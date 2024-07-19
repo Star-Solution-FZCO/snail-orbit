@@ -1,0 +1,22 @@
+name: project-manager
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: api
+    ports:
+    - "127.0.0.1:9090:9090"
+    volumes:
+    - "./etc:/app/etc"
+    depends_on:
+      postgres:
+        condition: service_started
+  postgres:
+    image: postgres:15.2
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_USER: 'test'
+      POSTGRES_PASSWORD: 'test'
+      POSTGRES_DB: 'pm'
