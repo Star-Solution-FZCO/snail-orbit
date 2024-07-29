@@ -5,9 +5,11 @@ name = "pypi"
 
 [packages]
 alembic = "*"
+bcrypt = "*"
 fastapi = "*"
 dynaconf = "*"
 uvicorn = "*"
+starlette-context = "*"
 sqlalchemy = {extras = ["postgresql_asyncpg"], version = "*"}
 starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
 pydantic = {version = ">=2.0"}

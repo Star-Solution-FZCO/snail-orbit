@@ -9,10 +9,13 @@ FROM python:3.12-alpine3.20 AS back-common
 
 ENV APP_DIR=/app
 ENV APP_NAME=pm
-ENV PYTHONPATH=${APP_DIR}
+ENV PYTHONPATH="${APP_DIR}:${APP_DIR}/vendor"
 WORKDIR ${APP_DIR}
 
-RUN python3 -m pip install --no-cache-dir --upgrade pip
+RUN apk add --update --no-cache\
+    build-base libffi-dev &&\
+    rm -rf "/var/cache/apk/*" &&\
+    python3 -m pip install --no-cache-dir --upgrade pip
 
 RUN mkdir -p "${APP_DIR}/etc" &&\
     ln -s ${APP_DIR}/etc/settings.toml ${APP_DIR}/settings.toml &&\
@@ -25,6 +28,8 @@ FROM back-common AS api
 COPY --from=get_requirements /app/requirements.txt ${APP_DIR}/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
     rm -rf requirements.txt
+
+COPY . ${APP_DIR}/
 
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]

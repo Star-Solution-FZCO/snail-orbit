@@ -17,7 +17,7 @@ class BaseOutput(PydanticBaseModel):
 
 
 class SuccessOutput(BaseOutput):
-    success = True
+    success: bool = True
 
 
 T = TypeVar('T')
@@ -29,6 +29,7 @@ class BasePayloadOutput(BaseOutput, Generic[T]):
 
 class SuccessPayloadOutput(SuccessOutput, BasePayloadOutput, Generic[T]):
     pass
+
 
 class ModelIDPayload(PydanticBaseModel):
     id: int

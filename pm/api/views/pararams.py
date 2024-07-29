@@ -15,7 +15,7 @@ class SelectParams(PydanticBaseModel):
 class ListParams(PydanticBaseModel):
     limit: int = Query(50, le=50, description='limit results')
     offset: int = Query(0, description='offset')
-    sort_by: str = Query(None, max_length=50, description='sort by field')
+    sort_by: str | None = Query(None, max_length=50, description='sort by field')
     direction: str = Query(
         'desc', max_length=4, description='sort direction asc or desc'
     )
