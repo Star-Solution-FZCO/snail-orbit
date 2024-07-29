@@ -6,15 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starsol_sql_base.utils import count_select_query_results
 
 import pm.models as m
-from pm.api.db import db_session_dependency
-from pm.api.views.factories.crud import CrudOutput, CrudCreateBody, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, ModelIdOutput
-from pm.api.views.pararams import ListParams
 from pm.api.context import admin_context_dependency, current_user_context_dependency
+from pm.api.db import db_session_dependency
+from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
+from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/project', tags=['project'], dependencies=[Depends(current_user_context_dependency)])
+router = APIRouter(
+    prefix='/project',
+    tags=['project'],
+    dependencies=[Depends(current_user_context_dependency)],
+)
 
 
 class ProjectOutput(CrudOutput[m.Project]):
@@ -51,10 +55,7 @@ async def list_projects(
         count=count,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            ProjectOutput.from_obj(obj)
-            for obj in objs_.all()
-        ],
+        items=[ProjectOutput.from_obj(obj) for obj in objs_.all()],
     )
 
 
@@ -73,7 +74,7 @@ async def get_project(
 async def create_project(
     body: ProjectCreate,
     session: AsyncSession = Depends(db_session_dependency),
-    _ = Depends(admin_context_dependency),
+    _=Depends(admin_context_dependency),
 ) -> ModelIdOutput:
     obj = m.Project(
         name=body.name,
@@ -90,7 +91,7 @@ async def update_project(
     project_id: int,
     body: ProjectUpdate,
     session: AsyncSession = Depends(db_session_dependency),
-    _ = Depends(admin_context_dependency),
+    _=Depends(admin_context_dependency),
 ) -> ModelIdOutput:
     obj = await session.scalar(sa.select(m.Project).where(m.Project.id == project_id))
     if not obj:

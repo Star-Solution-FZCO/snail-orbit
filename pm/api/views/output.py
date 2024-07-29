@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Self, Any
+from typing import Any, Generic, Self, TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -70,4 +70,8 @@ class BaseListOutput(SuccessPayloadOutput, Generic[T]):
 
     @classmethod
     def make(cls, items: list[T], count: int, limit: int, offset: int) -> Self:
-        return cls(payload=BaseListPayload(count=count, limit=limit, offset=offset, items=items))
+        return cls(
+            payload=BaseListPayload(
+                count=count, limit=limit, offset=offset, items=items
+            )
+        )

@@ -7,7 +7,6 @@ from starsol_fastapi_jwt_auth import AuthJWT
 from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 from starsol_sql_base.db import init_engine
 
-
 from pm.config import CONFIG
 from pm.constants import VERSION
 
@@ -50,6 +49,6 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
 
 
 # pylint: disable=wrong-import-position
-from pm.api.routes import api_router # noqa
+from pm.api.routes import api_router  # noqa
 
 app.include_router(api_router)
