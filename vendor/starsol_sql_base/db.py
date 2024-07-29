@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager, contextmanager
 from typing import AsyncGenerator, Generator
 
 from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 __all__ = ('async_session', 'autocommit_async_session', 'sync_session', 'init_engine')
 
-engine:  AsyncEngine | None = None
+engine: AsyncEngine | None = None
 sm: sessionmaker | None = None
 
 
@@ -30,7 +30,9 @@ def init_engine(uri: str) -> None:
 
 
 @asynccontextmanager
-async def async_session(session: AsyncSession | None = None) -> AsyncGenerator[AsyncSession, None]:
+async def async_session(
+    session: AsyncSession | None = None,
+) -> AsyncGenerator[AsyncSession, None]:
     """
     :param session: Optional AsyncSession.
                     An optional parameter of type AsyncSession.
@@ -52,7 +54,9 @@ async def async_session(session: AsyncSession | None = None) -> AsyncGenerator[A
 
 
 @asynccontextmanager
-async def autocommit_async_session(session: AsyncSession | None = None) -> AsyncGenerator[AsyncSession, None]:
+async def autocommit_async_session(
+    session: AsyncSession | None = None,
+) -> AsyncGenerator[AsyncSession, None]:
     """
     Acquire an asynchronous session with autocommit capability.
 

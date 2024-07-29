@@ -17,7 +17,9 @@ CONFIG = Dynaconf(
     load_dotenv=True,
     validators=[
         Validator('DEV_MODE', cast=bool, default=False),
-        Validator('DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)),
+        Validator(
+            'DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)
+        ),
         Validator('DEBUG', cast=bool, default=False),
         Validator('DB_URI', default='postgresql+asyncpg://pm:pm@db/pm'),
         Validator('PUBLIC_BASE_URL', default='http://localhost:3000'),

@@ -5,14 +5,13 @@ import warnings
 from typing import Any, Self
 
 import sqlalchemy
-from sqlalchemy import and_, DateTime, event, inspect, select, Table
+from sqlalchemy import DateTime, Table, and_, event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import AttributeState, Mapped, mapped_column, Mapper, PassiveFlag
+from sqlalchemy.orm import AttributeState, Mapped, Mapper, PassiveFlag, mapped_column
 from sqlalchemy.sql.elements import SQLCoreOperations
 
-
 from ._declarative_base import Base
-from .audit import AuditRecord, AuditActions
+from .audit import AuditActions, AuditRecord
 from .db import async_session, autocommit_async_session
 from .utils import get_utc
 
@@ -64,8 +63,12 @@ class BaseModel(Base):
     __read_only_fields__: tuple[str, ...] = tuple()
     id: Mapped[int] = mapped_column(primary_key=True)
     revision: Mapped[int] = mapped_column(default=0)
-    created: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=get_utc)
-    updated: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=get_utc, onupdate=get_utc)
+    created: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc
+    )
+    updated: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc, onupdate=get_utc
+    )
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(**kwargs)
@@ -146,7 +149,9 @@ class BaseModel(Base):
         async with async_session(session) as session:
             await session.refresh(self)
 
-    async def rollback(self, revision: int | None = None, session: AsyncSession | None = None) -> None:
+    async def rollback(
+        self, revision: int | None = None, session: AsyncSession | None = None
+    ) -> None:
         """
         :param revision: The revision number to which the model should be rolled back. If not specified, it will be set to the current revision minus 1.
         :param session: The asynchronous SQLAlchemy session to use for the rollback operation. If not specified, a new session will be created.
@@ -168,7 +173,9 @@ class BaseModel(Base):
             if state:
                 # noinspection PyUnresolvedReferences
                 relationships = {r.key: r.direction for r in state.mapper.relationships}
-            for record in await self.audits(s, limit=t.cast(int, self.revision) - revision):
+            for record in await self.audits(
+                s, limit=t.cast(int, self.revision) - revision
+            ):
                 if record is None:
                     raise ValueError('Audit record not found')
                 data = pickle.loads(t.cast('Buffer', record.data))
@@ -181,14 +188,22 @@ class BaseModel(Base):
                                     continue
                                 if mapper.persist_selectable.key == add['table']:
                                     item = await s.scalar(
-                                        select(mapper.class_).where(t.cast(SQLCoreOperations[Any], getattr(mapper.class_, add['fk'])) == add['value'])
+                                        select(mapper.class_).where(
+                                            t.cast(
+                                                SQLCoreOperations[Any],
+                                                getattr(mapper.class_, add['fk']),
+                                            )
+                                            == add['value']
+                                        )
                                     )
                                     if not item:
                                         raise ValueError(f'Item not found for {add}')
                                     getattr(self, key).append(item)
                         for delete in action['added']:
                             if not isinstance(delete, dict):
-                                raise ValueError(f'Invalid data, expected dict for key {key}, got {type(delete)}')
+                                raise ValueError(
+                                    f'Invalid data, expected dict for key {key}, got {type(delete)}'
+                                )
                             for item in getattr(self, key):
                                 if getattr(item, delete['fk']) == delete['value']:
                                     getattr(self, key).remove(item)
@@ -204,14 +219,22 @@ class BaseModel(Base):
             s.add(self)
             await s.commit()
 
-    async def audits(self, session: AsyncSession | None = None, limit: int = 100) -> list[AuditRecord]:
+    async def audits(
+        self, session: AsyncSession | None = None, limit: int = 100
+    ) -> list[AuditRecord]:
         async with async_session(session) as s:
             q = await s.scalars(
                 select(AuditRecord)
                 .where(
                     and_(
-                        t.cast(SQLCoreOperations[Any], AuditRecord.table_name == t.cast(Table, t.cast(Any, self).__table__).key),
-                        t.cast(SQLCoreOperations[Any], AuditRecord.object_id == self.id),
+                        t.cast(
+                            SQLCoreOperations[Any],
+                            AuditRecord.table_name
+                            == t.cast(Table, t.cast(Any, self).__table__).key,
+                        ),
+                        t.cast(
+                            SQLCoreOperations[Any], AuditRecord.object_id == self.id
+                        ),
                     )
                 )
                 .limit(limit)
@@ -220,12 +243,17 @@ class BaseModel(Base):
             return t.cast(list[AuditRecord], q.all())
 
     def __repr__(self) -> str:
-        kw = [(a.key, str(getattr(self, a.key))) for a in t.cast(t.Any, self).__table__.primary_key.columns]
+        kw = [
+            (a.key, str(getattr(self, a.key)))
+            for a in t.cast(t.Any, self).__table__.primary_key.columns
+        ]
         return f'{self.__class__.__name__}({", ".join([f"{k}={v}" for k, v in kw])})'
 
 
 @event.listens_for(BaseModel, 'before_update', propagate=True)
-def receive_before_update(mapper: Mapper[BaseModel], __: sqlalchemy.engine.Connection, target: BaseModel) -> None:
+def receive_before_update(
+    mapper: Mapper[BaseModel], __: sqlalchemy.engine.Connection, target: BaseModel
+) -> None:
     """
     :param mapper: The SQLAlchemy mapper object.
     :param __: The SQLAlchemy engine connection.
@@ -253,7 +281,11 @@ def receive_before_update(mapper: Mapper[BaseModel], __: sqlalchemy.engine.Conne
 
 
 @event.listens_for(BaseModel, 'after_insert', propagate=True)
-def receive_after_insert(mapper: Mapper[BaseModel], connection: sqlalchemy.engine.Connection, target: BaseModel) -> None:
+def receive_after_insert(
+    mapper: Mapper[BaseModel],
+    connection: sqlalchemy.engine.Connection,
+    target: BaseModel,
+) -> None:
     """
     Receive and handle the event triggered after an object is inserted into the database.
 
@@ -276,7 +308,11 @@ def receive_after_insert(mapper: Mapper[BaseModel], connection: sqlalchemy.engin
 
 
 @event.listens_for(BaseModel, 'after_update', propagate=True)
-def receive_after_update(mapper: Mapper[BaseModel], connection: sqlalchemy.engine.Connection, target: BaseModel) -> None:
+def receive_after_update(
+    mapper: Mapper[BaseModel],
+    connection: sqlalchemy.engine.Connection,
+    target: BaseModel,
+) -> None:
     """
     :param mapper: the mapper of the updated model
     :type mapper: sqlalchemy.orm.Mapper[BaseModel]
@@ -292,14 +328,20 @@ def receive_after_update(mapper: Mapper[BaseModel], connection: sqlalchemy.engin
                 if not hasattr(target, field_name):
                     warnings.warn(f'field {field_name} not found')
                     continue
-                changed, _, deleted = state.get_history(field_name, PassiveFlag.NO_CHANGE)
+                changed, _, deleted = state.get_history(
+                    field_name, PassiveFlag.NO_CHANGE
+                )
                 if changed or deleted:
                     raise ValueError(f'field {field_name} is read only')
     AuditRecord.create_entry(target, mapper, AuditActions.UPDATE, connection)
 
 
 @event.listens_for(BaseModel, 'after_delete', propagate=True)
-def receive_after_delete(mapper: Mapper[BaseModel], connection: sqlalchemy.engine.Connection, target: BaseModel) -> None:
+def receive_after_delete(
+    mapper: Mapper[BaseModel],
+    connection: sqlalchemy.engine.Connection,
+    target: BaseModel,
+) -> None:
     """
     Handle the 'after_delete' event for Base Model objects.
 

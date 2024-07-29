@@ -1,4 +1,4 @@
-from collections.abc import Coroutine, Callable
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 
 import sqlalchemy as sa
@@ -67,7 +67,9 @@ async def dev_auth(
     return user
 
 
-def get_auth_func() -> Callable[[UserAuth, AsyncSession], Coroutine[None, None, m.User]]:
+def get_auth_func() -> (
+    Callable[[UserAuth, AsyncSession], Coroutine[None, None, m.User]]
+):
     if CONFIG.DEV_MODE:
         return dev_auth
     return local_auth
@@ -83,9 +85,7 @@ async def login(
     try:
         user = await auth_fn(user_auth, session)
     except AuthException as err:
-        raise HTTPException(
-            HTTPStatus.UNAUTHORIZED, detail=err.detail
-        ) from err
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, detail=err.detail) from err
     access_token = auth.create_access_token(
         subject=user.email,
         algorithm=JWT_CRYPTO_ALGORITHM,
@@ -119,4 +119,3 @@ async def logout(auth: AuthJWT = Depends()) -> SuccessOutput:
     auth.jwt_required()
     auth.unset_jwt_cookies()
     return SuccessOutput()
-

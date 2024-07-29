@@ -1,3 +1,3 @@
-from .user import *
-from .project import *
 from .issue import *
+from .project import *
+from .user import *

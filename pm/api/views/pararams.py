@@ -1,5 +1,6 @@
 from fastapi import Query
-from pydantic import BaseModel as PydanticBaseModel, field_validator
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import field_validator
 
 __all__ = (
     'ListFilterParams',
@@ -29,4 +30,3 @@ class ListParams(PydanticBaseModel):
 
 class ListFilterParams(ListParams):
     filter: str = Query(None, description='filter params')
-

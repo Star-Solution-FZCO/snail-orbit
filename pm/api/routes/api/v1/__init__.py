@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 from .project import router as project_router
-from .version import router as version_router
 from .user import router as user_router
+from .version import router as version_router
 
 __all__ = ('router',)
 

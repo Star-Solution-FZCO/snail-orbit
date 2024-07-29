@@ -1,6 +1,5 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
-
 from starsol_sql_base import BaseModel
 
 __all__ = ('Project',)

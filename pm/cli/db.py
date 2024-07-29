@@ -1,7 +1,8 @@
 import argparse
 import typing
 from argparse import ArgumentParser
-from os.path import dirname, join as opj, realpath
+from os.path import dirname, realpath
+from os.path import join as opj
 from pathlib import Path
 
 if typing.TYPE_CHECKING:
@@ -12,8 +13,12 @@ __all__ = ('add_db_args',)
 
 def _alembic_default_parser(parser: argparse.ArgumentParser) -> None:
     root_dir = realpath(opj(dirname(realpath(__file__)), '../../'))
-    parser.add_argument('--migration-dir', type=Path, default=Path(root_dir, 'migrations'))
-    parser.add_argument('--config-file', type=Path, default=Path(root_dir, 'migrations/alembic.ini'))
+    parser.add_argument(
+        '--migration-dir', type=Path, default=Path(root_dir, 'migrations')
+    )
+    parser.add_argument(
+        '--config-file', type=Path, default=Path(root_dir, 'migrations/alembic.ini')
+    )
 
 
 def _alembic_config(args: argparse.Namespace) -> 'Config':
@@ -27,7 +32,9 @@ def _alembic_config(args: argparse.Namespace) -> 'Config':
 def db_migrate(args: argparse.Namespace) -> None:
     from alembic import command
 
-    command.revision(_alembic_config(args), args.message, args.autogenerate, args.sql, args.head)
+    command.revision(
+        _alembic_config(args), args.message, args.autogenerate, args.sql, args.head
+    )
 
 
 def db_upgrade(args: argparse.Namespace) -> None:

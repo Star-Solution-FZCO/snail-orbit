@@ -6,8 +6,16 @@ from enum import IntEnum
 from json import JSONEncoder
 
 import sqlalchemy
-from sqlalchemy import DateTime, event, ForeignKey, insert, JSON, LargeBinary, Table
-from sqlalchemy.orm import AppenderQuery, InstanceState, mapped_column, Mapper, MapperProperty, RelationshipProperty, Session
+from sqlalchemy import JSON, DateTime, ForeignKey, LargeBinary, Table, event, insert
+from sqlalchemy.orm import (
+    AppenderQuery,
+    InstanceState,
+    Mapper,
+    MapperProperty,
+    RelationshipProperty,
+    Session,
+    mapped_column,
+)
 from sqlalchemy.orm.base import MANYTOMANY, Mapped, PassiveFlag, RelationshipDirection
 
 from ._declarative_base import Base
@@ -32,7 +40,9 @@ class AuditFieldActions(IntEnum):
     CHANGE = 3
 
 
-def history_record(added: list | tuple | None = None, deleted: list | tuple | None = None) -> dict[str, tuple | list]:
+def history_record(
+    added: list | tuple | None = None, deleted: list | tuple | None = None
+) -> dict[str, tuple | list]:
     if added is None:
         added = []
     if deleted is None:
@@ -43,7 +53,10 @@ def history_record(added: list | tuple | None = None, deleted: list | tuple | No
 def find_foreign_key(foreign_keys: set[ForeignKey]) -> dict[str, dict[str, t.Any]]:
     result = {}
     for foreign_key in foreign_keys:
-        result[foreign_key.column.key] = {'table': foreign_key.column.table.key, 'fk': foreign_key.column.key}
+        result[foreign_key.column.key] = {
+            'table': foreign_key.column.table.key,
+            'fk': foreign_key.column.key,
+        }
     return result
 
 
@@ -57,7 +70,9 @@ def relation_record(fk: str, item: 'Base') -> dict[str, t.Any]:
     }
 
 
-def resolve_foreign_keys(foreign_keys: dict[str, dict[str, t.Any]], items: t.Iterable[Base]) -> tuple[list[dict[str, t.Any]], set[str]]:
+def resolve_foreign_keys(
+    foreign_keys: dict[str, dict[str, t.Any]], items: t.Iterable[Base]
+) -> tuple[list[dict[str, t.Any]], set[str]]:
     result = []
     resolve_after_commit = set()
     for item in items:
@@ -70,7 +85,9 @@ def resolve_foreign_keys(foreign_keys: dict[str, dict[str, t.Any]], items: t.Ite
 
 
 def find_remote_foreign_keys(
-    attribute: MapperProperty, direction: RelationshipDirection, skip_table: list[str | Table] | None = None
+    attribute: MapperProperty,
+    direction: RelationshipDirection,
+    skip_table: list[str | Table] | None = None,
 ) -> dict[str, dict[str, t.Any]]:
     if skip_table is None:
         skip_table = []
@@ -85,14 +102,29 @@ def find_remote_foreign_keys(
 
 def get_history(
     mapper: Mapper, state: InstanceState['BaseModel'], action: AuditActions
-) -> dict[str, tuple[MapperProperty[t.Any], tuple[()] | list[t.Any], tuple[()] | list[t.Any], tuple[()] | list[t.Any], RelationshipDirection | None]]:
+) -> dict[
+    str,
+    tuple[
+        MapperProperty[t.Any],
+        tuple[()] | list[t.Any],
+        tuple[()] | list[t.Any],
+        tuple[()] | list[t.Any],
+        RelationshipDirection | None,
+    ],
+]:
     result = {}
     for attr in t.cast(t.Iterable[MapperProperty], mapper.iterate_properties):
         history = state.get_history(attr.key, PassiveFlag.PASSIVE_OFF)
         added, deleted = history.added, history.deleted
         if not added and not deleted and action != AuditActions.DELETE:
             continue
-        result[str(attr.key)] = (attr, added, deleted, history.unchanged, getattr(attr, 'direction', None))
+        result[str(attr.key)] = (
+            attr,
+            added,
+            deleted,
+            history.unchanged,
+            getattr(attr, 'direction', None),
+        )
     return result
 
 
@@ -109,7 +141,9 @@ class AuditRecord(Base):
     class_name: Mapped[str] = mapped_column(index=True)
     _fields: Mapped[str] = mapped_column(name='fields')
     json_data: Mapped[dict] = mapped_column(JSON(none_as_null=True))
-    time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=get_utc, index=True)
+    time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc, index=True
+    )
     user_id: Mapped[int] = mapped_column(index=True)
     user: Mapped[str] = mapped_column()
     ip: Mapped[str] = mapped_column()
@@ -131,21 +165,43 @@ class AuditRecord(Base):
         self._fields = t.cast(Mapped[str], ','.join(map(str.strip, value)))
 
     @classmethod
-    def create_entry(cls, target: 'BaseModel', mapper: Mapper['BaseModel'], action: AuditActions, connection: sqlalchemy.engine.Connection) -> None:
+    def create_entry(
+        cls,
+        target: 'BaseModel',
+        mapper: Mapper['BaseModel'],
+        action: AuditActions,
+        connection: sqlalchemy.engine.Connection,
+    ) -> None:
         if target.__class__.__name__ in BLACKLISTED_CLASSES:
             return
-        state = t.cast(sqlalchemy.orm.InstanceState['BaseModel'], sqlalchemy.inspect(target))
+        state = t.cast(
+            sqlalchemy.orm.InstanceState['BaseModel'], sqlalchemy.inspect(target)
+        )
         attr_history = get_history(mapper, state, action)
         if not attr_history and action == AuditActions.UPDATE:
             return
         if action == AuditActions.DELETE:
-            for attribute in t.cast(t.Iterable[MapperProperty], mapper.iterate_properties):
+            for attribute in t.cast(
+                t.Iterable[MapperProperty], mapper.iterate_properties
+            ):
                 if attribute.key in attr_history:
                     continue
-                attr_history[attribute.key] = (attribute, [], getattr(target, attribute.key), [], None)
+                attr_history[attribute.key] = (
+                    attribute,
+                    [],
+                    getattr(target, attribute.key),
+                    [],
+                    None,
+                )
         changes: dict = {}
         need_to_be_resolve: dict = {'added': {}, 'deleted': {}}
-        for key, (attribute, added, deleted, unchanged, direction) in attr_history.items():
+        for key, (
+            attribute,
+            added,
+            deleted,
+            unchanged,
+            direction,
+        ) in attr_history.items():
             if action == AuditActions.DELETE:
                 deleted = unchanged
             if direction is None:
@@ -153,17 +209,23 @@ class AuditRecord(Base):
                 continue
             added_: list[dict[str, dict[str, t.Any]]] = []
             if added:
-                added_, need_to_resolve_added = resolve_foreign_keys(find_remote_foreign_keys(attribute, direction), added)
+                added_, need_to_resolve_added = resolve_foreign_keys(
+                    find_remote_foreign_keys(attribute, direction), added
+                )
                 if need_to_resolve_added:
                     need_to_be_resolve['added'][key] = need_to_resolve_added
             deleted_: list[dict[str, dict[str, t.Any]]] = []
             if deleted:
-                deleted_, need_to_resolve_deleted = resolve_foreign_keys(find_remote_foreign_keys(attribute, direction), deleted)
+                deleted_, need_to_resolve_deleted = resolve_foreign_keys(
+                    find_remote_foreign_keys(attribute, direction), deleted
+                )
                 if need_to_resolve_deleted:
                     need_to_be_resolve['deleted'][key] = need_to_resolve_deleted
             changes[key] = history_record(added_, deleted_)
         if action == AuditActions.INSERT or action == AuditActions.DELETE:
-            for attribute in t.cast(t.Iterable[MapperProperty['BaseModel']], mapper.iterate_properties):
+            for attribute in t.cast(
+                t.Iterable[MapperProperty['BaseModel']], mapper.iterate_properties
+            ):
                 if attribute.key in changes:
                     continue
                 key = 'added' if action == AuditActions.INSERT else 'deleted'
@@ -171,7 +233,12 @@ class AuditRecord(Base):
                 if isinstance(value, AppenderQuery):
                     value = value.all()
                 changes[attribute.key] = history_record(**{key: [value]})
-        if any([*need_to_be_resolve['added'].values(), *need_to_be_resolve['deleted'].values()]):
+        if any(
+            [
+                *need_to_be_resolve['added'].values(),
+                *need_to_be_resolve['deleted'].values(),
+            ]
+        ):
 
             @event.listens_for(state.session, 'after_commit', once=True)
             def execute_after_commit(_: Session) -> None:
@@ -183,12 +250,20 @@ class AuditRecord(Base):
                             changes[k][history_action] = []
                             for item in getattr(target, k):
                                 for fk in fks:
-                                    changes[k][history_action] += [relation_record(fk, item)]
-                            session.execute(cls.create_insert(target, changes, action, mapper))
+                                    changes[k][history_action] += [
+                                        relation_record(fk, item)
+                                    ]
+                            session.execute(
+                                cls.create_insert(target, changes, action, mapper)
+                            )
                             session.commit()
 
             return None
-        connection.execute(cls.create_insert(target, changes, action, mapper, comment=target.audit_comment))
+        connection.execute(
+            cls.create_insert(
+                target, changes, action, mapper, comment=target.audit_comment
+            )
+        )
 
     def __repr__(self) -> str:
         return (
@@ -198,24 +273,37 @@ class AuditRecord(Base):
 
     @classmethod
     def create_insert(
-        cls, target: 'BaseModel', changes: dict[str, dict[str, list[t.Any]]], action: AuditActions, mapper: Mapper['BaseModel'], comment: str | None = None
+        cls,
+        target: 'BaseModel',
+        changes: dict[str, dict[str, list[t.Any]]],
+        action: AuditActions,
+        mapper: Mapper['BaseModel'],
+        comment: str | None = None,
     ) -> sqlalchemy.sql.expression.Insert:
         json_data: dict[str, dict[str, t.Any]] = {}
         data: dict[str, t.Any] = {}
         relation_pairs: dict[str, str] = {}
         many_to_many: list[str] = []
-        for relation in t.cast(t.Iterable[RelationshipProperty['BaseModel']], mapper.relationships):
+        for relation in t.cast(
+            t.Iterable[RelationshipProperty['BaseModel']], mapper.relationships
+        ):
             if relation.direction == RelationshipDirection.MANYTOMANY:
                 many_to_many.append(relation.key)
                 continue
             for pair in relation.synchronize_pairs:
                 for column in pair:
-                    if column.table.key not in relation_pairs and column.key is not None:
+                    if (
+                        column.table.key not in relation_pairs
+                        and column.key is not None
+                    ):
                         relation_pairs[relation.key] = column.key
         for key, value in changes.items():
             if key not in relation_pairs.values():
                 if key in many_to_many:
-                    json_data[key] = history_record(get_string_from_relation(value['added']), get_string_from_relation(value['deleted']))
+                    json_data[key] = history_record(
+                        get_string_from_relation(value['added']),
+                        get_string_from_relation(value['deleted']),
+                    )
                 else:
                     json_data[key] = value
             if key in relation_pairs:

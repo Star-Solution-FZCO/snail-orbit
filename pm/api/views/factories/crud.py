@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Generic, Self, TypeVar
+
 from pydantic import BaseModel as PydanticBaseModel
 
 if TYPE_CHECKING:
@@ -17,11 +18,7 @@ ModelT = TypeVar('ModelT', bound='BaseModel')
 class CrudOutput(PydanticBaseModel, ABC, Generic[ModelT]):
     @classmethod
     def from_obj(cls, obj: ModelT) -> Self:
-        return cls(
-            **{k: getattr(obj, k)
-                for k in cls.__fields__
-            }
-        )
+        return cls(**{k: getattr(obj, k) for k in cls.__fields__})
 
 
 class CrudCreateBody(PydanticBaseModel, ABC, Generic[ModelT]):
