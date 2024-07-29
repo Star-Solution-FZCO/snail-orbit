@@ -13,7 +13,7 @@ __all__ = ('add_db_args',)
 def _alembic_default_parser(parser: argparse.ArgumentParser) -> None:
     root_dir = realpath(opj(dirname(realpath(__file__)), '../../'))
     parser.add_argument('--migration-dir', type=Path, default=Path(root_dir, 'migrations'))
-    parser.add_argument('--config-file', type=Path, default=Path(root_dir, 'alembic.ini'))
+    parser.add_argument('--config-file', type=Path, default=Path(root_dir, 'migrations/alembic.ini'))
 
 
 def _alembic_config(args: argparse.Namespace) -> 'Config':
@@ -52,7 +52,7 @@ def add_db_args(subparser: ArgumentParser) -> None:
     db_subparsers = subparser.add_subparsers(required=True)
     db_migrate_parser = db_subparsers.add_parser('migrate')
     db_migrate_parser.add_argument('message', type=str)
-    db_migrate_parser.add_argument('--autogenerate', action='store_false')
+    db_migrate_parser.add_argument('--autogenerate', action='store_true')
     db_migrate_parser.add_argument('--sql', action='store_true')
     db_migrate_parser.add_argument('--head', type=str, default='head')
     _alembic_default_parser(db_migrate_parser)

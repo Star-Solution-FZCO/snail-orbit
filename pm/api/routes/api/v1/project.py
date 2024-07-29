@@ -10,41 +10,40 @@ from pm.api.db import db_session_dependency
 from pm.api.views.factories.crud import CrudOutput, CrudCreateBody, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, ModelIdOutput
 from pm.api.views.pararams import ListParams
-from pm.api.context import admin_context_dependency
+from pm.api.context import admin_context_dependency, current_user_context_dependency
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/user', tags=['user'], dependencies=[Depends(admin_context_dependency)])
+router = APIRouter(prefix='/project', tags=['project'], dependencies=[Depends(current_user_context_dependency)])
 
 
-class UserOutput(CrudOutput[m.User]):
+class ProjectOutput(CrudOutput[m.Project]):
     id: int
-    email: str
     name: str
+    description: str | None
     is_active: bool
-    is_admin: bool
 
 
-class UserCreate(CrudCreateBody[m.User]):
+class ProjectCreate(CrudCreateBody[m.Project]):
     email: str
     name: str
+    description: str | None = None
     is_active: bool = True
-    is_admin: bool = False
 
 
-class UserUpdate(CrudUpdateBody[m.User]):
+class ProjectUpdate(CrudUpdateBody[m.Project]):
     email: str | None = None
     name: str | None = None
+    description: str | None = None
     is_active: bool | None = None
-    is_admin: bool | None = None
 
 
 @router.get('/list')
-async def list_users(
+async def list_projects(
     query: ListParams = Depends(),
     session: AsyncSession = Depends(db_session_dependency),
-) -> BaseListOutput[UserOutput]:
-    q = sa.select(m.User)
+) -> BaseListOutput[ProjectOutput]:
+    q = sa.select(m.Project)
     count = await count_select_query_results(q, session=session)
     q = q.limit(query.limit).offset(query.offset)
     objs_ = await session.scalars(q)
@@ -53,48 +52,49 @@ async def list_users(
         limit=query.limit,
         offset=query.offset,
         items=[
-            UserOutput.from_obj(obj)
+            ProjectOutput.from_obj(obj)
             for obj in objs_.all()
         ],
     )
 
 
-@router.get('/{user_id}')
-async def get_user(
-    user_id: int,
+@router.get('/{project_id}')
+async def get_project(
+    project_id: int,
     session: AsyncSession = Depends(db_session_dependency),
-) -> SuccessPayloadOutput[UserOutput]:
-    user = await session.scalar(sa.select(m.User).where(m.User.id == user_id))
-    if not user:
-        raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
-    return SuccessPayloadOutput(payload=UserOutput.from_obj(user))
+) -> SuccessPayloadOutput[ProjectOutput]:
+    obj = await session.scalar(sa.select(m.Project).where(m.Project.id == project_id))
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
 @router.post('/')
-async def create_user(
-    body: UserCreate,
+async def create_project(
+    body: ProjectCreate,
     session: AsyncSession = Depends(db_session_dependency),
+    _ = Depends(admin_context_dependency),
 ) -> ModelIdOutput:
-    user = m.User(
-        email=body.email,
+    obj = m.Project(
         name=body.name,
+        description=body.description,
         is_active=body.is_active,
-        is_admin=body.is_admin,
     )
-    session.add(user)
+    session.add(obj)
     await session.commit()
-    return ModelIdOutput.from_obj(user)
+    return ModelIdOutput.from_obj(obj)
 
 
-@router.put('/{user_id}')
-async def update_user(
-    user_id: int,
-    body: UserUpdate,
+@router.put('/{project_id}')
+async def update_project(
+    project_id: int,
+    body: ProjectUpdate,
     session: AsyncSession = Depends(db_session_dependency),
+    _ = Depends(admin_context_dependency),
 ) -> ModelIdOutput:
-    user = await session.scalar(sa.select(m.User).where(m.User.id == user_id))
-    if not user:
-        raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
-    body.update_obj(user)
+    obj = await session.scalar(sa.select(m.Project).where(m.Project.id == project_id))
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    body.update_obj(obj)
     await session.commit()
-    return ModelIdOutput.from_obj(user)
+    return ModelIdOutput.from_obj(obj)

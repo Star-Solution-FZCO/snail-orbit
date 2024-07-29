@@ -1,5 +1,6 @@
 [default]
 DEV_MODE = true
+DEV_PASSWORD = 'test'
 DEBUG = true
 DB_URI = 'postgresql+asyncpg://test:test@postgres:5432/pm'
 PUBLIC_BASE_URL='http://localhost:3000'
