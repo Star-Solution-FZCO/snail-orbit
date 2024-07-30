@@ -1,0 +1,11 @@
+{
+    "NAVBAR": {
+        "ISSUES": "Issues",
+        "AGILE_BOARDS": "Agile Boards",
+        "PROJECTS": "Projects"
+    },
+    "PROJECTS": {
+        "TITLE": "Projects",
+        "SEARCH_PLACEHOLDER": "Filter by name"
+    }
+}
