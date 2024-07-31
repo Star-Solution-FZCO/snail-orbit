@@ -21,7 +21,9 @@ CONFIG = Dynaconf(
             'DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)
         ),
         Validator('DEBUG', cast=bool, default=False),
-        Validator('DB_URI', default='postgresql+asyncpg://pm:pm@db/pm'),
+        Validator(
+            'DB_URI', default='mongodb://pm:pm@localhost:27017/pm?authSource=admin'
+        ),
         Validator('PUBLIC_BASE_URL', default='http://localhost:3000'),
         Validator('JWT_SECRET', required=True),
         Validator('SENTRY_DSN', default=''),

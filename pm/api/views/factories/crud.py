@@ -1,10 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import TYPE_CHECKING, Generic, Self, TypeVar
 
-from pydantic import BaseModel as PydanticBaseModel
+from beanie import PydanticObjectId
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from starsol_sql_base import BaseModel
+    from beanie import Document
 
 __all__ = (
     'CrudOutput',
@@ -12,21 +13,23 @@ __all__ = (
     'CrudUpdateBody',
 )
 
-ModelT = TypeVar('ModelT', bound='BaseModel')
+ModelT = TypeVar('ModelT', bound='Document')
 
 
-class CrudOutput(PydanticBaseModel, ABC, Generic[ModelT]):
+class CrudOutput(BaseModel, ABC, Generic[ModelT]):
+    id: PydanticObjectId
+
     @classmethod
     def from_obj(cls, obj: ModelT) -> Self:
         return cls(**{k: getattr(obj, k) for k in cls.__fields__})
 
 
-class CrudCreateBody(PydanticBaseModel, ABC, Generic[ModelT]):
+class CrudCreateBody(BaseModel, ABC, Generic[ModelT]):
     def create_obj(self, model: type[ModelT]) -> ModelT:
         return model(**self.model_dump(exclude_unset=True))
 
 
-class CrudUpdateBody(PydanticBaseModel, ABC, Generic[ModelT]):
+class CrudUpdateBody(BaseModel, ABC, Generic[ModelT]):
     def update_obj(self, obj: ModelT) -> None:
         for k, v in self.model_dump(exclude_unset=True).items():
             setattr(obj, k, v)

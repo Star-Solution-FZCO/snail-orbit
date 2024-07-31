@@ -1,16 +1,12 @@
 from http import HTTPStatus
 from typing import Self
 
-import sqlalchemy as sa
+from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel as PydanticBaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from starsol_sql_base.utils import count_select_query_results
+from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
-from pm.api.db import db_session_dependency
-from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
@@ -23,19 +19,37 @@ router = APIRouter(
 )
 
 
-class IssueCommentOutput(CrudOutput[m.IssueComment]):
-    id: int
-    issue_id: int
+class IssueCommentOutput(BaseModel):
     text: str | None
 
+    @classmethod
+    def from_obj(cls, obj: m.IssueComment) -> Self:
+        return cls(
+            text=obj.text,
+        )
 
-class IssueCommentCreate(PydanticBaseModel):
+
+class IssueCommentCreate(BaseModel):
     text: str | None = None
 
 
-class IssueOutput(PydanticBaseModel):
-    id: int
-    project_id: int
+class ProjectField(BaseModel):
+    id: PydanticObjectId
+    name: str
+    slug: str
+
+    @classmethod
+    def from_obj(cls, obj: m.Issue) -> Self:
+        return cls(
+            id=obj.project.id,
+            name=obj.project.name,
+            slug=obj.project.slug,
+        )
+
+
+class IssueOutput(BaseModel):
+    id: PydanticObjectId
+    project: ProjectField
     subject: str
     text: str | None
     comments: list[IssueCommentOutput]
@@ -44,20 +58,20 @@ class IssueOutput(PydanticBaseModel):
     def from_obj(cls, obj: m.Issue) -> Self:
         return cls(
             id=obj.id,
-            project_id=obj.project_id,
+            project=ProjectField.from_obj(obj),
             subject=obj.subject,
             text=obj.text,
             comments=[IssueCommentOutput.from_obj(comment) for comment in obj.comments],
         )
 
 
-class IssueCreate(CrudCreateBody[m.Issue]):
-    project_id: int
+class IssueCreate(BaseModel):
+    project_id: PydanticObjectId
     subject: str
     text: str | None = None
 
 
-class IssueUpdate(CrudUpdateBody[m.Issue]):
+class IssueUpdate(BaseModel):
     subject: str | None = None
     text: str | None = None
 
@@ -65,26 +79,24 @@ class IssueUpdate(CrudUpdateBody[m.Issue]):
 @router.get('/list')
 async def list_issues(
     query: ListParams = Depends(),
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> BaseListOutput[IssueOutput]:
-    q = sa.select(m.Issue)
-    count = await count_select_query_results(q, session=session)
-    q = q.limit(query.limit).offset(query.offset)
-    objs_ = await session.scalars(q)
+    q = m.Issue.find().sort(m.Issue.id)
+    results = []
+    async for obj in q.limit(query.limit).skip(query.offset):
+        results.append(IssueOutput.from_obj(obj))
     return BaseListOutput.make(
-        count=count,
+        count=await q.count(),
         limit=query.limit,
         offset=query.offset,
-        items=[IssueOutput.from_obj(obj) for obj in objs_.all()],
+        items=results,
     )
 
 
 @router.get('/{issue_id}')
 async def get_issue(
-    issue_id: int,
-    session: AsyncSession = Depends(db_session_dependency),
+    issue_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[IssueOutput]:
-    obj = await session.scalar(sa.select(m.Issue).where(m.Issue.id == issue_id))
+    obj = await m.Issue.find_one(m.Issue.id == issue_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
@@ -93,43 +105,28 @@ async def get_issue(
 @router.post('/')
 async def create_issue(
     body: IssueCreate,
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> ModelIdOutput:
-    project = await session.scalar(
-        sa.select(m.Project).where(m.Project.id == body.project_id)
-    )
+    project = await m.Project.find_one(m.Project.id == body.project_id)
     if not project:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
-    obj = m.Issue(project_id=body.project_id, subject=body.subject, text=body.text)
-    session.add(obj)
-    await session.commit()
+    obj = m.Issue(
+        subject=body.subject,
+        text=body.text,
+        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
+    )
+    await obj.insert()
     return ModelIdOutput.from_obj(obj)
 
 
 @router.put('/{issue_id}')
 async def update_issue(
-    issue_id: int,
+    issue_id: PydanticObjectId,
     body: IssueUpdate,
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> ModelIdOutput:
-    obj = await session.scalar(sa.select(m.Issue).where(m.Issue.id == issue_id))
+    obj = await m.Issue.find_one(m.Issue.id == issue_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
-    body.update_obj(obj)
-    await session.commit()
-    return ModelIdOutput.from_obj(obj)
-
-
-@router.post('/{issue_id}/comment')
-async def create_issue_comment(
-    issue_id: int,
-    body: IssueCommentCreate,
-    session: AsyncSession = Depends(db_session_dependency),
-) -> ModelIdOutput:
-    issue = await session.scalar(sa.select(m.Issue).where(m.Issue.id == issue_id))
-    if not issue:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Issue not found')
-    obj = m.IssueComment(issue_id=issue_id, text=body.text)
-    session.add(obj)
-    await session.commit()
+    for k, v in body.dict(exclude_unset=True).items():
+        setattr(obj, k, v)
+    await obj.save()
     return ModelIdOutput.from_obj(obj)

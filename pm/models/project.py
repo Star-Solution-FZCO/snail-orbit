@@ -1,12 +1,25 @@
-import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
-from starsol_sql_base import BaseModel
+from beanie import Document, Indexed, PydanticObjectId
+from pydantic import BaseModel
 
-__all__ = ('Project',)
+__all__ = (
+    'Project',
+    'ProjectLinkField',
+)
 
 
-class Project(BaseModel):
-    __tablename__ = 'projects'
-    name: Mapped[str]
-    description: Mapped[str | None]
-    is_active: Mapped[bool] = mapped_column(server_default=sa.true())
+class Project(Document):
+    class Settings:
+        name = 'projects'
+        use_revision = True
+        use_state_management = True
+
+    name: Indexed(str)
+    slug: str = Indexed(str, unique=True)
+    description: str | None = None
+    is_active: bool = True
+
+
+class ProjectLinkField(BaseModel):
+    id: PydanticObjectId
+    name: str
+    slug: str

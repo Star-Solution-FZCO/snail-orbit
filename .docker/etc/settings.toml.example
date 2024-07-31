@@ -2,7 +2,7 @@
 DEV_MODE = true
 DEV_PASSWORD = 'test'
 DEBUG = true
-DB_URI = 'postgresql+asyncpg://test:test@postgres:5432/pm'
+DB_URI = 'mongodb://test:test@mongo:27017/pm?authSource=admin'
 PUBLIC_BASE_URL='http://localhost:3000'
 JWT_SECRET = 'TESTSECRET'
 ORIGINS = ['http://localhost:3000', 'http://localhost:9090']
