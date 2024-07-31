@@ -1,6 +1,7 @@
 from typing import Any, Generic, Self, TypeVar
 
-from pydantic import BaseModel as PydanticBaseModel
+from beanie import PydanticObjectId
+from pydantic import BaseModel
 
 __all__ = (
     'BaseOutput',
@@ -12,7 +13,7 @@ __all__ = (
 )
 
 
-class BaseOutput(PydanticBaseModel):
+class BaseOutput(BaseModel):
     success: bool
 
 
@@ -31,13 +32,13 @@ class SuccessPayloadOutput(SuccessOutput, BasePayloadOutput, Generic[T]):
     pass
 
 
-class ModelIDPayload(PydanticBaseModel):
-    id: int
+class ModelIDPayload(BaseModel):
+    id: PydanticObjectId
 
 
 class ModelIdOutput(SuccessPayloadOutput[ModelIDPayload]):
     @classmethod
-    def make(cls, id_: int) -> Self:
+    def make(cls, id_: PydanticObjectId) -> Self:
         return cls(payload=ModelIDPayload(id=id_))
 
     @classmethod
@@ -45,14 +46,14 @@ class ModelIdOutput(SuccessPayloadOutput[ModelIDPayload]):
         return cls(payload=ModelIDPayload(id=obj.id))
 
 
-class BaseListPayload(PydanticBaseModel, Generic[T]):
+class BaseListPayload(BaseModel, Generic[T]):
     count: int
     limit: int
     offset: int
     items: list[T]
 
 
-class BaseSelectItem(PydanticBaseModel, Generic[T]):
+class BaseSelectItem(BaseModel, Generic[T]):
     label: str
     value: T
 

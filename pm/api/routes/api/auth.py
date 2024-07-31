@@ -1,14 +1,12 @@
 from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 
-import sqlalchemy as sa
+import beanie.operators as bo
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.api.db import db_session_dependency
 from pm.api.views.output import SuccessOutput
 from pm.config import CONFIG
 
@@ -36,15 +34,15 @@ class AuthException(Exception):
 
 async def local_auth(
     user_auth: UserAuth,
-    session: AsyncSession,
 ) -> m.User:
     if not user_auth.password:
         raise AuthException('Password is empty')
-    q = sa.select(m.User).where(
-        m.User.is_active.is_(True),
-        m.User.email == user_auth.login.strip().lower(),
+    user: m.User | None = await m.User.find_one(
+        bo.And(
+            bo.Eq(m.User.is_active, True),
+            m.User.email == user_auth.login.strip().lower(),
+        )
     )
-    user: m.User | None = await session.scalar(q)
     if not user:
         raise AuthException('User not found')
     if not user.check_password(user_auth.password):
@@ -54,12 +52,13 @@ async def local_auth(
 
 async def dev_auth(
     user_auth: UserAuth,
-    session: AsyncSession,
 ) -> m.User:
-    q = sa.select(m.User).where(
-        m.User.email == user_auth.login.strip().lower(),
+    user: m.User | None = await m.User.find_one(
+        bo.And(
+            bo.Eq(m.User.is_active, True),
+            m.User.email == user_auth.login.strip().lower(),
+        )
     )
-    user: m.User | None = await session.scalar(q)
     if not user:
         raise AuthException('User not found')
     if user_auth.password != CONFIG.DEV_PASSWORD:
@@ -67,9 +66,7 @@ async def dev_auth(
     return user
 
 
-def get_auth_func() -> (
-    Callable[[UserAuth, AsyncSession], Coroutine[None, None, m.User]]
-):
+def get_auth_func() -> Callable[[UserAuth], Coroutine[None, None, m.User]]:
     if CONFIG.DEV_MODE:
         return dev_auth
     return local_auth
@@ -79,11 +76,10 @@ def get_auth_func() -> (
 async def login(
     user_auth: UserAuth,
     auth: AuthJWT = Depends(),
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> SuccessOutput:
     auth_fn = get_auth_func()
     try:
-        user = await auth_fn(user_auth, session)
+        user = await auth_fn(user_auth)
     except AuthException as err:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, detail=err.detail) from err
     access_token = auth.create_access_token(

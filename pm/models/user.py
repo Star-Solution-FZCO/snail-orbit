@@ -1,18 +1,30 @@
 import bcrypt
-import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, mapped_column
-from starsol_sql_base import BaseModel
+from beanie import Document, Indexed, PydanticObjectId
+from pydantic import BaseModel
 
-__all__ = ('User',)
+__all__ = (
+    'User',
+    'UserLinkField',
+)
 
 
-class User(BaseModel):
-    __tablename__ = 'users'
-    name: Mapped[str]
-    email: Mapped[str] = mapped_column(index=True, unique=True)
-    password_hash: Mapped[str | None]
-    is_active: Mapped[bool] = mapped_column(server_default=sa.true())
-    is_admin: Mapped[bool] = mapped_column(server_default=sa.false())
+class UserLinkField(BaseModel):
+    id: PydanticObjectId
+    name: str
+    email: str
+
+
+class User(Document):
+    class Settings:
+        name = 'users'
+        use_revision = True
+        use_state_management = True
+
+    name: Indexed(str)
+    email: Indexed(str, unique=True)
+    password_hash: str | None = None
+    is_active: bool = True
+    is_admin: bool = False
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:

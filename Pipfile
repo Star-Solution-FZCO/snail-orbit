@@ -4,22 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-alembic = "*"
 bcrypt = "*"
 fastapi = "*"
 dynaconf = "*"
 uvicorn = "*"
 starlette-context = "*"
-sqlalchemy = {extras = ["postgresql_asyncpg"], version = "*"}
 starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
 pydantic = {version = ">=2.0"}
+motor = "*"
+beanie = "*"
 
 [dev-packages]
 bandit = "*"
 mypy = "*"
 pylint = "*"
 ruff = "*"
-sqlalchemy = {extras = ["mypy"], version = "*"}
 
 [requires]
 python_version = "3.12"

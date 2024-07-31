@@ -2,14 +2,11 @@ from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from typing import cast
 
-import sqlalchemy as sa
 from fastapi import Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.api.db import db_session_dependency
 
 __all__ = (
     'current_user_context_dependency',
@@ -21,11 +18,10 @@ __all__ = (
 
 async def user_dependency(
     jwt_auth: AuthJWT = Depends(AuthJWT),
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> 'm.User':
     jwt_auth.jwt_required()
     user_login = jwt_auth.get_jwt_subject()
-    user = await session.scalar(sa.select(m.User).where(m.User.email == user_login))
+    user = await m.User.find_one(m.User.email == user_login)
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user

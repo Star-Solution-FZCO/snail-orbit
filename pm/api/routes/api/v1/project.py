@@ -1,13 +1,10 @@
 from http import HTTPStatus
 
-import sqlalchemy as sa
+from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from starsol_sql_base.utils import count_select_query_results
 
 import pm.models as m
 from pm.api.context import admin_context_dependency, current_user_context_dependency
-from pm.api.db import db_session_dependency
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
@@ -22,22 +19,22 @@ router = APIRouter(
 
 
 class ProjectOutput(CrudOutput[m.Project]):
-    id: int
     name: str
+    slug: str
     description: str | None
     is_active: bool
 
 
 class ProjectCreate(CrudCreateBody[m.Project]):
-    email: str
     name: str
+    slug: str
     description: str | None = None
     is_active: bool = True
 
 
 class ProjectUpdate(CrudUpdateBody[m.Project]):
-    email: str | None = None
     name: str | None = None
+    slug: str | None = None
     description: str | None = None
     is_active: bool | None = None
 
@@ -45,26 +42,24 @@ class ProjectUpdate(CrudUpdateBody[m.Project]):
 @router.get('/list')
 async def list_projects(
     query: ListParams = Depends(),
-    session: AsyncSession = Depends(db_session_dependency),
 ) -> BaseListOutput[ProjectOutput]:
-    q = sa.select(m.Project)
-    count = await count_select_query_results(q, session=session)
-    q = q.limit(query.limit).offset(query.offset)
-    objs_ = await session.scalars(q)
+    q = m.Project.find().sort(m.Project.id)
+    results = []
+    async for obj in q.limit(query.limit).skip(query.offset):
+        results.append(ProjectOutput.from_obj(obj))
     return BaseListOutput.make(
-        count=count,
+        count=await q.count(),
         limit=query.limit,
         offset=query.offset,
-        items=[ProjectOutput.from_obj(obj) for obj in objs_.all()],
+        items=results,
     )
 
 
 @router.get('/{project_id}')
 async def get_project(
-    project_id: int,
-    session: AsyncSession = Depends(db_session_dependency),
+    project_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    obj = await session.scalar(sa.select(m.Project).where(m.Project.id == project_id))
+    obj = await m.Project.find_one(m.Project.id == project_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
@@ -73,29 +68,22 @@ async def get_project(
 @router.post('/')
 async def create_project(
     body: ProjectCreate,
-    session: AsyncSession = Depends(db_session_dependency),
     _=Depends(admin_context_dependency),
 ) -> ModelIdOutput:
-    obj = m.Project(
-        name=body.name,
-        description=body.description,
-        is_active=body.is_active,
-    )
-    session.add(obj)
-    await session.commit()
+    obj = body.create_obj(m.Project)
+    await obj.insert()
     return ModelIdOutput.from_obj(obj)
 
 
 @router.put('/{project_id}')
 async def update_project(
-    project_id: int,
+    project_id: PydanticObjectId,
     body: ProjectUpdate,
-    session: AsyncSession = Depends(db_session_dependency),
     _=Depends(admin_context_dependency),
 ) -> ModelIdOutput:
-    obj = await session.scalar(sa.select(m.Project).where(m.Project.id == project_id))
+    obj = await m.Project.find_one(m.Project.id == project_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     body.update_obj(obj)
-    await session.commit()
+    await obj.save()
     return ModelIdOutput.from_obj(obj)
