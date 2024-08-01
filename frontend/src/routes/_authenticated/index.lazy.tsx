@@ -9,6 +9,6 @@ const Index = () => {
     );
 };
 
-export const Route = createLazyFileRoute("/")({
+export const Route = createLazyFileRoute("/_authenticated/")({
     component: Index,
 });

@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material";
-import "theme/theme.types.ts";
+import "./theme.types";
 
 const theme = createTheme({
     palette: {

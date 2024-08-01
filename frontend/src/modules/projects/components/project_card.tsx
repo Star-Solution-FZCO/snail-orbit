@@ -1,7 +1,7 @@
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import StarIcon from "@mui/icons-material/Star";
 import { Avatar, Box, IconButton, Typography } from "@mui/material";
-import { Link } from "@tanstack/react-router";
+import Link from "components/link";
 import { FC } from "react";
 import { ProjectT } from "types";
 

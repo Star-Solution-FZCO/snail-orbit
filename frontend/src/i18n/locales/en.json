@@ -3,5 +3,13 @@
     "navbar.agileBoards": "Agile Boards",
     "navbar.projects": "Projects",
     "projects.title": "Projects",
-    "projects.search.placeholder": "Filter by name"
+    "projects.search.placeholder": "Filter by name",
+    "projects.create.title": "Create Project",
+    "projects.create.generalInfo": "General Info",
+    "projects.create.name": "Name",
+    "projects.create.id": "ID",
+    "projects.create.description": "Description",
+    "projects.create.submit": "Create",
+    "projects.create.cancel": "Cancel",
+    "form.validation.required": "Required field"
 }

@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ProjectCard } from "./components/project_card";
 
@@ -42,9 +43,11 @@ const ProjectList = () => {
                         {t("projects.title")}
                     </Typography>
 
-                    <IconButton size="small">
-                        <AddIcon />
-                    </IconButton>
+                    <Link to="/projects/create">
+                        <IconButton size="small">
+                            <AddIcon />
+                        </IconButton>
+                    </Link>
                 </Box>
 
                 <TextField
