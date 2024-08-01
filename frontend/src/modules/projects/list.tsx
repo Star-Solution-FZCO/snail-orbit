@@ -39,7 +39,7 @@ const ProjectList = () => {
             >
                 <Box display="flex" alignItems="center" gap={1}>
                     <Typography fontSize={24} fontWeight="bold">
-                        {t("PROJECTS:TITLE")}
+                        {t("projects.title")}
                     </Typography>
 
                     <IconButton size="small">
@@ -48,7 +48,7 @@ const ProjectList = () => {
                 </Box>
 
                 <TextField
-                    placeholder={t("PROJECTS:SEARCH_PLACEHOLDER")}
+                    placeholder={t("projects.search.placeholder")}
                     InputProps={{
                         startAdornment: <SearchIcon />,
                     }}

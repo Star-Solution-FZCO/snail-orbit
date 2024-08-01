@@ -4,9 +4,16 @@ import NavBar from "./navbar";
 
 const Layout = () => {
     return (
-        <Box display="flex" flexDirection="column" height="100%">
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                flexGrow: 1,
+                height: "100vh",
+                backgroundColor: (theme) => theme.palette.background.content,
+            }}
+        >
             <NavBar />
-
             <Outlet />
         </Box>
     );
