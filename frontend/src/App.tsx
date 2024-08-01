@@ -1,6 +1,9 @@
-import { CssBaseline } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import React, { Suspense } from "react";
+import { Provider as StoreProvider } from "react-redux";
+import { store } from "store";
+import theme from "theme/theme.ts";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
@@ -22,15 +25,15 @@ const TanStackRouterDevtools =
 
 const App = () => {
     return (
-        <>
-            <CssBaseline />
-
-            <RouterProvider router={router} />
-
-            <Suspense>
-                <TanStackRouterDevtools router={router} />
-            </Suspense>
-        </>
+        <ThemeProvider theme={theme}>
+            <StoreProvider store={store}>
+                <CssBaseline />
+                <RouterProvider router={router} />
+                <Suspense>
+                    <TanStackRouterDevtools router={router} />
+                </Suspense>
+            </StoreProvider>
+        </ThemeProvider>
     );
 };
 

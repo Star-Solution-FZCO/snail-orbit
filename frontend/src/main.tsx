@@ -1,9 +1,7 @@
 import App from "App";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { Provider as StoreProvider } from "react-redux";
-import { store } from "store";
-import "./i18n";
+import "./i18n/i18n.ts";
 import "./index.css";
 
 const rootElement = document.getElementById("root")!;
@@ -13,9 +11,7 @@ if (!rootElement.innerHTML) {
 
     root.render(
         <StrictMode>
-            <StoreProvider store={store}>
-                <App />
-            </StoreProvider>
+            <App />
         </StrictMode>,
     );
 }

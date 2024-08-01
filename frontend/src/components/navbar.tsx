@@ -1,6 +1,6 @@
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Avatar, Box, IconButton } from "@mui/material";
-import { Link } from "@tanstack/react-router";
+import Link from "components/link.tsx";
 import { useTranslation } from "react-i18next";
 
 const NavBar = () => {
@@ -15,9 +15,9 @@ const NavBar = () => {
             px={4}
         >
             <Box display="flex" gap={4}>
-                <Link to="/issues">{t("NAVBAR:ISSUES")}</Link>
-                <Link to="/agiles">{t("NAVBAR:AGILE_BOARDS")}</Link>
-                <Link to="/projects">{t("NAVBAR:PROJECTS")}</Link>
+                <Link to="/issues">{t("navbar.issues")}</Link>
+                <Link to="/agiles">{t("navbar.agileBoards")}</Link>
+                <Link to="/projects">{t("navbar.projects")}</Link>
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
