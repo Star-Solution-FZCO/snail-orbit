@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
-from typing import Self
+from typing import Self, TypeVar
 from uuid import UUID
 
 from beanie import (
@@ -131,7 +131,10 @@ async def _after_update_callback(self: Document) -> None:
     )
 
 
-def audited_model(cls: type[Document]) -> type[Document]:
+AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)
+
+
+def audited_model(cls: type[AuditedTypeVar]) -> type[AuditedTypeVar]:
     cls._after_insert_callback = _after_insert_callback
     cls._before_delete_callback = _before_delete_callback
     cls._after_delete_callback = _after_delete_callback
