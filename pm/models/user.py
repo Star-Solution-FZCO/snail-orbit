@@ -2,6 +2,8 @@ import bcrypt
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel
 
+from ._audit import audited_model
+
 __all__ = (
     'User',
     'UserLinkField',
@@ -14,14 +16,16 @@ class UserLinkField(BaseModel):
     email: str
 
 
+@audited_model
 class User(Document):
     class Settings:
         name = 'users'
         use_revision = True
         use_state_management = True
+        state_management_save_previous = True
 
-    name: Indexed(str)
-    email: Indexed(str, unique=True)
+    name: str = Indexed(str)
+    email: str = Indexed(str, unique=True)
     password_hash: str | None = None
     is_active: bool = True
     is_admin: bool = False
