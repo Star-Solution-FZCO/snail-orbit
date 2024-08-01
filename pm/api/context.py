@@ -19,10 +19,9 @@ __all__ = (
 async def user_dependency(
     jwt_auth: AuthJWT = Depends(AuthJWT),
 ) -> 'm.User':
-    return None
     jwt_auth.jwt_required()
     user_login = jwt_auth.get_jwt_subject()
-    user = await m.User.find_one(m.User.email == user_login)
+    user: m.User | None = await m.User.find_one(m.User.email == user_login)
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user
@@ -45,7 +44,7 @@ def current_user() -> 'm.User':
 async def admin_context_dependency(
     _: None = Depends(current_user_context_dependency),
 ) -> AsyncGenerator:
-    # user = current_user()
-    # if not user.is_admin:
-    #     raise HTTPException(HTTPStatus.FORBIDDEN, 'Admin permission required')
+    user = current_user()
+    if not user.is_admin:
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Admin permission required')
     yield
