@@ -128,5 +128,5 @@ async def update_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj, k, v)
-    await obj.save()
+    await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
