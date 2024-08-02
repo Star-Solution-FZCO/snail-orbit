@@ -35,7 +35,7 @@ class APIToken(BaseModel):
 
     @property
     def is_active(self) -> bool:
-        return self.expired_at is None or self.expired_at > utcnow()
+        return self.expires_at is None or self.expires_at > utcnow()
 
     @staticmethod
     def hash_secret(secret: str) -> str:

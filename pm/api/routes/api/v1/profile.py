@@ -10,7 +10,7 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/profile',
     tags=['profile'],
-    dependencies=Depends(current_user_context_dependency),
+    dependencies=[Depends(current_user_context_dependency)],
 )
 
 
