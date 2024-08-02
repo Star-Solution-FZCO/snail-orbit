@@ -1,10 +1,22 @@
+import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Avatar, Box, IconButton } from "@mui/material";
 import Link from "components/link.tsx";
 import { useTranslation } from "react-i18next";
+import { logout } from "services/auth";
+import { logout as logoutAction, useAppDispatch } from "store";
 
 const NavBar = () => {
+    const dispatch = useAppDispatch();
     const { t } = useTranslation();
+
+    const handleLogout = () => {
+        logout()
+            .then()
+            .finally(() => {
+                dispatch(logoutAction());
+            });
+    };
 
     return (
         <Box
@@ -28,6 +40,10 @@ const NavBar = () => {
                 <Avatar sx={{ width: 32, height: 32 }} variant="rounded">
                     U
                 </Avatar>
+
+                <IconButton onClick={handleLogout} size="small">
+                    <LogoutIcon />
+                </IconButton>
             </Box>
         </Box>
     );

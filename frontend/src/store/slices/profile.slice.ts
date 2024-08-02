@@ -3,37 +3,35 @@ import { UserT } from "types";
 
 export interface ProfileState {
     user: UserT | null;
-    isLoading: boolean;
-    error: string | null;
 }
 
 const initialState: ProfileState = {
     user: null,
-    isLoading: false,
-    error: null,
+};
+
+const loadStateFromLocalStorage = (): ProfileState => {
+    const savedState = localStorage.getItem("profile");
+    if (savedState) {
+        return JSON.parse(savedState);
+    }
+    return initialState;
 };
 
 const profileSlice = createSlice({
     name: "profile",
-    initialState,
+    initialState: loadStateFromLocalStorage(),
     reducers: {
-        fetchProfileStart(state) {
-            state.isLoading = true;
-            state.error = null;
-        },
-        fetchProfileSuccess(state, action: PayloadAction<UserT>) {
+        setUser(state, action: PayloadAction<UserT>) {
             state.user = action.payload;
-            state.isLoading = false;
-            state.error = null;
+            localStorage.setItem("profile", JSON.stringify(state));
         },
-        fetchProfileFailure(state, action: PayloadAction<string>) {
-            state.isLoading = false;
-            state.error = action.payload;
+        logout(state) {
+            state.user = null;
+            localStorage.removeItem("profile");
         },
     },
 });
 
-export const { fetchProfileStart, fetchProfileSuccess, fetchProfileFailure } =
-    profileSlice.actions;
+export const { setUser, logout } = profileSlice.actions;
 
 export const profileReducer = profileSlice.reducer;

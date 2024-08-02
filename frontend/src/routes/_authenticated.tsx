@@ -1,14 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Layout } from "components";
+import { useAppSelector } from "store";
 
 export const Route = createFileRoute("/_authenticated")({
-    // beforeLoad: async ({ location }) => {
-    //     // if (true) {
-    //     throw redirect({
-    //         to: "/login",
-    //         search: {
-    //             redirect: location.href,
-    //         },
-    //     });
-    //     // }
-    // },
+    component: () => {
+        const { user } = useAppSelector((state) => state.profile);
+
+        if (!user) {
+            return <Navigate to="/login" />;
+        }
+
+        return <Layout />;
+    },
 });

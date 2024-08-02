@@ -7,9 +7,10 @@
     "projects.create.title": "Create Project",
     "projects.create.generalInfo": "General Info",
     "projects.create.name": "Name",
-    "projects.create.id": "ID",
+    "projects.create.slug": "Slug",
     "projects.create.description": "Description",
     "projects.create.submit": "Create",
     "projects.create.cancel": "Cancel",
+    "projects.create.success": "Project created successfully",
     "form.validation.required": "Required field"
 }

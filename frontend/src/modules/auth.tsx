@@ -8,18 +8,26 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import { nanoid } from "@reduxjs/toolkit";
 import { useNavigate } from "@tanstack/react-router";
-import { FC } from "react";
+import { defaultErrorMessage } from "config";
+import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import { authenticate } from "services/auth";
+import { setUser, useAppDispatch } from "store";
 
 type AuthFormDataT = {
-    username: string;
+    login: string;
     password: string;
     remember: boolean;
 };
 
 const Auth: FC = () => {
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
+    const [loading, setLoading] = useState(false);
 
     const {
         control,
@@ -28,79 +36,106 @@ const Auth: FC = () => {
         formState: { errors },
     } = useForm<AuthFormDataT>({
         defaultValues: {
-            username: "",
+            login: "",
             password: "",
             remember: false,
         },
     });
 
     const onSubmit: SubmitHandler<AuthFormDataT> = (data) => {
-        console.log(data);
+        setLoading(true);
+        authenticate(data)
+            .then(() => {
+                // temporary
+                dispatch(
+                    setUser({
+                        id: nanoid(),
+                        name: "user",
+                        email: data.login,
+                        is_admin: true,
+                    }),
+                );
+                navigate({
+                    to: "/issues",
+                });
+            })
+            .catch((error) => {
+                toast.error(error.detail || defaultErrorMessage);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     return (
-        <Container maxWidth="xs" sx={{ mt: 8 }}>
-            <Box display="flex" flexDirection="column" alignItems="center">
-                <Avatar sx={{ mb: 2, bgcolor: "#F07167" }}>PM</Avatar>
+        <Box
+            height="100vh"
+            bgcolor={(theme) => theme.palette.background.content}
+        >
+            <Container maxWidth="xs" sx={{ pt: 8 }}>
+                <Box display="flex" flexDirection="column" alignItems="center">
+                    <Avatar sx={{ mb: 2, bgcolor: "#F07167" }}>PM</Avatar>
 
-                <Typography variant="h5">Sign in</Typography>
+                    <Typography variant="h5">Sign in</Typography>
 
-                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-                    <TextField
-                        {...register("username", { required: true })}
-                        label="Username"
-                        autoComplete="username"
-                        margin="normal"
-                        variant="standard"
-                        error={!!errors.username}
-                        helperText={errors.username?.message}
-                        autoFocus
-                        fullWidth
-                        required
-                    />
+                    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+                        <TextField
+                            {...register("login", { required: true })}
+                            label="Login"
+                            autoComplete="login"
+                            margin="normal"
+                            variant="standard"
+                            error={!!errors.login}
+                            helperText={errors.login?.message}
+                            autoFocus
+                            fullWidth
+                            required
+                        />
 
-                    <TextField
-                        {...register("password", { required: true })}
-                        label="Password"
-                        type="password"
-                        autoComplete="current-password"
-                        variant="standard"
-                        margin="normal"
-                        error={!!errors.password}
-                        helperText={errors.password?.message}
-                        fullWidth
-                        required
-                    />
+                        <TextField
+                            {...register("password", { required: true })}
+                            label="Password"
+                            type="password"
+                            autoComplete="current-password"
+                            variant="standard"
+                            margin="normal"
+                            error={!!errors.password}
+                            helperText={errors.password?.message}
+                            fullWidth
+                            required
+                        />
 
-                    <Controller
-                        name="remember"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <FormControlLabel
-                                label="Remember me"
-                                control={
-                                    <Checkbox
-                                        checked={value}
-                                        onChange={(_, checked) =>
-                                            onChange(checked)
-                                        }
-                                    />
-                                }
-                            />
-                        )}
-                    />
+                        <Controller
+                            name="remember"
+                            control={control}
+                            render={({ field: { value, onChange } }) => (
+                                <FormControlLabel
+                                    label="Remember me"
+                                    control={
+                                        <Checkbox
+                                            checked={value}
+                                            onChange={(_, checked) =>
+                                                onChange(checked)
+                                            }
+                                        />
+                                    }
+                                />
+                            )}
+                        />
 
-                    <LoadingButton
-                        sx={{ mt: 2 }}
-                        type="submit"
-                        variant="contained"
-                        fullWidth
-                    >
-                        Sign In
-                    </LoadingButton>
+                        <LoadingButton
+                            sx={{ mt: 2 }}
+                            type="submit"
+                            variant="contained"
+                            loading={loading}
+                            fullWidth
+                        >
+                            Sign In
+                        </LoadingButton>
+                    </Box>
                 </Box>
-            </Box>
-        </Container>
+            </Container>
+        </Box>
     );
 };
 
