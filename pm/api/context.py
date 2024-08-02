@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import cast
 
 from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
@@ -15,13 +16,27 @@ __all__ = (
     'admin_context_dependency',
 )
 
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_bearer_token(
+    authorization: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> str | None:
+    if not authorization:
+        return None
+    return cast(str, authorization.credentials)
+
 
 async def user_dependency(
     jwt_auth: AuthJWT = Depends(AuthJWT),
+    bearer_token: str | None = Depends(get_bearer_token),
 ) -> 'm.User':
-    jwt_auth.jwt_required()
-    user_login = jwt_auth.get_jwt_subject()
-    user = await m.User.find_one(m.User.email == user_login)
+    if bearer_token:
+        user: m.User | None = await m.User.get_by_api_token(bearer_token)
+    else:
+        jwt_auth.jwt_required()
+        user_login = jwt_auth.get_jwt_subject()
+        user = await m.User.find_one(m.User.email == user_login)
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user
