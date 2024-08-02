@@ -85,5 +85,5 @@ async def update_project(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     body.update_obj(obj)
-    await obj.save()
+    await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
