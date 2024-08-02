@@ -18,7 +18,6 @@ export const authenticate = async (credentials: CredentialsT) => {
     });
 
     const jsonResponse = await response.json();
-
     return response.ok ? jsonResponse : Promise.reject(jsonResponse);
 };
 
@@ -29,7 +28,6 @@ export const refreshToken = async () => {
     });
 
     const jsonResponse = await response.json();
-
     return response.ok ? jsonResponse : Promise.reject(jsonResponse);
 };
 
