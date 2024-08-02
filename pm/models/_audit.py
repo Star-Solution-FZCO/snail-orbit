@@ -15,6 +15,7 @@ from beanie import (
 )
 from pydantic import BaseModel
 from starlette_context import context
+from starlette_context.errors import ContextDoesNotExistError
 
 from pm.utils.dateutils import utcnow
 
@@ -61,12 +62,15 @@ class AuditRecord(Document):
         data: dict,
     ) -> Self:
         author: AuditAuthorField | None = None
-        if user := context.get('current_user'):
-            author = AuditAuthorField(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-            )
+        try:
+            if user := context.get('current_user'):
+                author = AuditAuthorField(
+                    id=user.id,
+                    name=user.name,
+                    email=user.email,
+                )
+        except ContextDoesNotExistError:
+            pass
         return cls(
             collection=collection,
             object_id=object_id,
