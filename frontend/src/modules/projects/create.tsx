@@ -5,11 +5,13 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { MDEditor } from "components";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import { projectApi } from "store/api";
 import * as yup from "yup";
 
 const createProjectSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
-    id: yup.string().required("form.validation.required"),
+    slug: yup.string().required("form.validation.required"),
     description: yup.string(),
 });
 
@@ -28,11 +30,24 @@ const ProjectCreate = () => {
         resolver: yupResolver(createProjectSchema),
     });
 
+    const [createProject, { isLoading }] =
+        projectApi.useCreateProjectMutation();
+
     const onSubmit = (formData: CreateProjectFormData) => {
-        console.log(formData);
-        navigate({
-            to: "/projects",
-        });
+        createProject(formData)
+            .unwrap()
+            .then((response) => {
+                navigate({
+                    to: "/projects/$projectId",
+                    params: {
+                        projectId: response.payload.id,
+                    },
+                });
+                toast.success(t("projects.create.success"));
+            })
+            .catch((error) => {
+                toast.error(error.data.detail);
+            });
     };
 
     return (
@@ -68,10 +83,10 @@ const ProjectCreate = () => {
                 />
 
                 <TextField
-                    {...register("id")}
-                    label={t("projects.create.id")}
+                    {...register("slug")}
+                    label={t("projects.create.slug")}
                     error={!!errors.name}
-                    helperText={t(errors.id?.message || "")}
+                    helperText={t(errors.slug?.message || "")}
                     variant="outlined"
                     fullWidth
                 />
@@ -90,7 +105,11 @@ const ProjectCreate = () => {
                 </Box>
 
                 <Box display="flex" gap={1}>
-                    <LoadingButton type="submit" variant="outlined">
+                    <LoadingButton
+                        type="submit"
+                        variant="outlined"
+                        loading={isLoading}
+                    >
                         {t("projects.create.submit")}
                     </LoadingButton>
 

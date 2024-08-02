@@ -6,6 +6,8 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { Mutex } from "async-mutex";
 import { API_URL, apiVersion } from "config";
+import { logout, refreshToken } from "services/auth";
+import { logout as logoutAction } from "store/slices";
 import { QueryErrorT } from "types";
 
 const mutex = new Mutex();
@@ -32,17 +34,15 @@ const customBaseQuery: BaseQueryFn<
         if (!mutex.isLocked()) {
             const release = await mutex.acquire();
             try {
-                const refreshResponse = await baseQuery(
-                    "/auth/refresh",
-                    api,
-                    extraOptions,
-                );
+                const refreshResponse = await refreshToken();
                 if (refreshResponse.data) {
-                    // api.dispatch(tokenReceived(refreshResponse.data))
                     response = await baseQuery(args, api, extraOptions);
                 } else {
-                    // api.dispatch(loggedOut())
-                    await baseQuery("/auth/logout", api, extraOptions);
+                    logout()
+                        .then()
+                        .finally(() => {
+                            api.dispatch(logoutAction());
+                        });
                 }
             } finally {
                 release();

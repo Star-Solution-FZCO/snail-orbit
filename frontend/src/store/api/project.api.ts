@@ -10,22 +10,25 @@ import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Project", "Projects"];
 
-export const projectsApi = createApi({
+export const projectApi = createApi({
     reducerPath: "projectsApi",
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
         listProject: build.query<ListResponse<ProjectT>, void>({
-            query: () => "projects",
+            query: () => "project/list",
             providesTags: ["Projects"],
         }),
         getProject: build.query<ApiResponse<ProjectT>, string>({
-            query: (id) => `projects/${id}`,
+            query: (id) => `project/${id}`,
             providesTags: ["Project"],
         }),
-        createProject: build.mutation<ApiResponse<ProjectT>, CreateProjectT>({
+        createProject: build.mutation<
+            ApiResponse<{ id: string }>,
+            CreateProjectT
+        >({
             query: (body) => ({
-                url: "projects",
+                url: "project",
                 method: "POST",
                 body,
             }),
@@ -36,7 +39,7 @@ export const projectsApi = createApi({
             { id: string } & UpdateProjectT
         >({
             query: ({ id, ...body }) => ({
-                url: `projects/${id}`,
+                url: `project/${id}`,
                 method: "PUT",
                 body,
             }),
@@ -44,7 +47,7 @@ export const projectsApi = createApi({
         }),
         deleteProject: build.mutation<void, string>({
             query: (id) => ({
-                url: `projects/${id}`,
+                url: `project/${id}`,
                 method: "DELETE",
             }),
             invalidatesTags: ["Projects"],
