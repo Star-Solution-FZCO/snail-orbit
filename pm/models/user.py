@@ -27,10 +27,15 @@ class APIToken(BaseModel):
     name: str
     last_digits: str
     secret_hash: str
+    expires_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
     def check_secret(self, secret: str) -> bool:
         return bcrypt.checkpw(secret.encode('utf-8'), self.secret_hash.encode('utf-8'))
+
+    @property
+    def is_active(self) -> bool:
+        return self.expired_at is None or self.expired_at > utcnow()
 
     @staticmethod
     def hash_secret(secret: str) -> str:
@@ -63,7 +68,9 @@ class User(Document):
     def hash_password(password: str) -> str:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    def gen_new_api_token(self, name: str) -> tuple[str, APIToken]:
+    def gen_new_api_token(
+        self, name: str, expires_at: datetime | None = None
+    ) -> tuple[str, APIToken]:
         secret = secrets.token_hex(32)
         token = base64.b64encode(
             f'{self.id}:{secret}:{datetime.now().timestamp()}'.encode('utf-8'),
@@ -73,6 +80,7 @@ class User(Document):
             name=name,
             last_digits=token[-6:],
             secret_hash=APIToken.hash_secret(secret),
+            expires_at=expires_at,
         )
         return token, api_token_obj
 
@@ -86,6 +94,10 @@ class User(Document):
         user_id, secret, _ = split_token
         if not (user := await cls.find_one(cls.id == PydanticObjectId(user_id))):
             return None
-        if not any(api_token.check_secret(secret) for api_token in user.api_tokens):
+        if not any(
+            api_token.check_secret(secret)
+            for api_token in user.api_tokens
+            if api_token.is_active
+        ):
             return None
         return user
