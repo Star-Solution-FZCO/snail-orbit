@@ -1,6 +1,13 @@
+import base64
+import secrets
+from datetime import datetime
+from typing import Self
+
 import bcrypt
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from pm.utils.dateutils import utcnow
 
 from ._audit import audited_model
 
@@ -16,6 +23,20 @@ class UserLinkField(BaseModel):
     email: str
 
 
+class APIToken(BaseModel):
+    name: str
+    last_digits: str
+    secret_hash: str
+    created_at: datetime = Field(default_factory=utcnow)
+
+    def check_secret(self, secret: str) -> bool:
+        return bcrypt.checkpw(secret.encode('utf-8'), self.secret_hash.encode('utf-8'))
+
+    @staticmethod
+    def hash_secret(secret: str) -> str:
+        return bcrypt.hashpw(secret.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
 @audited_model
 class User(Document):
     class Settings:
@@ -29,6 +50,7 @@ class User(Document):
     password_hash: str | None = None
     is_active: bool = True
     is_admin: bool = False
+    api_tokens: list[APIToken] = []
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:
@@ -40,3 +62,30 @@ class User(Document):
     @staticmethod
     def hash_password(password: str) -> str:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def gen_new_api_token(self, name: str) -> tuple[str, APIToken]:
+        secret = secrets.token_hex(32)
+        token = base64.b64encode(
+            f'{self.id}:{secret}:{datetime.now().timestamp()}'.encode('utf-8'),
+            altchars=b'-:',
+        ).decode('utf-8')
+        api_token_obj = APIToken(
+            name=name,
+            last_digits=token[-6:],
+            secret_hash=APIToken.hash_secret(secret),
+        )
+        return token, api_token_obj
+
+    @classmethod
+    async def get_by_api_token(cls, token: str) -> Self | None:
+        split_token = (
+            base64.b64decode(token.encode(), altchars=b'-:').decode().split(':')
+        )
+        if len(split_token) != 3:
+            return None
+        user_id, secret, _ = split_token
+        if not (user := await cls.find_one(cls.id == PydanticObjectId(user_id))):
+            return None
+        if not any(api_token.check_secret(secret) for api_token in user.api_tokens):
+            return None
+        return user
