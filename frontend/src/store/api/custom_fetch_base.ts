@@ -29,21 +29,19 @@ const customBaseQuery: BaseQueryFn<
     if (
         response.error &&
         response.error.status === 401 &&
-        (response.error as QueryErrorT)?.data.type === "token_expired"
+        (response.error as QueryErrorT)?.data.type === "jwt_auth_error"
     ) {
         if (!mutex.isLocked()) {
             const release = await mutex.acquire();
             try {
-                const refreshResponse = await refreshToken();
-                if (refreshResponse.data) {
-                    response = await baseQuery(args, api, extraOptions);
-                } else {
-                    logout()
-                        .then()
-                        .finally(() => {
-                            api.dispatch(logoutAction());
-                        });
-                }
+                await refreshToken();
+                response = await baseQuery(args, api, extraOptions);
+            } catch (_) {
+                logout()
+                    .then()
+                    .finally(() => {
+                        api.dispatch(logoutAction());
+                    });
             } finally {
                 release();
             }
