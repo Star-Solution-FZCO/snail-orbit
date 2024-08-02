@@ -16,10 +16,13 @@ class ApiTokenOut(BaseModel):
     name: str
     last_digits: str
     created_at: datetime
+    expires_at: datetime | None
+    is_active: bool
 
 
 class ApiTokenCreate(BaseModel):
     name: str
+    expires_at: datetime | None = None
 
 
 class ApiTokenCreateOut(BaseModel):
@@ -37,7 +40,13 @@ async def list_api_tokens(
         limit=query.limit,
         offset=query.offset,
         items=[
-            ApiTokenOut(name=t.name, last_digits=t.last_digits, created_at=t.created_at)
+            ApiTokenOut(
+                name=t.name,
+                last_digits=t.last_digits,
+                created_at=t.created_at,
+                expires_at=t.expires_at,
+                is_active=t.is_active,
+            )
             for t in tokens[query.offset : query.offset + query.limit]
         ],
     )
@@ -48,7 +57,7 @@ async def add_token(
     body: ApiTokenCreate,
 ) -> SuccessPayloadOutput[ApiTokenCreateOut]:
     user = current_user()
-    token, token_obj = user.gen_new_api_token(body.name)
+    token, token_obj = user.gen_new_api_token(body.name, expires_at=body.expires_at)
     user.api_tokens.append(token_obj)
     await user.save_changes()
     return SuccessPayloadOutput(payload=ApiTokenCreateOut(token=token))
