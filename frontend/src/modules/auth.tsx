@@ -9,7 +9,7 @@ import {
     Typography,
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { defaultErrorMessage } from "config";
 import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -23,9 +23,12 @@ type AuthFormDataT = {
     remember: boolean;
 };
 
+const routeApi = getRouteApi("/login");
+
 const Auth: FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const search = routeApi.useSearch();
 
     const [loading, setLoading] = useState(false);
 
@@ -56,7 +59,7 @@ const Auth: FC = () => {
                     }),
                 );
                 navigate({
-                    to: "/issues",
+                    to: search.redirect || "/",
                 });
             })
             .catch((error) => {

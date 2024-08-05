@@ -8,7 +8,7 @@ import {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Project", "Projects"];
+const tagTypes = ["Projects"];
 
 export const projectApi = createApi({
     reducerPath: "projectsApi",
@@ -17,11 +17,17 @@ export const projectApi = createApi({
     endpoints: (build) => ({
         listProject: build.query<ListResponse<ProjectT>, void>({
             query: () => "project/list",
-            providesTags: ["Projects"],
+            providesTags: (result) =>
+                result
+                    ? result.payload.items.map(({ id }) => ({
+                          type: "Projects",
+                          id,
+                      }))
+                    : [{ type: "Projects", id: "LIST" }],
         }),
         getProject: build.query<ApiResponse<ProjectT>, string>({
             query: (id) => `project/${id}`,
-            providesTags: ["Project"],
+            providesTags: (_result, _error, id) => [{ type: "Projects", id }],
         }),
         createProject: build.mutation<
             ApiResponse<{ id: string }>,
@@ -32,7 +38,12 @@ export const projectApi = createApi({
                 method: "POST",
                 body,
             }),
-            invalidatesTags: ["Projects"],
+            invalidatesTags: [
+                {
+                    type: "Projects",
+                    id: "LIST",
+                },
+            ],
         }),
         updateProject: build.mutation<
             ApiResponse<ProjectT>,
@@ -43,14 +54,21 @@ export const projectApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: ["Project", "Projects"],
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
         }),
         deleteProject: build.mutation<void, string>({
             query: (id) => ({
                 url: `project/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["Projects"],
+            invalidatesTags: [
+                {
+                    type: "Projects",
+                    id: "LIST",
+                },
+            ],
         }),
     }),
 });

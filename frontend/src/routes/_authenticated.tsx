@@ -7,7 +7,14 @@ export const Route = createFileRoute("/_authenticated")({
         const { user } = useAppSelector((state) => state.profile);
 
         if (!user) {
-            return <Navigate to="/login" />;
+            return (
+                <Navigate
+                    to="/login"
+                    search={{
+                        redirect: location.pathname,
+                    }}
+                />
+            );
         }
 
         return <Layout />;
