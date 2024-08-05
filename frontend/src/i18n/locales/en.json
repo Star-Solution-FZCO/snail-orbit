@@ -1,4 +1,6 @@
 {
+    "error.default": "An error has occurred. Contact support",
+    "form.validation.required": "Required field",
     "navbar.issues": "Issues",
     "navbar.agileBoards": "Agile Boards",
     "navbar.projects": "Projects",
@@ -12,5 +14,7 @@
     "projects.create.submit": "Create",
     "projects.create.cancel": "Cancel",
     "projects.create.success": "Project created successfully",
-    "form.validation.required": "Required field"
+    "projects.delete.title": "Delete project",
+    "projects.delete.confirm": "Are you sure you want to delete this project?",
+    "projects.delete.success": "Project deleted successfully"
 }
