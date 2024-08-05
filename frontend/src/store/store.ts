@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { projectApi } from "./api";
-import { profileReducer } from "./slices"; // Rename or alias the import
+import { profileReducer } from "./slices";
 
 export const store = configureStore({
     devTools: import.meta.env.DEV,
