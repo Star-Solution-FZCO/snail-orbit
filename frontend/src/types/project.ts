@@ -1,5 +1,14 @@
-export type ProjectT = {
-    id: string;
+export type CreateProjectT = {
     name: string;
-    description: string;
+    slug: string;
+    description?: string;
+    is_active?: boolean;
 };
+
+export type ProjectT = CreateProjectT & {
+    id: string;
+    description: string | null;
+    is_active: boolean;
+};
+
+export type UpdateProjectT = Partial<CreateProjectT>;
