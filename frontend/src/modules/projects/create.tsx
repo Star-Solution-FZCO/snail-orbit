@@ -3,11 +3,10 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import { defaultErrorMessage } from "config";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi } from "store/api";
+import { projectApi } from "store";
 import * as yup from "yup";
 
 const createProjectSchema = yup.object().shape({
@@ -47,7 +46,7 @@ const ProjectCreate = () => {
                 toast.success(t("projects.create.success"));
             })
             .catch((error) => {
-                toast.error(error.data.detail || defaultErrorMessage);
+                toast.error(error.data.detail || t("error.default"));
             });
     };
 
