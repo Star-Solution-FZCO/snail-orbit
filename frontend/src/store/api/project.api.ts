@@ -17,13 +17,18 @@ export const projectApi = createApi({
     endpoints: (build) => ({
         listProject: build.query<ListResponse<ProjectT>, void>({
             query: () => "project/list",
-            providesTags: (result) =>
-                result
-                    ? result.payload.items.map(({ id }) => ({
-                          type: "Projects",
-                          id,
-                      }))
-                    : [{ type: "Projects", id: "LIST" }],
+            providesTags: (result) => {
+                let tags = [{ type: "Projects", id: "LIST" }];
+                if (result) {
+                    tags = tags.concat(
+                        result.payload.items.map((project) => ({
+                            type: "Projects",
+                            id: project.id,
+                        })),
+                    );
+                }
+                return tags;
+            },
         }),
         getProject: build.query<ApiResponse<ProjectT>, string>({
             query: (id) => `project/${id}`,
