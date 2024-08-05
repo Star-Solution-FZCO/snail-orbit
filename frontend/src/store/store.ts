@@ -1,8 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { projectApi } from "./api";
+import { profileReducer } from "./slices";
 
 export const store = configureStore({
-    reducer: {},
     devTools: import.meta.env.DEV,
+    reducer: {
+        profile: profileReducer,
+        [projectApi.reducerPath]: projectApi.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(projectApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

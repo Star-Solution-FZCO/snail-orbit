@@ -1,29 +1,15 @@
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { projectApi } from "store/api";
 import { ProjectCard } from "./components/project_card";
-
-const mockProjects = [
-    {
-        id: "1",
-        name: "Project 1",
-        description: "Description 1",
-    },
-    {
-        id: "2",
-        name: "Project 2",
-        description: "Description 2",
-    },
-    {
-        id: "3",
-        name: "Project 3",
-        description: "Description 3",
-    },
-];
 
 const ProjectList = () => {
     const { t } = useTranslation();
+
+    const { data: projects } = projectApi.useListProjectQuery();
 
     return (
         <Box
@@ -42,9 +28,11 @@ const ProjectList = () => {
                         {t("projects.title")}
                     </Typography>
 
-                    <IconButton size="small">
-                        <AddIcon />
-                    </IconButton>
+                    <Link to="/projects/create">
+                        <IconButton size="small">
+                            <AddIcon />
+                        </IconButton>
+                    </Link>
                 </Box>
 
                 <TextField
@@ -58,7 +46,7 @@ const ProjectList = () => {
             </Box>
 
             <Box display="flex" flexDirection="column" gap={2} mt={4}>
-                {mockProjects.map((project) => (
+                {projects?.payload?.items?.map((project) => (
                     <ProjectCard key={project.id} project={project} />
                 ))}
             </Box>

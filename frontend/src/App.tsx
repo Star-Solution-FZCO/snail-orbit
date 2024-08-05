@@ -2,8 +2,9 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import React, { Suspense } from "react";
 import { Provider as StoreProvider } from "react-redux";
+import { ToastContainer } from "react-toastify";
 import { store } from "store";
-import theme from "theme/theme.ts";
+import { theme } from "theme";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
@@ -28,7 +29,11 @@ const App = () => {
         <ThemeProvider theme={theme}>
             <StoreProvider store={store}>
                 <CssBaseline />
+
+                <ToastContainer position="top-right" />
+
                 <RouterProvider router={router} />
+
                 <Suspense>
                     <TanStackRouterDevtools router={router} />
                 </Suspense>
