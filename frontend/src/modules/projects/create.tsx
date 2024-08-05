@@ -3,6 +3,7 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { MDEditor } from "components";
+import { defaultErrorMessage } from "config";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -46,7 +47,7 @@ const ProjectCreate = () => {
                 toast.success(t("projects.create.success"));
             })
             .catch((error) => {
-                toast.error(error.data.detail);
+                toast.error(error.data.detail || defaultErrorMessage);
             });
     };
 
