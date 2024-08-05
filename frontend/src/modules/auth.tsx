@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { defaultErrorMessage } from "config";
 import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { authenticate } from "services/auth";
 import { setUser, useAppDispatch } from "store";
@@ -26,6 +26,7 @@ type AuthFormDataT = {
 const routeApi = getRouteApi("/login");
 
 const Auth: FC = () => {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const search = routeApi.useSearch();
@@ -63,7 +64,7 @@ const Auth: FC = () => {
                 });
             })
             .catch((error) => {
-                toast.error(error.detail || defaultErrorMessage);
+                toast.error(error.detail || t("error.default"));
             })
             .finally(() => {
                 setLoading(false);

@@ -3,7 +3,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store/api";
+import { projectApi } from "store";
 import { ProjectCard } from "./components/project_card";
 
 const ProjectList = () => {
