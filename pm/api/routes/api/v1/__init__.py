@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from .custom_field import router as custom_field_router
 from .issue import router as issue_router
 from .profile import router as profile_router
 from .project import router as project_router
@@ -16,3 +17,4 @@ router.include_router(project_router)
 router.include_router(issue_router)
 router.include_router(settings_router)
 router.include_router(profile_router)
+router.include_router(custom_field_router)

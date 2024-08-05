@@ -1,7 +1,8 @@
-from beanie import Document, Indexed, PydanticObjectId
-from pydantic import BaseModel
+from beanie import Document, Indexed, Link, PydanticObjectId
+from pydantic import BaseModel, Field
 
 from ._audit import audited_model
+from .custom_fields import CustomField
 
 __all__ = (
     'Project',
@@ -21,6 +22,7 @@ class Project(Document):
     slug: str = Indexed(str, unique=True)
     description: str | None = None
     is_active: bool = True
+    custom_fields: list[Link['CustomField']] = Field(default_factory=list)
 
 
 class ProjectLinkField(BaseModel):
