@@ -98,7 +98,8 @@ async def update_custom_field(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     body.update_obj(obj)
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
 
 
@@ -114,7 +115,8 @@ async def add_enum_option(
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
     obj.options[uuid4()] = m.EnumOption(value=body.value, color=body.color)
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
 
 
@@ -136,7 +138,8 @@ async def update_enum_option(
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj.options[option_id], k, v)
     # todo: update issues
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
 
 
@@ -156,5 +159,6 @@ async def remove_enum_option(
     # todo: validate option is not in use
     obj.options.pop(option_id)
     # todo: update issues
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
