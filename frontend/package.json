@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "prettier": "npx prettier . --write -l"
+    "prettier": "npx prettier . --write -l",
+    "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parsser.config.js"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
@@ -48,6 +49,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.0.0",
     "typescript": "^5.5.4",
+    "i18next-parser": "^9.0.1",
     "vite": "^5.3.5",
     "vite-tsconfig-paths": "^4.3.2"
   }
