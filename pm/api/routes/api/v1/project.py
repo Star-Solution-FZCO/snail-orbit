@@ -117,7 +117,8 @@ async def update_project(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     body.update_obj(obj)
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
 
 
@@ -135,7 +136,8 @@ async def add_field(
     if not field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found')
     project.custom_fields.append(field)
-    await project.save_changes()
+    if project.is_changed:
+        await project.save_changes()
     return ModelIdOutput.from_obj(project)
 
 
@@ -156,5 +158,6 @@ async def remove_field(
         project.custom_fields.remove(field)
     except ValueError as err:
         raise HTTPException(HTTPStatus.CONFLICT, 'Field not found in project') from err
-    await project.save_changes()
+    if project.is_changed:
+        await project.save_changes()
     return ModelIdOutput.from_obj(project)

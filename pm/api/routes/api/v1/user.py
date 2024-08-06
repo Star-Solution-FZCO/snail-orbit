@@ -81,5 +81,6 @@ async def update_user(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     body.update_obj(obj)
-    await obj.save_changes()
+    if obj.is_changed:
+        await obj.save_changes()
     return ModelIdOutput.from_obj(obj)
