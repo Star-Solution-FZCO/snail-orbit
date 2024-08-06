@@ -1,14 +1,15 @@
 import LogoutIcon from "@mui/icons-material/Logout";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { Avatar, Box, IconButton } from "@mui/material";
 import Link from "components/link.tsx";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
-import { logout as logoutAction, useAppDispatch } from "store";
+import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
 
 const NavBar = () => {
-    const dispatch = useAppDispatch();
     const { t } = useTranslation();
+    const dispatch = useAppDispatch();
+
+    const user = useAppSelector((state) => state.profile.user);
 
     const handleLogout = () => {
         logout()
@@ -30,15 +31,16 @@ const NavBar = () => {
                 <Link to="/issues">{t("navbar.issues")}</Link>
                 <Link to="/agiles">{t("navbar.agileBoards")}</Link>
                 <Link to="/projects">{t("navbar.projects")}</Link>
+                <Link to="/fields">{t("navbar.fields")}</Link>
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
-                <IconButton size="small">
-                    <SettingsIcon />
-                </IconButton>
-
                 <Avatar sx={{ width: 32, height: 32 }} variant="rounded">
-                    U
+                    {user?.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
                 </Avatar>
 
                 <IconButton onClick={handleLogout} size="small">
