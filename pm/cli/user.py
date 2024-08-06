@@ -52,7 +52,8 @@ async def gen_api_token(args: argparse.Namespace) -> None:
         return
     token, token_obj = user.gen_new_api_token(args.name)
     user.api_tokens.append(token_obj)
-    await user.save_changes()
+    if user.is_changed:
+        await user.save_changes()
     print(f'API token: {token}')
 
 

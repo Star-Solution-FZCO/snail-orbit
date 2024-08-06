@@ -188,6 +188,7 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
+        "/_authenticated/fields",
         "/_authenticated/",
         "/_authenticated/projects/$projectId",
         "/_authenticated/projects/create",
@@ -199,12 +200,16 @@ export const routeTree = rootRoute.addChildren({
     "/login": {
       "filePath": "login.tsx"
     },
+    "/_authenticated/fields": {
+      "filePath": "_authenticated/fields.lazy.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/": {
       "filePath": "_authenticated/index.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/projects/$projectId": {
-      "filePath": "_authenticated/projects/$projectId.lazy.tsx",
+      "filePath": "_authenticated/projects/$projectId.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/projects/create": {

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Auth from "modules/auth";
+import { Auth } from "modules";
 
 type AuthSearch = {
     redirect?: string;
