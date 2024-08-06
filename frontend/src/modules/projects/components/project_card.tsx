@@ -1,6 +1,4 @@
-import DeleteIcon from "@mui/icons-material/Delete";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import StarIcon from "@mui/icons-material/Star";
 import {
     Avatar,
     Box,
@@ -9,12 +7,12 @@ import {
     MenuItem,
     Typography,
 } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import Link from "components/link";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { projectApi } from "store";
 import { ProjectT } from "types";
+import { tabs } from "../utils";
 
 interface IProjectCardProps {
     project: ProjectT;
@@ -22,11 +20,10 @@ interface IProjectCardProps {
 
 const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
-
-    const [deleteProject] = projectApi.useDeleteProjectMutation();
 
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -36,31 +33,25 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
         setAnchorEl(null);
     };
 
-    const handleClickDelete = () => {
+    const handleClickLink = (tab: string) => {
         handleClose();
-
-        const confirmed = confirm(t("projects.delete.confirm"));
-
-        if (!confirmed) return;
-
-        deleteProject(project.id)
-            .unwrap()
-            .then(() => {
-                toast.success(t("projects.delete.success"));
-            })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+        navigate({
+            to: "/projects/$projectId",
+            params: { projectId: project.id },
+            search: { tab },
+        });
     };
 
     return (
         <Box display="flex" alignItems="center">
-            <IconButton size="small">
-                <StarIcon />
-            </IconButton>
-
             <Avatar
-                sx={{ width: 40, height: 40, fontSize: 14, ml: 1, mr: 2 }}
+                sx={{
+                    width: 40,
+                    height: 40,
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    mr: 2,
+                }}
                 variant="rounded"
             >
                 {project.name.slice(0, 3).toUpperCase()}
@@ -75,17 +66,14 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
             </IconButton>
 
             <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleClose}>
-                <MenuItem onClick={handleClickDelete}>
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        gap={0.5}
-                        color="error.main"
+                {tabs.map((tab) => (
+                    <MenuItem
+                        key={tab.value}
+                        onClick={() => handleClickLink(tab.value)}
                     >
-                        <DeleteIcon />
-                        <Typography>{t("projects.delete.title")}</Typography>
-                    </Box>
-                </MenuItem>
+                        {t(tab.label)}
+                    </MenuItem>
+                ))}
             </Menu>
         </Box>
     );

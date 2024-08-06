@@ -143,4 +143,4 @@ const Auth: FC = () => {
     );
 };
 
-export default Auth;
+export { Auth };

@@ -1,39 +1,19 @@
-import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
-import { Box, Button, TextField, Typography } from "@mui/material";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { MDEditor } from "components";
-import { Controller, useForm } from "react-hook-form";
+import { Box, Typography } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
-import * as yup from "yup";
-
-const createProjectSchema = yup.object().shape({
-    name: yup.string().required("form.validation.required"),
-    slug: yup.string().required("form.validation.required"),
-    description: yup.string(),
-});
-
-type CreateProjectFormData = yup.InferType<typeof createProjectSchema>;
+import { CreateProjectT } from "types";
+import { ProjectForm } from "./components/project_form";
 
 const ProjectCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const {
-        control,
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        resolver: yupResolver(createProjectSchema),
-    });
-
     const [createProject, { isLoading }] =
         projectApi.useCreateProjectMutation();
 
-    const onSubmit = (formData: CreateProjectFormData) => {
+    const onSubmit = (formData: CreateProjectT) => {
         createProject(formData)
             .unwrap()
             .then((response) => {
@@ -61,65 +41,7 @@ const ProjectCreate = () => {
                 {t("projects.create.title")}
             </Typography>
 
-            <Box
-                component="form"
-                mt={2}
-                display="flex"
-                flexDirection="column"
-                gap={2}
-                onSubmit={handleSubmit(onSubmit)}
-            >
-                <Typography fontSize={20} fontWeight="bold">
-                    {t("projects.create.generalInfo")}
-                </Typography>
-
-                <TextField
-                    {...register("name")}
-                    label={t("projects.create.name")}
-                    error={!!errors.name}
-                    helperText={t(errors.name?.message || "")}
-                    variant="outlined"
-                    fullWidth
-                />
-
-                <TextField
-                    {...register("slug")}
-                    label={t("projects.create.slug")}
-                    error={!!errors.name}
-                    helperText={t(errors.slug?.message || "")}
-                    variant="outlined"
-                    fullWidth
-                />
-
-                <Box>
-                    <Typography mb={1}>
-                        {t("projects.create.description")}
-                    </Typography>
-                    <Controller
-                        name="description"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <MDEditor value={value} onChange={onChange} />
-                        )}
-                    />
-                </Box>
-
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        type="submit"
-                        variant="outlined"
-                        loading={isLoading}
-                    >
-                        {t("projects.create.submit")}
-                    </LoadingButton>
-
-                    <Link to="/projects">
-                        <Button variant="outlined" color="error">
-                            {t("projects.create.cancel")}
-                        </Button>
-                    </Link>
-                </Box>
-            </Box>
+            <ProjectForm onSubmit={onSubmit} loading={isLoading} />
         </Box>
     );
 };
