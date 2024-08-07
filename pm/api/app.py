@@ -36,7 +36,7 @@ def get_config() -> BaseModel:
     class Settings(BaseModel):
         authjwt_secret_key: str = CONFIG.JWT_SECRET
         authjwt_token_location: set = {'headers', 'cookies'}
-        authjwt_cookie_secure: bool = not CONFIG.DEV_MODE
+        authjwt_cookie_secure: bool = True
         authjwt_refresh_cookie_path: str = '/api/auth/refresh'
         authjwt_cookie_samesite: str = 'none' if CONFIG.DEV_MODE else 'strict'
         authjwt_cookie_csrf_protect: bool = not CONFIG.DEV_MODE
