@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "compile": "tsc -b",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -19,7 +20,7 @@
     "@mui/icons-material": "^5.16.6",
     "@mui/lab": "^5.0.0-alpha.173",
     "@mui/material": "^5.16.6",
-    "@mui/x-date-pickers-pro": "^7.12.0",
+    "@mui/x-data-grid": "^7.12.0",
     "@reduxjs/toolkit": "^2.2.7",
     "@tanstack/react-router": "^1.46.7",
     "@uiw/react-md-editor": "^4.0.4",

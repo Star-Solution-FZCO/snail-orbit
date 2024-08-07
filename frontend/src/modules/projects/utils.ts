@@ -12,8 +12,8 @@ export const tabs = [
         value: "members",
     },
     {
-        label: "projects.sections.fields",
-        value: "fields",
+        label: "projects.sections.customFields",
+        value: "custom-fields",
     },
     {
         label: "projects.sections.workflows",
