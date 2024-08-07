@@ -1,6 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
-import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { Box, IconButton, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
@@ -34,15 +33,6 @@ const ProjectList = () => {
                         </IconButton>
                     </Link>
                 </Box>
-
-                <TextField
-                    placeholder={t("projects.search.placeholder")}
-                    InputProps={{
-                        startAdornment: <SearchIcon />,
-                    }}
-                    size="small"
-                    variant="outlined"
-                />
             </Box>
 
             <Box display="flex" flexDirection="column" gap={2} mt={4}>
