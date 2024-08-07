@@ -1,0 +1,111 @@
+import { createApi } from "@reduxjs/toolkit/query/react";
+import {
+    ApiResponse,
+    CreateCustomFieldT,
+    CreateEnumOptionT,
+    CustomFieldT,
+    ListResponse,
+    UpdateCustomFieldT,
+    UpdateEnumOptionT,
+} from "types";
+import customFetchBase from "./custom_fetch_base";
+
+const tagTypes = ["CustomFields"];
+
+export const customFieldsApi = createApi({
+    reducerPath: "customFieldsApi",
+    baseQuery: customFetchBase,
+    tagTypes,
+    endpoints: (build) => ({
+        listCustomFields: build.query<ListResponse<CustomFieldT>, void>({
+            query: () => "custom_field/list",
+            providesTags: (result) => {
+                let tags = [{ type: "CustomFields", id: "LIST" }];
+                if (result) {
+                    tags = tags.concat(
+                        result.payload.items.map((project) => ({
+                            type: "CustomFields",
+                            id: project.id,
+                        })),
+                    );
+                }
+                return tags;
+            },
+        }),
+        getCustomField: build.query<ApiResponse<CustomFieldT>, string>({
+            query: (id) => `custom_field/${id}`,
+            providesTags: (_result, _error, id) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        createCustomField: build.mutation<
+            ApiResponse<{ id: string }>,
+            CreateCustomFieldT
+        >({
+            query: (body) => ({
+                url: "custom_field/",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                {
+                    type: "CustomFields",
+                    id: "LIST",
+                },
+            ],
+        }),
+        updateCustomField: build.mutation<
+            ApiResponse<{ id: string }>,
+            {
+                id: string;
+            } & UpdateCustomFieldT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `custom_field/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        createCustomFieldEnumOption: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string } & CreateEnumOptionT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `custom_field/${id}/option`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        updateCustomFieldEnumOption: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string } & UpdateEnumOptionT
+        >({
+            query: ({ id, option_id, ...body }) => ({
+                url: `custom_field/${id}/option/${option_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        deleteCustomFieldEnumOption: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string; option_id: string }
+        >({
+            query: ({ id, option_id }) => ({
+                url: `custom_field/${id}/option/${option_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+    }),
+});

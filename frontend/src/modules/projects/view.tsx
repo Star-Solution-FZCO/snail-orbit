@@ -70,9 +70,9 @@ const ProjectView = () => {
                         </Typography>
                     </TabPanel>
 
-                    <TabPanel value="fields">
+                    <TabPanel value="custom-fields">
                         <Typography fontSize={24} fontWeight="bold">
-                            {t("projects.sections.fields")}
+                            {t("projects.sections.customFields")}
                         </Typography>
                     </TabPanel>
 
