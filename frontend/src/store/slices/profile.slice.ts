@@ -27,7 +27,7 @@ const profileSlice = createSlice({
         },
         logout(state) {
             state.user = null;
-            localStorage.removeItem("profile");
+            localStorage.clear();
         },
     },
 });

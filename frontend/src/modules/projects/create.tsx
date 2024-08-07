@@ -36,8 +36,9 @@ const ProjectCreate = () => {
             width="1080px"
             display="flex"
             flexDirection="column"
+            gap={2}
         >
-            <Typography fontSize={24} fontWeight="bold" mt={3}>
+            <Typography fontSize={24} fontWeight="bold">
                 {t("projects.create.title")}
             </Typography>
 
