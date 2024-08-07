@@ -45,19 +45,14 @@ const ProjectForm: FC<IProjectFormProps> = ({
     return (
         <Box
             component="form"
-            mt={2}
             display="flex"
             flexDirection="column"
             gap={2}
             onSubmit={handleSubmit(onSubmit)}
         >
-            <Typography fontSize={20} fontWeight="bold">
-                {t("projects.create.generalInfo")}
-            </Typography>
-
             <TextField
                 {...register("name")}
-                label={t("projects.create.name")}
+                label={t("projects.form.name")}
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
@@ -66,7 +61,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
 
             <TextField
                 {...register("slug")}
-                label={t("projects.create.slug")}
+                label={t("projects.form.slug")}
                 error={!!errors.name}
                 helperText={t(errors.slug?.message || "")}
                 variant="outlined"
@@ -74,9 +69,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
             />
 
             <Box>
-                <Typography mb={1}>
-                    {t("projects.create.description")}
-                </Typography>
+                <Typography mb={1}>{t("projects.form.description")}</Typography>
                 <Controller
                     name="description"
                     control={control}
@@ -98,7 +91,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 {!hideCancel && (
                     <Link to="..">
                         <Button variant="outlined" color="error">
-                            {t("projects.create.cancel")}
+                            {t("projects.form.cancel")}
                         </Button>
                     </Link>
                 )}

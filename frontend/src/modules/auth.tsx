@@ -8,14 +8,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { nanoid } from "@reduxjs/toolkit";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { authenticate } from "services/auth";
-import { setUser, useAppDispatch } from "store";
+import { setUser, useAppDispatch, userApi } from "store";
 
 type AuthFormDataT = {
     login: string;
@@ -33,6 +32,9 @@ const Auth: FC = () => {
 
     const [loading, setLoading] = useState(false);
 
+    const [getProfile, { isLoading: profileLoading }] =
+        userApi.useLazyGetProfileQuery();
+
     const {
         control,
         register,
@@ -46,29 +48,20 @@ const Auth: FC = () => {
         },
     });
 
-    const onSubmit: SubmitHandler<AuthFormDataT> = (data) => {
+    const onSubmit: SubmitHandler<AuthFormDataT> = async (data) => {
         setLoading(true);
-        authenticate(data)
-            .then(() => {
-                // temporary
-                dispatch(
-                    setUser({
-                        id: nanoid(),
-                        name: "user",
-                        email: data.login,
-                        is_admin: true,
-                    }),
-                );
-                navigate({
-                    to: search.redirect || "/",
-                });
-            })
-            .catch((error) => {
-                toast.error(error.detail || t("error.default"));
-            })
-            .finally(() => {
-                setLoading(false);
+        try {
+            await authenticate(data);
+            const profileResponse = await getProfile().unwrap();
+            dispatch(setUser(profileResponse.payload));
+            navigate({
+                to: search.redirect || "/",
             });
+        } catch (error: any) {
+            toast.error(error.detail || t("error.default"));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -80,31 +73,35 @@ const Auth: FC = () => {
                 <Box display="flex" flexDirection="column" alignItems="center">
                     <Avatar sx={{ mb: 2, bgcolor: "#F07167" }}>PM</Avatar>
 
-                    <Typography variant="h5">Sign in</Typography>
+                    <Typography variant="h5">{t("auth.signIn")}</Typography>
 
                     <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                         <TextField
-                            {...register("login", { required: true })}
-                            label="Login"
+                            {...register("login", {
+                                required: "form.validation.required",
+                            })}
+                            label={t("auth.form.login")}
                             autoComplete="login"
                             margin="normal"
                             variant="standard"
                             error={!!errors.login}
-                            helperText={errors.login?.message}
+                            helperText={t(errors.login?.message || "")}
                             autoFocus
                             fullWidth
                             required
                         />
 
                         <TextField
-                            {...register("password", { required: true })}
-                            label="Password"
+                            {...register("password", {
+                                required: "form.validation.required",
+                            })}
+                            label={t("auth.form.password")}
                             type="password"
                             autoComplete="current-password"
                             variant="standard"
                             margin="normal"
                             error={!!errors.password}
-                            helperText={errors.password?.message}
+                            helperText={t(errors.password?.message || "")}
                             fullWidth
                             required
                         />
@@ -114,7 +111,7 @@ const Auth: FC = () => {
                             control={control}
                             render={({ field: { value, onChange } }) => (
                                 <FormControlLabel
-                                    label="Remember me"
+                                    label={t("auth.form.rememberMe")}
                                     control={
                                         <Checkbox
                                             checked={value}
@@ -131,10 +128,10 @@ const Auth: FC = () => {
                             sx={{ mt: 2 }}
                             type="submit"
                             variant="contained"
-                            loading={loading}
+                            loading={loading || profileLoading}
                             fullWidth
                         >
-                            Sign In
+                            {t("auth.signIn")}
                         </LoadingButton>
                     </Box>
                 </Box>

@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { projectApi } from "./api";
+import { customFieldsApi, projectApi, userApi } from "./api";
 import { profileReducer } from "./slices";
 
 export const store = configureStore({
@@ -7,9 +7,15 @@ export const store = configureStore({
     reducer: {
         profile: profileReducer,
         [projectApi.reducerPath]: projectApi.reducer,
+        [customFieldsApi.reducerPath]: customFieldsApi.reducer,
+        [userApi.reducerPath]: userApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(projectApi.middleware),
+        getDefaultMiddleware().concat([
+            projectApi.middleware,
+            customFieldsApi.middleware,
+            userApi.middleware,
+        ]),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

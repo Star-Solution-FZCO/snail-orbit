@@ -8,7 +8,7 @@ import {
     Typography,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import Link from "components/link";
+import { Link } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProjectT } from "types";

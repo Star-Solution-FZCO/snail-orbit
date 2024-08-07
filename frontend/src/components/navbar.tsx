@@ -1,9 +1,52 @@
 import LogoutIcon from "@mui/icons-material/Logout";
-import { Avatar, Box, IconButton } from "@mui/material";
-import Link from "components/link.tsx";
+import { Avatar, Box, IconButton, useTheme } from "@mui/material";
+import { Link } from "components";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
+
+const links = [
+    {
+        to: "/issues",
+        label: "navbar.issues",
+    },
+    {
+        to: "/agiles",
+        label: "navbar.agileBoards",
+    },
+    {
+        to: "/projects",
+        label: "navbar.projects",
+    },
+    {
+        to: "/custom-fields",
+        label: "navbar.customFields",
+    },
+];
+
+interface INavBarLinkProps {
+    to: string;
+}
+
+const NavBarLink: FC<INavBarLinkProps & React.PropsWithChildren> = ({
+    to,
+    children,
+}) => {
+    const theme = useTheme();
+    return (
+        <Link
+            to={to}
+            activeProps={{
+                style: {
+                    color: theme.palette.text.primary,
+                },
+            }}
+        >
+            {children}
+        </Link>
+    );
+};
 
 const NavBar = () => {
     const { t } = useTranslation();
@@ -28,10 +71,11 @@ const NavBar = () => {
             px={4}
         >
             <Box display="flex" gap={4}>
-                <Link to="/issues">{t("navbar.issues")}</Link>
-                <Link to="/agiles">{t("navbar.agileBoards")}</Link>
-                <Link to="/projects">{t("navbar.projects")}</Link>
-                <Link to="/fields">{t("navbar.fields")}</Link>
+                {links.map((link) => (
+                    <NavBarLink key={link.to} to={link.to}>
+                        {t(link.label)}
+                    </NavBarLink>
+                ))}
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
@@ -51,4 +95,4 @@ const NavBar = () => {
     );
 };
 
-export default NavBar;
+export { NavBar };
