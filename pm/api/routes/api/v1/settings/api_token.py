@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 from pydantic import BaseModel
 
 from pm.api.context import current_user
+from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 

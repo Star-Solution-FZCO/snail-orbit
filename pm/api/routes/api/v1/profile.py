@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
+from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudOutput
 from pm.api.views.output import SuccessPayloadOutput
 

@@ -1,10 +1,11 @@
 from http import HTTPStatus
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException
 
 import pm.models as m
 from pm.api.context import admin_context_dependency
+from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
