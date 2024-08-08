@@ -2,11 +2,12 @@ from http import HTTPStatus
 from uuid import UUID, uuid4
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
+from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
     CustomFieldOutput,
     CustomFieldOutputWithEnumOptions,

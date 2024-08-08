@@ -1,8 +1,8 @@
 import os
 
-from fastapi import APIRouter
 from pydantic import BaseModel
 
+from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
 
 __all__ = ('router',)

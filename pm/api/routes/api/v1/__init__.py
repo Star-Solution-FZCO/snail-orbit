@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from pm.api.utils.router import APIRouter
 
 from .custom_field import router as custom_field_router
 from .issue import router as issue_router

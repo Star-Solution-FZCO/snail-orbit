@@ -2,11 +2,12 @@ from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 
 import beanie.operators as bo
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
+from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessOutput
 from pm.config import CONFIG
 
