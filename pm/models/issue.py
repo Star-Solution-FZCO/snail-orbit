@@ -2,7 +2,8 @@ from beanie import Document, Indexed
 from pydantic import BaseModel, Extra, Field
 
 from ._audit import audited_model
-from .project import ProjectLinkField
+from .custom_fields import CustomFieldValue
+from .project import Project, ProjectLinkField
 from .user import UserLinkField
 
 __all__ = (
@@ -32,3 +33,13 @@ class Issue(Document):
 
     project: ProjectLinkField
     comments: list[IssueComment] = Field(default_factory=list)
+
+    fields: dict[str, CustomFieldValue] = Field(default_factory=dict)
+
+    async def get_project(self, fetch_links: bool = False) -> Project:
+        pr: Project | None = await Project.find_one(
+            Project.id == self.project.id, fetch_links=fetch_links
+        )
+        if not pr:
+            raise ValueError(f'Project {self.project.id} not found')
+        return pr
