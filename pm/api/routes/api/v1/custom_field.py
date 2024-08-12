@@ -13,7 +13,7 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithEnumOptions,
 )
 from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
@@ -83,16 +83,22 @@ async def get_custom_field(
 
 
 @router.post('/')
-async def create_custom_field(body: CustomFieldCreateBody) -> ModelIdOutput:
+async def create_custom_field(
+    body: CustomFieldCreateBody,
+) -> SuccessPayloadOutput[CustomFieldOutput | CustomFieldOutputWithEnumOptions]:
     obj = body.create_obj(body.type.get_field_class())
     await obj.insert()
-    return ModelIdOutput.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return SuccessPayloadOutput(
+            payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
+        )
+    return SuccessPayloadOutput(payload=CustomFieldOutput.from_obj(obj))
 
 
 @router.put('/{custom_field_id}')
 async def update_custom_field(
     custom_field_id: PydanticObjectId, body: CustomFieldUpdateBody
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[CustomFieldOutput | CustomFieldOutputWithEnumOptions]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -101,13 +107,17 @@ async def update_custom_field(
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return SuccessPayloadOutput(
+            payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
+        )
+    return SuccessPayloadOutput(payload=CustomFieldOutput.from_obj(obj))
 
 
 @router.post('/{custom_field_id}/option')
 async def add_enum_option(
     custom_field_id: PydanticObjectId, body: EnumOptionCreateBody
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[CustomFieldOutput | CustomFieldOutputWithEnumOptions]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -118,7 +128,11 @@ async def add_enum_option(
     obj.options[uuid4()] = m.EnumOption(value=body.value, color=body.color)
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return SuccessPayloadOutput(
+            payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
+        )
+    return SuccessPayloadOutput(payload=CustomFieldOutput.from_obj(obj))
 
 
 @router.put('/{custom_field_id}/option/{option_id}')
@@ -126,7 +140,7 @@ async def update_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
     body: EnumOptionUpdateBody,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[CustomFieldOutput | CustomFieldOutputWithEnumOptions]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -141,13 +155,17 @@ async def update_enum_option(
     # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return SuccessPayloadOutput(
+            payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
+        )
+    return SuccessPayloadOutput(payload=CustomFieldOutput.from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/option/{option_id}')
 async def remove_enum_option(
     custom_field_id: PydanticObjectId, option_id: UUID
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[CustomFieldOutput | CustomFieldOutputWithEnumOptions]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -162,4 +180,8 @@ async def remove_enum_option(
     # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return SuccessPayloadOutput(
+            payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
+        )
+    return SuccessPayloadOutput(payload=CustomFieldOutput.from_obj(obj))

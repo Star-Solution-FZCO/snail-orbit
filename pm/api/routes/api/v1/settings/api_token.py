@@ -1,8 +1,10 @@
 from datetime import datetime
+from typing import Self
 
 from fastapi import Depends
 from pydantic import BaseModel
 
+import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
@@ -20,6 +22,16 @@ class ApiTokenOut(BaseModel):
     expires_at: datetime | None
     is_active: bool
 
+    @classmethod
+    def from_obj(cls, obj: m.APIToken) -> Self:
+        return cls(
+            name=obj.name,
+            last_digits=obj.last_digits,
+            created_at=obj.created_at,
+            expires_at=obj.expires_at,
+            is_active=obj.is_active,
+        )
+
 
 class ApiTokenCreate(BaseModel):
     name: str
@@ -27,7 +39,23 @@ class ApiTokenCreate(BaseModel):
 
 
 class ApiTokenCreateOut(BaseModel):
+    name: str
+    last_digits: str
+    created_at: datetime
+    expires_at: datetime | None
+    is_active: bool
     token: str
+
+    @classmethod
+    def from_obj(cls, obj: m.APIToken, token: str) -> Self:
+        return cls(
+            name=obj.name,
+            last_digits=obj.last_digits,
+            created_at=obj.created_at,
+            expires_at=obj.expires_at,
+            is_active=obj.is_active,
+            token=token,
+        )
 
 
 @router.get('/list')
@@ -41,13 +69,7 @@ async def list_api_tokens(
         limit=query.limit,
         offset=query.offset,
         items=[
-            ApiTokenOut(
-                name=t.name,
-                last_digits=t.last_digits,
-                created_at=t.created_at,
-                expires_at=t.expires_at,
-                is_active=t.is_active,
-            )
+            ApiTokenOut.from_obj(t)
             for t in tokens[query.offset : query.offset + query.limit]
         ],
     )
@@ -62,4 +84,4 @@ async def add_token(
     user.api_tokens.append(token_obj)
     if user.is_changed:
         await user.save_changes()
-    return SuccessPayloadOutput(payload=ApiTokenCreateOut(token=token))
+    return SuccessPayloadOutput(payload=ApiTokenCreateOut.from_obj(token_obj, token))

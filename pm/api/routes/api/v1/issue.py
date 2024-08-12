@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
@@ -110,7 +110,7 @@ async def get_issue(
 @router.post('/')
 async def create_issue(
     body: IssueCreate,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[IssueOutput]:
     project: m.Project | None = await m.Project.find_one(
         m.Project.id == body.project_id, fetch_links=True
     )
@@ -124,14 +124,14 @@ async def create_issue(
         fields=validated_fields,
     )
     await obj.insert()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 @router.put('/{issue_id}')
 async def update_issue(
     issue_id: PydanticObjectId,
     body: IssueUpdate,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[IssueOutput]:
     obj: m.Issue | None = await m.Issue.find_one(
         m.Issue.id == issue_id, fetch_links=True
     )
@@ -146,7 +146,7 @@ async def update_issue(
         setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 async def validate_custom_fields_values(
