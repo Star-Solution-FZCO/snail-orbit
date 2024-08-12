@@ -13,6 +13,7 @@ starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
 pydantic = {version = ">=2.0"}
 motor = "*"
 beanie = "*"
+pyparsing = "*"
 
 [dev-packages]
 bandit = "*"

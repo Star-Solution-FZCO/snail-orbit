@@ -28,4 +28,4 @@ class ListParams(BaseModel):
 
 
 class ListFilterParams(ListParams):
-    filter: str = Query(None, description='filter params')
+    filter: str | None = Query(None, description='filter params')
