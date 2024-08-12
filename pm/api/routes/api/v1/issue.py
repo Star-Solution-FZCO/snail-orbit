@@ -2,14 +2,14 @@ from http import HTTPStatus
 from typing import Any, Self
 
 from beanie import PydanticObjectId
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
+from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
-from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
 
@@ -81,11 +81,22 @@ class IssueUpdate(BaseModel):
     fields: dict[str, Any] | None = None
 
 
+class IssueListParams(BaseModel):
+    q: str | None = Query(None, description='search query')
+    limit: int = Query(50, le=50, description='limit results')
+    offset: int = Query(0, description='offset')
+
+
 @router.get('/list')
 async def list_issues(
-    query: ListParams = Depends(),
+    query: IssueListParams = Depends(),
 ) -> BaseListOutput[IssueOutput]:
-    q = m.Issue.find().sort(m.Issue.id)
+    flt = {}
+    sort = (m.Issue.id,)
+    if query.q:
+        flt, sort_ = transform_query(query.q)
+        sort = sort_ or sort
+    q = m.Issue.find(flt).sort(*sort)
     results = []
     async for obj in q.limit(query.limit).skip(query.offset):
         results.append(IssueOutput.from_obj(obj))
