@@ -12,6 +12,7 @@ from pm.utils.dateutils import utcnow
 from ._audit import audited_model
 
 __all__ = (
+    'APIToken',
     'User',
     'UserLinkField',
 )

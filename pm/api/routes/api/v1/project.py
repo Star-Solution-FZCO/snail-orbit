@@ -12,7 +12,7 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithEnumOptions,
 )
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
@@ -91,10 +91,9 @@ async def list_projects(
 async def get_project(
     project_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    obj = await m.Project.find_one(m.Project.id == project_id)
+    obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
-    await obj.fetch_all_links()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
@@ -102,10 +101,10 @@ async def get_project(
 async def create_project(
     body: ProjectCreate,
     _=Depends(admin_context_dependency),
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[ProjectOutput]:
     obj = body.create_obj(m.Project)
     await obj.insert()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
 @router.put('/{project_id}')
@@ -113,21 +112,21 @@ async def update_project(
     project_id: PydanticObjectId,
     body: ProjectUpdate,
     _=Depends(admin_context_dependency),
-) -> ModelIdOutput:
-    obj = await m.Project.find_one(m.Project.id == project_id)
+) -> SuccessPayloadOutput[ProjectOutput]:
+    obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
 @router.post('/{project_id}/field/{field_id}')
 async def add_field(
     project_id: PydanticObjectId,
     field_id: PydanticObjectId,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[ProjectOutput]:
     project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
@@ -139,14 +138,14 @@ async def add_field(
     project.custom_fields.append(field)
     if project.is_changed:
         await project.save_changes()
-    return ModelIdOutput.from_obj(project)
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
 
 @router.delete('/{project_id}/field/{field_id}')
 async def remove_field(
     project_id: PydanticObjectId,
     field_id: PydanticObjectId,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[ProjectOutput]:
     project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
@@ -161,4 +160,4 @@ async def remove_field(
         raise HTTPException(HTTPStatus.CONFLICT, 'Field not found in project') from err
     if project.is_changed:
         await project.save_changes()
-    return ModelIdOutput.from_obj(project)
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))

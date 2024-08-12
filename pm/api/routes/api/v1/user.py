@@ -7,7 +7,7 @@ import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
@@ -67,21 +67,21 @@ async def get_user(
 @router.post('/')
 async def create_user(
     body: UserCreate,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[UserOutput]:
     obj = body.create_obj(m.User)
     await obj.insert()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))
 
 
 @router.put('/{user_id}')
 async def update_user(
     user_id: PydanticObjectId,
     body: UserUpdate,
-) -> ModelIdOutput:
+) -> SuccessPayloadOutput[UserOutput]:
     obj = await m.User.find_one(m.User.id == user_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
-    return ModelIdOutput.from_obj(obj)
+    return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))
