@@ -11,6 +11,7 @@ import {
     MenuItem,
     Select,
     TextField,
+    Typography,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { FC } from "react";
@@ -62,15 +63,20 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
             component="form"
             display="flex"
             flexDirection="column"
-            gap={2}
+            gap={1}
             onSubmit={handleSubmit(onSubmit)}
         >
+            <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
+                {t("customFields.form.title")}
+            </Typography>
+
             <TextField
                 {...register("name")}
                 label={t("customFields.form.name")}
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
+                size="small"
                 fullWidth
             />
 
@@ -88,6 +94,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                             label={t("customFields.form.type")}
                             onChange={onChange}
                             error={!!errors.type}
+                            size="small"
                         >
                             {customFieldsTypes.map((type) => (
                                 <MenuItem key={type} value={type}>
@@ -114,6 +121,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                             <Checkbox
                                 checked={value}
                                 onChange={(_, checked) => onChange(checked)}
+                                size="small"
                             />
                         }
                     />
