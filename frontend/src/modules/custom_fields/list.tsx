@@ -65,6 +65,11 @@ const CustomFieldList = () => {
             </Box>
 
             <DataGrid
+                sx={{
+                    "& .MuiDataGrid-row": {
+                        cursor: "pointer",
+                    },
+                }}
                 columns={columns}
                 rows={rows}
                 onRowClick={handleClickRow}
