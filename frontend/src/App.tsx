@@ -30,7 +30,7 @@ const App = () => {
             <StoreProvider store={store}>
                 <CssBaseline />
 
-                <ToastContainer position="top-right" />
+                <ToastContainer position="top-right" closeOnClick />
 
                 <RouterProvider router={router} />
 

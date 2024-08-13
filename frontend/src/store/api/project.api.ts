@@ -36,7 +36,7 @@ export const projectApi = createApi({
             providesTags: (_result, _error, id) => [{ type: "Projects", id }],
         }),
         createProject: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<ProjectDetailT>,
             CreateProjectT
         >({
             query: (body) => ({
@@ -52,37 +52,13 @@ export const projectApi = createApi({
             ],
         }),
         updateProject: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<ProjectDetailT>,
             { id: string } & UpdateProjectT
         >({
             query: ({ id, ...body }) => ({
                 url: `project/${id}`,
                 method: "PUT",
                 body,
-            }),
-            invalidatesTags: (_result, _error, { id }) => [
-                { type: "Projects", id },
-            ],
-        }),
-        addCustomField: build.mutation<
-            ApiResponse<{ id: string }>,
-            { id: string; customFieldId: string }
-        >({
-            query: ({ id, customFieldId }) => ({
-                url: `project/${id}/field/${customFieldId}`,
-                method: "POST",
-            }),
-            invalidatesTags: (_result, _error, { id }) => [
-                { type: "Projects", id },
-            ],
-        }),
-        deleteCustomField: build.mutation<
-            ApiResponse<{ id: string }>,
-            { id: string; customFieldId: string }
-        >({
-            query: ({ id, customFieldId }) => ({
-                url: `project/${id}/field/${customFieldId}`,
-                method: "DELETE",
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Projects", id },
