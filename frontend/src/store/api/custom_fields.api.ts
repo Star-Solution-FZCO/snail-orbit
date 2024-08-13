@@ -39,7 +39,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         createCustomField: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<CustomFieldT>,
             CreateCustomFieldT
         >({
             query: (body) => ({
@@ -55,7 +55,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         updateCustomField: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<CustomFieldT>,
             {
                 id: string;
             } & UpdateCustomFieldT
@@ -70,7 +70,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         createCustomFieldEnumOption: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<CustomFieldT>,
             { id: string } & CreateEnumOptionT
         >({
             query: ({ id, ...body }) => ({
@@ -83,7 +83,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         updateCustomFieldEnumOption: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<CustomFieldT>,
             { id: string } & UpdateEnumOptionT
         >({
             query: ({ id, option_id, ...body }) => ({
@@ -96,7 +96,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         deleteCustomFieldEnumOption: build.mutation<
-            ApiResponse<{ id: string }>,
+            ApiResponse<CustomFieldT>,
             { id: string; option_id: string }
         >({
             query: ({ id, option_id }) => ({

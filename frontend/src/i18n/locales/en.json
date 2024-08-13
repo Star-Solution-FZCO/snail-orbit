@@ -32,6 +32,7 @@
     "customFields.fields.name": "Name",
     "customFields.fields.type": "Type",
     "customFields.fields.nullable": "Nullable",
+    "customFields.form.title": "General info",
     "customFields.form.name": "Name",
     "customFields.form.type": "Type",
     "customFields.form.nullable": "Nullable",
@@ -46,5 +47,12 @@
     "customFields.types.user": "User",
     "customFields.types.user_multi": "User Multi",
     "customFields.types.enum": "Enum",
-    "customFields.types.enum_multi": "Enum Multi"
+    "customFields.types.enum_multi": "Enum Multi",
+    "customFields.options.title": "Options",
+    "customFields.options.empty": "No options",
+    "customFields.options.value": "Value",
+    "customFields.options.deleteTitle": "Delete Option",
+    "customFields.options.deleteConfirm": "Are you sure you want to delete this option?",
+    "customFields.options.delete": "Delete",
+    "customFields.options.cancel": "Cancel"
 }
