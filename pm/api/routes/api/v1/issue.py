@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
+from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
@@ -127,13 +128,21 @@ async def create_issue(
     )
     if not project:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
-    validated_fields = await validate_custom_fields_values(body.fields, project)
+    validated_fields, validation_errors = await validate_custom_fields_values(
+        body.fields, project
+    )
     obj = m.Issue(
         subject=body.subject,
         text=body.text,
         project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
         fields=validated_fields,
     )
+    if validation_errors:
+        raise ValidateModelException(
+            payload=IssueOutput.from_obj(obj),
+            error_messages=['Custom field validation error'],
+            error_fields={e.field.name: e.msg for e in validation_errors},
+        )
     await obj.insert()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
@@ -148,13 +157,20 @@ async def update_issue(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    validation_errors = []
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'fields':
             project = await obj.get_project(fetch_links=True)
-            v = await validate_custom_fields_values(v, project, obj)
+            v, validation_errors = await validate_custom_fields_values(v, project, obj)
             obj.fields.update(v)
             continue
         setattr(obj, k, v)
+    if validation_errors:
+        raise ValidateModelException(
+            payload=IssueOutput.from_obj(obj),
+            error_messages=['Custom field validation error'],
+            error_fields={e.field.name: e.msg for e in validation_errors},
+        )
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
@@ -162,7 +178,7 @@ async def update_issue(
 
 async def validate_custom_fields_values(
     fields: dict[str, Any], project: m.Project, issue: m.Issue | None = None
-) -> dict[str, m.CustomFieldValue]:
+) -> tuple[dict[str, m.CustomFieldValue], list[m.CustomFieldValidationError]]:
     all_issue_fields = set(fields.keys())
     if issue:
         all_issue_fields |= set(issue.fields.keys())
@@ -174,13 +190,18 @@ async def validate_custom_fields_values(
 
     results = {}
     project_fields = {f.name: f for f in project.custom_fields}
+    errors: list[m.CustomFieldValidationError] = []
     for key, val in fields.items():
         if key not in project_fields:
             raise HTTPException(HTTPStatus.BAD_REQUEST, f'Field {key} is not allowed')
-        val = project_fields[key].validate_value(val)
+        try:
+            val_ = project_fields[key].validate_value(val)
+        except m.CustomFieldValidationError as err:
+            val_ = err.value
+            errors.append(err)
         results[key] = m.CustomFieldValue(
             id=project_fields[key].id,
             type=project_fields[key].type,
-            value=val,
+            value=val_,
         )
-    return results
+    return results, errors

@@ -53,6 +53,11 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
     )
 
 
+from pm.api.error_handlers import connect_error_handlers  # noqa
+
+connect_error_handlers(app)
+
+
 # pylint: disable=wrong-import-position
 from pm.api.routes import api_router  # noqa
 

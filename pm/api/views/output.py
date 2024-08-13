@@ -5,6 +5,8 @@ from pydantic import BaseModel
 
 __all__ = (
     'BaseOutput',
+    'ErrorOutput',
+    'ErrorPayloadOutput',
     'SuccessOutput',
     'BasePayloadOutput',
     'SuccessPayloadOutput',
@@ -21,6 +23,11 @@ class SuccessOutput(BaseOutput):
     success: bool = True
 
 
+class ErrorOutput(BaseOutput):
+    success: bool = False
+    error_messages: list[str]
+
+
 T = TypeVar('T')
 
 
@@ -30,6 +37,10 @@ class BasePayloadOutput(BaseOutput, Generic[T]):
 
 class SuccessPayloadOutput(SuccessOutput, BasePayloadOutput, Generic[T]):
     pass
+
+
+class ErrorPayloadOutput(ErrorOutput, BasePayloadOutput, Generic[T]):
+    error_fields: dict[str, str]
 
 
 class ModelIDPayload(BaseModel):
