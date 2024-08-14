@@ -1,4 +1,5 @@
 from typing import Any, Generic, Self, TypeVar
+from uuid import UUID
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel
@@ -12,6 +13,7 @@ __all__ = (
     'SuccessPayloadOutput',
     'BaseListOutput',
     'ModelIdOutput',
+    'UUIDOutput',
 )
 
 
@@ -55,6 +57,16 @@ class ModelIdOutput(SuccessPayloadOutput[ModelIDPayload]):
     @classmethod
     def from_obj(cls, obj: Any) -> Self:
         return cls(payload=ModelIDPayload(id=obj.id))
+
+
+class UUIDPayload(BaseModel):
+    id: UUID
+
+
+class UUIDOutput(SuccessPayloadOutput[UUIDPayload]):
+    @classmethod
+    def make(cls, id_: UUID) -> Self:
+        return cls(payload=UUIDPayload(id=id_))
 
 
 class BaseListPayload(BaseModel, Generic[T]):

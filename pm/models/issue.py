@@ -1,3 +1,6 @@
+from datetime import datetime
+from uuid import UUID, uuid4
+
 from beanie import Document, Indexed
 from pydantic import BaseModel, Extra, Field
 
@@ -13,8 +16,11 @@ __all__ = (
 
 
 class IssueComment(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
     author: UserLinkField
     text: str | None
+    created_at: datetime
+    updated_at: datetime
 
 
 @audited_model
