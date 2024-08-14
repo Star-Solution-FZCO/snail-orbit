@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { customFieldsApi, projectApi, userApi } from "./api";
+import { customFieldsApi, issueApi, projectApi, userApi } from "./api";
 import { profileReducer } from "./slices";
 
 export const store = configureStore({
@@ -7,6 +7,7 @@ export const store = configureStore({
     reducer: {
         profile: profileReducer,
         [projectApi.reducerPath]: projectApi.reducer,
+        [issueApi.reducerPath]: issueApi.reducer,
         [customFieldsApi.reducerPath]: customFieldsApi.reducer,
         [userApi.reducerPath]: userApi.reducer,
     },
@@ -15,6 +16,7 @@ export const store = configureStore({
             projectApi.middleware,
             customFieldsApi.middleware,
             userApi.middleware,
+            issueApi.middleware,
         ]),
 });
 
