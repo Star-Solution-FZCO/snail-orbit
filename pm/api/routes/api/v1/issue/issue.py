@@ -6,7 +6,6 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
-from pm.api.context import current_user_context_dependency
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
@@ -14,25 +13,7 @@ from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 
 __all__ = ('router',)
 
-router = APIRouter(
-    prefix='/issue',
-    tags=['issue'],
-    dependencies=[Depends(current_user_context_dependency)],
-)
-
-
-class IssueCommentOutput(BaseModel):
-    text: str | None
-
-    @classmethod
-    def from_obj(cls, obj: m.IssueComment) -> Self:
-        return cls(
-            text=obj.text,
-        )
-
-
-class IssueCommentCreate(BaseModel):
-    text: str | None = None
+router = APIRouter()
 
 
 class ProjectField(BaseModel):
@@ -54,7 +35,6 @@ class IssueOutput(BaseModel):
     project: ProjectField
     subject: str
     text: str | None
-    comments: list[IssueCommentOutput]
     fields: dict[str, m.CustomFieldValue]
 
     @classmethod
@@ -64,7 +44,6 @@ class IssueOutput(BaseModel):
             project=ProjectField.from_obj(obj),
             subject=obj.subject,
             text=obj.text,
-            comments=[IssueCommentOutput.from_obj(comment) for comment in obj.comments],
             fields=obj.fields,
         )
 

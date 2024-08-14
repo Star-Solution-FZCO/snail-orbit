@@ -23,6 +23,14 @@ class UserLinkField(BaseModel):
     name: str
     email: str
 
+    @classmethod
+    def from_obj(cls, obj: 'User') -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            email=obj.email,
+        )
+
 
 class APIToken(BaseModel):
     name: str
