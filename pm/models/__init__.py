@@ -1,4 +1,5 @@
 from ._audit import *
+from .board import *
 from .custom_fields import *
 from .issue import *
 from .project import *
@@ -9,6 +10,7 @@ __beanie_models__ = [
     User,
     Project,
     Issue,
+    Board,
     CustomField,
     StringCustomField,
     IntegerCustomField,
