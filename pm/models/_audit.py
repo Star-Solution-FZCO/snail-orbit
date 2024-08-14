@@ -9,6 +9,7 @@ from beanie import (
     Indexed,
     Insert,
     PydanticObjectId,
+    Replace,
     SaveChanges,
     after_event,
     before_event,
@@ -135,6 +136,25 @@ async def _after_update_callback(self: Document) -> None:
     )
 
 
+@before_event(Replace)
+async def _before_replace_callback(self: Document) -> None:
+    self.__prev_revision_id = self.revision_id
+
+
+@after_event(Replace)
+async def _after_replace_callback(self: Document) -> None:
+    await AuditRecord.insert_one(
+        AuditRecord.create_record(
+            collection=self.__class__.Settings.name,
+            object_id=self.id,
+            next_revision=self.revision_id,
+            revision=self.__prev_revision_id,
+            action=AuditActionT.UPDATE,
+            data=self.get_previous_saved_state(),
+        )
+    )
+
+
 AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)
 
 
@@ -144,4 +164,6 @@ def audited_model(cls: type[AuditedTypeVar]) -> type[AuditedTypeVar]:
     cls._after_delete_callback = _after_delete_callback
     cls._before_update_callback = _before_update_callback
     cls._after_update_callback = _after_update_callback
+    cls._before_replace_callback = _before_replace_callback
+    cls._after_replace_callback = _after_replace_callback
     return cls
