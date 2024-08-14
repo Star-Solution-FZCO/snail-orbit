@@ -1,6 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
 import { FC } from "react";
@@ -56,25 +56,32 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
+                size="small"
                 fullWidth
             />
 
             <TextField
                 {...register("slug")}
                 label={t("projects.form.slug")}
-                error={!!errors.name}
+                error={!!errors.slug}
                 helperText={t(errors.slug?.message || "")}
                 variant="outlined"
+                size="small"
                 fullWidth
             />
 
             <Box>
-                <Typography mb={1}>{t("projects.form.description")}</Typography>
                 <Controller
                     name="description"
                     control={control}
                     render={({ field: { value, onChange } }) => (
-                        <MDEditor value={value} onChange={onChange} />
+                        <MDEditor
+                            value={value}
+                            onChange={onChange}
+                            textareaProps={{
+                                placeholder: t("projects.form.description"),
+                            }}
+                        />
                     )}
                 />
             </Box>
@@ -83,6 +90,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 <LoadingButton
                     type="submit"
                     variant="outlined"
+                    size="small"
                     loading={loading}
                 >
                     {t("projects.form.save")}
@@ -90,7 +98,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
 
                 {!hideCancel && (
                     <Link to="..">
-                        <Button variant="outlined" color="error">
+                        <Button variant="outlined" color="error" size="small">
                             {t("projects.form.cancel")}
                         </Button>
                     </Link>

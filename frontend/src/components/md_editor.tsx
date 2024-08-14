@@ -1,20 +1,17 @@
 import { Box, useTheme } from "@mui/material";
 import MDEditorLib from "@uiw/react-md-editor";
-import { FC } from "react";
+import { ComponentProps, FC } from "react";
 
-interface IMDEditorProps {
-    value?: string;
-    onChange: (value?: string) => void;
-}
+type IMDEditorProps = ComponentProps<typeof MDEditorLib>;
 
-const MDEditor: FC<IMDEditorProps> = ({ value, onChange }) => {
+const MDEditor: FC<IMDEditorProps> = (props) => {
     const theme = useTheme();
 
     return (
-        <Box data-color-mode={theme.palette.mode} width="100%">
+        <Box data-color-mode={theme.palette.mode} width="100%" sx={{}}>
             <Box className="wmde-markdown-var" />
 
-            <MDEditorLib value={value} onChange={onChange} />
+            <MDEditorLib {...props} />
         </Box>
     );
 };
