@@ -179,7 +179,7 @@ async def remove_enum_option(
     obj.options.pop(option_id)
     # todo: update issues
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         return SuccessPayloadOutput(
             payload=CustomFieldOutputWithEnumOptions.from_obj(obj)
