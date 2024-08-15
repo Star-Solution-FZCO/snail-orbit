@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from pm.api.context import current_user_context_dependency
+from pm.api.utils.router import APIRouter
 
 from .comment import router as comment_router
 from .issue import router as issue_router

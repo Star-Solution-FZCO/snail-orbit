@@ -4,11 +4,12 @@ from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user
+from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.pararams import ListParams
 from pm.api.views.user import UserOutput
