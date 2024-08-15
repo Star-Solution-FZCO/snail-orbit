@@ -69,6 +69,10 @@ CONFIG = Dynaconf(
             cast=int,
             default=int(datetime.timedelta(minutes=15).total_seconds()),
         ),
+        Validator(
+            'FILE_STORAGE_DIR',
+            default='/data/file_storage',
+        ),
     ],
 )
 CONFIG.configure()
