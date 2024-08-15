@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
+import { ProjectCustomFields } from "./components/project_custom_fields";
 import { tabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/projects/$projectId");
@@ -33,14 +34,14 @@ const ProjectView = () => {
     const project = data.payload;
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2}>
+        <Box display="flex" flexDirection="column" px={4} gap={2} flex={1}>
             <Box display="flex" alignItems="center">
                 <Typography fontSize={24} fontWeight="bold">
                     {project.name}
                 </Typography>
             </Box>
 
-            <Box display="flex" flexDirection="column">
+            <Box display="flex" flexDirection="column" flex={1}>
                 <TabContext value={currentTab}>
                     <Box borderBottom={1} borderColor="divider">
                         <TabList onChange={handleChangeTab}>
@@ -70,10 +71,10 @@ const ProjectView = () => {
                         </Typography>
                     </TabPanel>
 
-                    <TabPanel value="custom-fields">
-                        <Typography fontSize={24} fontWeight="bold">
-                            {t("projects.sections.customFields")}
-                        </Typography>
+                    <TabPanel value="custom-fields" sx={{ height: "100%" }}>
+                        <Box height="100%">
+                            <ProjectCustomFields project={project} />
+                        </Box>
                     </TabPanel>
 
                     <TabPanel value="workflows">
