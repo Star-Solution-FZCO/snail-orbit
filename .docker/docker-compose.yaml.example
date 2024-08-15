@@ -9,6 +9,7 @@ services:
     - "127.0.0.1:9090:9090"
     volumes:
     - "./etc:/app/etc"
+    - "./data/pm:/data"
     depends_on:
       mongo:
         condition: service_healthy

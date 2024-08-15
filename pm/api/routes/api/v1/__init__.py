@@ -2,6 +2,7 @@ from pm.api.utils.router import APIRouter
 
 from .board import router as board_router
 from .custom_field import router as custom_field_router
+from .files import router as files_router
 from .issue import router as issue_router
 from .profile import router as profile_router
 from .project import router as project_router
@@ -20,3 +21,4 @@ router.include_router(settings_router)
 router.include_router(profile_router)
 router.include_router(custom_field_router)
 router.include_router(board_router)
+router.include_router(files_router)
