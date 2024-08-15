@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from pm.utils.dateutils import utcnow
 
 from ._audit import audited_model
+from .group import GroupLinkField
 
 __all__ = (
     'APIToken',
@@ -64,7 +65,8 @@ class User(Document):
     password_hash: str | None = None
     is_active: bool = True
     is_admin: bool = False
-    api_tokens: list[APIToken] = []
+    api_tokens: list[APIToken] = Field(default_factory=list)
+    groups: list[GroupLinkField] = Field(default_factory=list)
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:
