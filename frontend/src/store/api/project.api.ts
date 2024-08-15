@@ -64,5 +64,29 @@ export const projectApi = createApi({
                 { type: "Projects", id },
             ],
         }),
+        addProjectCustomField: build.mutation<
+            ApiResponse<ProjectDetailT>,
+            { id: string; customFieldId: string }
+        >({
+            query: ({ id, customFieldId }) => ({
+                url: `project/${id}/field/${customFieldId}`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
+        removeProjectCustomField: build.mutation<
+            ApiResponse<ProjectDetailT>,
+            { id: string; customFieldId: string }
+        >({
+            query: ({ id, customFieldId }) => ({
+                url: `project/${id}/field/${customFieldId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
     }),
 });

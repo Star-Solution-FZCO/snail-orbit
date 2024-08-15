@@ -58,7 +58,7 @@ const Auth: FC = () => {
                 to: search.redirect || "/",
             });
         } catch (error: any) {
-            toast.error(error.detail || t("error.default"));
+            toast.error(error.error_messages?.join(", ") || t("error.default"));
         } finally {
             setLoading(false);
         }
@@ -111,7 +111,7 @@ const Auth: FC = () => {
                             control={control}
                             render={({ field: { value, onChange } }) => (
                                 <FormControlLabel
-                                    label={t("auth.form.rememberMe")}
+                                    label={t("auth.form.remember")}
                                     control={
                                         <Checkbox
                                             checked={value}

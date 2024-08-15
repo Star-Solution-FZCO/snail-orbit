@@ -54,12 +54,9 @@ const NavBar = () => {
 
     const user = useAppSelector((state) => state.profile.user);
 
-    const handleLogout = () => {
-        logout()
-            .then()
-            .finally(() => {
-                dispatch(logoutAction());
-            });
+    const handleLogout = async () => {
+        logout();
+        dispatch(logoutAction());
     };
 
     return (

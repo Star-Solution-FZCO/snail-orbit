@@ -37,11 +37,8 @@ const customBaseQuery: BaseQueryFn<
                 await refreshToken();
                 response = await baseQuery(args, api, extraOptions);
             } catch (_) {
-                logout()
-                    .then()
-                    .finally(() => {
-                        api.dispatch(logoutAction());
-                    });
+                await logout();
+                api.dispatch(logoutAction());
             } finally {
                 release();
             }
