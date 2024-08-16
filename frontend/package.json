@@ -10,7 +10,9 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prettier": "npx prettier . --write -l",
-    "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parsser.config.js"
+    "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parsser.config.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
@@ -38,6 +40,15 @@
     "yup": "^1.4.0"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "1.6.1",
+    "@storybook/addon-essentials": "^8.2.9",
+    "@storybook/addon-interactions": "^8.2.9",
+    "@storybook/addon-links": "^8.2.9",
+    "@storybook/addon-onboarding": "^8.2.9",
+    "@storybook/blocks": "^8.2.9",
+    "@storybook/react": "^8.2.9",
+    "@storybook/react-vite": "^8.2.9",
+    "@storybook/test": "^8.2.9",
     "@tanstack/router-devtools": "^1.46.7",
     "@tanstack/router-plugin": "^1.46.6",
     "@types/react": "^18.3.3",
@@ -49,9 +60,11 @@
     "eslint": "^9.8.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "eslint-plugin-storybook": "^0.8.0",
     "i18next-parser": "^9.0.1",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.0.0",
+    "storybook": "^8.2.9",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
     "vite-tsconfig-paths": "^4.3.2"

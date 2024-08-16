@@ -16,7 +16,6 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedProjectsProjectIdImport } from './routes/_authenticated/projects/$projectId'
-import { Route as AuthenticatedIssuesIssueIdImport } from './routes/_authenticated/issues/$issueId'
 
 // Create Virtual Routes
 
@@ -38,6 +37,9 @@ const AuthenticatedProjectsCreateLazyImport = createFileRoute(
 )()
 const AuthenticatedIssuesCreateLazyImport = createFileRoute(
   '/_authenticated/issues/create',
+)()
+const AuthenticatedIssuesIssueIdLazyImport = createFileRoute(
+  '/_authenticated/issues/$issueId',
 )()
 const AuthenticatedCustomFieldsCreateLazyImport = createFileRoute(
   '/_authenticated/custom-fields/create',
@@ -115,6 +117,14 @@ const AuthenticatedIssuesCreateLazyRoute =
     import('./routes/_authenticated/issues/create.lazy').then((d) => d.Route),
   )
 
+const AuthenticatedIssuesIssueIdLazyRoute =
+  AuthenticatedIssuesIssueIdLazyImport.update({
+    path: '/issues/$issueId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/issues/$issueId.lazy').then((d) => d.Route),
+  )
+
 const AuthenticatedCustomFieldsCreateLazyRoute =
   AuthenticatedCustomFieldsCreateLazyImport.update({
     path: '/custom-fields/create',
@@ -141,13 +151,6 @@ const AuthenticatedProjectsProjectIdRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
-const AuthenticatedIssuesIssueIdRoute = AuthenticatedIssuesIssueIdImport.update(
-  {
-    path: '/issues/$issueId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any,
-)
-
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -173,13 +176,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexLazyImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/_authenticated/issues/$issueId': {
-      id: '/_authenticated/issues/$issueId'
-      path: '/issues/$issueId'
-      fullPath: '/issues/$issueId'
-      preLoaderRoute: typeof AuthenticatedIssuesIssueIdImport
-      parentRoute: typeof AuthenticatedImport
-    }
     '/_authenticated/projects/$projectId': {
       id: '/_authenticated/projects/$projectId'
       path: '/projects/$projectId'
@@ -199,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/custom-fields/create'
       fullPath: '/custom-fields/create'
       preLoaderRoute: typeof AuthenticatedCustomFieldsCreateLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/issues/$issueId': {
+      id: '/_authenticated/issues/$issueId'
+      path: '/issues/$issueId'
+      fullPath: '/issues/$issueId'
+      preLoaderRoute: typeof AuthenticatedIssuesIssueIdLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/issues/create': {
@@ -251,10 +254,10 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   AuthenticatedRoute: AuthenticatedRoute.addChildren({
     AuthenticatedIndexLazyRoute,
-    AuthenticatedIssuesIssueIdRoute,
     AuthenticatedProjectsProjectIdRoute,
     AuthenticatedCustomFieldsCustomFieldIdLazyRoute,
     AuthenticatedCustomFieldsCreateLazyRoute,
+    AuthenticatedIssuesIssueIdLazyRoute,
     AuthenticatedIssuesCreateLazyRoute,
     AuthenticatedProjectsCreateLazyRoute,
     AuthenticatedAgilesIndexLazyRoute,
@@ -281,10 +284,10 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/",
-        "/_authenticated/issues/$issueId",
         "/_authenticated/projects/$projectId",
         "/_authenticated/custom-fields/$customFieldId",
         "/_authenticated/custom-fields/create",
+        "/_authenticated/issues/$issueId",
         "/_authenticated/issues/create",
         "/_authenticated/projects/create",
         "/_authenticated/agiles/",
@@ -300,10 +303,6 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated/index.lazy.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/issues/$issueId": {
-      "filePath": "_authenticated/issues/$issueId.tsx",
-      "parent": "/_authenticated"
-    },
     "/_authenticated/projects/$projectId": {
       "filePath": "_authenticated/projects/$projectId.tsx",
       "parent": "/_authenticated"
@@ -314,6 +313,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/custom-fields/create": {
       "filePath": "_authenticated/custom-fields/create.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/issues/$issueId": {
+      "filePath": "_authenticated/issues/$issueId.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/issues/create": {
