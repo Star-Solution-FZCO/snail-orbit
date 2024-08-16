@@ -100,19 +100,14 @@ async def _after_insert_callback(self: Document) -> None:
 
 @before_event(Delete)
 async def _before_delete_callback(self: Document) -> None:
-    self.__prev_revision_id = self.revision_id
-
-
-@after_event(Delete)
-async def _after_delete_callback(self: Document) -> None:
     await AuditRecord.insert_one(
         AuditRecord.create_record(
             collection=self.__class__.Settings.name,
             object_id=self.id,
             next_revision=None,
-            revision=self.__prev_revision_id,
+            revision=self.revision_id,
             action=AuditActionT.DELETE,
-            data=self.get_previous_saved_state(),
+            data=self.get_saved_state(),
         )
     )
 
@@ -161,7 +156,6 @@ AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)
 def audited_model(cls: type[AuditedTypeVar]) -> type[AuditedTypeVar]:
     cls._after_insert_callback = _after_insert_callback
     cls._before_delete_callback = _before_delete_callback
-    cls._after_delete_callback = _after_delete_callback
     cls._before_update_callback = _before_update_callback
     cls._after_update_callback = _after_update_callback
     cls._before_replace_callback = _before_replace_callback
