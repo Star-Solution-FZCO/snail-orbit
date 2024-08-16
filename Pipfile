@@ -22,6 +22,7 @@ bandit = "*"
 mypy = "*"
 pylint = "*"
 ruff = "*"
+types-aiofiles = "*"
 
 [requires]
 python_version = "3.12"
