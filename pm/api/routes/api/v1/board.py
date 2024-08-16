@@ -106,4 +106,4 @@ async def delete_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     await board.delete()
-    return ModelIdOutput(id=board_id)
+    return ModelIdOutput.make(board_id)

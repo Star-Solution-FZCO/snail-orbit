@@ -7,6 +7,7 @@ from .group import router as group_router
 from .issue import router as issue_router
 from .profile import router as profile_router
 from .project import router as project_router
+from .role import router as role_router
 from .settings import router as settings_router
 from .user import router as user_router
 from .version import router as version_router
@@ -24,3 +25,4 @@ router.include_router(custom_field_router)
 router.include_router(board_router)
 router.include_router(files_router)
 router.include_router(group_router)
+router.include_router(role_router)
