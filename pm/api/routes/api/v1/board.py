@@ -7,7 +7,7 @@ import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 
 __all__ = ('router',)
@@ -101,9 +101,9 @@ async def update_board(
 @router.delete('/{board_id}')
 async def delete_board(
     board_id: PydanticObjectId,
-) -> SuccessPayloadOutput[BoardOutput]:
+) -> ModelIdOutput:
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     await board.delete()
-    return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
+    return ModelIdOutput(id=board_id)

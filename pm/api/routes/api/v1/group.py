@@ -106,17 +106,12 @@ async def update_group(
 @router.delete('/{group_id}')
 async def delete_group(
     group_id: PydanticObjectId,
-) -> SuccessPayloadOutput[GroupOutput]:
+) -> ModelIdOutput:
     obj = await m.Group.find_one(m.Group.id == group_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     await obj.delete()
-    return SuccessPayloadOutput(
-        payload=GroupOutput(
-            id=obj.id,
-            name=obj.name,
-        )
-    )
+    return ModelIdOutput(id=group_id)
 
 
 @router.get('/{group_id}/members')
