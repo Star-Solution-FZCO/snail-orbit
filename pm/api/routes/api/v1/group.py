@@ -111,7 +111,7 @@ async def delete_group(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     await obj.delete()
-    return ModelIdOutput(id=group_id)
+    return ModelIdOutput.make(group_id)
 
 
 @router.get('/{group_id}/members')

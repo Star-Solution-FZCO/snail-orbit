@@ -1,4 +1,6 @@
 from http import HTTPStatus
+from typing import Self
+from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
@@ -12,8 +14,16 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithEnumOptions,
 )
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.group import GroupOutput
+from pm.api.views.output import (
+    BaseListOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+    UUIDOutput,
+)
 from pm.api.views.pararams import ListParams
+from pm.api.views.role import RoleOutput
+from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
 
@@ -29,6 +39,26 @@ class ProjectListOutput(CrudOutput[m.Project]):
     slug: str
     description: str | None
     is_active: bool
+
+
+class ProjectPermissionOutput(BaseModel):
+    id: UUID
+    target_type: m.PermissionTargetType
+    target: GroupOutput | UserOutput
+    role: RoleOutput
+
+    @classmethod
+    def from_obj(cls, obj: m.ProjectPermission) -> Self:
+        if obj.target_type == m.PermissionTargetType.USER:
+            target = UserOutput.from_obj(obj.target)
+        else:
+            target = GroupOutput.from_obj(obj.target)
+        return cls(
+            id=obj.id,
+            target_type=obj.target_type,
+            target=target,
+            role=RoleOutput.from_obj(obj.role),
+        )
 
 
 class ProjectOutput(BaseModel):
@@ -69,6 +99,12 @@ class ProjectUpdate(CrudUpdateBody[m.Project]):
     slug: str | None = None
     description: str | None = None
     is_active: bool | None = None
+
+
+class GrantPermissionBody(BaseModel):
+    target_type: m.PermissionTargetType
+    target_id: PydanticObjectId
+    role_id: PydanticObjectId
 
 
 @router.get('/list')
@@ -122,6 +158,18 @@ async def update_project(
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
+@router.delete('/{project_id}')
+async def delete_project(
+    project_id: PydanticObjectId,
+    _=Depends(admin_context_dependency),
+) -> ModelIdOutput:
+    obj = await m.Project.find_one(m.Project.id == project_id)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    await obj.delete()
+    return ModelIdOutput.make(project_id)
+
+
 @router.post('/{project_id}/field/{field_id}')
 async def add_field(
     project_id: PydanticObjectId,
@@ -161,3 +209,73 @@ async def remove_field(
     if project.is_changed:
         await project.save_changes()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.get('/{project_id}/permissions')
+async def get_project_permissions(
+    project_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[ProjectPermissionOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    return BaseListOutput.make(
+        count=len(project.permissions),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            ProjectPermissionOutput.from_obj(perm)
+            for perm in project.permissions[query.offset : query.offset + query.limit]
+        ],
+    )
+
+
+@router.post('/{project_id}/permission')
+async def grant_permission(
+    project_id: PydanticObjectId,
+    body: GrantPermissionBody,
+) -> UUIDOutput:
+    project: m.Project | None = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    role: m.Role | None = await m.Role.find_one(m.Role.id == body.role_id)
+    if not role:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Role not found')
+    if body.target_type == m.PermissionTargetType.USER:
+        user: m.User | None = await m.User.find_one(m.User.id == body.target_id)
+        if not user:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
+        permission = m.ProjectPermission(
+            target_type=body.target_type,
+            target=m.UserLinkField.from_obj(user),
+            role=m.RoleLinkField.from_obj(role),
+        )
+    else:  # m.PermissionTargetType.GROUP
+        group: m.Group | None = await m.Group.find_one(m.Group.id == body.target_id)
+        if not group:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
+        permission = m.ProjectPermission(
+            target_type=body.target_type,
+            target=m.GroupLinkField.from_obj(group),
+            role=m.RoleLinkField.from_obj(role),
+        )
+    project.permissions.append(permission)
+    await project.save_changes()
+    return UUIDOutput.make(permission.id)
+
+
+@router.delete('/{project_id}/permission/{permission_id}')
+async def revoke_permission(
+    project_id: PydanticObjectId,
+    permission_id: UUID,
+) -> UUIDOutput:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    if not any(perm.id == permission_id for perm in project.permissions):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+    project.permissions = [
+        perm for perm in project.permissions if perm.id != permission_id
+    ]
+    await project.replace()
+    return UUIDOutput.make(permission_id)

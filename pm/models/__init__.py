@@ -4,6 +4,7 @@ from .custom_fields import *
 from .group import *
 from .issue import *
 from .project import *
+from .role import *
 from .user import *
 
 __beanie_models__ = [
@@ -13,6 +14,7 @@ __beanie_models__ = [
     Project,
     Issue,
     Board,
+    Role,
     CustomField,
     StringCustomField,
     IntegerCustomField,
