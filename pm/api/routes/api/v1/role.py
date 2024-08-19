@@ -61,6 +61,7 @@ class PermissionCategoryOutput(BaseModel):
 class RoleOutput(BaseModel):
     id: PydanticObjectId
     name: str
+    description: str | None
     permissions: list[PermissionCategoryOutput]
 
     @classmethod
@@ -69,6 +70,7 @@ class RoleOutput(BaseModel):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
             permissions=[
                 PermissionCategoryOutput(
                     label=category,
@@ -88,10 +90,12 @@ class RoleOutput(BaseModel):
 
 class RoleCreate(BaseModel):
     name: str
+    description: str | None = None
 
 
 class RoleUpdate(BaseModel):
     name: str | None = None
+    description: str | None = None
 
 
 @router.get('/list')
@@ -124,7 +128,7 @@ async def get_role(
 async def create_role(
     body: RoleCreate,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj = m.Role(name=body.name)
+    obj = m.Role(name=body.name, description=body.description)
     await obj.insert()
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 

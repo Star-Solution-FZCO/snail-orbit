@@ -16,6 +16,7 @@ __all__ = (
 class RoleLinkField(BaseModel):
     id: PydanticObjectId
     name: str
+    description: str | None
     permissions: list[Permissions]
 
     def __eq__(self, other: object) -> bool:
@@ -28,6 +29,7 @@ class RoleLinkField(BaseModel):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
             permissions=obj.permissions,
         )
 
@@ -41,4 +43,5 @@ class Role(Document):
         state_management_save_previous = True
 
     name: str = Indexed(str)
+    description: str | None = None
     permissions: list[Permissions] = Field(default_factory=list)
