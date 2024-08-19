@@ -64,11 +64,11 @@ class AuditRecord(Document):
     ) -> Self:
         author: AuditAuthorField | None = None
         try:
-            if user := context.get('current_user'):
+            if user_ctx := context.get('current_user'):
                 author = AuditAuthorField(
-                    id=user.id,
-                    name=user.name,
-                    email=user.email,
+                    id=user_ctx.user.id,
+                    name=user_ctx.user.name,
+                    email=user_ctx.user.email,
                 )
         except ContextDoesNotExistError:
             pass

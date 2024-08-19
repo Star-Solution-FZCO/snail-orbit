@@ -1,13 +1,16 @@
 from collections.abc import AsyncGenerator
+from dataclasses import dataclass
 from http import HTTPStatus
 from typing import cast
 
+from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
+from pm.permissions import Permissions
 
 __all__ = (
     'current_user_context_dependency',
@@ -17,6 +20,17 @@ __all__ = (
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@dataclass
+class UserContext:
+    user: m.User
+    permissions: dict[PydanticObjectId, set[Permissions]]
+
+    def has_permission(
+        self, project_id: PydanticObjectId, permission: Permissions
+    ) -> bool:
+        return permission in self.permissions.get(project_id, set())
 
 
 def get_bearer_token(
@@ -45,21 +59,32 @@ async def user_dependency(
 async def current_user_context_dependency(
     user: 'm.User' = Depends(user_dependency),
 ) -> AsyncGenerator:
-    data = {'current_user': user}
+    ctx = UserContext(
+        user=user,
+        permissions=await resolve_user_permissions(user),
+    )
+    data = {'current_user': ctx}
     with request_cycle_context(data):
         yield
 
 
-def current_user() -> 'm.User':
+def current_user() -> UserContext:
     if user := context.get('current_user', None):
-        return cast(m.User, user)
+        return cast(UserContext, user)
     raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
 
 
 async def admin_context_dependency(
     _: None = Depends(current_user_context_dependency),
 ) -> AsyncGenerator:
-    user = current_user()
-    if not user.is_admin:
+    ctx = current_user()
+    if not ctx.user.is_admin:
         raise HTTPException(HTTPStatus.FORBIDDEN, 'Admin permission required')
     yield
+
+
+async def resolve_user_permissions(
+    user: m.User,
+) -> dict[PydanticObjectId, set[Permissions]]:
+    projects = await m.Project.find_all().to_list()
+    return {pr.id: pr.get_user_permissions(user) for pr in projects}

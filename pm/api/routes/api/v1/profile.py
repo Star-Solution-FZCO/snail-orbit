@@ -24,5 +24,5 @@ class Profile(CrudOutput[m.User]):
 
 @router.get('/')
 async def add_token() -> SuccessPayloadOutput[Profile]:
-    user = current_user()
-    return SuccessPayloadOutput(payload=Profile.from_obj(user))
+    user_ctx = current_user()
+    return SuccessPayloadOutput(payload=Profile.from_obj(user_ctx.user))
