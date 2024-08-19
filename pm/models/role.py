@@ -3,6 +3,8 @@ from typing import Self
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Field
 
+from pm.permissions import Permissions
+
 from ._audit import audited_model
 
 __all__ = (
@@ -14,6 +16,7 @@ __all__ = (
 class RoleLinkField(BaseModel):
     id: PydanticObjectId
     name: str
+    permissions: list[Permissions]
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RoleLinkField):
@@ -25,6 +28,7 @@ class RoleLinkField(BaseModel):
         return cls(
             id=obj.id,
             name=obj.name,
+            permissions=obj.permissions,
         )
 
 
@@ -37,4 +41,4 @@ class Role(Document):
         state_management_save_previous = True
 
     name: str = Indexed(str)
-    permissions: list[str] = Field(default_factory=list)
+    permissions: list[Permissions] = Field(default_factory=list)

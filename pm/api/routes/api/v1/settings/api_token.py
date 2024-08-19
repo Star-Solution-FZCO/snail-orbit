@@ -62,10 +62,10 @@ class ApiTokenCreateOut(BaseModel):
 async def list_api_tokens(
     query: ListParams = Depends(),
 ) -> BaseListOutput[ApiTokenOut]:
-    user = current_user()
-    tokens = sorted(user.api_tokens, key=lambda x: x.created_at, reverse=True)
+    user_ctx = current_user()
+    tokens = sorted(user_ctx.user.api_tokens, key=lambda x: x.created_at, reverse=True)
     return BaseListOutput.make(
-        count=len(user.api_tokens),
+        count=len(user_ctx.user.api_tokens),
         limit=query.limit,
         offset=query.offset,
         items=[
@@ -79,9 +79,11 @@ async def list_api_tokens(
 async def add_token(
     body: ApiTokenCreate,
 ) -> SuccessPayloadOutput[ApiTokenCreateOut]:
-    user = current_user()
-    token, token_obj = user.gen_new_api_token(body.name, expires_at=body.expires_at)
-    user.api_tokens.append(token_obj)
-    if user.is_changed:
-        await user.save_changes()
+    user_ctx = current_user()
+    token, token_obj = user_ctx.user.gen_new_api_token(
+        body.name, expires_at=body.expires_at
+    )
+    user_ctx.user.api_tokens.append(token_obj)
+    if user_ctx.user.is_changed:
+        await user_ctx.user.save_changes()
     return SuccessPayloadOutput(payload=ApiTokenCreateOut.from_obj(token_obj, token))

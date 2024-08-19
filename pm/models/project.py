@@ -4,11 +4,13 @@ from uuid import UUID, uuid4
 from beanie import Document, Indexed, Link, PydanticObjectId
 from pydantic import BaseModel, Field
 
+from pm.permissions import Permissions
+
 from ._audit import audited_model
 from .custom_fields import CustomField
 from .group import GroupLinkField
 from .role import RoleLinkField
-from .user import UserLinkField
+from .user import User, UserLinkField
 
 __all__ = (
     'Project',
@@ -44,6 +46,23 @@ class Project(Document):
     is_active: bool = True
     custom_fields: list[Link['CustomField']] = Field(default_factory=list)
     permissions: list[ProjectPermission] = Field(default_factory=list)
+
+    def get_user_permissions(self, user: User) -> set[Permissions]:
+        results = set()
+        user_groups = {gr.id for gr in user.groups}
+        for perm in self.permissions:
+            if (
+                perm.target_type == PermissionTargetType.USER
+                and perm.target.id == user.id
+            ):
+                results.update(perm.role.permissions)
+                continue
+            if (
+                perm.target_type == PermissionTargetType.GROUP
+                and perm.target.id in user_groups
+            ):
+                results.update(perm.role.permissions)
+        return results
 
 
 class ProjectLinkField(BaseModel):
