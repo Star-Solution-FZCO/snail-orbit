@@ -14,6 +14,7 @@ __all__ = (
 class GroupLinkField(BaseModel):
     id: PydanticObjectId
     name: str
+    description: str | None
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GroupLinkField):
@@ -25,6 +26,7 @@ class GroupLinkField(BaseModel):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
         )
 
 
@@ -37,3 +39,4 @@ class Group(Document):
         state_management_save_previous = True
 
     name: str = Indexed(str)
+    description: str | None = None

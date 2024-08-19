@@ -13,10 +13,12 @@ __all__ = ('RoleOutput',)
 class RoleOutput(BaseModel):
     id: PydanticObjectId
     name: str
+    description: str | None
 
     @classmethod
     def from_obj(cls, obj: 'm.Role | m.RoleLinkField') -> Self:
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
         )

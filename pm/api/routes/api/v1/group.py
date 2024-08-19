@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
+from pm.api.views.group import GroupOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.pararams import ListParams
 from pm.api.views.user import UserOutput
@@ -19,17 +20,14 @@ router = APIRouter(
 )
 
 
-class GroupOutput(BaseModel):
-    id: PydanticObjectId
-    name: str
-
-
 class GroupCreate(BaseModel):
     name: str
+    description: str | None = None
 
 
 class GroupUpdate(BaseModel):
     name: str | None = None
+    description: str | None = None
 
 
 @router.get('/list')
@@ -39,12 +37,7 @@ async def list_groups(
     q = m.Group.find().sort(m.Group.name)
     results = []
     async for obj in q.limit(query.limit).skip(query.offset):  # type: m.Group
-        results.append(
-            GroupOutput(
-                id=obj.id,
-                name=obj.name,
-            )
-        )
+        results.append(GroupOutput.from_obj(obj))
     return BaseListOutput.make(
         count=await q.count(),
         limit=query.limit,
@@ -60,26 +53,16 @@ async def get_group(
     obj = await m.Group.find_one(m.Group.id == group_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    return SuccessPayloadOutput(
-        payload=GroupOutput(
-            id=obj.id,
-            name=obj.name,
-        )
-    )
+    return SuccessPayloadOutput(payload=GroupOutput.from_obj(obj))
 
 
 @router.post('')
 async def create_group(
     body: GroupCreate,
 ) -> SuccessPayloadOutput[GroupOutput]:
-    obj = m.Group(name=body.name)
+    obj = m.Group(name=body.name, description=body.description)
     await obj.insert()
-    return SuccessPayloadOutput(
-        payload=GroupOutput(
-            id=obj.id,
-            name=obj.name,
-        )
-    )
+    return SuccessPayloadOutput(payload=GroupOutput.from_obj(obj))
 
 
 @router.put('/{group_id}')
@@ -95,12 +78,7 @@ async def update_group(
     if obj.is_changed:
         await obj.save_changes()
         await m.Project.update_group_embedded_links(obj)
-    return SuccessPayloadOutput(
-        payload=GroupOutput(
-            id=obj.id,
-            name=obj.name,
-        )
-    )
+    return SuccessPayloadOutput(payload=GroupOutput.from_obj(obj))
 
 
 @router.delete('/{group_id}')
