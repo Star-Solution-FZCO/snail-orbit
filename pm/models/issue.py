@@ -7,7 +7,7 @@ from pydantic import BaseModel, Extra, Field
 from ._audit import audited_model
 from .custom_fields import CustomFieldValue
 from .project import Project, ProjectLinkField
-from .user import UserLinkField
+from .user import User, UserLinkField
 
 __all__ = (
     'Issue',
@@ -49,3 +49,22 @@ class Issue(Document):
         if not pr:
             raise ValueError(f'Project {self.project.id} not found')
         return pr
+
+    @classmethod
+    async def update_project_embedded_links(
+        cls,
+        project: Project,
+    ) -> None:
+        await cls.find(cls.project.id == project.id).update(
+            project=ProjectLinkField.from_obj(project)
+        )
+
+    @classmethod
+    async def update_user_embedded_links(
+        cls,
+        user: User,
+    ) -> None:
+        await cls.find(cls.comments.author.id == user.id).update(
+            {'$set': {'comments.$[c].author': UserLinkField.from_obj(user)}},
+            array_filters=[{'c.author.id': user.id}],
+        )

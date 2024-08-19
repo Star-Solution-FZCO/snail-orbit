@@ -155,6 +155,7 @@ async def update_project(
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
+        await m.Issue.update_project_embedded_links(obj)
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
@@ -167,6 +168,7 @@ async def delete_project(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     await obj.delete()
+    # todo: remove all issues in project
     return ModelIdOutput.make(project_id)
 
 

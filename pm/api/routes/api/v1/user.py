@@ -84,4 +84,6 @@ async def update_user(
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
+        await m.Project.update_user_embedded_links(obj)
+        await m.Issue.update_user_embedded_links(obj)
     return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))
