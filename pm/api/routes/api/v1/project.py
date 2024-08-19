@@ -183,6 +183,12 @@ async def add_field(
     )
     if not field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found')
+    if field in project.custom_fields:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Field already added to project')
+    if any(field.name == f.name for f in project.custom_fields):
+        raise HTTPException(
+            HTTPStatus.CONFLICT, 'Field with the same name already in project'
+        )
     project.custom_fields.append(field)
     if project.is_changed:
         await project.save_changes()
