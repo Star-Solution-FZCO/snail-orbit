@@ -8,8 +8,8 @@ from pm.permissions import Permissions
 
 from ._audit import audited_model
 from .custom_fields import CustomField
-from .group import GroupLinkField
-from .role import RoleLinkField
+from .group import Group, GroupLinkField
+from .role import Role, RoleLinkField
 from .user import User, UserLinkField
 
 __all__ = (
@@ -63,6 +63,93 @@ class Project(Document):
             ):
                 results.update(perm.role.permissions)
         return results
+
+    @classmethod
+    async def update_role_embedded_links(
+        cls,
+        role: Role,
+    ) -> None:
+        await cls.find(cls.permissions.role.id == role.id).update(
+            {'$set': {'permissions.$[p].role': RoleLinkField.from_obj(role)}},
+            array_filters=[{'p.role.id': role.id}],
+        )
+
+    @classmethod
+    async def remove_role_embedded_links(
+        cls,
+        role_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(cls.permissions.role.id == role_id).update(
+            {'$pull': {'permissions.role.id': role_id}},
+        )
+
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: Group,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group.id,
+        ).update(
+            {'$set': {'permissions.$[p].target': GroupLinkField.from_obj(group)}},
+            array_filters=[
+                {'p.target.id': group.id, 'p.target_type': PermissionTargetType.GROUP}
+            ],
+        )
+
+    @classmethod
+    async def remove_group_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group_id,
+        ).update(
+            {
+                '$pull': {
+                    'permissions': {
+                        'target_type': PermissionTargetType.GROUP,
+                        'target.id': group_id,
+                    }
+                }
+            },
+        )
+
+    @classmethod
+    async def update_user_embedded_links(
+        cls,
+        user: User,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.USER,
+            cls.permissions.target.id == user.id,
+        ).update(
+            {'$set': {'permissions.$[p].target': UserLinkField.from_obj(user)}},
+            array_filters=[
+                {'p.target.id': user.id, 'p.target_type': PermissionTargetType.USER}
+            ],
+        )
+
+    @classmethod
+    async def remove_user_embedded_links(
+        cls,
+        user_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.USER,
+            cls.permissions.target.id == user_id,
+        ).update(
+            {
+                '$pull': {
+                    'permissions': {
+                        'target_type': PermissionTargetType.USER,
+                        'target.id': user_id,
+                    }
+                }
+            },
+        )
 
 
 class ProjectLinkField(BaseModel):

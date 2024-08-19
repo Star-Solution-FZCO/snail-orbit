@@ -134,14 +134,14 @@ async def update_role(
     role_id: PydanticObjectId,
     body: RoleUpdate,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj = await m.Role.find_one(m.Role.id == role_id)
+    obj: m.Role | None = await m.Role.find_one(m.Role.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj, k, v)
     if obj.is_changed:
-        # todo: update role links
         await obj.save_changes()
+        await m.Project.update_role_embedded_links(obj)
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
@@ -153,33 +153,31 @@ async def delete_role(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
     await obj.delete()
+    await m.Project.remove_role_embedded_links(role_id)
     return ModelIdOutput.make(role_id)
 
 
 @router.post('/{role_id}/permission/{permission_key}')
 async def grant_permission(
     role_id: PydanticObjectId,
-    permission_key: str,
+    permission_key: Permissions,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    if permission_key not in Permissions:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid permission key')
-    obj = await m.Role.find_one(m.Role.id == role_id)
+    obj: m.Role | None = await m.Role.find_one(m.Role.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
     if permission_key in obj.permissions:
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
     obj.permissions.append(permission_key)
     await obj.save_changes()
+    await m.Project.update_role_embedded_links(obj)
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
 @router.delete('/{role_id}/permission/{permission_key}')
 async def revoke_permission(
     role_id: PydanticObjectId,
-    permission_key: str,
+    permission_key: Permissions,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    if permission_key not in Permissions:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid permission key')
     obj = await m.Role.find_one(m.Role.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
@@ -187,4 +185,5 @@ async def revoke_permission(
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission not granted')
     obj.permissions.remove(permission_key)
     await obj.replace()
+    await m.Project.update_role_embedded_links(obj)
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))

@@ -93,8 +93,8 @@ async def update_group(
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj, k, v)
     if obj.is_changed:
-        # todo: update group links
         await obj.save_changes()
+        await m.Project.update_group_embedded_links(obj)
     return SuccessPayloadOutput(
         payload=GroupOutput(
             id=obj.id,
@@ -111,6 +111,7 @@ async def delete_group(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     await obj.delete()
+    await m.Project.remove_group_embedded_links(group_id)
     return ModelIdOutput.make(group_id)
 
 
