@@ -8,6 +8,9 @@ const theme = createTheme({
             content: "#23272b",
         },
     },
+    typography: {
+        fontSize: 14,
+    },
 });
 
 export default theme;
