@@ -48,14 +48,20 @@ PERMISSIONS_BY_CATEGORY = {
 
 
 class PermissionOutput(BaseModel):
+    key: Permissions
     label: str
     granted: bool
+
+
+class PermissionCategoryOutput(BaseModel):
+    label: str
+    permissions: list[PermissionOutput]
 
 
 class RoleOutput(BaseModel):
     id: PydanticObjectId
     name: str
-    permissions: dict[str, dict[str, PermissionOutput]]
+    permissions: list[PermissionCategoryOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Role) -> Self:
@@ -63,16 +69,20 @@ class RoleOutput(BaseModel):
         return cls(
             id=obj.id,
             name=obj.name,
-            permissions={
-                category: {
-                    permission: PermissionOutput(
-                        label=label,
-                        granted=permission in role_permissions,
-                    )
-                    for permission, label in permissions.items()
-                }
+            permissions=[
+                PermissionCategoryOutput(
+                    label=category,
+                    permissions=[
+                        PermissionOutput(
+                            key=key,
+                            label=label,
+                            granted=key in role_permissions,
+                        )
+                        for key, label in permissions.items()
+                    ],
+                )
                 for category, permissions in PERMISSIONS_BY_CATEGORY.items()
-            },
+            ],
         )
 
 
