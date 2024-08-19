@@ -1,5 +1,6 @@
-import { SxProps } from "@mui/material";
+import { Stack, SxProps, Typography } from "@mui/material";
 import { FC } from "react";
+import { FieldCardWrapper } from "./field_card.styles.tsx";
 
 export type FieldCardProps = {
     label: string;
@@ -15,7 +16,33 @@ export const FieldCard: FC<FieldCardProps> = ({
     label,
     orientation = "horizontal",
 }) => {
-    return <div>Test</div>;
+    return (
+        <FieldCardWrapper onClick={onClick}>
+            <Stack
+                direction={orientation === "horizontal" ? "row" : "column"}
+                alignItems="baseline"
+            >
+                <Typography
+                    variant={"body1"}
+                    component="span"
+                    sx={{
+                        width: 1,
+                        color: "grey.500",
+                        fontSize: orientation === "horizontal" ? 16 : 14,
+                    }}
+                >
+                    {label}
+                </Typography>
+                <Typography
+                    variant={"body1"}
+                    component="span"
+                    sx={{ width: 1, color: "primary.main" }}
+                >
+                    {value}
+                </Typography>
+            </Stack>
+        </FieldCardWrapper>
+    );
 };
 
 export default FieldCard;
