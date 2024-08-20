@@ -11,7 +11,7 @@ export const IssueCreate: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const { data, isLoading: isProjectsLoading } =
+    const { data: projects, isLoading: isProjectsLoading } =
         projectApi.useListProjectQuery();
 
     const [createIssue, { isLoading: isCreateProjectLoading }] =
@@ -46,7 +46,7 @@ export const IssueCreate: FC = () => {
             </Typography>
 
             <IssueForm
-                projects={data?.payload.items || []}
+                projects={projects?.payload.items || []}
                 onSubmit={handleSubmit}
                 loading={isLoading}
             />
