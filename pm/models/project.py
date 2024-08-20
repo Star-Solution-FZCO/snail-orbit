@@ -11,6 +11,7 @@ from .custom_fields import CustomField
 from .group import Group, GroupLinkField
 from .role import Role, RoleLinkField
 from .user import User, UserLinkField
+from .workflow import Workflow
 
 __all__ = (
     'Project',
@@ -45,6 +46,7 @@ class Project(Document):
     description: str | None = None
     is_active: bool = True
     custom_fields: list[Link['CustomField']] = Field(default_factory=list)
+    workflows: list[Link['Workflow']] = Field(default_factory=list)
     permissions: list[ProjectPermission] = Field(default_factory=list)
 
     def get_user_permissions(self, user: User) -> set[Permissions]:

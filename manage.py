@@ -4,6 +4,7 @@ import sys
 
 from pm.cli.api import add_api_args
 from pm.cli.user import add_user_args
+from pm.cli.workflow import add_workflow_args
 
 
 def execute(args: argparse.Namespace) -> None:
@@ -18,6 +19,7 @@ def main() -> int:
     subparsers = parser.add_subparsers(required=True)
     add_api_args(subparsers.add_parser('api', help='API server commands'))
     add_user_args(subparsers.add_parser('user', help='User commands'))
+    add_workflow_args(subparsers.add_parser('workflow', help='Workflow commands'))
     args = parser.parse_args()
     execute(args)
     return 0

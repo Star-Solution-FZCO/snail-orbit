@@ -6,6 +6,7 @@ from .issue import *
 from .project import *
 from .role import *
 from .user import *
+from .workflow import *
 
 __beanie_models__ = [
     AuditRecord,
@@ -26,4 +27,7 @@ __beanie_models__ = [
     UserMultiCustomField,
     EnumCustomField,
     EnumMultiCustomField,
+    Workflow,
+    ScheduledWorkflow,
+    OnChangeWorkflow,
 ]

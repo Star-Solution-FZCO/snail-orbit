@@ -10,6 +10,7 @@ from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.workflows import WorkflowException
 
 __all__ = ('router',)
 
@@ -122,6 +123,15 @@ async def create_issue(
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
+    try:
+        for wf in project.workflows:
+            await wf.run(obj)
+    except WorkflowException as err:
+        raise ValidateModelException(
+            payload=IssueOutput.from_obj(obj),
+            error_messages=[err.msg],
+            error_fields=err.fields_errors,
+        )
     await obj.insert()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
@@ -136,10 +146,10 @@ async def update_issue(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    project = await obj.get_project(fetch_links=True)
     validation_errors = []
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'fields':
-            project = await obj.get_project(fetch_links=True)
             v, validation_errors = await validate_custom_fields_values(v, project, obj)
             obj.fields.update(v)
             continue
@@ -149,6 +159,15 @@ async def update_issue(
             payload=IssueOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
+        )
+    try:
+        for wf in project.workflows:
+            await wf.run(obj)
+    except WorkflowException as err:
+        raise ValidateModelException(
+            payload=IssueOutput.from_obj(obj),
+            error_messages=[err.msg],
+            error_fields=err.fields_errors,
         )
     if obj.is_changed:
         await obj.save_changes()
