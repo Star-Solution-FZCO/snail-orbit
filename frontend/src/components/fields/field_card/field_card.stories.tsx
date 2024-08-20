@@ -2,10 +2,10 @@ import { Box } from "@mui/material";
 import { action } from "@storybook/addon-actions";
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import FieldCard from "components/fields/field_card/field_card.tsx";
+import FieldCard from "./field_card";
 
 const meta = {
-    title: "Components/FieldCard",
+    title: "Components/Field/Card",
     component: FieldCard,
     parameters: {
         layout: "centered",
