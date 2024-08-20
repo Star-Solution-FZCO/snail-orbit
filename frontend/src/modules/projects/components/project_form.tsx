@@ -57,6 +57,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
                 size="small"
+                required
                 fullWidth
             />
 
@@ -67,6 +68,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 helperText={t(errors.slug?.message || "")}
                 variant="outlined"
                 size="small"
+                required
                 fullWidth
             />
 

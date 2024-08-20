@@ -72,6 +72,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                     size="small"
                     fullWidth
                     labelId="issue_project"
+                    required
                 >
                     {projects.map((project) => (
                         <MenuItem key={project.id} value={project.id}>
@@ -79,7 +80,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                         </MenuItem>
                     ))}
                 </Select>
-                <FormHelperText hidden={!errors.project_id}>
+                <FormHelperText hidden={!errors.project_id} error>
                     {t(errors.project_id?.message || "")}
                 </FormHelperText>
             </FormControl>
@@ -91,6 +92,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                 helperText={t(errors.subject?.message || "")}
                 variant="outlined"
                 size="small"
+                required
                 fullWidth
             />
 
