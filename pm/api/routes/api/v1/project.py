@@ -34,6 +34,13 @@ router = APIRouter(
 )
 
 
+class WorkflowOutput(CrudOutput[m.Workflow]):
+    id: PydanticObjectId
+    name: str
+    description: str | None
+    type: m.WorkflowType
+
+
 class ProjectListOutput(CrudOutput[m.Project]):
     name: str
     slug: str
@@ -68,6 +75,7 @@ class ProjectOutput(BaseModel):
     description: str | None
     is_active: bool
     custom_fields: list[CustomFieldOutput | CustomFieldOutputWithEnumOptions]
+    workflows: list[WorkflowOutput] = []
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> 'ProjectOutput':
@@ -84,6 +92,7 @@ class ProjectOutput(BaseModel):
             description=obj.description,
             is_active=obj.is_active,
             custom_fields=custom_fields,
+            workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
         )
 
 
@@ -287,3 +296,48 @@ async def revoke_permission(
     ]
     await project.replace()
     return UUIDOutput.make(permission_id)
+
+
+@router.post('/{project_id}/workflow/{workflow_id}')
+async def add_workflow(
+    project_id: PydanticObjectId,
+    workflow_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    workflow = await m.Workflow.find_one(
+        m.Workflow.id == workflow_id, with_children=True
+    )
+    if not workflow:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
+    if workflow in project.workflows:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Workflow already added to project')
+    project.workflows.append(workflow)
+    if project.is_changed:
+        await project.save_changes()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.delete('/{project_id}/workflow/{workflow_id}')
+async def remove_workflow(
+    project_id: PydanticObjectId,
+    workflow_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    workflow = await m.Workflow.find_one(
+        m.Workflow.id == workflow_id, with_children=True
+    )
+    if not workflow:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
+    try:
+        project.workflows.remove(workflow)
+    except ValueError as err:
+        raise HTTPException(
+            HTTPStatus.CONFLICT, 'Workflow not found in project'
+        ) from err
+    if project.is_changed:
+        await project.save_changes()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
