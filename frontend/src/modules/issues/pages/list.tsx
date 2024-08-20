@@ -47,7 +47,7 @@ export const IssuesList: FC = () => {
             height="100%"
             gap={2}
         >
-            <Stack direction="row">
+            <Stack direction="row" gap={1}>
                 <Typography fontSize={24} fontWeight="bold">
                     {t("issues.title")}
                 </Typography>

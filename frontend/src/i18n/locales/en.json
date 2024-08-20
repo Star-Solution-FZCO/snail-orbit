@@ -63,5 +63,20 @@
     "customFields.options.deleteTitle": "Delete Option",
     "customFields.options.deleteConfirm": "Are you sure you want to delete this option?",
     "customFields.options.delete": "Delete",
-    "customFields.options.cancel": "Cancel"
+    "customFields.options.cancel": "Cancel",
+    "agileBoards.title": "Agile Boards",
+    "agileBoards.select.label": "Agile Board",
+    "agileBoards.search.placeholder": "Filter cards on the board",
+    "agileBoards.create.title": "New board",
+    "agileBoards.create.success": "Agile Board created successfully",
+    "agileBoards.form.name": "Name",
+    "agileBoards.form.description": "Description",
+    "agileBoards.form.query": "Query",
+    "agileBoards.form.column_field": "Column Field",
+    "agileBoards.form.column": "Column",
+    "agileBoards.form.columns": "Columns",
+    "agileBoards.form.addColumn": "Add column",
+    "agileBoards.form.save": "Save",
+    "agileBoards.form.cancel": "Cancel",
+    "agileBoards.update.success": "Agile Board updated successfully"
 }
