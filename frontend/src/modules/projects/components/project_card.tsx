@@ -1,12 +1,5 @@
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import {
-    Avatar,
-    Box,
-    IconButton,
-    Menu,
-    MenuItem,
-    Typography,
-} from "@mui/material";
+import { Avatar, Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { FC, useState } from "react";
@@ -57,9 +50,9 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                 {project.name.slice(0, 3).toUpperCase()}
             </Avatar>
 
-            <Typography fontWeight="bold" flex={1}>
-                <Link to={`/projects/${project.id}`}>{project.name}</Link>
-            </Typography>
+            <Link to={`/projects/${project.id}`} flex={1} fontWeight="bold">
+                {project.name}
+            </Link>
 
             <IconButton onClick={handleClickMenu} size="small">
                 <MoreHorizIcon />

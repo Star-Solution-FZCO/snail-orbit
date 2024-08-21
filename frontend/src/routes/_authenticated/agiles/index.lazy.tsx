@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { AgileBoardsDashboard } from "modules";
+import { AgileBoardList } from "modules";
 
 export const Route = createLazyFileRoute("/_authenticated/agiles/")({
-    component: AgileBoardsDashboard,
+    component: AgileBoardList,
 });
