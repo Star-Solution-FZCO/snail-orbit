@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Self
+from typing import Any
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Query
@@ -9,44 +9,13 @@ import pm.models as m
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
+from pm.api.views.issue import IssueOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
 
 router = APIRouter()
-
-
-class ProjectField(BaseModel):
-    id: PydanticObjectId
-    name: str
-    slug: str
-
-    @classmethod
-    def from_obj(cls, obj: m.Issue) -> Self:
-        return cls(
-            id=obj.project.id,
-            name=obj.project.name,
-            slug=obj.project.slug,
-        )
-
-
-class IssueOutput(BaseModel):
-    id: PydanticObjectId
-    project: ProjectField
-    subject: str
-    text: str | None
-    fields: dict[str, m.CustomFieldValue]
-
-    @classmethod
-    def from_obj(cls, obj: m.Issue) -> Self:
-        return cls(
-            id=obj.id,
-            project=ProjectField.from_obj(obj),
-            subject=obj.subject,
-            text=obj.text,
-            fields=obj.fields,
-        )
 
 
 class IssueCreate(BaseModel):
@@ -56,10 +25,16 @@ class IssueCreate(BaseModel):
     fields: dict[str, Any] = Field(default_factory=dict)
 
 
+class BoardPosition(BaseModel):
+    board_id: PydanticObjectId
+    after_issue: PydanticObjectId | None
+
+
 class IssueUpdate(BaseModel):
     subject: str | None = None
     text: str | None = None
     fields: dict[str, Any] | None = None
+    board_position: BoardPosition | None = None
 
 
 class IssueListParams(BaseModel):
@@ -146,9 +121,15 @@ async def update_issue(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    if body.board_position:
+        board = await m.Board.find_one(m.Board.id == body.board_position.board_id)
+        if not board:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board not found')
     project = await obj.get_project(fetch_links=True)
     validation_errors = []
     for k, v in body.dict(exclude_unset=True).items():
+        if k == 'board_position':
+            pass
         if k == 'fields':
             v, validation_errors = await validate_custom_fields_values(v, project, obj)
             obj.fields.update(v)
@@ -169,6 +150,9 @@ async def update_issue(
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         )
+    if body.board_position:
+        board.move_issue(obj.id, after_id=body.board_position.after_issue)
+        await board.save_changes()
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
