@@ -65,5 +65,14 @@ export const agileBoardApi = createApi({
                 { type: "AgileBoards", id },
             ],
         }),
+        deleteAgileBoard: build.mutation<ApiResponse<AgileBoardT>, string>({
+            query: (id) => ({
+                url: `board/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "AgileBoards", id },
+            ],
+        }),
     }),
 });
