@@ -135,12 +135,12 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                     variant="outlined"
                     loading={loading}
                 >
-                    {t("customFields.form.save")}
+                    {t("save")}
                 </LoadingButton>
 
                 <Link to="..">
                     <Button variant="outlined" color="error">
-                        {t("customFields.form.cancel")}
+                        {t("cancel")}
                     </Button>
                 </Link>
             </Box>

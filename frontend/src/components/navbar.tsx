@@ -1,7 +1,16 @@
 import LogoutIcon from "@mui/icons-material/Logout";
-import { Avatar, Box, IconButton, useTheme } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
+import {
+    Avatar,
+    Box,
+    IconButton,
+    Menu,
+    MenuItem,
+    useTheme,
+} from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
@@ -50,9 +59,30 @@ const NavBarLink: FC<INavBarLinkProps & React.PropsWithChildren> = ({
 
 const NavBar = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const user = useAppSelector((state) => state.profile.user);
+
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const menuOpen = Boolean(anchorEl);
+
+    const handleClickSettings = (
+        event: React.MouseEvent<HTMLButtonElement>,
+    ) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleClickMenuItem = (path: string) => {
+        navigate({
+            to: path,
+        });
+        handleClose();
+    };
 
     const handleLogout = async () => {
         logout();
@@ -76,6 +106,10 @@ const NavBar = () => {
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
+                <IconButton onClick={handleClickSettings} size="small">
+                    <SettingsIcon />
+                </IconButton>
+
                 <Avatar sx={{ width: 32, height: 32 }} variant="rounded">
                     {user?.name
                         .split(" ")
@@ -88,6 +122,27 @@ const NavBar = () => {
                     <LogoutIcon />
                 </IconButton>
             </Box>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={menuOpen}
+                onClose={handleClose}
+                anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                }}
+                transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                }}
+            >
+                <MenuItem onClick={() => handleClickMenuItem("/groups")}>
+                    {t("navbar.groups")}
+                </MenuItem>
+                <MenuItem onClick={() => handleClickMenuItem("/roles")}>
+                    {t("navbar.roles")}
+                </MenuItem>
+            </Menu>
         </Box>
     );
 };

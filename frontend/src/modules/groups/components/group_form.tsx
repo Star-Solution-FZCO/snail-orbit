@@ -6,25 +6,24 @@ import { MDEditor } from "components";
 import { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ProjectT } from "types";
+import { GroupT } from "types";
 import * as yup from "yup";
 
-const projectSchema = yup.object().shape({
+const groupSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
-    slug: yup.string().required("form.validation.required"),
-    description: yup.string(),
+    description: yup.string().nullable().default(null),
 });
 
-type ProjectFormData = yup.InferType<typeof projectSchema>;
+type GroupFormData = yup.InferType<typeof groupSchema>;
 
-interface IProjectFormProps {
-    defaultValues?: ProjectT;
-    onSubmit: (formData: ProjectFormData) => void;
+interface IGroupFormProps {
+    defaultValues?: GroupT;
+    onSubmit: (formData: GroupFormData) => void;
     loading?: boolean;
     hideCancel?: boolean;
 }
 
-const ProjectForm: FC<IProjectFormProps> = ({
+const GroupForm: FC<IGroupFormProps> = ({
     defaultValues,
     onSubmit,
     loading,
@@ -39,7 +38,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
         formState: { errors },
     } = useForm({
         defaultValues,
-        resolver: yupResolver(projectSchema),
+        resolver: yupResolver(groupSchema),
     });
 
     return (
@@ -49,23 +48,13 @@ const ProjectForm: FC<IProjectFormProps> = ({
             flexDirection="column"
             gap={2}
             onSubmit={handleSubmit(onSubmit)}
+            maxWidth="800px"
         >
             <TextField
                 {...register("name")}
-                label={t("projects.form.name")}
+                label={t("groups.form.name")}
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
-                variant="outlined"
-                size="small"
-                required
-                fullWidth
-            />
-
-            <TextField
-                {...register("slug")}
-                label={t("projects.form.slug")}
-                error={!!errors.slug}
-                helperText={t(errors.slug?.message || "")}
                 variant="outlined"
                 size="small"
                 required
@@ -78,7 +67,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                     control={control}
                     render={({ field: { value, onChange } }) => (
                         <MDEditor
-                            value={value}
+                            value={value || ""}
                             onChange={onChange}
                             textareaProps={{
                                 placeholder: t("description"),
@@ -110,4 +99,4 @@ const ProjectForm: FC<IProjectFormProps> = ({
     );
 };
 
-export { ProjectForm };
+export { GroupForm };

@@ -1,8 +1,8 @@
 export type CreateAgileBoardT = {
     name: string;
-    description?: string | null;
-    query?: string | null;
-    column_field?: string | null;
+    description: string | null;
+    query: string | null;
+    column_field: string | null;
     columns: string[];
 };
 
