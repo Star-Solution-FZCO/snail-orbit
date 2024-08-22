@@ -2,8 +2,10 @@ import { configureStore } from "@reduxjs/toolkit";
 import {
     agileBoardApi,
     customFieldsApi,
+    groupApi,
     issueApi,
     projectApi,
+    roleApi,
     userApi,
 } from "./api";
 import { profileReducer } from "./slices";
@@ -17,6 +19,8 @@ export const store = configureStore({
         [issueApi.reducerPath]: issueApi.reducer,
         [userApi.reducerPath]: userApi.reducer,
         [agileBoardApi.reducerPath]: agileBoardApi.reducer,
+        [groupApi.reducerPath]: groupApi.reducer,
+        [roleApi.reducerPath]: roleApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -25,6 +29,8 @@ export const store = configureStore({
             issueApi.middleware,
             userApi.middleware,
             agileBoardApi.middleware,
+            groupApi.middleware,
+            roleApi.middleware,
         ]),
 });
 

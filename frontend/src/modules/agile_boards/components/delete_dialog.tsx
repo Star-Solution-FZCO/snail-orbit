@@ -88,7 +88,7 @@ const DeleteAgileBoardDialog: FC<IDeleteAgileBoardDialogProps> = ({
                         color="error"
                         disabled={isLoading}
                     >
-                        {t("agileBoards.delete.cancel")}
+                        {t("cancel")}
                     </Button>
                 </Box>
             </Box>

@@ -10,15 +10,11 @@ import { tabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/projects/$projectId");
 
-type ProjectViewSearch = {
-    tab?: string;
-};
-
 const ProjectView = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { projectId } = routeApi.useParams();
-    const search: ProjectViewSearch = routeApi.useSearch();
+    const search = routeApi.useSearch();
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 

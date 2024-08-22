@@ -21,7 +21,7 @@ import * as yup from "yup";
 const issueSchema = yup.object().shape({
     project_id: yup.string().required("form.validation.required"),
     subject: yup.string().required("form.validation.required"),
-    text: yup.string(),
+    text: yup.string().nullable().default(null),
 });
 
 export type IssueFormData = yup.InferType<typeof issueSchema>;
@@ -63,7 +63,7 @@ export const IssueForm: FC<IssueFormProps> = ({
         >
             <FormControl fullWidth>
                 <FormLabel id="issue_project">
-                    {t("issue.form.project")}
+                    {t("issues.form.project")}
                 </FormLabel>
                 <Select
                     {...register("project_id")}
@@ -87,7 +87,7 @@ export const IssueForm: FC<IssueFormProps> = ({
 
             <TextField
                 {...register("subject")}
-                label={t("issue.form.name")}
+                label={t("issues.form.subject")}
                 error={!!errors.subject}
                 helperText={t(errors.subject?.message || "")}
                 variant="outlined"
@@ -102,10 +102,10 @@ export const IssueForm: FC<IssueFormProps> = ({
                     control={control}
                     render={({ field: { value, onChange } }) => (
                         <MDEditor
-                            value={value}
+                            value={value || ""}
                             onChange={onChange}
                             textareaProps={{
-                                placeholder: t("issue.form.text"),
+                                placeholder: t("issues.form.text"),
                             }}
                         />
                     )}
@@ -119,13 +119,13 @@ export const IssueForm: FC<IssueFormProps> = ({
                     size="small"
                     loading={loading}
                 >
-                    {t("issue.form.save")}
+                    {t("save")}
                 </LoadingButton>
 
                 {!hideCancel && (
                     <Link to="..">
                         <Button variant="outlined" color="error" size="small">
-                            {t("issue.form.cancel")}
+                            {t("cancel")}
                         </Button>
                     </Link>
                 )}
