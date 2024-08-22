@@ -129,10 +129,12 @@ async def update_issue(
     validation_errors = []
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'board_position':
-            pass
+            continue
         if k == 'fields':
-            v, validation_errors = await validate_custom_fields_values(v, project, obj)
-            obj.fields.update(v)
+            f_val, validation_errors = await validate_custom_fields_values(
+                v, project, obj
+            )
+            obj.fields.update(f_val)
             continue
         setattr(obj, k, v)
     if validation_errors:
