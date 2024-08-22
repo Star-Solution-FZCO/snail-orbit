@@ -1,3 +1,4 @@
+import asyncio
 from http import HTTPStatus
 
 from beanie import PydanticObjectId
@@ -78,12 +79,16 @@ async def update_user(
     user_id: PydanticObjectId,
     body: UserUpdate,
 ) -> SuccessPayloadOutput[UserOutput]:
-    obj = await m.User.find_one(m.User.id == user_id)
+    obj: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
-        await m.Project.update_user_embedded_links(obj)
-        await m.Issue.update_user_embedded_links(obj)
+        await asyncio.gather(
+            m.Project.update_user_embedded_links(obj),
+            m.Issue.update_user_embedded_links(obj),
+            m.UserMultiCustomField.update_user_embedded_links(obj),
+            m.UserCustomField.update_user_embedded_links(obj),
+        )
     return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))

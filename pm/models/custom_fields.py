@@ -7,6 +7,8 @@ from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
 from ._audit import audited_model
+from .group import Group, GroupLinkField
+from .user import User, UserLinkField
 
 __all__ = (
     'CustomFieldTypeT',
@@ -24,6 +26,9 @@ __all__ = (
     'EnumMultiCustomField',
     'CustomFieldValue',
     'CustomFieldValidationError',
+    'UserOptionType',
+    'UserOption',
+    'GroupOption',
 )
 
 
@@ -46,6 +51,28 @@ class CustomFieldTypeT(StrEnum):
 class EnumOption(BaseModel):
     value: str
     color: str | None = None
+
+
+class UserOptionType(StrEnum):
+    USER = 'user'
+    GROUP = 'group'
+
+
+class GroupOption(BaseModel):
+    group: GroupLinkField
+    users: list[UserLinkField]
+
+
+class UserOption(BaseModel):
+    id: UUID
+    type: UserOptionType
+    value: UserLinkField | GroupOption
+
+    @property
+    def users(self) -> list[UserLinkField]:
+        if self.type == UserOptionType.USER:
+            return [self.value]
+        return self.value.users
 
 
 class CustomFieldValidationError(ValueError):
@@ -173,16 +200,111 @@ class DateTimeCustomField(CustomField):
         )
 
 
-class UserCustomField(CustomField):
+class UserCustomFieldMixin:
+    options: list[UserOption] = Field(default_factory=list)
+
+    @classmethod
+    async def update_user_embedded_links(
+        cls,
+        user: User,
+    ) -> None:
+        await cls.find(
+            cls.options.type == UserOptionType.USER,
+            cls.options.value.id == user.id,
+        ).update(
+            {'$set': {'options.$[o].value': UserLinkField.from_obj(user)}},
+            array_filters=[{'o.value.id': user.id}],
+        )
+        await cls.find(
+            cls.options.type == UserOptionType.GROUP,
+            cls.options.value.users.id == user.id,
+        ).update(
+            {'$set': {'options.$[o].value.users.$[u]': UserLinkField.from_obj(user)}},
+            array_filters=[
+                {'o.value.users.id': user.id, 'o.type': UserOptionType.USER},
+                {'u.id': user.id},
+            ],
+        )
+
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: Group,
+    ) -> None:
+        await cls.find(
+            cls.options.type == UserOptionType.GROUP,
+            cls.options.value.group.id == group.id,
+        ).update(
+            {'$set': {'options.$[o].value.group': GroupLinkField.from_obj(group)}},
+            array_filters=[
+                {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP}
+            ],
+        )
+
+    @classmethod
+    async def remove_group_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.options.type == UserOptionType.GROUP,
+            cls.options.value.group.id == group_id,
+        ).update(
+            {
+                '$pull': {
+                    'options': {
+                        'value.group.id': group_id,
+                        'type': UserOptionType.GROUP,
+                    }
+                }
+            },
+        )
+
+    @classmethod
+    async def update_user_group_membership(cls, user: User, group: Group) -> None:
+        if any(gr.id == group.id for gr in user.groups):
+            await cls.find(
+                cls.options.type == UserOptionType.GROUP,
+                cls.options.value.group.id == group.id,
+            ).update(
+                {'$push': {'options.$[o].value.users': [UserLinkField.from_obj(user)]}},
+                array_filters=[
+                    {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP}
+                ],
+            )
+            return
+        await cls.find(
+            cls.options.type == UserOptionType.GROUP,
+            cls.options.value.group.id == group.id,
+        ).update(
+            {'$pull': {'options.$[o].value.users.$[u]': UserLinkField.from_obj(user)}},
+            array_filters=[
+                {'o.value.users.id': user.id, 'o.type': UserOptionType.USER},
+                {'u.id': user.id},
+            ],
+        )
+
+
+class UserCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
-        # todo: validate user
-        return value
+        try:
+            value = PydanticObjectId(value)
+        except ValueError as err:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='must be a valid ObjectId'
+            ) from err
+        users = {u.id: u for opt in self.options for u in opt.users}
+        if value not in users:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='user not found in options'
+            )
+        return users[value]
 
 
-class UserMultiCustomField(CustomField):
+class UserMultiCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER_MULTI
 
     def validate_value(self, value: Any) -> Any:
@@ -197,7 +319,21 @@ class UserMultiCustomField(CustomField):
             raise CustomFieldValidationError(
                 field=self, value=value, msg='cannot be empty'
             )
-        return value
+        users = {u.id: u for opt in self.options for u in opt.users}
+        results = []
+        for val in value:
+            try:
+                val = PydanticObjectId(val)
+            except ValueError as err:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg='must be a valid ObjectId'
+                ) from err
+            if val not in users:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg=f'user {val} not found'
+                )
+            results.append(users[val])
+        return results
 
 
 class EnumCustomField(CustomField):
@@ -257,4 +393,5 @@ MAPPING = {
 class CustomFieldValue(BaseModel):
     id: PydanticObjectId
     type: CustomFieldTypeT
-    value: Any
+    # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
+    value: UserLinkField | list[UserLinkField] | Any

@@ -1,3 +1,4 @@
+import asyncio
 from http import HTTPStatus
 
 from beanie import PydanticObjectId
@@ -70,14 +71,18 @@ async def update_group(
     group_id: PydanticObjectId,
     body: GroupUpdate,
 ) -> SuccessPayloadOutput[GroupOutput]:
-    obj = await m.Group.find_one(m.Group.id == group_id)
+    obj: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
-        await m.Project.update_group_embedded_links(obj)
+        await asyncio.gather(
+            m.Project.update_group_embedded_links(obj),
+            m.UserCustomField.update_group_embedded_links(obj),
+            m.UserMultiCustomField.update_group_embedded_links(obj),
+        )
     return SuccessPayloadOutput(payload=GroupOutput.from_obj(obj))
 
 
@@ -85,11 +90,15 @@ async def update_group(
 async def delete_group(
     group_id: PydanticObjectId,
 ) -> ModelIdOutput:
-    obj = await m.Group.find_one(m.Group.id == group_id)
+    obj: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     await obj.delete()
-    await m.Project.remove_group_embedded_links(group_id)
+    await asyncio.gather(
+        m.Project.remove_group_embedded_links(group_id),
+        m.UserCustomField.remove_group_embedded_links(group_id),
+        m.UserMultiCustomField.remove_group_embedded_links(group_id),
+    )
     return ModelIdOutput.make(group_id)
 
 
@@ -121,13 +130,17 @@ async def add_group_member(
     group: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    user = await m.User.find_one(m.User.id == user_id)
+    user: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     if any(gr.id == group.id for gr in user.groups):
         raise HTTPException(HTTPStatus.CONFLICT, 'User already in group')
     user.groups.append(m.GroupLinkField.from_obj(group))
     await user.save_changes()
+    await asyncio.gather(
+        m.UserCustomField.update_user_group_membership(user, group),
+        m.UserMultiCustomField.update_user_group_membership(user, group),
+    )
     return ModelIdOutput.from_obj(group)
 
 
@@ -146,4 +159,8 @@ async def remove_group_member(
         raise HTTPException(HTTPStatus.CONFLICT, 'User not in group')
     user.groups = [gr for gr in user.groups if gr.id != group.id]
     await user.save_changes()
+    await asyncio.gather(
+        m.UserCustomField.update_user_group_membership(user, group),
+        m.UserMultiCustomField.update_user_group_membership(user, group),
+    )
     return ModelIdOutput.from_obj(group)
