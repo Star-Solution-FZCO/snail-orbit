@@ -13,9 +13,9 @@ import * as yup from "yup";
 
 const agileBoardSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
-    description: yup.string().nullable(),
-    query: yup.string().nullable(),
-    column_field: yup.string().nullable(),
+    description: yup.string().nullable().default(null),
+    query: yup.string().nullable().default(null),
+    column_field: yup.string().nullable().default(null),
     columns: yup.array().of(yup.string().required()).required(),
 });
 
@@ -157,13 +157,13 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                     size="small"
                     loading={loading}
                 >
-                    {t("agileBoards.form.save")}
+                    {t("save")}
                 </LoadingButton>
 
                 {!hideCancel && (
                     <Link to="..">
                         <Button variant="outlined" color="error" size="small">
-                            {t("agileBoards.form.cancel")}
+                            {t("cancel")}
                         </Button>
                     </Link>
                 )}

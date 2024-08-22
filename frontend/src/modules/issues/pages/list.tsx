@@ -16,12 +16,12 @@ export const IssuesList: FC = () => {
     const columns: GridColDef<IssueT>[] = [
         {
             field: "subject",
-            headerName: t("issue.fields.subject"),
+            headerName: t("issues.fields.subject"),
             flex: 1,
         },
         {
             field: "project",
-            headerName: t("issue.fields.project"),
+            headerName: t("issues.fields.project"),
             flex: 1,
             valueGetter: (_, row) => row.project.name,
         },

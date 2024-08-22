@@ -174,7 +174,7 @@ const RemoveProjectCustomFieldDialog: FC<
                         color="error"
                         disabled={isLoading}
                     >
-                        {t("projects.customFields.remove.cancel")}
+                        {t("cancel")}
                     </Button>
                 </Box>
             </Box>
