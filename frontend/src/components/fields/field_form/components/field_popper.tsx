@@ -20,8 +20,7 @@ export const defaultModifiers = {
         name: "flip",
         enabled: true,
         options: {
-            altBoundary: true,
-            rootBoundary: "document",
+            rootBoundary: "viewport",
             padding: 8,
         },
     },
@@ -30,9 +29,8 @@ export const defaultModifiers = {
         enabled: true,
         options: {
             altAxis: true,
-            altBoundary: true,
             tether: true,
-            rootBoundary: "document",
+            rootBoundary: "viewport",
             padding: 8,
         },
     },

@@ -4,20 +4,17 @@ import IssueForm from "modules/issues/components/issue_form.tsx";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, projectApi } from "store";
+import { issueApi } from "store";
 import { CreateIssueT } from "types";
 
 export const IssueCreate: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const { data: projects, isLoading: isProjectsLoading } =
-        projectApi.useListProjectQuery();
-
     const [createIssue, { isLoading: isCreateProjectLoading }] =
         issueApi.useCreateIssuesMutation();
 
-    const isLoading = isProjectsLoading || isCreateProjectLoading;
+    const isLoading = isCreateProjectLoading;
 
     const handleSubmit = (formData: CreateIssueT) => {
         createIssue(formData)
@@ -45,11 +42,7 @@ export const IssueCreate: FC = () => {
                 {t("issues.create.title")}
             </Typography>
 
-            <IssueForm
-                projects={projects?.payload.items || []}
-                onSubmit={handleSubmit}
-                loading={isLoading}
-            />
+            <IssueForm onSubmit={handleSubmit} loading={isLoading} />
         </Container>
     );
 };

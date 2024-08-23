@@ -1,11 +1,11 @@
 import { Stack, SxProps, Typography } from "@mui/material";
-import { FC } from "react";
+import { FC, MouseEventHandler } from "react";
 import { FieldCardWrapper } from "./field_card.styles.tsx";
 
 export type FieldCardProps = {
     label: string;
     value: string;
-    onClick?: () => unknown;
+    onClick?: MouseEventHandler<HTMLDivElement>;
     sx?: SxProps;
     orientation?: "horizontal" | "vertical";
 };
