@@ -9,9 +9,9 @@ import {
 } from "react";
 import FieldCard from "../../../../components/fields/field_card/field_card.tsx";
 import {
-    FormAutocomplete,
+    FormAutocompletePopover,
     FormAutocompleteValueType,
-} from "../../../../components/fields/field_form/components/form_autocomplete/form_autocomplete.tsx";
+} from "../../../../components/fields/form_autocomplete/form_autocomplete.tsx";
 import { projectApi } from "../../../../store";
 
 type ProjectFieldProps = {
@@ -64,7 +64,7 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                 />
-                <FormAutocomplete
+                <FormAutocompletePopover
                     ref={ref}
                     anchorEl={anchorEl}
                     id="projects"

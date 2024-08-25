@@ -10,7 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prettier": "npx prettier . --write -l",
-    "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parsser.config.js",
+    "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parser.config.js",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

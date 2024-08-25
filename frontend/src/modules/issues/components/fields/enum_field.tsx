@@ -1,9 +1,9 @@
 import { FC, forwardRef, SyntheticEvent, useMemo, useState } from "react";
 import FieldCard from "../../../../components/fields/field_card/field_card.tsx";
 import {
-    FormAutocomplete,
+    FormAutocompletePopover,
     FormAutocompleteValueType,
-} from "../../../../components/fields/field_form/components/form_autocomplete/form_autocomplete.tsx";
+} from "../../../../components/fields/form_autocomplete/form_autocomplete.tsx";
 import { EnumOptionT } from "../../../../types";
 
 type EnumFieldProps = {
@@ -48,7 +48,7 @@ export const EnumField: FC<EnumFieldProps> = forwardRef(
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                 />
-                <FormAutocomplete
+                <FormAutocompletePopover
                     ref={ref}
                     anchorEl={anchorEl}
                     id="projects"
