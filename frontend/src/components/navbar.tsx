@@ -10,35 +10,42 @@ import {
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
-import { FC, useState } from "react";
+import { FC, PropsWithChildren, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
 
-const links = [
-    {
-        to: "/issues",
-        label: "navbar.issues",
-    },
-    {
-        to: "/agiles",
-        label: "navbar.agileBoards",
-    },
-    {
-        to: "/projects",
-        label: "navbar.projects",
-    },
-    {
-        to: "/custom-fields",
-        label: "navbar.customFields",
-    },
-];
+const useLinks = () => {
+    const { t } = useTranslation();
+
+    return useMemo(
+        () => [
+            {
+                to: "/issues",
+                label: t("navbar.issues"),
+            },
+            {
+                to: "/agiles",
+                label: t("navbar.agileBoards"),
+            },
+            {
+                to: "/projects",
+                label: t("navbar.projects"),
+            },
+            {
+                to: "/custom-fields",
+                label: t("navbar.customFields"),
+            },
+        ],
+        [t],
+    );
+};
 
 interface INavBarLinkProps {
     to: string;
 }
 
-const NavBarLink: FC<INavBarLinkProps & React.PropsWithChildren> = ({
+const NavBarLink: FC<INavBarLinkProps & PropsWithChildren> = ({
     to,
     children,
 }) => {
@@ -61,6 +68,7 @@ const NavBar = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const links = useLinks();
 
     const user = useAppSelector((state) => state.profile.user);
 
