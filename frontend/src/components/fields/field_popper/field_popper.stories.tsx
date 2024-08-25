@@ -1,10 +1,10 @@
 import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import FieldPopper from "./components/field_popper.tsx";
+import FieldPopper from "./field_popper";
 
 const meta = {
-    title: "Components/Field/Form",
+    title: "Components/Field/Popper",
     parameters: {
         layout: "centered",
     },
@@ -14,7 +14,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const EmptyPopperForm: Story = {
+export const EmptyPopper: Story = {
     render: () => {
         const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 

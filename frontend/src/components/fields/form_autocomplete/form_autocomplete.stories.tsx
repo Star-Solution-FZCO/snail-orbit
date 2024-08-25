@@ -1,13 +1,11 @@
 import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MouseEventHandler, useState } from "react";
-import {
-    FormAutocomplete,
-    FormAutocompleteValueType,
-} from "./form_autocomplete.tsx";
+import FormAutocompletePopover from "./form_autocomplete";
+import { FormAutocompleteValueType } from "./form_autocomplete_content";
 
 const meta = {
-    title: "Components/Field/FormAutocomplete",
+    title: "Components/Field/Form/AutocompletePopover",
     parameters: {
         layout: "centered",
     },
@@ -35,7 +33,7 @@ export const MultiSelect: Story = {
                 <Button variant="contained" onClick={handleClick}>
                     Open
                 </Button>
-                <FormAutocomplete
+                <FormAutocompletePopover
                     id="test"
                     open={!!anchorEl}
                     anchorEl={anchorEl}
@@ -68,7 +66,7 @@ export const SingleSelect: Story = {
                 <Button variant="contained" onClick={handleClick}>
                     Open
                 </Button>
-                <FormAutocomplete
+                <FormAutocompletePopover
                     id="test"
                     open={!!anchorEl}
                     anchorEl={anchorEl}
