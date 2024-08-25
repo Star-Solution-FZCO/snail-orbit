@@ -13,7 +13,7 @@ import React, {
     Ref,
     SyntheticEvent,
 } from "react";
-import { PopperComponent, StyledInput } from "./form_autocomplete.styles.tsx";
+import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
 
 export type FormAutocompleteValueType = {
     label: string;
@@ -52,7 +52,10 @@ const FormAutocompleteContentComp = <
                 event: SyntheticEvent<Element, Event>,
                 reason: AutocompleteCloseReason,
             ) => {
-                if (reason === "escape" || reason === "selectOption") {
+                if (
+                    reason === "escape" ||
+                    (!multiple && reason === "selectOption")
+                ) {
                     onClose?.(event, reason);
                 }
             }}

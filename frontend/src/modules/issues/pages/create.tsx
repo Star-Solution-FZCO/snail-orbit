@@ -1,6 +1,6 @@
 import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import IssueForm from "modules/issues/components/issue_form.tsx";
+import IssueForm from "modules/issues/components/issue_form";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
