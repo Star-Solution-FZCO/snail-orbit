@@ -1,18 +1,7 @@
 import { skipToken } from "@reduxjs/toolkit/query";
-import {
-    FC,
-    forwardRef,
-    SyntheticEvent,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
-import FieldCard from "../../../../components/fields/field_card/field_card.tsx";
-import {
-    FormAutocompletePopover,
-    FormAutocompleteValueType,
-} from "../../../../components/fields/form_autocomplete/form_autocomplete.tsx";
+import { FC, forwardRef, useMemo } from "react";
 import { projectApi } from "../../../../store";
+import { SelectField, SelectFieldOptionType } from "./select_field";
 
 type ProjectFieldProps = {
     value: string;
@@ -22,8 +11,6 @@ type ProjectFieldProps = {
 
 export const ProjectField: FC<ProjectFieldProps> = forwardRef(
     ({ value, onChange, label }, ref) => {
-        const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
         const [fetch, { data, isLoading }] =
             projectApi.useLazyListProjectQuery();
 
@@ -31,11 +18,7 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
             value ?? skipToken,
         );
 
-        useEffect(() => {
-            if (anchorEl) fetch();
-        }, [anchorEl]);
-
-        const options: FormAutocompleteValueType[] = useMemo(() => {
+        const options: SelectFieldOptionType[] = useMemo(() => {
             if (!data) return [];
             return data.payload.items.map(({ id, name, description }) => ({
                 label: name,
@@ -44,37 +27,18 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
             }));
         }, [data]);
 
-        const handleChange = (
-            _: SyntheticEvent,
-            value:
-                | FormAutocompleteValueType
-                | FormAutocompleteValueType[]
-                | null,
-        ) => {
-            if (!value) onChange("");
-            else if (Array.isArray(value)) onChange(value[0].id);
-            else onChange(value.id);
-        };
-
         return (
-            <>
-                <FieldCard
-                    label={label}
-                    value={fullProject?.payload.name || "?"}
-                    orientation="vertical"
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                />
-                <FormAutocompletePopover
-                    ref={ref}
-                    anchorEl={anchorEl}
-                    id="projects"
-                    open={!!anchorEl}
-                    onClose={() => setAnchorEl(null)}
-                    loading={isLoading}
-                    options={options}
-                    onChange={handleChange}
-                />
-            </>
+            <SelectField
+                loading={isLoading}
+                options={options}
+                value={value}
+                cardValue={fullProject?.payload.name || "?"}
+                onChange={(value) => onChange(value as string)}
+                label={label}
+                onOpened={fetch}
+                ref={ref}
+                id="projects"
+            />
         );
     },
 );

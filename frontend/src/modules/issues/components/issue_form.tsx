@@ -10,9 +10,9 @@ import { useTranslation } from "react-i18next";
 import { CreateIssueT } from "types";
 import * as yup from "yup";
 import { projectApi } from "../../../store";
-import { CustomFieldsParser } from "./CustomFieldsParser.tsx";
-import { FieldContainer } from "./field_container.tsx";
-import { ProjectField } from "./fields/project_field.tsx";
+import { CustomFieldsParser } from "./CustomFieldsParser";
+import { FieldContainer } from "./field_container";
+import { ProjectField } from "./fields/project_field";
 
 const issueSchema = yup.object().shape({
     project_id: yup.string().required("form.validation.required"),

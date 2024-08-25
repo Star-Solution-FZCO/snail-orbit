@@ -53,7 +53,7 @@
   "issues.create.title": "Create Issue",
   "issues.fields.project": "Project",
   "issues.fields.subject": "Subject",
-  "issues.form.project.label": "issues.form.project.label",
+  "issues.form.project.label": "Project",
   "issues.form.subject": "Subject",
   "issues.form.text": "Text",
   "issues.title": "Issues",
