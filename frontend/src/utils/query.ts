@@ -6,9 +6,12 @@ export const initialListQueryParams: ListQueryParams = {
     offset: 0,
 };
 
-export const useListQueryParams = (
-    initialParams: ListQueryParams = initialListQueryParams,
-) => {
+export const useListQueryParams = (params: Partial<ListQueryParams> = {}) => {
+    const initialParams = {
+        ...initialListQueryParams,
+        ...params,
+    };
+
     const [queryParams, setQueryParams] =
         useState<ListQueryParams>(initialParams);
 
