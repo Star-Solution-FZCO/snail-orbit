@@ -95,6 +95,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                             label={t("customFields.form.type")}
                             onChange={onChange}
                             error={!!errors.type}
+                            disabled={!!defaultValues}
                             size="small"
                         >
                             {customFieldsTypes.map((type) => (
