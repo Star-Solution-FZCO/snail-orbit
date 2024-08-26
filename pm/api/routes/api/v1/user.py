@@ -9,7 +9,7 @@ from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 

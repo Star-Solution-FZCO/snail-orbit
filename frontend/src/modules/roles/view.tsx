@@ -1,7 +1,7 @@
-import { TabContext, TabList, TabPanel } from "@mui/lab";
+import { TabContext, TabList } from "@mui/lab";
 import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
+import { Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { roleApi } from "store";
@@ -45,7 +45,7 @@ const RoleView = () => {
 
             <Box display="flex" flexDirection="column" flex={1}>
                 <TabContext value={currentTab}>
-                    <Box borderBottom={1} borderColor="divider">
+                    <Box borderBottom={1} borderColor="divider" mb={2}>
                         <TabList onChange={handleChangeTab}>
                             {tabs.map((tab) => (
                                 <Tab

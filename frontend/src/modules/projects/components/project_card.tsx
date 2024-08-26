@@ -36,23 +36,25 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     };
 
     return (
-        <Box display="flex" alignItems="center">
-            <Avatar
-                sx={{
-                    width: 40,
-                    height: 40,
-                    fontSize: 16,
-                    fontWeight: "bold",
-                    mr: 2,
-                }}
-                variant="rounded"
-            >
-                {project.name.slice(0, 3).toUpperCase()}
-            </Avatar>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center">
+                <Avatar
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        mr: 2,
+                    }}
+                    variant="rounded"
+                >
+                    {project.name.slice(0, 3).toUpperCase()}
+                </Avatar>
 
-            <Link to={`/projects/${project.id}`} flex={1} fontWeight="bold">
-                {project.name}
-            </Link>
+                <Link to={`/projects/${project.id}`} fontWeight="bold">
+                    {project.name}
+                </Link>
+            </Box>
 
             <IconButton onClick={handleClickMenu} size="small">
                 <MoreHorizIcon />

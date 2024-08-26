@@ -9,7 +9,7 @@ import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 

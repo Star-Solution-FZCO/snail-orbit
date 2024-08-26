@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
     CreateProjectT,
+    ListQueryParams,
     ListResponse,
     ProjectDetailT,
     ProjectT,
@@ -16,8 +17,11 @@ export const projectApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listProject: build.query<ListResponse<ProjectT>, void>({
-            query: () => "project/list",
+        listProject: build.query<ListResponse<ProjectT>, ListQueryParams>({
+            query: (params) => ({
+                url: "project/list",
+                params,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: "Projects", id: "LIST" }];
                 if (result) {
