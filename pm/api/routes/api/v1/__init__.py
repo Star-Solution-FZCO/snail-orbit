@@ -11,6 +11,7 @@ from .role import router as role_router
 from .settings import router as settings_router
 from .user import router as user_router
 from .version import router as version_router
+from .workflow import router as workflow_router
 
 __all__ = ('router',)
 
@@ -26,3 +27,4 @@ router.include_router(board_router)
 router.include_router(files_router)
 router.include_router(group_router)
 router.include_router(role_router)
+router.include_router(workflow_router)
