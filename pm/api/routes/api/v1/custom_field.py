@@ -55,7 +55,6 @@ class CustomFieldCreateBody(CrudCreateBody[m.CustomField]):
 
 class CustomFieldUpdateBody(CrudUpdateBody[m.CustomField]):
     name: str | None = None
-    type: m.CustomFieldTypeT | None = None
     is_nullable: bool | None = None
 
 
