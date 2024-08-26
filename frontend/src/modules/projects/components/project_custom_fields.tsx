@@ -40,7 +40,10 @@ const AddProjectCustomField: FC<IAddProjectCustomFieldProps> = ({
                 toast.success(t("projects.customFields.add.success"));
             })
             .catch((error) => {
-                toast.error(error.data.message);
+                toast.error(
+                    error.data?.error_messages?.join(", ") ||
+                        t("error.default"),
+                );
             });
     };
 
@@ -189,7 +192,7 @@ interface IProjectCustomFieldsProps {
 const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
     const { t } = useTranslation();
 
-    const [tab, setTab] = useState<"add" | null>("add");
+    const [tab, setTab] = useState<"add" | null>(null);
 
     const [selectedField, setSelectedField] = useState<CustomFieldT | null>(
         null,
