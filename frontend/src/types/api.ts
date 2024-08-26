@@ -13,6 +13,13 @@ export type QueryErrorT = {
     };
 };
 
+export type ListQueryParams = {
+    limit: number;
+    offset: number;
+    sort_by?: string | null;
+    direction?: "asc" | "desc";
+};
+
 export type ListPayload<T> = {
     count: number;
     limit: number;

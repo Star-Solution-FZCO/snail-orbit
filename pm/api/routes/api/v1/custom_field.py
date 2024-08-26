@@ -15,7 +15,7 @@ from pm.api.views.custom_fields import (
 )
 from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 

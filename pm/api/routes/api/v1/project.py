@@ -21,7 +21,7 @@ from pm.api.views.output import (
     SuccessPayloadOutput,
     UUIDOutput,
 )
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 from pm.api.views.role import RoleOutput
 from pm.api.views.user import UserOutput
 

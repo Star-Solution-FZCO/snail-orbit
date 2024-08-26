@@ -10,7 +10,7 @@ from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)

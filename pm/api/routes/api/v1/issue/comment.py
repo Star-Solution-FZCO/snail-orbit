@@ -11,7 +11,7 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
-from pm.api.views.pararams import ListParams
+from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
 from pm.permissions import Permissions
 from pm.utils.dateutils import utcnow
