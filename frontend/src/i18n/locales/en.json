@@ -114,5 +114,11 @@
     "roles.sections.settings": "Settings",
     "roles.title": "Roles",
     "roles.update.success": "Role updated successfully",
-    "save": "Save"
+    "save": "Save",
+    "projects.workflows.fields.name": "Name",
+    "projects.workflows.fields.type": "Type",
+    "projects.workflows.plural": "workflow(s)",
+    "projects.customFields.detach.title": "Detach workflow",
+    "projects.workflows.detach.title": "Detach",
+    "projects.workflows.detach.confirmation": "Are you sure you want to detach the workflow from the project?"
 }

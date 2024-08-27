@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectCustomFields } from "./components/project_custom_fields";
+import { ProjectWorkflows } from "./components/project_workflows";
 import { tabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/projects/$projectId");
@@ -71,16 +72,12 @@ const ProjectView = () => {
                         </Typography>
                     </TabPanel>
 
-                    <TabPanel value="custom-fields" sx={{ height: "100%" }}>
-                        <Box height="100%">
-                            <ProjectCustomFields project={project} />
-                        </Box>
+                    <TabPanel value="custom-fields">
+                        <ProjectCustomFields project={project} />
                     </TabPanel>
 
                     <TabPanel value="workflows">
-                        <Typography fontSize={24} fontWeight="bold">
-                            {t("projects.sections.workflows")}
-                        </Typography>
+                        <ProjectWorkflows project={project} />
                     </TabPanel>
                 </TabContext>
             </Box>

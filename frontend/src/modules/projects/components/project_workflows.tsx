@@ -1,6 +1,6 @@
-import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -15,51 +15,52 @@ import { Modal } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi, projectApi } from "store";
-import { CustomFieldT, ProjectDetailT } from "types";
+import { projectApi } from "store";
+import { workflowApi } from "store/api/workflow.api";
+import { ProjectDetailT, WorkflowT } from "types";
 import { toastApiError } from "utils";
 
-interface ICustomFieldListProps {
+interface IWorkflowListProps {
     projectId: string;
 }
 
-const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
+const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
-    const { data: customFields, isLoading: customFieldsLoading } =
-        customFieldsApi.useListCustomFieldsQuery();
+    const { data: workflows, isLoading: workflowsLoading } =
+        workflowApi.useListWorkflowQuery();
 
-    const [addProjectCustomField, { isLoading: addProjectCustomFieldLoading }] =
-        projectApi.useAddProjectCustomFieldMutation();
+    const [addProjectWorkflow, { isLoading: addProjectWorkflowLoading }] =
+        projectApi.useAddProjectWorkflowMutation();
 
-    const handleClickAddCustomField = (customFieldId: string) => {
-        addProjectCustomField({ id: projectId, customFieldId })
+    const handleClickAttachWorkflow = (workflowId: string) => {
+        addProjectWorkflow({ id: projectId, workflowId })
             .unwrap()
             .then(() => {
-                toast.success(t("projects.customFields.add.success"));
+                toast.success(t("projects.workflows.add.success"));
             })
             .catch(toastApiError);
     };
 
-    if (customFieldsLoading)
+    if (workflowsLoading)
         return (
             <Box display="flex" justifyContent="center">
                 <CircularProgress color="inherit" />
             </Box>
         );
 
-    if (!customFields)
-        return <Typography>{t("projects.customFields.empty")}</Typography>;
+    if (!workflows)
+        return <Typography>{t("projects.workflows.empty")}</Typography>;
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
-                    {customFields.payload.items.length}{" "}
-                    {t("projects.customFields.fields")}
+                    {workflows.payload.items.length}{" "}
+                    {t("projects.workflows.plural")}
                 </Typography>
 
-                {addProjectCustomFieldLoading && (
+                {addProjectWorkflowLoading && (
                     <CircularProgress color="inherit" size={14} />
                 )}
             </Box>
@@ -67,25 +68,30 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
             <Divider flexItem />
 
             <Box display="flex" flexDirection="column" gap={1} overflow="auto">
-                {customFields.payload.items.map((field) => (
+                {workflows.payload.items.map((workflow) => (
                     <Box
-                        key={field.id}
+                        key={workflow.id}
                         display="flex"
-                        gap={1}
-                        alignItems="center"
+                        flexDirection="column"
                     >
-                        <IconButton
-                            onClick={() => handleClickAddCustomField(field.id)}
-                            size="small"
-                        >
-                            <AddIcon />
-                        </IconButton>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <IconButton
+                                onClick={() =>
+                                    handleClickAttachWorkflow(workflow.id)
+                                }
+                                size="small"
+                            >
+                                <LinkIcon />
+                            </IconButton>
 
-                        <Typography flex={1} fontWeight="bold">
-                            {field.name}
-                        </Typography>
+                            <Typography flex={1} fontWeight="bold">
+                                {workflow.name}
+                            </Typography>
 
-                        <Typography>{field.type}</Typography>
+                            <Typography>{workflow.type}</Typography>
+                        </Box>
+
+                        <Typography>{workflow.description}</Typography>
                     </Box>
                 ))}
             </Box>
@@ -93,37 +99,39 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
     );
 };
 
-interface IRemoveProjectCustomFieldDialogProps {
+interface IDetachProjectWorkflowDialogProps {
     projectId: string;
-    customField: CustomFieldT | null;
+    workflow: WorkflowT | null;
     onClose: () => void;
 }
 
-const RemoveProjectCustomFieldDialog: FC<
-    IRemoveProjectCustomFieldDialogProps
-> = ({ projectId, customField, onClose }) => {
+const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
+    projectId,
+    workflow,
+    onClose,
+}) => {
     const { t } = useTranslation();
 
-    const [removeProjectCustomField, { isLoading }] =
-        projectApi.useRemoveProjectCustomFieldMutation();
+    const [detachProjectWorkflow, { isLoading }] =
+        projectApi.useRemoveProjectWorkflowMutation();
 
-    const handleClickRemove = () => {
-        if (!customField) return;
+    const handleClickDetach = () => {
+        if (!workflow) return;
 
-        removeProjectCustomField({
+        detachProjectWorkflow({
             id: projectId,
-            customFieldId: customField.id,
+            workflowId: workflow.id,
         })
             .unwrap()
             .then(() => {
-                toast.success(t("projects.customFields.remove.success"));
+                toast.success(t("projects.workflows.remove.success"));
                 onClose();
             })
             .catch(toastApiError);
     };
 
     return (
-        <Modal open={!!customField} onClose={onClose}>
+        <Modal open={!!workflow} onClose={onClose}>
             <Box display="flex" flexDirection="column" gap={2}>
                 <Box
                     display="flex"
@@ -131,8 +139,8 @@ const RemoveProjectCustomFieldDialog: FC<
                     alignItems="center"
                 >
                     <Typography fontSize={20} fontWeight="bold">
-                        {t("projects.customFields.remove.title")} "
-                        {customField?.name}"?
+                        {t("projects.customFields.detach.title")} "
+                        {workflow?.name}"?
                     </Typography>
 
                     <IconButton
@@ -145,16 +153,16 @@ const RemoveProjectCustomFieldDialog: FC<
                 </Box>
 
                 <Typography>
-                    {t("projects.customFields.remove.warning")}
+                    {t("projects.workflows.detach.confirmation")}
                 </Typography>
 
                 <Box display="flex" gap={1}>
                     <LoadingButton
-                        onClick={handleClickRemove}
+                        onClick={handleClickDetach}
                         variant="outlined"
                         loading={isLoading}
                     >
-                        {t("projects.customFields.remove.title")}
+                        {t("projects.workflows.detach.title")}
                     </LoadingButton>
                     <Button
                         onClick={onClose}
@@ -170,20 +178,20 @@ const RemoveProjectCustomFieldDialog: FC<
     );
 };
 
-interface IProjectCustomFieldsProps {
+interface IProjectWorkflowsProps {
     project: ProjectDetailT;
 }
 
-const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
+const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
     const { t } = useTranslation();
 
-    const [selectedField, setSelectedField] = useState<CustomFieldT | null>(
+    const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowT | null>(
         null,
     );
 
-    const columns: GridColDef<CustomFieldT>[] = [
+    const columns: GridColDef<WorkflowT>[] = [
         {
-            field: "delete",
+            field: "detach",
             headerName: "",
             sortable: false,
             resizable: false,
@@ -193,56 +201,55 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 <IconButton
                     onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedField(row);
+                        setSelectedWorkflow(row);
                     }}
                     size="small"
                     color="error"
                 >
-                    <DeleteIcon />
+                    <LinkOffIcon />
                 </IconButton>
             ),
         },
         {
             field: "name",
-            headerName: t("customFields.fields.name"),
+            headerName: t("projects.workflows.fields.name"),
+            flex: 1,
+        },
+        {
+            field: "description",
+            headerName: t("description"),
             flex: 1,
         },
         {
             field: "type",
-            headerName: t("customFields.fields.type"),
-            flex: 1,
-        },
-        {
-            field: "is_nullable",
-            headerName: t("customFields.fields.nullable"),
-            type: "boolean",
+            headerName: t("projects.workflows.fields.type"),
             flex: 1,
         },
     ];
 
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
-            <RemoveProjectCustomFieldDialog
+            <DetachProjectWorkflowDialog
                 projectId={project.id}
-                customField={selectedField}
-                onClose={() => setSelectedField(null)}
+                workflow={selectedWorkflow}
+                onClose={() => setSelectedWorkflow(null)}
             />
 
             <Box display="flex" gap={2} height="100%">
                 <Box flex={1}>
                     <DataGrid
                         columns={columns}
-                        rows={project.custom_fields}
+                        rows={project.workflows}
                         density="compact"
                     />
                 </Box>
 
                 <Box flex={1}>
-                    <CustomFieldList projectId={project.id} />
+                    <WorkflowList projectId={project.id} />
                 </Box>
             </Box>
         </Box>
     );
 };
 
-export { ProjectCustomFields };
+export { ProjectWorkflows };
