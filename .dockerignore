@@ -1,6 +1,9 @@
 .dockerignore
 .docker
 
+# Frontend
+frontend/
+
 # Cache
 __pycache__/
 .mypy_cache/
