@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { groupApi } from "store";
 import { GroupT, UpdateGroupT } from "types";
+import { toastApiError } from "utils";
 import { GroupForm } from "./group_form";
 
 interface IGroupSettingsProps {
@@ -23,9 +24,7 @@ const GroupSettings: FC<IGroupSettingsProps> = ({ group }) => {
             .then(() => {
                 toast.success(t("groups.update.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

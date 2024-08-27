@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { roleApi } from "store";
 import { RoleT, UpdateGroupT } from "types";
+import { toastApiError } from "utils";
 import { RoleForm } from "./role_form";
 
 interface IRoleSettingsProps {
@@ -23,9 +24,7 @@ const RoleSettings: FC<IRoleSettingsProps> = ({ role }) => {
             .then(() => {
                 toast.success(t("roles.update.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

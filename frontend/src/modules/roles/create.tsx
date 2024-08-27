@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { roleApi } from "store";
 import { CreateRoleT } from "types";
+import { toastApiError } from "utils";
 import { RoleForm } from "./components/role_form";
 
 const RoleCreate = () => {
@@ -23,9 +24,7 @@ const RoleCreate = () => {
                 });
                 toast.success(t("roles.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

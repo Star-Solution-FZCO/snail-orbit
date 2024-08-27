@@ -16,9 +16,9 @@ import {
 import ColorPicker from "@uiw/react-color-compact";
 import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { CustomFieldT, EnumOptionT } from "types";
+import { toastApiError } from "utils";
 
 interface ICustomFieldOptionProps {
     customFieldId: string;
@@ -60,9 +60,7 @@ const CustomFieldOption: FC<ICustomFieldOptionProps> = ({
             color: newColor,
         })
             .unwrap()
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
 
         handleCloseColorPicker();
     };
@@ -74,9 +72,7 @@ const CustomFieldOption: FC<ICustomFieldOptionProps> = ({
             value: newValue,
         })
             .unwrap()
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     const debouncedUpdateValue = useCallback(debounce(updateValue, 500), []);
@@ -165,9 +161,7 @@ const DeleteCustomFieldOptionDialog: FC<
         })
             .unwrap()
             .then(onClose)
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (
@@ -255,9 +249,7 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
         })
             .unwrap()
             .then()
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     const handleClickDeleteOption = (option: EnumOptionT) => {

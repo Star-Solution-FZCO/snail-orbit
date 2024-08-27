@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { UpdateCustomFieldT } from "types";
+import { toastApiError } from "utils";
 import { CustomFieldForm } from "./components/custom_field_form";
 import { CustomFieldOptionsEditor } from "./components/custom_field_options_editor";
 
@@ -32,9 +33,7 @@ const CustomFieldView = () => {
             .then(() => {
                 toast.success(t("customFields.update.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

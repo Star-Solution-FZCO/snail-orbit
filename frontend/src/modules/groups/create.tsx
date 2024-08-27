@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { groupApi } from "store";
 import { CreateGroupT } from "types";
+import { toastApiError } from "utils";
 import { GroupForm } from "./components/group_form";
 
 const GroupCreate = () => {
@@ -23,9 +24,7 @@ const GroupCreate = () => {
                 });
                 toast.success(t("groups.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

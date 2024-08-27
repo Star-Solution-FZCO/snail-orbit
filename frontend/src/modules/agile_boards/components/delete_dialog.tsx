@@ -6,6 +6,7 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
+import { toastApiError } from "utils";
 
 interface IDeleteAgileBoardDialogProps {
     id: string;
@@ -32,9 +33,7 @@ const DeleteAgileBoardDialog: FC<IDeleteAgileBoardDialogProps> = ({
                 toast.success(t("agileBoards.delete.success"));
                 navigate({ to: "/agiles" });
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

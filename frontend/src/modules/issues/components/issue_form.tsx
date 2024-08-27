@@ -67,7 +67,6 @@ export const IssueForm: FC<IssueFormProps> = ({
                             helperText={t(errors.subject?.message || "")}
                             variant="outlined"
                             size="small"
-                            required
                             fullWidth
                         />
 

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { CreateCustomFieldT } from "types";
+import { toastApiError } from "utils";
 import { CustomFieldForm } from "./components/custom_field_form";
 
 const CustomFieldCreate = () => {
@@ -23,9 +24,7 @@ const CustomFieldCreate = () => {
                 });
                 toast.success(t("customFields.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

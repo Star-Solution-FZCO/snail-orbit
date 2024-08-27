@@ -57,7 +57,6 @@ const RoleForm: FC<IGroupFormProps> = ({
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
                 size="small"
-                required
                 fullWidth
             />
 

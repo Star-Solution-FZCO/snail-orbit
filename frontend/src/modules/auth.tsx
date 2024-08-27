@@ -12,9 +12,9 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { authenticate } from "services/auth";
 import { setUser, useAppDispatch, userApi } from "store";
+import { toastApiError } from "utils";
 
 type AuthFormDataT = {
     login: string;
@@ -58,7 +58,7 @@ const Auth: FC = () => {
                 to: search.redirect || "/",
             });
         } catch (error: any) {
-            toast.error(error.error_messages?.join(", ") || t("error.default"));
+            toastApiError(error);
         } finally {
             setLoading(false);
         }
@@ -88,7 +88,6 @@ const Auth: FC = () => {
                             helperText={t(errors.login?.message || "")}
                             autoFocus
                             fullWidth
-                            required
                         />
 
                         <TextField
@@ -103,7 +102,6 @@ const Auth: FC = () => {
                             error={!!errors.password}
                             helperText={t(errors.password?.message || "")}
                             fullWidth
-                            required
                         />
 
                         <Controller

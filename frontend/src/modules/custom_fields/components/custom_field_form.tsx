@@ -77,7 +77,6 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
                 size="small"
-                required
                 fullWidth
             />
 

@@ -14,9 +14,9 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { groupApi, userApi } from "store";
 import { GroupMemberT } from "types";
+import { toastApiError } from "utils";
 
 interface IAddGroupMemberProps {
     groupId: string;
@@ -40,11 +40,7 @@ const AddGroupMember: FC<IAddGroupMemberProps> = ({
         addGroupMember({ id: groupId, userId })
             .unwrap()
             .then(onClose)
-            .catch((error) => {
-                toast.error(
-                    error.data.error_messages?.join(", ") || t("error.default"),
-                );
-            });
+            .catch(toastApiError);
     };
 
     return (
@@ -159,11 +155,7 @@ const GroupMembers: FC<IGroupFormProps> = ({ groupId }) => {
     const handleClickRemoveMember = (member: GroupMemberT) => {
         removeGroupMember({ id: groupId, userId: member.id })
             .unwrap()
-            .catch((error) => {
-                toast.error(
-                    error.data.error_messages?.join(", ") || t("error.default"),
-                );
-            });
+            .catch(toastApiError);
     };
 
     const columns: GridColDef<GroupMemberT>[] = [

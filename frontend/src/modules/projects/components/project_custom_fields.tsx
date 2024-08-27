@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, projectApi } from "store";
 import { CustomFieldT, ProjectDetailT } from "types";
+import { toastApiError } from "utils";
 
 interface IAddProjectCustomFieldProps {
     projectId: string;
@@ -39,12 +40,7 @@ const AddProjectCustomField: FC<IAddProjectCustomFieldProps> = ({
             .then(() => {
                 toast.success(t("projects.customFields.add.success"));
             })
-            .catch((error) => {
-                toast.error(
-                    error.data?.error_messages?.join(", ") ||
-                        t("error.default"),
-                );
-            });
+            .catch(toastApiError);
     };
 
     if (customFieldsLoading)
@@ -118,9 +114,7 @@ const RemoveProjectCustomFieldDialog: FC<
                 toast.success(t("projects.customFields.remove.success"));
                 onClose();
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

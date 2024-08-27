@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { UpdateAgileBoardT } from "types";
+import { toastApiError } from "utils";
 import { AgileBoardForm } from "./components/agile_board_form";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 
@@ -36,9 +37,7 @@ const AgileBoardView = () => {
             .then(() => {
                 toast.success(t("agileBoards.update.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (
