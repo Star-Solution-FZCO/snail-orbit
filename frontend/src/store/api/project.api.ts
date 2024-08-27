@@ -95,5 +95,29 @@ export const projectApi = createApi({
                 { type: "Projects", id },
             ],
         }),
+        addProjectWorkflow: build.mutation<
+            ApiResponse<ProjectDetailT>,
+            { id: string; workflowId: string }
+        >({
+            query: ({ id, workflowId }) => ({
+                url: `project/${id}/workflow/${workflowId}`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
+        removeProjectWorkflow: build.mutation<
+            ApiResponse<ProjectDetailT>,
+            { id: string; workflowId: string }
+        >({
+            query: ({ id, workflowId }) => ({
+                url: `project/${id}/workflow/${workflowId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
     }),
 });

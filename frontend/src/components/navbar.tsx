@@ -32,10 +32,6 @@ const useLinks = () => {
                 to: "/projects",
                 label: t("navbar.projects"),
             },
-            {
-                to: "/custom-fields",
-                label: t("navbar.customFields"),
-            },
         ],
         [t],
     );
@@ -145,6 +141,9 @@ const NavBar = () => {
                     horizontal: "right",
                 }}
             >
+                <MenuItem onClick={() => handleClickMenuItem("/custom-fields")}>
+                    {t("navbar.customFields")}
+                </MenuItem>
                 <MenuItem onClick={() => handleClickMenuItem("/groups")}>
                     {t("navbar.groups")}
                 </MenuItem>

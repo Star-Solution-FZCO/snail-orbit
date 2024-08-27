@@ -7,6 +7,7 @@ import {
     projectApi,
     roleApi,
     userApi,
+    workflowApi,
 } from "./api";
 import { profileReducer } from "./slices";
 
@@ -21,6 +22,7 @@ export const store = configureStore({
         [agileBoardApi.reducerPath]: agileBoardApi.reducer,
         [groupApi.reducerPath]: groupApi.reducer,
         [roleApi.reducerPath]: roleApi.reducer,
+        [workflowApi.reducerPath]: workflowApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -31,6 +33,7 @@ export const store = configureStore({
             agileBoardApi.middleware,
             groupApi.middleware,
             roleApi.middleware,
+            workflowApi.middleware,
         ]),
 });
 
