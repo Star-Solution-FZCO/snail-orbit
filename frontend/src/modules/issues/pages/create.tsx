@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi } from "store";
 import { CreateIssueT } from "types";
+import { toastApiError } from "utils";
 
 const IssueCreate: FC = () => {
     const { t } = useTranslation();
@@ -28,9 +29,7 @@ const IssueCreate: FC = () => {
                 });
                 toast.success(t("issue.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

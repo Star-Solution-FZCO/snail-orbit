@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { CreateAgileBoardT } from "types";
+import { toastApiError } from "utils";
 import { AgileBoardForm } from "./components/agile_board_form";
 
 const AgileBoardCreate = () => {
@@ -23,9 +24,7 @@ const AgileBoardCreate = () => {
                 });
                 toast.success(t("agileBoards.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

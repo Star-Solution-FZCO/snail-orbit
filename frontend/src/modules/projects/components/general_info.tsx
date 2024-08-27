@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { ProjectT, UpdateProjectT } from "types";
+import { toastApiError } from "utils";
 import { ProjectForm } from "./project_form";
 
 interface IProjectGeneralInfoProps {
@@ -24,9 +25,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
             .then(() => {
                 toast.success(t("projects.update.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (

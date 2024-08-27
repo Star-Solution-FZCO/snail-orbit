@@ -68,7 +68,6 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
                 size="small"
-                required
                 fullWidth
             />
 

@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { roleApi } from "store";
 import { PermissionGroupT, PermissionKeyT, RoleT } from "types";
+import { toastApiError } from "utils";
 
 interface IPermissionGroupProps {
     group: PermissionGroupT;
@@ -84,11 +84,7 @@ const RolePermissions: FC<IRolePermissionsProps> = ({ role }) => {
             permissionKey,
         })
             .unwrap()
-            .catch((error) => {
-                toast.error(
-                    error.data.error_messages?.join(", ") || t("error.default"),
-                );
-            });
+            .catch(toastApiError);
     };
 
     return (

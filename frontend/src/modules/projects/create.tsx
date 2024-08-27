@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { CreateProjectT } from "types";
+import { toastApiError } from "utils";
 import { ProjectForm } from "./components/project_form";
 
 const ProjectCreate = () => {
@@ -25,9 +26,7 @@ const ProjectCreate = () => {
                 });
                 toast.success(t("projects.create.success"));
             })
-            .catch((error) => {
-                toast.error(error.data.detail || t("error.default"));
-            });
+            .catch(toastApiError);
     };
 
     return (
