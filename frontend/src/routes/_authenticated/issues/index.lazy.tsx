@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import IssuesList from "modules/issues/pages/list.tsx";
+import { IssueList } from "modules";
 
 export const Route = createLazyFileRoute("/_authenticated/issues/")({
-    component: IssuesList,
+    component: IssueList,
 });

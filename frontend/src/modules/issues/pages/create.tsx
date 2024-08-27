@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { issueApi } from "store";
 import { CreateIssueT } from "types";
 
-export const IssueCreate: FC = () => {
+const IssueCreate: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -47,4 +47,4 @@ export const IssueCreate: FC = () => {
     );
 };
 
-export default IssueCreate;
+export { IssueCreate };

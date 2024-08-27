@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import { theme } from "../../../theme";
+import { theme } from "theme";
 import { FieldInput } from "../field_input/field_input";
 
 export const StyledInput = styled(FieldInput)(() => ({

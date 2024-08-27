@@ -17,10 +17,13 @@ export const projectApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listProject: build.query<ListResponse<ProjectT>, ListQueryParams>({
+        listProject: build.query<
+            ListResponse<ProjectT>,
+            ListQueryParams | void
+        >({
             query: (params) => ({
                 url: "project/list",
-                params,
+                params: params ?? undefined,
             }),
             providesTags: (result) => {
                 let tags = [{ type: "Projects", id: "LIST" }];

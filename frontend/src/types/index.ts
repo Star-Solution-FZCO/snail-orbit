@@ -1,5 +1,6 @@
 export * from "./agile_board";
 export * from "./api";
+export * from "./comment";
 export * from "./custom_fields";
 export * from "./group";
 export * from "./issue";

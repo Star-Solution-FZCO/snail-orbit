@@ -1,5 +1,5 @@
-import { CommentT } from "types/comment.ts";
-import { ProjectT } from "types/project.ts";
+import { CommentT } from "./comment";
+import { ProjectT } from "./project";
 
 export type CreateIssueT = {
     project_id: string;

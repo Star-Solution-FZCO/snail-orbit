@@ -4,6 +4,7 @@ import {
     CreateCustomFieldT,
     CreateEnumOptionT,
     CustomFieldT,
+    ListQueryParams,
     ListResponse,
     UpdateCustomFieldT,
     UpdateEnumOptionT,
@@ -17,8 +18,14 @@ export const customFieldsApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listCustomFields: build.query<ListResponse<CustomFieldT>, void>({
-            query: () => "custom_field/list",
+        listCustomFields: build.query<
+            ListResponse<CustomFieldT>,
+            ListQueryParams | void
+        >({
+            query: (params) => ({
+                url: "custom_field/list",
+                params: params ?? undefined,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: "CustomFields", id: "LIST" }];
                 if (result) {

@@ -1,7 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import customFetchBase from "store/api/custom_fetch_base.ts";
-import { ApiResponse, ListResponse } from "types";
-import { CreateIssueT, IssueT, UpdateIssueT } from "types/issue.ts";
+import {
+    ApiResponse,
+    CreateIssueT,
+    IssueT,
+    ListQueryParams,
+    ListResponse,
+    UpdateIssueT,
+} from "types";
+import customFetchBase from "./custom_fetch_base";
 
 const coreTag = "Issues";
 
@@ -12,8 +18,11 @@ export const issueApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listIssues: build.query<ListResponse<IssueT>, void>({
-            query: () => "issue/list",
+        listIssues: build.query<ListResponse<IssueT>, ListQueryParams | void>({
+            query: (params) => ({
+                url: "issue/list",
+                params: params ?? undefined,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: coreTag, id: "LIST" }];
                 if (result) {

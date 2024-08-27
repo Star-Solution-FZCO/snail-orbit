@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import IssueCreate from "modules/issues/pages/create";
+import { IssueCreate } from "modules";
 
 export const Route = createLazyFileRoute("/_authenticated/issues/create")({
     component: IssueCreate,

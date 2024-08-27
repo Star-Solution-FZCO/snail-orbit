@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
     CreateUserT,
+    ListQueryParams,
     ListResponse,
     UpdateUserT,
     UserT,
@@ -21,8 +22,11 @@ export const userApi = createApi({
                 { type: "Users", id: "PROFILE" },
             ],
         }),
-        listUser: build.query<ListResponse<UserT>, void>({
-            query: () => "user/list",
+        listUser: build.query<ListResponse<UserT>, ListQueryParams | void>({
+            query: (params) => ({
+                url: "user/list",
+                params: params ?? undefined,
+            }),
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
         getUser: build.query<ApiResponse<UserT>, string>({

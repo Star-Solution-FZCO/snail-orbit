@@ -1,8 +1,8 @@
-import { ForwardedRef, forwardRef, useState } from "react";
-import FieldCard from "../../../../components/fields/field_card/field_card";
+import FieldCard from "components/fields/field_card/field_card";
 import FormInputPopover, {
     FormInputPopoverProps,
-} from "../../../../components/fields/form_input/form_input";
+} from "components/fields/form_input/form_input";
+import { ForwardedRef, forwardRef, useState } from "react";
 
 type InputFieldProps = {
     label: string;
