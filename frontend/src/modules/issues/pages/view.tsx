@@ -4,7 +4,7 @@ import { issueApi } from "store";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
-export const IssueView: FC = () => {
+const IssueView: FC = () => {
     const { issueId } = routeApi.useParams();
 
     const { data } = issueApi.useGetIssuesQuery(issueId);
@@ -14,4 +14,4 @@ export const IssueView: FC = () => {
     return <div>Test</div>;
 };
 
-export default IssueView;
+export { IssueView };

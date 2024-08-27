@@ -1,5 +1,5 @@
 import { ForwardedRef, forwardRef, useMemo } from "react";
-import { userApi } from "../../../../store";
+import { userApi } from "store";
 import { SelectField, SelectFieldOptionType } from "./select_field";
 
 type UserFieldValueType<T extends boolean | undefined> = T extends true

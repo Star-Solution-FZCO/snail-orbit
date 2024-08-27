@@ -1,6 +1,6 @@
 import { Stack, SxProps, Typography } from "@mui/material";
 import { FC, MouseEventHandler } from "react";
-import { FieldCardWrapper } from "./field_card.styles.tsx";
+import { FieldCardWrapper } from "./field_card.styles";
 
 export type FieldCardProps = {
     label: string;

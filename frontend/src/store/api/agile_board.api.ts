@@ -3,6 +3,7 @@ import {
     AgileBoardT,
     ApiResponse,
     CreateAgileBoardT,
+    ListQueryParams,
     ListResponse,
     UpdateAgileBoardT,
 } from "types";
@@ -15,8 +16,14 @@ export const agileBoardApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listAgileBoard: build.query<ListResponse<AgileBoardT>, void>({
-            query: () => "board/list",
+        listAgileBoard: build.query<
+            ListResponse<AgileBoardT>,
+            ListQueryParams | void
+        >({
+            query: (params) => ({
+                url: "board/list",
+                params: params ?? undefined,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: "AgileBoards", id: "LIST" }];
                 if (result) {

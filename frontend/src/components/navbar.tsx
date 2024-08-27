@@ -68,9 +68,10 @@ const NavBar = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const links = useLinks();
 
     const user = useAppSelector((state) => state.profile.user);
+
+    const links = useLinks();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);

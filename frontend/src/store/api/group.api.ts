@@ -4,6 +4,7 @@ import {
     CreateGroupT,
     GroupMemberT,
     GroupT,
+    ListQueryParams,
     ListResponse,
     UpdateGroupT,
 } from "types";
@@ -16,8 +17,11 @@ export const groupApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listGroup: build.query<ListResponse<GroupT>, void>({
-            query: () => "group/list",
+        listGroup: build.query<ListResponse<GroupT>, ListQueryParams | void>({
+            query: (params) => ({
+                url: "group/list",
+                params: params ?? undefined,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: "Groups", id: "LIST" }];
                 if (result) {

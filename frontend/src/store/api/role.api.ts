@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
     CreateRoleT,
+    ListQueryParams,
     ListResponse,
     PermissionKeyT,
     RoleT,
@@ -16,8 +17,11 @@ export const roleApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        listRole: build.query<ListResponse<RoleT>, void>({
-            query: () => "role/list",
+        listRole: build.query<ListResponse<RoleT>, ListQueryParams | void>({
+            query: (params) => ({
+                url: "role/list",
+                params: params ?? undefined,
+            }),
             providesTags: (result) => {
                 let tags = [{ type: "Roles", id: "LIST" }];
                 if (result) {

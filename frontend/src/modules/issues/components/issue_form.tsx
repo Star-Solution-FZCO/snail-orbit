@@ -7,9 +7,9 @@ import { MDEditor } from "components";
 import { FC } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { projectApi } from "store";
 import { CreateIssueT } from "types";
 import * as yup from "yup";
-import { projectApi } from "../../../store";
 import { CustomFieldsParser } from "./CustomFieldsParser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
@@ -110,6 +110,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                             )}
                         </Box>
                     </Stack>
+
                     <FieldContainer>
                         <Controller
                             control={control}

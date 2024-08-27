@@ -39,7 +39,10 @@ const App = () => {
                 <RouterProvider router={router} />
 
                 <Suspense>
-                    <TanStackRouterDevtools router={router} />
+                    <TanStackRouterDevtools
+                        router={router}
+                        position="bottom-right"
+                    />
                 </Suspense>
             </StoreProvider>
         </ThemeProvider>

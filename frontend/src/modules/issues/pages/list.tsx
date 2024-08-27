@@ -4,14 +4,19 @@ import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi } from "store/api/issue.api.ts";
+import { issueApi } from "store";
 import { IssueT } from "types";
+import { useListQueryParams } from "utils";
 
-export const IssuesList: FC = () => {
+const IssueList: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const { data, isLoading } = issueApi.useListIssuesQuery();
+    const [listQueryParams, updateListQueryParams] = useListQueryParams({
+        limit: 50,
+    });
+
+    const { data, isLoading, isFetching } = issueApi.useListIssuesQuery();
 
     const columns: GridColDef<IssueT>[] = [
         {
@@ -36,7 +41,23 @@ export const IssuesList: FC = () => {
         });
     };
 
+    const paginationModel = {
+        page: listQueryParams.offset / listQueryParams.limit,
+        pageSize: listQueryParams.limit,
+    };
+
+    const handlePaginationModelChange = (model: {
+        page: number;
+        pageSize: number;
+    }) => {
+        updateListQueryParams({
+            limit: model.pageSize,
+            offset: model.page * model.pageSize,
+        });
+    };
+
     const rows = data?.payload.items || [];
+    const rowCount = data?.payload.count || 0;
 
     return (
         <Box
@@ -67,12 +88,16 @@ export const IssuesList: FC = () => {
                 }}
                 columns={columns}
                 rows={rows}
-                loading={isLoading}
-                density="compact"
+                rowCount={rowCount}
                 onRowClick={handleClickRow}
+                paginationModel={paginationModel}
+                onPaginationModelChange={handlePaginationModelChange}
+                loading={isLoading || isFetching}
+                paginationMode="server"
+                density="compact"
             />
         </Box>
     );
 };
 
-export default IssuesList;
+export { IssueList };

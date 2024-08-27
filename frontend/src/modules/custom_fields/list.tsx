@@ -5,13 +5,18 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import { CustomFieldT } from "types";
+import { useListQueryParams } from "utils";
 
 const CustomFieldList = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
+    const [listQueryParams, updateListQueryParams] = useListQueryParams({
+        limit: 50,
+    });
+
     const { data, isLoading, isFetching } =
-        customFieldsApi.useListCustomFieldsQuery();
+        customFieldsApi.useListCustomFieldsQuery(listQueryParams);
 
     const columns: GridColDef<CustomFieldT>[] = [
         {
@@ -41,7 +46,23 @@ const CustomFieldList = () => {
         });
     };
 
+    const paginationModel = {
+        page: listQueryParams.offset / listQueryParams.limit,
+        pageSize: listQueryParams.limit,
+    };
+
+    const handlePaginationModelChange = (model: {
+        page: number;
+        pageSize: number;
+    }) => {
+        updateListQueryParams({
+            limit: model.pageSize,
+            offset: model.page * model.pageSize,
+        });
+    };
+
     const rows = data?.payload.items || [];
+    const rowCount = data?.payload.count || 0;
 
     return (
         <Box
@@ -72,8 +93,12 @@ const CustomFieldList = () => {
                 }}
                 columns={columns}
                 rows={rows}
+                rowCount={rowCount}
                 onRowClick={handleClickRow}
+                paginationModel={paginationModel}
+                onPaginationModelChange={handlePaginationModelChange}
                 loading={isLoading || isFetching}
+                paginationMode="server"
                 density="compact"
             />
         </Box>

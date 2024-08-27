@@ -1,4 +1,7 @@
 import { AutocompleteValue } from "@mui/material";
+import FieldCard from "components/fields/field_card/field_card";
+import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
+import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
 import {
     ForwardedRef,
     forwardRef,
@@ -7,9 +10,6 @@ import {
     useMemo,
     useState,
 } from "react";
-import FieldCard from "../../../../components/fields/field_card/field_card";
-import { FormAutocompletePopover } from "../../../../components/fields/form_autocomplete/form_autocomplete";
-import { FormAutocompleteValueType } from "../../../../components/fields/form_autocomplete/form_autocomplete_content";
 
 export type SelectFieldOptionType = FormAutocompleteValueType & { id: string };
 
