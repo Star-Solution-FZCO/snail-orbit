@@ -1,4 +1,4 @@
-FROM python:3.12-alpine3.20 as get_requirements
+FROM python:3.12-alpine3.20 AS get_requirements
 WORKDIR /app
 COPY Pipfile Pipfile.lock /app/
 RUN python3 -m pip install --upgrade pip pipenv && \
