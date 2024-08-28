@@ -59,6 +59,7 @@ connect_error_handlers(app)
 
 
 # pylint: disable=wrong-import-position
-from pm.api.routes import api_router  # noqa
+from pm.api.routes import api_router, events_router  # noqa
 
 app.include_router(api_router)
+app.include_router(events_router)
