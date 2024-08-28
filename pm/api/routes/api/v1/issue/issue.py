@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
+from pm.api.events_bus import Event, EventType
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
@@ -108,6 +109,7 @@ async def create_issue(
             error_fields=err.fields_errors,
         )
     await obj.insert()
+    await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
@@ -157,6 +159,7 @@ async def update_issue(
         await board.save_changes()
     if obj.is_changed:
         await obj.save_changes()
+        await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 

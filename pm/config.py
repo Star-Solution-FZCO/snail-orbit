@@ -73,6 +73,10 @@ CONFIG = Dynaconf(
             'FILE_STORAGE_DIR',
             default='/data/file_storage',
         ),
+        Validator(
+            'REDIS_EVENT_BUS_URL',
+            default='redis://localhost:6379/0',
+        ),
     ],
 )
 CONFIG.configure()
