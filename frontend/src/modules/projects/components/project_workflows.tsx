@@ -32,7 +32,10 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
     const { data: workflows, isLoading: workflowsLoading } =
-        workflowApi.useListWorkflowQuery();
+        workflowApi.useListWorkflowQuery({
+            limit: 0,
+            offset: 0,
+        });
 
     const [addProjectWorkflow, { isLoading: addProjectWorkflowLoading }] =
         projectApi.useAddProjectWorkflowMutation();
@@ -71,7 +74,13 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
 
             <Divider flexItem />
 
-            <Box display="flex" flexDirection="column" gap={1} overflow="auto">
+            <Box
+                display="flex"
+                flexDirection="column"
+                gap={1}
+                flex={1}
+                overflow="auto"
+            >
                 {workflows.payload.items.map((workflow) => (
                     <Box
                         key={workflow.id}

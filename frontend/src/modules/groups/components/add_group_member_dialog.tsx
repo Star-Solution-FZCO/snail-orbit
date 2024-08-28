@@ -28,7 +28,10 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const { data: users } = userApi.useListUserQuery();
+    const { data: users } = userApi.useListUserQuery({
+        limit: 0,
+        offset: 0,
+    });
 
     const [addGroupMember] = groupApi.useAddGroupMemberMutation();
 

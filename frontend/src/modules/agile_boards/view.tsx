@@ -1,5 +1,11 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Breadcrumbs, IconButton, Typography } from "@mui/material";
+import {
+    Box,
+    Breadcrumbs,
+    Container,
+    IconButton,
+    Typography,
+} from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
 import { useState } from "react";
@@ -41,14 +47,14 @@ const AgileBoardView = () => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2}>
+        <Container sx={{ px: 4, pb: 4 }} disableGutters>
             <DeleteAgileBoardDialog
                 id={agileBoard.id}
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
             />
 
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
                 <Breadcrumbs>
                     <Link to="/custom-fields" underline="hover">
                         <Typography fontSize={24} fontWeight="bold">
@@ -74,7 +80,7 @@ const AgileBoardView = () => {
                 defaultValues={agileBoard}
                 loading={isLoading}
             />
-        </Box>
+        </Container>
     );
 };
 

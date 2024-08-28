@@ -1,4 +1,4 @@
-import { Box, Breadcrumbs, Typography } from "@mui/material";
+import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { useTranslation } from "react-i18next";
@@ -28,8 +28,8 @@ const RoleCreate = () => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2}>
-            <Breadcrumbs>
+        <Container sx={{ px: 4, pb: 4 }} disableGutters>
+            <Breadcrumbs sx={{ mb: 2 }}>
                 <Link to="/roles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
                         {t("roles.title")}
@@ -41,7 +41,7 @@ const RoleCreate = () => {
             </Breadcrumbs>
 
             <RoleForm onSubmit={onSubmit} loading={isLoading} />
-        </Box>
+        </Container>
     );
 };
 

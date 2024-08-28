@@ -34,8 +34,8 @@ const IssueCreate: FC = () => {
 
     return (
         <Container
-            maxWidth="lg"
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2, px: 4 }}
+            disableGutters
         >
             <Typography fontSize={24} fontWeight="bold">
                 {t("issues.create.title")}

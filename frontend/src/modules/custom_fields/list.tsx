@@ -68,10 +68,10 @@ const CustomFieldList = () => {
         <Box
             display="flex"
             flexDirection="column"
+            gap={2}
+            height="100%"
             px={4}
             pb={4}
-            height="100%"
-            gap={2}
         >
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontSize={24} fontWeight="bold">

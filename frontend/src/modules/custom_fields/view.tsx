@@ -1,4 +1,10 @@
-import { Box, Breadcrumbs, Divider, Typography } from "@mui/material";
+import {
+    Box,
+    Breadcrumbs,
+    Container,
+    Divider,
+    Typography,
+} from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
 import { useTranslation } from "react-i18next";
@@ -37,8 +43,8 @@ const CustomFieldView = () => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2}>
-            <Breadcrumbs>
+        <Container sx={{ px: 4, pb: 4 }} disableGutters>
+            <Breadcrumbs sx={{ mb: 2 }}>
                 <Link to="/custom-fields" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
                         {t("customFields.title")}
@@ -50,7 +56,7 @@ const CustomFieldView = () => {
             </Breadcrumbs>
 
             <Box display="flex" gap={2}>
-                <Box flex={1}>
+                <Box flex={1} pt="44px">
                     <CustomFieldForm
                         onSubmit={onSubmit}
                         defaultValues={customField}
@@ -60,7 +66,11 @@ const CustomFieldView = () => {
 
                 {["enum", "enum_multi"].includes(customField.type) && (
                     <>
-                        <Divider orientation="vertical" flexItem />
+                        <Divider
+                            orientation="vertical"
+                            sx={{ mt: "44px" }}
+                            flexItem
+                        />
 
                         <Box flex={1}>
                             <CustomFieldOptionsEditor
@@ -70,7 +80,7 @@ const CustomFieldView = () => {
                     </>
                 )}
             </Box>
-        </Box>
+        </Container>
     );
 };
 

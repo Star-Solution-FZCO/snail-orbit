@@ -32,7 +32,14 @@ const ProjectView = () => {
     const project = data.payload;
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2} flex={1}>
+        <Box
+            display="flex"
+            flexDirection="column"
+            px={4}
+            pb={2}
+            gap={2}
+            flex={1}
+        >
             <Box display="flex" alignItems="center">
                 <Typography fontSize={24} fontWeight="bold">
                     {project.name}

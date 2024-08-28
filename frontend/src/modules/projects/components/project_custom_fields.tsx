@@ -31,7 +31,10 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
     const { data: customFields, isLoading: customFieldsLoading } =
-        customFieldsApi.useListCustomFieldsQuery();
+        customFieldsApi.useListCustomFieldsQuery({
+            limit: 0,
+            offset: 0,
+        });
 
     const [addProjectCustomField, { isLoading: addProjectCustomFieldLoading }] =
         projectApi.useAddProjectCustomFieldMutation();
@@ -70,7 +73,13 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
 
             <Divider flexItem />
 
-            <Box display="flex" flexDirection="column" gap={1} overflow="auto">
+            <Box
+                display="flex"
+                flexDirection="column"
+                gap={1}
+                flex={1}
+                overflow="auto"
+            >
                 {customFields.payload.items.map((field) => (
                     <Box
                         key={field.id}

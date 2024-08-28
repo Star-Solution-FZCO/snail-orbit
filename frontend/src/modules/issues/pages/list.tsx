@@ -63,10 +63,10 @@ const IssueList: FC = () => {
         <Box
             display="flex"
             flexDirection="column"
+            gap={2}
+            height="100%"
             px={4}
             pb={4}
-            height="100%"
-            gap={2}
         >
             <Stack direction="row" gap={1}>
                 <Typography fontSize={24} fontWeight="bold">

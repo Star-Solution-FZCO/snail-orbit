@@ -49,6 +49,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
             flexDirection="column"
             gap={2}
             onSubmit={handleSubmit(onSubmit)}
+            maxWidth="md"
         >
             <TextField
                 {...register("name")}

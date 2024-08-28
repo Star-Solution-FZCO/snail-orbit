@@ -11,7 +11,6 @@ import {
     MenuItem,
     Select,
     TextField,
-    Typography,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { FC } from "react";
@@ -65,11 +64,8 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
             flexDirection="column"
             gap={1}
             onSubmit={handleSubmit(onSubmit)}
+            maxWidth="sm"
         >
-            <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
-                {t("customFields.form.title")}
-            </Typography>
-
             <TextField
                 {...register("name")}
                 label={t("customFields.form.name")}

@@ -1,4 +1,4 @@
-import { Box, Breadcrumbs, Typography } from "@mui/material";
+import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { useTranslation } from "react-i18next";
@@ -28,8 +28,8 @@ const AgileBoardCreate = () => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2}>
-            <Breadcrumbs>
+        <Container sx={{ px: 4, pb: 4 }} disableGutters>
+            <Breadcrumbs sx={{ mb: 2 }}>
                 <Link to="/agiles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
                         {t("agileBoards.title")}
@@ -41,7 +41,7 @@ const AgileBoardCreate = () => {
             </Breadcrumbs>
 
             <AgileBoardForm onSubmit={onSubmit} loading={isLoading} />
-        </Box>
+        </Container>
     );
 };
 
