@@ -61,7 +61,7 @@ def output_from_obj(obj: m.Workflow) -> WorkflowOutput:
 async def list_workflow(
     query: ListParams = Depends(),
 ) -> BaseListOutput[WorkflowOutput]:
-    q = m.Workflow.find().sort(m.Workflow.name)
+    q = m.Workflow.find(with_children=True).sort(m.Workflow.name)
     return BaseListOutput.make(
         count=await q.count(),
         limit=query.limit,
@@ -77,7 +77,7 @@ async def list_workflow(
 async def get_workflow(
     workflow_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[WorkflowOutput]:
-    obj = await m.Workflow.find_one(m.Workflow.id == workflow_id)
+    obj = await m.Workflow.find_one(m.Workflow.id == workflow_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
     return SuccessPayloadOutput(payload=output_from_obj(obj))
