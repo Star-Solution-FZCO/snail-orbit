@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -30,19 +30,22 @@ const ProjectCreate = () => {
     };
 
     return (
-        <Box
-            margin="0 auto"
-            width="1080px"
-            display="flex"
-            flexDirection="column"
-            gap={2}
+        <Container
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                px: 4,
+                pb: 4,
+            }}
+            disableGutters
         >
             <Typography fontSize={24} fontWeight="bold">
                 {t("projects.create.title")}
             </Typography>
 
             <ProjectForm onSubmit={onSubmit} loading={isLoading} />
-        </Box>
+        </Container>
     );
 };
 

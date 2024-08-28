@@ -59,7 +59,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
             flexDirection="column"
             gap={2}
             onSubmit={handleSubmit(onSubmit)}
-            maxWidth="800px"
+            maxWidth="md"
         >
             <TextField
                 {...register("name")}

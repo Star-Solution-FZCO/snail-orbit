@@ -18,21 +18,10 @@ const IssueView: FC = () => {
     };
 
     return (
-        <Container
-            maxWidth="lg"
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
+        <Container sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {isLoading ? (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "100%",
-                        height: "90dvh",
-                    }}
-                >
-                    <CircularProgress />
+                <Box display="flex" justifyContent="center">
+                    <CircularProgress color="inherit" size={36} />
                 </Box>
             ) : (
                 <>

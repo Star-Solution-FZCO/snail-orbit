@@ -31,7 +31,14 @@ const RoleView = () => {
     const role = data.payload;
 
     return (
-        <Box display="flex" flexDirection="column" px={4} gap={2} flex={1}>
+        <Box
+            display="flex"
+            flexDirection="column"
+            px={4}
+            pb={4}
+            gap={2}
+            flex={1}
+        >
             <Breadcrumbs>
                 <Link to="/roles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">

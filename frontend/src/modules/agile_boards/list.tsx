@@ -1,5 +1,11 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, CircularProgress, IconButton, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Container,
+    IconButton,
+    Typography,
+} from "@mui/material";
 import { Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
@@ -14,12 +20,21 @@ const AgileBoardList = () => {
         agileBoardApi.useListAgileBoardQuery(listQueryParams);
 
     return (
-        <Box display="flex" flexDirection="column" px={4} pb={2} height="100%">
+        <Container
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                height: "100%",
+                px: 4,
+                pb: 4,
+            }}
+            disableGutters
+        >
             <Box
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                mb={4}
             >
                 <Box display="flex" alignItems="center" gap={1}>
                     <Typography fontSize={24} fontWeight="bold">
@@ -65,7 +80,7 @@ const AgileBoardList = () => {
                     />
                 </>
             )}
-        </Box>
+        </Container>
     );
 };
 

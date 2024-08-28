@@ -23,7 +23,7 @@
     "cancel": "Cancel",
     "create": "Create",
     "customFields.create.success": "Custom Field created successfully",
-    "customFields.create.title": "Create",
+    "customFields.create.title": "New custom field",
     "customFields.fields.name": "Name",
     "customFields.fields.nullable": "Nullable",
     "customFields.fields.type": "Type",

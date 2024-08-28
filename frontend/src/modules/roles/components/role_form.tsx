@@ -48,7 +48,7 @@ const RoleForm: FC<IGroupFormProps> = ({
             flexDirection="column"
             gap={2}
             onSubmit={handleSubmit(onSubmit)}
-            maxWidth="800px"
+            maxWidth="md"
         >
             <TextField
                 {...register("name")}
