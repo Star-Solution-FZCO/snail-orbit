@@ -1,10 +1,11 @@
 import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
+import dayjs, { Dayjs } from "dayjs";
 import { MouseEventHandler, useState } from "react";
-import FormInputPopover, { FormInputPopoverProps } from "./form_input";
+import FormDatePopover, { FormDatePopoverProps } from "./form_date";
 
 const meta = {
-    title: "Components/Field/Form/Input Popover",
+    title: "Components/Field/Form/Date Popover",
     parameters: {
         layout: "centered",
     },
@@ -15,12 +16,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 type CompProps = {
-    value: string;
-} & Omit<FormInputPopoverProps, "value" | "id" | "open" | "anchorEl" | "ref">;
+    type: FormDatePopoverProps["type"];
+};
 
-const Comp = ({ value: initialValue, ...rest }: CompProps) => {
+const Comp = ({ type }: CompProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [value, setValue] = useState<string>(initialValue || "");
+    const [value, setValue] = useState<Dayjs>(dayjs());
 
     const handleClick: MouseEventHandler<HTMLButtonElement> = (e) => {
         setAnchorEl(e.currentTarget);
@@ -30,38 +31,34 @@ const Comp = ({ value: initialValue, ...rest }: CompProps) => {
         setAnchorEl(null);
     };
 
-    const handleSubmit = (value: string) => {
+    const handleSubmit = (value: Dayjs) => {
         setValue(value);
         setAnchorEl(null);
     };
 
     return (
         <>
-            <div>{value}</div>
+            <div>{value.toString()}</div>
             <Button variant="contained" onClick={handleClick}>
                 Open
             </Button>
-            <FormInputPopover
+            <FormDatePopover
                 id="test"
                 open={!!anchorEl}
                 anchorEl={anchorEl}
                 onClose={handleClose}
                 value={value}
                 onChange={handleSubmit}
-                {...rest}
+                type={type}
             />
         </>
     );
 };
 
-export const StringInput: Story = {
-    render: () => <Comp value="Hello world" />,
+export const Date: Story = {
+    render: () => <Comp type="date" />,
 };
 
-export const IntegerInput: Story = {
-    render: () => <Comp value="123" inputMode="numeric" />,
-};
-
-export const DecimalInput: Story = {
-    render: () => <Comp value="123.123" inputMode="decimal" />,
+export const DateTime: Story = {
+    render: () => <Comp type="datetime" />,
 };

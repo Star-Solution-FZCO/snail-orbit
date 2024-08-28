@@ -11,10 +11,11 @@ type UserFieldProps<T extends boolean | undefined> = {
     onChange: (value: UserFieldValueType<T>) => void;
     label: string;
     multiple?: T;
+    id: string;
 };
 
 const UserFieldComp = <T extends boolean | undefined>(
-    { value, onChange, label, multiple }: UserFieldProps<T>,
+    { value, onChange, label, multiple, id }: UserFieldProps<T>,
     ref: ForwardedRef<unknown>,
 ) => {
     const [fetch, { data, isLoading }] = userApi.useLazyListUserQuery();
@@ -50,7 +51,7 @@ const UserFieldComp = <T extends boolean | undefined>(
             onOpened={fetch}
             ref={ref}
             multiple={multiple}
-            id="projects"
+            id={id}
         />
     );
 };

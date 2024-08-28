@@ -8,7 +8,7 @@ export const FieldPopper = styled(Popper)(({ theme }) => ({
             : "rgb(1, 4, 9)"
     }`,
     borderRadius: 6,
-    width: 300,
+    minWidth: 300,
     zIndex: theme.zIndex.modal,
     fontSize: 13,
     color: theme.palette.mode === "light" ? "#24292e" : "#c9d1d9",

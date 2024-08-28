@@ -1,7 +1,9 @@
+import dayjs from "dayjs";
 import { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import FieldCard from "../../../components/fields/field_card/field_card";
 import { CustomFieldT } from "../../../types";
+import { DateField } from "./fields/date_field";
 import { InputField } from "./fields/input_field";
 import { SelectField } from "./fields/select_field";
 import { UserField } from "./fields/user_field";
@@ -112,6 +114,34 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                             label={fieldData.name}
                                             multiple={
                                                 fieldData.type === "user_multi"
+                                            }
+                                            id={fieldData.id}
+                                        />
+                                    )}
+                                />
+                            );
+                        case "date":
+                        case "datetime":
+                            return (
+                                <Controller
+                                    control={control}
+                                    key={fieldData.id}
+                                    // @ts-ignore
+                                    name={`fields.${fieldData.name}`}
+                                    render={({
+                                        field: { value, onChange },
+                                    }) => (
+                                        <DateField
+                                            value={dayjs(value as string)}
+                                            onChange={(value) =>
+                                                onChange(value.toISOString())
+                                            }
+                                            label={fieldData.name}
+                                            id={fieldData.id}
+                                            type={
+                                                fieldData.type === "date"
+                                                    ? "date"
+                                                    : "datetime"
                                             }
                                         />
                                     )}
