@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
+import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
 import { ProjectWorkflows } from "./components/project_workflows";
 import { tabs } from "./utils";
@@ -36,7 +37,7 @@ const ProjectView = () => {
             display="flex"
             flexDirection="column"
             px={4}
-            pb={2}
+            pb={4}
             gap={2}
             flex={1}
         >
@@ -68,16 +69,14 @@ const ProjectView = () => {
                     </TabPanel>
 
                     <TabPanel value="access">
-                        <Typography fontSize={24} fontWeight="bold">
-                            {t("projects.sections.access")}
-                        </Typography>
+                        <ProjectAccess project={project} />
                     </TabPanel>
 
-                    <TabPanel value="members">
+                    {/* <TabPanel value="members">
                         <Typography fontSize={24} fontWeight="bold">
                             {t("projects.sections.members")}
                         </Typography>
-                    </TabPanel>
+                    </TabPanel> */}
 
                     <TabPanel value="custom-fields">
                         <ProjectCustomFields project={project} />

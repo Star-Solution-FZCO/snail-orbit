@@ -1,10 +1,8 @@
 import {
     Checkbox,
-    Paper,
     Table,
     TableBody,
     TableCell,
-    TableContainer,
     TableHead,
     TableRow,
 } from "@mui/material";
@@ -88,28 +86,26 @@ const RolePermissions: FC<IRolePermissionsProps> = ({ role }) => {
     };
 
     return (
-        <TableContainer component={Paper}>
-            <Table size="small">
-                <TableHead>
-                    <TableRow>
-                        <TableCell width="400px">
-                            {t("roles.sections.permissions")}
-                        </TableCell>
-                        <TableCell>{t("roles.permissions.enabled")}</TableCell>
-                    </TableRow>
-                </TableHead>
+        <Table size="small">
+            <TableHead>
+                <TableRow>
+                    <TableCell width="400px">
+                        {t("roles.sections.permissions")}
+                    </TableCell>
+                    <TableCell>{t("roles.permissions.enabled")}</TableCell>
+                </TableRow>
+            </TableHead>
 
-                <TableBody>
-                    {role.permissions.map((group) => (
-                        <PermissionGroup
-                            key={group.label}
-                            group={group}
-                            onPermissionChange={handlePermissionChange}
-                        />
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+            <TableBody>
+                {role.permissions.map((group) => (
+                    <PermissionGroup
+                        key={group.label}
+                        group={group}
+                        onPermissionChange={handlePermissionChange}
+                    />
+                ))}
+            </TableBody>
+        </Table>
     );
 };
 

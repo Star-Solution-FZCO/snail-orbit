@@ -72,9 +72,15 @@ export const groupApi = createApi({
             }),
             invalidatesTags: (_result, _error, id) => [{ type: "Groups", id }],
         }),
-        listGroupMembers: build.query<ListResponse<GroupMemberT>, string>({
-            query: (id) => `group/${id}/members`,
-            providesTags: (_result, _error, id) => [{ type: "Groups", id }],
+        listGroupMembers: build.query<
+            ListResponse<GroupMemberT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `group/${id}/members`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [{ type: "Groups", id }],
         }),
         addGroupMember: build.mutation<
             ApiResponse<{ id: string }>,

@@ -111,9 +111,11 @@ const NavBar = () => {
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
-                <IconButton onClick={handleClickSettings} size="small">
-                    <SettingsIcon />
-                </IconButton>
+                {user?.is_admin && (
+                    <IconButton onClick={handleClickSettings} size="small">
+                        <SettingsIcon />
+                    </IconButton>
+                )}
 
                 <Avatar sx={{ width: 32, height: 32 }} variant="rounded">
                     {user?.name

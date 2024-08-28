@@ -5,12 +5,14 @@ import {
     ListQueryParams,
     ListResponse,
     ProjectDetailT,
+    ProjectPermissionT,
     ProjectT,
+    TargetTypeT,
     UpdateProjectT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Projects"];
+const tagTypes = ["Projects", "ProjectPermissions"];
 
 export const projectApi = createApi({
     reducerPath: "projectsApi",
@@ -117,6 +119,48 @@ export const projectApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Projects", id },
+            ],
+        }),
+        getProjectPermissions: build.query<
+            ListResponse<ProjectPermissionT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `project/${id}/permissions`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "ProjectPermissions", id },
+            ],
+        }),
+        grantProjectPermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            {
+                id: string;
+                target_type: TargetTypeT;
+                target_id: string;
+                role_id: string;
+            }
+        >({
+            query: ({ id, ...body }) => ({
+                url: `project/${id}/permission`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "ProjectPermissions", id },
+            ],
+        }),
+        revokeProjectPermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string; permissionId: string }
+        >({
+            query: ({ id, permissionId }) => ({
+                url: `project/${id}/permission/${permissionId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "ProjectPermissions", id },
             ],
         }),
     }),

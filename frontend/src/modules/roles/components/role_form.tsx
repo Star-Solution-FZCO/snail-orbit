@@ -16,14 +16,14 @@ const roleSchema = yup.object().shape({
 
 type RoleFormData = yup.InferType<typeof roleSchema>;
 
-interface IGroupFormProps {
+interface IRoleFormProps {
     defaultValues?: RoleT;
     onSubmit: (formData: RoleFormData) => void;
     loading?: boolean;
     hideCancel?: boolean;
 }
 
-const RoleForm: FC<IGroupFormProps> = ({
+const RoleForm: FC<IRoleFormProps> = ({
     defaultValues,
     onSubmit,
     loading,

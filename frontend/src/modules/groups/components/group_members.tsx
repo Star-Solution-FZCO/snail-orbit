@@ -2,27 +2,34 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, Button, IconButton } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "store";
 import { GroupMemberT } from "types";
-import { toastApiError } from "utils";
+import { toastApiError, useListQueryParams } from "utils";
 import { AddGroupMemberDialog } from "./add_group_member_dialog";
 
-interface IGroupFormProps {
+interface IGroupMembersProps {
     groupId: string;
 }
 
-const GroupMembers: FC<IGroupFormProps> = ({ groupId }) => {
+const GroupMembers: FC<IGroupMembersProps> = ({ groupId }) => {
     const { t } = useTranslation();
 
     const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+
+    const [listQueryParams, updateListQueryParams] = useListQueryParams({
+        limit: 50,
+    });
 
     const {
         data: members,
         isLoading,
         isFetching,
-    } = groupApi.useListGroupMembersQuery(groupId);
+    } = groupApi.useListGroupMembersQuery({
+        id: groupId,
+        params: listQueryParams,
+    });
 
     const [removeGroupMember] = groupApi.useRemoveGroupMemberMutation();
 
@@ -32,40 +39,59 @@ const GroupMembers: FC<IGroupFormProps> = ({ groupId }) => {
             .catch(toastApiError);
     };
 
-    const columns: GridColDef<GroupMemberT>[] = [
-        {
-            field: "delete",
-            headerName: "",
-            sortable: false,
-            resizable: false,
-            width: 60,
-            align: "center",
-            renderCell: ({ row }) => (
-                <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleClickRemoveMember(row);
-                    }}
-                    size="small"
-                    color="error"
-                >
-                    <DeleteIcon />
-                </IconButton>
-            ),
-        },
-        {
-            field: "name",
-            headerName: t("groups.members.name"),
-            flex: 1,
-        },
-        {
-            field: "email",
-            headerName: t("groups.members.email"),
-            flex: 1,
-        },
-    ];
+    const columns: GridColDef<GroupMemberT>[] = useMemo(
+        () => [
+            {
+                field: "delete",
+                headerName: "",
+                sortable: false,
+                resizable: false,
+                width: 60,
+                align: "center",
+                renderCell: ({ row }) => (
+                    <IconButton
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClickRemoveMember(row);
+                        }}
+                        size="small"
+                        color="error"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                ),
+            },
+            {
+                field: "name",
+                headerName: t("groups.members.name"),
+                flex: 1,
+            },
+            {
+                field: "email",
+                headerName: t("groups.members.email"),
+                flex: 1,
+            },
+        ],
+        [t],
+    );
+
+    const paginationModel = {
+        page: listQueryParams.offset / listQueryParams.limit,
+        pageSize: listQueryParams.limit,
+    };
+
+    const handlePaginationModelChange = (model: {
+        page: number;
+        pageSize: number;
+    }) => {
+        updateListQueryParams({
+            limit: model.pageSize,
+            offset: model.page * model.pageSize,
+        });
+    };
 
     const rows = members?.payload.items || [];
+    const rowCount = members?.payload.count || 0;
 
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
@@ -81,10 +107,19 @@ const GroupMembers: FC<IGroupFormProps> = ({ groupId }) => {
             </Box>
 
             <DataGrid
+                sx={{
+                    "& .MuiDataGrid-row": {
+                        cursor: "pointer",
+                    },
+                }}
                 columns={columns}
                 rows={rows}
-                density="compact"
+                rowCount={rowCount}
+                paginationModel={paginationModel}
+                onPaginationModelChange={handlePaginationModelChange}
                 loading={isLoading || isFetching}
+                paginationMode="server"
+                density="compact"
             />
 
             <AddGroupMemberDialog

@@ -16,7 +16,8 @@ const RoleList = () => {
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: roles, isLoading } = roleApi.useListRoleQuery();
+    const { data: roles, isLoading } =
+        roleApi.useListRoleQuery(listQueryParams);
 
     return (
         <Container
