@@ -32,6 +32,11 @@ class UserLinkField(BaseModel):
             email=obj.email,
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UserLinkField):
+            return False
+        return self.id == other.id
+
 
 class APIToken(BaseModel):
     name: str

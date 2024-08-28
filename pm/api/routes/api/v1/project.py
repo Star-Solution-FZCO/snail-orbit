@@ -276,6 +276,8 @@ async def grant_permission(
             target=m.GroupLinkField.from_obj(group),
             role=m.RoleLinkField.from_obj(role),
         )
+    if any(perm == permission for perm in project.permissions):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
     project.permissions.append(permission)
     await project.save_changes()
     return UUIDOutput.make(permission.id)

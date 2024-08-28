@@ -32,6 +32,15 @@ class ProjectPermission(BaseModel):
     target: GroupLinkField | UserLinkField
     role: RoleLinkField
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ProjectPermission):
+            return False
+        return (
+            self.target_type == other.target_type
+            and self.target == other.target
+            and self.role == other.role
+        )
+
 
 @audited_model
 class Project(Document):
