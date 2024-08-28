@@ -2,7 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { Box, IconButton, Stack, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
 import { IssueT } from "types";
@@ -16,21 +16,25 @@ const IssueList: FC = () => {
         limit: 50,
     });
 
-    const { data, isLoading, isFetching } = issueApi.useListIssuesQuery();
+    const { data, isLoading, isFetching } =
+        issueApi.useListIssuesQuery(listQueryParams);
 
-    const columns: GridColDef<IssueT>[] = [
-        {
-            field: "subject",
-            headerName: t("issues.fields.subject"),
-            flex: 1,
-        },
-        {
-            field: "project",
-            headerName: t("issues.fields.project"),
-            flex: 1,
-            valueGetter: (_, row) => row.project.name,
-        },
-    ];
+    const columns: GridColDef<IssueT>[] = useMemo(
+        () => [
+            {
+                field: "subject",
+                headerName: t("issues.fields.subject"),
+                flex: 1,
+            },
+            {
+                field: "project",
+                headerName: t("issues.fields.project"),
+                flex: 1,
+                valueGetter: (_, row) => row.project.name,
+            },
+        ],
+        [t],
+    );
 
     const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
         navigate({

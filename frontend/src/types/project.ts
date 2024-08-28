@@ -20,3 +20,28 @@ export type ProjectDetailT = ProjectT & {
 };
 
 export type UpdateProjectT = Partial<CreateProjectT>;
+
+export type ProjectPermissionTargetT = {
+    id: string;
+    name: string;
+};
+
+export type TargetTypeT = "user" | "group";
+
+export type TargetUserT = ProjectPermissionTargetT & { email: string };
+export type TargetGroupT = ProjectPermissionTargetT & {
+    description: string | null;
+};
+
+type RoleT = {
+    id: string;
+    name: string;
+    description: string | null;
+};
+
+export type ProjectPermissionT = {
+    id: string;
+    target_type: TargetTypeT;
+    target: TargetUserT | TargetGroupT;
+    role: RoleT;
+};

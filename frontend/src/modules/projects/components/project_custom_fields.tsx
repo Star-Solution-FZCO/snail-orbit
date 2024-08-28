@@ -16,7 +16,7 @@ import {
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, projectApi } from "store";
@@ -189,56 +189,61 @@ interface IProjectCustomFieldsProps {
 const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
     const { t } = useTranslation();
 
+    const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
     const [selectedField, setSelectedField] = useState<CustomFieldT | null>(
         null,
     );
 
-    const columns: GridColDef<CustomFieldT>[] = [
-        {
-            field: "delete",
-            headerName: "",
-            sortable: false,
-            resizable: false,
-            width: 60,
-            align: "center",
-            renderCell: ({ row }) => (
-                <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedField(row);
-                    }}
-                    size="small"
-                    color="error"
-                >
-                    <DeleteIcon />
-                </IconButton>
-            ),
-        },
-        {
-            field: "name",
-            headerName: t("customFields.fields.name"),
-            flex: 1,
-        },
-        {
-            field: "type",
-            headerName: t("customFields.fields.type"),
-            flex: 1,
-        },
-        {
-            field: "is_nullable",
-            headerName: t("customFields.fields.nullable"),
-            type: "boolean",
-            flex: 1,
-        },
-    ];
+    const columns: GridColDef<CustomFieldT>[] = useMemo(
+        () => [
+            {
+                field: "delete",
+                headerName: "",
+                sortable: false,
+                resizable: false,
+                width: 60,
+                align: "center",
+                renderCell: ({ row }) => (
+                    <IconButton
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedField(row);
+                            setRemoveDialogOpen(true);
+                        }}
+                        size="small"
+                        color="error"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                ),
+            },
+            {
+                field: "name",
+                headerName: t("customFields.fields.name"),
+                flex: 1,
+            },
+            {
+                field: "type",
+                headerName: t("customFields.fields.type"),
+                flex: 1,
+            },
+            {
+                field: "is_nullable",
+                headerName: t("customFields.fields.nullable"),
+                type: "boolean",
+                flex: 1,
+            },
+        ],
+        [t],
+    );
 
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
             <RemoveProjectCustomFieldDialog
-                open={!!selectedField}
+                open={removeDialogOpen}
                 projectId={project.id}
                 customField={selectedField}
-                onClose={() => setSelectedField(null)}
+                onClose={() => setRemoveDialogOpen(false)}
             />
 
             <Box display="flex" gap={2} height="100%">

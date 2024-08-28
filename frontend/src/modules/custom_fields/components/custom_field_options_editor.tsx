@@ -225,6 +225,7 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<EnumOptionT | null>(
         null,
     );
@@ -245,6 +246,7 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
 
     const handleClickDeleteOption = (option: EnumOptionT) => {
         setSelectedOption(option);
+        setDeleteDialogOpen(true);
     };
 
     const options = customField.options || [];
@@ -277,10 +279,10 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             ))}
 
             <DeleteCustomFieldOptionDialog
-                open={!!selectedOption}
+                open={deleteDialogOpen}
                 customFieldId={customField.id}
                 option={selectedOption}
-                onClose={() => setSelectedOption(null)}
+                onClose={() => setDeleteDialogOpen(false)}
             />
         </Box>
     );

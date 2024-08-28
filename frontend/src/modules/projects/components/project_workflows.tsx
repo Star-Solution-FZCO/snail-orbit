@@ -1,6 +1,8 @@
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -16,13 +18,27 @@ import {
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { workflowApi } from "store/api/workflow.api";
-import { ProjectDetailT, WorkflowT } from "types";
+import { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
 import { toastApiError } from "utils";
+
+const workflowTypeMap: Record<
+    WorkflowTypeT,
+    { translation: string; icon: JSX.Element }
+> = {
+    on_change: {
+        translation: "projects.workflows.types.on_change",
+        icon: <ChangeCircleIcon />,
+    },
+    scheduled: {
+        translation: "projects.workflows.types.scheduled",
+        icon: <ScheduleIcon />,
+    },
+};
 
 interface IWorkflowListProps {
     projectId: string;
@@ -44,7 +60,7 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
         addProjectWorkflow({ id: projectId, workflowId })
             .unwrap()
             .then(() => {
-                toast.success(t("projects.workflows.add.success"));
+                toast.success(t("projects.workflows.attach.success"));
             })
             .catch(toastApiError);
     };
@@ -101,7 +117,11 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
                                 {workflow.name}
                             </Typography>
 
-                            <Typography>{workflow.type}</Typography>
+                            {workflowTypeMap[workflow.type].icon}
+
+                            <Typography>
+                                {t(workflowTypeMap[workflow.type].translation)}
+                            </Typography>
                         </Box>
 
                         <Typography>{workflow.description}</Typography>
@@ -139,7 +159,7 @@ const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
         })
             .unwrap()
             .then(() => {
-                toast.success(t("projects.workflows.remove.success"));
+                toast.success(t("projects.workflows.detach.success"));
                 onClose();
             })
             .catch(toastApiError);
@@ -202,55 +222,77 @@ interface IProjectWorkflowsProps {
 const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
     const { t } = useTranslation();
 
+    const [detachDialogOpen, setDetachDialogOpen] = useState(false);
     const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowT | null>(
         null,
     );
 
-    const columns: GridColDef<WorkflowT>[] = [
-        {
-            field: "detach",
-            headerName: "",
-            sortable: false,
-            resizable: false,
-            width: 60,
-            align: "center",
-            renderCell: ({ row }) => (
-                <IconButton
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedWorkflow(row);
-                    }}
-                    size="small"
-                    color="error"
-                >
-                    <LinkOffIcon />
-                </IconButton>
-            ),
-        },
-        {
-            field: "name",
-            headerName: t("projects.workflows.fields.name"),
-            flex: 1,
-        },
-        {
-            field: "description",
-            headerName: t("description"),
-            flex: 1,
-        },
-        {
-            field: "type",
-            headerName: t("projects.workflows.fields.type"),
-            flex: 1,
-        },
-    ];
+    const columns: GridColDef<WorkflowT>[] = useMemo(
+        () => [
+            {
+                field: "detach",
+                headerName: "",
+                sortable: false,
+                resizable: false,
+                width: 60,
+                align: "center",
+                renderCell: ({ row }) => (
+                    <IconButton
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedWorkflow(row);
+                            setDetachDialogOpen(true);
+                        }}
+                        size="small"
+                        color="error"
+                    >
+                        <LinkOffIcon />
+                    </IconButton>
+                ),
+            },
+            {
+                field: "name",
+                headerName: t("projects.workflows.fields.name"),
+                flex: 1,
+            },
+            {
+                field: "description",
+                headerName: t("description"),
+                flex: 1,
+            },
+            {
+                field: "type",
+                headerName: t("projects.workflows.fields.type"),
+                renderCell: ({ value }) => (
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        height="100%"
+                    >
+                        {workflowTypeMap[value as WorkflowTypeT].icon}
+
+                        <Typography>
+                            {t(
+                                workflowTypeMap[value as WorkflowTypeT]
+                                    .translation,
+                            )}
+                        </Typography>
+                    </Box>
+                ),
+                flex: 1,
+            },
+        ],
+        [t],
+    );
 
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
             <DetachProjectWorkflowDialog
-                open={!!selectedWorkflow}
+                open={detachDialogOpen}
                 projectId={project.id}
                 workflow={selectedWorkflow}
-                onClose={() => setSelectedWorkflow(null)}
+                onClose={() => setDetachDialogOpen(false)}
             />
 
             <Box display="flex" gap={2} height="100%">

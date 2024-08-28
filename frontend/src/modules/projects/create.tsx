@@ -1,5 +1,6 @@
-import { Container, Typography } from "@mui/material";
+import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { Link } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
@@ -40,9 +41,16 @@ const ProjectCreate = () => {
             }}
             disableGutters
         >
-            <Typography fontSize={24} fontWeight="bold">
-                {t("projects.create.title")}
-            </Typography>
+            <Breadcrumbs sx={{ mb: 2 }}>
+                <Link to="/roles" underline="hover">
+                    <Typography fontSize={24} fontWeight="bold">
+                        {t("projects.title")}
+                    </Typography>
+                </Link>
+                <Typography fontSize={24} fontWeight="bold">
+                    {t("projects.create.title")}
+                </Typography>
+            </Breadcrumbs>
 
             <ProjectForm onSubmit={onSubmit} loading={isLoading} />
         </Container>

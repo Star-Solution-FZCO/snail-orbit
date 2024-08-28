@@ -1,4 +1,6 @@
-export type WorkflowTypeT = "on_change" | "scheduleed";
+const workflowTypes = ["on_change", "scheduled"] as const;
+
+export type WorkflowTypeT = (typeof workflowTypes)[number];
 
 export type WorkflowT = {
     id: string;

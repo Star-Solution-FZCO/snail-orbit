@@ -16,7 +16,8 @@ const GroupList = () => {
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: groups, isLoading } = groupApi.useListGroupQuery();
+    const { data: groups, isLoading } =
+        groupApi.useListGroupQuery(listQueryParams);
 
     return (
         <Container

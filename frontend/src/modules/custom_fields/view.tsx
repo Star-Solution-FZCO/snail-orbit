@@ -30,6 +30,8 @@ const CustomFieldView = () => {
 
     const customField = data.payload;
 
+    const isEnum = ["enum", "enum_multi"].includes(customField.type);
+
     const onSubmit = (formData: UpdateCustomFieldT) => {
         updateCustomField({
             id: customField.id,
@@ -56,7 +58,7 @@ const CustomFieldView = () => {
             </Breadcrumbs>
 
             <Box display="flex" gap={2}>
-                <Box flex={1} pt="44px">
+                <Box flex={1} pt={isEnum ? "44px" : 0}>
                     <CustomFieldForm
                         onSubmit={onSubmit}
                         defaultValues={customField}
@@ -64,7 +66,7 @@ const CustomFieldView = () => {
                     />
                 </Box>
 
-                {["enum", "enum_multi"].includes(customField.type) && (
+                {isEnum && (
                     <>
                         <Divider
                             orientation="vertical"
