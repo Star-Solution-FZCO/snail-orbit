@@ -6,12 +6,16 @@ import {
     Box,
     Button,
     CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Modal } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -94,6 +98,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
 };
 
 interface IRemoveProjectCustomFieldDialogProps {
+    open: boolean;
     projectId: string;
     customField: CustomFieldT | null;
     onClose: () => void;
@@ -101,7 +106,7 @@ interface IRemoveProjectCustomFieldDialogProps {
 
 const RemoveProjectCustomFieldDialog: FC<
     IRemoveProjectCustomFieldDialogProps
-> = ({ projectId, customField, onClose }) => {
+> = ({ open, projectId, customField, onClose }) => {
     const { t } = useTranslation();
 
     const [removeProjectCustomField, { isLoading }] =
@@ -123,50 +128,48 @@ const RemoveProjectCustomFieldDialog: FC<
     };
 
     return (
-        <Modal open={!!customField} onClose={onClose}>
-            <Box display="flex" flexDirection="column" gap={2}>
-                <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+                {t("projects.customFields.remove.title")} "{customField?.name}"?
+                <IconButton
+                    sx={{ p: 0 }}
+                    onClick={onClose}
+                    size="small"
+                    disabled={isLoading}
                 >
-                    <Typography fontSize={20} fontWeight="bold">
-                        {t("projects.customFields.remove.title")} "
-                        {customField?.name}"?
-                    </Typography>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        disabled={isLoading}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                <Typography>
+            <DialogContent>
+                <DialogContentText>
                     {t("projects.customFields.remove.warning")}
-                </Typography>
+                </DialogContentText>
+            </DialogContent>
 
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        onClick={handleClickRemove}
-                        variant="outlined"
-                        loading={isLoading}
-                    >
-                        {t("projects.customFields.remove.title")}
-                    </LoadingButton>
-                    <Button
-                        onClick={onClose}
-                        variant="outlined"
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {t("cancel")}
-                    </Button>
-                </Box>
-            </Box>
-        </Modal>
+            <DialogActions>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
+                    {t("cancel")}
+                </Button>
+
+                <LoadingButton
+                    onClick={handleClickRemove}
+                    variant="outlined"
+                    loading={isLoading}
+                >
+                    {t("projects.customFields.remove.title")}
+                </LoadingButton>
+            </DialogActions>
+        </Dialog>
     );
 };
 
@@ -223,6 +226,7 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
             <RemoveProjectCustomFieldDialog
+                open={!!selectedField}
                 projectId={project.id}
                 customField={selectedField}
                 onClose={() => setSelectedField(null)}

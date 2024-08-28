@@ -6,12 +6,16 @@ import {
     Box,
     Button,
     CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Modal } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -100,12 +104,14 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
 };
 
 interface IDetachProjectWorkflowDialogProps {
+    open: boolean;
     projectId: string;
     workflow: WorkflowT | null;
     onClose: () => void;
 }
 
 const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
+    open,
     projectId,
     workflow,
     onClose,
@@ -131,50 +137,52 @@ const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
     };
 
     return (
-        <Modal open={!!workflow} onClose={onClose}>
-            <Box display="flex" flexDirection="column" gap={2}>
-                <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
-                    <Typography fontSize={20} fontWeight="bold">
-                        {t("projects.customFields.detach.title")} "
-                        {workflow?.name}"?
-                    </Typography>
-
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        disabled={isLoading}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-
-                <Typography>
-                    {t("projects.workflows.detach.confirmation")}
+        <Dialog open={open} onClose={onClose}>
+            <DialogTitle
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+                <Typography fontSize={20} fontWeight="bold">
+                    {t("projects.customFields.detach.title")} "{workflow?.name}
+                    "?
                 </Typography>
 
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        onClick={handleClickDetach}
-                        variant="outlined"
-                        loading={isLoading}
-                    >
-                        {t("projects.workflows.detach.title")}
-                    </LoadingButton>
-                    <Button
-                        onClick={onClose}
-                        variant="outlined"
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {t("cancel")}
-                    </Button>
-                </Box>
-            </Box>
-        </Modal>
+                <IconButton
+                    sx={{ p: 0 }}
+                    onClick={onClose}
+                    size="small"
+                    disabled={isLoading}
+                >
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+
+            <DialogContent>
+                <DialogContentText>
+                    {t("projects.workflows.detach.confirmation")}
+                </DialogContentText>
+            </DialogContent>
+
+            <DialogActions>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
+                    {t("cancel")}
+                </Button>
+
+                <LoadingButton
+                    onClick={handleClickDetach}
+                    variant="outlined"
+                    loading={isLoading}
+                >
+                    {t("projects.workflows.detach.title")}
+                </LoadingButton>
+            </DialogActions>
+        </Dialog>
     );
 };
 
@@ -230,6 +238,7 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
     return (
         <Box display="flex" flexDirection="column" gap={1} height="100%">
             <DetachProjectWorkflowDialog
+                open={!!selectedWorkflow}
                 projectId={project.id}
                 workflow={selectedWorkflow}
                 onClose={() => setSelectedWorkflow(null)}

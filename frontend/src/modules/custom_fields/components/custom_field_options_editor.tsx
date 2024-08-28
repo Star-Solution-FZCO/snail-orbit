@@ -7,8 +7,12 @@ import {
     Button,
     CircularProgress,
     debounce,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     IconButton,
-    Modal,
     Popover,
     TextField,
     Typography,
@@ -137,6 +141,7 @@ const CustomFieldOption: FC<ICustomFieldOptionProps> = ({
 };
 
 interface IDeleteCustomFieldOptionDialogProps {
+    open: boolean;
     customFieldId: string;
     option: EnumOptionT | null;
     onClose: () => void;
@@ -144,7 +149,7 @@ interface IDeleteCustomFieldOptionDialogProps {
 
 const DeleteCustomFieldOptionDialog: FC<
     IDeleteCustomFieldOptionDialogProps
-> = ({ customFieldId, option, onClose }) => {
+> = ({ open, customFieldId, option, onClose }) => {
     const { t } = useTranslation();
 
     const [deleteOption, { isLoading }] =
@@ -165,63 +170,49 @@ const DeleteCustomFieldOptionDialog: FC<
     };
 
     return (
-        <Modal open={!!option} onClose={onClose}>
-            <Box
-                sx={(theme) => ({
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    backgroundColor: theme.palette.background.paper,
-                    p: 4,
-                    boxShadow: 16,
-                    borderRadius: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                })}
+        <Dialog open={open} onClose={onClose}>
+            <DialogTitle
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
             >
-                <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
+                {t("customFields.options.delete.title")}
+
+                <IconButton
+                    sx={{ p: 0 }}
+                    onClick={onClose}
+                    size="small"
+                    disabled={isLoading}
                 >
-                    <Typography fontSize={20} fontWeight="bold">
-                        {t("customFields.options.deleteTitle")}
-                    </Typography>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        disabled={isLoading}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+            <DialogContent>
+                <DialogContentText>
+                    {t("customFields.options.delete.confirmation")}
+                </DialogContentText>
+            </DialogContent>
 
-                <Typography>
-                    {t("customFields.options.deleteConfirm")}
-                </Typography>
+            <DialogActions>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
+                    {t("cancel")}
+                </Button>
 
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        onClick={handleClickDelete}
-                        variant="outlined"
-                        loading={isLoading}
-                    >
-                        {t("customFields.options.delete")}
-                    </LoadingButton>
-                    <Button
-                        onClick={onClose}
-                        variant="outlined"
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {t("customFields.options.cancel")}
-                    </Button>
-                </Box>
-            </Box>
-        </Modal>
+                <LoadingButton
+                    onClick={handleClickDelete}
+                    variant="outlined"
+                    loading={isLoading}
+                >
+                    {t("delete")}
+                </LoadingButton>
+            </DialogActions>
+        </Dialog>
     );
 };
 
@@ -286,6 +277,7 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             ))}
 
             <DeleteCustomFieldOptionDialog
+                open={!!selectedOption}
                 customFieldId={customField.id}
                 option={selectedOption}
                 onClose={() => setSelectedOption(null)}

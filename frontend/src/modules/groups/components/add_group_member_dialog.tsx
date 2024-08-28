@@ -5,14 +5,15 @@ import {
     Box,
     Dialog,
     DialogContent,
+    DialogTitle,
     IconButton,
     TextField,
     Typography,
 } from "@mui/material";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi, userApi } from "../../../store";
-import { toastApiError } from "../../../utils";
+import { groupApi, userApi } from "store";
+import { toastApiError } from "utils";
 
 interface AddGroupMemberDialogProps {
     groupId: string;
@@ -29,8 +30,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
 
     const { data: users } = userApi.useListUserQuery();
 
-    const [addGroupMember, { isLoading }] =
-        groupApi.useAddGroupMemberMutation();
+    const [addGroupMember] = groupApi.useAddGroupMemberMutation();
 
     const handleClickAdd = (userId: string) => {
         addGroupMember({ id: groupId, userId })
@@ -40,29 +40,22 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-            <DialogContent
-                sx={{ gap: 1, display: "flex", flexDirection: "column" }}
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <DialogTitle
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
             >
-                <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    gap={1}
-                >
-                    <Typography fontSize={20} fontWeight="bold">
-                        {t("groups.members.add")}
-                    </Typography>
+                {t("groups.members.add")}
 
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        disabled={isLoading}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+                <IconButton sx={{ p: 0 }} onClick={onClose} size="small">
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
+            <DialogContent
+                sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+            >
                 <TextField
                     InputProps={{
                         startAdornment: <SearchIcon />,
