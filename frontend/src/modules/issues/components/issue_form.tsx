@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { CreateIssueT } from "types";
 import * as yup from "yup";
-import { CustomFieldsParser } from "./CustomFieldsParser";
+import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
 
