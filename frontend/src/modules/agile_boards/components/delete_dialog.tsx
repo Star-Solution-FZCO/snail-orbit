@@ -1,6 +1,14 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, IconButton, Modal, Typography } from "@mui/material";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    IconButton,
+} from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,61 +45,49 @@ const DeleteAgileBoardDialog: FC<IDeleteAgileBoardDialogProps> = ({
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <Box
-                sx={(theme) => ({
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    backgroundColor: theme.palette.background.paper,
-                    p: 4,
-                    boxShadow: 16,
-                    borderRadius: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                })}
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <DialogTitle
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
             >
-                <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
+                {t("agileBoards.delete.title")}
+
+                <IconButton
+                    sx={{ p: 0 }}
+                    onClick={onClose}
+                    size="small"
+                    disabled={isLoading}
                 >
-                    <Typography fontSize={20} fontWeight="bold">
-                        {t("agileBoards.delete.title")}
-                    </Typography>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
 
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        disabled={isLoading}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+            <DialogContent>
+                <DialogContentText>
+                    {t("agileBoards.delete.confirm")}
+                </DialogContentText>
+            </DialogContent>
 
-                <Typography>{t("agileBoards.delete.confirm")}</Typography>
+            <DialogActions>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
+                    {t("cancel")}
+                </Button>
 
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        onClick={handleClickDelete}
-                        variant="outlined"
-                        loading={isLoading}
-                    >
-                        {t("agileBoards.delete.title")}
-                    </LoadingButton>
-                    <Button
-                        onClick={onClose}
-                        variant="outlined"
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {t("cancel")}
-                    </Button>
-                </Box>
-            </Box>
-        </Modal>
+                <LoadingButton
+                    onClick={handleClickDelete}
+                    variant="outlined"
+                    loading={isLoading}
+                >
+                    {t("delete")}
+                </LoadingButton>
+            </DialogActions>
+        </Dialog>
     );
 };
 
