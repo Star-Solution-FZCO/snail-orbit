@@ -5,7 +5,7 @@ import FormAutocompletePopover from "./form_autocomplete";
 import { FormAutocompleteValueType } from "./form_autocomplete_content";
 
 const meta = {
-    title: "Components/Field/Form/AutocompletePopover",
+    title: "Components/Field/Form/Autocomplete Popover",
     parameters: {
         layout: "centered",
     },
