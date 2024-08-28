@@ -16,6 +16,7 @@ beanie = "*"
 pyparsing = "*"
 aiofiles = "*"
 python-multipart = "*"
+redis = "*"
 
 [dev-packages]
 bandit = "*"
@@ -23,6 +24,7 @@ mypy = "*"
 pylint = "*"
 ruff = "*"
 types-aiofiles = "*"
+types-redis = "*"
 
 [requires]
 python_version = "3.12"
