@@ -29,6 +29,9 @@ __all__ = (
     'UserOptionType',
     'UserOption',
     'GroupOption',
+    'StateOption',
+    'StateCustomField',
+    'StateField',
 )
 
 
@@ -43,6 +46,7 @@ class CustomFieldTypeT(StrEnum):
     USER_MULTI = 'user_multi'
     ENUM = 'enum'
     ENUM_MULTI = 'enum_multi'
+    STATE = 'state'
 
     def get_field_class(self) -> type['CustomField']:
         return MAPPING[self]
@@ -73,6 +77,18 @@ class UserOption(BaseModel):
         if self.type == UserOptionType.USER:
             return [self.value]
         return self.value.users
+
+
+class StateField(BaseModel):
+    state: str
+    is_resolved: bool = False
+    is_closed: bool = False
+
+
+class StateOption(BaseModel):
+    id: UUID
+    value: StateField
+    color: str | None = None
 
 
 class CustomFieldValidationError(ValueError):
@@ -376,6 +392,22 @@ class EnumMultiCustomField(CustomField):
         return value
 
 
+class StateCustomField(CustomField):
+    type: CustomFieldTypeT = CustomFieldTypeT.STATE
+    options: list[StateOption] = Field(default_factory=list)
+
+    def validate_value(self, value: Any) -> Any:
+        value = super().validate_value(value)
+        if value is None:
+            return value
+        opts = {opt.value.state: opt.value for opt in self.options}
+        if value not in opts:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='option not found'
+            )
+        return opts[value]
+
+
 MAPPING = {
     CustomFieldTypeT.STRING: StringCustomField,
     CustomFieldTypeT.INTEGER: IntegerCustomField,
@@ -387,6 +419,7 @@ MAPPING = {
     CustomFieldTypeT.USER_MULTI: UserMultiCustomField,
     CustomFieldTypeT.ENUM: EnumCustomField,
     CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomField,
+    CustomFieldTypeT.STATE: StateCustomField,
 }
 
 
@@ -394,4 +427,4 @@ class CustomFieldValue(BaseModel):
     id: PydanticObjectId
     type: CustomFieldTypeT
     # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: UserLinkField | list[UserLinkField] | Any
+    value: UserLinkField | list[UserLinkField] | StateField | Any
