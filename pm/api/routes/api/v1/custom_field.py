@@ -11,6 +11,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
     CustomFieldOutput,
     CustomFieldOutputWithEnumOptions,
+    CustomFieldOutputWithStateOptions,
     CustomFieldOutputWithUserOptions,
 )
 from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
@@ -29,6 +30,7 @@ CustomFieldOutputT = (
     CustomFieldOutput
     | CustomFieldOutputWithEnumOptions
     | CustomFieldOutputWithUserOptions
+    | CustomFieldOutputWithStateOptions
 )
 
 
@@ -42,9 +44,23 @@ class UserOptionCreateBody(BaseModel):
     value: PydanticObjectId
 
 
+class StateOptionCreateBody(BaseModel):
+    value: str
+    color: str | None = None
+    is_resolved: bool = False
+    is_closed: bool = False
+
+
 class EnumOptionUpdateBody(BaseModel):
     value: str | None = None
     color: str | None = None
+
+
+class StateOptionUpdateBody(BaseModel):
+    value: str | None = None
+    color: str | None = None
+    is_resolved: bool | None = None
+    is_closed: bool | None = None
 
 
 class CustomFieldCreateBody(CrudCreateBody[m.CustomField]):
@@ -63,6 +79,8 @@ def output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
         return CustomFieldOutputWithEnumOptions.from_obj(obj)
     if obj.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
         return CustomFieldOutputWithUserOptions.from_obj(obj)
+    if obj.type == m.CustomFieldTypeT.STATE:
+        return CustomFieldOutputWithStateOptions.from_obj(obj)
     return CustomFieldOutput.from_obj(obj)
 
 
@@ -241,6 +259,77 @@ async def remove_user_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     obj.options.remove(opt)
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.post('/{custom_field_id}/state-option')
+async def add_state_option(
+    custom_field_id: PydanticObjectId,
+    body: StateOptionCreateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.StateCustomField.find_one(
+        m.StateCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if any(opt.value == body.value for opt in obj.options):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
+    obj.options.append(
+        m.StateOption(
+            id=uuid4(),
+            value=m.StateField(
+                state=body.value, is_resolved=body.is_resolved, is_closed=body.is_closed
+            ),
+            color=body.color,
+        )
+    )
+    if obj.is_changed:
+        await obj.save_changes()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.put('/{custom_field_id}/state-option/{option_id}')
+async def update_state_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+    body: StateOptionUpdateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.StateCustomField.find_one(
+        m.StateCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    for k, v in body.dict(exclude_unset=True).items():
+        if k == 'color':
+            setattr(opt, k, v)
+            continue
+        setattr(opt.value, k, v)
+    # todo: update issues
+    if obj.is_changed:
+        await obj.save_changes()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.delete('/{custom_field_id}/state-option/{option_id}')
+async def remove_state_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.StateCustomField.find_one(
+        m.StateCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    obj.options.remove(opt)
+    # todo: update issues
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))

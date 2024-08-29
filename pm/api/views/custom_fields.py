@@ -1,3 +1,4 @@
+from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -10,7 +11,9 @@ from .user import UserOutput
 
 __all__ = (
     'EnumOptionOutput',
+    'StateOptionOutput',
     'CustomFieldOutput',
+    'CustomFieldOutputWithStateOptions',
     'CustomFieldOutputWithEnumOptions',
     'CustomFieldOutputWithUserOptions',
 )
@@ -85,4 +88,36 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
                 for opt in obj.options
             ],
             users=[UserOutput.from_obj(u) for opt in obj.options for u in opt.users],
+        )
+
+
+class StateOptionOutput(BaseModel):
+    uuid: UUID
+    value: str
+    color: str | None = None
+    is_resolved: bool = False
+    is_closed: bool = False
+
+    @classmethod
+    def from_obj(cls, obj: m.StateOption) -> Self:
+        return cls(
+            uuid=obj.id,
+            value=obj.value.state,
+            color=obj.color,
+            is_resolved=obj.value.is_resolved,
+            is_closed=obj.value.is_closed,
+        )
+
+
+class CustomFieldOutputWithStateOptions(CustomFieldOutput):
+    options: list[StateOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.StateCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
+            is_nullable=obj.is_nullable,
+            options=[StateOptionOutput.from_obj(opt) for opt in obj.options],
         )
