@@ -21,13 +21,17 @@ export const DateField = forwardRef(
             setAnchorEl(null);
         };
 
+        console.log(label, value);
+
         return (
             <>
                 <FieldCard
                     label={label}
                     value={
                         value?.format(
-                            type === "date" ? "DD-MM-YYYY" : "DD-MM-YYYY HH:mm",
+                            type === "date"
+                                ? "DD MMM YYYY"
+                                : "DD MMM YYYY HH:mm",
                         ) || "?"
                     }
                     orientation="vertical"

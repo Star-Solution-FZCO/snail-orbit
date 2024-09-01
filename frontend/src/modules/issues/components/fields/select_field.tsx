@@ -55,6 +55,7 @@ const SelectFieldComp = <T extends boolean | undefined>(
     const initialValue = useMemo(() => {
         if (multiple && !value) return [] as unknown as ValueType<T>;
         if (!value) return undefined;
+        if (!Array.isArray(value)) return undefined;
         return options.filter((el) => value.includes(el.id)) as ValueType<T>;
     }, [options, value]);
 

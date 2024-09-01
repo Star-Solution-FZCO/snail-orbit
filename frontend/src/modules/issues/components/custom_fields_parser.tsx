@@ -14,7 +14,7 @@ type CustomFieldsParserProps = {
     fields: CustomFieldT[];
 };
 
-// TODO: Разобраться как правильно типизировать этот ужас и избавиться от ts-ignore
+// TODO: Find a way to make proper typing without ts-ignore
 
 export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
     const { control } = useFormContext<IssueFormData>();
@@ -63,6 +63,9 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                     render={({ field }) => (
                                         <InputField
                                             {...field}
+                                            onChange={(val) =>
+                                                field.onChange(Number(val))
+                                            }
                                             value={field.value as string}
                                             label={fieldData.name}
                                             id={fieldData.id}
@@ -132,7 +135,11 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                         field: { value, onChange },
                                     }) => (
                                         <DateField
-                                            value={dayjs(value as string)}
+                                            value={
+                                                !!value
+                                                    ? dayjs(value as string)
+                                                    : undefined
+                                            }
                                             onChange={(value) =>
                                                 onChange(value.toISOString())
                                             }
