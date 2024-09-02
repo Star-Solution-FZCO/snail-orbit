@@ -1,9 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
+    Button,
     CircularProgress,
     Container,
-    IconButton,
+    Stack,
     Typography,
 } from "@mui/material";
 import { Link, QueryPagination } from "components";
@@ -31,23 +32,26 @@ const AgileBoardList = () => {
             }}
             disableGutters
         >
-            <Box
-                display="flex"
+            <Stack
+                direction="row"
                 justifyContent="space-between"
                 alignItems="center"
+                gap={1}
             >
-                <Box display="flex" alignItems="center" gap={1}>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("agileBoards.title")}
-                    </Typography>
+                <Typography fontSize={24} fontWeight="bold">
+                    {t("agileBoards.title")}
+                </Typography>
 
-                    <Link to="/agiles/create">
-                        <IconButton size="small">
-                            <AddIcon />
-                        </IconButton>
-                    </Link>
-                </Box>
-            </Box>
+                <Link to="/agiles/create">
+                    <Button
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        size="small"
+                    >
+                        {t("agileBoards.new")}
+                    </Button>
+                </Link>
+            </Stack>
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">
