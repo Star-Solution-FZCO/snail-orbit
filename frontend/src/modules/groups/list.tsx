@@ -1,9 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
+    Button,
     CircularProgress,
     Container,
-    IconButton,
+    Stack,
     Typography,
 } from "@mui/material";
 import { Link, QueryPagination } from "components";
@@ -31,23 +32,27 @@ const GroupList = () => {
             }}
             disableGutters
         >
-            <Box
+            <Stack
+                direction="row"
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
+                gap={1}
             >
-                <Box display="flex" alignItems="center" gap={1}>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("groups.title")}
-                    </Typography>
+                <Typography fontSize={24} fontWeight="bold">
+                    {t("groups.title")}
+                </Typography>
 
-                    <Link to="/groups/create">
-                        <IconButton size="small">
-                            <AddIcon />
-                        </IconButton>
-                    </Link>
-                </Box>
-            </Box>
+                <Link to="/groups/create">
+                    <Button
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        size="small"
+                    >
+                        {t("groups.new")}
+                    </Button>
+                </Link>
+            </Stack>
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">
