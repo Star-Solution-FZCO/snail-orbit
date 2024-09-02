@@ -1,5 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -77,17 +77,27 @@ const CustomFieldList = () => {
             px={4}
             pb={4}
         >
-            <Box display="flex" alignItems="center" gap={1}>
+            <Stack
+                direction="row"
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                gap={1}
+            >
                 <Typography fontSize={24} fontWeight="bold">
                     {t("customFields.title")}
                 </Typography>
 
                 <Link to="/custom-fields/create">
-                    <IconButton size="small">
-                        <AddIcon />
-                    </IconButton>
+                    <Button
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        size="small"
+                    >
+                        {t("customFields.new")}
+                    </Button>
                 </Link>
-            </Box>
+            </Stack>
 
             <DataGrid
                 sx={{

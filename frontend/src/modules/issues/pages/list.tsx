@@ -1,5 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FC, useMemo } from "react";
@@ -72,15 +72,24 @@ const IssueList: FC = () => {
             px={4}
             pb={4}
         >
-            <Stack direction="row" gap={1}>
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                gap={1}
+            >
                 <Typography fontSize={24} fontWeight="bold">
                     {t("issues.title")}
                 </Typography>
 
                 <Link to="/issues/create">
-                    <IconButton size="small">
-                        <AddIcon />
-                    </IconButton>
+                    <Button
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        size="small"
+                    >
+                        {t("issues.new")}
+                    </Button>
                 </Link>
             </Stack>
 
