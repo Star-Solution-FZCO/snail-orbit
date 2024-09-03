@@ -1,20 +1,33 @@
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { issueApi } from "store";
 import { CreateIssueT } from "../../../types";
+import { toastApiError } from "../../../utils";
 import IssueForm from "../components/issue_form";
 import { issueToIssueForm } from "../utils/issue_to_issue_form";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
 const IssueView: FC = () => {
+    const { t } = useTranslation();
     const { issueId } = routeApi.useParams();
 
-    const { data, isLoading } = issueApi.useGetIssuesQuery(issueId);
+    const { data, isLoading, refetch } = issueApi.useGetIssuesQuery(issueId);
+
+    const [updateIssue, { isLoading: isIssueUpdateLoading }] =
+        issueApi.useUpdateIssuesMutation();
 
     const handleSubmit = (formData: CreateIssueT) => {
-        console.log(formData);
+        updateIssue({ ...formData, id: issueId })
+            .unwrap()
+            .then(() => {
+                toast.success(t("issue.update.success"));
+            })
+            .catch(toastApiError)
+            .finally(refetch);
     };
 
     return (
@@ -31,7 +44,7 @@ const IssueView: FC = () => {
 
                     <IssueForm
                         onSubmit={handleSubmit}
-                        loading={isLoading}
+                        loading={isLoading || isIssueUpdateLoading}
                         defaultValues={
                             data?.payload && issueToIssueForm(data.payload)
                         }

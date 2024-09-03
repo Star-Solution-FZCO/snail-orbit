@@ -64,7 +64,11 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                         <InputField
                                             {...field}
                                             onChange={(val) =>
-                                                field.onChange(Number(val))
+                                                field.onChange(
+                                                    fieldData.type === "string"
+                                                        ? val
+                                                        : Number(val),
+                                                )
                                             }
                                             value={field.value as string}
                                             label={fieldData.name}

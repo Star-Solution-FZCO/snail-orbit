@@ -1,15 +1,12 @@
 import { CommentT } from "./comment";
-import { CustomFieldTypeT } from "./custom_fields";
+import { CustomFieldT, IssueValueT } from "./custom_fields";
 import { ProjectT } from "./project";
 
 export type CreateIssueT = {
     project_id: string;
     subject: string;
     text: string | null;
-    fields: Record<
-        string,
-        { id: string; type: CustomFieldTypeT; value: string }
-    >;
+    fields: Record<string, IssueValueT>;
 };
 
 export type IssueT = {
@@ -18,10 +15,7 @@ export type IssueT = {
     comments: Array<CommentT>;
     subject: string;
     text: string | null;
-    fields: Record<
-        string,
-        { id: string; type: CustomFieldTypeT; value: string }
-    >;
+    fields: Record<string, CustomFieldT>;
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;
