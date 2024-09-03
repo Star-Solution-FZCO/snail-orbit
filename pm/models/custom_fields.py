@@ -185,7 +185,7 @@ class DateCustomField(CustomField):
             return value
         if isinstance(value, str):
             try:
-                return datetime.strptime(value, '%Y-%m-%d').date()
+                return datetime.fromisoformat(value).date()
             except ValueError as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a date in ISO format'
@@ -427,4 +427,4 @@ class CustomFieldValue(BaseModel):
     id: PydanticObjectId
     type: CustomFieldTypeT
     # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: UserLinkField | list[UserLinkField] | StateField | Any
+    value: UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any
