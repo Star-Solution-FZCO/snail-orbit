@@ -71,7 +71,11 @@ const AgileBoardList = () => {
                         )}
 
                         {boards?.payload?.items?.map((board) => (
-                            <Link to={`/agiles/${board.id}`} fontWeight="bold">
+                            <Link
+                                key={board.id}
+                                to={`/agiles/${board.id}`}
+                                fontWeight="bold"
+                            >
                                 {board.name}
                             </Link>
                         ))}

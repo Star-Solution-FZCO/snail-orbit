@@ -72,7 +72,11 @@ const RoleList = () => {
                         )}
 
                         {roles?.payload?.items?.map((role) => (
-                            <Link to={`/roles/${role.id}`} fontWeight="bold">
+                            <Link
+                                key={role.id}
+                                to={`/roles/${role.id}`}
+                                fontWeight="bold"
+                            >
                                 {role.name}
                             </Link>
                         ))}

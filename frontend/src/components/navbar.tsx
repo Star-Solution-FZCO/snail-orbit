@@ -14,6 +14,7 @@ import { FC, PropsWithChildren, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
+import { NewEntityButton } from "./new_entity_button";
 
 const useLinks = () => {
     const { t } = useTranslation();
@@ -102,12 +103,14 @@ const NavBar = () => {
             justifyContent="space-between"
             px={4}
         >
-            <Box display="flex" gap={4}>
+            <Box display="flex" alignItems="center" gap={4}>
                 {links.map((link) => (
                     <NavBarLink key={link.to} to={link.to}>
                         {t(link.label)}
                     </NavBarLink>
                 ))}
+
+                <NewEntityButton />
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>

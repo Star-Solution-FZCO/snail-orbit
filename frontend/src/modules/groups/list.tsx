@@ -72,7 +72,11 @@ const GroupList = () => {
                         )}
 
                         {groups?.payload?.items?.map((group) => (
-                            <Link to={`/groups/${group.id}`} fontWeight="bold">
+                            <Link
+                                key={group.id}
+                                to={`/groups/${group.id}`}
+                                fontWeight="bold"
+                            >
                                 {group.name}
                             </Link>
                         ))}
