@@ -13,6 +13,8 @@ export const customFieldsTypes = [
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
 
+export type IssueValueT = string | number | boolean | null;
+
 export type CreateCustomFieldT = {
     name: string;
     type: CustomFieldTypeT;
@@ -22,6 +24,7 @@ export type CreateCustomFieldT = {
 export type CustomFieldT = CreateCustomFieldT & {
     id: string;
     options?: EnumOptionT[];
+    value?: IssueValueT;
 };
 
 export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;
