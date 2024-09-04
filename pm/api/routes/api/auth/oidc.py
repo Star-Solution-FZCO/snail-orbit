@@ -110,9 +110,12 @@ async def oidc_callback(
         algorithm='HS256',
         expires_time=CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES,
     )
-    auth.set_access_cookies(access_token, max_age=CONFIG.ACCESS_TOKEN_EXPIRES)
-    auth.set_refresh_cookies(refresh_token, max_age=refresh_expires)
-    return RedirectResponse(state_data.get('redirect', '/'))
+    resp = RedirectResponse(state_data.get('redirect', '/'))
+    auth.set_access_cookies(
+        access_token, max_age=CONFIG.ACCESS_TOKEN_EXPIRES, response=resp
+    )
+    auth.set_refresh_cookies(refresh_token, max_age=refresh_expires, response=resp)
+    return resp
 
 
 def _gen_state(req: Request) -> str:
