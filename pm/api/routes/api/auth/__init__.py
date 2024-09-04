@@ -11,10 +11,13 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessOutput
 from pm.config import CONFIG
 
+from .oidc import router as oidc_router
+
 __all__ = ('router',)
 
 
 router = APIRouter(prefix='/auth', tags=['auth'])
+router.include_router(oidc_router)
 
 JWT_CRYPTO_ALGORITHM = 'HS256'
 
