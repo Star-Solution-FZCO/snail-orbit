@@ -17,6 +17,7 @@ pyparsing = "*"
 aiofiles = "*"
 python-multipart = "*"
 redis = "*"
+aiohttp = "*"
 
 [dev-packages]
 bandit = "*"
