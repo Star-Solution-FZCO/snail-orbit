@@ -1,8 +1,20 @@
 import { Box } from "@mui/material";
 import { Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { setUser, useAppDispatch, userApi } from "store";
 import { NavBar } from "./navbar";
 
 const Layout = () => {
+    const dispatch = useAppDispatch();
+
+    const { data: profile } = userApi.useGetProfileQuery();
+
+    useEffect(() => {
+        if (profile) {
+            dispatch(setUser(profile.payload));
+        }
+    }, [profile]);
+
     return (
         <Box
             sx={{
