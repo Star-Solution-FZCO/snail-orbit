@@ -2,6 +2,7 @@ import { LoadingButton } from "@mui/lab";
 import {
     Avatar,
     Box,
+    Button,
     Checkbox,
     Container,
     FormControlLabel,
@@ -62,6 +63,10 @@ const Auth: FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClickSignInOIDC = () => {
+        window.location.href = "/api/auth/oidc";
     };
 
     return (
@@ -131,6 +136,22 @@ const Auth: FC = () => {
                         >
                             {t("auth.signIn")}
                         </LoadingButton>
+
+                        <Button
+                            sx={{
+                                bgcolor: "#4444BB",
+                                "&:hover": {
+                                    bgcolor: "#5C5CFF",
+                                },
+                                color: "white",
+                                mt: 2,
+                            }}
+                            onClick={handleClickSignInOIDC}
+                            variant="contained"
+                            fullWidth
+                        >
+                            {t("auth.signInWithWB")}
+                        </Button>
                     </Box>
                 </Box>
             </Container>

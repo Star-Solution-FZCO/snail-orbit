@@ -21,6 +21,7 @@
     "auth.form.password": "Password",
     "auth.form.remember": "Remember me",
     "auth.signIn": "Sign In",
+    "auth.signInWithWB": "Sign in with Workbench",
     "cancel": "Cancel",
     "create": "Create",
     "customFields.create.success": "Custom Field created successfully",
