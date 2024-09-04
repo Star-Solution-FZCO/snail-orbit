@@ -77,6 +77,29 @@ CONFIG = Dynaconf(
             'REDIS_EVENT_BUS_URL',
             default='redis://localhost:6379/0',
         ),
+        Validator(
+            'OIDC_ENABLED',
+            cast=bool,
+            default=False,
+        ),
+        Validator(
+            'OIDC_DISCOVERY_URL',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'OIDC_CLIENT_ID',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'OIDC_CLIENT_SECRET',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
     ],
 )
 CONFIG.configure()
