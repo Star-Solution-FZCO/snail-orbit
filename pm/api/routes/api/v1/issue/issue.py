@@ -170,10 +170,8 @@ async def validate_custom_fields_values(
     if issue:
         all_issue_fields |= set(issue.fields.keys())
     for f in project.custom_fields:  # type: m.CustomField
-        if f.is_nullable:
-            continue
         if f.name not in all_issue_fields:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, f'Field {f.name} is required')
+            fields[f.name] = f.default_value
 
     results = {}
     project_fields = {f.name: f for f in project.custom_fields}

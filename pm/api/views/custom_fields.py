@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -30,6 +30,14 @@ class CustomFieldOutput(BaseModel):
     name: str
     type: m.CustomFieldTypeT
     is_nullable: bool
+    default_value: (
+        m.UserLinkField
+        | list[m.UserLinkField]
+        | m.StateField
+        | PydanticObjectId
+        | Any
+        | None
+    )
 
     @classmethod
     def from_obj(cls, obj: m.CustomField) -> 'CustomFieldOutput':
@@ -38,6 +46,7 @@ class CustomFieldOutput(BaseModel):
             name=obj.name,
             type=obj.type,
             is_nullable=obj.is_nullable,
+            default_value=obj.default_value,
         )
 
 
@@ -51,6 +60,7 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
             name=obj.name,
             type=obj.type,
             is_nullable=obj.is_nullable,
+            default_value=obj.default_value,
             options=[
                 EnumOptionOutput(uuid=k, value=v.value, color=v.color)
                 for k, v in obj.options.items()
@@ -87,6 +97,7 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
                 )
                 for opt in obj.options
             ],
+            default_value=obj.default_value,
             users=[UserOutput.from_obj(u) for opt in obj.options for u in opt.users],
         )
 
@@ -120,4 +131,5 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[StateOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=obj.default_value,
         )

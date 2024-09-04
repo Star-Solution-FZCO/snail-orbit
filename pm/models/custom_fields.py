@@ -117,6 +117,7 @@ class CustomField(Document):
     name: str
     type: CustomFieldTypeT
     is_nullable: bool
+    default_value: Any | None = None
 
     def validate_value(self, value: Any) -> Any:
         if value is None and not self.is_nullable:
@@ -303,9 +304,14 @@ class UserCustomFieldMixin:
 
 class UserCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER
+    default_value: UserLinkField | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
+        if value is None:
+            return value
+        if isinstance(value, UserLinkField):
+            value = value.id
         try:
             value = PydanticObjectId(value)
         except ValueError as err:
@@ -322,6 +328,7 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
 
 class UserMultiCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER_MULTI
+    default_value: list[UserLinkField] | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
@@ -338,6 +345,8 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
         users = {u.id: u for opt in self.options for u in opt.users}
         results = []
         for val in value:
+            if isinstance(val, UserLinkField):
+                val = val.id
             try:
                 val = PydanticObjectId(val)
             except ValueError as err:
@@ -355,6 +364,7 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
     options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    default_value: str | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
@@ -370,6 +380,7 @@ class EnumCustomField(CustomField):
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
     options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    default_value: list[str] | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
@@ -395,11 +406,14 @@ class EnumMultiCustomField(CustomField):
 class StateCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STATE
     options: list[StateOption] = Field(default_factory=list)
+    default_value: StateField | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
         if value is None:
             return value
+        if isinstance(value, StateField):
+            value = value.state
         opts = {opt.value.state: opt.value for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
@@ -427,4 +441,6 @@ class CustomFieldValue(BaseModel):
     id: PydanticObjectId
     type: CustomFieldTypeT
     # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any
+    value: (
+        UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any | None
+    ) = None
