@@ -12,7 +12,18 @@ from .user import User, UserLinkField
 __all__ = (
     'Issue',
     'IssueComment',
+    'IssueAttachment',
 )
+
+
+class IssueAttachment(BaseModel):
+    id: UUID
+    name: str
+    size: int
+    content_type: str
+    author: UserLinkField
+    created_at: datetime
+    ocr_text: str | None = None
 
 
 class IssueComment(BaseModel):
@@ -21,6 +32,7 @@ class IssueComment(BaseModel):
     text: str | None
     created_at: datetime
     updated_at: datetime
+    attachments: list[IssueAttachment] = Field(default_factory=list)
 
 
 @audited_model
@@ -39,6 +51,7 @@ class Issue(Document):
 
     project: ProjectLinkField
     comments: list[IssueComment] = Field(default_factory=list)
+    attachments: list[IssueAttachment] = Field(default_factory=list)
 
     fields: dict[str, CustomFieldValue] = Field(default_factory=dict)
 

@@ -5,11 +5,13 @@ from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
+from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
+from pm.api.views.issue import IssueAttachmentOut
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
@@ -31,6 +33,7 @@ class IssueCommentOutput(BaseModel):
     author: UserOutput
     created_at: datetime
     updated_at: datetime
+    attachments: list[IssueAttachmentOut]
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
@@ -40,15 +43,18 @@ class IssueCommentOutput(BaseModel):
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
+            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments],
         )
 
 
 class IssueCommentCreate(BaseModel):
     text: str | None = None
+    attachments: list[UUID] = Field(default_factory=list)
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
+    attachments: list[UUID] | None = None
 
 
 @router.get('/list')
@@ -104,6 +110,7 @@ async def create_comment(
     issue_id: PydanticObjectId,
     body: IssueCommentCreate,
 ) -> SuccessPayloadOutput[IssueCommentOutput]:
+    now = utcnow()
     issue = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -113,12 +120,33 @@ async def create_comment(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You do not have permission to comment on this issue'
         )
-    now = utcnow()
+    attachments = {}
+    if body.attachments:
+        if not user_ctx.has_permission(issue.project.id, Permissions.ATTACHMENT_CREATE):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                'You do not have permission to attach files to this issue',
+            )
+        try:
+            attachments = await resolve_files(body.attachments)
+        except ValueError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
     comment = m.IssueComment(
         text=body.text,
         author=m.UserLinkField.from_obj(user_ctx.user),
         created_at=now,
         updated_at=now,
+        attachments=[
+            m.IssueAttachment(
+                id=a_id,
+                name=a_data.name,
+                size=a_data.size,
+                content_type=a_data.content_type,
+                author=m.UserLinkField.from_obj(user_ctx.user),
+                created_at=now,
+            )
+            for a_id, a_data in attachments.items()
+        ],
     )
     issue.comments.append(comment)
     await issue.save_changes()
@@ -131,6 +159,7 @@ async def update_comment(
     comment_id: UUID,
     body: IssueCommentUpdate,
 ) -> SuccessPayloadOutput[IssueCommentOutput]:
+    now = utcnow()
     issue = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -150,9 +179,32 @@ async def update_comment(
         )
 
     for k, v in body.dict(exclude_unset=True).items():
+        if k == 'attachments':
+            extra_attachment_ids = [
+                a_id for a_id in v if a_id not in comment.attachments
+            ]
+            try:
+                extra_attachments = await resolve_files(extra_attachment_ids)
+            except ValueError as err:
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            comment.attachments = [a for a in comment.attachments if a.id not in v]
+            comment.attachments.extend(
+                [
+                    m.IssueAttachment(
+                        id=a_id,
+                        name=a_data.name,
+                        size=a_data.size,
+                        content_type=a_data.content_type,
+                        author=m.UserLinkField.from_obj(user_ctx.user),
+                        created_at=now,
+                    )
+                    for a_id, a_data in extra_attachments.items()
+                ]
+            )
+            continue
         setattr(comment, k, v)
     if issue.is_changed:
-        comment.updated_at = utcnow()
+        comment.updated_at = now
         await issue.save_changes()
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 

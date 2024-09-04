@@ -1,17 +1,21 @@
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
+from pm.api.context import current_user
 from pm.api.events_bus import Event, EventType
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
+from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.utils.dateutils import utcnow
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
@@ -24,6 +28,7 @@ class IssueCreate(BaseModel):
     subject: str
     text: str | None = None
     fields: dict[str, Any] = Field(default_factory=dict)
+    attachments: list[UUID] = Field(default_factory=list)
 
 
 class BoardPosition(BaseModel):
@@ -36,6 +41,7 @@ class IssueUpdate(BaseModel):
     text: str | None = None
     fields: dict[str, Any] | None = None
     board_position: BoardPosition | None = None
+    attachments: list[UUID] | None = None
 
 
 class IssueListParams(BaseModel):
@@ -79,11 +85,20 @@ async def get_issue(
 async def create_issue(
     body: IssueCreate,
 ) -> SuccessPayloadOutput[IssueOutput]:
+    user_ctx = current_user()
+    now = utcnow()
     project: m.Project | None = await m.Project.find_one(
         m.Project.id == body.project_id, fetch_links=True
     )
     if not project:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+    attachments = {}
+    if body.attachments:
+        try:
+            attachments = await resolve_files(body.attachments)
+        except ValueError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+
     validated_fields, validation_errors = await validate_custom_fields_values(
         body.fields, project
     )
@@ -92,6 +107,17 @@ async def create_issue(
         text=body.text,
         project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
         fields=validated_fields,
+        attachments=[
+            m.IssueAttachment(
+                id=a_id,
+                name=a_data.name,
+                size=a_data.size,
+                content_type=a_data.content_type,
+                author=m.UserLinkField.from_obj(user_ctx.user),
+                created_at=now,
+            )
+            for a_id, a_data in attachments.items()
+        ],
     )
     if validation_errors:
         raise ValidateModelException(
@@ -118,6 +144,8 @@ async def update_issue(
     issue_id: PydanticObjectId,
     body: IssueUpdate,
 ) -> SuccessPayloadOutput[IssueOutput]:
+    user_ctx = current_user()
+    now = utcnow()
     obj: m.Issue | None = await m.Issue.find_one(
         m.Issue.id == issue_id, fetch_links=True
     )
@@ -137,6 +165,27 @@ async def update_issue(
                 v, project, obj
             )
             obj.fields.update(f_val)
+            continue
+        if k == 'attachments':
+            extra_attachment_ids = [a_id for a_id in v if a_id not in obj.attachments]
+            try:
+                extra_attachments = await resolve_files(extra_attachment_ids)
+            except ValueError as err:
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            obj.attachments = [a for a in obj.attachments if a.id not in v]
+            obj.attachments.extend(
+                [
+                    m.IssueAttachment(
+                        id=a_id,
+                        name=a_data.name,
+                        size=a_data.size,
+                        content_type=a_data.content_type,
+                        author=m.UserLinkField.from_obj(user_ctx.user),
+                        created_at=now,
+                    )
+                    for a_id, a_data in extra_attachments.items()
+                ]
+            )
             continue
         setattr(obj, k, v)
     if validation_errors:
@@ -158,7 +207,7 @@ async def update_issue(
         board.move_issue(obj.id, after_id=body.board_position.after_issue)
         await board.save_changes()
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
         await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
