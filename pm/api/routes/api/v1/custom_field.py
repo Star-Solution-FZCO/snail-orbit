@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Any, Type
 from uuid import UUID, uuid4
 
 from beanie import PydanticObjectId
@@ -14,7 +15,6 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithStateOptions,
     CustomFieldOutputWithUserOptions,
 )
-from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 
@@ -63,15 +63,33 @@ class StateOptionUpdateBody(BaseModel):
     is_closed: bool | None = None
 
 
-class CustomFieldCreateBody(CrudCreateBody[m.CustomField]):
+class CustomFieldCreateBody(BaseModel):
     name: str
     type: m.CustomFieldTypeT
     is_nullable: bool
+    default_value: Any | None = None
+
+    def create_obj(self, cls: Type[m.CustomField]) -> m.CustomField:
+        obj = cls(
+            name=self.name,
+            type=self.type,
+            is_nullable=self.is_nullable,
+        )
+        if self.default_value is not None:
+            obj.default_value = obj.validate_value(self.default_value)
+        return obj
 
 
-class CustomFieldUpdateBody(CrudUpdateBody[m.CustomField]):
+class CustomFieldUpdateBody(BaseModel):
     name: str | None = None
     is_nullable: bool | None = None
+    default_value: Any | None = None
+
+    def update_obj(self, obj: m.CustomField) -> None:
+        for k, v in self.dict(exclude_unset=True).items():
+            if k == 'default_value':
+                v = obj.validate_value(v)
+            setattr(obj, k, v)
 
 
 def output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
@@ -116,7 +134,10 @@ async def get_custom_field(
 async def create_custom_field(
     body: CustomFieldCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
-    obj = body.create_obj(body.type.get_field_class())
+    try:
+        obj = body.create_obj(body.type.get_field_class())
+    except m.CustomFieldValidationError as err:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     await obj.insert()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
@@ -130,7 +151,10 @@ async def update_custom_field(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    body.update_obj(obj)
+    try:
+        body.update_obj(obj)
+    except m.CustomFieldValidationError as err:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
