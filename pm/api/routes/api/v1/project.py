@@ -9,10 +9,7 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import admin_context_dependency, current_user_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.custom_fields import (
-    CustomFieldOutput,
-    CustomFieldOutputWithEnumOptions,
-)
+from pm.api.views.custom_fields import CustomFieldOutput
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
@@ -74,24 +71,18 @@ class ProjectOutput(BaseModel):
     slug: str
     description: str | None
     is_active: bool
-    custom_fields: list[CustomFieldOutput | CustomFieldOutputWithEnumOptions]
+    custom_fields: list[CustomFieldOutput]
     workflows: list[WorkflowOutput] = []
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> 'ProjectOutput':
-        custom_fields = []
-        for v in obj.custom_fields:
-            if v.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
-                custom_fields.append(CustomFieldOutputWithEnumOptions.from_obj(v))
-                continue
-            custom_fields.append(CustomFieldOutput.from_obj(v))
         return cls(
             id=obj.id,
             name=obj.name,
             slug=obj.slug,
             description=obj.description,
             is_active=obj.is_active,
-            custom_fields=custom_fields,
+            custom_fields=[CustomFieldOutput.from_obj(v) for v in obj.custom_fields],
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
         )
 
