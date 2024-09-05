@@ -98,7 +98,7 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
                 for opt in obj.options
             ],
             default_value=obj.default_value,
-            users=[UserOutput.from_obj(u) for opt in obj.options for u in opt.users],
+            users=[UserOutput.from_obj(u) for u in obj.users],
         )
 
 
