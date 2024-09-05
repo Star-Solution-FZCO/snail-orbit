@@ -10,15 +10,18 @@ import {
 import { Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "store";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const GroupList = () => {
     const { t } = useTranslation();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: groups, isLoading } =
-        groupApi.useListGroupQuery(listQueryParams);
+    const {
+        data: groups,
+        isLoading,
+        error,
+    } = groupApi.useListGroupQuery(listQueryParams);
 
     return (
         <Container
@@ -53,6 +56,12 @@ const GroupList = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            {error && (
+                <Typography>
+                    {formatErrorMessages(error) || t("groups.list.fetch.error")}
+                </Typography>
+            )}
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">

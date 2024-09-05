@@ -10,15 +10,18 @@ import {
 import { Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { roleApi } from "store";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const RoleList = () => {
     const { t } = useTranslation();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: roles, isLoading } =
-        roleApi.useListRoleQuery(listQueryParams);
+    const {
+        data: roles,
+        isLoading,
+        error,
+    } = roleApi.useListRoleQuery(listQueryParams);
 
     return (
         <Container
@@ -53,6 +56,12 @@ const RoleList = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            {error && (
+                <Typography>
+                    {formatErrorMessages(error) || t("roles.list.fetch.error")}
+                </Typography>
+            )}
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">

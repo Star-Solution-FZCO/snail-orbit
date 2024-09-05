@@ -6,16 +6,27 @@ import { defineConfig, splitVendorChunkPlugin, type PluginOption } from "vite";
 import unusedCode from "vite-plugin-unused-code";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+const oneYear = 60 * 60 * 24 * 365;
+
 // https://vitejs.dev/config/
 export default defineConfig({
     server: {
         host: "localhost",
         port: 3000,
         open: true,
+        headers: {
+            "Strict-Transport-Security": `max-age=${oneYear}; includeSubDomains; preload`,
+        },
         proxy: {
             "/api": {
                 target: "http://127.0.0.1:9090",
                 changeOrigin: true,
+                // for local oauth
+                configure: (proxy) => {
+                    proxy.on("proxyReq", (proxyReq) => {
+                        proxyReq.setHeader("Host", "localhost:3000");
+                    });
+                },
             },
         },
     },

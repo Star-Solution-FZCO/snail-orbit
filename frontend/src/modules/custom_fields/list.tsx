@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import { CustomFieldT } from "types";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const CustomFieldList = () => {
     const { t } = useTranslation();
@@ -16,7 +16,7 @@ const CustomFieldList = () => {
         limit: 50,
     });
 
-    const { data, isLoading, isFetching } =
+    const { data, isLoading, isFetching, error } =
         customFieldsApi.useListCustomFieldsQuery(listQueryParams);
 
     const columns: GridColDef<CustomFieldT>[] = useMemo(
@@ -84,9 +84,18 @@ const CustomFieldList = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("customFields.title")}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={2}>
+                    <Typography fontSize={24} fontWeight="bold">
+                        {t("customFields.title")}
+                    </Typography>
+
+                    {error && (
+                        <Typography fontSize={16} color="error">
+                            {formatErrorMessages(error) ||
+                                t("customFields.list.fetch.error")}
+                        </Typography>
+                    )}
+                </Box>
 
                 <Link to="/custom-fields/create">
                     <Button

@@ -50,7 +50,12 @@ const NewEntityButton = () => {
 
     return (
         <Link to={entity.path}>
-            <Button startIcon={<AddIcon />} variant="contained" size="small">
+            <Button
+                sx={{ height: "24px", py: 0, textTransform: "none" }}
+                startIcon={<AddIcon />}
+                variant="contained"
+                size="small"
+            >
                 {t(entity.label)}
             </Button>
         </Link>
