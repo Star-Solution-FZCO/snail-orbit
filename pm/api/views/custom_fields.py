@@ -62,8 +62,8 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
             options=[
-                EnumOptionOutput(uuid=k, value=v.value, color=v.color)
-                for k, v in obj.options.items()
+                EnumOptionOutput(uuid=opt.id, value=opt.value, color=opt.color)
+                for opt in obj.options
             ],
         )
 
@@ -98,7 +98,7 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
                 for opt in obj.options
             ],
             default_value=obj.default_value,
-            users=[UserOutput.from_obj(u) for opt in obj.options for u in opt.users],
+            users=[UserOutput.from_obj(u) for u in obj.users],
         )
 
 

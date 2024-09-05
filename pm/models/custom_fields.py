@@ -53,6 +53,7 @@ class CustomFieldTypeT(StrEnum):
 
 
 class EnumOption(BaseModel):
+    id: UUID
     value: str
     color: str | None = None
 
@@ -220,6 +221,10 @@ class DateTimeCustomField(CustomField):
 class UserCustomFieldMixin:
     options: list[UserOption] = Field(default_factory=list)
 
+    @property
+    def users(self) -> set[UserLinkField]:
+        return {u for opt in self.options for u in opt.users}
+
     @classmethod
     async def update_user_embedded_links(
         cls,
@@ -363,14 +368,14 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
-    options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    options: list[EnumOption] = Field(default_factory=list)
     default_value: str | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
         if value is None:
             return value
-        if value not in {opt.value for opt in self.options.values()}:
+        if value not in {opt.value for opt in self.options}:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
             )
@@ -379,7 +384,7 @@ class EnumCustomField(CustomField):
 
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
-    options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    options: list[EnumOption] = Field(default_factory=list)
     default_value: list[str] | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -394,7 +399,7 @@ class EnumMultiCustomField(CustomField):
             raise CustomFieldValidationError(
                 field=self, value=value, msg='cannot be empty'
             )
-        allowed_values = {opt.value for opt in self.options.values()}
+        allowed_values = {opt.value for opt in self.options}
         for val in value:
             if val not in allowed_values:
                 raise CustomFieldValidationError(
