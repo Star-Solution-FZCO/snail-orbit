@@ -222,8 +222,8 @@ class UserCustomFieldMixin:
     options: list[UserOption] = Field(default_factory=list)
 
     @property
-    def users(self) -> list[UserLinkField]:
-        return [u for opt in self.options for u in opt.users]
+    def users(self) -> set[UserLinkField]:
+        return {u for opt in self.options for u in opt.users}
 
     @classmethod
     async def update_user_embedded_links(

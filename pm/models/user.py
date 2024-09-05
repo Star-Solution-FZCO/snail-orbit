@@ -37,6 +37,9 @@ class UserLinkField(BaseModel):
             return False
         return self.id == other.id
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 
 class APIToken(BaseModel):
     name: str
