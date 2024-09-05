@@ -5,6 +5,7 @@ import { Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { roleApi } from "store";
+import { formatErrorMessages } from "utils";
 import { RolePermissions } from "./components/role_permissions";
 import { RoleSettings } from "./components/role_settings";
 import { tabs } from "./utils";
@@ -19,12 +20,22 @@ const RoleView = () => {
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "settings");
 
-    const { data } = roleApi.useGetRoleQuery(roleId);
+    const { data, error } = roleApi.useGetRoleQuery(roleId);
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
         navigate({ search: { tab: value } });
     };
+
+    if (error) {
+        return (
+            <Box px={4} pb={4}>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) || t("roles.item.fetch.error")}
+                </Typography>
+            </Box>
+        );
+    }
 
     if (!data) return null;
 

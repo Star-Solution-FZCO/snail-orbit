@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { UpdateCustomFieldT } from "types";
-import { toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 import { CustomFieldForm } from "./components/custom_field_form";
 import { CustomFieldOptionsEditor } from "./components/custom_field_options_editor";
 
@@ -21,10 +21,22 @@ const CustomFieldView = () => {
     const { t } = useTranslation();
     const { customFieldId } = routeApi.useParams();
 
-    const { data } = customFieldsApi.useGetCustomFieldQuery(customFieldId);
+    const { data, error } =
+        customFieldsApi.useGetCustomFieldQuery(customFieldId);
 
     const [updateCustomField, { isLoading }] =
         customFieldsApi.useUpdateCustomFieldMutation();
+
+    if (error) {
+        return (
+            <Container sx={{ px: 4, pb: 4 }} disableGutters>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) ||
+                        t("customFields.item.fetch.error")}
+                </Typography>
+            </Container>
+        );
+    }
 
     if (!data) return null;
 

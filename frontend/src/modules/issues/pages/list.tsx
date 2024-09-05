@@ -6,7 +6,7 @@ import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
 import { IssueT } from "types";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const IssueList: FC = () => {
     const { t } = useTranslation();
@@ -16,7 +16,7 @@ const IssueList: FC = () => {
         limit: 50,
     });
 
-    const { data, isLoading, isFetching } =
+    const { data, isLoading, isFetching, error } =
         issueApi.useListIssuesQuery(listQueryParams);
 
     const columns: GridColDef<IssueT>[] = useMemo(
@@ -78,9 +78,19 @@ const IssueList: FC = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("issues.title")}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={2}>
+                    <Typography fontSize={24} fontWeight="bold">
+                        {t("issues.title")}
+                    </Typography>
+
+                    {error && (
+                        <Typography color="error" fontSize={16}>
+                            {formatErrorMessages(error) ||
+                                t("issues.list.fetch.error")}
+                            !
+                        </Typography>
+                    )}
+                </Box>
 
                 <Link to="/issues/create">
                     <Button

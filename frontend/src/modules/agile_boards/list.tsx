@@ -10,15 +10,18 @@ import {
 import { Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const AgileBoardList = () => {
     const { t } = useTranslation();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: boards, isLoading } =
-        agileBoardApi.useListAgileBoardQuery(listQueryParams);
+    const {
+        data: boards,
+        isLoading,
+        error,
+    } = agileBoardApi.useListAgileBoardQuery(listQueryParams);
 
     return (
         <Container
@@ -52,6 +55,13 @@ const AgileBoardList = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            {error && (
+                <Typography>
+                    {formatErrorMessages(error) ||
+                        t("agileBoards.list.fetch.error")}
+                </Typography>
+            )}
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">

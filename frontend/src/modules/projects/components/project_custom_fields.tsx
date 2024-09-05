@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, projectApi } from "store";
 import { CustomFieldT, ProjectDetailT } from "types";
-import { toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 
 interface ICustomFieldListProps {
     projectId: string;
@@ -30,11 +30,14 @@ interface ICustomFieldListProps {
 const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
-    const { data: customFields, isLoading: customFieldsLoading } =
-        customFieldsApi.useListCustomFieldsQuery({
-            limit: 0,
-            offset: 0,
-        });
+    const {
+        data: customFields,
+        isLoading: customFieldsLoading,
+        error,
+    } = customFieldsApi.useListCustomFieldsQuery({
+        limit: 0,
+        offset: 0,
+    });
 
     const [addProjectCustomField, { isLoading: addProjectCustomFieldLoading }] =
         projectApi.useAddProjectCustomFieldMutation();
@@ -55,8 +58,20 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
             </Box>
         );
 
+    if (error)
+        return (
+            <Typography fontWeight="bold" color="error">
+                {formatErrorMessages(error) ||
+                    t("projects.customFields.fetch.error")}
+            </Typography>
+        );
+
     if (!customFields)
-        return <Typography>{t("projects.customFields.empty")}</Typography>;
+        return (
+            <Typography fontWeight="bold">
+                {t("projects.customFields.empty")}
+            </Typography>
+        );
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>

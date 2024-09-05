@@ -5,6 +5,7 @@ import { TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
+import { formatErrorMessages } from "utils";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
@@ -21,12 +22,23 @@ const ProjectView = () => {
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 
-    const { data } = projectApi.useGetProjectQuery(projectId);
+    const { data, error } = projectApi.useGetProjectQuery(projectId);
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
         navigate({ search: { tab: value } });
     };
+
+    if (error) {
+        return (
+            <Box px={4} pb={4}>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) ||
+                        t("projects.item.fetch.error")}
+                </Typography>
+            </Box>
+        );
+    }
 
     if (!data) return null;
 

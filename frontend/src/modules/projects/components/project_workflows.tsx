@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { workflowApi } from "store/api/workflow.api";
 import { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
-import { toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 
 const workflowTypeMap: Record<
     WorkflowTypeT,
@@ -47,11 +47,14 @@ interface IWorkflowListProps {
 const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
-    const { data: workflows, isLoading: workflowsLoading } =
-        workflowApi.useListWorkflowQuery({
-            limit: 0,
-            offset: 0,
-        });
+    const {
+        data: workflows,
+        isLoading: workflowsLoading,
+        error,
+    } = workflowApi.useListWorkflowQuery({
+        limit: 0,
+        offset: 0,
+    });
 
     const [addProjectWorkflow, { isLoading: addProjectWorkflowLoading }] =
         projectApi.useAddProjectWorkflowMutation();
@@ -72,8 +75,20 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
             </Box>
         );
 
+    if (error)
+        return (
+            <Typography fontWeight="bold" color="error">
+                {formatErrorMessages(error) ||
+                    t("projects.workflows.fetch.error")}
+            </Typography>
+        );
+
     if (!workflows)
-        return <Typography>{t("projects.workflows.empty")}</Typography>;
+        return (
+            <Typography fontWeight="bold">
+                {t("projects.workflows.empty")}
+            </Typography>
+        );
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>
