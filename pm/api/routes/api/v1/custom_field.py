@@ -14,9 +14,18 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithEnumOptions,
     CustomFieldOutputWithStateOptions,
     CustomFieldOutputWithUserOptions,
+    EnumOptionOutput,
+    StateOptionOutput,
 )
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.api.views.select import (
+    SelectParams,
+    enum_option_select,
+    state_option_select,
+    user_link_select,
+)
+from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
 
@@ -32,6 +41,7 @@ CustomFieldOutputT = (
     | CustomFieldOutputWithUserOptions
     | CustomFieldOutputWithStateOptions
 )
+CustomFieldSelectOptionsT = EnumOptionOutput | UserOutput | StateOptionOutput
 
 
 class EnumOptionCreateBody(BaseModel):
@@ -172,7 +182,9 @@ async def add_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    obj.options[uuid4()] = m.EnumOption(value=body.value, color=body.color)
+    if any(opt.value == body.value for opt in obj.options):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
+    obj.options.append(m.EnumOption(id=uuid4(), value=body.value, color=body.color))
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -191,10 +203,11 @@ async def update_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    if option_id not in obj.options:
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        setattr(obj.options[option_id], k, v)
+        setattr(opt, k, v)
     # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
@@ -213,10 +226,11 @@ async def remove_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    if option_id not in obj.options:
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     # todo: validate option is not in use
-    obj.options.pop(option_id)
+    obj.options.remove(opt)
     # todo: update issues
     if obj.is_changed:
         await obj.replace()
@@ -357,3 +371,43 @@ async def remove_state_option(
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.get('/{custom_field_id}/select')
+async def select_options(
+    custom_field_id: PydanticObjectId,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[CustomFieldSelectOptionsT]:
+    obj = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id, with_children=True
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if isinstance(obj, m.UserCustomField | m.UserMultiCustomField):
+        selected = user_link_select(obj.users, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[UserOutput.from_obj(user) for user in selected.items],
+        )
+    if isinstance(obj, m.StateCustomField):
+        selected = state_option_select(obj.options, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[StateOptionOutput.from_obj(opt) for opt in selected.items],
+        )
+    if isinstance(obj, m.EnumCustomField | m.EnumMultiCustomField):
+        selected = enum_option_select(obj.options, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[
+                EnumOptionOutput(uuid=opt.id, value=opt.value, color=opt.color)
+                for opt in selected.items
+            ],
+        )
+    raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')
