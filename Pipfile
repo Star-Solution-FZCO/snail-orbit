@@ -26,6 +26,7 @@ pylint = "*"
 ruff = "*"
 types-aiofiles = "*"
 types-redis = "*"
+faker = "*"
 
 [requires]
 python_version = "3.12"

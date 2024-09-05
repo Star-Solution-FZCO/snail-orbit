@@ -1,3 +1,5 @@
+snippets/
+
 # Cache
 __pycache__/
 .mypy_cache/
