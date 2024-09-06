@@ -112,7 +112,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                         field: { value, onChange },
                                     }) => (
                                         <UserField
-                                            value={value as string}
+                                            value={value as string | string[]}
                                             onChange={onChange}
                                             label={fieldData.name}
                                             multiple={

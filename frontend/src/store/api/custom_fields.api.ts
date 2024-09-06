@@ -9,6 +9,7 @@ import {
     ListResponse,
     UpdateCustomFieldT,
     UpdateEnumOptionT,
+    UserOptionT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
@@ -116,7 +117,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         listSelectOptions: build.query<
-            ListResponse<EnumOptionT>,
+            ListResponse<UserOptionT> | ListResponse<EnumOptionT>,
             { id: string } & (ListQueryParams | void)
         >({
             query: ({ id, ...params }) => ({
