@@ -34,6 +34,7 @@
     "customFields.form.name": "Name",
     "customFields.form.nullable": "Nullable",
     "customFields.form.title": "General info",
+    "customFields.form.defaultValue": "Default Value",
     "customFields.form.type": "Type",
     "customFields.new": "New Custom Field",
     "customFields.list.fetch.error": "Failed to fetch custom fields",
@@ -41,6 +42,8 @@
     "customFields.options.delete.confirmation": "Are you sure you want to delete this option?",
     "customFields.options.delete.title": "Delete Option",
     "customFields.options.empty": "No options",
+    "customFields.users.empty": "No users",
+    "customFields.users.title": "Users",
     "customFields.options.title": "Options",
     "customFields.options.value": "Value",
     "customFields.title": "Custom Fields",
@@ -54,6 +57,7 @@
     "customFields.types.string": "String",
     "customFields.types.user": "User",
     "customFields.types.user_multi": "User Multi",
+    "customFields.types.state": "State",
     "customFields.update.success": "Custom Field updated successfully",
     "delete": "Delete",
     "description": "Description",
@@ -160,5 +164,11 @@
     "roles.sections.settings": "Settings",
     "roles.title": "Roles",
     "roles.update.success": "Role updated successfully",
-    "save": "Save"
+    "save": "Save",
+    "customFields.userOrGroup.add.title": "Add user or group",
+    "customFields.userOrGroup.title": "Users or groups",
+    "customFields.userOrGroup.empty": "No users or groups",
+    "customFields.userOrGroup.add": "Add",
+    "customFields.userOrGroup.delete.title": "Delete user or group",
+    "customFields.userOrGroup.delete.confirmation": "Are you sure you want to delete this user or group?"
 }

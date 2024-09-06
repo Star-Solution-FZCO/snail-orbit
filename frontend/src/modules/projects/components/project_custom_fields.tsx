@@ -16,6 +16,7 @@ import {
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Link } from "components";
 import { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -99,19 +100,28 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
                     <Box
                         key={field.id}
                         display="flex"
-                        gap={1}
+                        justifyContent="space-between"
                         alignItems="center"
+                        gap={1}
                     >
-                        <IconButton
-                            onClick={() => handleClickAddCustomField(field.id)}
-                            size="small"
-                        >
-                            <AddIcon />
-                        </IconButton>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <IconButton
+                                onClick={() =>
+                                    handleClickAddCustomField(field.id)
+                                }
+                                size="small"
+                            >
+                                <AddIcon />
+                            </IconButton>
 
-                        <Typography flex={1} fontWeight="bold">
-                            {field.name}
-                        </Typography>
+                            <Link
+                                to={`/custom-fields/${field.id}`}
+                                flex={1}
+                                fontWeight="bold"
+                            >
+                                {field.name}
+                            </Link>
+                        </Box>
 
                         <Typography>{field.type}</Typography>
                     </Box>

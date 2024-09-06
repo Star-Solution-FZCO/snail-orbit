@@ -237,7 +237,7 @@ async def remove_enum_option(
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
-@router.post('/{custom_field_id}/user_option')
+@router.post('/{custom_field_id}/user-option')
 async def add_user_option(
     custom_field_id: PydanticObjectId,
     body: UserOptionCreateBody,
@@ -281,7 +281,7 @@ async def add_user_option(
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
-@router.delete('/{custom_field_id}/user_option/{option_id}')
+@router.delete('/{custom_field_id}/user-option/{option_id}')
 async def remove_user_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
