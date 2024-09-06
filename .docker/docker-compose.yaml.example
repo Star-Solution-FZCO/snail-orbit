@@ -13,6 +13,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
   mongo:
     image: mongo:7.0
     volumes:
@@ -38,3 +40,13 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - "./data/redis:/data"
+    healthcheck:
+        test: redis-cli ping
+        interval: 5s
+        timeout: 3s
+        retries: 3
+        start_period: 5s
