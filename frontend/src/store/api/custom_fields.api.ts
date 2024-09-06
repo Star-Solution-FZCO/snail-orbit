@@ -4,6 +4,7 @@ import {
     CreateCustomFieldT,
     CreateEnumOptionT,
     CustomFieldT,
+    EnumOptionT,
     ListQueryParams,
     ListResponse,
     UpdateCustomFieldT,
@@ -112,6 +113,18 @@ export const customFieldsApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "CustomFields", id },
+            ],
+        }),
+        listSelectOptions: build.query<
+            ListResponse<EnumOptionT>,
+            { id: string } & (ListQueryParams | void)
+        >({
+            query: ({ id, ...params }) => ({
+                url: `custom_field/${id}/select`,
+                params: params ?? undefined,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "CustomFieldOption", id },
             ],
         }),
     }),

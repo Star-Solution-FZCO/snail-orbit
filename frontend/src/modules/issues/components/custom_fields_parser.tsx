@@ -4,11 +4,10 @@ import { Controller, useFormContext } from "react-hook-form";
 import FieldCard from "../../../components/fields/field_card/field_card";
 import { CustomFieldT } from "../../../types";
 import { DateField } from "./fields/date_field";
+import { EnumField } from "./fields/enum_field";
 import { InputField } from "./fields/input_field";
-import { SelectField } from "./fields/select_field";
 import { UserField } from "./fields/user_field";
 import { IssueFormData } from "./issue_form";
-import { enumToSelectOption } from "./utils/enum_to_select_option";
 
 type CustomFieldsParserProps = {
     fields: CustomFieldT[];
@@ -35,18 +34,15 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                     render={({
                                         field: { value, onChange, ...rest },
                                     }) => (
-                                        <SelectField
+                                        <EnumField
                                             {...rest}
-                                            options={enumToSelectOption(
-                                                fieldData.options,
-                                            )}
                                             label={fieldData.name}
                                             value={value as string | string[]}
                                             onChange={onChange}
                                             multiple={
                                                 fieldData.type === "enum_multi"
                                             }
-                                            id={fieldData.id}
+                                            enumFieldId={fieldData.id}
                                         />
                                     )}
                                 />
