@@ -1,6 +1,9 @@
-import { ForwardedRef, forwardRef, useMemo } from "react";
-import { userApi } from "store";
-import { SelectField, SelectFieldOptionType } from "./select_field";
+import { ForwardedRef, forwardRef, useEffect, useMemo } from "react";
+import { customFieldsApi } from "store";
+import { UserOptionT } from "../../../../types";
+import { useListQueryParams } from "../../../../utils";
+import { enumToSelectOption } from "../utils/enum_to_select_option";
+import { SelectField } from "./select_field";
 
 type UserFieldValueType<T extends boolean | undefined> = T extends true
     ? string[]
@@ -18,37 +21,47 @@ const UserFieldComp = <T extends boolean | undefined>(
     { value, onChange, label, multiple, id }: UserFieldProps<T>,
     ref: ForwardedRef<unknown>,
 ) => {
-    const [fetch, { data, isLoading }] = userApi.useLazyListUserQuery();
+    const [listQueryParams] = useListQueryParams({
+        limit: 50,
+    });
+    const [fetchOptions, { data, isLoading }] =
+        customFieldsApi.useLazyListSelectOptionsQuery();
 
-    const options: SelectFieldOptionType[] = useMemo(() => {
-        if (!data) return [];
-        return data.payload.items.map(({ id, name, email }) => ({
-            label: name,
-            description: email,
-            id: id,
-        }));
-    }, [data]);
-
-    // Ужасное решение, но RTK не дает запрашивать массив хуков, поэтому пока так
+    // TODO: Fix this crap
     const cardValue = useMemo(() => {
-        if (!value) return "";
-        if (!multiple) return options.find((el) => el.id === value)?.label;
-        else
-            return options
-                .filter((el) => value.includes(el.id))
-                .map((el) => el.label)
+        if (!value || !data) return "";
+        if (!multiple) {
+            let res = data.payload.items.find(
+                (el) => "id" in el && el.id === value,
+            );
+            console.log(res, value);
+            if (res && "name" in res) return res.name;
+            else return "";
+        } else {
+            return data.payload.items
+                .filter((el) => "id" in el && value.includes(el.id))
+                .map((el) => (el as UserOptionT).name)
                 .join(", ");
-    }, [value, options]);
+        }
+    }, [value, data]);
+
+    const handleOpened = () => {
+        fetchOptions({ id, ...listQueryParams });
+    };
+
+    useEffect(() => {
+        handleOpened();
+    }, []);
 
     return (
         <SelectField
             loading={isLoading}
-            options={options}
+            options={enumToSelectOption(data?.payload.items || [])}
             value={value}
             cardValue={cardValue || "?"}
             onChange={(value) => onChange(value as UserFieldValueType<T>)}
             label={label}
-            onOpened={fetch}
+            onOpened={handleOpened}
             ref={ref}
             multiple={multiple}
             id={id}
