@@ -53,7 +53,10 @@ class Issue(Document):
     comments: list[IssueComment] = Field(default_factory=list)
     attachments: list[IssueAttachment] = Field(default_factory=list)
 
-    fields: dict[str, CustomFieldValue] = Field(default_factory=dict)
+    fields: list[CustomFieldValue] = Field(default_factory=list)
+
+    def get_field_by_name(self, name: str) -> CustomFieldValue | None:
+        return next((field for field in self.fields if field.name == name), None)
 
     async def get_project(self, fetch_links: bool = False) -> Project:
         pr: Project | None = await Project.find_one(
