@@ -1,4 +1,4 @@
-import { CreateIssueT, IssueT, IssueValueT } from "../../../types";
+import { CreateIssueT, IssueT, IssueValueT } from "types";
 
 export const issueToIssueForm = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
