@@ -13,7 +13,7 @@ ERROR_MSG = 'Due date validation workflow error'
 
 class ValidateDueDate(OnChangeWorkflowScript):
     async def run(self, issue: m.Issue) -> None:
-        if not (due_date_field := issue.fields.get(DUE_DATE_FIELD)):
+        if not (due_date_field := issue.get_field_by_name(DUE_DATE_FIELD)):
             return
         if not due_date_field.type == m.CustomFieldTypeT.DATE:
             return
