@@ -459,6 +459,7 @@ CustomFieldValueT = (
     | date
     | datetime
     | UserLinkField
+    | list[str]  # todo: use only list[EnumCustomField]
     | list[UserLinkField]
     | EnumCustomField
     | list[EnumCustomField]
