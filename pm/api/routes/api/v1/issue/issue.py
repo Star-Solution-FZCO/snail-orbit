@@ -226,8 +226,11 @@ async def validate_custom_fields_values(
     results = []
     errors: list[m.CustomFieldValidationError] = []
     for f in project.custom_fields:  # type: m.CustomField
-        issue_field_val = issue_fields.get(f.name)
-        fields[f.name] = issue_field_val.value if issue_field_val else f.default_value
+        if f.name not in fields:
+            issue_field_val = issue_fields.get(f.name)
+            fields[f.name] = (
+                issue_field_val.value if issue_field_val else f.default_value
+            )
         try:
             val_ = f.validate_value(fields[f.name])
         except m.CustomFieldValidationError as err:
