@@ -165,10 +165,13 @@ class FloatCustomField(CustomField):
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
-        if value is not None and not isinstance(value, float):
-            raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a float'
-            )
+        if value is not None:
+            try:
+                value = float(value)
+            except Exception:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg='must be a float'
+                )
         return value
 
 
