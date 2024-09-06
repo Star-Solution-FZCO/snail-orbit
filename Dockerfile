@@ -35,4 +35,4 @@ USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
 ARG version="__DEV__"
 ENV APP_VERSION=$version
-ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0"]
+ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy", "*"]
