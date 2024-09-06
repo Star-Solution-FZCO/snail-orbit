@@ -62,8 +62,8 @@ const SelectFieldComp = <T extends boolean | undefined>(
     const cardValue = useMemo(() => {
         if (customCardValue) return customCardValue;
         if (!value || !value.length) return undefined;
-        if (!multiple) return value as string;
-        else return (value as string[]).join(", ");
+        if (!Array.isArray(value)) return value as string;
+        else return value.join(", ");
     }, [multiple, value, customCardValue]);
 
     const handleChange = (
