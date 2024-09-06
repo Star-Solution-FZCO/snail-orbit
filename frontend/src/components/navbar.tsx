@@ -1,8 +1,10 @@
+import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Avatar,
     Box,
+    Button,
     IconButton,
     Menu,
     MenuItem,
@@ -14,7 +16,6 @@ import { FC, PropsWithChildren, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
-import { NewEntityButton } from "./new_entity_button";
 
 const useLinks = () => {
     const { t } = useTranslation();
@@ -110,7 +111,16 @@ const NavBar = () => {
                     </NavBarLink>
                 ))}
 
-                <NewEntityButton />
+                <Link to="/issues/create">
+                    <Button
+                        sx={{ height: "24px", py: 0, textTransform: "none" }}
+                        startIcon={<AddIcon />}
+                        variant="contained"
+                        size="small"
+                    >
+                        {t("issues.new")}
+                    </Button>
+                </Link>
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
