@@ -86,6 +86,7 @@ const FormAutocompleteContentComp = <
                                     <Checkbox
                                         size="small"
                                         checked={selected || false}
+                                        sx={{ py: 0, paddingLeft: 0 }}
                                     />
                                 ) : null}
                                 <Stack
