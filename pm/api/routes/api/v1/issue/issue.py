@@ -164,7 +164,7 @@ async def update_issue(
             f_val, validation_errors = await validate_custom_fields_values(
                 v, project, obj
             )
-            obj.fields.update(f_val)
+            obj.fields = f_val
             continue
         if k == 'attachments':
             extra_attachment_ids = [a_id for a_id in v if a_id not in obj.attachments]
@@ -214,28 +214,31 @@ async def update_issue(
 
 async def validate_custom_fields_values(
     fields: dict[str, Any], project: m.Project, issue: m.Issue | None = None
-) -> tuple[dict[str, m.CustomFieldValue], list[m.CustomFieldValidationError]]:
-    all_issue_fields = set(fields.keys())
-    if issue:
-        all_issue_fields |= set(issue.fields.keys())
-    for f in project.custom_fields:  # type: m.CustomField
-        if f.name not in all_issue_fields:
-            fields[f.name] = f.default_value
-
-    results = {}
+) -> tuple[list[m.CustomFieldValue], list[m.CustomFieldValidationError]]:
     project_fields = {f.name: f for f in project.custom_fields}
+    issue_fields = {f.name: f for f in issue.fields} if issue else {}
+    for f_name in fields:
+        if f_name not in project_fields:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST, f'Field {f_name} is not allowed'
+            )
+
+    results = []
     errors: list[m.CustomFieldValidationError] = []
-    for key, val in fields.items():
-        if key not in project_fields:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, f'Field {key} is not allowed')
+    for f in project.custom_fields:  # type: m.CustomField
+        issue_field_val = issue_fields.get(f.name)
+        fields[f.name] = issue_field_val.value if issue_field_val else f.default_value
         try:
-            val_ = project_fields[key].validate_value(val)
+            val_ = f.validate_value(fields[f.name])
         except m.CustomFieldValidationError as err:
             val_ = err.value
             errors.append(err)
-        results[key] = m.CustomFieldValue(
-            id=project_fields[key].id,
-            type=project_fields[key].type,
-            value=val_,
+        results.append(
+            m.CustomFieldValue(
+                id=f.id,
+                name=f.name,
+                type=f.type,
+                value=val_,
+            )
         )
     return results, errors

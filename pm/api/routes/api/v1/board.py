@@ -129,11 +129,10 @@ async def get_board_issues(
         flt, _ = transform_query(board.query)
     results = {col: [] for col in board.columns}
     for issue in await m.Issue.find(flt).sort(m.Issue.id).to_list():
-        if (
-            board.column_field in issue.fields
-            and issue.fields[board.column_field].value in results
-        ):
-            results[issue.fields[board.column_field].value].append(issue)
+        if not (field := issue.get_field_by_name(board.column_field)):
+            continue
+        if field.value in results:
+            results[field.value].append(issue)
     priorities = {id_: idx for idx, id_ in enumerate(board.issues_order)}
     for issues in results.values():
         issues.sort(key=lambda i: priorities.get(i.id, float('inf')))

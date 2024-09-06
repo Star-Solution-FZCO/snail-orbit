@@ -30,14 +30,7 @@ class CustomFieldOutput(BaseModel):
     name: str
     type: m.CustomFieldTypeT
     is_nullable: bool
-    default_value: (
-        m.UserLinkField
-        | list[m.UserLinkField]
-        | m.StateField
-        | PydanticObjectId
-        | Any
-        | None
-    )
+    default_value: m.CustomFieldValueT
 
     @classmethod
     def from_obj(cls, obj: m.CustomField) -> 'CustomFieldOutput':

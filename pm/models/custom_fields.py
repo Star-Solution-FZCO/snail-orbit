@@ -13,6 +13,7 @@ from .user import User, UserLinkField
 __all__ = (
     'CustomFieldTypeT',
     'CustomField',
+    'CustomFieldLink',
     'EnumOption',
     'StringCustomField',
     'IntegerCustomField',
@@ -32,6 +33,7 @@ __all__ = (
     'StateOption',
     'StateCustomField',
     'StateField',
+    'CustomFieldValueT',
 )
 
 
@@ -126,6 +128,12 @@ class CustomField(Document):
                 field=self, value=value, msg='cannot be None'
             )
         return value
+
+
+class CustomFieldLink(BaseModel):
+    id: PydanticObjectId
+    name: str
+    type: CustomFieldTypeT
 
 
 class StringCustomField(CustomField):
@@ -441,11 +449,23 @@ MAPPING = {
     CustomFieldTypeT.STATE: StateCustomField,
 }
 
+CustomFieldValueT = (
+    UserLinkField
+    | list[UserLinkField]
+    | EnumCustomField
+    | list[EnumCustomField]
+    | StateField
+    | PydanticObjectId
+    | int
+    | float
+    | bool
+    | date
+    | datetime
+    | str
+    | Any
+    | None
+)
 
-class CustomFieldValue(BaseModel):
-    id: PydanticObjectId
-    type: CustomFieldTypeT
-    # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: (
-        UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any | None
-    ) = None
+
+class CustomFieldValue(CustomFieldLink):
+    value: CustomFieldValueT = None
