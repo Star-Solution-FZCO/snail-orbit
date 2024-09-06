@@ -6,3 +6,4 @@ DB_URI = 'mongodb://test:test@mongo:27017/pm?authSource=admin'
 PUBLIC_BASE_URL='http://localhost:3000'
 JWT_SECRET = 'TESTSECRET'
 ORIGINS = ['http://localhost:3000', 'http://localhost:9090']
+REDIS_EVENT_BUS_URL = 'redis://redis:6379/0'
