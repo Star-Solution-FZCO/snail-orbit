@@ -25,6 +25,7 @@ export default defineConfig({
                 configure: (proxy) => {
                     proxy.on("proxyReq", (proxyReq) => {
                         proxyReq.setHeader("Host", "localhost:3000");
+                        proxyReq.setHeader("X-Forwarded-Proto", "https");
                     });
                 },
             },
