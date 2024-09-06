@@ -13,7 +13,7 @@ export const customFieldsTypes = [
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
 
-export type IssueValueT = string | number | boolean | null;
+export type IssueValueT = string | number | boolean | null | string[];
 
 export type CreateCustomFieldT = {
     name: string;
@@ -24,8 +24,32 @@ export type CreateCustomFieldT = {
 export type CustomFieldT = CreateCustomFieldT & {
     id: string;
     options?: EnumOptionT[];
-    value?: IssueValueT;
-};
+} & (
+        | {
+              type: "string" | "enum" | "date" | "datetime";
+              value: string;
+          }
+        | {
+              type: "boolean";
+              value: boolean;
+          }
+        | {
+              type: "integer" | "float";
+              value: number;
+          }
+        | {
+              type: "enum_multi";
+              value: string[];
+          }
+        | {
+              type: "user";
+              value: UserOptionT;
+          }
+        | {
+              type: "user_multi";
+              value: UserOptionT[];
+          }
+    );
 
 export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;
 
@@ -37,6 +61,16 @@ export type CreateEnumOptionT = {
 export type EnumOptionT = {
     uuid: string;
 } & CreateEnumOptionT;
+
+export type UserOptionT = {
+    id: string;
+    email: string;
+    name: string;
+};
+
+export function isUserOption(option: object): option is UserOptionT {
+    return "id" in option;
+}
 
 export type UpdateEnumOptionT = {
     option_id: string;
