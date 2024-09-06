@@ -450,18 +450,17 @@ MAPPING = {
 }
 
 CustomFieldValueT = (
-    UserLinkField
+    bool
+    | int
+    | float
+    | date
+    | datetime
+    | UserLinkField
     | list[UserLinkField]
     | EnumCustomField
     | list[EnumCustomField]
     | StateField
     | PydanticObjectId
-    | int
-    | float
-    | bool
-    | date
-    | datetime
-    | str
     | Any
     | None
 )
