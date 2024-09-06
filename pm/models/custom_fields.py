@@ -13,6 +13,7 @@ from .user import User, UserLinkField
 __all__ = (
     'CustomFieldTypeT',
     'CustomField',
+    'CustomFieldLink',
     'EnumOption',
     'StringCustomField',
     'IntegerCustomField',
@@ -32,6 +33,7 @@ __all__ = (
     'StateOption',
     'StateCustomField',
     'StateField',
+    'CustomFieldValueT',
 )
 
 
@@ -128,6 +130,12 @@ class CustomField(Document):
         return value
 
 
+class CustomFieldLink(BaseModel):
+    id: PydanticObjectId
+    name: str
+    type: CustomFieldTypeT
+
+
 class StringCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STRING
 
@@ -157,10 +165,13 @@ class FloatCustomField(CustomField):
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
-        if value is not None and not isinstance(value, float):
-            raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a float'
-            )
+        if value is not None:
+            try:
+                value = float(value)
+            except Exception:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg='must be a float'
+                )
         return value
 
 
@@ -441,11 +452,22 @@ MAPPING = {
     CustomFieldTypeT.STATE: StateCustomField,
 }
 
+CustomFieldValueT = (
+    bool
+    | int
+    | float
+    | date
+    | datetime
+    | UserLinkField
+    | list[UserLinkField]
+    | EnumCustomField
+    | list[EnumCustomField]
+    | StateField
+    | PydanticObjectId
+    | Any
+    | None
+)
 
-class CustomFieldValue(BaseModel):
-    id: PydanticObjectId
-    type: CustomFieldTypeT
-    # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: (
-        UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any | None
-    ) = None
+
+class CustomFieldValue(CustomFieldLink):
+    value: CustomFieldValueT = None
