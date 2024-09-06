@@ -12,7 +12,9 @@ __all__ = (
     'Event',
 )
 
-pool = aioredis.ConnectionPool.from_url(CONFIG.REDIS_EVENT_BUS_URL)
+pool = None
+if CONFIG.REDIS_EVENT_BUS_URL:
+    pool = aioredis.ConnectionPool.from_url(CONFIG.REDIS_EVENT_BUS_URL)
 
 
 class EventType(IntEnum):
@@ -35,6 +37,8 @@ class Event:
         ).encode()
 
     async def send(self) -> None:
+        if not pool:
+            return
         async with aioredis.Redis(connection_pool=pool) as client:
             await client.publish('events', self._to_bus_msg())
 
