@@ -1,8 +1,10 @@
 from collections.abc import AsyncGenerator
+from http import HTTPStatus
 from typing import Any
 
 import redis.asyncio as aioredis
 from beanie import PydanticObjectId
+from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
 import pm.models as m
@@ -53,6 +55,11 @@ async def issue_event_generator(
 async def get_issue_events(
     issue_id: PydanticObjectId,
 ) -> StreamingResponse:
+    if not CONFIG.REDIS_EVENT_BUS_URL:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
+            detail='Redis event bus is not configured',
+        )
     return StreamingResponse(
         issue_event_generator(issue_id), media_type='text/event-stream'
     )
