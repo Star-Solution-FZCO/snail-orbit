@@ -15,6 +15,30 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  tasks-worker:
+    build:
+      context: ..
+      target: tasks
+    command: worker
+    volumes:
+      - "./etc:/app/etc"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+  tasks-beat:
+    build:
+      context: ..
+      target: tasks
+    command: beat
+    volumes:
+      - "./etc:/app/etc"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
   mongo:
     image: mongo:7.0
     volumes:
@@ -46,6 +70,19 @@ services:
       - "./data/redis:/data"
     healthcheck:
         test: redis-cli ping
+        interval: 5s
+        timeout: 3s
+        retries: 3
+        start_period: 5s
+  rabbitmq:
+    image: rabbitmq:3.13.7-alpine
+    volumes:
+      - "./data/rabbitmq:/var/lib/rabbitmq"
+    environment:
+        RABBITMQ_DEFAULT_USER: test
+        RABBITMQ_DEFAULT_PASS: test
+    healthcheck:
+        test: rabbitmq-diagnostics -q ping
         interval: 5s
         timeout: 3s
         retries: 3
