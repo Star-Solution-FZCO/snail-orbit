@@ -23,6 +23,7 @@ class UserOutput(CrudOutput[m.User]):
     name: str
     is_active: bool
     is_admin: bool
+    origin: m.UserOriginType
 
 
 class UserCreate(CrudCreateBody[m.User]):

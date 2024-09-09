@@ -1,6 +1,7 @@
 import base64
 import secrets
 from datetime import datetime
+from enum import StrEnum
 from typing import Self
 
 import bcrypt
@@ -16,7 +17,13 @@ __all__ = (
     'APIToken',
     'User',
     'UserLinkField',
+    'UserOriginType',
 )
+
+
+class UserOriginType(StrEnum):
+    LOCAL = 'local'
+    WB = 'wb'
 
 
 class UserLinkField(BaseModel):
@@ -75,6 +82,7 @@ class User(Document):
     is_admin: bool = False
     api_tokens: list[APIToken] = Field(default_factory=list)
     groups: list[GroupLinkField] = Field(default_factory=list)
+    origin: UserOriginType = UserOriginType.LOCAL
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:
