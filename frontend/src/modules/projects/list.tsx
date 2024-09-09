@@ -11,7 +11,7 @@ import { Link } from "@tanstack/react-router";
 import { QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
-import { useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 import { ProjectCard } from "./components/project_card";
 
 const ProjectList = () => {
@@ -19,8 +19,11 @@ const ProjectList = () => {
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: projects, isLoading } =
-        projectApi.useListProjectQuery(listQueryParams);
+    const {
+        data: projects,
+        isLoading,
+        error,
+    } = projectApi.useListProjectQuery(listQueryParams);
 
     return (
         <Container
@@ -55,6 +58,13 @@ const ProjectList = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            {error && (
+                <Typography>
+                    {formatErrorMessages(error) ||
+                        t("projects.list.fetch.error")}
+                </Typography>
+            )}
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">

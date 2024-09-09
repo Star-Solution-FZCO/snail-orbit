@@ -4,8 +4,8 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi } from "store";
-import { CreateIssueT } from "../../../types";
-import { toastApiError } from "../../../utils";
+import { CreateIssueT } from "types";
+import { formatErrorMessages, toastApiError } from "utils";
 import IssueForm from "../components/issue_form";
 import { issueToIssueForm } from "../utils/issue_to_issue_form";
 
@@ -15,7 +15,8 @@ const IssueView: FC = () => {
     const { t } = useTranslation();
     const { issueId } = routeApi.useParams();
 
-    const { data, isLoading, refetch } = issueApi.useGetIssuesQuery(issueId);
+    const { data, isLoading, error, refetch } =
+        issueApi.useGetIssuesQuery(issueId);
 
     const [updateIssue, { isLoading: isIssueUpdateLoading }] =
         issueApi.useUpdateIssuesMutation();
@@ -29,6 +30,16 @@ const IssueView: FC = () => {
             .catch(toastApiError)
             .finally(refetch);
     };
+
+    if (error) {
+        return (
+            <Container>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
+                </Typography>
+            </Container>
+        );
+    }
 
     return (
         <Container sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

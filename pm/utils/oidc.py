@@ -39,7 +39,7 @@ class OIDCParams:
                     token, cert.public_key(), algorithms=['RS256'], audience=client_id
                 )
             except jwt.PyJWTError:
-                raise Exception(token)
+                pass
         raise ValueError('Token decoding failed')
 
 

@@ -24,13 +24,13 @@ import { customFieldsApi } from "store";
 import { CustomFieldT, EnumOptionT } from "types";
 import { toastApiError } from "utils";
 
-interface ICustomFieldOptionProps {
+interface ICustomFieldEnumOptionProps {
     customFieldId: string;
     option: EnumOptionT;
     onDelete: (option: EnumOptionT) => void;
 }
 
-const CustomFieldOption: FC<ICustomFieldOptionProps> = ({
+const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
     customFieldId,
     option,
     onDelete,
@@ -140,15 +140,15 @@ const CustomFieldOption: FC<ICustomFieldOptionProps> = ({
     );
 };
 
-interface IDeleteCustomFieldOptionDialogProps {
+interface IDeleteCustomFieldEnumOptionDialogProps {
     open: boolean;
     customFieldId: string;
     option: EnumOptionT | null;
     onClose: () => void;
 }
 
-const DeleteCustomFieldOptionDialog: FC<
-    IDeleteCustomFieldOptionDialogProps
+const DeleteCustomFieldEnumOptionDialog: FC<
+    IDeleteCustomFieldEnumOptionDialogProps
 > = ({ open, customFieldId, option, onClose }) => {
     const { t } = useTranslation();
 
@@ -216,11 +216,11 @@ const DeleteCustomFieldOptionDialog: FC<
     );
 };
 
-interface ICustomFieldOptionsEditorProps {
+interface ICustomFieldEnumOptionsEditorProps {
     customField: CustomFieldT;
 }
 
-const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
+const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
     customField,
 }) => {
     const { t } = useTranslation();
@@ -270,15 +270,15 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             )}
 
             {options.map((option) => (
-                <CustomFieldOption
+                <CustomFieldEnumOption
                     key={option.uuid}
                     customFieldId={customField.id}
-                    option={option}
+                    option={option as EnumOptionT}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
 
-            <DeleteCustomFieldOptionDialog
+            <DeleteCustomFieldEnumOptionDialog
                 open={deleteDialogOpen}
                 customFieldId={customField.id}
                 option={selectedOption}
@@ -288,4 +288,4 @@ const CustomFieldOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
     );
 };
 
-export { CustomFieldOptionsEditor };
+export { CustomFieldEnumOptionsEditor };

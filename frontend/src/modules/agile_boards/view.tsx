@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { UpdateAgileBoardT } from "types";
-import { toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 import { AgileBoardForm } from "./components/agile_board_form";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 
@@ -25,10 +25,21 @@ const AgileBoardView = () => {
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const { data } = agileBoardApi.useGetAgileBoardQuery(boardId);
+    const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
     const [updateAgileBoard, { isLoading }] =
         agileBoardApi.useUpdateAgileBoardMutation();
+
+    if (error) {
+        return (
+            <Container sx={{ px: 4, pb: 4 }} disableGutters>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) ||
+                        t("agileBoards.item.fetch.error")}
+                </Typography>
+            </Container>
+        );
+    }
 
     if (!data) return null;
 

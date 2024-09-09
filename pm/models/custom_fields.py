@@ -13,6 +13,7 @@ from .user import User, UserLinkField
 __all__ = (
     'CustomFieldTypeT',
     'CustomField',
+    'CustomFieldLink',
     'EnumOption',
     'StringCustomField',
     'IntegerCustomField',
@@ -32,6 +33,7 @@ __all__ = (
     'StateOption',
     'StateCustomField',
     'StateField',
+    'CustomFieldValueT',
 )
 
 
@@ -53,6 +55,7 @@ class CustomFieldTypeT(StrEnum):
 
 
 class EnumOption(BaseModel):
+    id: UUID
     value: str
     color: str | None = None
 
@@ -127,6 +130,12 @@ class CustomField(Document):
         return value
 
 
+class CustomFieldLink(BaseModel):
+    id: PydanticObjectId
+    name: str
+    type: CustomFieldTypeT
+
+
 class StringCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STRING
 
@@ -156,10 +165,13 @@ class FloatCustomField(CustomField):
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
-        if value is not None and not isinstance(value, float):
-            raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a float'
-            )
+        if value is not None:
+            try:
+                value = float(value)
+            except Exception:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg='must be a float'
+                )
         return value
 
 
@@ -219,6 +231,10 @@ class DateTimeCustomField(CustomField):
 
 class UserCustomFieldMixin:
     options: list[UserOption] = Field(default_factory=list)
+
+    @property
+    def users(self) -> set[UserLinkField]:
+        return {u for opt in self.options for u in opt.users}
 
     @classmethod
     async def update_user_embedded_links(
@@ -363,14 +379,14 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
-    options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    options: list[EnumOption] = Field(default_factory=list)
     default_value: str | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
         if value is None:
             return value
-        if value not in {opt.value for opt in self.options.values()}:
+        if value not in {opt.value for opt in self.options}:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
             )
@@ -379,7 +395,7 @@ class EnumCustomField(CustomField):
 
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
-    options: dict[UUID, EnumOption] = Field(default_factory=dict)
+    options: list[EnumOption] = Field(default_factory=list)
     default_value: list[str] | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -394,7 +410,7 @@ class EnumMultiCustomField(CustomField):
             raise CustomFieldValidationError(
                 field=self, value=value, msg='cannot be empty'
             )
-        allowed_values = {opt.value for opt in self.options.values()}
+        allowed_values = {opt.value for opt in self.options}
         for val in value:
             if val not in allowed_values:
                 raise CustomFieldValidationError(
@@ -436,11 +452,23 @@ MAPPING = {
     CustomFieldTypeT.STATE: StateCustomField,
 }
 
+CustomFieldValueT = (
+    bool
+    | int
+    | float
+    | date
+    | datetime
+    | UserLinkField
+    | list[str]  # todo: use only list[EnumCustomField]
+    | list[UserLinkField]
+    | EnumCustomField
+    | list[EnumCustomField]
+    | StateField
+    | PydanticObjectId
+    | Any
+    | None
+)
 
-class CustomFieldValue(BaseModel):
-    id: PydanticObjectId
-    type: CustomFieldTypeT
-    # these shenanigans are needed for pydantic serialization with user fields, should replace with a custom serializer
-    value: (
-        UserLinkField | list[UserLinkField] | StateField | PydanticObjectId | Any | None
-    ) = None
+
+class CustomFieldValue(CustomFieldLink):
+    value: CustomFieldValueT = None
