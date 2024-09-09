@@ -27,7 +27,7 @@ const IssueCreate: FC = () => {
                         issueId: response.payload.id,
                     },
                 });
-                toast.success(t("issue.create.success"));
+                toast.success(t("issues.create.success"));
             })
             .catch(toastApiError);
     };

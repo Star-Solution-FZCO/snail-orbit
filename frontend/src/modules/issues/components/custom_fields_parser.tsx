@@ -1,8 +1,8 @@
+import FieldCard from "components/fields/field_card/field_card";
 import dayjs from "dayjs";
 import { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import FieldCard from "../../../components/fields/field_card/field_card";
-import { CustomFieldT } from "../../../types";
+import { CustomFieldT } from "types";
 import { DateField } from "./fields/date_field";
 import { EnumField } from "./fields/enum_field";
 import { InputField } from "./fields/input_field";

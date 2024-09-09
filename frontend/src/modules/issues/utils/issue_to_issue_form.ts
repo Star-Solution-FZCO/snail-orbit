@@ -1,4 +1,4 @@
-import { CreateIssueT, IssueT, IssueValueT } from "types";
+import { CreateIssueT, FieldValueT, IssueT } from "types";
 
 export const issueToIssueForm = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
@@ -14,6 +14,6 @@ export const issueToIssueForm = (issue: IssueT): CreateIssueT => ({
             else prev[cur] = issue.fields[cur].value;
             return prev;
         },
-        {} as Record<string, IssueValueT>,
+        {} as Record<string, FieldValueT>,
     ),
 });

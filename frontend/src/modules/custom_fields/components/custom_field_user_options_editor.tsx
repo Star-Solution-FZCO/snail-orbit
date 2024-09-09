@@ -286,7 +286,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             {users.map((user) => (
                 <UserOrGroupOption
                     key={user.uuid}
-                    entity={user as UserOrGroupOptionT}
+                    entity={user as unknown as UserOrGroupOptionT}
                     onDelete={handleClickDeleteUserOrGroup}
                 />
             ))}

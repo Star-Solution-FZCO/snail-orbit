@@ -1,4 +1,8 @@
-import { EnumOptionT, isUserOption, UserOptionT } from "types";
+import { EnumOptionT, UserOptionT } from "types";
+
+export function isUserOption(option: object): option is UserOptionT {
+    return "id" in option;
+}
 
 export const enumToSelectOption = (
     options: EnumOptionT[] | UserOptionT[] | undefined,

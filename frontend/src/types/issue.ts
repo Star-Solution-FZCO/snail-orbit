@@ -1,12 +1,15 @@
 import { CommentT } from "./comment";
-import { CustomFieldT, IssueValueT } from "./custom_fields";
+import { CustomFieldT } from "./custom_fields";
 import { ProjectT } from "./project";
+
+// TODO: specify type
+export type FieldValueT = string | number | boolean | null | string[];
 
 export type CreateIssueT = {
     project_id: string;
     subject: string;
     text: string | null;
-    fields: Record<string, IssueValueT>;
+    fields: Record<string, FieldValueT>;
 };
 
 export type IssueT = {

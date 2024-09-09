@@ -1,7 +1,7 @@
 import { ForwardedRef, forwardRef, useEffect, useMemo } from "react";
 import { customFieldsApi } from "store";
-import { UserOptionT } from "../../../../types";
-import { useListQueryParams } from "../../../../utils";
+import { UserOptionT } from "types";
+import { useListQueryParams } from "utils";
 import { enumToSelectOption } from "../utils/enum_to_select_option";
 import { SelectField } from "./select_field";
 
