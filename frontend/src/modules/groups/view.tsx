@@ -5,6 +5,7 @@ import { Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "store";
+import { formatErrorMessages } from "utils";
 import { GroupMembers } from "./components/group_members";
 import { GroupSettings } from "./components/group_settings";
 import { tabs } from "./utils";
@@ -19,12 +20,22 @@ const GroupView = () => {
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "members");
 
-    const { data } = groupApi.useGetGroupQuery(groupId);
+    const { data, error } = groupApi.useGetGroupQuery(groupId);
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
         navigate({ search: { tab: value } });
     };
+
+    if (error) {
+        return (
+            <Box px={4} pb={4}>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) || t("groups.item.fetch.error")}
+                </Typography>
+            </Box>
+        );
+    }
 
     if (!data) return null;
 

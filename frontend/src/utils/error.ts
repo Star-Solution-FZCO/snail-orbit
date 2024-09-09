@@ -1,7 +1,11 @@
 import i18n from "i18n";
 import { toast } from "react-toastify";
 
-export const toastApiError = (error: any) => {
+export const formatErrorMessages = (error: any) => {
     const errorMessages = error?.error_messages || error?.data?.error_messages;
-    toast.error(errorMessages?.join(". ") || i18n.t("error.default"));
+    return errorMessages?.join(". ");
+};
+
+export const toastApiError = (error: any) => {
+    toast.error(formatErrorMessages(error) || i18n.t("error.default"));
 };

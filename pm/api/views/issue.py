@@ -63,6 +63,6 @@ class IssueOutput(BaseModel):
             project=ProjectField.from_obj(obj),
             subject=obj.subject,
             text=obj.text,
-            fields=obj.fields,
+            fields={field.name: field for field in obj.fields},
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
         )

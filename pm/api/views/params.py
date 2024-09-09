@@ -3,13 +3,8 @@ from pydantic import BaseModel, field_validator
 
 __all__ = (
     'ListFilterParams',
-    'SelectParams',
     'ListParams',
 )
-
-
-class SelectParams(BaseModel):
-    search: str | None = Query(default='', description='Filter results by value')
 
 
 class ListParams(BaseModel):
