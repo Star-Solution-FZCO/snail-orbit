@@ -7,3 +7,5 @@ PUBLIC_BASE_URL='http://localhost:3000'
 JWT_SECRET = 'TESTSECRET'
 ORIGINS = ['http://localhost:3000', 'http://localhost:9090']
 REDIS_EVENT_BUS_URL = 'redis://redis:6379/0'
+TASKS_BROKER_URL = 'amqp://test:test@rabbitmq:5672/'
+WB_SYNC_ENABLED = false
