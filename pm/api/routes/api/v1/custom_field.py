@@ -98,7 +98,7 @@ class CustomFieldUpdateBody(BaseModel):
     def update_obj(self, obj: m.CustomField) -> None:
         for k, v in self.dict(exclude_unset=True).items():
             if k == 'default_value':
-                v = obj.validate_value(v)
+                v = obj.validate_value(v) if v is not None else None
             setattr(obj, k, v)
 
 
