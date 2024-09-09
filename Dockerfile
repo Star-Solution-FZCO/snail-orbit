@@ -36,3 +36,8 @@ VOLUME ["${APP_DIR}/etc"]
 ARG version="__DEV__"
 ENV APP_VERSION=$version
 ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy", "*"]
+
+
+FROM api AS tasks
+ENTRYPOINT ["python3", "manage.py", "tasks"]
+CMD ["worker"]
