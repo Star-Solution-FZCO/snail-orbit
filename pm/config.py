@@ -100,6 +100,48 @@ CONFIG = Dynaconf(
             must_exist=True,
             when=Validator('OIDC_ENABLED', condition=bool),
         ),
+        Validator(
+            'TASKS_BROKER_URL',
+            cast=str,
+            default='',
+        ),
+        Validator(
+            'WB_SYNC_ENABLED',
+            cast=bool,
+            default=False,
+        ),
+        Validator(
+            'WB_USER_SYNC_LOCAL',
+            cast=bool,
+            default=False,
+            description='Sync local if they found in WB',
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_USER_SYNC_ADD_MISSED_INACTIVE',
+            cast=bool,
+            default=False,
+            description='Add missed inactive users',
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_URL',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_API_TOKEN_KID',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_API_TOKEN_SECRET',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
     ],
 )
 CONFIG.configure()

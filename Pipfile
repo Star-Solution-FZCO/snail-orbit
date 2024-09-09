@@ -18,6 +18,7 @@ aiofiles = "*"
 python-multipart = "*"
 redis = "*"
 aiohttp = "*"
+celery = "*"
 
 [dev-packages]
 bandit = "*"
