@@ -25,6 +25,11 @@ build-dev-api:
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       -t $CI_REGISTRY_IMAGE/api:dev
       --build-arg version=$CI_COMMIT_SHORT_SHA --target api .
+    - docker buildx build --push
+      --platform linux/amd64
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
+      -t $CI_REGISTRY_IMAGE/tasks:dev
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target tasks .
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG == null'
 
