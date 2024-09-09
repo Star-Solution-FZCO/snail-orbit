@@ -1,9 +1,9 @@
 import FieldCard from "components/fields/field_card/field_card";
-import { Dayjs } from "dayjs";
-import { ForwardedRef, forwardRef, useState } from "react";
 import FormDatePopover, {
     FormDatePopoverProps,
-} from "../../../../components/fields/form_date/form_date";
+} from "components/fields/form_date/form_date";
+import { Dayjs } from "dayjs";
+import { ForwardedRef, forwardRef, useState } from "react";
 
 type InputFieldProps = {
     label: string;

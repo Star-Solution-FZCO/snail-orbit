@@ -30,7 +30,7 @@ export const workflowApi = createApi({
                 return tags;
             },
         }),
-        getProject: build.query<ApiResponse<WorkflowT>, string>({
+        getWorkflow: build.query<ApiResponse<WorkflowT>, string>({
             query: (id) => `workflow/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Workflows", id }],
         }),

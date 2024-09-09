@@ -25,7 +25,7 @@ const IssueView: FC = () => {
         updateIssue({ ...formData, id: issueId })
             .unwrap()
             .then(() => {
-                toast.success(t("issue.update.success"));
+                toast.success(t("issues.update.success"));
             })
             .catch(toastApiError)
             .finally(refetch);

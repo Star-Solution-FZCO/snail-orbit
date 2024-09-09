@@ -53,6 +53,12 @@ const optionLabelGetter = (option: CustomFieldOptionT) => {
     return option.value.name;
 };
 
+const getDefaultValue = (value: any) => {
+    return typeof value === "object" && value !== null && "id" in value
+        ? value.id
+        : value;
+};
+
 interface ICustomFieldFormProps {
     defaultValues?: CustomFieldT;
     onSubmit: (formData: CustomFieldFormData) => void;
@@ -146,7 +152,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                                 {t("customFields.form.defaultValue")}
                             </InputLabel>
                             <Select
-                                value={value.id || value}
+                                value={getDefaultValue(value)}
                                 labelId="defaultValue"
                                 label={t("customFields.form.defaultValue")}
                                 onChange={onChange}

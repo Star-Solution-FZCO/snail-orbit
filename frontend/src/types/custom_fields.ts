@@ -17,14 +17,6 @@ export const customFieldsTypes = [
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
 
-export type IssueValueT = string | number | boolean | null | string[];
-
-export type StateFieldT = {
-    state: string;
-    is_resolved: boolean;
-    is_closed: boolean;
-};
-
 export type CreateEnumOptionT = {
     value: string;
     color: string | null;
@@ -40,10 +32,6 @@ export type UserOptionT = {
     name: string;
 };
 
-export function isUserOption(option: object): option is UserOptionT {
-    return "id" in option;
-}
-
 export type UpdateEnumOptionT = {
     option_id: string;
 } & Partial<CreateEnumOptionT>;
@@ -52,6 +40,12 @@ export type UserOrGroupOptionT = {
     uuid: string;
     type: "user" | "group";
     value: Omit<UserT, "is_admin"> | GroupT;
+};
+
+export type StateFieldT = {
+    state: string;
+    is_resolved: boolean;
+    is_closed: boolean;
 };
 
 export type CreateStateOptionT = {
@@ -69,7 +63,7 @@ export type UpdateStateOptionT = {
     option_id: string;
 } & Partial<CreateStateOptionT>;
 
-export type CustomFieldDefaultValueT =
+export type CustomFieldValueT =
     | Omit<UserT, "is_admin">
     | Array<Omit<UserT, "is_admin">>
     | StateFieldT
@@ -86,37 +80,33 @@ export type CreateCustomFieldT = {
     name: string;
     type: CustomFieldTypeT;
     is_nullable: boolean;
-    default_value: CustomFieldDefaultValueT;
+    default_value: CustomFieldValueT;
 };
+
+type CustomFieldTypeMap = {
+    string: string;
+    enum: string;
+    date: string;
+    datetime: string;
+    state: string;
+    boolean: boolean;
+    integer: number;
+    float: number;
+    enum_multi: string[];
+    user: UserOptionT;
+    user_multi: UserOptionT[];
+};
+
+type CustomFieldTypeValuePair = {
+    [K in keyof CustomFieldTypeMap]: {
+        type: K;
+        value: CustomFieldTypeMap[K];
+    };
+}[keyof CustomFieldTypeMap];
 
 export type CustomFieldT = CreateCustomFieldT & {
     id: string;
     options?: EnumOptionT[];
-} & (
-        | {
-              type: "string" | "enum" | "date" | "datetime";
-              value: string;
-          }
-        | {
-              type: "boolean";
-              value: boolean;
-          }
-        | {
-              type: "integer" | "float";
-              value: number;
-          }
-        | {
-              type: "enum_multi";
-              value: string[];
-          }
-        | {
-              type: "user";
-              value: UserOptionT;
-          }
-        | {
-              type: "user_multi";
-              value: UserOptionT[];
-          }
-    );
+} & CustomFieldTypeValuePair;
 
 export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;
