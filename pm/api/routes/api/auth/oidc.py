@@ -16,6 +16,8 @@ router = APIRouter(prefix='/oidc', tags=['oidc'])
 
 STATE_COOKIE_NAME = 'oidc_state'
 CALL_BACK_PATH = '/api/auth/oidc/callback'
+STATE_NOT_BEFORE_DELTA = 60  # 1 minute
+STATE_TTL = 10 * 60  # 10 minutes
 
 
 @router.get('')
@@ -122,8 +124,8 @@ def _gen_state(req: Request) -> str:
     now = time.time()
     data = {
         'ip': req.client.host,
-        'not_before': now,
-        'expires': now + 60,
+        'not_before': now - STATE_NOT_BEFORE_DELTA,
+        'expires': now + STATE_TTL,
     }
     if url := req.query_params.get('redirect'):
         data['redirect'] = url
