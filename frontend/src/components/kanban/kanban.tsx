@@ -22,7 +22,7 @@ import {
     SortableContext,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Container } from "./components/container";
 import { DroppableContainer } from "./components/droppable-container";
@@ -53,19 +53,37 @@ export const Kanban: FC<KanbanProps> = ({
     wrapperStyle = () => ({}),
     modifiers,
     renderItem,
-    strategy = verticalListSortingStrategy,
     vertical = false,
     scrollable,
 }) => {
     const [items, setItems] = useState<Items>(() => initialItems ?? {});
-    const [containers, setContainers] = useState(
+    const [swimLines, setSwimLines] = useState(
         Object.keys(items) as UniqueIdentifier[],
     );
+    const [containers, setContainers] = useState(
+        swimLines.reduce(
+            (prev, id) => {
+                prev[id] = Object.keys(items[id]);
+                return prev;
+            },
+            {} as Record<UniqueIdentifier, UniqueIdentifier[]>,
+        ),
+    );
+    const containerToSwimLineMap = useMemo(() => {
+        const res: Record<UniqueIdentifier, UniqueIdentifier> = {};
+        for (const swimLine of Object.keys(items))
+            for (const container of Object.keys(items[swimLine]))
+                res[container] = swimLine;
+        return res;
+    }, [items]);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
     const [clonedItems, setClonedItems] = useState<Items | null>(null);
     const lastOverId = useRef<UniqueIdentifier | null>(null);
     const recentlyMovedToNewContainer = useRef(false);
-    const isSortingContainer = activeId ? containers.includes(activeId) : false;
+    const isSortingContainer = activeId
+        ? !!containerToSwimLineMap[activeId]
+        : false;
+    const isSortingSwimLines = activeId ? swimLines.includes(activeId) : false;
 
     const collisionDetectionStrategy: CollisionDetection = useCallback(
         (args) => {
@@ -87,11 +105,19 @@ export const Kanban: FC<KanbanProps> = ({
                     : rectIntersection(args);
             let overId = getFirstCollision(intersections, "id");
 
-            if (overId != null) {
-                if (overId in items) {
-                    const containerItems = items[overId];
+            if (overId != null && activeId != null) {
+                const overContainer = findContainer(overId);
+                const overSwimLine = findSwimLine(overId);
+                const activeContainer = findContainer(activeId);
 
-                    // If a container is matched and it contains items (columns 'A', 'B', 'C')
+                if (
+                    overId === overContainer &&
+                    overSwimLine &&
+                    activeId !== activeContainer
+                ) {
+                    const containerItems = items[overSwimLine][overContainer];
+
+                    // If a container is matched and it contains items
                     if (containerItems.length > 0) {
                         // Return the closest droppable within that container
                         overId = closestCenter({
@@ -133,22 +159,42 @@ export const Kanban: FC<KanbanProps> = ({
         }),
     );
 
+    const findSwimLine = (id: UniqueIdentifier) => {
+        // TODO: Make it FASTER (prefer O(1))
+        if (id in items) return id;
+        return Object.keys(items).find(
+            (swimLineId) =>
+                id in items[swimLineId] ||
+                Object.keys(items[swimLineId]).some((containerId) =>
+                    items[swimLineId][containerId].includes(id),
+                ),
+        );
+    };
+
     const findContainer = (id: UniqueIdentifier) => {
-        if (id in items) {
-            return id;
+        // TODO: Make it FASTER (prefer O(1))
+        const swimLineIds = Object.keys(items);
+        for (const swimLineId of swimLineIds) {
+            const containers = items[swimLineId];
+            if (id in containers) return id;
+            const containerIds = Object.keys(containers);
+            for (const containerId of containerIds) {
+                if (containers[containerId].includes(id)) return containerId;
+            }
         }
 
-        return Object.keys(items).find((key) => items[key].includes(id));
+        return undefined;
     };
 
     const getIndex = (id: UniqueIdentifier) => {
+        const swimLine = findSwimLine(id);
         const container = findContainer(id);
 
-        if (!container) {
+        if (!container || !swimLine) {
             return -1;
         }
 
-        return items[container].indexOf(id);
+        return items[swimLine][container].indexOf(id);
     };
 
     const onDragCancel = () => {
@@ -188,17 +234,31 @@ export const Kanban: FC<KanbanProps> = ({
                     return;
                 }
 
+                const overSwimLine = findSwimLine(overId);
+                const activeSwimLine = findSwimLine(active.id);
                 const overContainer = findContainer(overId);
                 const activeContainer = findContainer(active.id);
+                const activeType = active.data.current?.type;
+                const overType = over?.data.current?.type;
 
-                if (!overContainer || !activeContainer) {
+                if (
+                    !overContainer ||
+                    !activeContainer ||
+                    !overSwimLine ||
+                    !activeSwimLine
+                ) {
                     return;
                 }
 
-                if (activeContainer !== overContainer) {
+                if (
+                    activeType === "item" &&
+                    activeContainer !== overContainer &&
+                    activeSwimLine === overSwimLine
+                ) {
                     setItems((items) => {
-                        const activeItems = items[activeContainer];
-                        const overItems = items[overContainer];
+                        const activeItems =
+                            items[activeSwimLine][activeContainer];
+                        const overItems = items[overSwimLine][overContainer];
                         const overIndex = overItems.indexOf(overId);
                         const activeIndex = activeItems.indexOf(active.id);
 
@@ -223,65 +283,95 @@ export const Kanban: FC<KanbanProps> = ({
 
                         recentlyMovedToNewContainer.current = true;
 
-                        return {
-                            ...items,
-                            [activeContainer]: items[activeContainer].filter(
-                                (item) => item !== active.id,
+                        // Delete the old one, insert new one
+                        const copy = structuredClone(items);
+                        const itemToMove =
+                            copy[activeSwimLine][activeContainer][activeIndex];
+                        copy[activeSwimLine][activeContainer] = copy[
+                            activeSwimLine
+                        ][activeContainer].filter((item) => item !== active.id);
+                        copy[overSwimLine][overContainer] = [
+                            ...items[overSwimLine][overContainer].slice(
+                                0,
+                                newIndex,
                             ),
-                            [overContainer]: [
-                                ...items[overContainer].slice(0, newIndex),
-                                items[activeContainer][activeIndex],
-                                ...items[overContainer].slice(
-                                    newIndex,
-                                    items[overContainer].length,
-                                ),
-                            ],
-                        };
+                            itemToMove,
+                            ...items[overSwimLine][overContainer].slice(
+                                newIndex,
+                                items[overSwimLine][overContainer].length,
+                            ),
+                        ];
+
+                        return copy;
                     });
                 }
             }}
             onDragEnd={({ active, over }) => {
-                if (active.id in items && over?.id) {
-                    setContainers((containers) => {
-                        const activeIndex = containers.indexOf(active.id);
-                        const overIndex = containers.indexOf(over.id);
-
-                        return arrayMove(containers, activeIndex, overIndex);
-                    });
+                if (!over?.id) {
+                    setActiveId(null);
+                    return;
                 }
 
+                const overSwimLine = findSwimLine(over.id);
+                const activeSwimLine = findSwimLine(active.id);
+                const overContainer = findContainer(over.id);
                 const activeContainer = findContainer(active.id);
 
-                if (!activeContainer) {
+                if (
+                    !overContainer ||
+                    !activeContainer ||
+                    !overSwimLine ||
+                    !activeSwimLine
+                ) {
                     setActiveId(null);
                     return;
                 }
 
-                const overId = over?.id;
+                // If both are equal then item card was moved
+                if (
+                    overContainer === activeContainer &&
+                    overSwimLine === activeSwimLine
+                ) {
+                    const activeIndex = items[activeSwimLine][
+                        activeContainer
+                    ].indexOf(active.id);
+                    const overIndex = items[overSwimLine][
+                        overContainer
+                    ].indexOf(over.id);
 
-                if (overId == null) {
-                    setActiveId(null);
-                    return;
-                }
-
-                const overContainer = findContainer(overId);
-
-                if (overContainer) {
-                    const activeIndex = items[activeContainer].indexOf(
+                    setItems((items) => {
+                        const copy = structuredClone(items);
+                        copy[overSwimLine][overContainer] = arrayMove(
+                            copy[overSwimLine][overContainer],
+                            activeIndex,
+                            overIndex,
+                        );
+                        return copy;
+                    });
+                } // If only swim lines are equal than container was moved
+                else if (overSwimLine === activeSwimLine) {
+                    const activeIndex = containers[activeSwimLine].indexOf(
                         active.id,
                     );
-                    const overIndex = items[overContainer].indexOf(overId);
+                    const overIndex = containers[overSwimLine].indexOf(over.id);
 
-                    if (activeIndex !== overIndex) {
-                        setItems((items) => ({
-                            ...items,
-                            [overContainer]: arrayMove(
-                                items[overContainer],
-                                activeIndex,
-                                overIndex,
-                            ),
-                        }));
-                    }
+                    setContainers((containers) => {
+                        const copy = structuredClone(containers);
+                        copy[overSwimLine] = arrayMove(
+                            copy[overSwimLine],
+                            activeIndex,
+                            overIndex,
+                        );
+                        return copy;
+                    });
+                } // If every thing is different than swimline was moved
+                else {
+                    const activeIndex = swimLines.indexOf(active.id);
+                    const overIndex = swimLines.indexOf(over.id);
+
+                    setSwimLines((swimLines) =>
+                        arrayMove(swimLines, activeIndex, overIndex),
+                    );
                 }
 
                 setActiveId(null);
@@ -290,64 +380,74 @@ export const Kanban: FC<KanbanProps> = ({
             onDragCancel={onDragCancel}
             modifiers={modifiers}
         >
-            <div
-                style={{
-                    display: "inline-grid",
-                    boxSizing: "border-box",
-                    padding: 20,
-                    gridAutoFlow: vertical ? "row" : "column",
-                }}
-            >
-                <SortableContext
-                    items={containers}
-                    strategy={
-                        vertical
-                            ? verticalListSortingStrategy
-                            : horizontalListSortingStrategy
-                    }
+            {swimLines.map((swimLineId) => (
+                <div
+                    style={{
+                        display: "inline-grid",
+                        boxSizing: "border-box",
+                        padding: 20,
+                        gridAutoFlow: vertical ? "row" : "column",
+                    }}
+                    key={swimLineId}
                 >
-                    {containers.map((containerId) => (
-                        <DroppableContainer
-                            key={containerId}
-                            id={containerId}
-                            label={`Column ${containerId}`}
-                            columns={columns}
-                            items={items[containerId]}
-                            scrollable={scrollable}
-                            style={containerStyle}
-                        >
-                            <SortableContext
-                                items={items[containerId]}
-                                strategy={strategy}
+                    <SortableContext
+                        items={containers[swimLineId]}
+                        strategy={
+                            vertical
+                                ? verticalListSortingStrategy
+                                : horizontalListSortingStrategy
+                        }
+                    >
+                        {containers[swimLineId].map((containerId) => (
+                            <DroppableContainer
+                                key={containerId}
+                                id={containerId}
+                                label={`Column ${containerId}`}
+                                columns={columns}
+                                items={items[swimLineId][containerId]}
+                                scrollable={scrollable}
+                                style={containerStyle}
                             >
-                                {items[containerId].map((value, index) => {
-                                    return (
-                                        <SortableItem
-                                            disabled={isSortingContainer}
-                                            key={value}
-                                            id={value}
-                                            index={index}
-                                            style={getItemStyles}
-                                            wrapperStyle={wrapperStyle}
-                                            renderItem={renderItem}
-                                            containerId={containerId}
-                                            getIndex={getIndex}
-                                        />
-                                    );
-                                })}
-                            </SortableContext>
-                        </DroppableContainer>
-                    ))}
-                </SortableContext>
-            </div>
+                                <SortableContext
+                                    items={items[swimLineId][containerId]}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    {items[swimLineId][containerId].map(
+                                        (value, index) => {
+                                            return (
+                                                <SortableItem
+                                                    disabled={
+                                                        isSortingContainer
+                                                    }
+                                                    key={value}
+                                                    id={value}
+                                                    index={index}
+                                                    style={getItemStyles}
+                                                    wrapperStyle={wrapperStyle}
+                                                    renderItem={renderItem}
+                                                    containerId={containerId}
+                                                    getIndex={getIndex}
+                                                />
+                                            );
+                                        },
+                                    )}
+                                </SortableContext>
+                            </DroppableContainer>
+                        ))}
+                    </SortableContext>
+                </div>
+            ))}
             {createPortal(
                 <DragOverlay
                     adjustScale={adjustScale}
                     dropAnimation={dropAnimation}
                 >
                     {activeId
-                        ? containers.includes(activeId)
-                            ? renderContainerDragOverlay(activeId)
+                        ? containerToSwimLineMap[activeId]
+                            ? renderContainerDragOverlay(
+                                  containerToSwimLineMap[activeId],
+                                  activeId,
+                              )
                             : renderSortableItemDragOverlay(activeId)
                         : null}
                 </DragOverlay>,
@@ -376,7 +476,10 @@ export const Kanban: FC<KanbanProps> = ({
         );
     }
 
-    function renderContainerDragOverlay(containerId: UniqueIdentifier) {
+    function renderContainerDragOverlay(
+        swimLineId: UniqueIdentifier,
+        containerId: UniqueIdentifier,
+    ) {
         return (
             <Container
                 label={`Column ${containerId}`}
@@ -386,7 +489,7 @@ export const Kanban: FC<KanbanProps> = ({
                 }}
                 shadow
             >
-                {items[containerId].map((item, index) => (
+                {items[swimLineId][containerId].map((item, index) => (
                     <Item
                         key={item}
                         value={item}

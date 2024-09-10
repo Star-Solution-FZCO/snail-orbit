@@ -25,10 +25,12 @@ type Story = StoryObj<typeof meta>;
 const itemsCount = 4;
 
 const items = {
-    Hello: createRange(itemsCount, (idx) => `Hello ${idx}`),
-    World: createRange(itemsCount, (idx) => `World ${idx}`),
-    My: createRange(itemsCount, (idx) => `My ${idx}`),
-    Friend: createRange(itemsCount, (idx) => `Friend ${idx}`),
+    SwimLine: {
+        Hello: createRange(itemsCount, (idx) => `Hello ${idx}`),
+        World: createRange(itemsCount, (idx) => `World ${idx}`),
+        My: createRange(itemsCount, (idx) => `My ${idx}`),
+        Friend: createRange(itemsCount, (idx) => `Friend ${idx}`),
+    },
 };
 
 export const Kanban: Story = {

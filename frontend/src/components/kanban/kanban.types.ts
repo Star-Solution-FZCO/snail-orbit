@@ -4,10 +4,12 @@ import {
     Modifiers,
     UniqueIdentifier,
 } from "@dnd-kit/core";
-import { SortingStrategy } from "@dnd-kit/sortable";
 import { CSSProperties } from "react";
 
-export type Items = Record<UniqueIdentifier, UniqueIdentifier[]>;
+export type Items = Record<
+    UniqueIdentifier,
+    Record<UniqueIdentifier, UniqueIdentifier[]>
+>;
 
 export type KanbanProps = {
     adjustScale?: boolean;
@@ -29,7 +31,6 @@ export type KanbanProps = {
     modifiers?: Modifiers;
     renderItem?: any;
     scrollable?: boolean;
-    strategy?: SortingStrategy;
     vertical?: boolean;
     wrapperStyle?(args: { index: number }): CSSProperties;
 };
