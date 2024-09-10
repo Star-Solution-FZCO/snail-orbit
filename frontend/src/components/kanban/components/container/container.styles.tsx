@@ -1,24 +1,19 @@
 import { styled } from "@mui/material";
 
+// TODO: Move to theme and sync with custom fields
+const backgroundColor = "#1c2128";
+const activeBackgroundColor = "#192030";
+
 export type StyledContainerProps = {
     scrollable?: boolean;
     placeholder?: boolean;
-    horizontal?: boolean;
     shadow?: boolean;
     focusVisible?: boolean;
     hover?: boolean;
 };
 
 export const StyledContainer = styled("div")<StyledContainerProps>(
-    ({
-        theme,
-        scrollable,
-        placeholder,
-        horizontal,
-        shadow,
-        focusVisible,
-        hover,
-    }) => ({
+    ({ theme, scrollable, placeholder, shadow, focusVisible, hover }) => ({
         display: "flex",
         flexDirection: "column",
         gridAutoRows: "max-content",
@@ -34,8 +29,7 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
             duration: theme.transitions.duration.standard,
             easing: theme.transitions.easing.easeInOut,
         }),
-        backgroundColor: theme.palette.background.default,
-        border: "1px solid rgba(0, 0, 0, 0.05)",
+        backgroundColor: backgroundColor,
         fontSize: theme.typography.fontSize,
 
         "& ul": {
@@ -45,11 +39,12 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
             listStyle: "none",
             padding: "20px",
             margin: 0,
+            width: "100%",
         },
 
         ...(hover
             ? {
-                  backgroundColor: "rgb(235, 235, 235, 1)",
+                  backgroundColor: activeBackgroundColor,
               }
             : {}),
 
@@ -77,16 +72,6 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
               }
             : {}),
 
-        ...(horizontal
-            ? {
-                  width: "100%",
-
-                  "& ul": {
-                      gridAutoFlow: "column",
-                  },
-              }
-            : {}),
-
         ...(shadow
             ? {
                   boxShadow: "0 1px 10px 0 rgba(34, 33, 81, 0.1)",
@@ -107,9 +92,8 @@ export const HeaderStyled = styled("div")(({ theme }) => ({
     display: "flex",
     padding: theme.spacing(2),
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: theme.palette.background.paper,
+    justifyContent: "flex-start",
+    backgroundColor: backgroundColor,
     borderTopLeftRadius: "5px",
     borderTopRightRadius: "5px",
-    borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
 }));
