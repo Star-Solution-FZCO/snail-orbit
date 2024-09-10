@@ -5,7 +5,6 @@ export type ContainerProps = {
     columns?: number;
     label?: string;
     style?: CSSProperties;
-    horizontal?: boolean;
     hover?: boolean;
     handleProps?: HTMLAttributes<any>;
     scrollable?: boolean;

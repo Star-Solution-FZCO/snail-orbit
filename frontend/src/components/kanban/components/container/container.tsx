@@ -1,4 +1,5 @@
 import { CSSProperties, forwardRef } from "react";
+import { Handle } from "../handle/Handle";
 import { HeaderStyled, StyledContainer } from "./container.styles";
 import { ContainerProps } from "./container.types";
 
@@ -9,7 +10,6 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
             children,
             columns = 1,
             handleProps,
-            horizontal,
             hover,
             label,
             placeholder,
@@ -30,13 +30,15 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
                         "--columns": columns,
                     } as CSSProperties
                 }
-                horizontal={horizontal}
                 hover={hover}
                 placeholder={placeholder}
                 scrollable={scrollable}
                 shadow={shadow}
             >
-                {label ? <HeaderStyled>{label}</HeaderStyled> : null}
+                <HeaderStyled>
+                    <Handle {...handleProps} />
+                    {label ?? null}
+                </HeaderStyled>
                 {placeholder ? children : <ul>{children}</ul>}
             </StyledContainer>
         );
