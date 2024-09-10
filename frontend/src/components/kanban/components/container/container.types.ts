@@ -1,3 +1,4 @@
+import { SxProps } from "@mui/material";
 import { CSSProperties, HTMLAttributes, ReactNode } from "react";
 
 export type ContainerProps = {
@@ -10,4 +11,5 @@ export type ContainerProps = {
     scrollable?: boolean;
     shadow?: boolean;
     placeholder?: boolean;
+    sx?: SxProps;
 };

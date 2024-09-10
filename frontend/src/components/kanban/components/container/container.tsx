@@ -3,7 +3,6 @@ import { Handle } from "../handle/Handle";
 import { HeaderStyled, StyledContainer } from "./container.styles";
 import { ContainerProps } from "./container.types";
 
-// TODO: Add sx support
 export const Container = forwardRef<HTMLDivElement, ContainerProps>(
     (
         {

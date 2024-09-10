@@ -25,6 +25,9 @@ export const SortableItem: FC<SortableItemProps> = ({
         transition,
     } = useSortable({
         id,
+        data: {
+            type: "item",
+        },
     });
     const mounted = useMountStatus();
     const mountedWhileDragging = isDragging && !mounted;
