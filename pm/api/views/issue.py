@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Self
+from datetime import date, datetime
+from typing import Any, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -10,6 +10,23 @@ import pm.models as m
 from .user import UserOutput
 
 __all__ = ('IssueOutput', 'IssueAttachmentOut')
+
+CustomFieldValueOutT = (
+    bool
+    | int
+    | float
+    | date
+    | datetime
+    | UserOutput
+    | list[str]  # todo: use only list[EnumCustomField]
+    | list[UserOutput]
+    | m.EnumCustomField
+    | list[m.EnumCustomField]
+    | m.StateField
+    | PydanticObjectId
+    | Any
+    | None
+)
 
 
 class ProjectField(BaseModel):
@@ -48,12 +65,36 @@ class IssueAttachmentOut(BaseModel):
         )
 
 
+def _transform_custom_field_value(value: m.CustomFieldValueT) -> CustomFieldValueOutT:
+    if isinstance(value, m.UserLinkField):
+        return UserOutput.from_obj(value)
+    if isinstance(value, list) and value and isinstance(value[0], m.UserLinkField):
+        return [UserOutput.from_obj(v) for v in value]
+    return value
+
+
+class CustomFieldValueOut(BaseModel):
+    id: PydanticObjectId
+    name: str
+    type: m.CustomFieldTypeT
+    value: CustomFieldValueOutT = None
+
+    @classmethod
+    def from_obj(cls, obj: m.CustomFieldValue) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
+            value=_transform_custom_field_value(obj.value),
+        )
+
+
 class IssueOutput(BaseModel):
     id: PydanticObjectId
     project: ProjectField
     subject: str
     text: str | None
-    fields: dict[str, m.CustomFieldValue]
+    fields: dict[str, CustomFieldValueOut]
     attachments: list[IssueAttachmentOut]
 
     @classmethod
@@ -63,6 +104,8 @@ class IssueOutput(BaseModel):
             project=ProjectField.from_obj(obj),
             subject=obj.subject,
             text=obj.text,
-            fields={field.name: field for field in obj.fields},
+            fields={
+                field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
+            },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
         )
