@@ -142,6 +142,12 @@ CONFIG = Dynaconf(
             must_exist=True,
             when=Validator('WB_SYNC_ENABLED', condition=bool),
         ),
+        Validator(
+            'AVATAR_EXTERNAL_URL',
+            is_type_of=str,
+            description='URL for avatar service (e.g. https://avatar.example.com/{email})',
+            default='',
+        ),
     ],
 )
 CONFIG.configure()
