@@ -22,6 +22,8 @@ RUN mkdir -p "${APP_DIR}/etc" &&\
     addgroup -g 998 ${APP_NAME} &&\
     adduser -u 999 -G ${APP_NAME} -h ${APP_DIR} -D ${APP_NAME}
 
+COPY contrib/fonts/Montserrat-Alt1/MontserratAlt1-Regular.ttf /usr/share/fonts/truetype/
+
 
 FROM back-common AS api
 
