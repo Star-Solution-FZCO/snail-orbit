@@ -1,5 +1,5 @@
 import { GroupT } from "./group";
-import { UserT } from "./user";
+import { BasicUserT } from "./user";
 
 export const customFieldsTypes = [
     "string",
@@ -39,7 +39,7 @@ export type UpdateEnumOptionT = {
 export type UserOrGroupOptionT = {
     uuid: string;
     type: "user" | "group";
-    value: Omit<UserT, "is_admin"> | GroupT;
+    value: BasicUserT | GroupT;
 };
 
 export type StateFieldT = {
@@ -64,8 +64,8 @@ export type UpdateStateOptionT = {
 } & Partial<CreateStateOptionT>;
 
 export type CustomFieldValueT =
-    | Omit<UserT, "is_admin">
-    | Array<Omit<UserT, "is_admin">>
+    | BasicUserT
+    | BasicUserT[]
     | StateFieldT
     | string
     | any

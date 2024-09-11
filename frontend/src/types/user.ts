@@ -1,8 +1,12 @@
-export type UserT = {
+export type BasicUserT = {
     id: string;
     name: string;
     email: string;
+};
+
+export type UserT = BasicUserT & {
     is_admin: boolean;
+    origin: "local" | "wb";
 };
 
 export type CreateUserT = {
