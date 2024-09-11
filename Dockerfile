@@ -30,11 +30,14 @@ FROM back-common AS api
 COPY --from=get_requirements /app/requirements.txt ${APP_DIR}/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
     rm -rf requirements.txt
+RUN mkdir -p /data &&\
+    chown ${APP_NAME}:${APP_NAME} /data
 
 COPY . ${APP_DIR}/
 
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
+VOLUME ["/data"]
 ARG version="__DEV__"
 ENV APP_VERSION=$version
 ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy", "*"]
