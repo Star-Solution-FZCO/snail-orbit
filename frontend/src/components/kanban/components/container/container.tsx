@@ -1,6 +1,10 @@
 import { CSSProperties, forwardRef } from "react";
 import { Handle } from "../handle/Handle";
-import { HeaderStyled, StyledContainer } from "./container.styles";
+import {
+    HeaderStyled,
+    StyledContainer,
+    StyledContainerList,
+} from "./container.styles";
 import { ContainerProps } from "./container.types";
 
 export const Container = forwardRef<HTMLDivElement, ContainerProps>(
@@ -38,7 +42,11 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
                     <Handle {...handleProps} />
                     {label ?? null}
                 </HeaderStyled>
-                {placeholder ? children : <ul>{children}</ul>}
+                {placeholder ? (
+                    children
+                ) : (
+                    <StyledContainerList>{children}</StyledContainerList>
+                )}
             </StyledContainer>
         );
     },

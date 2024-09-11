@@ -26,8 +26,10 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Container } from "./components/container";
 import { DroppableContainer } from "./components/droppable-container";
+import { DroppableSwimLine } from "./components/droppable-swim-line/DroppableSwimLine";
 import Item from "./components/item";
 import { SortableItem } from "./components/sortable-item";
+import { SwimLine } from "./components/swim-line";
 import { Items, KanbanProps } from "./kanban.types";
 import { multipleContainersKeyboardCoordinates } from "./utils/multipleContainersKeyboardCoordinates";
 
@@ -230,7 +232,7 @@ export const Kanban: FC<KanbanProps> = ({
             onDragOver={({ active, over }) => {
                 const overId = over?.id;
 
-                if (overId == null || active.id in items) {
+                if (overId == null) {
                     return;
                 }
 
@@ -241,19 +243,15 @@ export const Kanban: FC<KanbanProps> = ({
                 const activeType = active.data.current?.type;
                 const overType = over?.data.current?.type;
 
-                if (
-                    !overContainer ||
-                    !activeContainer ||
-                    !overSwimLine ||
-                    !activeSwimLine
-                ) {
+                if (!overSwimLine || !activeSwimLine) {
                     return;
                 }
 
                 if (
                     activeType === "item" &&
-                    activeContainer !== overContainer &&
-                    activeSwimLine === overSwimLine
+                    activeContainer &&
+                    overContainer &&
+                    activeContainer !== overContainer
                 ) {
                     setItems((items) => {
                         const activeItems =
@@ -317,12 +315,7 @@ export const Kanban: FC<KanbanProps> = ({
                 const overContainer = findContainer(over.id);
                 const activeContainer = findContainer(active.id);
 
-                if (
-                    !overContainer ||
-                    !activeContainer ||
-                    !overSwimLine ||
-                    !activeSwimLine
-                ) {
+                if (!overSwimLine || !activeSwimLine) {
                     setActiveId(null);
                     return;
                 }
@@ -330,7 +323,9 @@ export const Kanban: FC<KanbanProps> = ({
                 // If both are equal then item card was moved
                 if (
                     overContainer === activeContainer &&
-                    overSwimLine === activeSwimLine
+                    overSwimLine === activeSwimLine &&
+                    activeContainer &&
+                    overContainer
                 ) {
                     const activeIndex = items[activeSwimLine][
                         activeContainer
@@ -380,75 +375,87 @@ export const Kanban: FC<KanbanProps> = ({
             onDragCancel={onDragCancel}
             modifiers={modifiers}
         >
-            {swimLines.map((swimLineId) => (
-                <div
-                    style={{
-                        display: "inline-grid",
-                        boxSizing: "border-box",
-                        padding: 20,
-                        gridAutoFlow: vertical ? "row" : "column",
-                    }}
-                    key={swimLineId}
-                >
-                    <SortableContext
-                        items={containers[swimLineId]}
-                        strategy={
-                            vertical
-                                ? verticalListSortingStrategy
-                                : horizontalListSortingStrategy
-                        }
+            <SortableContext
+                items={swimLines}
+                strategy={
+                    !vertical
+                        ? verticalListSortingStrategy
+                        : horizontalListSortingStrategy
+                }
+            >
+                {swimLines.map((swimLineId) => (
+                    <DroppableSwimLine
+                        key={swimLineId}
+                        sx={{ backgroundColor: "red" }}
+                        id={swimLineId}
+                        items={swimLines}
                     >
-                        {containers[swimLineId].map((containerId) => (
-                            <DroppableContainer
-                                key={containerId}
-                                id={containerId}
-                                label={`Column ${containerId}`}
-                                columns={columns}
-                                items={items[swimLineId][containerId]}
-                                scrollable={scrollable}
-                                style={containerStyle}
-                            >
-                                <SortableContext
-                                    items={items[swimLineId][containerId]}
-                                    strategy={verticalListSortingStrategy}
+                        <SortableContext
+                            items={containers[swimLineId]}
+                            strategy={
+                                vertical
+                                    ? verticalListSortingStrategy
+                                    : horizontalListSortingStrategy
+                            }
+                        >
+                            {containers[swimLineId].map((containerId) => (
+                                <DroppableContainer
+                                    key={containerId}
+                                    id={containerId}
+                                    label={`Column ${containerId}`}
+                                    columns={columns}
+                                    items={containers[swimLineId]}
+                                    scrollable={scrollable}
+                                    style={containerStyle}
                                 >
-                                    {items[swimLineId][containerId].map(
-                                        (value, index) => {
-                                            return (
-                                                <SortableItem
-                                                    disabled={
-                                                        isSortingContainer
-                                                    }
-                                                    key={value}
-                                                    id={value}
-                                                    index={index}
-                                                    style={getItemStyles}
-                                                    wrapperStyle={wrapperStyle}
-                                                    renderItem={renderItem}
-                                                    containerId={containerId}
-                                                    getIndex={getIndex}
-                                                />
-                                            );
-                                        },
-                                    )}
-                                </SortableContext>
-                            </DroppableContainer>
-                        ))}
-                    </SortableContext>
-                </div>
-            ))}
+                                    <SortableContext
+                                        items={items[swimLineId][containerId]}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {items[swimLineId][containerId].map(
+                                            (value, index) => {
+                                                return (
+                                                    <SortableItem
+                                                        disabled={
+                                                            isSortingContainer
+                                                        }
+                                                        key={value}
+                                                        id={value}
+                                                        index={index}
+                                                        style={getItemStyles}
+                                                        wrapperStyle={
+                                                            wrapperStyle
+                                                        }
+                                                        renderItem={renderItem}
+                                                        containerId={
+                                                            containerId
+                                                        }
+                                                        getIndex={getIndex}
+                                                    />
+                                                );
+                                            },
+                                        )}
+                                    </SortableContext>
+                                </DroppableContainer>
+                            ))}
+                        </SortableContext>
+                    </DroppableSwimLine>
+                ))}
+            </SortableContext>
             {createPortal(
                 <DragOverlay
                     adjustScale={adjustScale}
                     dropAnimation={dropAnimation}
                 >
                     {activeId
-                        ? containerToSwimLineMap[activeId]
-                            ? renderContainerDragOverlay(
-                                  containerToSwimLineMap[activeId],
-                                  activeId,
-                              )
-                            : renderSortableItemDragOverlay(activeId)
+                        ? activeId in items
+                            ? renderSwimLineDragOverlay(activeId)
+                            : containerToSwimLineMap[activeId]
+                              ? renderContainerDragOverlay(
+                                    containerToSwimLineMap[activeId],
+                                    activeId,
+                                )
+                              : renderSortableItemDragOverlay(activeId)
                         : null}
                 </DragOverlay>,
                 document.body,
@@ -507,6 +514,16 @@ export const Kanban: FC<KanbanProps> = ({
                     />
                 ))}
             </Container>
+        );
+    }
+
+    function renderSwimLineDragOverlay(swimLineId: UniqueIdentifier) {
+        return (
+            <SwimLine style={{ height: "100%" }} shadow>
+                {containers[swimLineId].map((containerId) =>
+                    renderContainerDragOverlay(swimLineId, containerId),
+                )}
+            </SwimLine>
         );
     }
 };
