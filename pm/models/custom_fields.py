@@ -300,7 +300,7 @@ class UserCustomFieldMixin:
                 cls.options.type == UserOptionType.GROUP,
                 cls.options.value.group.id == group.id,
             ).update(
-                {'$push': {'options.$[o].value.users': [UserLinkField.from_obj(user)]}},
+                {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
                 array_filters=[
                     {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP}
                 ],
@@ -310,10 +310,9 @@ class UserCustomFieldMixin:
             cls.options.type == UserOptionType.GROUP,
             cls.options.value.group.id == group.id,
         ).update(
-            {'$pull': {'options.$[o].value.users.$[u]': UserLinkField.from_obj(user)}},
+            {'$pull': {'options.$[o].value.users': {'id': user.id}}},
             array_filters=[
-                {'o.value.users.id': user.id, 'o.type': UserOptionType.USER},
-                {'u.id': user.id},
+                {'o.value.users.id': user.id, 'o.type': UserOptionType.GROUP},
             ],
         )
 
