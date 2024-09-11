@@ -71,11 +71,11 @@ async def list_issues(
     )
 
 
-@router.get('/{issue_id}')
+@router.get('/{issue_id_or_alias}')
 async def get_issue(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessPayloadOutput[IssueOutput]:
-    obj = await m.Issue.find_one(m.Issue.id == issue_id)
+    obj = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
@@ -134,6 +134,7 @@ async def create_issue(
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         )
+    obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))

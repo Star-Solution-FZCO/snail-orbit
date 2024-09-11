@@ -2,7 +2,7 @@ from enum import StrEnum
 from typing import Self
 from uuid import UUID, uuid4
 
-from beanie import Document, Indexed, Link, PydanticObjectId
+from beanie import Document, Indexed, Link, PydanticObjectId, Update
 from pydantic import BaseModel, Field
 
 from pm.permissions import Permissions
@@ -58,6 +58,13 @@ class Project(Document):
     custom_fields: list[Link['CustomField']] = Field(default_factory=list)
     workflows: list[Link['Workflow']] = Field(default_factory=list)
     permissions: list[ProjectPermission] = Field(default_factory=list)
+    issue_counter: int = 0
+
+    async def get_new_issue_alias(self) -> str:
+        await self.update(
+            {'$inc': {'issue_counter': 1}}, ignore_revision=True, skip_actions=[Update]
+        )
+        return f'{self.slug}-{self.issue_counter}'
 
     def get_user_permissions(self, user: User) -> set[Permissions]:
         results = set()

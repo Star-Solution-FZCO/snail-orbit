@@ -1,7 +1,8 @@
 from datetime import datetime
+from typing import Self
 from uuid import UUID, uuid4
 
-from beanie import Document, Indexed
+from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
 from ._audit import audited_model
@@ -48,6 +49,7 @@ class Issue(Document):
 
     subject: str = Indexed(str)
     text: str | None = None
+    aliases: list[str] = Field(default_factory=list)
 
     project: ProjectLinkField
     comments: list[IssueComment] = Field(default_factory=list)
@@ -57,6 +59,12 @@ class Issue(Document):
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
+
+    @classmethod
+    async def find_one_by_id_or_alias(cls, id_or_alias: PydanticObjectId | str) -> Self:
+        if isinstance(id_or_alias, str):
+            return await cls.find_one(cls.aliases == id_or_alias)
+        return await cls.find_one(cls.id == id_or_alias)
 
     async def get_project(self, fetch_links: bool = False) -> Project:
         pr: Project | None = await Project.find_one(
