@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Self
 from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, Link, PydanticObjectId
@@ -167,3 +168,11 @@ class ProjectLinkField(BaseModel):
     id: PydanticObjectId
     name: str
     slug: str
+
+    @classmethod
+    def from_obj(cls, obj: Project) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            slug=obj.slug,
+        )
