@@ -1,15 +1,7 @@
 import { Box } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Kanban as KanbanComp } from "./kanban";
-
-const defaultInitializer = (index: number) => index;
-
-function createRange<T = number>(
-    length: number,
-    initializer: (index: number) => any = defaultInitializer,
-): T[] {
-    return [...new Array(length)].map((_, index) => initializer(index));
-}
+import { Items } from "./kanban.types";
 
 const meta = {
     title: "Components/Kanban",
@@ -24,19 +16,23 @@ type Story = StoryObj<typeof meta>;
 
 const itemsCount = 4;
 
-const items = {
-    SwimLine: {
-        Hello: createRange(itemsCount, (idx) => `Hello ${idx}`),
-        World: createRange(itemsCount, (idx) => `World ${idx}`),
-        My: createRange(itemsCount, (idx) => `My ${idx}`),
-        Friend: createRange(itemsCount, (idx) => `Friend ${idx}`),
-    },
-};
+const items: Items = {};
+for (let i = 0; i < itemsCount; i++) {
+    items[`${i}`] = {};
+    for (let j = 0; j < itemsCount; j++) {
+        items[`${i}`][`${i}-${j}`] = [];
+        for (let k = 0; k < itemsCount; k++) {
+            items[`${i}`][`${i}-${j}`].push(`${i}-${j}-${k}`);
+        }
+    }
+}
+
+console.log(items);
 
 export const Kanban: Story = {
     render: () => {
         return (
-            <Box sx={{ width: 1, height: 1 }}>
+            <Box sx={{ width: "100dvw", height: 1 }}>
                 <KanbanComp items={items} />
             </Box>
         );

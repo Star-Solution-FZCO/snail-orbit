@@ -1,10 +1,10 @@
+// TODO: Move to theme and sync with custom fields
 import { styled } from "@mui/material";
 
-// TODO: Move to theme and sync with custom fields
 const backgroundColor = "#1c2128";
 const activeBackgroundColor = "#192030";
 
-export type StyledContainerProps = {
+export type StyledSwimLineProps = {
     scrollable?: boolean;
     placeholder?: boolean;
     shadow?: boolean;
@@ -12,7 +12,7 @@ export type StyledContainerProps = {
     hover?: boolean;
 };
 
-export const StyledContainer = styled("div")<StyledContainerProps>(
+export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
     ({ theme, scrollable, placeholder, shadow, focusVisible, hover }) => ({
         display: "flex",
         flexDirection: "column",
@@ -21,10 +21,10 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
         boxSizing: "border-box",
         appearance: "none",
         outline: "none",
+        minWidth: "350px",
         margin: "10px",
         borderRadius: theme.spacing(1),
         minHeight: "200px",
-        width: "100%",
         transition: theme.transitions.create("background-color", {
             duration: theme.transitions.duration.standard,
             easing: theme.transitions.easing.easeInOut,
@@ -78,14 +78,15 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
     }),
 );
 
-export const StyledContainerList = styled("ul")(() => ({
-    display: "grid",
-    gridGap: "10px",
-    gridTemplateColumns: "repeat(var(--columns, 1), 1fr)",
+export const StyledSwimLineList = styled("ul")(({ theme }) => ({
     listStyle: "none",
     padding: "20px",
     margin: 0,
     width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    flexGap: theme.spacing(1),
 }));
 
 export const HeaderStyled = styled("div")(({ theme }) => ({
