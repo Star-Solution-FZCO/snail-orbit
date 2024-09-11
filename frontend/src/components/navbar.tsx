@@ -130,14 +130,7 @@ const NavBar = () => {
                     </IconButton>
                 )}
 
-                <Avatar sx={{ width: 32, height: 32 }} variant="rounded">
-                    {user?.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
-                </Avatar>
-
+                <Avatar sx={{ width: 32, height: 32 }} variant="rounded" src={user?.avatar} />
                 <IconButton onClick={handleLogout} size="small">
                     <LogoutIcon />
                 </IconButton>
