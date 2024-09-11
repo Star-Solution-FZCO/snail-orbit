@@ -7,15 +7,21 @@ const Layout = () => {
         <Box
             sx={{
                 display: "flex",
-                flexDirection: "column",
-                flexGrow: 1,
-                height: "100vh",
+                minHeight: "100vh",
                 backgroundColor: (theme) => theme.palette.background.content,
             }}
         >
-            <NavBar />
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flexGrow: 1,
+                }}
+            >
+                <NavBar />
 
-            <Outlet />
+                <Outlet />
+            </Box>
         </Box>
     );
 };

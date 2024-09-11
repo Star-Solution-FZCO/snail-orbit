@@ -10,6 +10,7 @@ export type CreateIssueT = {
     subject: string;
     text: string | null;
     fields: Record<string, FieldValueT>;
+    attachments?: string[];
 };
 
 export type IssueT = {
@@ -19,6 +20,7 @@ export type IssueT = {
     subject: string;
     text: string | null;
     fields: Record<string, CustomFieldT>;
+    attachments: string[];
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;

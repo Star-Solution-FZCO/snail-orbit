@@ -73,14 +73,20 @@ async def list_comments(
             'You do not have permission to read comments on this issue',
         )
 
+    items = sorted(
+        [
+            IssueCommentOutput.from_obj(c)
+            for c in issue.comments[query.offset : query.offset + query.limit]
+        ],
+        key=lambda comment: comment.created_at,
+        reverse=True,
+    )
+
     return BaseListOutput.make(
         count=len(issue.comments),
         limit=query.limit,
         offset=query.offset,
-        items=[
-            IssueCommentOutput.from_obj(c)
-            for c in issue.comments[query.offset : query.offset + query.limit]
-        ],
+        items=items,
     )
 
 
