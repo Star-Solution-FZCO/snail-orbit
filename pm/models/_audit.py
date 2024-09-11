@@ -1,8 +1,13 @@
 from datetime import datetime
 from enum import StrEnum
+from os.path import dirname as opd
+from os.path import join as opj
 from typing import Self, TypeVar
 from uuid import UUID
 
+import aiofiles
+import aiofiles.os as aio_os
+import bson
 from beanie import (
     Delete,
     Document,
@@ -14,10 +19,11 @@ from beanie import (
     after_event,
     before_event,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette_context import context
 from starlette_context.errors import ContextDoesNotExistError
 
+from pm.config import CONFIG
 from pm.utils.dateutils import utcnow
 
 __all__ = (
@@ -50,7 +56,12 @@ class AuditRecord(Document):
     revision: UUID | None
     author: AuditAuthorField | None
     time: datetime
-    data: dict
+
+    __data: dict | None = None
+
+    @property
+    def data(self) -> dict | None:
+        return self.__data
 
     @classmethod
     def create_record(
@@ -72,7 +83,7 @@ class AuditRecord(Document):
                 )
         except ContextDoesNotExistError:
             pass
-        return cls(
+        obj = cls(
             collection=collection,
             object_id=object_id,
             next_revision=next_revision,
@@ -80,36 +91,71 @@ class AuditRecord(Document):
             action=str(action),
             author=author,
             time=utcnow(),
-            data=data,
+        )
+        obj.__data = data
+        return obj
+
+    async def _save_data(self, path: str) -> None:
+        await aio_os.makedirs(opd(path), exist_ok=True)
+        async with aiofiles.open(path, 'wb') as f:
+            await f.write(
+                bson.encode(
+                    {
+                        **self.model_dump(mode='json'),
+                        'data': self.__data,
+                    }
+                )
+            )
+
+    async def save_data(self) -> None:
+        await self._save_data(self._data_path)
+
+    async def _load_data(self, path: str) -> None:
+        async with aiofiles.open(path, 'rb') as f:
+            content = bson.decode(await f.read())
+        if not (data := content.get('data')):
+            raise ValueError('No data found in audit record')
+        self.__data = data
+
+    async def load_data(self) -> None:
+        await self._load_data(self._data_path)
+
+    @property
+    def _data_path(self) -> str:
+        return opj(
+            CONFIG.AUDIT_STORAGE_DIR,
+            self.collection,
+            str(self.object_id),
+            f'{self.revision}.bson',
         )
 
 
 @after_event(Insert)
 async def _after_insert_callback(self: Document) -> None:
-    await AuditRecord.insert_one(
-        AuditRecord.create_record(
-            collection=self.__class__.Settings.name,
-            object_id=self.id,
-            next_revision=self.revision_id,
-            revision=None,
-            action=AuditActionT.INSERT,
-            data={},
-        )
+    obj = AuditRecord.create_record(
+        collection=self.__class__.Settings.name,
+        object_id=self.id,
+        next_revision=self.revision_id,
+        revision=None,
+        action=AuditActionT.INSERT,
+        data={},
     )
+    await AuditRecord.insert_one(obj)
+    await obj.save_data()
 
 
 @before_event(Delete)
 async def _before_delete_callback(self: Document) -> None:
-    await AuditRecord.insert_one(
-        AuditRecord.create_record(
-            collection=self.__class__.Settings.name,
-            object_id=self.id,
-            next_revision=None,
-            revision=self.revision_id,
-            action=AuditActionT.DELETE,
-            data=self.get_saved_state(),
-        )
+    obj = AuditRecord.create_record(
+        collection=self.__class__.Settings.name,
+        object_id=self.id,
+        next_revision=None,
+        revision=self.revision_id,
+        action=AuditActionT.DELETE,
+        data=self.get_saved_state(),
     )
+    await AuditRecord.insert_one(obj)
+    await obj.save_data()
 
 
 @before_event(SaveChanges)
@@ -119,16 +165,16 @@ async def _before_update_callback(self: Document) -> None:
 
 @after_event(SaveChanges)
 async def _after_update_callback(self: Document) -> None:
-    await AuditRecord.insert_one(
-        AuditRecord.create_record(
-            collection=self.__class__.Settings.name,
-            object_id=self.id,
-            next_revision=self.revision_id,
-            revision=self.__prev_revision_id,
-            action=AuditActionT.UPDATE,
-            data=self.get_previous_saved_state(),
-        )
+    obj = AuditRecord.create_record(
+        collection=self.__class__.Settings.name,
+        object_id=self.id,
+        next_revision=self.revision_id,
+        revision=self.__prev_revision_id,
+        action=AuditActionT.UPDATE,
+        data=self.get_previous_saved_state(),
     )
+    await AuditRecord.insert_one(obj)
+    await obj.save_data()
 
 
 @before_event(Replace)
@@ -138,16 +184,16 @@ async def _before_replace_callback(self: Document) -> None:
 
 @after_event(Replace)
 async def _after_replace_callback(self: Document) -> None:
-    await AuditRecord.insert_one(
-        AuditRecord.create_record(
-            collection=self.__class__.Settings.name,
-            object_id=self.id,
-            next_revision=self.revision_id,
-            revision=self.__prev_revision_id,
-            action=AuditActionT.UPDATE,
-            data=self.get_previous_saved_state(),
-        )
+    obj = AuditRecord.create_record(
+        collection=self.__class__.Settings.name,
+        object_id=self.id,
+        next_revision=self.revision_id,
+        revision=self.__prev_revision_id,
+        action=AuditActionT.UPDATE,
+        data=self.get_previous_saved_state(),
     )
+    await AuditRecord.insert_one(obj)
+    await obj.save_data()
 
 
 AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)

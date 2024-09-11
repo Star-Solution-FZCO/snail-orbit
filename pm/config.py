@@ -148,6 +148,12 @@ CONFIG = Dynaconf(
             description='URL for avatar service (e.g. https://avatar.example.com/{email})',
             default='',
         ),
+        Validator(
+            'AUDIT_STORAGE_DIR',
+            is_type_of=str,
+            default='/data/audit',
+            description='Directory for audit logs',
+        ),
     ],
 )
 CONFIG.configure()
