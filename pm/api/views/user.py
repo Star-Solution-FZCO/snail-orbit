@@ -4,15 +4,13 @@ from urllib.parse import quote
 from beanie import PydanticObjectId
 from pydantic import BaseModel, computed_field
 
-from pm.constants import AVATAR_SIZES
-
 if TYPE_CHECKING:
     import pm.models as m
 
 
 __all__ = ('UserOutput',)
 
-AVATAR_URL = '/api/avatar?email={email}&size={size}'
+AVATAR_URL = '/api/avatar?email={email}'
 
 
 class UserOutput(BaseModel):
@@ -22,11 +20,8 @@ class UserOutput(BaseModel):
 
     @computed_field
     @property
-    def avatars(self) -> dict[int, str]:
-        return {
-            size: AVATAR_URL.format(email=quote(self.email), size=size)
-            for size in AVATAR_SIZES
-        }
+    def avatar(self) -> str:
+        return AVATAR_URL.format(email=quote(self.email))
 
     @classmethod
     def from_obj(cls, obj: 'm.User | m.UserLinkField') -> Self:

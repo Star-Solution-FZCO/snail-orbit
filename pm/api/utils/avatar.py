@@ -1,4 +1,3 @@
-import asyncio
 from hashlib import sha1
 from http import HTTPStatus
 from os.path import join as opj
@@ -10,7 +9,7 @@ import aiohttp
 
 import pm.models as m
 from pm.config import CONFIG
-from pm.constants import AVATAR_SIZES
+from pm.constants import AVATAR_SIZE
 from pm.utils.image import (
     bytes_to_image,
     generate_initials_image,
@@ -21,15 +20,18 @@ from pm.utils.image import (
 if TYPE_CHECKING:
     from PIL.Image import Image
 
-__all__ = ('get_avatar_path',)
+__all__ = (
+    'get_avatar_path',
+    'clean_avatar_cache',
+)
 
 
 AVATAR_STORAGE_DIR = opj(CONFIG.FILE_STORAGE_DIR, 'avatars')
 ALLOWED_RESPONSE_TYPES = ('image/', 'binary/')
 
 
-def _file_path(avatar_id: str, size: int) -> str:
-    return opj(AVATAR_STORAGE_DIR, f'{avatar_id}_{size}.png')
+def _file_path(avatar_id: str) -> str:
+    return opj(AVATAR_STORAGE_DIR, f'{avatar_id}.png')
 
 
 def avatar_hash(email: str) -> str:
@@ -55,47 +57,39 @@ async def _get_new_avatar_img(email: str, avatar_id: str) -> 'Image | None':
     data = await get_avatar_from_external_service(email)
     if data:
         try:
-            return bytes_to_image(data)
+            return resize_image(bytes_to_image(data), AVATAR_SIZE)
         except Exception:
             pass
     user = await m.User.find_one(m.User.email == email)
     if not user:
         return None
     return generate_initials_image(
-        user.name, max(AVATAR_SIZES), background_color_bytes=bytes.fromhex(avatar_id)
+        user.name, AVATAR_SIZE, background_color_bytes=bytes.fromhex(avatar_id)
     )
 
 
 async def _clear_avatar_cache(avatar_id: str) -> None:
-    async def _remove_file(file_path: str) -> None:
-        try:
-            await aio_os.remove(file_path)
-        except FileNotFoundError:
-            pass
-
-    await asyncio.gather(
-        *[_remove_file(_file_path(avatar_id, s)) for s in AVATAR_SIZES]
-    )
+    try:
+        await aio_os.remove(_file_path(avatar_id))
+    except FileNotFoundError:
+        pass
 
 
-async def get_avatar_path(email: str, size: int, update: bool = False) -> str | None:
-    if size not in AVATAR_SIZES:
-        raise ValueError('Invalid size')
+async def get_avatar_path(email: str, update: bool = False) -> str | None:
     avatar_id = avatar_hash(email)
-    file_path = _file_path(avatar_id, size)
+    file_path = _file_path(avatar_id)
     if await aio_os.path.exists(file_path):
         if not update:
             return file_path
         await _clear_avatar_cache(avatar_id)
     img = await _get_new_avatar_img(email, avatar_id)
-    if not img:
-        return None
-    images = {s: resize_image(img, s) for s in AVATAR_SIZES}
-    for s, img in images.items():
-        img_bytes = image_to_bytes(img)
-        img_path = _file_path(avatar_id, s)
-        await aio_os.makedirs(AVATAR_STORAGE_DIR, exist_ok=True)
-        async with aiofiles.open(img_path, 'wb') as f:
-            await f.write(img_bytes.read())
+    img_path = _file_path(avatar_id)
+    await aio_os.makedirs(AVATAR_STORAGE_DIR, exist_ok=True)
+    async with aiofiles.open(img_path, 'wb') as f:
+        await f.write(image_to_bytes(img).read())
 
     return file_path
+
+
+async def clean_avatar_cache(email: str) -> None:
+    await _clear_avatar_cache(avatar_hash(email))
