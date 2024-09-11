@@ -3,6 +3,7 @@ export type UserT = {
     name: string;
     email: string;
     is_admin: boolean;
+    avatar: string;
 };
 
 export type CreateUserT = {
