@@ -19,6 +19,7 @@ python-multipart = "*"
 redis = "*"
 aiohttp = "*"
 celery = "*"
+pillow = "*"
 
 [dev-packages]
 bandit = "*"
