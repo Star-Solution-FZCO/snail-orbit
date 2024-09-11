@@ -91,6 +91,7 @@ class CustomFieldValueOut(BaseModel):
 
 class IssueOutput(BaseModel):
     id: PydanticObjectId
+    aliases: list[str]
     project: ProjectField
     subject: str
     text: str | None
@@ -101,6 +102,7 @@ class IssueOutput(BaseModel):
     def from_obj(cls, obj: m.Issue) -> Self:
         return cls(
             id=obj.id,
+            aliases=obj.aliases,
             project=ProjectField.from_obj(obj),
             subject=obj.subject,
             text=obj.text,
