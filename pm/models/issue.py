@@ -72,7 +72,7 @@ class Issue(Document):
         project: Project,
     ) -> None:
         await cls.find(cls.project.id == project.id).update(
-            project=ProjectLinkField.from_obj(project)
+            {'$set': {'project': ProjectLinkField.from_obj(project)}}
         )
 
     @classmethod
