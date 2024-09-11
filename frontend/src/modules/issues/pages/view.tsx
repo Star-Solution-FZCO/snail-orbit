@@ -1,4 +1,10 @@
-import { Box, CircularProgress, Container, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Container,
+    Divider,
+    Typography,
+} from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +12,7 @@ import { toast } from "react-toastify";
 import { issueApi } from "store";
 import { CreateIssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
+import { IssueComments } from "../components/issue_comments";
 import IssueForm from "../components/issue_form";
 import { issueToIssueForm } from "../utils/issue_to_issue_form";
 
@@ -15,10 +22,22 @@ const IssueView: FC = () => {
     const { t } = useTranslation();
     const { issueId } = routeApi.useParams();
 
-    const { data, isLoading, error, refetch } =
-        issueApi.useGetIssuesQuery(issueId);
+    const {
+        data: issue,
+        isLoading: issueLoading,
+        error: issueError,
+        refetch,
+    } = issueApi.useGetIssuesQuery(issueId);
 
-    const [updateIssue, { isLoading: isIssueUpdateLoading }] =
+    const {
+        data: comments,
+        isLoading: commentsLoading,
+        error: commentsError,
+    } = issueApi.useListIssueCommentsQuery({
+        id: issueId,
+    });
+
+    const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssuesMutation();
 
     const handleSubmit = (formData: CreateIssueT) => {
@@ -31,35 +50,56 @@ const IssueView: FC = () => {
             .finally(refetch);
     };
 
-    if (error) {
+    if (issueError || commentsError) {
         return (
             <Container>
                 <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
+                    {formatErrorMessages(issueError) ||
+                        formatErrorMessages(commentsError) ||
+                        t("issues.item.fetch.error")}
                 </Typography>
             </Container>
         );
     }
 
     return (
-        <Container sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {isLoading ? (
+        <Container
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                px: 4,
+                pb: 4,
+            }}
+            disableGutters
+        >
+            {issueLoading || commentsLoading ? (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={36} />
                 </Box>
             ) : (
                 <>
                     <Typography fontSize={24} fontWeight="bold">
-                        {data?.payload.subject}
+                        {issue?.payload.subject}
                     </Typography>
 
                     <IssueForm
                         onSubmit={handleSubmit}
-                        loading={isLoading || isIssueUpdateLoading}
+                        loading={issueLoading || updateLoading}
                         defaultValues={
-                            data?.payload && issueToIssueForm(data.payload)
+                            issue?.payload && issueToIssueForm(issue.payload)
                         }
                     />
+
+                    {/* TODO: change layout */}
+                    <Box width="calc(100% - 324px)">
+                        <Divider sx={{ mb: 2 }} />
+
+                        <IssueComments
+                            issueId={issueId}
+                            comments={comments?.payload.items || []}
+                        />
+                    </Box>
                 </>
             )}
         </Container>
