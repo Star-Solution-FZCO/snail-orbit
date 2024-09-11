@@ -8,7 +8,7 @@ const MDEditor: FC<IMDEditorProps> = (props) => {
     const theme = useTheme();
 
     return (
-        <Box data-color-mode={theme.palette.mode} width="100%">
+        <Box data-color-mode={theme.palette.mode} width="100%" height="100%">
             <Box className="wmde-markdown-var" />
 
             <MDEditorLib {...props} />
