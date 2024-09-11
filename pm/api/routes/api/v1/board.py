@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
-from pm.api.context import current_user_context_dependency
+from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import Event, EventType
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
@@ -53,11 +53,16 @@ class BoardOutput(BaseModel):
             query=obj.query,
             projects=[ProjectField.from_obj(p) for p in obj.projects],
             column_field=CustomFieldLinkOutput.from_obj(obj.column_field),
-            columns=[transform_custom_field_value(v) for v in obj.columns],
+            columns=[
+                transform_custom_field_value(v, obj.column_field) for v in obj.columns
+            ],
             swimlane_field=CustomFieldLinkOutput.from_obj(obj.swimlane_field)
             if obj.swimlane_field
             else None,
-            swimlanes=[transform_custom_field_value(v) for v in obj.swimlanes],
+            swimlanes=[
+                transform_custom_field_value(v, obj.swimlane_field)
+                for v in obj.swimlanes
+            ],
         )
 
 
@@ -323,10 +328,12 @@ async def get_board_issues(
         offset=0,
         items=[
             SwimlaneOutput(
-                field_value=transform_custom_field_value(sl),
+                field_value=transform_custom_field_value(sl, board.swimlane_field),
                 columns=[
                     ColumnOutput(
-                        field_value=transform_custom_field_value(col),
+                        field_value=transform_custom_field_value(
+                            col, board.column_field
+                        ),
                         issues=[IssueOutput.from_obj(issue) for issue in issues],
                     )
                     for col, issues in cols.items()
@@ -340,7 +347,9 @@ async def get_board_issues(
                     field_value=None,
                     columns=[
                         ColumnOutput(
-                            field_value=transform_custom_field_value(col),
+                            field_value=transform_custom_field_value(
+                                col, board.column_field
+                            ),
                             issues=[IssueOutput.from_obj(issue) for issue in issues],
                         )
                         for col, issues in non_swimlane.items()
@@ -365,6 +374,7 @@ async def move_issue(
     issue_id: PydanticObjectId,
     body: IssueMoveBody,
 ) -> ModelIdOutput:
+    user_ctx = current_user()
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
@@ -413,6 +423,7 @@ async def move_issue(
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             )
+        issue.gen_history_record(user_ctx.user)
         await issue.replace()
         await Event(
             type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)}
