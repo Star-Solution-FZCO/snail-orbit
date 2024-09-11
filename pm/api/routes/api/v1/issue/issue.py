@@ -191,6 +191,7 @@ async def update_issue(
             error_fields=err.fields_errors,
         )
     if obj.is_changed:
+        obj.gen_history_record(user_ctx.user, now)
         await obj.replace()
         await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
