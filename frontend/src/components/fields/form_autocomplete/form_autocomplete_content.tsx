@@ -94,19 +94,6 @@ const FormAutocompleteContentComp = <
                                     justifyContent="center"
                                 >
                                     {option.label}
-                                    {option.description && (
-                                        <Box
-                                            component="span"
-                                            sx={(t) => ({
-                                                color: "#8b949e",
-                                                ...t.applyStyles("light", {
-                                                    color: "#586069",
-                                                }),
-                                            })}
-                                        >
-                                            {option.description}
-                                        </Box>
-                                    )}
                                 </Stack>
                             </Stack>
                             {option.color ? (

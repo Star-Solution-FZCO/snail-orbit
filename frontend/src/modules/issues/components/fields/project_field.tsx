@@ -21,6 +21,7 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
 
         const options: SelectFieldOptionType[] = useMemo(() => {
             if (!data) return [];
+
             return data.payload.items.map(({ id, name, description }) => ({
                 label: name,
                 description: description,
