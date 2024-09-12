@@ -282,22 +282,28 @@ async def get_board_issues(
     flt = {}
     if board.query:
         flt, _ = transform_query(board.query)
-    non_swimlane = None
-    if None in board.swimlanes:
+    if board.swimlane_field:
+        non_swimlane = None
+        if None in board.swimlanes:
+            non_swimlane = {col: [] for col in board.columns}
+        swimlanes = {
+            sl: {col: [] for col in board.columns}
+            for sl in board.swimlanes
+            if sl is not None
+        }
+    else:
         non_swimlane = {col: [] for col in board.columns}
-    swimlanes = {
-        sl: {col: [] for col in board.columns}
-        for sl in board.swimlanes
-        if sl is not None
-    }
+        swimlanes = {}
     for issue in await m.Issue.find(flt).sort(m.Issue.id).to_list():
-        if not (sl_field := issue.get_field_by_id(board.swimlane_field.id)):
+        if board.swimlane_field and not (
+            sl_field := issue.get_field_by_id(board.swimlane_field.id)
+        ):
             continue
         if not (col_field := issue.get_field_by_id(board.column_field.id)):
             continue
         if col_field.value not in board.columns:
             continue
-        if sl_field.value is None:
+        if not board.swimlane_field or sl_field.value is None:
             if non_swimlane is not None:
                 non_swimlane[col_field.value].append(issue)
             continue
