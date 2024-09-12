@@ -89,6 +89,7 @@ const IssueView: FC = () => {
                         defaultValues={
                             issue?.payload && issueToIssueForm(issue.payload)
                         }
+                        hideGoBack
                     />
 
                     {/* TODO: change layout */}

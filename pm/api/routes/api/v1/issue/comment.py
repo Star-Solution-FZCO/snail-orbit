@@ -22,7 +22,7 @@ __all__ = ('router',)
 
 
 router = APIRouter(
-    prefix='/{issue_id}/comment',
+    prefix='/{issue_id_or_alias}/comment',
     tags=['comment'],
 )
 
@@ -59,10 +59,10 @@ class IssueCommentUpdate(BaseModel):
 
 @router.get('/list')
 async def list_comments(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     query: ListParams = Depends(),
 ) -> BaseListOutput[IssueCommentOutput]:
-    issue = await m.Issue.find_one(m.Issue.id == issue_id)
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
@@ -92,10 +92,10 @@ async def list_comments(
 
 @router.get('/{comment_id}')
 async def get_comment(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
 ) -> SuccessPayloadOutput[IssueCommentOutput]:
-    issue = await m.Issue.find_one(m.Issue.id == issue_id)
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     user_ctx = current_user()
@@ -113,11 +113,11 @@ async def get_comment(
 
 @router.post('/')
 async def create_comment(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     body: IssueCommentCreate,
 ) -> SuccessPayloadOutput[IssueCommentOutput]:
     now = utcnow()
-    issue = await m.Issue.find_one(m.Issue.id == issue_id)
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
@@ -161,12 +161,12 @@ async def create_comment(
 
 @router.put('/{comment_id}')
 async def update_comment(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
     body: IssueCommentUpdate,
 ) -> SuccessPayloadOutput[IssueCommentOutput]:
     now = utcnow()
-    issue = await m.Issue.find_one(m.Issue.id == issue_id)
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
@@ -217,10 +217,10 @@ async def update_comment(
 
 @router.delete('/{comment_id}')
 async def delete_comment(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
 ) -> UUIDOutput:
-    issue = await m.Issue.find_one(m.Issue.id == issue_id)
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 

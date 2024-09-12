@@ -4,8 +4,9 @@ import { Box, Button, Stack, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import { FC } from "react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import isEqual from "fast-deep-equal/react";
+import { FC, useEffect, useState } from "react";
+import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { CreateIssueT } from "types";
@@ -27,16 +28,18 @@ type IssueFormProps = {
     defaultValues?: CreateIssueT;
     onSubmit: (formData: IssueFormData) => unknown;
     loading?: boolean;
-    hideCancel?: boolean;
+    hideGoBack?: boolean;
 };
 
 export const IssueForm: FC<IssueFormProps> = ({
     defaultValues,
     onSubmit,
     loading,
-    hideCancel,
+    hideGoBack,
 }) => {
     const { t } = useTranslation();
+
+    const [isDirty, setIsDirty] = useState(false);
 
     const methods = useForm<IssueFormData>({
         defaultValues,
@@ -54,6 +57,13 @@ export const IssueForm: FC<IssueFormProps> = ({
     const { data: projectData } = projectApi.useGetProjectQuery(
         watch("project_id") ?? skipToken,
     );
+
+    const watchedValues = useWatch({ control });
+
+    useEffect(() => {
+        const isDirty = !isEqual(watchedValues, defaultValues);
+        setIsDirty(isDirty);
+    }, [watchedValues, defaultValues]);
 
     return (
         <FormProvider {...methods}>
@@ -95,18 +105,19 @@ export const IssueForm: FC<IssueFormProps> = ({
                             variant="outlined"
                             size="small"
                             loading={loading}
+                            disabled={!isDirty || loading}
                         >
                             {t("save")}
                         </LoadingButton>
 
-                        {!hideCancel && (
-                            <Link to="..">
+                        {!hideGoBack && (
+                            <Link to="/issues">
                                 <Button
                                     variant="outlined"
                                     color="error"
                                     size="small"
                                 >
-                                    {t("cancel")}
+                                    {t("back")}
                                 </Button>
                             </Link>
                         )}
@@ -117,10 +128,11 @@ export const IssueForm: FC<IssueFormProps> = ({
                     <Controller
                         control={control}
                         name="project_id"
-                        render={({ field }) => (
+                        render={({ field, formState: { errors } }) => (
                             <ProjectField
                                 {...field}
                                 label={t("issues.form.project.label")}
+                                error={!!errors.project_id}
                             />
                         )}
                     />

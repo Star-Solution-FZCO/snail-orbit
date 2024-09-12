@@ -7678,6 +7678,13 @@ toposort@^2.0.2:
   resolved "https://registry.yarnpkg.com/toposort/-/toposort-2.0.2.tgz#ae21768175d1559d48bef35420b2f4962f09c330"
   integrity sha512-0a5EOkAUp8D4moMi2W8ZF8jcga7BgZd91O/yabJCFY8az+XSzeGyTKs0Aoo897iV1Nj6guFq8orWDS96z91oGg==
 
+transliteration@^2.3.5:
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/transliteration/-/transliteration-2.3.5.tgz#8f92309575f69e4a8a525dab4ff705ebcf961c45"
+  integrity sha512-HAGI4Lq4Q9dZ3Utu2phaWgtm3vB6PkLUFqWAScg/UW+1eZ/Tg6Exo4oC0/3VUol/w4BlefLhUUSVBr/9/ZGQOw==
+  dependencies:
+    yargs "^17.5.1"
+
 trim-lines@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/trim-lines/-/trim-lines-3.0.1.tgz#d802e332a07df861c48802c04321017b1bd87338"
