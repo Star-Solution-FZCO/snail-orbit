@@ -8,7 +8,7 @@ export const SortableItem: FC<SortableItemProps> = ({
     disabled,
     id,
     index,
-    renderItem,
+    renderItemContent,
     style,
     containerId,
     getIndex,
@@ -52,7 +52,7 @@ export const SortableItem: FC<SortableItemProps> = ({
             transform={transform}
             fadeIn={mountedWhileDragging}
             listeners={listeners}
-            renderItem={renderItem}
+            renderItemContent={renderItemContent}
         />
     );
 };

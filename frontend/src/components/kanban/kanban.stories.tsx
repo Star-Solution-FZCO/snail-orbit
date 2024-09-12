@@ -33,7 +33,7 @@ export const Kanban: Story = {
     render: () => {
         return (
             <Box sx={{ width: "100dvw", height: 1 }}>
-                <KanbanComp items={items} />
+                <KanbanComp items={items} renderItemContent={() => "test"} />
             </Box>
         );
     },

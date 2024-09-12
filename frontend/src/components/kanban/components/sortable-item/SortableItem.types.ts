@@ -1,5 +1,6 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
-import { CSSProperties, ReactElement } from "react";
+import { CSSProperties } from "react";
+import { ItemProps } from "../item";
 
 export type SortableItemProps = {
     containerId: UniqueIdentifier;
@@ -8,6 +9,6 @@ export type SortableItemProps = {
     disabled?: boolean;
     style(args: any): CSSProperties;
     getIndex(id: UniqueIdentifier): number;
-    renderItem(): ReactElement;
+    renderItemContent?: ItemProps["renderItemContent"];
     wrapperStyle({ index }: { index: number }): CSSProperties;
 };

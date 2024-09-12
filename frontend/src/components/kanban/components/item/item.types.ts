@@ -1,6 +1,6 @@
 import { DraggableSyntheticListeners } from "@dnd-kit/core";
 import { Transform } from "@dnd-kit/utilities";
-import { CSSProperties, ReactElement, ReactNode, Ref } from "react";
+import { CSSProperties, ReactNode } from "react";
 
 export type ItemProps = {
     dragOverlay?: boolean;
@@ -17,17 +17,13 @@ export type ItemProps = {
     transition?: string | null;
     wrapperStyle?: CSSProperties;
     value: ReactNode;
-    renderItem?(args: {
+    renderItemContent?(args: {
         dragOverlay: boolean;
         dragging: boolean;
         sorting: boolean;
         index: number | undefined;
         fadeIn: boolean;
-        listeners: DraggableSyntheticListeners;
-        ref: Ref<HTMLElement>;
-        style: CSSProperties | undefined;
-        transform: ItemProps["transform"];
-        transition: ItemProps["transition"];
+        disabled: boolean;
         value: ItemProps["value"];
-    }): ReactElement;
+    }): ReactNode;
 };
