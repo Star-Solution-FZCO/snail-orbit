@@ -142,7 +142,7 @@ async def create_issue(
 
 @router.put('/{issue_id_or_alias}')
 async def update_issue(
-    issue_id_or_alias: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     body: IssueUpdate,
 ) -> SuccessPayloadOutput[IssueOutput]:
     user_ctx = current_user()
