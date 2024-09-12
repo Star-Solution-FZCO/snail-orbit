@@ -5,11 +5,12 @@ import {
     Divider,
     Typography,
 } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, Navigate } from "@tanstack/react-router";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi } from "store";
+import { slugify } from "transliteration";
 import { CreateIssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
 import { IssueComments } from "../components/issue_comments";
@@ -59,6 +60,23 @@ const IssueView: FC = () => {
                         t("issues.item.fetch.error")}
                 </Typography>
             </Container>
+        );
+    }
+
+    if (
+        issue &&
+        issue.payload.id_readable &&
+        issue.payload.id_readable !== issueId
+    ) {
+        return (
+            <Navigate
+                to="/issues/$issueId/$subject"
+                params={{
+                    issueId: issue.payload.id_readable,
+                    subject: slugify(issue.payload.subject),
+                }}
+                replace
+            />
         );
     }
 

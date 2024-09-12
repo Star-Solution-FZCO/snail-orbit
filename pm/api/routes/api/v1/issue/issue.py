@@ -140,16 +140,14 @@ async def create_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.put('/{issue_id}')
+@router.put('/{issue_id_or_alias}')
 async def update_issue(
-    issue_id: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId,
     body: IssueUpdate,
 ) -> SuccessPayloadOutput[IssueOutput]:
     user_ctx = current_user()
     now = utcnow()
-    obj: m.Issue | None = await m.Issue.find_one(
-        m.Issue.id == issue_id, fetch_links=True
-    )
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     if body.board_position:

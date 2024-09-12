@@ -63,8 +63,8 @@ class Issue(Document):
     @classmethod
     async def find_one_by_id_or_alias(cls, id_or_alias: PydanticObjectId | str) -> Self:
         if isinstance(id_or_alias, str):
-            return await cls.find_one(cls.aliases == id_or_alias)
-        return await cls.find_one(cls.id == id_or_alias)
+            return await cls.find_one(cls.aliases == id_or_alias, fetch_links=True)
+        return await cls.find_one(cls.id == id_or_alias, fetch_links=True)
 
     async def get_project(self, fetch_links: bool = False) -> Project:
         pr: Project | None = await Project.find_one(

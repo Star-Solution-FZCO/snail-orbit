@@ -3,11 +3,12 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ProjectT } from "types";
 import * as yup from "yup";
+import { generateSlug } from "../utils";
 
 const projectSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
@@ -37,10 +38,22 @@ const ProjectForm: FC<IProjectFormProps> = ({
         register,
         handleSubmit,
         formState: { errors },
+        setValue,
+        watch,
     } = useForm({
         defaultValues,
         resolver: yupResolver(projectSchema),
     });
+
+    const name = watch("name");
+    const slug = watch("slug");
+
+    useEffect(() => {
+        if (!defaultValues) {
+            const slug = generateSlug(name);
+            setValue("slug", slug);
+        }
+    }, [name]);
 
     return (
         <Box
@@ -64,6 +77,9 @@ const ProjectForm: FC<IProjectFormProps> = ({
             <TextField
                 {...register("slug")}
                 label={t("projects.form.slug")}
+                InputLabelProps={{
+                    shrink: !!slug,
+                }}
                 error={!!errors.slug}
                 helperText={t(errors.slug?.message || "")}
                 variant="outlined"
