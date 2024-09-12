@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Self
 from uuid import UUID
 
 from beanie import Document, PydanticObjectId
@@ -87,6 +87,14 @@ class StateField(BaseModel):
     is_resolved: bool = False
     is_closed: bool = False
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, StateField):
+            return False
+        return self.state == other.state
+
+    def __hash__(self) -> int:
+        return hash(self.state)
+
 
 class StateOption(BaseModel):
     id: UUID
@@ -134,6 +142,20 @@ class CustomFieldLink(BaseModel):
     id: PydanticObjectId
     name: str
     type: CustomFieldTypeT
+
+    @classmethod
+    def from_obj(cls, obj: CustomField) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
+        )
+
+    async def resolve(self) -> CustomField:
+        obj = await CustomField.find_one(CustomField.id == self.id, with_children=True)
+        if obj is None:
+            raise ValueError(f'CustomField not found: {self.id}')
+        return obj
 
 
 class StringCustomField(CustomField):

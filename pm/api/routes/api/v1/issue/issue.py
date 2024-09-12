@@ -31,16 +31,10 @@ class IssueCreate(BaseModel):
     attachments: list[UUID] = Field(default_factory=list)
 
 
-class BoardPosition(BaseModel):
-    board_id: PydanticObjectId
-    after_issue: PydanticObjectId | None
-
-
 class IssueUpdate(BaseModel):
     subject: str | None = None
     text: str | None = None
     fields: dict[str, Any] | None = None
-    board_position: BoardPosition | None = None
     attachments: list[UUID] | None = None
 
 
@@ -142,7 +136,7 @@ async def create_issue(
 
 @router.put('/{issue_id_or_alias}')
 async def update_issue(
-    issue_id_or_alias: PydanticObjectId,
+    issue_id_or_alias: PydanticObjectId | str,
     body: IssueUpdate,
 ) -> SuccessPayloadOutput[IssueOutput]:
     user_ctx = current_user()
@@ -150,15 +144,9 @@ async def update_issue(
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
-    if body.board_position:
-        board = await m.Board.find_one(m.Board.id == body.board_position.board_id)
-        if not board:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board not found')
     project = await obj.get_project(fetch_links=True)
     validation_errors = []
     for k, v in body.dict(exclude_unset=True).items():
-        if k == 'board_position':
-            continue
         if k == 'fields':
             f_val, validation_errors = await validate_custom_fields_values(
                 v, project, obj
@@ -202,9 +190,6 @@ async def update_issue(
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         )
-    if body.board_position:
-        board.move_issue(obj.id, after_id=body.board_position.after_issue)
-        await board.save_changes()
     if obj.is_changed:
         await obj.replace()
         await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
