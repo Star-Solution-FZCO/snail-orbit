@@ -130,7 +130,11 @@ const NavBar = () => {
                     </IconButton>
                 )}
 
-                <Avatar sx={{ width: 32, height: 32 }} variant="rounded" src={user?.avatar} />
+                <Avatar
+                    sx={{ width: 32, height: 32 }}
+                    variant="rounded"
+                    src={user?.avatar}
+                />
                 <IconButton onClick={handleLogout} size="small">
                     <LogoutIcon />
                 </IconButton>

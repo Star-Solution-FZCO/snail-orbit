@@ -50,7 +50,6 @@ const iconStyles = (hoverColor: string): SxProps<Theme> => ({
 });
 
 interface IActionButtonsProps {
-    issueId: string;
     comment: CommentT;
     isOwner: boolean;
     onEdit: (comment: CommentT) => void;
@@ -58,7 +57,6 @@ interface IActionButtonsProps {
 }
 
 const ActionButtons: FC<IActionButtonsProps> = ({
-    issueId,
     comment,
     isOwner,
     onEdit,
@@ -67,7 +65,8 @@ const ActionButtons: FC<IActionButtonsProps> = ({
     const { t } = useTranslation();
 
     const handleClickCopyLink = () => {
-        const commentUrl = `${window.location.origin}/issues/${issueId}#comment-${comment.id}`;
+        const pageUrl = `${window.location.protocol + "//" + window.location.hostname + window.location.pathname}`;
+        const commentUrl = `${pageUrl}#comment-${comment.id}`;
 
         navigator.clipboard
             .writeText(commentUrl)
@@ -229,7 +228,6 @@ const CommentCard: FC<ICommentCardProps> = ({
                     </Box>
 
                     <ActionButtons
-                        issueId={issueId}
                         comment={comment}
                         isOwner={isOwner}
                         onEdit={onEdit}

@@ -5,6 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
+import { slugify } from "transliteration";
 import { IssueT } from "types";
 import { formatErrorMessages, useListQueryParams } from "utils";
 
@@ -37,10 +38,13 @@ const IssueList: FC = () => {
     );
 
     const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
+        const issueId = row.id_readable || row.id;
+        const subject = slugify(row.subject);
         navigate({
-            to: "/issues/$issueId",
+            to: "/issues/$issueId/$subject",
             params: {
-                issueId: row.id,
+                issueId,
+                subject,
             },
         });
     };

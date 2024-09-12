@@ -5,6 +5,7 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi } from "store";
+import { slugify } from "transliteration";
 import { CreateIssueT } from "types";
 import { toastApiError } from "utils";
 
@@ -21,10 +22,14 @@ const IssueCreate: FC = () => {
         createIssue(formData)
             .unwrap()
             .then((response) => {
+                const issueId =
+                    response.payload.id_readable || response.payload.id;
+                const subject = slugify(response.payload.subject);
                 navigate({
-                    to: "/issues/$issueId",
+                    to: "/issues/$issueId/$subject",
                     params: {
-                        issueId: response.payload.id,
+                        issueId,
+                        subject,
                     },
                 });
                 toast.success(t("issues.create.success"));

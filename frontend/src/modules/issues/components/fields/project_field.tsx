@@ -5,12 +5,13 @@ import { SelectField, SelectFieldOptionType } from "./select_field";
 
 type ProjectFieldProps = {
     value: string;
-    onChange: (value: string) => void;
     label: string;
+    onChange: (value: string) => void;
+    error?: boolean;
 };
 
 export const ProjectField: FC<ProjectFieldProps> = forwardRef(
-    ({ value, onChange, label }, ref) => {
+    ({ value, label, onChange, error }, ref) => {
         const [trigger, { data, isLoading }] =
             projectApi.useLazyListProjectQuery();
 
@@ -29,15 +30,16 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
 
         return (
             <SelectField
-                loading={isLoading}
+                id="projects"
+                ref={ref}
+                label={label}
                 options={options}
                 value={value}
                 cardValue={fullProject?.payload.name || "?"}
                 onChange={(value) => onChange(value as string)}
-                label={label}
                 onOpened={trigger}
-                ref={ref}
-                id="projects"
+                loading={isLoading}
+                error={error}
             />
         );
     },

@@ -159,6 +159,9 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                                 error={!!errors.type}
                                 size="small"
                             >
+                                <MenuItem>
+                                    {t("customFields.form.noDefaultValue")}
+                                </MenuItem>
                                 {defaultValues?.options?.map((option) => (
                                     <MenuItem
                                         key={option.uuid}

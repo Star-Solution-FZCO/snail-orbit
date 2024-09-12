@@ -25,28 +25,30 @@ type ValueType<T extends boolean | undefined> = AutocompleteValue<
 >;
 
 type SelectFieldProps<T extends boolean | undefined> = {
-    value: SelectFieldValueType<T>;
-    onChange: (value: SelectFieldValueType<T>) => void;
+    id: string;
     options: SelectFieldOptionType[];
     label: string;
-    multiple?: T;
-    loading?: boolean;
-    onOpened?: () => unknown;
+    value: SelectFieldValueType<T>;
     cardValue?: string;
-    id: string;
+    onChange: (value: SelectFieldValueType<T>) => void;
+    onOpened?: () => unknown;
+    loading?: boolean;
+    multiple?: T;
+    error?: boolean;
 };
 
 const SelectFieldComp = <T extends boolean | undefined>(
     {
-        value,
-        onChange,
+        id,
         options,
         label,
-        multiple,
-        loading,
-        onOpened,
+        value,
         cardValue: customCardValue,
-        id,
+        onChange,
+        onOpened,
+        loading,
+        multiple,
+        error,
     }: SelectFieldProps<T>,
     ref: ForwardedRef<unknown>,
 ) => {
@@ -54,14 +56,19 @@ const SelectFieldComp = <T extends boolean | undefined>(
 
     const initialValue = useMemo(() => {
         if (multiple && !value) return [] as unknown as ValueType<T>;
+
         if (!value) return undefined;
+
         if (!Array.isArray(value)) return undefined;
+
         return options.filter((el) => value.includes(el.id)) as ValueType<T>;
     }, [options, value]);
 
     const cardValue = useMemo(() => {
         if (customCardValue) return customCardValue;
+
         if (!value || !value.length) return undefined;
+
         if (!Array.isArray(value)) return value as string;
         else return value.join(", ");
     }, [multiple, value, customCardValue]);
@@ -70,16 +77,23 @@ const SelectFieldComp = <T extends boolean | undefined>(
         _: SyntheticEvent,
         value: FormAutocompleteValueType | FormAutocompleteValueType[] | null,
     ) => {
+        const getValueId = (val: FormAutocompleteValueType | null) =>
+            val ? val.id : "";
+
+        const getMultipleValueIds = (
+            val: FormAutocompleteValueType[] | null,
+        ) => (val ? val.map((el) => el.id) : []);
+
         if (multiple) {
-            if (!value) onChange([] as string[] as SelectFieldValueType<T>);
-            else if (Array.isArray(value))
-                onChange(value.map((el) => el.id) as SelectFieldValueType<T>);
-            else onChange([value.id] as SelectFieldValueType<T>);
+            const result = Array.isArray(value)
+                ? getMultipleValueIds(value)
+                : getMultipleValueIds(value ? [value] : null);
+            onChange(result as SelectFieldValueType<T>);
         } else {
-            if (!value) onChange("" as SelectFieldValueType<T>);
-            else if (Array.isArray(value))
-                onChange(value[0].id as SelectFieldValueType<T>);
-            else onChange(value.id as SelectFieldValueType<T>);
+            const result = Array.isArray(value)
+                ? getValueId(value[0])
+                : getValueId(value);
+            onChange(result as SelectFieldValueType<T>);
         }
     };
 
@@ -92,19 +106,21 @@ const SelectFieldComp = <T extends boolean | undefined>(
             <FieldCard
                 label={label}
                 value={cardValue || "?"}
-                orientation="vertical"
                 onClick={(e) => setAnchorEl(e.currentTarget)}
+                orientation="vertical"
+                error={error}
             />
+
             <FormAutocompletePopover
+                id={id}
                 ref={ref}
                 anchorEl={anchorEl}
-                id={id}
-                open={!!anchorEl}
-                onClose={() => setAnchorEl(null)}
                 options={options}
-                onChange={handleChange}
-                multiple={multiple}
                 value={initialValue}
+                onClose={() => setAnchorEl(null)}
+                onChange={handleChange}
+                open={!!anchorEl}
+                multiple={multiple}
                 loading={loading}
             />
         </>
