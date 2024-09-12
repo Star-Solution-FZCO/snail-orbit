@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from http import HTTPStatus
+from typing import Any
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -8,6 +9,8 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
+from pm.api.events_bus import Event, EventType
+from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
@@ -19,6 +22,7 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.workflows import WorkflowException
 
 __all__ = ('router',)
 
@@ -341,6 +345,75 @@ async def get_board_issues(
             else []
         ),
     )
+
+
+class IssueMoveBody(BaseModel):
+    after_issue: PydanticObjectId | None = None
+    column: Any | None = None
+    swimlane: Any | None = None
+
+
+@router.put('/{board_id}/issues/{issue_id}')
+async def move_issue(
+    board_id: PydanticObjectId,
+    issue_id: PydanticObjectId,
+    body: IssueMoveBody,
+) -> ModelIdOutput:
+    board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
+    if not issue:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    data = body.dict(exclude_unset=True)
+    if 'column' in data:
+        column_field = await board.column_field.resolve()
+        column = validate_custom_field_values(column_field, [data['column']])[0]
+        if column not in board.columns:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid column')
+        if not (issue_field := issue.get_field_by_id(board.column_field.id)):
+            raise HTTPException(
+                HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no column field'
+            )
+        issue_field.value = column
+    if 'swimlane' in data:
+        if not board.swimlane_field:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board has no swimlanes')
+        swimlane_field = await board.swimlane_field.resolve()
+        swimlane = validate_custom_field_values(swimlane_field, [data['swimlane']])[0]
+        if swimlane not in board.swimlanes:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid swimlane')
+        if not (issue_field := issue.get_field_by_id(board.swimlane_field.id)):
+            raise HTTPException(
+                HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no swimlane field'
+            )
+        issue_field.value = swimlane
+    if body.after_issue:
+        after_issue: m.Issue | None = await m.Issue.find_one(
+            m.Issue.id == body.after_issue
+        )
+        if not after_issue:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'After issue not found')
+    else:
+        after_issue = None
+    if issue.is_changed:
+        pr = await issue.get_project(fetch_links=True)
+        try:
+            for wf in pr.workflows:
+                await wf.run(issue)
+        except WorkflowException as err:
+            raise ValidateModelException(
+                payload=IssueOutput.from_obj(issue),
+                error_messages=[err.msg],
+                error_fields=err.fields_errors,
+            )
+        await issue.replace()
+        await Event(
+            type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)}
+        ).send()
+    board.move_issue(issue.id, after_issue.id if after_issue else None)
+    await board.save_changes()
+    return ModelIdOutput.make(issue_id)
 
 
 def _projects_has_custom_field(
