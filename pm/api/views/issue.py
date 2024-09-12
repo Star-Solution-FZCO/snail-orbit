@@ -3,7 +3,7 @@ from typing import Any, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 import pm.models as m
 
@@ -97,6 +97,11 @@ class IssueOutput(BaseModel):
     text: str | None
     fields: dict[str, CustomFieldValueOut]
     attachments: list[IssueAttachmentOut]
+
+    @computed_field
+    @property
+    def id_readable(self) -> str | None:
+        return self.aliases[-1] if self.aliases else None
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
