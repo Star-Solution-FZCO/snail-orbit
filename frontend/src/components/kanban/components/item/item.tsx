@@ -15,7 +15,7 @@ const Item = memo(
                 height,
                 index,
                 listeners,
-                renderItem,
+                renderItemContent,
                 sorting,
                 style,
                 transition,
@@ -37,21 +37,6 @@ const Item = memo(
                     document.body.style.cursor = "";
                 };
             }, [dragOverlay]);
-
-            if (renderItem)
-                return renderItem({
-                    dragOverlay: !!dragOverlay,
-                    dragging: !!dragging,
-                    sorting: !!sorting,
-                    index,
-                    fadeIn: !!fadeIn,
-                    listeners,
-                    ref,
-                    style,
-                    transform,
-                    transition,
-                    value,
-                });
 
             return (
                 <ItemContainer
@@ -91,7 +76,18 @@ const Item = memo(
                         {...props}
                         tabIndex={0}
                     >
-                        {value}
+                        {renderItemContent
+                            ? renderItemContent({
+                                  dragging: !!dragging,
+                                  dragOverlay: !!dragOverlay,
+                                  disabled: !!disabled,
+                                  index,
+                                  fadeIn: !!fadeIn,
+                                  sorting: !!sorting,
+                                  value,
+                                  ...props,
+                              })
+                            : value}
                     </ItemStyled>
                 </ItemContainer>
             );

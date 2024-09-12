@@ -41,8 +41,6 @@ export const DroppableSwimLine: FC<DroppableSwimLineProps> = ({
           items.includes(over.id)
         : false;
 
-    console.log("test", isDragging);
-
     return (
         <SwimLine
             ref={disabled ? undefined : setNodeRef}

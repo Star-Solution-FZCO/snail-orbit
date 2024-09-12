@@ -5,6 +5,7 @@ import {
     UniqueIdentifier,
 } from "@dnd-kit/core";
 import { CSSProperties } from "react";
+import { ItemProps } from "./components/item";
 
 export type Items = Record<
     UniqueIdentifier,
@@ -29,7 +30,7 @@ export type KanbanProps = {
     handle?: boolean;
     items?: Items;
     modifiers?: Modifiers;
-    renderItem?: any;
+    renderItemContent?: ItemProps["renderItemContent"];
     scrollable?: boolean;
     vertical?: boolean;
     wrapperStyle?(args: { index: number }): CSSProperties;

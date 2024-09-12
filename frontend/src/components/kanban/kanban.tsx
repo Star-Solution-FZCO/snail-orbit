@@ -54,7 +54,7 @@ export const Kanban: FC<KanbanProps> = ({
     getItemStyles = () => ({}),
     wrapperStyle = () => ({}),
     modifiers,
-    renderItem,
+    renderItemContent,
     vertical = false,
     scrollable,
 }) => {
@@ -76,6 +76,14 @@ export const Kanban: FC<KanbanProps> = ({
         for (const swimLine of Object.keys(items))
             for (const container of Object.keys(items[swimLine]))
                 res[container] = swimLine;
+        return res;
+    }, [items]);
+    const itemToContainerMap = useMemo(() => {
+        const res: Record<UniqueIdentifier, UniqueIdentifier> = {};
+        for (const swimLine of Object.keys(items))
+            for (const container of Object.keys(items[swimLine]))
+                for (const item of items[swimLine][container])
+                    res[item] = container;
         return res;
     }, [items]);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -162,28 +170,17 @@ export const Kanban: FC<KanbanProps> = ({
     );
 
     const findSwimLine = (id: UniqueIdentifier) => {
-        // TODO: Make it FASTER (prefer O(1))
         if (id in items) return id;
-        return Object.keys(items).find(
-            (swimLineId) =>
-                id in items[swimLineId] ||
-                Object.keys(items[swimLineId]).some((containerId) =>
-                    items[swimLineId][containerId].includes(id),
-                ),
-        );
+        if (containerToSwimLineMap[id]) return containerToSwimLineMap[id];
+        if (itemToContainerMap[id])
+            return containerToSwimLineMap[itemToContainerMap[id]];
+
+        return undefined;
     };
 
     const findContainer = (id: UniqueIdentifier) => {
-        // TODO: Make it FASTER (prefer O(1))
-        const swimLineIds = Object.keys(items);
-        for (const swimLineId of swimLineIds) {
-            const containers = items[swimLineId];
-            if (id in containers) return id;
-            const containerIds = Object.keys(containers);
-            for (const containerId of containerIds) {
-                if (containers[containerId].includes(id)) return containerId;
-            }
-        }
+        if (containerToSwimLineMap[id]) return id;
+        if (itemToContainerMap[id]) return itemToContainerMap[id];
 
         return undefined;
     };
@@ -426,7 +423,9 @@ export const Kanban: FC<KanbanProps> = ({
                                                         wrapperStyle={
                                                             wrapperStyle
                                                         }
-                                                        renderItem={renderItem}
+                                                        renderItemContent={
+                                                            renderItemContent
+                                                        }
                                                         containerId={
                                                             containerId
                                                         }
@@ -477,7 +476,7 @@ export const Kanban: FC<KanbanProps> = ({
                     isDragOverlay: true,
                 })}
                 wrapperStyle={wrapperStyle({ index: 0 })}
-                renderItem={renderItem}
+                renderItemContent={renderItemContent}
                 dragOverlay
             />
         );
@@ -510,7 +509,7 @@ export const Kanban: FC<KanbanProps> = ({
                             isDragOverlay: false,
                         })}
                         wrapperStyle={wrapperStyle({ index })}
-                        renderItem={renderItem}
+                        renderItemContent={renderItemContent}
                     />
                 ))}
             </Container>
