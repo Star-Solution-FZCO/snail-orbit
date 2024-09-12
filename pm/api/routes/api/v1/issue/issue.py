@@ -14,7 +14,7 @@ from pm.api.search.issue import transform_query
 from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueOutput
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.utils.dateutils import utcnow
 from pm.workflows import WorkflowException
 
@@ -194,6 +194,18 @@ async def update_issue(
         await obj.replace()
         await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.delete('/{issue_id_or_alias}')
+async def delete_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> ModelIdOutput:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    await obj.delete()
+    await Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}).send()
+    return ModelIdOutput.from_obj(obj)
 
 
 async def validate_custom_fields_values(
