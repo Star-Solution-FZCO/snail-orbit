@@ -16,6 +16,7 @@ __all__ = (
     'CustomFieldOutputWithStateOptions',
     'CustomFieldOutputWithEnumOptions',
     'CustomFieldOutputWithUserOptions',
+    'CustomFieldLinkOutput',
 )
 
 
@@ -40,6 +41,20 @@ class CustomFieldOutput(BaseModel):
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
+        )
+
+
+class CustomFieldLinkOutput(BaseModel):
+    id: PydanticObjectId
+    name: str
+    type: m.CustomFieldTypeT
+
+    @classmethod
+    def from_obj(cls, obj: m.CustomField | m.CustomFieldLink) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
         )
 
 

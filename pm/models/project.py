@@ -183,3 +183,9 @@ class ProjectLinkField(BaseModel):
             name=obj.name,
             slug=obj.slug,
         )
+
+    async def resolve(self, fetch_links: bool = False) -> Project:
+        pr = await Project.find_one(Project.id == self.id, fetch_links=fetch_links)
+        if not pr:
+            raise ValueError(f'Project {self.id} not found')
+        return pr
