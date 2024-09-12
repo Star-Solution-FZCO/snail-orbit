@@ -9,7 +9,14 @@ import pm.models as m
 
 from .user import UserOutput
 
-__all__ = ('IssueOutput', 'IssueAttachmentOut')
+__all__ = (
+    'IssueOutput',
+    'IssueAttachmentOut',
+    'ProjectField',
+    'CustomFieldValueOut',
+    'CustomFieldValueOutT',
+    'transform_custom_field_value',
+)
 
 CustomFieldValueOutT = (
     bool
@@ -35,11 +42,11 @@ class ProjectField(BaseModel):
     slug: str
 
     @classmethod
-    def from_obj(cls, obj: m.Issue) -> Self:
+    def from_obj(cls, obj: m.ProjectLinkField) -> Self:
         return cls(
-            id=obj.project.id,
-            name=obj.project.name,
-            slug=obj.project.slug,
+            id=obj.id,
+            name=obj.name,
+            slug=obj.slug,
         )
 
 
@@ -65,7 +72,7 @@ class IssueAttachmentOut(BaseModel):
         )
 
 
-def _transform_custom_field_value(value: m.CustomFieldValueT) -> CustomFieldValueOutT:
+def transform_custom_field_value(value: m.CustomFieldValueT) -> CustomFieldValueOutT:
     if isinstance(value, m.UserLinkField):
         return UserOutput.from_obj(value)
     if isinstance(value, list) and value and isinstance(value[0], m.UserLinkField):
@@ -85,7 +92,7 @@ class CustomFieldValueOut(BaseModel):
             id=obj.id,
             name=obj.name,
             type=obj.type,
-            value=_transform_custom_field_value(obj.value),
+            value=transform_custom_field_value(obj.value),
         )
 
 
@@ -108,7 +115,7 @@ class IssueOutput(BaseModel):
         return cls(
             id=obj.id,
             aliases=obj.aliases,
-            project=ProjectField.from_obj(obj),
+            project=ProjectField.from_obj(obj.project),
             subject=obj.subject,
             text=obj.text,
             fields={

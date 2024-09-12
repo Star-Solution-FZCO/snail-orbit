@@ -60,6 +60,9 @@ class Issue(Document):
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
 
+    def get_field_by_id(self, id_: PydanticObjectId) -> CustomFieldValue | None:
+        return next((field for field in self.fields if field.id == id_), None)
+
     @classmethod
     async def find_one_by_id_or_alias(cls, id_or_alias: PydanticObjectId | str) -> Self:
         if isinstance(id_or_alias, str):
