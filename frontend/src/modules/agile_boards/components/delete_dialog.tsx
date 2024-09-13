@@ -53,12 +53,7 @@ const DeleteAgileBoardDialog: FC<IDeleteAgileBoardDialogProps> = ({
             >
                 {t("agileBoards.delete.title")}
 
-                <IconButton
-                    sx={{ p: 0 }}
-                    onClick={onClose}
-                    size="small"
-                    disabled={isLoading}
-                >
+                <IconButton onClick={onClose} size="small" disabled={isLoading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

@@ -104,7 +104,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
             >
                 {t("projects.access.grantPermission")}
 
-                <IconButton sx={{ p: 0 }} onClick={handleClose} size="small">
+                <IconButton onClick={handleClose} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -206,12 +206,7 @@ const RevokProjectPermissionDialog: FC<IRevokeProjectPermissionDialogProps> = ({
                 alignItems="center"
             >
                 {t("projects.access.permissions.revoke.title")}?
-                <IconButton
-                    sx={{ p: 0 }}
-                    onClick={onClose}
-                    size="small"
-                    disabled={isLoading}
-                >
+                <IconButton onClick={onClose} size="small" disabled={isLoading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

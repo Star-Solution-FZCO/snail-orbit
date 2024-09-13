@@ -169,12 +169,7 @@ const RemoveProjectCustomFieldDialog: FC<
                 alignItems="center"
             >
                 {t("projects.customFields.remove.title")} "{customField?.name}"?
-                <IconButton
-                    sx={{ p: 0 }}
-                    onClick={onClose}
-                    size="small"
-                    disabled={isLoading}
-                >
+                <IconButton onClick={onClose} size="small" disabled={isLoading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

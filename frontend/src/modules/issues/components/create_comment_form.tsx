@@ -48,7 +48,7 @@ const UnsavedChangesDialog: FC<IUnsavedChangesDialogProps> = ({
             >
                 {t("issues.comments.unsavedChanges.title")}
 
-                <IconButton sx={{ p: 0 }} onClick={onClose} size="small">
+                <IconButton onClick={onClose} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
