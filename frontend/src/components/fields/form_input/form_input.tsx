@@ -11,6 +11,7 @@ import {
     useMemo,
     useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
 import { StyledContainer, StyledInput } from "./form_input.styles";
 
@@ -41,6 +42,8 @@ export const FormInputPopover = forwardRef(
         }: FormInputPopoverProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
+        const { t } = useTranslation();
+
         const [innerValue, setInnerValue] = useState<string>(value || "");
 
         const handleClose = () => {
@@ -88,7 +91,7 @@ export const FormInputPopover = forwardRef(
                                 onClick={handleSubmit}
                                 disabled={isSubmitDisabled}
                             >
-                                {submitButtonLabel || "Submit"}
+                                {submitButtonLabel || t("submit")}
                             </Button>
                             <Button
                                 size="small"
@@ -96,7 +99,7 @@ export const FormInputPopover = forwardRef(
                                 color="error"
                                 onClick={handleClose}
                             >
-                                {cancelButtonLabel || "Cancel"}
+                                {cancelButtonLabel || t("cancel")}
                             </Button>
                         </Stack>
                     </StyledContainer>

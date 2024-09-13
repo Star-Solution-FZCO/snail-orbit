@@ -1,8 +1,8 @@
 import { FC, forwardRef } from "react";
 import { customFieldsApi } from "store";
 import { useListQueryParams } from "utils";
-import { enumToSelectOption } from "../utils/enum_to_select_option";
 import { SelectField } from "./select_field";
+import { enumToSelectOption } from "./utils";
 
 type EnumFieldProps = {
     value?: string | string[];

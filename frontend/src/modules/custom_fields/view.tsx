@@ -49,6 +49,31 @@ const ErrorContainer: FC<{ error: any }> = ({ error }) => {
     );
 };
 
+const isNonPrimitiveType = (customField: CustomFieldT) => {
+    return (
+        ["enum", "enum_multi", "user", "user_multi"].includes(
+            customField.type,
+        ) || customField.type === "state"
+    );
+};
+
+const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
+    customField,
+}) => {
+    const isEnumType = ["enum", "enum_multi"].includes(customField.type);
+    const isUserType = ["user", "user_multi"].includes(customField.type);
+
+    if (isEnumType) {
+        return <CustomFieldEnumOptionsEditor customField={customField} />;
+    }
+
+    if (isUserType) {
+        return <CustomFieldUserOptionsEditor customField={customField} />;
+    }
+
+    return null;
+};
+
 const CustomFieldView = () => {
     const { t } = useTranslation();
     const { customFieldId } = routeApi.useParams();
@@ -105,31 +130,6 @@ const CustomFieldView = () => {
             </Box>
         </Container>
     );
-};
-
-const isNonPrimitiveType = (customField: CustomFieldT) => {
-    return (
-        ["enum", "enum_multi", "user", "user_multi"].includes(
-            customField.type,
-        ) || customField.type === "state"
-    );
-};
-
-const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
-    customField,
-}) => {
-    const isEnumType = ["enum", "enum_multi"].includes(customField.type);
-    const isUserType = ["user", "user_multi"].includes(customField.type);
-
-    if (isEnumType) {
-        return <CustomFieldEnumOptionsEditor customField={customField} />;
-    }
-
-    if (isUserType) {
-        return <CustomFieldUserOptionsEditor customField={customField} />;
-    }
-
-    return null;
 };
 
 export { CustomFieldView };

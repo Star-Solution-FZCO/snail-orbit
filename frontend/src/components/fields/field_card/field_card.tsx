@@ -8,7 +8,7 @@ export type FieldCardProps = {
     onClick?: MouseEventHandler<HTMLDivElement>;
     sx?: SxProps;
     orientation?: "horizontal" | "vertical";
-    error?: boolean;
+    variant?: "standard" | "error";
 };
 
 export const FieldCard: FC<FieldCardProps> = ({
@@ -16,10 +16,10 @@ export const FieldCard: FC<FieldCardProps> = ({
     onClick,
     label,
     orientation = "horizontal",
-    error,
+    variant = "standard",
 }) => {
     return (
-        <FieldCardWrapper onClick={onClick} error={error}>
+        <FieldCardWrapper onClick={onClick} variant={variant}>
             <Stack
                 direction={orientation === "horizontal" ? "row" : "column"}
                 alignItems="baseline"

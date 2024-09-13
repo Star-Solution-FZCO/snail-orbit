@@ -20,13 +20,7 @@ import { toastApiError } from "utils";
 const UserAvatar: FC = () => {
     const user = useAppSelector((state) => state.profile.user);
     return (
-        <Avatar sx={{ width: 32, height: 32, mt: 0.5 }}>
-            {user?.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-        </Avatar>
+        <Avatar sx={{ width: 32, height: 32, mt: 0.5 }} src={user?.avatar} />
     );
 };
 

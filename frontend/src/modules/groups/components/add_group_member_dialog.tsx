@@ -99,13 +99,8 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                                     fontWeight: "bold",
                                     mr: 2,
                                 }}
-                            >
-                                {user?.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()}
-                            </Avatar>
+                                src={user.avatar}
+                            />
 
                             <Typography>{user.name}</Typography>
                         </Box>

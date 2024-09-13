@@ -1,6 +1,6 @@
 import { CreateIssueT, FieldValueT, IssueT } from "types";
 
-export const issueToIssueForm = (issue: IssueT): CreateIssueT => ({
+export const transformIssue = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
     text: issue.text,
     project_id: issue.project.id,
@@ -16,4 +16,5 @@ export const issueToIssueForm = (issue: IssueT): CreateIssueT => ({
         },
         {} as Record<string, FieldValueT>,
     ),
+    attachments: issue.attachments,
 });

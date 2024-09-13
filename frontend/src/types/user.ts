@@ -2,11 +2,11 @@ export type BasicUserT = {
     id: string;
     name: string;
     email: string;
+    avatar: string;
 };
 
 export type UserT = BasicUserT & {
     is_admin: boolean;
-    avatar: string;
     origin: "local" | "wb";
 };
 

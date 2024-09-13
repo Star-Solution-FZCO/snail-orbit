@@ -22,16 +22,16 @@ const IssueList: FC = () => {
 
     const columns: GridColDef<IssueT>[] = useMemo(
         () => [
+            { field: "id_readable", headerName: t("issues.fields.id") },
+            {
+                field: "project",
+                headerName: t("issues.fields.project"),
+                valueGetter: (_, row) => row.project.name,
+            },
             {
                 field: "subject",
                 headerName: t("issues.fields.subject"),
                 flex: 1,
-            },
-            {
-                field: "project",
-                headerName: t("issues.fields.project"),
-                flex: 1,
-                valueGetter: (_, row) => row.project.name,
             },
         ],
         [t],
@@ -122,6 +122,7 @@ const IssueList: FC = () => {
                 loading={isLoading || isFetching}
                 paginationMode="server"
                 density="compact"
+                checkboxSelection
             />
         </Box>
     );

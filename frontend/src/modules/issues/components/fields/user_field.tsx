@@ -2,8 +2,8 @@ import { ForwardedRef, forwardRef, useEffect, useMemo } from "react";
 import { customFieldsApi } from "store";
 import { UserOptionT } from "types";
 import { useListQueryParams } from "utils";
-import { enumToSelectOption } from "../utils/enum_to_select_option";
 import { SelectField } from "./select_field";
+import { enumToSelectOption } from "./utils";
 
 type UserFieldValueType<T extends boolean | undefined> = T extends true
     ? string[]

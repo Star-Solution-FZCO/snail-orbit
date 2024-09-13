@@ -34,7 +34,7 @@ type SelectFieldProps<T extends boolean | undefined> = {
     onOpened?: () => unknown;
     loading?: boolean;
     multiple?: T;
-    error?: boolean;
+    variant?: "standard" | "error";
 };
 
 const SelectFieldComp = <T extends boolean | undefined>(
@@ -48,7 +48,7 @@ const SelectFieldComp = <T extends boolean | undefined>(
         onOpened,
         loading,
         multiple,
-        error,
+        variant = "standard",
     }: SelectFieldProps<T>,
     ref: ForwardedRef<unknown>,
 ) => {
@@ -107,8 +107,8 @@ const SelectFieldComp = <T extends boolean | undefined>(
                 label={label}
                 value={cardValue || "?"}
                 onClick={(e) => setAnchorEl(e.currentTarget)}
+                variant={variant}
                 orientation="vertical"
-                error={error}
             />
 
             <FormAutocompletePopover

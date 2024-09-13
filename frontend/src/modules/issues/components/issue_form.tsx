@@ -4,9 +4,8 @@ import { Box, Button, Stack, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import isEqual from "fast-deep-equal/react";
-import { FC, useEffect, useState } from "react";
-import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
+import { FC } from "react";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { CreateIssueT } from "types";
@@ -39,8 +38,6 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [isDirty, setIsDirty] = useState(false);
-
     const methods = useForm<IssueFormData>({
         defaultValues,
         resolver: yupResolver(issueSchema),
@@ -50,20 +47,13 @@ export const IssueForm: FC<IssueFormProps> = ({
         control,
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isDirty },
         watch,
     } = methods;
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         watch("project_id") ?? skipToken,
     );
-
-    const watchedValues = useWatch({ control });
-
-    useEffect(() => {
-        const isDirty = !isEqual(watchedValues, defaultValues);
-        setIsDirty(isDirty);
-    }, [watchedValues, defaultValues]);
 
     return (
         <FormProvider {...methods}>

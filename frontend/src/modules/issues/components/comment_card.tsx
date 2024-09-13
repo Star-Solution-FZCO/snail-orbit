@@ -33,13 +33,7 @@ interface IAuthorAvatarProps {
 }
 
 const AuthorAvatar: FC<IAuthorAvatarProps> = ({ author }) => (
-    <Avatar sx={{ width: 32, height: 32 }}>
-        {author.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()}
-    </Avatar>
+    <Avatar sx={{ width: 32, height: 32 }} src={author.avatar} />
 );
 
 const iconStyles = (hoverColor: string): SxProps<Theme> => ({
@@ -65,7 +59,7 @@ const ActionButtons: FC<IActionButtonsProps> = ({
     const { t } = useTranslation();
 
     const handleClickCopyLink = () => {
-        const pageUrl = `${window.location.protocol + "//" + window.location.hostname + window.location.pathname}`;
+        const pageUrl = `${window.location.protocol + "//" + window.location.hostname + window.location.pathname + window.location.port}`;
         const commentUrl = `${pageUrl}#comment-${comment.id}`;
 
         navigator.clipboard

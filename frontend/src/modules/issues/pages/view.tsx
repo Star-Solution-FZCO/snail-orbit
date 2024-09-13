@@ -5,38 +5,27 @@ import {
     Divider,
     Typography,
 } from "@mui/material";
-import { getRouteApi, Navigate } from "@tanstack/react-router";
-import { FC } from "react";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { issueApi } from "store";
 import { slugify } from "transliteration";
 import { CreateIssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
+import { IssueHeading } from "../components/heading";
 import { IssueComments } from "../components/issue_comments";
 import IssueForm from "../components/issue_form";
-import { issueToIssueForm } from "../utils/issue_to_issue_form";
+import { transformIssue } from "../utils";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
 const IssueView: FC = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { issueId } = routeApi.useParams();
 
-    const {
-        data: issue,
-        isLoading: issueLoading,
-        error: issueError,
-        refetch,
-    } = issueApi.useGetIssuesQuery(issueId);
-
-    const {
-        data: comments,
-        isLoading: commentsLoading,
-        error: commentsError,
-    } = issueApi.useListIssueCommentsQuery({
-        id: issueId,
-    });
+    const { data, isLoading, error, refetch } =
+        issueApi.useGetIssuesQuery(issueId);
 
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssuesMutation();
@@ -44,41 +33,47 @@ const IssueView: FC = () => {
     const handleSubmit = (formData: CreateIssueT) => {
         updateIssue({ ...formData, id: issueId })
             .unwrap()
-            .then(() => {
-                toast.success(t("issues.update.success"));
+            .then((response) => {
+                const issueId =
+                    response.payload.id_readable || response.payload.id;
+                const subject = slugify(response.payload.subject);
+                navigate({
+                    to: "/issues/$issueId/$subject",
+                    params: {
+                        issueId,
+                        subject,
+                    },
+                    replace: true,
+                });
             })
             .catch(toastApiError)
             .finally(refetch);
     };
 
-    if (issueError || commentsError) {
+    if (error) {
         return (
             <Container>
                 <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(issueError) ||
-                        formatErrorMessages(commentsError) ||
-                        t("issues.item.fetch.error")}
+                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
                 </Typography>
             </Container>
         );
     }
 
-    if (
-        issue &&
-        issue.payload.id_readable &&
-        issue.payload.id_readable !== issueId
-    ) {
-        return (
-            <Navigate
-                to="/issues/$issueId/$subject"
-                params={{
-                    issueId: issue.payload.id_readable,
-                    subject: slugify(issue.payload.subject),
-                }}
-                replace
-            />
-        );
-    }
+    const issue = data?.payload;
+
+    useEffect(() => {
+        if (issue && issue.id_readable && issue.id_readable !== issueId) {
+            navigate({
+                to: "/issues/$issueId/$subject",
+                params: {
+                    issueId: issue.id_readable,
+                    subject: slugify(issue.subject),
+                },
+                replace: true,
+            });
+        }
+    }, [issue]);
 
     return (
         <Container
@@ -91,22 +86,18 @@ const IssueView: FC = () => {
             }}
             disableGutters
         >
-            {issueLoading || commentsLoading ? (
+            {isLoading ? (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={36} />
                 </Box>
             ) : (
                 <>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {issue?.payload.subject}
-                    </Typography>
+                    {issue && <IssueHeading issue={issue} />}
 
                     <IssueForm
                         onSubmit={handleSubmit}
-                        loading={issueLoading || updateLoading}
-                        defaultValues={
-                            issue?.payload && issueToIssueForm(issue.payload)
-                        }
+                        loading={isLoading || updateLoading}
+                        defaultValues={issue && transformIssue(issue)}
                         hideGoBack
                     />
 
@@ -114,10 +105,7 @@ const IssueView: FC = () => {
                     <Box width="calc(100% - 324px)">
                         <Divider sx={{ mb: 2 }} />
 
-                        <IssueComments
-                            issueId={issueId}
-                            comments={comments?.payload.items || []}
-                        />
+                        <IssueComments issueId={issueId} />
                     </Box>
                 </>
             )}

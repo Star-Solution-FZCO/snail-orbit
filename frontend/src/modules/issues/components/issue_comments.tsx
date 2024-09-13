@@ -3,17 +3,19 @@ import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
     IconButton,
+    Typography,
 } from "@mui/material";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { issueApi } from "store";
 import { CommentT } from "types";
-import { toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 
@@ -86,10 +88,13 @@ const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
 
 interface IIssueCommentsProps {
     issueId: string;
-    comments: CommentT[];
 }
 
-const IssueComments: FC<IIssueCommentsProps> = ({ issueId, comments }) => {
+const IssueComments: FC<IIssueCommentsProps> = ({ issueId }) => {
+    const { data, isLoading, error } = issueApi.useListIssueCommentsQuery({
+        id: issueId,
+    });
+
     const [currentEditingComment, setCurrentEditingComment] =
         useState<CommentT | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -104,11 +109,26 @@ const IssueComments: FC<IIssueCommentsProps> = ({ issueId, comments }) => {
         setCurrentEditingComment(null);
     };
 
+    const comments = data?.payload.items || [];
+
     return (
         <Box display="flex" flexDirection="column">
             <Box pl={1} mb={3}>
                 <CreateCommentForm issueId={issueId} />
             </Box>
+
+            {error && (
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) ||
+                        t("issues.comments.fetch.error")}
+                </Typography>
+            )}
+
+            {isLoading && (
+                <Box display="flex" justifyContent="center">
+                    <CircularProgress color="inherit" size={20} />
+                </Box>
+            )}
 
             <Box display="flex" flexDirection="column" gap={1}>
                 {comments.map((comment) => (

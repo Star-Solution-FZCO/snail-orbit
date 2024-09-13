@@ -80,7 +80,7 @@ const NavBar = () => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleClose = () => {
+    const handleCloseMenu = () => {
         setAnchorEl(null);
     };
 
@@ -88,7 +88,7 @@ const NavBar = () => {
         navigate({
             to: path,
         });
-        handleClose();
+        handleCloseMenu();
     };
 
     const handleLogout = async () => {
@@ -132,8 +132,8 @@ const NavBar = () => {
 
                 <Avatar
                     sx={{ width: 32, height: 32 }}
-                    variant="rounded"
                     src={user?.avatar}
+                    variant="rounded"
                 />
                 <IconButton onClick={handleLogout} size="small">
                     <LogoutIcon />
@@ -143,7 +143,7 @@ const NavBar = () => {
             <Menu
                 anchorEl={anchorEl}
                 open={menuOpen}
-                onClose={handleClose}
+                onClose={handleCloseMenu}
                 anchorOrigin={{
                     vertical: "bottom",
                     horizontal: "right",
