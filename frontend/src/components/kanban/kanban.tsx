@@ -93,7 +93,7 @@ export const Kanban: FC<KanbanProps> = ({
     const isSortingContainer = activeId
         ? !!containerToSwimLineMap[activeId]
         : false;
-    const isSortingSwimLines = activeId ? swimLines.includes(activeId) : false;
+    // const isSortingSwimLines = activeId ? swimLines.includes(activeId) : false;
 
     const collisionDetectionStrategy: CollisionDetection = useCallback(
         (args) => {
@@ -238,7 +238,6 @@ export const Kanban: FC<KanbanProps> = ({
                 const overContainer = findContainer(overId);
                 const activeContainer = findContainer(active.id);
                 const activeType = active.data.current?.type;
-                const overType = over?.data.current?.type;
 
                 if (!overSwimLine || !activeSwimLine) {
                     return;
