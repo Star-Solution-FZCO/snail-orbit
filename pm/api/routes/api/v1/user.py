@@ -2,6 +2,7 @@ import asyncio
 from http import HTTPStatus
 from typing import Self
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
 
@@ -11,6 +12,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -64,6 +66,28 @@ async def list_users(
         limit=query.limit,
         offset=query.offset,
         items=results,
+    )
+
+
+@router.get('/select')
+async def select_users(
+    query: SelectParams = Depends(),
+):
+    q = m.User.find(
+        bo.Or(
+            bo.RegEx(m.User.name, query.search, 'i'),
+            bo.RegEx(m.User.email, query.search, 'i'),
+        )
+    ).sort(m.User.name)
+    results = []
+    return BaseListOutput.make(
+        count=await q.count(),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            UserOutput.from_obj(obj)
+            async for obj in q.limit(query.limit).skip(query.offset)
+        ],
     )
 
 
