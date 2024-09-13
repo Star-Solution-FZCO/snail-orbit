@@ -1,5 +1,6 @@
 import asyncio
 from http import HTTPStatus
+from typing import Self
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
@@ -10,6 +11,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
 
@@ -18,12 +20,21 @@ router = APIRouter(
 )
 
 
-class UserOutput(CrudOutput[m.User]):
-    email: str
-    name: str
+class UserFullOutput(UserOutput):
     is_active: bool
     is_admin: bool
     origin: m.UserOriginType
+
+    @classmethod
+    def from_obj(cls, obj: m.User) -> Self:
+        return cls(
+            id=obj.id,
+            email=obj.email,
+            name=obj.name,
+            is_active=obj.is_active,
+            is_admin=obj.is_admin,
+            origin=obj.origin,
+        )
 
 
 class UserCreate(CrudCreateBody[m.User]):
@@ -43,11 +54,11 @@ class UserUpdate(CrudUpdateBody[m.User]):
 @router.get('/list')
 async def list_users(
     query: ListParams = Depends(),
-) -> BaseListOutput[UserOutput]:
+) -> BaseListOutput[UserFullOutput]:
     q = m.User.find().sort(m.User.id)
     results = []
     async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(UserOutput.from_obj(obj))
+        results.append(UserFullOutput.from_obj(obj))
     return BaseListOutput.make(
         count=await q.count(),
         limit=query.limit,
@@ -59,27 +70,27 @@ async def list_users(
 @router.get('/{user_id}')
 async def get_user(
     user_id: PydanticObjectId,
-) -> SuccessPayloadOutput[UserOutput]:
+) -> SuccessPayloadOutput[UserFullOutput]:
     user = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
-    return SuccessPayloadOutput(payload=UserOutput.from_obj(user))
+    return SuccessPayloadOutput(payload=UserFullOutput.from_obj(user))
 
 
 @router.post('/')
 async def create_user(
     body: UserCreate,
-) -> SuccessPayloadOutput[UserOutput]:
+) -> SuccessPayloadOutput[UserFullOutput]:
     obj = body.create_obj(m.User)
     await obj.insert()
-    return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))
+    return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
 @router.put('/{user_id}')
 async def update_user(
     user_id: PydanticObjectId,
     body: UserUpdate,
-) -> SuccessPayloadOutput[UserOutput]:
+) -> SuccessPayloadOutput[UserFullOutput]:
     obj: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
@@ -92,4 +103,4 @@ async def update_user(
             m.UserMultiCustomField.update_user_embedded_links(obj),
             m.UserCustomField.update_user_embedded_links(obj),
         )
-    return SuccessPayloadOutput(payload=UserOutput.from_obj(obj))
+    return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
