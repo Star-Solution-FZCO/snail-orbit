@@ -118,7 +118,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
             >
                 {t("customFields.userOrGroup.add.title")}
 
-                <IconButton sx={{ p: 0 }} onClick={handleClose} size="small">
+                <IconButton onClick={handleClose} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -203,12 +203,7 @@ const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
             >
                 {t("customFields.userOrGroup.delete.title")}
 
-                <IconButton
-                    sx={{ p: 0 }}
-                    onClick={onClose}
-                    size="small"
-                    disabled={isLoading}
-                >
+                <IconButton onClick={onClose} size="small" disabled={isLoading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

@@ -1,18 +1,21 @@
 import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
+import { LoadingButton } from "@mui/lab";
 import {
+    Autocomplete,
     Avatar,
     Box,
+    Button,
     Dialog,
+    DialogActions,
     DialogContent,
     DialogTitle,
     IconButton,
     TextField,
-    Typography,
 } from "@mui/material";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
+import { UserT } from "types";
 import { toastApiError } from "utils";
 
 interface AddGroupMemberDialogProps {
@@ -28,19 +31,29 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const { data: users } = userApi.useListUserQuery({
+    const [user, setUser] = useState<UserT | null>(null);
+
+    const { data } = userApi.useListUserQuery({
         limit: 0,
         offset: 0,
     });
 
-    const [addGroupMember] = groupApi.useAddGroupMemberMutation();
+    const [addGroupMember, { isLoading }] =
+        groupApi.useAddGroupMemberMutation();
 
-    const handleClickAdd = (userId: string) => {
-        addGroupMember({ id: groupId, userId })
+    const handleClickAdd = () => {
+        if (!user) return;
+
+        addGroupMember({ id: groupId, userId: user.id })
             .unwrap()
-            .then(onClose)
+            .then(() => {
+                onClose();
+                setUser(null);
+            })
             .catch(toastApiError);
     };
+
+    const users = data?.payload?.items || [];
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -51,7 +64,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
             >
                 {t("groups.members.add")}
 
-                <IconButton sx={{ p: 0 }} onClick={onClose} size="small">
+                <IconButton onClick={onClose} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -59,54 +72,54 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
             <DialogContent
                 sx={{ display: "flex", flexDirection: "column", gap: 1 }}
             >
-                <TextField
-                    InputProps={{
-                        startAdornment: <SearchIcon />,
+                <Autocomplete
+                    value={user}
+                    options={users}
+                    getOptionLabel={(option) => option.name}
+                    onChange={(_, value) => setUser(value)}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            placeholder={t("groups.members.filter")}
+                        />
+                    )}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Avatar
+                                        sx={{ width: 24, height: 24 }}
+                                        src={option.avatar}
+                                    />
+                                    {option.name}
+                                </Box>
+                            </li>
+                        );
                     }}
-                    fullWidth
-                    placeholder={t("groups.members.filter")}
                     size="small"
-                    autoFocus
                 />
-
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    maxHeight="400px"
-                    overflow="auto"
-                >
-                    {users?.payload.items.map((user) => (
-                        <Box
-                            key={user.id}
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                cursor: "pointer",
-                                px: 2,
-                                py: 1,
-                                borderRadius: 1,
-                                "&:hover": {
-                                    bgcolor: "action.hover",
-                                },
-                            }}
-                            onClick={() => handleClickAdd(user.id)}
-                        >
-                            <Avatar
-                                sx={{
-                                    width: 24,
-                                    height: 24,
-                                    fontSize: 14,
-                                    fontWeight: "bold",
-                                    mr: 2,
-                                }}
-                                src={user.avatar}
-                            />
-
-                            <Typography>{user.name}</Typography>
-                        </Box>
-                    ))}
-                </Box>
             </DialogContent>
+
+            <DialogActions>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
+                    {t("cancel")}
+                </Button>
+
+                <LoadingButton
+                    onClick={handleClickAdd}
+                    variant="outlined"
+                    disabled={!user}
+                    loading={isLoading}
+                >
+                    {t("groups.members.add")}
+                </LoadingButton>
+            </DialogActions>
         </Dialog>
     );
 };
