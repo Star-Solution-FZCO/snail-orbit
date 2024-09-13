@@ -60,6 +60,13 @@ export const issueApi = createApi({
                 { type: coreTag, id },
             ],
         }),
+        deleteIssue: build.mutation<ApiResponse<{ id: string }>, string>({
+            query: (id) => ({
+                url: `issue/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+        }),
         listIssueComments: build.query<
             ListResponse<CommentT>,
             { id: string; params?: ListQueryParams }

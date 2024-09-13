@@ -22,10 +22,9 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
         const options: SelectFieldOptionType[] = useMemo(() => {
             if (!data) return [];
 
-            return data.payload.items.map(({ id, name, description }) => ({
-                label: name,
-                description: description,
+            return data.payload.items.map(({ id, name }) => ({
                 id: id,
+                label: name,
             }));
         }, [data]);
 
@@ -40,7 +39,7 @@ export const ProjectField: FC<ProjectFieldProps> = forwardRef(
                 onChange={(value) => onChange(value as string)}
                 onOpened={trigger}
                 loading={isLoading}
-                error={error}
+                variant={error ? "error" : "standard"}
             />
         );
     },

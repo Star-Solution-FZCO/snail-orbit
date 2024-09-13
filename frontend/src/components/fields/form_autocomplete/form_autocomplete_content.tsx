@@ -13,6 +13,7 @@ import React, {
     Ref,
     SyntheticEvent,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
 
 export type FormAutocompleteValueType = {
@@ -43,6 +44,8 @@ const FormAutocompleteContentComp = <
     }: FormAutocompleteContentProps<F, G>,
     ref: ForwardedRef<unknown>,
 ) => {
+    const { t } = useTranslation();
+
     return (
         <Autocomplete<FormAutocompleteValueType, F, G>
             ref={ref}
@@ -94,6 +97,19 @@ const FormAutocompleteContentComp = <
                                     justifyContent="center"
                                 >
                                     {option.label}
+                                    {option.description && (
+                                        <Box
+                                            component="span"
+                                            sx={(t) => ({
+                                                color: "#8b949e",
+                                                ...t.applyStyles("light", {
+                                                    color: "#586069",
+                                                }),
+                                            })}
+                                        >
+                                            {option.description}
+                                        </Box>
+                                    )}
                                 </Stack>
                             </Stack>
                             {option.color ? (
@@ -122,8 +138,8 @@ const FormAutocompleteContentComp = <
                 <StyledInput
                     ref={params.InputProps.ref}
                     inputProps={params.inputProps}
+                    placeholder={t("autocomplete.filter")}
                     autoFocus
-                    placeholder="Filter labels"
                 />
             )}
             {...props}
