@@ -8,17 +8,33 @@ import { MDEditor } from "components";
 import { FC } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { AgileBoardT } from "types";
+import { AgileBoardT, customFieldsTypes, CustomFieldTypeT } from "types";
 import * as yup from "yup";
+import { ColumnFieldSelect } from "./column_field_select";
 import { ProjectSelect } from "./project_select";
 
 const agileBoardSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
     description: yup.string().nullable().default(null),
     query: yup.string().nullable().default(null),
-    column_field: yup.string().nullable().default(null),
+    column_field: yup
+        .object()
+        .shape({
+            id: yup.string().required(),
+            name: yup.string().required(),
+            type: yup
+                .mixed<CustomFieldTypeT>()
+                .oneOf([...customFieldsTypes])
+                .required(),
+        })
+        .required("form.validation.required"),
     columns: yup.array().of(yup.string().required()).required(),
-    projects: yup.array().of(yup.string().required()).required(),
+    projects: yup
+        .array()
+        .of(yup.string().required())
+        .required("form.validation.required"),
+    swimlane_field: yup.string().nullable().default(null),
+    swimlanes: yup.array().of(yup.string().required()).required(),
 });
 
 type AgileBoardFormData = yup.InferType<typeof agileBoardSchema>;
@@ -80,7 +96,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                 fullWidth
             />
 
-            <Box>
+            {!!defaultValues && (
                 <Controller
                     name="description"
                     control={control}
@@ -94,75 +110,79 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                         />
                     )}
                 />
-            </Box>
+            )}
 
             <Controller
                 control={control}
                 name="projects"
-                render={({ field }) => <ProjectSelect {...field} />}
+                render={({ field, formState: { errors } }) => (
+                    <ProjectSelect {...field} error={errors.projects} />
+                )}
             />
 
-            <TextField
-                {...register("query")}
-                label={t("agileBoards.form.query")}
-                error={!!errors.query}
-                helperText={t(errors.query?.message || "")}
-                variant="outlined"
-                size="small"
-                fullWidth
+            <Controller
+                control={control}
+                name="column_field"
+                render={({ field, formState: { errors } }) => (
+                    <ColumnFieldSelect {...field} error={errors.column_field} />
+                )}
             />
 
-            <TextField
-                {...register("column_field")}
-                label={t("agileBoards.form.column_field")}
-                error={!!errors.column_field}
-                helperText={t(errors.column_field?.message || "")}
-                variant="outlined"
-                size="small"
-                fullWidth
-            />
+            {!!defaultValues && (
+                <>
+                    <TextField
+                        {...register("query")}
+                        label={t("agileBoards.form.query")}
+                        error={!!errors.query}
+                        helperText={t(errors.query?.message || "")}
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                    />
 
-            <Box display="flex" flexDirection="column" gap={1}>
-                <FormLabel>{t("agileBoards.form.columns")}</FormLabel>
+                    <Box display="flex" flexDirection="column" gap={1}>
+                        <FormLabel>{t("agileBoards.form.columns")}</FormLabel>
 
-                {fields.map((field, index) => (
-                    <Box
-                        key={field.id}
-                        display="flex"
-                        alignItems="center"
-                        gap={1}
-                    >
-                        <TextField
-                            {...register(`columns.${index}` as const)}
-                            label={t(`agileBoards.form.column`)}
-                            error={!!errors.columns?.[index]}
-                            helperText={t(
-                                errors.columns?.[index]?.message || "",
-                            )}
+                        {fields.map((field, index) => (
+                            <Box
+                                key={field.id}
+                                display="flex"
+                                alignItems="center"
+                                gap={1}
+                            >
+                                <TextField
+                                    {...register(`columns.${index}` as const)}
+                                    label={t(`agileBoards.form.column`)}
+                                    error={!!errors.columns?.[index]}
+                                    helperText={t(
+                                        errors.columns?.[index]?.message || "",
+                                    )}
+                                    variant="outlined"
+                                    size="small"
+                                    fullWidth
+                                />
+                                <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => remove(index)}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Box>
+                        ))}
+
+                        <Button
+                            sx={{ alignSelf: "flex-start" }}
                             variant="outlined"
                             size="small"
-                            fullWidth
-                        />
-                        <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => remove(index)}
+                            startIcon={<AddIcon />}
+                            onClick={() => append("")}
                         >
-                            <DeleteIcon />
-                        </IconButton>
+                            {t("agileBoards.form.addColumn")}
+                        </Button>
                     </Box>
-                ))}
-
-                <Button
-                    sx={{ alignSelf: "flex-start" }}
-                    variant="outlined"
-                    size="small"
-                    startIcon={<AddIcon />}
-                    onClick={() => append("")}
-                >
-                    {t("agileBoards.form.addColumn")}
-                </Button>
-            </Box>
+                </>
+            )}
 
             <Box display="flex" gap={1}>
                 <LoadingButton

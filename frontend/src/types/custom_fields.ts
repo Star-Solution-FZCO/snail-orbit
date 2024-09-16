@@ -64,8 +64,11 @@ export type UpdateStateOptionT = {
 } & Partial<CreateStateOptionT>;
 
 export type CustomFieldValueT =
+    | boolean
+    | number
     | BasicUserT
     | BasicUserT[]
+    | CustomFieldT
     | StateFieldT
     | string
     | any
@@ -110,3 +113,9 @@ export type CustomFieldT = CreateCustomFieldT & {
 } & CustomFieldTypeValuePair;
 
 export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;
+
+export type BasicCustomFieldT = {
+    id: string;
+    name: string;
+    type: CustomFieldTypeT;
+};

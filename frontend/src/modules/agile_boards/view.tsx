@@ -67,7 +67,7 @@ const AgileBoardView = () => {
 
             <Box display="flex" alignItems="center" gap={1} mb={2}>
                 <Breadcrumbs>
-                    <Link to="/custom-fields" underline="hover">
+                    <Link to="/agiles" underline="hover">
                         <Typography fontSize={24} fontWeight="bold">
                             {t("agileBoards.title")}
                         </Typography>
