@@ -154,6 +154,18 @@ CONFIG = Dynaconf(
             default='/data/audit',
             description='Directory for audit logs',
         ),
+        Validator(
+            'PARARAM_NOTIFICATION_BOT_TOKEN',
+            is_type_of=str,
+            default='',
+            description='Token for Pararam notification bot',
+        ),
+        Validator(
+            'PUBLIC_BASE_URL',
+            is_type_of=str,
+            default='http://localhost:3000',
+            description='Base URL for public links',
+        ),
     ],
 )
 CONFIG.configure()

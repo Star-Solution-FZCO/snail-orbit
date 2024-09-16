@@ -6,6 +6,7 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel, computed_field
 
 import pm.models as m
+from pm.api.context import current_user
 
 from .user import UserOutput
 
@@ -75,6 +76,8 @@ class IssueAttachmentOut(BaseModel):
 def transform_custom_field_value(
     value: m.CustomFieldValueT, field: m.CustomFieldLink | m.CustomField
 ) -> CustomFieldValueOutT:
+    if value is None:
+        return None
     if field.type == m.CustomFieldTypeT.DATE:
         return value.date()
     if isinstance(value, m.UserLinkField):
@@ -108,16 +111,14 @@ class IssueOutput(BaseModel):
     text: str | None
     fields: dict[str, CustomFieldValueOut]
     attachments: list[IssueAttachmentOut]
-
-    @computed_field
-    @property
-    def id_readable(self) -> str | None:
-        return self.aliases[-1] if self.aliases else None
+    is_subscribed: bool
+    id_readable: str
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
         return cls(
             id=obj.id,
+            id_readable=obj.id_readable,
             aliases=obj.aliases,
             project=ProjectField.from_obj(obj.project),
             subject=obj.subject,
@@ -126,4 +127,5 @@ class IssueOutput(BaseModel):
                 field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
+            is_subscribed=current_user().user.id in obj.subscribers,
         )

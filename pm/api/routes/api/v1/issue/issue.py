@@ -15,6 +15,7 @@ from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.workflows import WorkflowException
 
@@ -112,6 +113,7 @@ async def create_issue(
             )
             for a_id, a_data in attachments.items()
         ],
+        subscribers=[user_ctx.user.id],
     )
     if validation_errors:
         raise ValidateModelException(
@@ -131,6 +133,13 @@ async def create_issue(
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
+    task_notify_by_pararam.delay(
+        'create',
+        obj.subject,
+        obj.id_readable,
+        [str(s) for s in obj.subscribers],
+        str(project.id),
+    )
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
@@ -193,6 +202,13 @@ async def update_issue(
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
         await obj.replace()
+        task_notify_by_pararam.delay(
+            'update',
+            obj.subject,
+            obj.id_readable,
+            [str(s) for s in obj.subscribers],
+            str(obj.project.id),
+        )
         await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
@@ -205,8 +221,43 @@ async def delete_issue(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     await obj.delete()
+    task_notify_by_pararam.delay(
+        'delete',
+        obj.subject,
+        obj.id_readable,
+        [str(s) for s in obj.subscribers],
+        str(obj.project.id),
+    )
     await Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}).send()
     return ModelIdOutput.from_obj(obj)
+
+
+@router.post('/{issue_id_or_alias}/subscribe')
+async def subscribe_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    user_ctx = current_user()
+    if user_ctx.user.id not in obj.subscribers:
+        obj.subscribers.append(user_ctx.user.id)
+        await obj.replace()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.post('/{issue_id_or_alias}/unsubscribe')
+async def unsubscribe_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    user_ctx = current_user()
+    if user_ctx.user.id in obj.subscribers:
+        obj.subscribers.remove(user_ctx.user.id)
+        await obj.replace()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 async def validate_custom_fields_values(
