@@ -70,7 +70,10 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         type: "user" | "group";
     } | null>(null);
 
-    const { data: users } = userApi.useListUserQuery({ limit: 0, offset: 0 });
+    const { data: users } = userApi.useListSelectUserQuery({
+        limit: 0,
+        offset: 0,
+    });
     const { data: groups } = groupApi.useListGroupQuery({
         limit: 0,
         offset: 0,
