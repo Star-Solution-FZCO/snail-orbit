@@ -7,7 +7,11 @@ from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.api.context import admin_context_dependency, current_user_context_dependency
+from pm.api.context import (
+    admin_context_dependency,
+    current_user,
+    current_user_context_dependency,
+)
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldOutput
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
@@ -73,6 +77,7 @@ class ProjectOutput(BaseModel):
     is_active: bool
     custom_fields: list[CustomFieldOutput]
     workflows: list[WorkflowOutput] = []
+    is_subscribed: bool = False
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> 'ProjectOutput':
@@ -84,6 +89,7 @@ class ProjectOutput(BaseModel):
             is_active=obj.is_active,
             custom_fields=[CustomFieldOutput.from_obj(v) for v in obj.custom_fields],
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
+            is_subscribed=current_user().user.id in obj.subscribers,
         )
 
 
@@ -333,4 +339,32 @@ async def remove_workflow(
         ) from err
     if project.is_changed:
         await project.save_changes()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.post('/{project_id}/subscribe')
+async def subscribe_project(
+    project_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    user_ctx = current_user()
+    if user_ctx.user.id not in project.subscribers:
+        project.subscribers.append(user_ctx.user.id)
+        await project.replace()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.post('/{project_id}/unsubscribe')
+async def unsubscribe_project(
+    project_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    user_ctx = current_user()
+    if user_ctx.user.id in project.subscribers:
+        project.subscribers.remove(user_ctx.user.id)
+        await project.replace()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))

@@ -77,6 +77,7 @@ class Issue(Document):
 
     fields: list[CustomFieldValue] = Field(default_factory=list)
     history: list[IssueHistoryRecord] = Field(default_factory=list)
+    subscribers: list[PydanticObjectId] = Field(default_factory=list)
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -149,4 +150,8 @@ class Issue(Document):
         await cls.find(cls.comments.author.id == user.id).update(
             {'$set': {'comments.$[c].author': UserLinkField.from_obj(user)}},
             array_filters=[{'c.author.id': user.id}],
+        )
+        await cls.find(cls.attachments.author.id == user.id).update(
+            {'$set': {'attachments.$[a].author': UserLinkField.from_obj(user)}},
+            array_filters=[{'a.author.id': user.id}],
         )

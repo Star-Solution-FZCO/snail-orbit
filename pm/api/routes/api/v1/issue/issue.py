@@ -112,6 +112,7 @@ async def create_issue(
             )
             for a_id, a_data in attachments.items()
         ],
+        subscribers=[user_ctx.user.id],
     )
     if validation_errors:
         raise ValidateModelException(
@@ -207,6 +208,34 @@ async def delete_issue(
     await obj.delete()
     await Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}).send()
     return ModelIdOutput.from_obj(obj)
+
+
+@router.post('/{issue_id_or_alias}/subscribe')
+async def subscribe_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    user_ctx = current_user()
+    if user_ctx.user.id not in obj.subscribers:
+        obj.subscribers.append(user_ctx.user.id)
+        await obj.replace()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.post('/{issue_id_or_alias}/unsubscribe')
+async def unsubscribe_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+    user_ctx = current_user()
+    if user_ctx.user.id in obj.subscribers:
+        obj.subscribers.remove(user_ctx.user.id)
+        await obj.replace()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 async def validate_custom_fields_values(

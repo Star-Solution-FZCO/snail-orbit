@@ -6,6 +6,7 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel, computed_field
 
 import pm.models as m
+from pm.api.context import current_user
 
 from .user import UserOutput
 
@@ -108,6 +109,7 @@ class IssueOutput(BaseModel):
     text: str | None
     fields: dict[str, CustomFieldValueOut]
     attachments: list[IssueAttachmentOut]
+    is_subscribed: bool
 
     @computed_field
     @property
@@ -126,4 +128,5 @@ class IssueOutput(BaseModel):
                 field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
+            is_subscribed=current_user().user.id in obj.subscribers,
         )
