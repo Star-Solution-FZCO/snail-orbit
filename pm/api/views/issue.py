@@ -72,7 +72,11 @@ class IssueAttachmentOut(BaseModel):
         )
 
 
-def transform_custom_field_value(value: m.CustomFieldValueT) -> CustomFieldValueOutT:
+def transform_custom_field_value(
+    value: m.CustomFieldValueT, field: m.CustomFieldLink | m.CustomField
+) -> CustomFieldValueOutT:
+    if field.type == m.CustomFieldTypeT.DATE:
+        return value.date()
     if isinstance(value, m.UserLinkField):
         return UserOutput.from_obj(value)
     if isinstance(value, list) and value and isinstance(value[0], m.UserLinkField):
@@ -92,7 +96,7 @@ class CustomFieldValueOut(BaseModel):
             id=obj.id,
             name=obj.name,
             type=obj.type,
-            value=transform_custom_field_value(obj.value),
+            value=transform_custom_field_value(obj.value, obj),
         )
 
 

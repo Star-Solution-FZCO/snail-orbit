@@ -1,19 +1,26 @@
+import logging
 from datetime import datetime
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
+from pm.utils.dateutils import utcnow
+
 from ._audit import audited_model
-from .custom_fields import CustomFieldValue
+from .custom_fields import CustomFieldLink, CustomFieldValue, CustomFieldValueT
 from .project import Project, ProjectLinkField
 from .user import User, UserLinkField
+
+logging.basicConfig(level=logging.INFO)
 
 __all__ = (
     'Issue',
     'IssueComment',
     'IssueAttachment',
+    'IssueHistoryRecord',
+    'IssueFieldChange',
 )
 
 
@@ -36,6 +43,19 @@ class IssueComment(BaseModel):
     attachments: list[IssueAttachment] = Field(default_factory=list)
 
 
+class IssueFieldChange(BaseModel):
+    field: CustomFieldLink | Literal['subject', 'text']
+    old_value: CustomFieldValueT | str
+    new_value: CustomFieldValueT | str
+
+
+class IssueHistoryRecord(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+    author: UserLinkField
+    time: datetime
+    changes: list[IssueFieldChange]
+
+
 @audited_model
 class Issue(Document):
     class Settings:
@@ -56,12 +76,47 @@ class Issue(Document):
     attachments: list[IssueAttachment] = Field(default_factory=list)
 
     fields: list[CustomFieldValue] = Field(default_factory=list)
+    history: list[IssueHistoryRecord] = Field(default_factory=list)
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
 
     def get_field_by_id(self, id_: PydanticObjectId) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.id == id_), None)
+
+    def _fields_diff(
+        self,
+    ) -> dict[PydanticObjectId, tuple[CustomFieldValueT, CustomFieldValueT]]:
+        old_state = self.__class__.model_validate(self.get_saved_state())
+        old_fields = {field.id: field.value for field in old_state.fields}
+        new_fields = {field.id: field.value for field in self.fields}
+        diff = {}
+        for field_id, new_value in new_fields.items():
+            old_value = old_fields.get(field_id)
+            if old_value != new_value:
+                logging.info(f'Field {field_id} changed: {old_value} -> {new_value}')
+                diff[field_id] = (old_value, new_value)
+        return diff
+
+    def gen_history_record(self, author: 'User', time: datetime | None = None) -> None:
+        time = time or utcnow()
+        fields = {field.id: field for field in self.fields}
+        fields_diff = self._fields_diff()
+        if not fields_diff:
+            return
+        record = IssueHistoryRecord(
+            author=UserLinkField.from_obj(author),
+            time=time,
+            changes=[
+                IssueFieldChange(
+                    field=CustomFieldLink.from_obj(fields[field_id]),
+                    old_value=old_value,
+                    new_value=new_value,
+                )
+                for field_id, (old_value, new_value) in fields_diff.items()
+            ],
+        )
+        self.history.append(record)
 
     @classmethod
     async def find_one_by_id_or_alias(cls, id_or_alias: PydanticObjectId | str) -> Self:
