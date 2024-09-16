@@ -59,6 +59,7 @@ class Project(Document):
     workflows: list[Link['Workflow']] = Field(default_factory=list)
     permissions: list[ProjectPermission] = Field(default_factory=list)
     issue_counter: int = 0
+    subscribers: list[PydanticObjectId] = Field(default_factory=list)
 
     async def get_new_issue_alias(self) -> str:
         await self.update(

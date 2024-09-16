@@ -1,7 +1,7 @@
 from pm.config import CONFIG
+from pm.tasks._base import run_task
 from pm.tasks.app import celery_app
 
-from ._base import run_task
 from .wb_user_sync import wb_user_sync
 
 if CONFIG.WB_SYNC_ENABLED:
