@@ -79,6 +79,10 @@ class Issue(Document):
     history: list[IssueHistoryRecord] = Field(default_factory=list)
     subscribers: list[PydanticObjectId] = Field(default_factory=list)
 
+    @property
+    def id_readable(self) -> str:
+        return self.aliases[-1] if self.aliases else str(self.id)
+
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
 

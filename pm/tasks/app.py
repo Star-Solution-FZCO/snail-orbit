@@ -11,6 +11,7 @@ celery_app.conf.broker_url = CONFIG.TASKS_BROKER_URL
 celery_app.autodiscover_tasks(
     [
         'pm.tasks.scheduled',
+        'pm.tasks.actions',
     ]
 )
 celery_app.conf.beat_schedule = {}
