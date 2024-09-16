@@ -71,7 +71,7 @@ class BoardCreate(BaseModel):
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId]
-    column_field: PydanticObjectId
+    column_field: CustomFieldLinkOutput
     columns: list
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list = Field(default_factory=list)
@@ -82,7 +82,7 @@ class BoardUpdate(BaseModel):
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId] | None = None
-    column_field: PydanticObjectId | None = None
+    column_field: CustomFieldLinkOutput | None = None
     columns: list | None = None
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list | None = None
@@ -126,7 +126,7 @@ async def create_board(
         not_found = set(body.projects) - {p.id for p in projects}
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Projects not found: {not_found}')
     column_field: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == body.column_field, with_children=True
+        m.CustomField.id == body.column_field.id, with_children=True
     )
     if not column_field:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
@@ -206,7 +206,7 @@ async def update_board(
         projects = [await p.resolve(fetch_links=True) for p in board.projects]
     if 'column_field' in data:
         column_field: m.CustomField | None = await m.CustomField.find_one(
-            m.CustomField.id == data['column_field'], with_children=True
+            m.CustomField.id == data['column_field']['id'], with_children=True
         )
         if not column_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')

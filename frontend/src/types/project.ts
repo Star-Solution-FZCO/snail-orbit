@@ -1,6 +1,12 @@
 import { CustomFieldT } from "./custom_fields";
 import { WorkflowT } from "./workflow";
 
+export type BasicProjectT = {
+    id: string;
+    name: string;
+    slug: string;
+};
+
 export type CreateProjectT = {
     name: string;
     slug: string;

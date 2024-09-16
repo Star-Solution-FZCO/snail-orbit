@@ -9,58 +9,61 @@ import {
 } from "react";
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import { ProjectT } from "types";
+import { customFieldsApi } from "store";
+import { BasicCustomFieldT } from "types";
 
-export type ProjectSelectProps = {
-    value?: string[];
-    onChange?: (value: string[]) => void;
-    error?: Merge<FieldError, (FieldError | undefined)[]>;
-};
+interface IColumnFieldSelectProps {
+    value?: BasicCustomFieldT;
+    onChange: (value: BasicCustomFieldT) => void;
+    error?: Merge<FieldError, any>;
+}
 
-export const ProjectSelect: FC<ProjectSelectProps> = ({
+const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
     value,
     onChange,
     error,
 }) => {
     const { t } = useTranslation();
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    const [fetchProjects, { data, isLoading, isSuccess }] =
-        projectApi.useLazyListProjectQuery();
+    const [fetchCustomFields, { data, isLoading, isSuccess }] =
+        customFieldsApi.useLazyListCustomFieldsQuery();
 
     const options = useMemo(() => {
-        return data?.payload.items || [];
+        if (!data) return [];
+        return data.payload.items.filter((field) =>
+            ["enum", "state"].includes(field.type),
+        );
     }, [data]);
-
-    const autocompleteValue = useMemo(() => {
-        return options.filter((option) => value?.includes(option.id));
-    }, [options, value]);
 
     const handleOpen = useCallback(() => {
         setIsOpen(true);
 
-        if (!isLoading && !isSuccess) fetchProjects({ limit: 0, offset: 0 });
+        if (!isLoading && !isSuccess)
+            fetchCustomFields({ limit: 0, offset: 0 });
     }, [setIsOpen]);
 
     const handleClose = useCallback(() => {
         setIsOpen(false);
     }, [setIsOpen]);
 
-    const handleChange = (_: SyntheticEvent, value: ProjectT[]) => {
-        if (onChange) onChange(value.map((el) => el.id));
+    const handleChange = (
+        _: SyntheticEvent,
+        value: BasicCustomFieldT | null,
+    ) => {
+        if (value && onChange) onChange(value);
     };
 
     useEffect(() => {
-        if (value && value.length && !isLoading && !isSuccess) {
-            fetchProjects({ limit: 0, offset: 0 });
+        if (value && !isLoading && !isSuccess) {
+            fetchCustomFields({ limit: 0, offset: 0 });
         }
     }, [value, isLoading, isSuccess]);
 
     return (
         <Autocomplete
-            value={autocompleteValue}
+            value={value}
             options={options}
             open={isOpen}
             onOpen={handleOpen}
@@ -71,7 +74,7 @@ export const ProjectSelect: FC<ProjectSelectProps> = ({
             renderInput={(params) => (
                 <TextField
                     {...params}
-                    label={t("agileBoards.form.projects")}
+                    label={t("agileBoards.form.columnField")}
                     InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -93,7 +96,8 @@ export const ProjectSelect: FC<ProjectSelectProps> = ({
             )}
             loading={isLoading}
             filterSelectedOptions
-            multiple
         />
     );
 };
+
+export { ColumnFieldSelect };
