@@ -79,7 +79,6 @@ async def select_users(
             bo.RegEx(m.User.email, query.search, 'i'),
         )
     ).sort(m.User.name)
-    results = []
     return BaseListOutput.make(
         count=await q.count(),
         limit=query.limit,

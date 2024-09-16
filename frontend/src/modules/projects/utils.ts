@@ -1,4 +1,9 @@
-import { GroupT, ProjectPermissionTargetT, TargetTypeT, UserT } from "types";
+import {
+    BasicUserT,
+    GroupT,
+    ProjectPermissionTargetT,
+    TargetTypeT,
+} from "types";
 
 export const tabs = [
     {
@@ -20,7 +25,7 @@ export const tabs = [
 ];
 
 export const mergeUsersAndGroups = (
-    users: UserT[],
+    users: BasicUserT[],
     groups: GroupT[],
 ): Array<ProjectPermissionTargetT & { type: TargetTypeT }> => {
     const merged = [

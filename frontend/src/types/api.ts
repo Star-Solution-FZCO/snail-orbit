@@ -13,9 +13,16 @@ export type QueryErrorT = {
     };
 };
 
-export type ListQueryParams = {
+export type BaseQueryParams = {
     limit: number;
     offset: number;
+};
+
+export type ListSelectQueryParams = BaseQueryParams & {
+    search?: string | null;
+};
+
+export type ListQueryParams = BaseQueryParams & {
     sort_by?: string | null;
     direction?: "asc" | "desc";
 };

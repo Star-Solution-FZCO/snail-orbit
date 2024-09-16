@@ -15,7 +15,7 @@ import {
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
-import { UserT } from "types";
+import { BasicUserT } from "types";
 import { toastApiError } from "utils";
 
 interface AddGroupMemberDialogProps {
@@ -31,9 +31,9 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [user, setUser] = useState<UserT | null>(null);
+    const [user, setUser] = useState<BasicUserT | null>(null);
 
-    const { data } = userApi.useListUserQuery({
+    const { data } = userApi.useListSelectUserQuery({
         limit: 0,
         offset: 0,
     });
