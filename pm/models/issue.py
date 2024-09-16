@@ -19,6 +19,8 @@ __all__ = (
     'Issue',
     'IssueComment',
     'IssueAttachment',
+    'IssueHistoryRecord',
+    'IssueFieldChange',
 )
 
 
