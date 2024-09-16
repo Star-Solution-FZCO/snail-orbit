@@ -10,6 +10,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { AgileBoardT } from "types";
 import * as yup from "yup";
+import { ProjectSelect } from "./project_select";
 
 const agileBoardSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
@@ -17,6 +18,7 @@ const agileBoardSchema = yup.object().shape({
     query: yup.string().nullable().default(null),
     column_field: yup.string().nullable().default(null),
     columns: yup.array().of(yup.string().required()).required(),
+    projects: yup.array().of(yup.string().required()).required(),
 });
 
 type AgileBoardFormData = yup.InferType<typeof agileBoardSchema>;
@@ -27,6 +29,11 @@ interface IAgileBoardFormProps {
     loading?: boolean;
     hideCancel?: boolean;
 }
+
+const formatDefaultValues = (values: AgileBoardT): AgileBoardFormData => ({
+    ...values,
+    projects: values.projects.map((el) => el.id),
+});
 
 const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     defaultValues,
@@ -42,7 +49,9 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
         handleSubmit,
         formState: { errors },
     } = useForm({
-        defaultValues,
+        defaultValues: defaultValues
+            ? formatDefaultValues(defaultValues)
+            : undefined,
         resolver: yupResolver(agileBoardSchema),
     });
 
@@ -86,6 +95,12 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                     )}
                 />
             </Box>
+
+            <Controller
+                control={control}
+                name="projects"
+                render={({ field }) => <ProjectSelect {...field} />}
+            />
 
             <TextField
                 {...register("query")}
