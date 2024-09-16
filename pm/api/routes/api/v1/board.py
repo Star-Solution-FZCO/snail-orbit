@@ -4,7 +4,7 @@ from typing import Any
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
@@ -420,6 +420,59 @@ async def move_issue(
     board.move_issue(issue.id, after_issue.id if after_issue else None)
     await board.save_changes()
     return ModelIdOutput.make(issue_id)
+
+
+@router.get('/column_field/select')
+async def select_column_field(
+    project_id: list[PydanticObjectId] = Query(...),
+) -> BaseListOutput[CustomFieldLinkOutput]:
+    projects = await m.Project.find(
+        bo.In(m.Project.id, project_id),
+        fetch_links=True,
+    ).to_list()
+    fields = [
+        cf
+        for cf in _intersect_custom_fields(projects)
+        if cf.type in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM)
+    ]
+    return BaseListOutput.make(
+        count=len(fields),
+        limit=len(fields),
+        offset=0,
+        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+    )
+
+
+@router.get('/swimlane_field/select')
+async def select_swimlane_field(
+    project_id: list[PydanticObjectId] = Query(...),
+) -> BaseListOutput[CustomFieldLinkOutput]:
+    projects = await m.Project.find(
+        bo.In(m.Project.id, project_id),
+        fetch_links=True,
+    ).to_list()
+    fields = [
+        cf
+        for cf in _intersect_custom_fields(projects)
+        if cf.type not in (m.CustomFieldTypeT.ENUM_MULTI, m.CustomFieldTypeT.USER_MULTI)
+    ]
+    return BaseListOutput.make(
+        count=len(fields),
+        limit=len(fields),
+        offset=0,
+        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+    )
+
+
+def _intersect_custom_fields(
+    projects: Sequence[m.Project],
+) -> set[m.CustomField]:
+    if not projects:
+        return set()
+    fields = set(projects[0].custom_fields)
+    for p in projects[1:]:
+        fields &= set(p.custom_fields)
+    return fields
 
 
 def _projects_has_custom_field(
