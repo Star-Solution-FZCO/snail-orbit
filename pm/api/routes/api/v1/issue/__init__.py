@@ -4,6 +4,7 @@ from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 
 from .comment import router as comment_router
+from .history import router as history_router
 from .issue import router as issue_router
 
 __all__ = ('router',)
@@ -15,3 +16,4 @@ router = APIRouter(
 )
 router.include_router(issue_router)
 router.include_router(comment_router)
+router.include_router(history_router)
