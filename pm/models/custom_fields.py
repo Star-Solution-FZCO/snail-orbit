@@ -137,6 +137,9 @@ class CustomField(Document):
             )
         return value
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 
 class CustomFieldLink(BaseModel):
     id: PydanticObjectId
