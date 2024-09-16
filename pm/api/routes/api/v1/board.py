@@ -22,6 +22,7 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.tasks.actions import task_notify_by_pararam
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
@@ -425,6 +426,13 @@ async def move_issue(
             )
         issue.gen_history_record(user_ctx.user)
         await issue.replace()
+        task_notify_by_pararam.delay(
+            'update',
+            issue.subject,
+            issue.id_readable,
+            [str(s) for s in issue.subscribers],
+            str(issue.project.id),
+        )
         await Event(
             type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)}
         ).send()

@@ -346,7 +346,7 @@ async def remove_workflow(
 async def subscribe_project(
     project_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -360,7 +360,7 @@ async def subscribe_project(
 async def unsubscribe_project(
     project_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
