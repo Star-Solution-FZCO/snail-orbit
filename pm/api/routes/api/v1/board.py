@@ -125,9 +125,9 @@ async def create_board(
     )
     if not column_field:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
-    if column_field.type != m.CustomFieldTypeT.STATE:
+    if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE'
+            HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
         )
     _projects_has_custom_field(column_field, projects)
     columns = validate_custom_field_values(column_field, body.columns)
@@ -205,9 +205,9 @@ async def update_board(
         )
         if not column_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
-        if column_field.type != m.CustomFieldTypeT.STATE:
+        if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE'
+                HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
             )
         board.column_field = m.CustomFieldLink.from_obj(column_field)
     else:
