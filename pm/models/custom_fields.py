@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Any, Self
 from uuid import UUID
@@ -147,7 +147,7 @@ class CustomFieldLink(BaseModel):
     type: CustomFieldTypeT
 
     @classmethod
-    def from_obj(cls, obj: CustomField) -> Self:
+    def from_obj(cls, obj: CustomField | Self) -> Self:
         return cls(
             id=obj.id,
             name=obj.name,
@@ -219,11 +219,15 @@ class DateCustomField(CustomField):
         value = super().validate_value(value)
         if value is None:
             return value
+        if isinstance(value, datetime):
+            value = value.date()
         if isinstance(value, date):
-            return value
+            return datetime.combine(value, datetime.min.time())
         if isinstance(value, str):
             try:
-                return datetime.fromisoformat(value).date()
+                return datetime.fromisoformat(value).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
             except ValueError as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a date in ISO format'
@@ -241,10 +245,14 @@ class DateTimeCustomField(CustomField):
         if value is None:
             return value
         if isinstance(value, datetime):
-            return value
+            return value.astimezone(tz=timezone.utc).replace(tzinfo=None)
         if isinstance(value, str):
             try:
-                return datetime.fromisoformat(value)
+                return (
+                    datetime.fromisoformat(value)
+                    .astimezone(tz=timezone.utc)
+                    .replace(tzinfo=None)
+                )
             except ValueError as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a datetime in ISO format'
@@ -480,7 +488,6 @@ CustomFieldValueT = (
     bool
     | int
     | float
-    | date
     | datetime
     | UserLinkField
     | list[str]  # todo: use only list[EnumCustomField]
