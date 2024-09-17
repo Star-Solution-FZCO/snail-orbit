@@ -14,7 +14,7 @@ export type CreateIssueT = {
 
 export type IssueT = {
     id: string;
-    id_readable: string | null;
+    id_readable: string;
     project: Pick<ProjectT, "id" | "name" | "slug">;
     subject: string;
     text: string | null;

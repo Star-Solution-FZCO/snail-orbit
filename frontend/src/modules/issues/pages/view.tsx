@@ -34,8 +34,7 @@ const IssueView: FC = () => {
         updateIssue({ ...formData, id: issueId })
             .unwrap()
             .then((response) => {
-                const issueId =
-                    response.payload.id_readable || response.payload.id;
+                const issueId = response.payload.id_readable;
                 const subject = slugify(response.payload.subject);
                 navigate({
                     to: "/issues/$issueId/$subject",
