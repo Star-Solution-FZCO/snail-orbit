@@ -53,8 +53,7 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
         createIssue(transformIssue(issue))
             .unwrap()
             .then((response) => {
-                const issueId =
-                    response.payload.id_readable || response.payload.id;
+                const issueId = response.payload.id_readable;
                 toast.success(
                     <Typography>
                         {t("issues.clone.created")}:{" "}
