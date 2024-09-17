@@ -192,5 +192,10 @@
     "roles.title": "Roles",
     "roles.update.success": "Role updated successfully",
     "save": "Save",
-    "submit": "Submit"
+    "submit": "Submit",
+    "pageNotFound": "Page not found",
+    "pageNotFound.description": "It could mean that the URL points to a page that doesn't exist or the URL is correct and you don't have permission to view this content.",
+    "somethingWentWrong": "Something went wrong",
+    "somethingWentWrong.description": "Please try refreshing the page. If the problem persists, feel free to contact IT Support for assistance.",
+    "mainPage": "Main page"
 }
