@@ -49,16 +49,6 @@ const IssueView: FC = () => {
             .finally(refetch);
     };
 
-    if (error) {
-        return (
-            <Container>
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
-                </Typography>
-            </Container>
-        );
-    }
-
     const issue = data?.payload;
 
     useEffect(() => {
@@ -73,6 +63,16 @@ const IssueView: FC = () => {
             });
         }
     }, [issue]);
+
+    if (error) {
+        return (
+            <Container>
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
+                </Typography>
+            </Container>
+        );
+    }
 
     return (
         <Container
