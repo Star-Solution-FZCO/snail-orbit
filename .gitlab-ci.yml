@@ -1,4 +1,5 @@
 stages:
+  - lint
   - build
 
 default:
@@ -12,6 +13,25 @@ default:
 .template-init-buildx: &template-init-buildx
   - docker buildx create --use
 
+sec-trivy-src-scan:
+  stage: lint
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - trivy fs --exit-code 1 --no-progress --show-suppressed --scanners vuln .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+sec-gitleaks:
+  stage: lint
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 build-dev-api:
   stage: build
