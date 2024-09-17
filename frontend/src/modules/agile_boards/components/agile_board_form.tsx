@@ -28,13 +28,16 @@ const agileBoardSchema = yup.object().shape({
                 .required(),
         })
         .required("form.validation.required"),
-    columns: yup.array().of(yup.string().required()).required(),
+    columns: yup
+        .array()
+        .of(yup.object().shape({ name: yup.string().required() }))
+        .required(),
     projects: yup
         .array()
         .of(yup.string().required())
         .required("form.validation.required"),
     swimlane_field: yup.string().nullable().default(null),
-    swimlanes: yup.array().of(yup.string().required()).required(),
+    swimlanes: yup.array().of(yup.string().required()).required().default([]),
 });
 
 type AgileBoardFormData = yup.InferType<typeof agileBoardSchema>;
@@ -64,16 +67,15 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm({
+    } = useForm<AgileBoardFormData>({
         defaultValues: defaultValues
             ? formatDefaultValues(defaultValues)
             : undefined,
         resolver: yupResolver(agileBoardSchema),
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove } = useFieldArray<AgileBoardFormData>({
         control,
-        // @ts-ignore
         name: "columns",
     });
 
@@ -176,7 +178,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                             variant="outlined"
                             size="small"
                             startIcon={<AddIcon />}
-                            onClick={() => append("")}
+                            onClick={() => append({ name: "" })}
                         >
                             {t("agileBoards.form.addColumn")}
                         </Button>
