@@ -194,11 +194,11 @@ async def update_board(
             setattr(board, k, data[k])
     if 'projects' in data:
         projects = await m.Project.find(
-            bo.In(m.Project.id, data['projects']),
+            bo.In(m.Project.id, body.projects),
             fetch_links=True,
         ).to_list()
-        if len(projects) != len(data['projects']):
-            not_found = set(data['projects']) - {p.id for p in projects}
+        if len(projects) != len(body.projects):
+            not_found = set(body.projects) - {p.id for p in projects}
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST, f'Projects not found: {not_found}'
             )
@@ -207,7 +207,7 @@ async def update_board(
         projects = [await p.resolve(fetch_links=True) for p in board.projects]
     if 'column_field' in data:
         column_field: m.CustomField | None = await m.CustomField.find_one(
-            m.CustomField.id == data['column_field'], with_children=True
+            m.CustomField.id == body.column_field, with_children=True
         )
         if not column_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
@@ -219,13 +219,13 @@ async def update_board(
     else:
         column_field = await board.column_field.resolve()
     if 'columns' in data:
-        columns = data['columns']
+        columns = body.columns
     else:
         columns = board.columns
     if 'swimlane_field' in data:
-        if data['swimlane_field']:
+        if body.swimlane_field:
             swimlane_field: m.CustomField | None = await m.CustomField.find_one(
-                m.CustomField.id == data['swimlane_field'], with_children=True
+                m.CustomField.id == body.swimlane_field, with_children=True
             )
             if not swimlane_field:
                 raise HTTPException(HTTPStatus.BAD_REQUEST, 'Swimlane field not found')
@@ -246,7 +246,7 @@ async def update_board(
         )
     if 'swimlanes' in data:
         if swimlane_field:
-            swimlanes = data['swimlanes']
+            swimlanes = body.swimlanes
         else:
             swimlanes = []
     else:
@@ -397,7 +397,7 @@ async def move_issue(
         if not board.swimlane_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board has no swimlanes')
         swimlane_field = await board.swimlane_field.resolve()
-        swimlane = validate_custom_field_values(swimlane_field, [data['swimlane']])[0]
+        swimlane = validate_custom_field_values(swimlane_field, [body.swimlane])[0]
         if swimlane not in board.swimlanes:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid swimlane')
         if not (issue_field := issue.get_field_by_id(board.swimlane_field.id)):
