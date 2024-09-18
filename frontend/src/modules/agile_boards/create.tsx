@@ -4,9 +4,12 @@ import { Link } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { CreateAgileBoardT } from "types";
 import { toastApiError } from "utils";
-import { AgileBoardForm } from "./components/agile_board_form";
+import {
+    AgileBoardForm,
+    AgileBoardFormData,
+} from "./components/agile_board_form/agile_board_form";
+import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 
 const AgileBoardCreate = () => {
     const { t } = useTranslation();
@@ -15,14 +18,14 @@ const AgileBoardCreate = () => {
     const [createAgileBoard, { isLoading }] =
         agileBoardApi.useCreateAgileBoardMutation();
 
-    const onSubmit = (formData: CreateAgileBoardT) => {
-        createAgileBoard(formData)
+    const onSubmit = (formData: AgileBoardFormData) => {
+        createAgileBoard(formValuesToCreateForm(formData))
             .unwrap()
-            .then(() => {
-                navigate({
-                    to: "/agiles",
-                });
+            .then((response) => {
                 toast.success(t("agileBoards.create.success"));
+                navigate({
+                    to: `/agiles/${response.payload.id}`,
+                });
             })
             .catch(toastApiError);
     };
