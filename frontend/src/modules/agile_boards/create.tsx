@@ -5,10 +5,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { toastApiError } from "utils";
-import {
-    AgileBoardForm,
-    AgileBoardFormData,
-} from "./components/agile_board_form/agile_board_form";
+import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
+import { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 
 const AgileBoardCreate = () => {

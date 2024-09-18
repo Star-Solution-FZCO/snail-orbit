@@ -13,12 +13,14 @@ import * as yup from "yup";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
+import { IssueAttachments } from "./issue_attachments";
 
 const issueSchema = yup.object().shape({
     project_id: yup.string().required("form.validation.required"),
     subject: yup.string().required("form.validation.required"),
     text: yup.string().nullable().default(null),
     fields: yup.object(),
+    attachments: yup.array().of(yup.string().required()),
 });
 
 export type IssueFormData = yup.InferType<typeof issueSchema>;
@@ -88,6 +90,8 @@ export const IssueForm: FC<IssueFormProps> = ({
                             />
                         )}
                     />
+
+                    <IssueAttachments />
 
                     <Box display="flex" gap={1}>
                         <LoadingButton
