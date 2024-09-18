@@ -6,6 +6,7 @@ import {
     issueApi,
     projectApi,
     roleApi,
+    sharedApi,
     userApi,
     workflowApi,
 } from "./api";
@@ -23,6 +24,7 @@ export const store = configureStore({
         [groupApi.reducerPath]: groupApi.reducer,
         [roleApi.reducerPath]: roleApi.reducer,
         [workflowApi.reducerPath]: workflowApi.reducer,
+        [sharedApi.reducerPath]: sharedApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -34,6 +36,7 @@ export const store = configureStore({
             groupApi.middleware,
             roleApi.middleware,
             workflowApi.middleware,
+            sharedApi.middleware,
         ]),
 });
 
