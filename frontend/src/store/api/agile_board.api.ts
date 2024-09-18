@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     AgileBoardT,
     ApiResponse,
+    ColumnT,
     CreateAgileBoardT,
     ListQueryParams,
     ListResponse,
@@ -42,6 +43,15 @@ export const agileBoardApi = createApi({
             providesTags: (_result, _error, id) => [
                 { type: "AgileBoards", id },
             ],
+        }),
+        listAvailableColumns: build.query<
+            ListResponse<ColumnT>,
+            { project_id: string[] }
+        >({
+            query: (params) => ({
+                url: "board/column_field/select",
+                params,
+            }),
         }),
         createAgileBoard: build.mutation<
             ApiResponse<AgileBoardT>,

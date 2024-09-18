@@ -12,10 +12,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { UpdateAgileBoardT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
-import { AgileBoardForm } from "./components/agile_board_form";
+import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
+import { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
+import { agileBoardToFormValues } from "./utils/agileBoardToFormValues";
+import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 
 const routeApi = getRouteApi("/_authenticated/agiles/$boardId");
 
@@ -45,10 +47,10 @@ const AgileBoardView = () => {
 
     const agileBoard = data.payload;
 
-    const onSubmit = (formData: UpdateAgileBoardT) => {
+    const onSubmit = (formData: AgileBoardFormData) => {
         updateAgileBoard({
             id: agileBoard.id,
-            ...formData,
+            ...formValuesToCreateForm(formData),
         })
             .unwrap()
             .then(() => {
@@ -88,7 +90,7 @@ const AgileBoardView = () => {
 
             <AgileBoardForm
                 onSubmit={onSubmit}
-                defaultValues={agileBoard}
+                defaultValues={agileBoardToFormValues(agileBoard)}
                 loading={isLoading}
             />
         </Container>
