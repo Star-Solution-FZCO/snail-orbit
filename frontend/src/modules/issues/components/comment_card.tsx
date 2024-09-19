@@ -26,8 +26,6 @@ import { toastApiError } from "utils";
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-const now = dayjs();
-
 interface IAuthorAvatarProps {
     author: BasicUserT;
 }
@@ -216,7 +214,10 @@ const CommentCard: FC<ICommentCardProps> = ({
                                 color="text.disabled"
                             >
                                 {t("issues.comments.commented")}{" "}
-                                {now.to(dayjs.utc(comment.created_at).local())}
+                                {dayjs
+                                    .utc(comment.created_at)
+                                    .local()
+                                    .fromNow()}
                             </Typography>
                         </Tooltip>
                     </Box>
@@ -255,6 +256,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                         }}
                         height="100%"
                         minHeight={74}
+                        autoFocus
                     />
                 </Box>
 

@@ -32,7 +32,7 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const [createIssue] = issueApi.useCreateIssuesMutation();
+    const [createIssue] = issueApi.useCreateIssueMutation();
 
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);

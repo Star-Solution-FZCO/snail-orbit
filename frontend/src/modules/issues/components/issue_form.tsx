@@ -8,8 +8,9 @@ import { FC } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
-import { CreateIssueT } from "types";
+import { IssueT } from "types";
 import * as yup from "yup";
+import { transformIssue } from "../utils";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
@@ -26,14 +27,14 @@ const issueSchema = yup.object().shape({
 export type IssueFormData = yup.InferType<typeof issueSchema>;
 
 type IssueFormProps = {
-    defaultValues?: CreateIssueT;
+    defaultValues?: IssueT;
     onSubmit: (formData: IssueFormData) => unknown;
     loading?: boolean;
     hideGoBack?: boolean;
 };
 
 export const IssueForm: FC<IssueFormProps> = ({
-    defaultValues,
+    defaultValues: issue,
     onSubmit,
     loading,
     hideGoBack,
@@ -41,7 +42,7 @@ export const IssueForm: FC<IssueFormProps> = ({
     const { t } = useTranslation();
 
     const methods = useForm<IssueFormData>({
-        defaultValues,
+        defaultValues: issue ? transformIssue(issue) : undefined,
         resolver: yupResolver(issueSchema),
     });
 
@@ -91,7 +92,10 @@ export const IssueForm: FC<IssueFormProps> = ({
                         )}
                     />
 
-                    <IssueAttachments />
+                    <IssueAttachments
+                        issueId={issue?.id_readable}
+                        issueAttachments={issue?.attachments}
+                    />
 
                     <Box display="flex" gap={1}>
                         <LoadingButton

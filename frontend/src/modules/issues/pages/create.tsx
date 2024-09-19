@@ -14,7 +14,7 @@ const IssueCreate: FC = () => {
     const navigate = useNavigate();
 
     const [createIssue, { isLoading: isCreateProjectLoading }] =
-        issueApi.useCreateIssuesMutation();
+        issueApi.useCreateIssueMutation();
 
     const isLoading = isCreateProjectLoading;
 
