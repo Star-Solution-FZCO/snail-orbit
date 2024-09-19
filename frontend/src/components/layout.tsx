@@ -8,7 +8,6 @@ const Layout = () => {
             sx={{
                 display: "flex",
                 minHeight: "100vh",
-                backgroundColor: (theme) => theme.palette.background.content,
             }}
         >
             <Box

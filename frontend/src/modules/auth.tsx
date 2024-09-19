@@ -74,10 +74,7 @@ const Auth: FC = () => {
     if (user) return <Navigate to="/" />;
 
     return (
-        <Box
-            height="100vh"
-            bgcolor={(theme) => theme.palette.background.content}
-        >
+        <Box height="100vh">
             <Container maxWidth="xs" sx={{ pt: 8 }}>
                 <Box display="flex" flexDirection="column" alignItems="center">
                     <Avatar sx={{ mb: 2, bgcolor: "#F07167" }}>PM</Avatar>
