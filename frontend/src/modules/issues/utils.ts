@@ -16,5 +16,5 @@ export const transformIssue = (issue: IssueT): CreateIssueT => ({
         },
         {} as Record<string, FieldValueT>,
     ),
-    attachments: issue.attachments,
+    attachments: issue.attachments.map((el) => el.id),
 });

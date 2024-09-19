@@ -12,9 +12,7 @@ import {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const coreTag = "Issues";
-
-const tagTypes = [coreTag, "IssueComments"];
+const tagTypes = ["Issues", "IssueComments"];
 
 export const issueApi = createApi({
     reducerPath: "issuesApi",
@@ -27,11 +25,11 @@ export const issueApi = createApi({
                 params: params ?? undefined,
             }),
             providesTags: (result) => {
-                let tags = [{ type: coreTag, id: "LIST" }];
+                let tags = [{ type: "Issues", id: "LIST" }];
                 if (result) {
                     tags = tags.concat(
                         result.payload.items.map((issue) => ({
-                            type: coreTag,
+                            type: "Issues",
                             id: issue.id,
                         })),
                     );
@@ -39,15 +37,15 @@ export const issueApi = createApi({
                 return tags;
             },
         }),
-        getIssues: build.query<ApiResponse<IssueT>, string>({
+        getIssue: build.query<ApiResponse<IssueT>, string>({
             query: (id) => `issue/${id}`,
-            providesTags: (_result, _error, id) => [{ type: coreTag, id }],
+            providesTags: (_result, _error, id) => [{ type: "Issues", id }],
         }),
-        createIssues: build.mutation<ApiResponse<IssueT>, CreateIssueT>({
+        createIssue: build.mutation<ApiResponse<IssueT>, CreateIssueT>({
             query: (body) => ({ url: "issue/", method: "POST", body }),
-            invalidatesTags: [{ type: coreTag, id: "LIST" }],
+            invalidatesTags: [{ type: "Issues", id: "LIST" }],
         }),
-        updateIssues: build.mutation<
+        updateIssue: build.mutation<
             ApiResponse<IssueT>,
             { id: string } & UpdateIssueT
         >({
@@ -57,7 +55,8 @@ export const issueApi = createApi({
                 body,
             }),
             invalidatesTags: (_result, _error, { id }) => [
-                { type: coreTag, id },
+                { type: "Issues", id },
+                { type: "Issues", id: "LIST" },
             ],
         }),
         deleteIssue: build.mutation<ApiResponse<{ id: string }>, string>({
@@ -65,7 +64,10 @@ export const issueApi = createApi({
                 url: `issue/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Issues", id },
+                { type: "Issues", id: "LIST" },
+            ],
         }),
         listIssueComments: build.query<
             ListResponse<CommentT>,

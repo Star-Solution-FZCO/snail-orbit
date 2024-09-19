@@ -136,6 +136,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                             }}
                             height="100%"
                             minHeight={74}
+                            autoFocus
                         />
                     </Box>
 
