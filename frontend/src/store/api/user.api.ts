@@ -36,7 +36,7 @@ export const userApi = createApi({
             ListSelectQueryParams | void
         >({
             query: (params) => ({
-                url: "user/list/select",
+                url: "user/select",
                 params: params ?? undefined,
             }),
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
