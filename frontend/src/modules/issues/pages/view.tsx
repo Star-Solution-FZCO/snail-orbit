@@ -15,7 +15,6 @@ import { formatErrorMessages, toastApiError } from "utils";
 import { IssueHeading } from "../components/heading";
 import { IssueComments } from "../components/issue_comments";
 import IssueForm from "../components/issue_form";
-import { transformIssue } from "../utils";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
@@ -25,10 +24,10 @@ const IssueView: FC = () => {
     const { issueId } = routeApi.useParams();
 
     const { data, isLoading, error, refetch } =
-        issueApi.useGetIssuesQuery(issueId);
+        issueApi.useGetIssueQuery(issueId);
 
     const [updateIssue, { isLoading: updateLoading }] =
-        issueApi.useUpdateIssuesMutation();
+        issueApi.useUpdateIssueMutation();
 
     const handleSubmit = (formData: CreateIssueT) => {
         updateIssue({ ...formData, id: issueId })
@@ -96,7 +95,7 @@ const IssueView: FC = () => {
                     <IssueForm
                         onSubmit={handleSubmit}
                         loading={isLoading || updateLoading}
-                        defaultValues={issue && transformIssue(issue)}
+                        defaultValues={issue}
                         hideGoBack
                     />
 

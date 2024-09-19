@@ -32,6 +32,7 @@ export type IssueT = {
     fields: Record<string, CustomFieldT>;
     attachments: IssueAttachmentT[];
     aliases: string[];
+    is_subscribed: boolean;
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;
