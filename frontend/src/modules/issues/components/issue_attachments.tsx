@@ -1,68 +1,154 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { Box, LinearProgress, Typography } from "@mui/material";
-import { useCallback, useRef, useState } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+    Box,
+    IconButton,
+    LinearProgress,
+    Tooltip,
+    Typography,
+} from "@mui/material";
+import { FC, useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
+import { toast, TypeOptions } from "react-toastify";
 import { sharedApi } from "store";
 import { toastApiError } from "utils";
 import { IssueFormData } from "./issue_form";
 
+interface IAttachmentCardProps {
+    file: File;
+}
+
+const AttachmentCard: FC<IAttachmentCardProps> = ({ file }) => {
+    return (
+        <Tooltip title={file.name} placement="bottom-start">
+            <Box
+                width="120px"
+                height="80px"
+                borderRadius={0.5}
+                border={1}
+                borderColor="grey.600"
+                position="relative"
+                sx={{
+                    "&:hover .overlay": {
+                        display: "flex",
+                    },
+                }}
+            >
+                <Box
+                    className="overlay"
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    width="100%"
+                    height="100%"
+                    display="none"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    bgcolor="rgba(0, 0, 0, 0.7)"
+                    borderRadius={0.5}
+                >
+                    <Typography
+                        variant="caption"
+                        color="white"
+                        textAlign="center"
+                        mb={1}
+                    >
+                        {file.name}
+                    </Typography>
+                    <IconButton>
+                        <DeleteIcon />
+                    </IconButton>
+                </Box>
+            </Box>
+        </Tooltip>
+    );
+};
+
 const IssueAttachments = () => {
     const { t } = useTranslation();
-
     const { setValue, watch } = useFormContext<IssueFormData>();
     const attachments = watch("attachments") || [];
 
     const toastId = useRef<string | number | null>(null);
-
     const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
-
     const [files, setFiles] = useState<File[]>([]);
 
-    const onDrop = useCallback(
-        (acceptedFiles: File[]) => {
-            if (acceptedFiles.length > 1) return;
+    const showToast = (fileName: string) => {
+        toastId.current = toast(
+            <Box display="flex" flexDirection="column" gap={1}>
+                <Typography>{fileName}</Typography>
+                <LinearProgress />
+            </Box>,
+            {
+                closeOnClick: false,
+                closeButton: false,
+                hideProgressBar: true,
+                position: "bottom-right",
+            },
+        );
+    };
 
+    const updateToast = (
+        message: string,
+        type: TypeOptions,
+        autoClose: number,
+    ) => {
+        if (toastId.current) {
+            toast.update(toastId.current, {
+                render: <Typography>{message}</Typography>,
+                onClose: () => (toastId.current = null),
+                isLoading: false,
+                autoClose,
+                type,
+            });
+        }
+    };
+
+    const onDrop = useCallback(
+        async (acceptedFiles: File[]) => {
             const file = acceptedFiles[0];
             const formData = new FormData();
-
             formData.append("file", file);
 
             if (toastId.current === null) {
-                toastId.current = toast(
-                    <Box display="flex" flexDirection="column" gap={1}>
-                        <Typography>{file.name}</Typography>
-                        <LinearProgress />
-                    </Box>,
-                    {
-                        closeOnClick: false,
-                        closeButton: false,
-                        position: "bottom-right",
-                        progress: 0,
-                    },
-                );
+                showToast(file.name);
             }
 
-            uploadAttachment(formData)
-                .unwrap()
-                .then((response) => {
-                    setFiles([...files, file]);
+            try {
+                const response = await uploadAttachment(formData).unwrap();
+
+                setTimeout(() => {
+                    setFiles((prevFiles) => [...prevFiles, file]);
                     setValue("attachments", [
                         ...attachments,
                         response.payload.id,
                     ]);
-                    toastId.current && toast.dismiss(toastId.current);
-                })
-                .catch(toastApiError);
+                    updateToast(
+                        t("issues.form.attachments.upload.success"),
+                        "success",
+                        3000,
+                    );
+                }, 1000);
+            } catch (error) {
+                setTimeout(() => {
+                    toastApiError(error);
+                    updateToast(
+                        t("issues.form.attachments.upload.error"),
+                        "error",
+                        3000,
+                    );
+                }, 1000);
+            }
         },
-        [attachments, setValue, uploadAttachment],
+        [attachments, setValue, uploadAttachment, t],
     );
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
-        maxFiles: 1,
+        multiple: false,
     });
 
     return (
@@ -89,11 +175,17 @@ const IssueAttachments = () => {
                 <AttachFileIcon />
 
                 <Typography>
-                    {t("issues.form.attachments.dragFilesHere")}
+                    {t("issues.form.attachments.dragFileHere")}
                 </Typography>
             </Box>
 
-            <Box></Box>
+            {files.length > 0 && (
+                <Box>
+                    {files.map((file) => (
+                        <AttachmentCard key={file.name} file={file} />
+                    ))}
+                </Box>
+            )}
         </Box>
     );
 };

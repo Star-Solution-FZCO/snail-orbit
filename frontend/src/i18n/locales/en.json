@@ -198,5 +198,7 @@
     "somethingWentWrong": "Something went wrong",
     "somethingWentWrong.description": "Please try refreshing the page. If the problem persists, feel free to contact IT Support for assistance.",
     "mainPage": "Main page",
-    "issues.form.attachments.dragFilesHere": "Click to browse files or drag files here"
+    "issues.form.attachments.dragFileHere": "Click to browse file or drag file here",
+    "issues.form.attachments.upload.success": "File uploaded successfully",
+    "issues.form.attachments.upload.error": "Failed to upload file"
 }
