@@ -163,12 +163,17 @@ async def update_issue(
             obj.fields = f_val
             continue
         if k == 'attachments':
-            extra_attachment_ids = [a_id for a_id in v if a_id not in obj.attachments]
+            new_attachment_ids = set(v)
+            current_attachment_ids = set(a.id for a in obj.attachments)
+            extra_attachment_ids = new_attachment_ids - current_attachment_ids
+            remove_attachment_ids = current_attachment_ids - new_attachment_ids
             try:
-                extra_attachments = await resolve_files(extra_attachment_ids)
+                extra_attachments = await resolve_files(list(extra_attachment_ids))
             except ValueError as err:
                 raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
-            obj.attachments = [a for a in obj.attachments if a.id not in v]
+            obj.attachments = [
+                a for a in obj.attachments if a.id not in remove_attachment_ids
+            ]
             obj.attachments.extend(
                 [
                     m.IssueAttachment(

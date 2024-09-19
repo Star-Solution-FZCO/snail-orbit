@@ -38,7 +38,7 @@ const IssueList: FC = () => {
     );
 
     const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
-        const issueId = row.id_readable || row.id;
+        const issueId = row.id_readable;
         const subject = slugify(row.subject);
         navigate({
             to: "/issues/$issueId/$subject",
