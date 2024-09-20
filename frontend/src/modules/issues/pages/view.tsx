@@ -27,7 +27,7 @@ const IssueView: FC = () => {
     const { issueId } = routeApi.useParams();
 
     const [currentTab, setCurrentTab] = useState<"comments" | "history">(
-        "history",
+        "comments",
     );
 
     const { data, isLoading, error, refetch } =

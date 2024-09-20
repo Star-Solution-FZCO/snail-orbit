@@ -162,6 +162,10 @@ const IssueHistory: FC<IIssueHistoryProps> = ({ issueId }) => {
         );
     }
 
+    if (!records.length) {
+        return <Typography>{t("issues.history.empty")}</Typography>;
+    }
+
     return (
         <Box display="flex" flexDirection="column" gap={1}>
             {records.map((record) => (
