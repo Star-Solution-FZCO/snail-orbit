@@ -116,7 +116,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                             variant="outlined"
                             size="small"
                             loading={loading}
-                            disabled={!isDirty || loading}
+                            disabled={(!!issue && !isDirty) || loading}
                         >
                             {t("save")}
                         </LoadingButton>
