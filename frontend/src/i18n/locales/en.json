@@ -128,6 +128,7 @@
     "issues.history.fetch.error": "Failed to fetch issue history",
     "issues.history.title": "Issue history",
     "issues.history.updated": "Updated",
+    "issues.history.empty": "No history",
     "issues.item.fetch.error": "Failed to fetch issue",
     "issues.list.fetch.error": "Failed to fetch issues",
     "issues.new": "New Issue",
