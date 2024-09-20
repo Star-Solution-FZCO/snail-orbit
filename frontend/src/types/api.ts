@@ -38,6 +38,8 @@ export type ApiResponse<T> = {
     success: boolean;
     payload: T;
     metadata?: any;
+    error_messages?: string[];
+    error_fields?: Record<string, string>;
 };
 
 export type ListResponse<T> = ApiResponse<ListPayload<T>>;

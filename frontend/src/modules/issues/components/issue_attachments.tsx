@@ -39,7 +39,6 @@ const useToast = () => {
                 closeOnClick: false,
                 closeButton: false,
                 hideProgressBar: true,
-                position: "bottom-right",
             },
         );
     };
