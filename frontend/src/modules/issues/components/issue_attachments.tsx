@@ -279,9 +279,9 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
     const attachmentsExists = files.length > 0 || issueAttachments.length > 0;
 
     return (
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Box display="flex" flexDirection="column">
             {attachmentsExists && (
-                <Box display="flex" alignItems="center" gap={0.5}>
+                <Box display="flex" alignItems="center" gap={0.5} mb={1}>
                     <IconButton
                         sx={{ p: 0 }}
                         onClick={() =>
@@ -337,7 +337,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
 
             {attachmentsExists && (
                 <Collapse in={attachmentsExpanded}>
-                    <Box display="flex" gap={1} flexWrap="wrap">
+                    <Box display="flex" gap={1} flexWrap="wrap" mt={1}>
                         {issueAttachments.map((attachment) => (
                             <IssueAttachmentCard
                                 key={attachment.id}

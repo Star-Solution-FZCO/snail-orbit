@@ -1,9 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
-import { Box, Button, Stack, TextField } from "@mui/material";
+import { LoadingButton, TabContext, TabList } from "@mui/lab";
+import { Box, Button, Stack, Tab, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
-import { MDEditor } from "components";
+import { MDEditor, TabPanel } from "components";
 import equal from "fast-deep-equal/react";
 import { FC, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
@@ -16,6 +16,8 @@ import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
 import { IssueAttachments } from "./issue_attachments";
+import { IssueComments } from "./issue_comments";
+import { IssueHistory } from "./issue_history";
 
 const issueSchema = yup.object().shape({
     project_id: yup.string().required("form.validation.required"),
@@ -42,6 +44,9 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    const [currentTab, setCurrentTab] = useState<"comments" | "history">(
+        "comments",
+    );
     const [isDirty, setIsDirty] = useState(false);
 
     const methods = useForm<IssueFormData>({
@@ -62,6 +67,13 @@ export const IssueForm: FC<IssueFormProps> = ({
     const { data: projectData } = projectApi.useGetProjectQuery(
         watch("project_id") ?? skipToken,
     );
+
+    const handleChangeTab = (
+        _: React.SyntheticEvent,
+        value: "comments" | "history",
+    ) => {
+        setCurrentTab(value);
+    };
 
     useEffect(() => {
         if (issue) {
@@ -105,11 +117,6 @@ export const IssueForm: FC<IssueFormProps> = ({
                         )}
                     />
 
-                    <IssueAttachments
-                        issueId={issue?.id_readable}
-                        issueAttachments={issue?.attachments}
-                    />
-
                     <Box display="flex" gap={1}>
                         <LoadingButton
                             type="submit"
@@ -133,6 +140,36 @@ export const IssueForm: FC<IssueFormProps> = ({
                             </Link>
                         )}
                     </Box>
+
+                    <IssueAttachments
+                        issueId={issue?.id_readable}
+                        issueAttachments={issue?.attachments}
+                    />
+
+                    {issue && (
+                        <TabContext value={currentTab}>
+                            <Box borderBottom={1} borderColor="divider">
+                                <TabList onChange={handleChangeTab}>
+                                    <Tab
+                                        label={t("issues.comments.title")}
+                                        value="comments"
+                                    />
+                                    <Tab
+                                        label={t("issues.history.title")}
+                                        value="history"
+                                    />
+                                </TabList>
+                            </Box>
+
+                            <TabPanel value="comments">
+                                <IssueComments issueId={issue.id} />
+                            </TabPanel>
+
+                            <TabPanel value="history">
+                                <IssueHistory issueId={issue.id} />
+                            </TabPanel>
+                        </TabContext>
+                    )}
                 </Stack>
 
                 <FieldContainer>

@@ -108,7 +108,7 @@ const IssueComments: FC<IIssueCommentsProps> = ({ issueId }) => {
 
     return (
         <Box display="flex" flexDirection="column">
-            <Box pl={1} mb={3}>
+            <Box pl={1} mb={2}>
                 <CreateCommentForm issueId={issueId} />
             </Box>
 

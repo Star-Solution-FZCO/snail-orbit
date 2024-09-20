@@ -10,6 +10,7 @@ import {
     Theme,
     Tooltip,
     Typography,
+    useTheme,
 } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
 import MDEditor from "@uiw/react-md-editor";
@@ -127,6 +128,7 @@ const CommentCard: FC<ICommentCardProps> = ({
 }) => {
     const { t } = useTranslation();
     const location = useLocation();
+    const theme = useTheme();
 
     const user = useAppSelector((state) => state.profile.user);
 
@@ -235,6 +237,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                     style={{
                         whiteSpace: "pre-wrap",
                         fontSize: "inherit",
+                        color: theme.palette.text.primary,
                         backgroundColor: "transparent",
                     }}
                 />
