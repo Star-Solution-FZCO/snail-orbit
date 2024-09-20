@@ -162,11 +162,11 @@ export const IssueForm: FC<IssueFormProps> = ({
                             </Box>
 
                             <TabPanel value="comments">
-                                <IssueComments issueId={issue.id} />
+                                <IssueComments issueId={issue.id_readable} />
                             </TabPanel>
 
                             <TabPanel value="history">
-                                <IssueHistory issueId={issue.id} />
+                                <IssueHistory issueId={issue.id_readable} />
                             </TabPanel>
                         </TabContext>
                     )}
