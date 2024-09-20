@@ -1,9 +1,11 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
+    Collapse,
     Dialog,
     DialogActions,
     DialogContent,
@@ -151,6 +153,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         issueApi.useUpdateIssueMutation();
 
     const [files, setFiles] = useState<File[]>([]);
+    const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
     const [selectedAttachment, setSelectedAttachment] =
         useState<SelectedAttachmentT>(initialSelectedAttachment);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -185,11 +188,12 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                             .catch(toastApiError);
                     } else {
                         setFiles((prevFiles) => [...prevFiles, file]);
-                        setValue("attachments", [
-                            ...formAttachments,
-                            response.payload.id,
-                        ]);
                     }
+
+                    setValue("attachments", [
+                        ...formAttachments,
+                        response.payload.id,
+                    ]);
 
                     updateToast(
                         t("issues.form.attachments.upload.success"),
@@ -256,7 +260,13 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 .map((attachment) => attachment.id),
         })
             .unwrap()
-            .then(() => {
+            .then((response) => {
+                setValue(
+                    "attachments",
+                    response.payload.attachments.map(
+                        (attachment) => attachment.id,
+                    ),
+                );
                 setOpenDeleteDialog(false);
             })
             .catch(toastApiError);
@@ -267,11 +277,38 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         multiple: false,
     });
 
+    const attachmentsExists = files.length > 0 || issueAttachments.length > 0;
+
     return (
         <Box display="flex" flexDirection="column" gap={1}>
-            <Typography fontWeight="bold">
-                {t("issues.form.attachments.title")}
-            </Typography>
+            {attachmentsExists && (
+                <Box display="flex" alignItems="center" gap={0.5}>
+                    <IconButton
+                        sx={{ p: 0 }}
+                        onClick={() =>
+                            setAttachmentsExpanded(!attachmentsExpanded)
+                        }
+                        size="small"
+                    >
+                        <ExpandMoreIcon
+                            sx={{
+                                transform: attachmentsExpanded
+                                    ? "rotate(180deg)"
+                                    : "rotate(0)",
+                                transition: "transform 0.2s",
+                            }}
+                            fontSize="small"
+                        />
+                    </IconButton>
+
+                    <Typography fontWeight="bold">
+                        {t("issues.form.attachments.title")}{" "}
+                        <Typography component="span" color="text.secondary">
+                            ({files.length + issueAttachments.length})
+                        </Typography>
+                    </Typography>
+                </Box>
+            )}
 
             <Box
                 {...getRootProps()}
@@ -299,34 +336,36 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 </Typography>
             </Box>
 
-            {(files.length > 0 || issueAttachments.length > 0) && (
-                <Box display="flex" gap={1} flexWrap="wrap">
-                    {issueAttachments.map((attachment) => (
-                        <IssueAttachmentCard
-                            key={attachment.id}
-                            attachment={attachment}
-                            onDelete={() =>
-                                handleClickDeleteIssueAttachment(
-                                    attachment.id,
-                                    attachment.name,
-                                )
-                            }
-                        />
-                    ))}
+            {attachmentsExists && (
+                <Collapse in={attachmentsExpanded}>
+                    <Box display="flex" gap={1} flexWrap="wrap">
+                        {issueAttachments.map((attachment) => (
+                            <IssueAttachmentCard
+                                key={attachment.id}
+                                attachment={attachment}
+                                onDelete={() =>
+                                    handleClickDeleteIssueAttachment(
+                                        attachment.id,
+                                        attachment.name,
+                                    )
+                                }
+                            />
+                        ))}
 
-                    {files.map((file, index) => (
-                        <FileAttachmentCard
-                            key={file.name}
-                            file={file}
-                            onDelete={() =>
-                                handleClickDeleteFileAttachment(
-                                    index,
-                                    file.name,
-                                )
-                            }
-                        />
-                    ))}
-                </Box>
+                        {files.map((file, index) => (
+                            <FileAttachmentCard
+                                key={file.name}
+                                file={file}
+                                onDelete={() =>
+                                    handleClickDeleteFileAttachment(
+                                        index,
+                                        file.name,
+                                    )
+                                }
+                            />
+                        ))}
+                    </Box>
+                </Collapse>
             )}
 
             <DeleteAttachmentDialog
