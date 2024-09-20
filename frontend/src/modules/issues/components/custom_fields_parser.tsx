@@ -1,5 +1,6 @@
 import FieldCard from "components/fields/field_card/field_card";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { CustomFieldT } from "types";
@@ -8,6 +9,8 @@ import { EnumField } from "./fields/enum_field";
 import { InputField } from "./fields/input_field";
 import { UserField } from "./fields/user_field";
 import { IssueFormData } from "./issue_form";
+
+dayjs.extend(utc);
 
 type CustomFieldsParserProps = {
     fields: CustomFieldT[];
@@ -140,9 +143,16 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                                     ? dayjs(value as string)
                                                     : undefined
                                             }
-                                            onChange={(value) =>
-                                                onChange(value.toISOString())
-                                            }
+                                            onChange={(value) => {
+                                                onChange(
+                                                    value.format(
+                                                        fieldData.type ===
+                                                            "date"
+                                                            ? "YYYY-MM-DD"
+                                                            : "YYYY-MM-DDTHH:mm:ss",
+                                                    ),
+                                                );
+                                            }}
                                             label={fieldData.name}
                                             id={fieldData.id}
                                             type={

@@ -21,8 +21,6 @@ export const DateField = forwardRef(
             setAnchorEl(null);
         };
 
-        console.log(label, value);
-
         return (
             <>
                 <FieldCard

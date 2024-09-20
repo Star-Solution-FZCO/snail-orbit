@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pm.models as m
 from pm.utils.dateutils import utcnow
@@ -20,6 +20,8 @@ class ValidateDueDate(OnChangeWorkflowScript):
         if not (due_date := due_date_field.value):
             return
         today = utcnow().date()
+        if isinstance(due_date, datetime):
+            due_date = due_date.date()
         if due_date:
             if due_date < today:
                 raise WorkflowException(

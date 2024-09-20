@@ -75,7 +75,6 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
                     </Typography>,
                     {
                         autoClose: false,
-                        position: "bottom-right",
                     },
                 );
             })

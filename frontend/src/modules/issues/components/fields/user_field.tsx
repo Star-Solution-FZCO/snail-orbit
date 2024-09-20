@@ -34,7 +34,7 @@ const UserFieldComp = <T extends boolean | undefined>(
             let res = data.payload.items.find(
                 (el) => "id" in el && el.id === value,
             );
-            console.log(res, value);
+            console.debug(res, value);
             if (res && "name" in res) return res.name;
             else return "";
         } else {

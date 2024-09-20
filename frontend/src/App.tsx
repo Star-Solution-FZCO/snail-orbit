@@ -36,7 +36,7 @@ const App = () => {
                 <CssBaseline />
 
                 <ToastContainer
-                    position="top-right"
+                    position="bottom-right"
                     theme={theme.palette.mode}
                     closeOnClick
                 />
