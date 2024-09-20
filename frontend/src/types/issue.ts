@@ -1,4 +1,8 @@
-import { CustomFieldT } from "./custom_fields";
+import {
+    BasicCustomFieldT,
+    CustomFieldT,
+    CustomFieldValueT,
+} from "./custom_fields";
 import { ProjectT } from "./project";
 import { BasicUserT } from "./user";
 
@@ -36,3 +40,16 @@ export type IssueT = {
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;
+
+export type FieldValueChangeT = {
+    field: BasicCustomFieldT;
+    old_value: CustomFieldValueT;
+    new_value: CustomFieldValueT;
+};
+
+export type IssueHistoryT = {
+    id: string;
+    author: BasicUserT;
+    time: string;
+    changes: FieldValueChangeT[];
+};
