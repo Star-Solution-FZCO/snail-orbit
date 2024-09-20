@@ -13,41 +13,62 @@ import i18n from "i18n";
 import { t } from "i18next";
 import { FC } from "react";
 import { issueApi } from "store";
-import { CustomFieldValueT, FieldValueChangeT, IssueHistoryT } from "types";
+import {
+    BasicCustomFieldT,
+    BasicUserT,
+    CustomFieldValueT,
+    FieldValueChangeT,
+    IssueHistoryT,
+    StateFieldT,
+} from "types";
 import { formatErrorMessages } from "utils";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-const renderValue = (value: CustomFieldValueT): string => {
+const renderValue = (
+    value: CustomFieldValueT,
+    field: BasicCustomFieldT,
+): string => {
     if (value === null || value === undefined) {
-        return "—";
-    }
-    if (typeof value === "boolean") {
-        return value ? i18n.t("common.yes") : i18n.t("common.no");
-    }
-    if (typeof value === "number") {
-        return value.toString();
-    }
-    if (typeof value === "string") {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value
-            .map((item) => (typeof item === "object" ? item.name : item))
-            .join(", ");
-    }
-    if (typeof value === "object") {
-        if ("name" in value) {
-            return value.name;
-        }
-        if ("state" in value) {
-            return value.state;
-        }
-        return JSON.stringify(value);
+        return `${i18n.t("common.no")} ${field.name}`;
     }
 
-    return String(value);
+    switch (field.type) {
+        case "boolean":
+            return value ? i18n.t("common.yes") : i18n.t("common.no");
+
+        case "integer":
+        case "float":
+            return value.toString();
+
+        case "string":
+            return value as string;
+
+        case "date":
+            return dayjs(value).format("DD MMM YYYY");
+
+        case "datetime":
+            return dayjs(value).format("DD MMM YYYY HH:mm");
+
+        case "user":
+            return (value as BasicUserT).name;
+
+        case "user_multi":
+            return (value as BasicUserT[]).map((user) => user.name).join(", ");
+
+        case "enum":
+            return value;
+
+        case "enum_multi":
+            return (value as string[]).join(", ");
+
+        case "state":
+            return (value as StateFieldT).state;
+
+        default:
+            return String(value);
+    }
 };
 
 const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
@@ -60,7 +81,8 @@ const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
                     </Typography>
 
                     <Typography fontSize="inherit">
-                        {renderValue(old_value)} → {renderValue(new_value)}
+                        {renderValue(old_value, field)} →{" "}
+                        {renderValue(new_value, field)}
                     </Typography>
                 </Box>
             ))}
@@ -74,7 +96,7 @@ const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
             sx={{
                 display: "flex",
                 alignItems: "flex-start",
-                gap: 1,
+                gap: 2,
                 px: 1,
                 py: 0.5,
                 borderRadius: 0.5,
@@ -87,12 +109,12 @@ const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                p={0.5}
                 border={1}
                 borderColor="divider"
                 borderRadius={1}
                 width="36px"
                 height="36px"
+                p={0.5}
             >
                 <HistoryIcon color="disabled" />
             </Box>
