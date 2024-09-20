@@ -211,7 +211,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                         >
                             <Typography
                                 fontSize="inherit"
-                                color="text.disabled"
+                                color="text.secondary"
                             >
                                 {t("issues.comments.commented")}{" "}
                                 {dayjs

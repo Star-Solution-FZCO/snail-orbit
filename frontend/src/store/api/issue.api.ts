@@ -4,6 +4,7 @@ import {
     CommentT,
     CreateCommentT,
     CreateIssueT,
+    IssueHistoryT,
     IssueT,
     ListQueryParams,
     ListResponse,
@@ -12,7 +13,7 @@ import {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Issues", "IssueComments"];
+const tagTypes = ["Issues", "IssueComments", "IssueHistories"];
 
 export const issueApi = createApi({
     reducerPath: "issuesApi",
@@ -57,6 +58,7 @@ export const issueApi = createApi({
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Issues", id },
                 { type: "Issues", id: "LIST" },
+                { type: "IssueHistories", id },
             ],
         }),
         deleteIssue: build.mutation<ApiResponse<{ id: string }>, string>({
@@ -123,6 +125,7 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { commentId }) => [
                 { type: "IssueComments", id: commentId },
+                { type: "IssueComments", id: "LIST" },
             ],
         }),
         deleteIssueComment: build.mutation<
@@ -135,6 +138,19 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { commentId }) => [
                 { type: "IssueComments", id: commentId },
+                { type: "IssueComments", id: "LIST" },
+            ],
+        }),
+        listIssueHistory: build.query<
+            ListResponse<IssueHistoryT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `issue/${id}/history/list`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "IssueHistories", id },
             ],
         }),
     }),
