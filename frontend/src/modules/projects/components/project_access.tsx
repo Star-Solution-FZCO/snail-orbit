@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import GroupIcon from "@mui/icons-material/Group";
 import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
@@ -16,11 +17,13 @@ import {
     Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { UserAvatar } from "components";
 import { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { groupApi, projectApi, roleApi, userApi } from "store";
 import {
+    BasicUserT,
     ProjectDetailT,
     ProjectPermissionT,
     ProjectPermissionTargetT,
@@ -44,7 +47,8 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
     const { t } = useTranslation();
 
     const [target, setTarget] = useState<
-        (ProjectPermissionTargetT & { type: TargetTypeT }) | null
+        | (ProjectPermissionTargetT & { type: TargetTypeT; avatar?: string })
+        | null
     >(null);
     const [role, setRole] = useState<RoleT | null>(null);
 
@@ -144,6 +148,21 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     )}
                     getOptionLabel={(option) => option.name}
                     onChange={(_, value) => setTarget(value)}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    {option.type === "user" ? (
+                                        <UserAvatar src={option.avatar || ""} />
+                                    ) : (
+                                        <GroupIcon />
+                                    )}
+                                    {option.name}
+                                </Box>
+                            </li>
+                        );
+                    }}
                     groupBy={(option) =>
                         t(`projects.access.target.${option.type}s`)
                     }
@@ -303,6 +322,18 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
                 headerName: t("projects.access.target.name"),
                 valueGetter: (_, row) => row.target.name,
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Box display="flex" alignItems="center" gap={1}>
+                        {row.target_type === "user" ? (
+                            <UserAvatar
+                                src={(row.target as BasicUserT).avatar}
+                            />
+                        ) : (
+                            <GroupIcon />
+                        )}
+                        {row.target.name}
+                    </Box>
+                ),
             },
             {
                 field: "target_type",

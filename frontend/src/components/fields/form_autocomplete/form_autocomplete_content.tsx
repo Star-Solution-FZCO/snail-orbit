@@ -84,12 +84,13 @@ const FormAutocompleteContentComp = <
                             justifyContent="space-between"
                             sx={{ width: 1 }}
                         >
-                            <Stack direction="row">
+                            <Stack direction="row" gap={0.5}>
                                 {multiple ? (
                                     <Checkbox
-                                        size="small"
+                                        sx={{ p: 0 }}
                                         checked={selected || false}
-                                        sx={{ py: 0, paddingLeft: 0 }}
+                                        size="small"
+                                        disableRipple
                                     />
                                 ) : null}
                                 <Stack
@@ -122,9 +123,7 @@ const FormAutocompleteContentComp = <
                                         borderRadius: "3px",
                                         mr: 1,
                                         my: "auto",
-                                    }}
-                                    style={{
-                                        backgroundColor: option.color,
+                                        bgcolor: option.color,
                                     }}
                                 />
                             ) : null}

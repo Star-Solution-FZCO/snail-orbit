@@ -1,11 +1,6 @@
 import HistoryIcon from "@mui/icons-material/History";
-import {
-    Avatar,
-    Box,
-    CircularProgress,
-    Tooltip,
-    Typography,
-} from "@mui/material";
+import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
+import { UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -127,10 +122,7 @@ const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
                     fontSize={14}
                     height="36px"
                 >
-                    <Avatar
-                        sx={{ width: 24, height: 24 }}
-                        src={record.author.avatar}
-                    />
+                    <UserAvatar src={record.author.avatar} />
 
                     <Typography fontSize="inherit">
                         {record.author.name}

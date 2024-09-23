@@ -27,11 +27,12 @@ export const tabs = [
 export const mergeUsersAndGroups = (
     users: BasicUserT[],
     groups: GroupT[],
-): Array<ProjectPermissionTargetT & { type: TargetTypeT }> => {
+): Array<ProjectPermissionTargetT & { type: TargetTypeT; avatar?: string }> => {
     const merged = [
         ...users.map((user) => ({
             id: user.id,
             name: user.name,
+            avatar: user.avatar,
             type: "user" as TargetTypeT,
         })),
         ...groups.map((group) => ({
