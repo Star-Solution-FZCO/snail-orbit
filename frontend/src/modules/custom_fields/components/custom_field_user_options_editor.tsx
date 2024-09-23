@@ -2,7 +2,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import GroupIcon from "@mui/icons-material/Group";
-import PersonIcon from "@mui/icons-material/Person";
 import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
@@ -17,11 +16,12 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import { UserAvatar } from "components";
 import { mergeUsersAndGroups } from "modules/projects/utils";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi, groupApi, userApi } from "store";
-import { CustomFieldT, UserOrGroupOptionT } from "types";
+import { BasicUserT, CustomFieldT, UserOrGroupOptionT } from "types";
 import { toastApiError } from "utils";
 
 interface IUserOrGroupOptionProps {
@@ -34,8 +34,10 @@ const UserOrGroupOption: FC<IUserOrGroupOptionProps> = ({
     onDelete,
 }) => {
     return (
-        <Box display="flex" alignItems="center" gap={2}>
-            {entity.type === "user" && <PersonIcon />}
+        <Box display="flex" alignItems="center" gap={1}>
+            {entity.type === "user" && (
+                <UserAvatar src={(entity.value as BasicUserT).avatar} />
+            )}
             {entity.type === "group" && <GroupIcon />}
 
             <Typography flex={1}>{entity.value.name}</Typography>
@@ -68,6 +70,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         id: string;
         name: string;
         type: "user" | "group";
+        avatar?: string;
     } | null>(null);
 
     const { data: users } = userApi.useListSelectUserQuery({
@@ -141,6 +144,21 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     )}
                     getOptionLabel={(option) => option.name}
                     onChange={(_, value) => setEntity(value)}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    {option.type === "user" ? (
+                                        <UserAvatar src={option.avatar || ""} />
+                                    ) : (
+                                        <GroupIcon />
+                                    )}
+                                    {option.name}
+                                </Box>
+                            </li>
+                        );
+                    }}
                     groupBy={(option) =>
                         t(`projects.access.target.${option.type}s`)
                     }

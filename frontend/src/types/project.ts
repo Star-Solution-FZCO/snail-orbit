@@ -1,4 +1,5 @@
 import { CustomFieldT } from "./custom_fields";
+import { BasicUserT } from "./user";
 import { WorkflowT } from "./workflow";
 
 export type BasicProjectT = {
@@ -34,7 +35,6 @@ export type ProjectPermissionTargetT = {
 
 export type TargetTypeT = "user" | "group";
 
-export type TargetUserT = ProjectPermissionTargetT & { email: string };
 export type TargetGroupT = ProjectPermissionTargetT & {
     description: string | null;
 };
@@ -48,6 +48,6 @@ type RoleT = {
 export type ProjectPermissionT = {
     id: string;
     target_type: TargetTypeT;
-    target: TargetUserT | TargetGroupT;
+    target: BasicUserT | TargetGroupT;
     role: RoleT;
 };

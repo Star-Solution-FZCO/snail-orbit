@@ -1,8 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
+    BasicUserT,
     CreateGroupT,
-    GroupMemberT,
     GroupT,
     ListQueryParams,
     ListResponse,
@@ -73,7 +73,7 @@ export const groupApi = createApi({
             invalidatesTags: (_result, _error, id) => [{ type: "Groups", id }],
         }),
         listGroupMembers: build.query<
-            ListResponse<GroupMemberT>,
+            ListResponse<BasicUserT>,
             { id: string; params?: ListQueryParams }
         >({
             query: ({ id, params }) => ({

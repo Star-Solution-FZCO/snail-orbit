@@ -2,7 +2,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
-    Avatar,
     Box,
     Button,
     Dialog,
@@ -12,6 +11,7 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
+import { UserAvatar } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
@@ -88,10 +88,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                         return (
                             <li key={key} {...optionProps}>
                                 <Box display="flex" alignItems="center" gap={1}>
-                                    <Avatar
-                                        sx={{ width: 24, height: 24 }}
-                                        src={option.avatar}
-                                    />
+                                    <UserAvatar src={option.avatar} />
                                     {option.name}
                                 </Box>
                             </li>

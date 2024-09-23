@@ -6,3 +6,4 @@ export * from "./navbar";
 export * from "./not_found";
 export * from "./query_pagination";
 export * from "./tab_panel";
+export * from "./user_avatar";

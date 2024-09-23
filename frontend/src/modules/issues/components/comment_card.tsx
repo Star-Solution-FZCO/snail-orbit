@@ -3,7 +3,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { LoadingButton } from "@mui/lab";
 import {
-    Avatar,
     Box,
     Button,
     SxProps,
@@ -14,6 +13,7 @@ import {
 } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
 import MDEditor from "@uiw/react-md-editor";
+import { UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -21,19 +21,11 @@ import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppSelector } from "store";
-import { BasicUserT, CommentT } from "types";
+import { CommentT } from "types";
 import { toastApiError } from "utils";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
-
-interface IAuthorAvatarProps {
-    author: BasicUserT;
-}
-
-const AuthorAvatar: FC<IAuthorAvatarProps> = ({ author }) => (
-    <Avatar sx={{ width: 32, height: 32 }} src={author.avatar} />
-);
 
 const iconStyles = (hoverColor: string): SxProps<Theme> => ({
     "&:hover": {
@@ -185,7 +177,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                 },
             }}
         >
-            <AuthorAvatar author={author} />
+            <UserAvatar src={author.avatar} size={32}/>
 
             <Box width="100%" fontSize={14}>
                 <Box
@@ -247,7 +239,7 @@ const CommentCard: FC<ICommentCardProps> = ({
 
     const renderEditMode = () => (
         <Box display="flex" gap={1} pl={1} py={0.5}>
-            <AuthorAvatar author={author} />
+            <UserAvatar src={author.avatar} />
 
             <Box display="flex" flexDirection="column" gap={1} flex={1}>
                 <Box minHeight="85px">
