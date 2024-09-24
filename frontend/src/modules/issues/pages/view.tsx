@@ -1,18 +1,17 @@
-import { Box, CircularProgress, Container, Typography } from "@mui/material";
+import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { ErrorHandler } from "components";
 import { FC, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
 import { slugify } from "transliteration";
 import { CreateIssueT } from "types";
-import { formatErrorMessages, toastApiError } from "utils";
+import { toastApiError } from "utils";
 import { IssueHeading } from "../components/heading";
 import IssueForm from "../components/issue_form";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
 const IssueView: FC = () => {
-    const { t } = useTranslation();
     const navigate = useNavigate();
     const { issueId } = routeApi.useParams();
 
@@ -57,13 +56,7 @@ const IssueView: FC = () => {
     }, [issue]);
 
     if (error) {
-        return (
-            <Container>
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) || t("issues.item.fetch.error")}
-                </Typography>
-            </Container>
-        );
+        return <ErrorHandler error={error} message="issues.item.fetch.error" />;
     }
 
     return (
