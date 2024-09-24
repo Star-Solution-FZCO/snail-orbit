@@ -16,7 +16,7 @@ import {
     IssueHistoryT,
     StateFieldT,
 } from "types";
-import { formatErrorMessages } from "utils";
+import { formatErrorMessages, noLimitListQueryParams } from "utils";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -155,7 +155,7 @@ interface IIssueHistoryProps {
 const IssueHistory: FC<IIssueHistoryProps> = ({ issueId }) => {
     const { data, isLoading, error } = issueApi.useListIssueHistoryQuery({
         id: issueId,
-        params: { limit: 0, offset: 0 },
+        params: noLimitListQueryParams,
     });
 
     const records = data?.payload.items || [];

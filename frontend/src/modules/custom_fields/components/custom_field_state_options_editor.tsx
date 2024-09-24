@@ -3,8 +3,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {
     Box,
     Button,
+    Checkbox,
     CircularProgress,
     debounce,
+    FormControlLabel,
     IconButton,
     Popover,
     TextField,
@@ -14,28 +16,30 @@ import ColorPicker from "@uiw/react-color-compact";
 import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { CustomFieldT, EnumOptionT } from "types";
+import { CustomFieldT, EnumOptionT, StateOptionT } from "types";
 import { toastApiError } from "utils";
 import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
 
-interface ICustomFieldEnumOptionProps {
+interface ICustomFieldStateOptionProps {
     customFieldId: string;
-    option: EnumOptionT;
-    onDelete: (option: EnumOptionT) => void;
+    option: StateOptionT;
+    onDelete: (option: StateOptionT) => void;
 }
 
-const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
+const CustomFieldStateOption: FC<ICustomFieldStateOptionProps> = ({
     customFieldId,
     option,
     onDelete,
 }) => {
     const { t } = useTranslation();
 
-    const [updateOption] =
-        customFieldsApi.useUpdateCustomFieldEnumOptionMutation();
+    const [updateOption, { isLoading }] =
+        customFieldsApi.useUpdateCustomFieldStateOptionMutation();
 
     const [color, setColor] = useState<string | null>(option.color);
     const [value, setValue] = useState<string>(option.value);
+    const [isResolved, setIsResolved] = useState<boolean>(option.is_resolved);
+    const [isClosed, setIsClosed] = useState<boolean>(option.is_closed);
 
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
@@ -63,17 +67,17 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
         handleCloseColorPicker();
     };
 
-    const updateValue = (newValue: string) => {
+    const updateState = (newValue: string) => {
         updateOption({
             id: customFieldId,
             option_id: option.uuid,
-            value: newValue,
+            state: newValue, // pay attention to StateOptionUpdateBody
         })
             .unwrap()
             .catch(toastApiError);
     };
 
-    const debouncedUpdateValue = useCallback(debounce(updateValue, 500), []);
+    const debouncedUpdateValue = useCallback(debounce(updateState, 500), []);
 
     const handleChangeValue = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +88,38 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
         },
         [],
     );
+
+    const handleChangeIsResolved = (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const newValue = event.target.checked;
+
+        setIsResolved(newValue);
+
+        updateOption({
+            id: customFieldId,
+            option_id: option.uuid,
+            is_resolved: newValue,
+        })
+            .unwrap()
+            .catch(toastApiError);
+    };
+
+    const handleChangeIsClosed = (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const newValue = event.target.checked;
+
+        setIsClosed(newValue);
+
+        updateOption({
+            id: customFieldId,
+            option_id: option.uuid,
+            is_closed: newValue,
+        })
+            .unwrap()
+            .catch(toastApiError);
+    };
 
     const open = Boolean(anchorEl);
 
@@ -118,9 +154,40 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
             <TextField
                 value={value}
                 onChange={handleChangeValue}
+                InputProps={{
+                    endAdornment: isLoading && (
+                        <Box display="flex">
+                            <CircularProgress color="inherit" size={20} />
+                        </Box>
+                    ),
+                }}
                 placeholder={t("customFields.options.value")}
                 size="small"
                 fullWidth
+            />
+
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={isResolved}
+                        onChange={handleChangeIsResolved}
+                        size="small"
+                        disableRipple
+                    />
+                }
+                label={t("customFields.options.state.resolved")}
+            />
+
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={isClosed}
+                        onChange={handleChangeIsClosed}
+                        size="small"
+                        disableRipple
+                    />
+                }
+                label={t("customFields.options.state.closed")}
             />
 
             <Button
@@ -134,13 +201,13 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
     );
 };
 
-interface ICustomFieldEnumOptionsEditorProps {
+interface ICustomFieldStateOptionsEditorProps {
     customField: CustomFieldT;
 }
 
-const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
-    customField,
-}) => {
+const CustomFieldStateOptionsEditor: FC<
+    ICustomFieldStateOptionsEditorProps
+> = ({ customField }) => {
     const { t } = useTranslation();
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -149,15 +216,17 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
     );
 
     const [createOption, { isLoading: createLoading }] =
-        customFieldsApi.useCreateCustomFieldEnumOptionMutation();
+        customFieldsApi.useCreateCustomFieldStateOptionMutation();
     const [deleteOption, { isLoading: deleteLoading }] =
-        customFieldsApi.useDeleteCustomFieldEnumOptionMutation();
+        customFieldsApi.useDeleteCustomFieldStateOptionMutation();
 
     const handleClickAddOption = () => {
         createOption({
             id: customField.id,
             value: "",
             color: null,
+            is_resolved: false,
+            is_closed: false,
         })
             .unwrap()
             .then()
@@ -209,10 +278,10 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
             )}
 
             {options.map((option) => (
-                <CustomFieldEnumOption
+                <CustomFieldStateOption
                     key={option.uuid}
                     customFieldId={customField.id}
-                    option={option as EnumOptionT}
+                    option={option as StateOptionT}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
@@ -227,4 +296,4 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
     );
 };
 
-export { CustomFieldEnumOptionsEditor };
+export { CustomFieldStateOptionsEditor };

@@ -61,7 +61,7 @@ export type StateOptionT = {
 
 export type UpdateStateOptionT = {
     option_id: string;
-} & Partial<CreateStateOptionT>;
+} & Partial<Omit<CreateStateOptionT, "value"> & { state: string }>;
 
 export type CustomFieldValueT =
     | boolean

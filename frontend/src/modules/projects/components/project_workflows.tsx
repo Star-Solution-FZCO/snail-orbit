@@ -24,7 +24,11 @@ import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { workflowApi } from "store/api/workflow.api";
 import { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
-import { formatErrorMessages, toastApiError } from "utils";
+import {
+    formatErrorMessages,
+    noLimitListQueryParams,
+    toastApiError,
+} from "utils";
 
 const workflowTypeMap: Record<
     WorkflowTypeT,
@@ -51,10 +55,7 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
         data: workflows,
         isLoading: workflowsLoading,
         error,
-    } = workflowApi.useListWorkflowQuery({
-        limit: 0,
-        offset: 0,
-    });
+    } = workflowApi.useListWorkflowQuery(noLimitListQueryParams);
 
     const [addProjectWorkflow, { isLoading: addProjectWorkflowLoading }] =
         projectApi.useAddProjectWorkflowMutation();

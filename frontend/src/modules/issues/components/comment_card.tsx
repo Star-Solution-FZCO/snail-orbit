@@ -177,7 +177,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                 },
             }}
         >
-            <UserAvatar src={author.avatar} size={32}/>
+            <UserAvatar src={author.avatar} size={32} />
 
             <Box width="100%" fontSize={14}>
                 <Box
