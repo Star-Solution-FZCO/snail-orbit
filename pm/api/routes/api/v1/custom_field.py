@@ -67,7 +67,7 @@ class EnumOptionUpdateBody(BaseModel):
 
 
 class StateOptionUpdateBody(BaseModel):
-    value: str | None = None
+    state: str | None = None
     color: str | None = None
     is_resolved: bool | None = None
     is_closed: bool | None = None

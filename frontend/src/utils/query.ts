@@ -26,3 +26,8 @@ export const useListQueryParams = (params: Partial<ListQueryParams> = {}) => {
 
     return [queryParams, updateQueryParams, resetQueryParams] as const;
 };
+
+export const noLimitListQueryParams: ListQueryParams = {
+    limit: 0,
+    offset: 0,
+};

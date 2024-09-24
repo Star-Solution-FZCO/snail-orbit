@@ -22,7 +22,7 @@ import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi, groupApi, userApi } from "store";
 import { BasicUserT, CustomFieldT, UserOrGroupOptionT } from "types";
-import { toastApiError } from "utils";
+import { noLimitListQueryParams, toastApiError } from "utils";
 
 interface IUserOrGroupOptionProps {
     entity: UserOrGroupOptionT;
@@ -73,14 +73,10 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         avatar?: string;
     } | null>(null);
 
-    const { data: users } = userApi.useListSelectUserQuery({
-        limit: 0,
-        offset: 0,
-    });
-    const { data: groups } = groupApi.useListGroupQuery({
-        limit: 0,
-        offset: 0,
-    });
+    const { data: users } = userApi.useListSelectUserQuery(
+        noLimitListQueryParams,
+    );
+    const { data: groups } = groupApi.useListGroupQuery(noLimitListQueryParams);
 
     const [addEntity, { isLoading }] =
         customFieldsApi.useCreateCustomFieldUserOptionMutation();
@@ -185,35 +181,18 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
 
 interface IRemoveUserOrGroupDialogProps {
     open: boolean;
-    customFieldId: string;
-    entity: UserOrGroupOptionT | null;
     onClose: () => void;
+    onDelete: () => void;
+    loading?: boolean;
 }
 
 const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
     open,
-    customFieldId,
-    entity,
     onClose,
+    onDelete,
+    loading,
 }) => {
     const { t } = useTranslation();
-
-    const [removeEntity, { isLoading }] =
-        customFieldsApi.useDeleteCustomFieldUserOptionMutation();
-
-    const handleClickDelete = () => {
-        if (!entity) {
-            return;
-        }
-
-        removeEntity({
-            id: customFieldId,
-            option_id: entity.uuid,
-        })
-            .unwrap()
-            .then(onClose)
-            .catch(toastApiError);
-    };
 
     return (
         <Dialog open={open} onClose={onClose}>
@@ -224,7 +203,7 @@ const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
             >
                 {t("customFields.userOrGroup.delete.title")}
 
-                <IconButton onClick={onClose} size="small" disabled={isLoading}>
+                <IconButton onClick={onClose} size="small" disabled={loading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -240,15 +219,15 @@ const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
                     onClick={onClose}
                     variant="outlined"
                     color="error"
-                    disabled={isLoading}
+                    disabled={loading}
                 >
                     {t("cancel")}
                 </Button>
 
                 <LoadingButton
-                    onClick={handleClickDelete}
+                    onClick={onDelete}
                     variant="outlined"
-                    loading={isLoading}
+                    loading={loading}
                 >
                     {t("delete")}
                 </LoadingButton>
@@ -279,6 +258,26 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
     const handleClickDeleteUserOrGroup = (user: UserOrGroupOptionT) => {
         setSelectedEntity(user);
         setDeleteDialogOpen(true);
+    };
+
+    const [removeEntity, { isLoading }] =
+        customFieldsApi.useDeleteCustomFieldUserOptionMutation();
+
+    const deleteOption = () => {
+        if (!selectedEntity) {
+            return;
+        }
+
+        removeEntity({
+            id: customField.id,
+            option_id: selectedEntity.uuid,
+        })
+            .unwrap()
+            .then(() => {
+                setDeleteDialogOpen(false);
+                setSelectedEntity(null);
+            })
+            .catch(toastApiError);
     };
 
     const users = customField.options || [];
@@ -315,9 +314,9 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
 
             <RemoveUserOrGroupDialog
                 open={deleteDialogOpen}
-                customFieldId={customField.id}
-                entity={selectedEntity}
                 onClose={() => setDeleteDialogOpen(false)}
+                onDelete={deleteOption}
+                loading={isLoading}
             />
         </Box>
     );

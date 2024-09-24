@@ -30,7 +30,11 @@ import {
     RoleT,
     TargetTypeT,
 } from "types";
-import { toastApiError, useListQueryParams } from "utils";
+import {
+    noLimitListQueryParams,
+    toastApiError,
+    useListQueryParams,
+} from "utils";
 import { mergeUsersAndGroups } from "../utils";
 
 interface IPGrantPermissionDialogProps {
@@ -52,18 +56,11 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
     >(null);
     const [role, setRole] = useState<RoleT | null>(null);
 
-    const { data: roles } = roleApi.useListRoleQuery({
-        limit: 0,
-        offset: 0,
-    });
-    const { data: users } = userApi.useListSelectUserQuery({
-        limit: 0,
-        offset: 0,
-    });
-    const { data: groups } = groupApi.useListGroupQuery({
-        limit: 0,
-        offset: 0,
-    });
+    const { data: roles } = roleApi.useListRoleQuery(noLimitListQueryParams);
+    const { data: users } = userApi.useListSelectUserQuery(
+        noLimitListQueryParams,
+    );
+    const { data: groups } = groupApi.useListGroupQuery(noLimitListQueryParams);
 
     const [grantProjectPermission, { isLoading }] =
         projectApi.useGrantProjectPermissionMutation();

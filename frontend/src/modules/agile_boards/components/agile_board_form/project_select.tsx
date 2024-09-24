@@ -10,6 +10,7 @@ import {
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
+import { noLimitListQueryParams } from "utils";
 import { AgileBoardProject } from "./agile_board_form.schema";
 
 export type ProjectSelectProps = {
@@ -34,8 +35,7 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
         const handleOpen = useCallback(() => {
             setIsOpen(true);
 
-            if (!isLoading && !isSuccess)
-                fetchProjects({ limit: 0, offset: 0 });
+            if (!isLoading && !isSuccess) fetchProjects(noLimitListQueryParams);
         }, [setIsOpen]);
 
         const handleClose = useCallback(() => {
@@ -51,7 +51,7 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
 
         useEffect(() => {
             if (value && value.length && !isLoading && !isSuccess) {
-                fetchProjects({ limit: 0, offset: 0 });
+                fetchProjects(noLimitListQueryParams);
             }
         }, [value, isLoading, isSuccess]);
 

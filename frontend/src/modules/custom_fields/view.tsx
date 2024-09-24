@@ -15,6 +15,7 @@ import { CustomFieldT, UpdateCustomFieldT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
 import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
 import { CustomFieldForm } from "./components/custom_field_form";
+import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
 import { CustomFieldUserOptionsEditor } from "./components/custom_field_user_options_editor";
 
 const routeApi = getRouteApi("/_authenticated/custom-fields/$customFieldId");
@@ -62,6 +63,7 @@ const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
 }) => {
     const isEnumType = ["enum", "enum_multi"].includes(customField.type);
     const isUserType = ["user", "user_multi"].includes(customField.type);
+    const isStateType = customField.type === "state";
 
     if (isEnumType) {
         return <CustomFieldEnumOptionsEditor customField={customField} />;
@@ -69,6 +71,10 @@ const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
 
     if (isUserType) {
         return <CustomFieldUserOptionsEditor customField={customField} />;
+    }
+
+    if (isStateType) {
+        return <CustomFieldStateOptionsEditor customField={customField} />;
     }
 
     return null;

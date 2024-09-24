@@ -22,7 +22,11 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, projectApi } from "store";
 import { CustomFieldT, ProjectDetailT } from "types";
-import { formatErrorMessages, toastApiError } from "utils";
+import {
+    formatErrorMessages,
+    noLimitListQueryParams,
+    toastApiError,
+} from "utils";
 
 interface ICustomFieldListProps {
     projectId: string;
@@ -35,10 +39,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
         data: customFields,
         isLoading: customFieldsLoading,
         error,
-    } = customFieldsApi.useListCustomFieldsQuery({
-        limit: 0,
-        offset: 0,
-    });
+    } = customFieldsApi.useListCustomFieldsQuery(noLimitListQueryParams);
 
     const [addProjectCustomField, { isLoading: addProjectCustomFieldLoading }] =
         projectApi.useAddProjectCustomFieldMutation();
