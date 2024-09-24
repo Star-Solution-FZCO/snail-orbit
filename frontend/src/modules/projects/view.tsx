@@ -1,11 +1,10 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { TabPanel } from "components";
+import { ErrorHandler, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import { formatErrorMessages } from "utils";
+import { projectApi, useAppSelector } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
@@ -20,6 +19,8 @@ const ProjectView = () => {
     const { projectId } = routeApi.useParams();
     const search = routeApi.useSearch();
 
+    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
+
     const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
@@ -31,18 +32,17 @@ const ProjectView = () => {
 
     if (error) {
         return (
-            <Box px={4} pb={4}>
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) ||
-                        t("projects.item.fetch.error")}
-                </Typography>
-            </Box>
+            <ErrorHandler error={error} message="projects.item.fetch.error" />
         );
     }
 
     if (!data) return null;
 
     const project = data.payload;
+
+    const visibleTabs = tabs.filter((tab) => {
+        return !tab.adminOnly || isAdmin;
+    });
 
     return (
         <Box
@@ -66,7 +66,7 @@ const ProjectView = () => {
                             onChange={handleChangeTab}
                             variant="scrollable"
                         >
-                            {tabs.map((tab) => (
+                            {visibleTabs.map((tab) => (
                                 <Tab
                                     key={tab.value}
                                     label={t(tab.label)}
@@ -80,23 +80,21 @@ const ProjectView = () => {
                         <ProjectGeneralInfo project={project} />
                     </TabPanel>
 
-                    <TabPanel value="access">
-                        <ProjectAccess project={project} />
-                    </TabPanel>
+                    {isAdmin && (
+                        <>
+                            <TabPanel value="access">
+                                <ProjectAccess project={project} />
+                            </TabPanel>
 
-                    {/* <TabPanel value="members">
-                        <Typography fontSize={24} fontWeight="bold">
-                            {t("projects.sections.members")}
-                        </Typography>
-                    </TabPanel> */}
+                            <TabPanel value="custom-fields">
+                                <ProjectCustomFields project={project} />
+                            </TabPanel>
 
-                    <TabPanel value="custom-fields">
-                        <ProjectCustomFields project={project} />
-                    </TabPanel>
-
-                    <TabPanel value="workflows">
-                        <ProjectWorkflows project={project} />
-                    </TabPanel>
+                            <TabPanel value="workflows">
+                                <ProjectWorkflows project={project} />
+                            </TabPanel>
+                        </>
+                    )}
                 </TabContext>
             </Box>
         </Box>

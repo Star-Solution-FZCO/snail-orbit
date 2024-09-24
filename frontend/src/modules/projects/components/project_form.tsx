@@ -23,6 +23,7 @@ interface IProjectFormProps {
     onSubmit: (formData: ProjectFormData) => void;
     loading?: boolean;
     hideCancel?: boolean;
+    readOnly?: boolean;
 }
 
 const ProjectForm: FC<IProjectFormProps> = ({
@@ -30,6 +31,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
     onSubmit,
     loading,
     hideCancel,
+    readOnly,
 }) => {
     const { t } = useTranslation();
 
@@ -67,6 +69,9 @@ const ProjectForm: FC<IProjectFormProps> = ({
             <TextField
                 {...register("name")}
                 label={t("projects.form.name")}
+                InputProps={{
+                    readOnly,
+                }}
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
                 variant="outlined"
@@ -79,6 +84,9 @@ const ProjectForm: FC<IProjectFormProps> = ({
                 label={t("projects.form.slug")}
                 InputLabelProps={{
                     shrink: !!slug,
+                }}
+                InputProps={{
+                    readOnly,
                 }}
                 error={!!errors.slug}
                 helperText={t(errors.slug?.message || "")}
@@ -97,6 +105,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                             onChange={onChange}
                             textareaProps={{
                                 placeholder: t("description"),
+                                readOnly,
                             }}
                         />
                     )}
@@ -109,6 +118,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                     variant="outlined"
                     size="small"
                     loading={loading}
+                    disabled={readOnly}
                 >
                     {t("save")}
                 </LoadingButton>

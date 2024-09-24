@@ -9,13 +9,12 @@ import {
     DialogContent,
     DialogTitle,
     IconButton,
-    Typography,
 } from "@mui/material";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { issueApi } from "store";
 import { CommentT } from "types";
-import { formatErrorMessages, toastApiError } from "utils";
+import { toastApiError } from "utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 
@@ -86,7 +85,7 @@ interface IIssueCommentsProps {
 }
 
 const IssueComments: FC<IIssueCommentsProps> = ({ issueId }) => {
-    const { data, isLoading, error } = issueApi.useListIssueCommentsQuery({
+    const { data, isLoading } = issueApi.useListIssueCommentsQuery({
         id: issueId,
     });
 
@@ -111,13 +110,6 @@ const IssueComments: FC<IIssueCommentsProps> = ({ issueId }) => {
             <Box pl={1} mb={2}>
                 <CreateCommentForm issueId={issueId} />
             </Box>
-
-            {error && (
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) ||
-                        t("issues.comments.fetch.error")}
-                </Typography>
-            )}
 
             {isLoading && (
                 <Box display="flex" justifyContent="center">

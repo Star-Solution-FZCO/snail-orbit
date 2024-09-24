@@ -1,9 +1,9 @@
 import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
+import { Link, NotFound } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { roleApi } from "store";
+import { roleApi, useAppSelector } from "store";
 import { CreateRoleT } from "types";
 import { toastApiError } from "utils";
 import { RoleForm } from "./components/role_form";
@@ -11,6 +11,8 @@ import { RoleForm } from "./components/role_form";
 const RoleCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+
+    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
     const [createRole, { isLoading }] = roleApi.useCreateRoleMutation();
 
@@ -26,6 +28,10 @@ const RoleCreate = () => {
             })
             .catch(toastApiError);
     };
+
+    if (!isAdmin) {
+        return <NotFound />;
+    }
 
     return (
         <Container sx={{ px: 4, pb: 4 }} disableGutters>

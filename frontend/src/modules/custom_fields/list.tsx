@@ -2,11 +2,12 @@ import AddIcon from "@mui/icons-material/Add";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ErrorHandler } from "components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import { CustomFieldT } from "types";
-import { formatErrorMessages, useListQueryParams } from "utils";
+import { useListQueryParams } from "utils";
 
 const CustomFieldList = () => {
     const { t } = useTranslation();
@@ -68,6 +69,15 @@ const CustomFieldList = () => {
     const rows = data?.payload.items || [];
     const rowCount = data?.payload.count || 0;
 
+    if (error) {
+        return (
+            <ErrorHandler
+                error={error}
+                message="customFields.list.fetch.error"
+            />
+        );
+    }
+
     return (
         <Box
             display="flex"
@@ -88,13 +98,6 @@ const CustomFieldList = () => {
                     <Typography fontSize={24} fontWeight="bold">
                         {t("customFields.title")}
                     </Typography>
-
-                    {error && (
-                        <Typography fontSize={16} color="error">
-                            {formatErrorMessages(error) ||
-                                t("customFields.list.fetch.error")}
-                        </Typography>
-                    )}
                 </Box>
 
                 <Link to="/custom-fields/create">

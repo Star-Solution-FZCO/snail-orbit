@@ -1,11 +1,10 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { Link, TabPanel } from "components";
+import { ErrorHandler, Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "store";
-import { formatErrorMessages } from "utils";
 import { GroupMembers } from "./components/group_members";
 import { GroupSettings } from "./components/group_settings";
 import { tabs } from "./utils";
@@ -28,13 +27,7 @@ const GroupView = () => {
     };
 
     if (error) {
-        return (
-            <Box px={4} pb={4}>
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) || t("groups.item.fetch.error")}
-                </Typography>
-            </Box>
-        );
+        return <ErrorHandler error={error} message="groups.item.fetch.error" />;
     }
 
     if (!data) return null;

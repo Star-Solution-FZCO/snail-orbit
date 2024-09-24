@@ -9,18 +9,22 @@ export const tabs = [
     {
         label: "projects.sections.generalInfo",
         value: "general",
+        adminOnly: false,
     },
     {
         label: "projects.sections.access",
         value: "access",
+        adminOnly: true,
     },
     {
         label: "projects.sections.customFields",
         value: "custom-fields",
+        adminOnly: true,
     },
     {
         label: "projects.sections.workflows",
         value: "workflows",
+        adminOnly: true,
     },
 ];
 

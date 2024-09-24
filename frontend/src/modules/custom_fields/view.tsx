@@ -6,13 +6,13 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { Link } from "components";
+import { ErrorHandler, Link } from "components";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { CustomFieldT, UpdateCustomFieldT } from "types";
-import { formatErrorMessages, toastApiError } from "utils";
+import { toastApiError } from "utils";
 import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
 import { CustomFieldForm } from "./components/custom_field_form";
 import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
@@ -35,18 +35,6 @@ const HeaderBreadcrumbs: FC<{ customField: CustomFieldT; title: string }> = ({
                 {customField.name}
             </Typography>
         </Breadcrumbs>
-    );
-};
-
-const ErrorContainer: FC<{ error: any }> = ({ error }) => {
-    const { t } = useTranslation();
-    return (
-        <Container sx={{ px: 4, pb: 4 }} disableGutters>
-            <Typography fontSize={24} fontWeight="bold">
-                {formatErrorMessages(error) ||
-                    t("customFields.item.fetch.error")}
-            </Typography>
-        </Container>
     );
 };
 
@@ -91,7 +79,12 @@ const CustomFieldView = () => {
         customFieldsApi.useUpdateCustomFieldMutation();
 
     if (error) {
-        return <ErrorContainer error={error} />;
+        return (
+            <ErrorHandler
+                error={error}
+                message="customFields.item.fetch.error"
+            />
+        );
     }
 
     if (!data) return null;

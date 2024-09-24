@@ -7,10 +7,10 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
-import { Link, QueryPagination } from "components";
+import { ErrorHandler, Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { roleApi } from "store";
-import { formatErrorMessages, useListQueryParams } from "utils";
+import { useListQueryParams } from "utils";
 
 const RoleList = () => {
     const { t } = useTranslation();
@@ -22,6 +22,10 @@ const RoleList = () => {
         isLoading,
         error,
     } = roleApi.useListRoleQuery(listQueryParams);
+
+    if (error) {
+        return <ErrorHandler error={error} message="roles.list.fetch.error" />;
+    }
 
     return (
         <Container
@@ -56,12 +60,6 @@ const RoleList = () => {
                     </Button>
                 </Link>
             </Stack>
-
-            {error && (
-                <Typography>
-                    {formatErrorMessages(error) || t("roles.list.fetch.error")}
-                </Typography>
-            )}
 
             {isLoading ? (
                 <Box display="flex" justifyContent="center">

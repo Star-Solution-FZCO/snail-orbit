@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi } from "store";
+import { projectApi, useAppSelector } from "store";
 import { ProjectT, UpdateProjectT } from "types";
 import { toastApiError } from "utils";
 import { ProjectForm } from "./project_form";
@@ -12,6 +12,8 @@ interface IProjectGeneralInfoProps {
 
 const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
     const { t } = useTranslation();
+
+    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
     const [updateProject, { isLoading }] =
         projectApi.useUpdateProjectMutation();
@@ -33,6 +35,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
             defaultValues={project}
             onSubmit={onSubmit}
             loading={isLoading}
+            readOnly={!isAdmin}
             hideCancel
         />
     );
