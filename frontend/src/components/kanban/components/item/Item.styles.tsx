@@ -70,7 +70,6 @@ export const ItemStyled = styled("div")<ItemStyledProps>(
         display: "flex",
         flexGrow: 1,
         alignItems: "center",
-        padding: theme.spacing(2),
         backgroundColor: theme.palette.background.paper,
         boxShadow: boxShadow,
         outline: "none",

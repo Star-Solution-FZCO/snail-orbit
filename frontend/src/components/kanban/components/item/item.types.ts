@@ -17,7 +17,7 @@ export type ItemProps = {
     transition?: string | null;
     wrapperStyle?: CSSProperties;
     id: UniqueIdentifier;
-    renderItemContent?(args: {
+    renderItemContent?: (args: {
         dragOverlay: boolean;
         dragging: boolean;
         sorting: boolean;
@@ -25,5 +25,5 @@ export type ItemProps = {
         fadeIn: boolean;
         disabled: boolean;
         id: UniqueIdentifier;
-    }): ReactNode;
+    }) => ReactNode;
 };
