@@ -2,8 +2,9 @@ import { FC, useEffect, useMemo } from "react";
 import { Kanban as KanbanComp } from "../../../components/kanban/kanban";
 import { Items, KanbanProps } from "../../../components/kanban/kanban.types";
 import { agileBoardApi } from "../../../store";
-import { AgileBoardT } from "../../../types";
+import { AgileBoardT, IssueT } from "../../../types";
 import { fieldKeyToValue, fieldValueToKey } from "../utils/fieldValueToKey";
+import { IssueCard } from "./issue_card";
 
 export type AgileBoardProps = {
     boardData: AgileBoardT;
@@ -31,6 +32,20 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         return res;
     }, [data?.payload]);
 
+    const itemsMap: Record<string, IssueT> = useMemo(() => {
+        if (!data?.payload) return {};
+        const allItems = data.payload.items
+            .flatMap((el) => el.columns)
+            .flatMap((el) => el.issues);
+        return allItems.reduce(
+            (prev, cur) => {
+                prev[cur.id] = cur;
+                return prev;
+            },
+            {} as Record<string, IssueT>,
+        );
+    }, [data?.payload]);
+
     useEffect(() => {
         refetch();
     }, [boardData]);
@@ -51,7 +66,9 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         <div>
             <KanbanComp
                 items={items}
-                renderItemContent={({ id }) => id}
+                renderItemContent={(args) => (
+                    <IssueCard {...args} issue={itemsMap[args.id]} /> // TODO: Move and preserve issue data inside kanban
+                )}
                 swimLineProps={{ hideHandle: true, label: "All tasks" }}
                 containerProps={{ hideHandle: true, label: "" }}
                 onCardMoved={handleCardMoved}
