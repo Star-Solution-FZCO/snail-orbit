@@ -21,9 +21,6 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
         boxSizing: "border-box",
         appearance: "none",
         outline: "none",
-        minWidth: "350px",
-        margin: "10px",
-        borderRadius: theme.spacing(1),
         minHeight: "200px",
         transition: theme.transitions.create("background-color", {
             duration: theme.transitions.duration.standard,
@@ -31,6 +28,9 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
         }),
         backgroundColor: backgroundColor,
         fontSize: theme.typography.fontSize,
+
+        borderBottom: "1px solid",
+        borderColor: theme.palette.grey["700"],
 
         ...(hover
             ? {
@@ -80,21 +80,19 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
 
 export const StyledSwimLineList = styled("ul")(({ theme }) => ({
     listStyle: "none",
-    padding: "20px",
     margin: 0,
     width: "100%",
     display: "flex",
     flexDirection: "row",
     flexWrap: "nowrap",
     flexGap: theme.spacing(1),
+    padding: 0,
 }));
 
 export const HeaderStyled = styled("div")(({ theme }) => ({
     display: "flex",
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     alignItems: "center",
     justifyContent: "flex-start",
     backgroundColor: backgroundColor,
-    borderTopLeftRadius: "5px",
-    borderTopRightRadius: "5px",
 }));

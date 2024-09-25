@@ -27,8 +27,6 @@ for (let i = 0; i < itemsCount; i++) {
     }
 }
 
-console.log(items);
-
 export const Kanban: Story = {
     render: () => {
         return (

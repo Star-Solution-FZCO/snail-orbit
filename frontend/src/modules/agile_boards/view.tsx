@@ -4,15 +4,17 @@ import {
     Breadcrumbs,
     Container,
     IconButton,
+    Stack,
     Typography,
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { formatErrorMessages, toastApiError } from "utils";
+import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
@@ -27,7 +29,12 @@ const AgileBoardView = () => {
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
+    const { data, error, refetch } =
+        agileBoardApi.useGetAgileBoardQuery(boardId);
+
+    useEffect(() => {
+        console.log(data?.payload);
+    }, [data?.payload]);
 
     const [updateAgileBoard, { isLoading }] =
         agileBoardApi.useUpdateAgileBoardMutation();
@@ -55,45 +62,51 @@ const AgileBoardView = () => {
             .unwrap()
             .then(() => {
                 toast.success(t("agileBoards.update.success"));
+                refetch();
             })
             .catch(toastApiError);
     };
 
     return (
-        <Container sx={{ px: 4, pb: 4 }} disableGutters>
-            <DeleteAgileBoardDialog
-                id={agileBoard.id}
-                open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
-            />
+        <Stack direction="column">
+            <Container sx={{ pb: 4, px: 4 }} disableGutters>
+                <DeleteAgileBoardDialog
+                    id={agileBoard.id}
+                    open={deleteDialogOpen}
+                    onClose={() => setDeleteDialogOpen(false)}
+                />
 
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-                <Breadcrumbs>
-                    <Link to="/agiles" underline="hover">
+                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                    <Breadcrumbs>
+                        <Link to="/agiles" underline="hover">
+                            <Typography fontSize={24} fontWeight="bold">
+                                {t("agileBoards.title")}
+                            </Typography>
+                        </Link>
                         <Typography fontSize={24} fontWeight="bold">
-                            {t("agileBoards.title")}
+                            {agileBoard.name}
                         </Typography>
-                    </Link>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {agileBoard.name}
-                    </Typography>
-                </Breadcrumbs>
+                    </Breadcrumbs>
 
-                <IconButton
-                    onClick={() => setDeleteDialogOpen(true)}
-                    color="error"
-                    size="small"
-                >
-                    <DeleteIcon />
-                </IconButton>
+                    <IconButton
+                        onClick={() => setDeleteDialogOpen(true)}
+                        color="error"
+                        size="small"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                </Box>
+
+                <AgileBoardForm
+                    onSubmit={onSubmit}
+                    defaultValues={agileBoardToFormValues(agileBoard)}
+                    loading={isLoading}
+                />
+            </Container>
+            <Box sx={{ width: "100dvw" }}>
+                <AgileBoard boardData={agileBoard} />
             </Box>
-
-            <AgileBoardForm
-                onSubmit={onSubmit}
-                defaultValues={agileBoardToFormValues(agileBoard)}
-                loading={isLoading}
-            />
-        </Container>
+        </Stack>
     );
 };
 

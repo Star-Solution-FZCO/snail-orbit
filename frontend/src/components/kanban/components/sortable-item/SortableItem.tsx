@@ -35,7 +35,7 @@ export const SortableItem: FC<SortableItemProps> = ({
     return (
         <Item
             ref={disabled ? undefined : setNodeRef}
-            value={id}
+            id={id}
             dragging={isDragging}
             sorting={isSorting}
             index={index}

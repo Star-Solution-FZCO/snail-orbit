@@ -20,7 +20,7 @@ const Item = memo(
                 style,
                 transition,
                 transform,
-                value,
+                id,
                 wrapperStyle,
                 ...props
             },
@@ -84,10 +84,10 @@ const Item = memo(
                                   index,
                                   fadeIn: !!fadeIn,
                                   sorting: !!sorting,
-                                  value,
+                                  id,
                                   ...props,
                               })
-                            : value}
+                            : id}
                     </ItemStyled>
                 </ItemContainer>
             );

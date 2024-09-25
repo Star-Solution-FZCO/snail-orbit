@@ -21,8 +21,6 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
         boxSizing: "border-box",
         appearance: "none",
         outline: "none",
-        margin: "10px",
-        borderRadius: theme.spacing(1),
         minHeight: "200px",
         width: "100%",
         transition: theme.transitions.create("background-color", {
@@ -31,6 +29,12 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
         }),
         backgroundColor: backgroundColor,
         fontSize: theme.typography.fontSize,
+        borderRight: "1px solid",
+        borderColor: theme.palette.grey["700"],
+
+        "&:last-of-type": {
+            borderRight: 0,
+        },
 
         ...(hover
             ? {
@@ -78,19 +82,19 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
     }),
 );
 
-export const StyledContainerList = styled("ul")(() => ({
+export const StyledContainerList = styled("ul")(({ theme }) => ({
     display: "grid",
     gridGap: "10px",
     gridTemplateColumns: "repeat(var(--columns, 1), 1fr)",
     listStyle: "none",
-    padding: "20px",
+    padding: theme.spacing(1),
     margin: 0,
     width: "100%",
 }));
 
 export const HeaderStyled = styled("div")(({ theme }) => ({
     display: "flex",
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     alignItems: "center",
     justifyContent: "flex-start",
     backgroundColor: backgroundColor,

@@ -19,6 +19,7 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
             style,
             scrollable,
             shadow,
+            hideHandle,
             ...props
         },
         ref,
@@ -38,8 +39,10 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
                 scrollable={scrollable}
                 shadow={shadow}
             >
-                <HeaderStyled>
-                    <Handle {...handleProps} />
+                <HeaderStyled
+                    sx={{ display: hideHandle && !label ? "none" : "initial" }}
+                >
+                    {!hideHandle ? <Handle {...handleProps} /> : null}
                     {label ?? null}
                 </HeaderStyled>
                 {placeholder ? (
