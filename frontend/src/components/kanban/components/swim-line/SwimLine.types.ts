@@ -7,6 +7,7 @@ export type SwimLineProps = {
     style?: CSSProperties;
     hover?: boolean;
     handleProps?: HTMLAttributes<any>;
+    hideHandle?: boolean;
     scrollable?: boolean;
     shadow?: boolean;
     placeholder?: boolean;

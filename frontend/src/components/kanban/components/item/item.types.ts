@@ -1,4 +1,4 @@
-import { DraggableSyntheticListeners } from "@dnd-kit/core";
+import { DraggableSyntheticListeners, UniqueIdentifier } from "@dnd-kit/core";
 import { Transform } from "@dnd-kit/utilities";
 import { CSSProperties, ReactNode } from "react";
 
@@ -16,7 +16,7 @@ export type ItemProps = {
     style?: CSSProperties;
     transition?: string | null;
     wrapperStyle?: CSSProperties;
-    value: ReactNode;
+    id: UniqueIdentifier;
     renderItemContent?(args: {
         dragOverlay: boolean;
         dragging: boolean;
@@ -24,6 +24,6 @@ export type ItemProps = {
         index: number | undefined;
         fadeIn: boolean;
         disabled: boolean;
-        value: ItemProps["value"];
+        id: UniqueIdentifier;
     }): ReactNode;
 };

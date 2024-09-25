@@ -27,6 +27,7 @@ import { createPortal } from "react-dom";
 import { Container } from "./components/container";
 import { DroppableContainer } from "./components/droppable-container";
 import { DroppableSwimLine } from "./components/droppable-swim-line/DroppableSwimLine";
+import { Header } from "./components/header";
 import Item from "./components/item";
 import { SortableItem } from "./components/sortable-item";
 import { SwimLine } from "./components/swim-line";
@@ -44,11 +45,12 @@ const dropAnimation: DropAnimation = {
 };
 
 // I hate this :c
+// TODO: Rewrite to use 3 arrays as input instead of the tree
 export const Kanban: FC<KanbanProps> = ({
     adjustScale = false,
     cancelDrop,
     columns,
-    items: initialItems,
+    items: outerItems,
     containerStyle,
     coordinateGetter = multipleContainersKeyboardCoordinates,
     getItemStyles = () => ({}),
@@ -57,8 +59,11 @@ export const Kanban: FC<KanbanProps> = ({
     renderItemContent,
     vertical = false,
     scrollable,
+    swimLineProps,
+    containerProps,
+    onCardMoved,
 }) => {
-    const [items, setItems] = useState<Items>(() => initialItems ?? {});
+    const [items, setItems] = useState<Items>(outerItems ?? {});
     const [swimLines, setSwimLines] = useState(
         Object.keys(items) as UniqueIdentifier[],
     );
@@ -89,11 +94,33 @@ export const Kanban: FC<KanbanProps> = ({
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
     const [clonedItems, setClonedItems] = useState<Items | null>(null);
     const lastOverId = useRef<UniqueIdentifier | null>(null);
+    const originalActiveContainer = useRef<UniqueIdentifier | null>(null);
+    const originalActiveSwimLine = useRef<UniqueIdentifier | null>(null);
     const recentlyMovedToNewContainer = useRef(false);
     const isSortingContainer = activeId
         ? !!containerToSwimLineMap[activeId]
         : false;
-    // const isSortingSwimLines = activeId ? swimLines.includes(activeId) : false;
+
+    useEffect(() => {
+        const newItems = outerItems || {};
+        setItems(newItems);
+        setSwimLines(Object.keys(newItems) as UniqueIdentifier[]);
+        setContainers(
+            Object.keys(newItems).reduce(
+                (prev, id) => {
+                    prev[id] = Object.keys(newItems[id]);
+                    return prev;
+                },
+                {} as Record<UniqueIdentifier, UniqueIdentifier[]>,
+            ),
+        );
+    }, [outerItems]);
+
+    useEffect(() => {
+        console.log(items);
+        console.log(containers);
+        console.log(swimLines);
+    }, [items, containers, swimLines]);
 
     const collisionDetectionStrategy: CollisionDetection = useCallback(
         (args) => {
@@ -225,6 +252,11 @@ export const Kanban: FC<KanbanProps> = ({
             onDragStart={({ active }) => {
                 setActiveId(active.id);
                 setClonedItems(items);
+
+                originalActiveSwimLine.current =
+                    findSwimLine(active.id) || null;
+                originalActiveContainer.current =
+                    findContainer(active.id) || null;
             }}
             onDragOver={({ active, over }) => {
                 const overId = over?.id;
@@ -330,6 +362,8 @@ export const Kanban: FC<KanbanProps> = ({
                         overContainer
                     ].indexOf(over.id);
 
+                    let beforeId: UniqueIdentifier | null = null;
+
                     setItems((items) => {
                         const copy = structuredClone(items);
                         copy[overSwimLine][overContainer] = arrayMove(
@@ -337,8 +371,35 @@ export const Kanban: FC<KanbanProps> = ({
                             activeIndex,
                             overIndex,
                         );
+
+                        const newIndex = copy[overSwimLine][
+                            overContainer
+                        ].findIndex((el) => el === activeId);
+                        if (newIndex > 0)
+                            beforeId =
+                                copy[overSwimLine][overContainer][newIndex - 1];
+
                         return copy;
                     });
+
+                    if (
+                        onCardMoved &&
+                        originalActiveContainer.current &&
+                        originalActiveSwimLine.current
+                    )
+                        onCardMoved(
+                            active.id,
+                            {
+                                column: originalActiveContainer.current,
+                                swimLine: originalActiveSwimLine.current,
+                                after: null,
+                            },
+                            {
+                                column: overContainer,
+                                swimLine: overSwimLine,
+                                after: beforeId,
+                            },
+                        );
                 } // If only swim lines are equal than container was moved
                 else if (overSwimLine === activeSwimLine) {
                     const activeIndex = containers[activeSwimLine].indexOf(
@@ -371,6 +432,12 @@ export const Kanban: FC<KanbanProps> = ({
             onDragCancel={onDragCancel}
             modifiers={modifiers}
         >
+            <Header
+                columns={Object.keys(containerToSwimLineMap).map((id) => ({
+                    id,
+                    label: id,
+                }))}
+            />
             <SortableContext
                 items={swimLines}
                 strategy={
@@ -382,9 +449,14 @@ export const Kanban: FC<KanbanProps> = ({
                 {swimLines.map((swimLineId) => (
                     <DroppableSwimLine
                         key={swimLineId}
-                        sx={{ backgroundColor: "red" }}
                         id={swimLineId}
-                        items={swimLines}
+                        items={containers[swimLineId]}
+                        label={`SwimLine ${swimLineId}`}
+                        {...(swimLineProps
+                            ? typeof swimLineProps === "function"
+                                ? swimLineProps(swimLineId)
+                                : swimLineProps
+                            : null)}
                     >
                         <SortableContext
                             items={containers[swimLineId]}
@@ -400,9 +472,14 @@ export const Kanban: FC<KanbanProps> = ({
                                     id={containerId}
                                     label={`Column ${containerId}`}
                                     columns={columns}
-                                    items={containers[swimLineId]}
+                                    items={items[swimLineId][containerId]}
                                     scrollable={scrollable}
                                     style={containerStyle}
+                                    {...(containerProps
+                                        ? typeof containerProps === "function"
+                                            ? containerProps(containerId)
+                                            : containerProps
+                                        : null)}
                                 >
                                     <SortableContext
                                         items={items[swimLineId][containerId]}
@@ -464,7 +541,7 @@ export const Kanban: FC<KanbanProps> = ({
     function renderSortableItemDragOverlay(id: UniqueIdentifier) {
         return (
             <Item
-                value={id}
+                id={id}
                 style={getItemStyles({
                     containerId: findContainer(id) as UniqueIdentifier,
                     overIndex: -1,
@@ -494,15 +571,15 @@ export const Kanban: FC<KanbanProps> = ({
                 }}
                 shadow
             >
-                {items[swimLineId][containerId].map((item, index) => (
+                {items[swimLineId][containerId].map((id, index) => (
                     <Item
-                        key={item}
-                        value={item}
+                        key={id}
+                        id={id}
                         style={getItemStyles({
                             containerId,
                             overIndex: -1,
-                            index: getIndex(item),
-                            value: item,
+                            index: getIndex(id),
+                            value: id,
                             isDragging: false,
                             isSorting: false,
                             isDragOverlay: false,

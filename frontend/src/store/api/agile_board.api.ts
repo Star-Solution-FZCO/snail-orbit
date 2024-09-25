@@ -1,11 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     AgileBoardT,
+    AgileSwimLineT,
     ApiResponse,
     ColumnT,
     CreateAgileBoardT,
     ListQueryParams,
     ListResponse,
+    MoveIssueT,
     UpdateAgileBoardT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
@@ -89,6 +91,25 @@ export const agileBoardApi = createApi({
             }),
             invalidatesTags: (_result, _error, id) => [
                 { type: "AgileBoards", id },
+            ],
+        }),
+        getBoardIssues: build.query<
+            ListResponse<AgileSwimLineT>,
+            { boardId: string }
+        >({
+            query: ({ boardId }) => `board/${boardId}/issues`,
+            providesTags: (_result, _error, { boardId }) => [
+                { type: "AgileBoardIssues", id: boardId },
+            ],
+        }),
+        moveIssue: build.mutation<ApiResponse<{ id: string }>, MoveIssueT>({
+            query: ({ issue_id, board_id, ...params }) => ({
+                url: `board/${board_id}/issues/${issue_id}`,
+                method: "PUT",
+                body: params,
+            }),
+            invalidatesTags: (_result, _error, { board_id }) => [
+                { type: "AgileBoards", id: board_id },
             ],
         }),
     }),

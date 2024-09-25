@@ -1,4 +1,5 @@
 import { BasicCustomFieldT } from "./custom_fields";
+import { IssueT } from "./issue";
 import { BasicProjectT } from "./project";
 
 export type ColumnT = BasicCustomFieldT;
@@ -26,3 +27,21 @@ export type AgileBoardT = Omit<CreateAgileBoardT, "projects"> & {
 };
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
+
+export type AgileColumnT = {
+    field_value: string | null;
+    issues: IssueT[];
+};
+
+export type AgileSwimLineT = {
+    field_value: string | null;
+    columns: AgileColumnT[];
+};
+
+export type MoveIssueT = {
+    board_id: string;
+    issue_id: string;
+    column: string | null;
+    swimline: string | null;
+    after_issue: string | null;
+};

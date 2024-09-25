@@ -1,7 +1,10 @@
 import { forwardRef } from "react";
-import { HeaderStyled } from "../container/container.styles";
 import { Handle } from "../handle/Handle";
-import { StyledSwimLine, StyledSwimLineList } from "./SwimLine.styles";
+import {
+    HeaderStyled,
+    StyledSwimLine,
+    StyledSwimLineList,
+} from "./SwimLine.styles";
 import { SwimLineProps } from "./SwimLine.types";
 
 export const SwimLine = forwardRef<HTMLDivElement, SwimLineProps>(
@@ -15,6 +18,7 @@ export const SwimLine = forwardRef<HTMLDivElement, SwimLineProps>(
             style,
             scrollable,
             shadow,
+            hideHandle,
             ...props
         },
         ref,
@@ -29,8 +33,10 @@ export const SwimLine = forwardRef<HTMLDivElement, SwimLineProps>(
                 scrollable={scrollable}
                 shadow={shadow}
             >
-                <HeaderStyled>
-                    <Handle {...handleProps} />
+                <HeaderStyled
+                    sx={{ display: hideHandle && !label ? "none" : "initial" }}
+                >
+                    {!hideHandle ? <Handle {...handleProps} /> : null}
                     {label ?? null}
                 </HeaderStyled>
                 {placeholder ? (
