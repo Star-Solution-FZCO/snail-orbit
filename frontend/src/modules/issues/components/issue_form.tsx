@@ -1,9 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton, TabContext, TabList } from "@mui/lab";
-import { Box, Button, Stack, Tab, TextField } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import { Box, Button, Stack, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
-import { MDEditor, TabPanel } from "components";
+import { MDEditor } from "components";
 import equal from "fast-deep-equal/react";
 import { FC, useEffect, useState } from "react";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
@@ -15,9 +15,8 @@ import { transformIssue } from "../utils";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
+import { IssueActivities } from "./issue_activities";
 import { IssueAttachments } from "./issue_attachments";
-import { IssueComments } from "./issue_comments";
-import { IssueHistory } from "./issue_history";
 
 const issueSchema = yup.object().shape({
     project_id: yup.string().required("form.validation.required"),
@@ -146,30 +145,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                         issueAttachments={issue?.attachments}
                     />
 
-                    {issue && (
-                        <TabContext value={currentTab}>
-                            <Box borderBottom={1} borderColor="divider">
-                                <TabList onChange={handleChangeTab}>
-                                    <Tab
-                                        label={t("issues.comments.title")}
-                                        value="comments"
-                                    />
-                                    <Tab
-                                        label={t("issues.history.title")}
-                                        value="history"
-                                    />
-                                </TabList>
-                            </Box>
-
-                            <TabPanel value="comments">
-                                <IssueComments issueId={issue.id_readable} />
-                            </TabPanel>
-
-                            <TabPanel value="history">
-                                <IssueHistory issueId={issue.id_readable} />
-                            </TabPanel>
-                        </TabContext>
-                    )}
+                    {issue && <IssueActivities issueId={issue.id_readable} />}
                 </Stack>
 
                 <FieldContainer>

@@ -1,3 +1,4 @@
+import { CommentT } from "./comment";
 import {
     BasicCustomFieldT,
     CustomFieldT,
@@ -52,4 +53,13 @@ export type IssueHistoryT = {
     author: BasicUserT;
     time: string;
     changes: FieldValueChangeT[];
+};
+
+export type IssueActivityTypeT = "comment" | "history";
+
+export type IssueActivityT = {
+    id: string;
+    type: IssueActivityTypeT;
+    time: string;
+    data: CommentT | IssueHistoryT;
 };
