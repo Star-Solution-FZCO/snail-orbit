@@ -15,7 +15,7 @@ import {
     Tooltip,
 } from "@mui/material";
 import { t } from "i18next";
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { issueApi } from "store";
 import { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
 import { noLimitListQueryParams, toastApiError } from "utils";
@@ -158,10 +158,14 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
     const comments = commentsData?.payload.items || [];
     const historyRecords = historyData?.payload.items || [];
 
-    const activities = mergeCommentsAndHistoryRecords(
-        comments,
-        historyRecords,
-        displayingActivities,
+    const activities = useMemo(
+        () =>
+            mergeCommentsAndHistoryRecords(
+                comments,
+                historyRecords,
+                displayingActivities,
+            ),
+        [comments, historyRecords, displayingActivities],
     );
 
     return (
