@@ -1,4 +1,12 @@
-import { CreateIssueT, FieldValueT, IssueT } from "types";
+import {
+    CommentT,
+    CreateIssueT,
+    FieldValueT,
+    IssueActivityT,
+    IssueActivityTypeT,
+    IssueHistoryT,
+    IssueT,
+} from "types";
 
 export const transformIssue = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
@@ -18,3 +26,31 @@ export const transformIssue = (issue: IssueT): CreateIssueT => ({
     ),
     attachments: issue.attachments.map((el) => el.id),
 });
+
+export const mergeCommentsAndHistoryRecords = (
+    comments: CommentT[],
+    historyRecords: IssueHistoryT[],
+    displayingActivities: IssueActivityTypeT[],
+): IssueActivityT[] => {
+    const commentActivities: IssueActivityT[] = comments.map((comment) => ({
+        id: comment.id,
+        type: "comment",
+        time: comment.created_at,
+        data: comment,
+    }));
+
+    const historyActivities: IssueActivityT[] = historyRecords.map(
+        (record) => ({
+            id: record.id,
+            type: "history",
+            time: record.time,
+            data: record,
+        }),
+    );
+
+    return [...commentActivities, ...historyActivities]
+        .filter((activity) => displayingActivities.includes(activity.type))
+        .sort(
+            (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
+        );
+};

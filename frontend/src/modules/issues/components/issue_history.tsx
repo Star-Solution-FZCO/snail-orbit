@@ -1,5 +1,5 @@
 import HistoryIcon from "@mui/icons-material/History";
-import { Box, CircularProgress, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import { UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -7,7 +7,6 @@ import utc from "dayjs/plugin/utc";
 import i18n from "i18n";
 import { t } from "i18next";
 import { FC } from "react";
-import { issueApi } from "store";
 import {
     BasicCustomFieldT,
     BasicUserT,
@@ -16,7 +15,6 @@ import {
     IssueHistoryT,
     StateFieldT,
 } from "types";
-import { noLimitListQueryParams } from "utils";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -85,7 +83,7 @@ const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
     );
 };
 
-const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
+const IssueHistory: FC<{ record: IssueHistoryT }> = ({ record }) => {
     return (
         <Box
             sx={{
@@ -107,8 +105,8 @@ const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
                 border={1}
                 borderColor="divider"
                 borderRadius={1}
-                width="36px"
-                height="36px"
+                width="32px"
+                height="32px"
                 p={0.5}
             >
                 <HistoryIcon color="disabled" />
@@ -144,39 +142,6 @@ const IssueHistoryCard: FC<{ record: IssueHistoryT }> = ({ record }) => {
 
                 <FieldChanges changes={record.changes} />
             </Box>
-        </Box>
-    );
-};
-
-interface IIssueHistoryProps {
-    issueId: string;
-}
-
-const IssueHistory: FC<IIssueHistoryProps> = ({ issueId }) => {
-    const { data, isLoading } = issueApi.useListIssueHistoryQuery({
-        id: issueId,
-        params: noLimitListQueryParams,
-    });
-
-    const records = data?.payload.items || [];
-
-    if (isLoading) {
-        return (
-            <Box display="flex" justifyContent="center">
-                <CircularProgress color="inherit" size={20} />
-            </Box>
-        );
-    }
-
-    if (!records.length) {
-        return <Typography>{t("issues.history.empty")}</Typography>;
-    }
-
-    return (
-        <Box display="flex" flexDirection="column" gap={1}>
-            {records.map((record) => (
-                <IssueHistoryCard key={record.id} record={record} />
-            ))}
         </Box>
     );
 };
