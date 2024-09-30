@@ -161,7 +161,7 @@ const CommentCard: FC<ICommentCardProps> = ({
             tabIndex={-1}
             sx={{
                 display: "flex",
-                gap: 1,
+                gap: 2,
                 px: 1,
                 py: 0.5,
                 borderRadius: 0.5,

@@ -108,7 +108,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
 
     if (mode === "view")
         return (
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={2}>
                 <UserAvatar />
 
                 <TextField
@@ -123,7 +123,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
 
     if (mode === "edit")
         return (
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={2}>
                 <UserAvatar />
 
                 <Box display="flex" flexDirection="column" gap={1} flex={1}>
