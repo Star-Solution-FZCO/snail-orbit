@@ -43,9 +43,6 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [currentTab, setCurrentTab] = useState<"comments" | "history">(
-        "comments",
-    );
     const [isDirty, setIsDirty] = useState(false);
 
     const methods = useForm<IssueFormData>({
@@ -66,13 +63,6 @@ export const IssueForm: FC<IssueFormProps> = ({
     const { data: projectData } = projectApi.useGetProjectQuery(
         watch("project_id") ?? skipToken,
     );
-
-    const handleChangeTab = (
-        _: React.SyntheticEvent,
-        value: "comments" | "history",
-    ) => {
-        setCurrentTab(value);
-    };
 
     useEffect(() => {
         if (issue) {
