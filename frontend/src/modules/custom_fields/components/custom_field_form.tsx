@@ -88,6 +88,8 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         resolver: yupResolver(customFieldSchema),
     });
 
+    console.log(defaultValues);
+
     const isDefaultValueVisible =
         editableDefaultValueTypes.includes(watch("type")) && !!defaultValues;
 

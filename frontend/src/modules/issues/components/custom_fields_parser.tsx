@@ -164,6 +164,26 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({ fields }) => {
                                     )}
                                 />
                             );
+                        case "state":
+                            return (
+                                <Controller
+                                    control={control}
+                                    key={fieldData.id}
+                                    // @ts-ignore
+                                    name={`fields.${fieldData.name}`}
+                                    render={({
+                                        field: { value, onChange, ...rest },
+                                    }) => (
+                                        <EnumField
+                                            {...rest}
+                                            label={fieldData.name}
+                                            value={value as string}
+                                            onChange={onChange}
+                                            enumFieldId={fieldData.id}
+                                        />
+                                    )}
+                                />
+                            );
                         default:
                             return null;
                     }
