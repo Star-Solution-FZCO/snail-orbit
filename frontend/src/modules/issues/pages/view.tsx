@@ -1,10 +1,10 @@
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
-import { FC, useEffect } from "react";
+import { FC, useCallback, useEffect } from "react";
 import { issueApi } from "store";
 import { slugify } from "transliteration";
-import { CreateIssueT } from "types";
+import { UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { IssueHeading } from "../components/heading";
 import IssueForm from "../components/issue_form";
@@ -21,24 +21,27 @@ const IssueView: FC = () => {
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssueMutation();
 
-    const handleSubmit = (formData: CreateIssueT) => {
-        updateIssue({ ...formData, id: issueId })
-            .unwrap()
-            .then((response) => {
-                const issueId = response.payload.id_readable;
-                const subject = slugify(response.payload.subject);
-                navigate({
-                    to: "/issues/$issueId/$subject",
-                    params: {
-                        issueId,
-                        subject,
-                    },
-                    replace: true,
-                });
-            })
-            .catch(toastApiError)
-            .finally(refetch);
-    };
+    const handleSubmit = useCallback(
+        (formData: UpdateIssueT) => {
+            updateIssue({ ...formData, id: issueId })
+                .unwrap()
+                .then((response) => {
+                    const issueId = response.payload.id_readable;
+                    const subject = slugify(response.payload.subject);
+                    navigate({
+                        to: "/issues/$issueId/$subject",
+                        params: {
+                            issueId,
+                            subject,
+                        },
+                        replace: true,
+                    });
+                })
+                .catch(toastApiError)
+                .finally(refetch);
+        },
+        [issueId, refetch, navigate],
+    );
 
     const issue = data?.payload;
 

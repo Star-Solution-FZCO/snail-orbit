@@ -4,8 +4,7 @@ import { Box, Button, Stack, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import equal from "fast-deep-equal/react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect } from "react";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
@@ -43,8 +42,6 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [isDirty, setIsDirty] = useState(false);
-
     const methods = useForm<IssueFormData>({
         defaultValues: issue ? transformIssue(issue) : undefined,
         resolver: yupResolver(issueSchema),
@@ -54,23 +51,20 @@ export const IssueForm: FC<IssueFormProps> = ({
         control,
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, dirtyFields, isDirty },
         watch,
     } = methods;
 
-    const formValues = useWatch({ control });
+    const allFields = useWatch({ control, disabled: !issue, name: "fields" });
+
+    useEffect(() => {
+        if (!issue || !dirtyFields || !dirtyFields.fields || !onSubmit) return;
+        onSubmit({ ...transformIssue(issue), fields: allFields });
+    }, [allFields, dirtyFields, issue, onSubmit]);
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         watch("project_id") ?? skipToken,
     );
-
-    useEffect(() => {
-        if (issue) {
-            const transformedIssue = transformIssue(issue);
-            const isFormDirty = !equal(transformedIssue, formValues);
-            setIsDirty(isFormDirty);
-        }
-    }, [formValues, issue]);
 
     return (
         <FormProvider {...methods}>
@@ -112,7 +106,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                             variant="outlined"
                             size="small"
                             loading={loading}
-                            disabled={(!!issue && !isDirty) || loading}
+                            disabled={loading || !isDirty}
                         >
                             {t("save")}
                         </LoadingButton>
