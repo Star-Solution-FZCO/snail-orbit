@@ -5,6 +5,7 @@ import { FormAutocompleteValueType } from "components/fields/form_autocomplete/f
 import {
     ForwardedRef,
     forwardRef,
+    ReactNode,
     SyntheticEvent,
     useEffect,
     useMemo,
@@ -35,6 +36,8 @@ type SelectFieldProps<T extends boolean | undefined> = {
     loading?: boolean;
     multiple?: T;
     variant?: "standard" | "error";
+    leftAdornment?: ReactNode;
+    rightAdornment?: ReactNode;
 };
 
 const SelectFieldComp = <T extends boolean | undefined>(
@@ -49,6 +52,8 @@ const SelectFieldComp = <T extends boolean | undefined>(
         loading,
         multiple,
         variant = "standard",
+        leftAdornment,
+        rightAdornment,
     }: SelectFieldProps<T>,
     ref: ForwardedRef<unknown>,
 ) => {
@@ -109,6 +114,8 @@ const SelectFieldComp = <T extends boolean | undefined>(
                 onClick={(e) => setAnchorEl(e.currentTarget)}
                 variant={variant}
                 orientation="vertical"
+                leftAdornment={leftAdornment}
+                rightAdornment={rightAdornment}
             />
 
             <FormAutocompletePopover

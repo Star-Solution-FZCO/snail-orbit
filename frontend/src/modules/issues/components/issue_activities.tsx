@@ -24,9 +24,20 @@ import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 import { IssueHistory } from "./issue_history";
 
-const ActivityTypeButton = styled(Button)<{ enabled?: boolean }>(
-    ({ theme, enabled }) => ({
-        borderRadius: 0,
+const ActivityTypeButton = styled(Button, {
+    shouldForwardProp: (name) => name !== "enabled",
+})<{ enabled?: boolean }>(({ theme, enabled }) => ({
+    borderRadius: 0,
+    borderLeft: 0,
+    borderRight: 0,
+    borderBottom: 0,
+    borderColor: enabled ? theme.palette.primary.main : theme.palette.divider,
+    "& svg": {
+        fill: enabled
+            ? theme.palette.primary.main
+            : theme.palette.action.disabled,
+    },
+    "&:hover": {
         borderLeft: 0,
         borderRight: 0,
         borderBottom: 0,
@@ -34,23 +45,10 @@ const ActivityTypeButton = styled(Button)<{ enabled?: boolean }>(
             ? theme.palette.primary.main
             : theme.palette.divider,
         "& svg": {
-            fill: enabled
-                ? theme.palette.primary.main
-                : theme.palette.action.disabled,
+            fill: theme.palette.primary.main,
         },
-        "&:hover": {
-            borderLeft: 0,
-            borderRight: 0,
-            borderBottom: 0,
-            borderColor: enabled
-                ? theme.palette.primary.main
-                : theme.palette.divider,
-            "& svg": {
-                fill: theme.palette.primary.main,
-            },
-        },
-    }),
-);
+    },
+}));
 
 interface IDeleteCommentDialogProps {
     issueId: string;

@@ -18,4 +18,8 @@ export const FieldCardWrapper = styled("div")<{
         variant === "error"
             ? alpha(theme.palette.error.main, 0.3)
             : "transparent",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
 }));
