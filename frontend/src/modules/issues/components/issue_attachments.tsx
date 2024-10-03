@@ -1,16 +1,8 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
-    Button,
     Collapse,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
     IconButton,
     LinearProgress,
     Typography,
@@ -21,9 +13,11 @@ import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast, TypeOptions } from "react-toastify";
 import { issueApi, sharedApi } from "store";
-import { IssueAttachmentT } from "types";
+import { AttachmentT, SelectedAttachmentT } from "types";
 import { toastApiError } from "utils";
-import { FileAttachmentCard, IssueAttachmentCard } from "./attachment_cards";
+import { initialSelectedAttachment } from "../utils";
+import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
+import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 import { IssueFormData } from "./issue_form";
 
 const useToast = () => {
@@ -62,80 +56,9 @@ const useToast = () => {
     return { toastId, showToast, updateToast };
 };
 
-interface IDeleteAttachmentDialogProps {
-    open: boolean;
-    filename: string;
-    onClose: () => void;
-    onDelete: () => void;
-    loading?: boolean;
-}
-
-const DeleteAttachmentDialog: FC<IDeleteAttachmentDialogProps> = ({
-    open,
-    filename,
-    onClose,
-    onDelete,
-    loading,
-}) => {
-    const { t } = useTranslation();
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-            <DialogTitle
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-            >
-                {t("issues.attachments.delete.title")}
-
-                <IconButton onClick={onClose} size="small" disabled={loading}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-
-            <DialogContent>
-                <DialogContentText>
-                    {t("issues.attachments.delete.confirmation")} "{filename}"?
-                </DialogContentText>
-            </DialogContent>
-
-            <DialogActions>
-                <Button
-                    onClick={onClose}
-                    variant="outlined"
-                    color="error"
-                    disabled={loading}
-                >
-                    {t("cancel")}
-                </Button>
-
-                <LoadingButton
-                    onClick={onDelete}
-                    variant="outlined"
-                    loading={loading}
-                >
-                    {t("delete")}
-                </LoadingButton>
-            </DialogActions>
-        </Dialog>
-    );
-};
-
-type SelectedAttachmentT = {
-    id: string | number;
-    filename: string;
-    type: "browser" | "server";
-};
-
-const initialSelectedAttachment: SelectedAttachmentT = {
-    id: "",
-    filename: "",
-    type: "browser",
-};
-
 interface IIssueAttachmentsProps {
     issueId?: string;
-    issueAttachments?: IssueAttachmentT[];
+    issueAttachments?: AttachmentT[];
 }
 
 const IssueAttachments: FC<IIssueAttachmentsProps> = ({
@@ -220,10 +143,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         ],
     );
 
-    const handleClickDeleteFileAttachment = (
-        index: number,
-        filename: string,
-    ) => {
+    const handleClickDeleteBrowserFile = (index: number, filename: string) => {
         setSelectedAttachment({ id: index, filename, type: "browser" });
         setOpenDeleteDialog(true);
     };
@@ -233,7 +153,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         setOpenDeleteDialog(true);
     };
 
-    const deleteFileAttachment = () => {
+    const deleteBrowserFile = () => {
         if (!selectedAttachment) return;
         if (selectedAttachment.type !== "browser") return;
 
@@ -247,7 +167,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         setOpenDeleteDialog(false);
     };
 
-    const deleteIssueAttachment = () => {
+    const deleteAttachment = () => {
         if (!issueId) return;
         if (!selectedAttachment) return;
         if (selectedAttachment.type !== "server") return;
@@ -339,7 +259,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 <Collapse in={attachmentsExpanded}>
                     <Box display="flex" gap={1} flexWrap="wrap" mt={1}>
                         {issueAttachments.map((attachment) => (
-                            <IssueAttachmentCard
+                            <AttachmentCard
                                 key={attachment.id}
                                 attachment={attachment}
                                 onDelete={() =>
@@ -352,11 +272,11 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                         ))}
 
                         {files.map((file, index) => (
-                            <FileAttachmentCard
+                            <BrowserFileCard
                                 key={file.name}
                                 file={file}
                                 onDelete={() =>
-                                    handleClickDeleteFileAttachment(
+                                    handleClickDeleteBrowserFile(
                                         index,
                                         file.name,
                                     )
@@ -373,8 +293,8 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 onClose={() => setOpenDeleteDialog(false)}
                 onDelete={
                     selectedAttachment.type === "browser"
-                        ? deleteFileAttachment
-                        : deleteIssueAttachment
+                        ? deleteBrowserFile
+                        : deleteAttachment
                 }
                 loading={updateLoading}
             />

@@ -6,7 +6,14 @@ import {
     IssueActivityTypeT,
     IssueHistoryT,
     IssueT,
+    SelectedAttachmentT,
 } from "types";
+
+export const initialSelectedAttachment: SelectedAttachmentT = {
+    id: "",
+    filename: "",
+    type: "browser",
+};
 
 export const transformIssue = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
