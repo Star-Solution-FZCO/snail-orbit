@@ -4,9 +4,9 @@ import { Box, Tooltip, Typography } from "@mui/material";
 import { API_URL, apiVersion } from "config";
 import { FC, useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "store";
-import { IssueAttachmentT } from "types";
+import { AttachmentT } from "types";
 
-interface IAttachmentCardProps {
+interface IBaseAttachmentCardProps {
     filename: string;
     isImage: boolean;
     url: string;
@@ -15,7 +15,7 @@ interface IAttachmentCardProps {
     canDelete?: boolean;
 }
 
-const AttachmentCard: FC<IAttachmentCardProps> = ({
+const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
     filename,
     isImage,
     url,
@@ -174,15 +174,12 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
     );
 };
 
-interface IFileAttachmentCardProps {
+interface IBrowserFileCardProps {
     file: File;
     onDelete: () => void;
 }
 
-const FileAttachmentCard: FC<IFileAttachmentCardProps> = ({
-    file,
-    onDelete,
-}) => {
+const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
     const [fileUrl, setFileUrl] = useState<string>("");
 
     useEffect(() => {
@@ -194,7 +191,7 @@ const FileAttachmentCard: FC<IFileAttachmentCardProps> = ({
     }, [file]);
 
     return (
-        <AttachmentCard
+        <BaseAttachmentCard
             filename={file.name}
             isImage={file.type.startsWith("image/")}
             url={fileUrl}
@@ -203,15 +200,12 @@ const FileAttachmentCard: FC<IFileAttachmentCardProps> = ({
     );
 };
 
-interface IIssueAttachmentCardProps {
-    attachment: IssueAttachmentT;
+interface IAttachmentCardProps {
+    attachment: AttachmentT;
     onDelete: () => void;
 }
 
-const IssueAttachmentCard: FC<IIssueAttachmentCardProps> = ({
-    attachment,
-    onDelete,
-}) => {
+const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
     const user = useAppSelector((state) => state.profile.user);
 
     const fileUrl = API_URL + apiVersion + "/files/" + attachment.id;
@@ -221,7 +215,7 @@ const IssueAttachmentCard: FC<IIssueAttachmentCardProps> = ({
     };
 
     return (
-        <AttachmentCard
+        <BaseAttachmentCard
             filename={attachment.name}
             isImage={attachment.content_type.startsWith("image/")}
             url={fileUrl}
@@ -232,4 +226,4 @@ const IssueAttachmentCard: FC<IIssueAttachmentCardProps> = ({
     );
 };
 
-export { FileAttachmentCard, IssueAttachmentCard };
+export { AttachmentCard, BrowserFileCard };
