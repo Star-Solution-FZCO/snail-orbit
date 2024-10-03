@@ -3,7 +3,7 @@ import { customFieldsApi } from "store";
 import { UserOptionT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import { enumToSelectOption } from "./utils";
+import { userToSelectOption } from "./utils";
 
 type UserFieldValueType<T extends boolean | undefined> = T extends true
     ? string[]
@@ -56,7 +56,9 @@ const UserFieldComp = <T extends boolean | undefined>(
     return (
         <SelectField
             loading={isLoading}
-            options={enumToSelectOption(data?.payload.items || [])}
+            options={userToSelectOption(
+                (data?.payload.items as UserOptionT[]) || [],
+            )}
             value={value}
             cardValue={cardValue || "?"}
             onChange={(value) => onChange(value as UserFieldValueType<T>)}

@@ -10,6 +10,7 @@ import React, {
     ComponentRef,
     ForwardedRef,
     forwardRef,
+    ReactNode,
     Ref,
     SyntheticEvent,
 } from "react";
@@ -19,7 +20,8 @@ import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
 export type FormAutocompleteValueType = {
     label: string;
     description?: string | null;
-    color?: string | null;
+    leftAdornment?: ReactNode;
+    rightAdornment?: ReactNode;
     [key: string]: any;
 };
 
@@ -93,6 +95,8 @@ const FormAutocompleteContentComp = <
                                         disableRipple
                                     />
                                 ) : null}
+                                {/* TODO: Make left adornment be forshadowed by checkbox */}
+                                {option.leftAdornment || null}
                                 <Stack
                                     direction="column"
                                     justifyContent="center"
@@ -113,20 +117,7 @@ const FormAutocompleteContentComp = <
                                     )}
                                 </Stack>
                             </Stack>
-                            {option.color ? (
-                                <Box
-                                    component="span"
-                                    sx={{
-                                        width: 18,
-                                        height: 18,
-                                        flexShrink: 0,
-                                        borderRadius: "3px",
-                                        mr: 1,
-                                        my: "auto",
-                                        bgcolor: option.color,
-                                    }}
-                                />
-                            ) : null}
+                            {option.rightAdornment || null}
                         </Stack>
                     </li>
                 );

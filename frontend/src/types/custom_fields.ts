@@ -30,6 +30,7 @@ export type UserOptionT = {
     id: string;
     email: string;
     name: string;
+    avatar?: string;
 };
 
 export type UpdateEnumOptionT = {
