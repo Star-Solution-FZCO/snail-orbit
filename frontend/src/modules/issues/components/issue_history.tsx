@@ -1,4 +1,3 @@
-import HistoryIcon from "@mui/icons-material/History";
 import { Box, Tooltip, Typography } from "@mui/material";
 import { UserAvatar } from "components";
 import dayjs from "dayjs";
@@ -98,30 +97,10 @@ const IssueHistory: FC<{ record: IssueHistoryT }> = ({ record }) => {
                 },
             }}
         >
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                border={1}
-                borderColor="divider"
-                borderRadius={1}
-                width="32px"
-                height="32px"
-                p={0.5}
-            >
-                <HistoryIcon color="disabled" />
-            </Box>
+            <UserAvatar src={record.author.avatar} size={32} />
 
-            <Box display="flex" flexDirection="column" gap={0.5}>
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={1}
-                    fontSize={14}
-                    height="36px"
-                >
-                    <UserAvatar src={record.author.avatar} />
-
+            <Box display="flex" flexDirection="column" fontSize={14}>
+                <Box height="24px" display="flex" alignItems="center" gap={1}>
                     <Typography fontSize="inherit">
                         {record.author.name}
                     </Typography>
