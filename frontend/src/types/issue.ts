@@ -1,3 +1,4 @@
+import { AttachmentT } from "./attachment";
 import { CommentT } from "./comment";
 import {
     BasicCustomFieldT,
@@ -18,16 +19,6 @@ export type CreateIssueT = {
     attachments?: string[];
 };
 
-export type IssueAttachmentT = {
-    id: string;
-    name: string;
-    size: number;
-    content_type: string;
-    author: BasicUserT;
-    created_at: string;
-    ocr_text: string | null;
-};
-
 export type IssueT = {
     id: string;
     id_readable: string;
@@ -35,7 +26,7 @@ export type IssueT = {
     subject: string;
     text: string | null;
     fields: Record<string, CustomFieldT>;
-    attachments: IssueAttachmentT[];
+    attachments: AttachmentT[];
     aliases: string[];
     is_subscribed: boolean;
 };

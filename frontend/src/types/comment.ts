@@ -1,3 +1,4 @@
+import { AttachmentT } from "./attachment";
 import { BasicUserT } from "./user";
 
 export type CreateCommentT = {
@@ -13,5 +14,5 @@ export type CommentT = {
     author: BasicUserT;
     created_at: string;
     updated_at: string;
-    attachments: string[];
+    attachments: AttachmentT[];
 };

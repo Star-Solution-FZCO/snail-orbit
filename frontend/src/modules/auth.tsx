@@ -9,12 +9,12 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { getRouteApi, Navigate, useNavigate } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { FC, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { authenticate } from "services/auth";
-import { setUser, useAppDispatch, useAppSelector, userApi } from "store";
+import { setUser, useAppDispatch, userApi } from "store";
 import { toastApiError } from "utils";
 
 type AuthFormDataT = {
@@ -30,8 +30,6 @@ const Auth: FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const search = routeApi.useSearch();
-
-    const { user } = useAppSelector((state) => state.profile);
 
     const [loading, setLoading] = useState(false);
 
@@ -70,8 +68,6 @@ const Auth: FC = () => {
     const handleClickSignInOIDC = () => {
         window.location.href = "/api/auth/oidc";
     };
-
-    if (user) return <Navigate to="/" />;
 
     return (
         <Box height="100vh">
