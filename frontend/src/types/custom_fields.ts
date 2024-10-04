@@ -26,13 +26,6 @@ export type EnumOptionT = {
     uuid: string;
 } & CreateEnumOptionT;
 
-export type UserOptionT = {
-    id: string;
-    email: string;
-    name: string;
-    avatar?: string;
-};
-
 export type UpdateEnumOptionT = {
     option_id: string;
 } & Partial<CreateEnumOptionT>;
@@ -97,8 +90,8 @@ type CustomFieldTypeMap = {
     integer: number;
     float: number;
     enum_multi: string[];
-    user: UserOptionT;
-    user_multi: UserOptionT[];
+    user: BasicUserT;
+    user_multi: BasicUserT[];
 };
 
 type CustomFieldTypeValuePair = {

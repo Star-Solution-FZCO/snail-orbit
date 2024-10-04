@@ -1,6 +1,6 @@
 import { Avatar } from "@mui/material";
-import { EnumOptionT, UserOptionT } from "types";
-import { ColorAdornment } from "../../../../components/fields/form_autocomplete/color_adornment";
+import { ColorAdornment } from "components/fields/form_autocomplete/color_adornment";
+import { BasicUserT, EnumOptionT } from "types";
 import { SelectFieldOptionType } from "./select_field";
 
 export const enumToSelectOption = (
@@ -17,10 +17,10 @@ export const enumToSelectOption = (
     }));
 };
 
-export type UserSelectOptionT = UserOptionT & SelectFieldOptionType;
+export type UserSelectOptionT = BasicUserT & SelectFieldOptionType;
 
 export const userToSelectOption = (
-    options: UserOptionT[] | undefined,
+    options?: BasicUserT[],
 ): UserSelectOptionT[] => {
     if (!options) return [];
     if (!options.length) return [];

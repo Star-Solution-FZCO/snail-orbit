@@ -1,6 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
+    BasicUserT,
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateStateOptionT,
@@ -8,11 +9,11 @@ import {
     EnumOptionT,
     ListQueryParams,
     ListResponse,
+    StateOptionT,
     TargetTypeT,
     UpdateCustomFieldT,
     UpdateEnumOptionT,
     UpdateStateOptionT,
-    UserOptionT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
@@ -183,7 +184,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         listSelectOptions: build.query<
-            ListResponse<UserOptionT> | ListResponse<EnumOptionT>,
+            ListResponse<EnumOptionT | StateOptionT | BasicUserT>,
             { id: string } & (ListQueryParams | void)
         >({
             query: ({ id, ...params }) => ({

@@ -1,5 +1,6 @@
 import { FC, forwardRef } from "react";
 import { customFieldsApi } from "store";
+import { EnumOptionT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
 import { enumToSelectOption } from "./utils";
@@ -28,7 +29,9 @@ export const EnumField: FC<EnumFieldProps> = forwardRef(
         return (
             <SelectField
                 loading={isLoading}
-                options={enumToSelectOption(data?.payload.items || [])}
+                options={enumToSelectOption(
+                    (data?.payload.items as EnumOptionT[]) || [],
+                )}
                 value={value || ""}
                 onChange={(value) => onChange(value as string)}
                 label={label}
