@@ -1,6 +1,6 @@
 import { ForwardedRef, forwardRef, useEffect, useMemo } from "react";
 import { customFieldsApi } from "store";
-import { UserOptionT } from "types";
+import { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
 import { userToSelectOption } from "./utils";
@@ -40,7 +40,7 @@ const UserFieldComp = <T extends boolean | undefined>(
         } else {
             return data.payload.items
                 .filter((el) => "id" in el && value.includes(el.id))
-                .map((el) => (el as UserOptionT).name)
+                .map((el) => (el as BasicUserT).name)
                 .join(", ");
         }
     }, [value, data]);
@@ -57,7 +57,7 @@ const UserFieldComp = <T extends boolean | undefined>(
         <SelectField
             loading={isLoading}
             options={userToSelectOption(
-                (data?.payload.items as UserOptionT[]) || [],
+                (data?.payload.items as BasicUserT[]) || [],
             )}
             value={value}
             cardValue={cardValue || "?"}

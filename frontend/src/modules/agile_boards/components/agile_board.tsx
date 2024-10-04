@@ -1,8 +1,8 @@
+import { Kanban as KanbanComp } from "components/kanban/kanban";
+import { Items, KanbanProps } from "components/kanban/kanban.types";
 import { FC, useEffect, useMemo } from "react";
-import { Kanban as KanbanComp } from "../../../components/kanban/kanban";
-import { Items, KanbanProps } from "../../../components/kanban/kanban.types";
-import { agileBoardApi } from "../../../store";
-import { AgileBoardT, IssueT } from "../../../types";
+import { agileBoardApi } from "store";
+import { AgileBoardT, IssueT } from "types";
 import { fieldKeyToValue, fieldValueToKey } from "../utils/fieldValueToKey";
 import { IssueCard } from "./issue_card";
 
