@@ -1,60 +1,17 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-    Box,
-    Collapse,
-    IconButton,
-    LinearProgress,
-    Typography,
-} from "@mui/material";
-import { FC, useCallback, useRef, useState } from "react";
+import { Box, Collapse, IconButton, Typography } from "@mui/material";
+import { FC, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast, TypeOptions } from "react-toastify";
 import { issueApi, sharedApi } from "store";
 import { AttachmentT, SelectedAttachmentT } from "types";
 import { toastApiError } from "utils";
-import { initialSelectedAttachment } from "../utils";
+import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 import { IssueFormData } from "./issue_form";
-
-const useToast = () => {
-    const toastId = useRef<string | number | null>(null);
-
-    const showToast = (fileName: string) => {
-        toastId.current = toast(
-            <Box display="flex" flexDirection="column" gap={1}>
-                <Typography>{fileName}</Typography>
-                <LinearProgress />
-            </Box>,
-            {
-                closeOnClick: false,
-                closeButton: false,
-                hideProgressBar: true,
-            },
-        );
-    };
-
-    const updateToast = (
-        message: string,
-        type: TypeOptions,
-        autoClose: number,
-    ) => {
-        if (toastId.current) {
-            toast.update(toastId.current, {
-                render: <Typography>{message}</Typography>,
-                onClose: () => (toastId.current = null),
-                isLoading: false,
-                autoClose,
-                type,
-            });
-        }
-    };
-
-    return { toastId, showToast, updateToast };
-};
 
 interface IIssueAttachmentsProps {
     issueId?: string;
@@ -80,58 +37,62 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         useState<SelectedAttachmentT>(initialSelectedAttachment);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-    const { toastId, showToast, updateToast } = useToast();
+    const { toastId, showToast, updateToast, activeMutations } =
+        useUploadToast();
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
             const file = acceptedFiles[0];
+
             const formData = new FormData();
             formData.append("file", file);
 
-            if (toastId.current === null) {
+            if (!toastId.current[file.name]) {
                 showToast(file.name);
             }
 
             try {
-                const response = await uploadAttachment(formData).unwrap();
+                const mutation = uploadAttachment(formData);
+                activeMutations.current[file.name] = mutation;
+                const response = await mutation.unwrap();
 
-                setTimeout(() => {
-                    if (issueId) {
-                        updateIssue({
-                            id: issueId,
-                            attachments: [
-                                ...issueAttachments.map(
-                                    (attachment) => attachment.id,
-                                ),
-                                response.payload.id,
-                            ],
-                        })
-                            .unwrap()
-                            .catch(toastApiError);
-                    } else {
-                        setFiles((prevFiles) => [...prevFiles, file]);
-                    }
+                if (issueId) {
+                    await updateIssue({
+                        id: issueId,
+                        attachments: [
+                            ...issueAttachments.map(
+                                (attachment) => attachment.id,
+                            ),
+                            response.payload.id,
+                        ],
+                    })
+                        .unwrap()
+                        .catch(toastApiError);
+                } else {
+                    setFiles((prevFiles) => [...prevFiles, file]);
+                }
 
-                    setValue("attachments", [
-                        ...formAttachments,
-                        response.payload.id,
-                    ]);
+                setValue("attachments", [
+                    ...formAttachments,
+                    response.payload.id,
+                ]);
 
-                    updateToast(
-                        t("issues.form.attachments.upload.success"),
-                        "success",
-                        3000,
-                    );
-                }, 1000);
-            } catch (error) {
-                setTimeout(() => {
+                updateToast(
+                    file.name,
+                    t("issues.form.attachments.upload.success"),
+                    "success",
+                    3000,
+                );
+            } catch (error: any) {
+                if (error.name !== "AbortError") {
                     toastApiError(error);
                     updateToast(
+                        file.name,
                         t("issues.form.attachments.upload.error"),
                         "error",
                         3000,
                     );
-                }, 1000);
+                }
             }
         },
         [
@@ -140,6 +101,9 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
             issueId,
             setValue,
             uploadAttachment,
+            showToast,
+            updateToast,
+            activeMutations,
         ],
     );
 
@@ -273,7 +237,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
 
                         {files.map((file, index) => (
                             <BrowserFileCard
-                                key={file.name}
+                                key={`${file.name}-${index}`}
                                 file={file}
                                 onDelete={() =>
                                     handleClickDeleteBrowserFile(

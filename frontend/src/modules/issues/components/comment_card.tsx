@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { CommentT, SelectedAttachmentT } from "types";
 import { toastApiError } from "utils";
-import { initialSelectedAttachment } from "../utils";
+import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 import { HiddenInput } from "./hidden_input";
@@ -138,6 +138,9 @@ const CommentCard: FC<ICommentCardProps> = ({
         issueApi.useUpdateIssueCommentMutation();
     const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
 
+    const { toastId, showToast, updateToast, activeMutations } =
+        useUploadToast();
+
     const handleClickSave = () => {
         updateComment({
             id: issueId,
@@ -152,29 +155,47 @@ const CommentCard: FC<ICommentCardProps> = ({
     const handleChangeFileInput = async (
         event: React.ChangeEvent<HTMLInputElement>,
     ) => {
-        const files = event.target.files;
-        if (!files) return;
+        if (!event.target.files) return;
 
-        const uploadPromises = Array.from(files).map(async (file) => {
-            const formData = new FormData();
-            formData.append("file", file);
+        const file = event.target.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
 
-            try {
-                const response = await uploadAttachment(formData).unwrap();
-                await updateComment({
-                    id: issueId,
-                    commentId: comment.id,
-                    attachments: [
-                        ...comment.attachments.map((a) => a.id),
-                        response.payload.id,
-                    ],
-                });
-            } catch (error) {
-                return toastApiError(error);
+        if (!toastId.current[file.name]) {
+            showToast(file.name);
+        }
+
+        try {
+            const mutation = uploadAttachment(formData);
+            activeMutations.current[file.name] = mutation;
+            const response = await mutation.unwrap();
+
+            await updateComment({
+                id: issueId,
+                commentId: comment.id,
+                attachments: [
+                    ...comment.attachments.map((a) => a.id),
+                    response.payload.id,
+                ],
+            });
+
+            updateToast(
+                file.name,
+                t("issues.form.attachments.upload.success"),
+                "success",
+                3000,
+            );
+        } catch (error: any) {
+            if (error.name !== "AbortError") {
+                toastApiError(error);
+                updateToast(
+                    file.name,
+                    t("issues.form.attachments.upload.error"),
+                    "error",
+                    3000,
+                );
             }
-        });
-
-        await Promise.all(uploadPromises);
+        }
     };
 
     const handleClickDeleteAttachment = (id: string, filename: string) => {
@@ -357,7 +378,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                             <HiddenInput
                                 type="file"
                                 onChange={handleChangeFileInput}
-                                multiple
+                                multiple={false}
                             />
                         </Button>
 
