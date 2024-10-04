@@ -1,3 +1,4 @@
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
@@ -20,9 +21,13 @@ import utc from "dayjs/plugin/utc";
 import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppSelector } from "store";
-import { CommentT } from "types";
+import { issueApi, sharedApi, useAppSelector } from "store";
+import { CommentT, SelectedAttachmentT } from "types";
 import { toastApiError } from "utils";
+import { initialSelectedAttachment, useUploadToast } from "../utils";
+import { AttachmentCard } from "./attachment_cards";
+import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
+import { HiddenInput } from "./hidden_input";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -125,9 +130,16 @@ const CommentCard: FC<ICommentCardProps> = ({
     const user = useAppSelector((state) => state.profile.user);
 
     const [text, setText] = useState<string>(comment.text || "");
+    const [selectedAttachment, setSelectedAttachment] =
+        useState<SelectedAttachmentT>(initialSelectedAttachment);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
     const [updateComment, { isLoading }] =
         issueApi.useUpdateIssueCommentMutation();
+    const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
+
+    const { toastId, showToast, updateToast, activeMutations } =
+        useUploadToast();
 
     const handleClickSave = () => {
         updateComment({
@@ -137,6 +149,75 @@ const CommentCard: FC<ICommentCardProps> = ({
         })
             .unwrap()
             .then(onCancel)
+            .catch(toastApiError);
+    };
+
+    const handleChangeFileInput = async (
+        event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        if (!event.target.files) return;
+
+        const file = event.target.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        if (!toastId.current[file.name]) {
+            showToast(file.name);
+        }
+
+        try {
+            const mutation = uploadAttachment(formData);
+            activeMutations.current[file.name] = mutation;
+            const response = await mutation.unwrap();
+
+            await updateComment({
+                id: issueId,
+                commentId: comment.id,
+                attachments: [
+                    ...comment.attachments.map((a) => a.id),
+                    response.payload.id,
+                ],
+            });
+
+            updateToast(
+                file.name,
+                t("issues.form.attachments.upload.success"),
+                "success",
+                3000,
+            );
+        } catch (error: any) {
+            if (error.name !== "AbortError") {
+                toastApiError(error);
+                updateToast(
+                    file.name,
+                    t("issues.form.attachments.upload.error"),
+                    "error",
+                    3000,
+                );
+            }
+        }
+    };
+
+    const handleClickDeleteAttachment = (id: string, filename: string) => {
+        setSelectedAttachment({ id, filename, type: "server" });
+        setOpenDeleteDialog(true);
+    };
+
+    const deleteAttachment = () => {
+        if (!selectedAttachment) return;
+        if (selectedAttachment.type !== "server") return;
+
+        updateComment({
+            id: issueId,
+            commentId: comment.id,
+            attachments: comment.attachments
+                .filter((attachment) => attachment.id !== selectedAttachment.id)
+                .map((a) => a.id),
+        })
+            .unwrap()
+            .then(() => {
+                setOpenDeleteDialog(false);
+            })
             .catch(toastApiError);
     };
 
@@ -154,6 +235,7 @@ const CommentCard: FC<ICommentCardProps> = ({
 
     const author = comment.author;
     const isOwner = user?.id === author.id;
+    const attachmentsExists = comment.attachments.length > 0;
 
     const renderViewMode = () => (
         <Box
@@ -233,53 +315,117 @@ const CommentCard: FC<ICommentCardProps> = ({
                         backgroundColor: "transparent",
                     }}
                 />
+
+                {attachmentsExists && (
+                    <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
+                        {comment.attachments.map((attachment) => (
+                            <AttachmentCard
+                                key={attachment.id}
+                                attachment={attachment}
+                                onDelete={() =>
+                                    handleClickDeleteAttachment(
+                                        attachment.id,
+                                        attachment.name,
+                                    )
+                                }
+                            />
+                        ))}
+                    </Box>
+                )}
             </Box>
         </Box>
     );
 
     const renderEditMode = () => (
-        <Box display="flex" gap={1} pl={1} py={0.5}>
-            <UserAvatar src={author.avatar} />
+        <Box display="flex" flexDirection="column" pl={1} py={0.5}>
+            <Box display="flex" gap={2}>
+                <UserAvatar src={author.avatar} size={32} />
 
-            <Box display="flex" flexDirection="column" gap={1} flex={1}>
-                <Box minHeight="85px">
-                    <MDEditor
-                        value={text}
-                        onChange={(value) => setText(value || "")}
-                        textareaProps={{
-                            placeholder: t("issues.comments.write"),
-                        }}
-                        height="100%"
-                        minHeight={74}
-                        autoFocus
-                    />
-                </Box>
+                <Box display="flex" flexDirection="column" gap={1} flex={1}>
+                    <Box minHeight="85px">
+                        <MDEditor
+                            value={text}
+                            onChange={(value) => setText(value || "")}
+                            textareaProps={{
+                                placeholder: t("issues.comments.write"),
+                            }}
+                            height="100%"
+                            minHeight={74}
+                            autoFocus
+                        />
+                    </Box>
 
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        onClick={handleClickSave}
-                        variant="outlined"
-                        size="small"
-                        disabled={!text}
-                        loading={isLoading}
-                    >
-                        {t("save")}
-                    </LoadingButton>
+                    <Box display="flex" gap={1}>
+                        <LoadingButton
+                            onClick={handleClickSave}
+                            variant="outlined"
+                            size="small"
+                            disabled={!text}
+                            loading={isLoading}
+                        >
+                            {t("save")}
+                        </LoadingButton>
 
-                    <Button
-                        onClick={onCancel}
-                        variant="outlined"
-                        size="small"
-                        color="error"
-                    >
-                        {t("cancel")}
-                    </Button>
+                        <Button
+                            component="label"
+                            startIcon={<AttachFileIcon />}
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                        >
+                            {t("issues.comments.attachFile")}
+
+                            <HiddenInput
+                                type="file"
+                                onChange={handleChangeFileInput}
+                                multiple={false}
+                            />
+                        </Button>
+
+                        <Button
+                            onClick={onCancel}
+                            variant="outlined"
+                            size="small"
+                            color="error"
+                        >
+                            {t("cancel")}
+                        </Button>
+                    </Box>
                 </Box>
             </Box>
+
+            {attachmentsExists && (
+                <Box display="flex" flexWrap="wrap" gap={1} mt={1} ml={6}>
+                    {comment.attachments.map((attachment) => (
+                        <AttachmentCard
+                            key={attachment.id}
+                            attachment={attachment}
+                            onDelete={() =>
+                                handleClickDeleteAttachment(
+                                    attachment.id,
+                                    attachment.name,
+                                )
+                            }
+                        />
+                    ))}
+                </Box>
+            )}
         </Box>
     );
 
-    return isEditing ? renderEditMode() : renderViewMode();
+    return (
+        <>
+            {isEditing ? renderEditMode() : renderViewMode()}
+
+            <DeleteAttachmentDialog
+                open={openDeleteDialog}
+                filename={selectedAttachment.filename}
+                onClose={() => setOpenDeleteDialog(false)}
+                onDelete={deleteAttachment}
+                loading={isLoading}
+            />
+        </>
+    );
 };
 
 export { CommentCard };
