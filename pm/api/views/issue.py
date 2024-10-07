@@ -27,10 +27,9 @@ CustomFieldValueOutT = (
     | date
     | datetime
     | UserOutput
-    | list[str]  # todo: use only list[EnumCustomField]
     | list[UserOutput]
-    | m.EnumCustomField
-    | list[m.EnumCustomField]
+    | m.EnumField
+    | list[m.EnumField]
     | m.StateField
     | PydanticObjectId
     | Any

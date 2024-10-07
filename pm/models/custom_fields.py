@@ -14,6 +14,7 @@ __all__ = (
     'CustomFieldTypeT',
     'CustomField',
     'CustomFieldLink',
+    'EnumField',
     'EnumOption',
     'StringCustomField',
     'IntegerCustomField',
@@ -54,10 +55,22 @@ class CustomFieldTypeT(StrEnum):
         return MAPPING[self]
 
 
-class EnumOption(BaseModel):
-    id: UUID
+class EnumField(BaseModel):
     value: str
     color: str | None = None
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, EnumField):
+            return False
+        return self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+class EnumOption(BaseModel):
+    id: UUID
+    value: EnumField
 
 
 class UserOptionType(StrEnum):
@@ -86,6 +99,7 @@ class StateField(BaseModel):
     state: str
     is_resolved: bool = False
     is_closed: bool = False
+    color: str | None = None
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, StateField):
@@ -99,7 +113,6 @@ class StateField(BaseModel):
 class StateOption(BaseModel):
     id: UUID
     value: StateField
-    color: str | None = None
 
 
 class CustomFieldValidationError(ValueError):
@@ -418,17 +431,26 @@ class EnumCustomField(CustomField):
         value = super().validate_value(value)
         if value is None:
             return value
-        if value not in {opt.value for opt in self.options}:
+        if isinstance(value, EnumField):
+            value = value.value
+        opts = {opt.value.value: opt.value for opt in self.options}
+        if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
             )
-        return value
+        return opts[value]
 
 
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
     options: list[EnumOption] = Field(default_factory=list)
     default_value: list[str] | None = None
+
+    @staticmethod
+    def __transform_single_value(value: Any) -> Any:
+        if isinstance(value, EnumField):
+            return value.value
+        return value
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
@@ -442,13 +464,14 @@ class EnumMultiCustomField(CustomField):
             raise CustomFieldValidationError(
                 field=self, value=value, msg='cannot be empty'
             )
-        allowed_values = {opt.value for opt in self.options}
+        value = [self.__transform_single_value(val) for val in value]
+        opts = {opt.value.value: opt.value for opt in self.options}
         for val in value:
-            if val not in allowed_values:
+            if val not in opts:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg=f'option {val} not found'
                 )
-        return value
+        return [opts[val] for val in value]
 
 
 class StateCustomField(CustomField):
@@ -490,10 +513,9 @@ CustomFieldValueT = (
     | float
     | datetime
     | UserLinkField
-    | list[str]  # todo: use only list[EnumCustomField]
     | list[UserLinkField]
-    | EnumCustomField
-    | list[EnumCustomField]
+    | EnumField
+    | list[EnumField]
     | StateField
     | PydanticObjectId
     | Any
