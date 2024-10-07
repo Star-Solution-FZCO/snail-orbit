@@ -1,6 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -27,12 +27,18 @@ router = APIRouter(
 
 
 class IssueFieldChangeOutput(BaseModel):
-    field: CustomFieldLinkOutput
-    old_value: CustomFieldValueOutT
-    new_value: CustomFieldValueOutT
+    field: CustomFieldLinkOutput | Literal['subject', 'text']
+    old_value: CustomFieldValueOutT | str | None
+    new_value: CustomFieldValueOutT | str | None
 
     @classmethod
     def from_obj(cls, obj: m.IssueFieldChange) -> Self:
+        if isinstance(obj.field, str):
+            return cls(
+                field=obj.field,
+                old_value=obj.old_value,
+                new_value=obj.new_value,
+            )
         return cls(
             field=CustomFieldLinkOutput.from_obj(obj.field),
             old_value=transform_custom_field_value(obj.old_value, obj.field),
