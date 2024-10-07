@@ -182,9 +182,11 @@ async def add_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    if any(opt.value == body.value for opt in obj.options):
+    if any(opt.value.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
-    obj.options.append(m.EnumOption(id=uuid4(), value=body.value, color=body.color))
+    obj.options.append(
+        m.EnumOption(id=uuid4(), value=m.EnumField(value=body.value, color=body.color))
+    )
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -207,7 +209,7 @@ async def update_enum_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        setattr(opt, k, v)
+        setattr(opt.value, k, v)
     # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
@@ -312,15 +314,17 @@ async def add_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.value == body.value for opt in obj.options):
+    if any(opt.value.state == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
         m.StateOption(
             id=uuid4(),
             value=m.StateField(
-                state=body.value, is_resolved=body.is_resolved, is_closed=body.is_closed
+                state=body.value,
+                is_resolved=body.is_resolved,
+                is_closed=body.is_closed,
+                color=body.color,
             ),
-            color=body.color,
         )
     )
     if obj.is_changed:
@@ -343,9 +347,6 @@ async def update_state_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        if k == 'color':
-            setattr(opt, k, v)
-            continue
         setattr(opt.value, k, v)
     # todo: update issues
     if obj.is_changed:
@@ -405,9 +406,6 @@ async def select_options(
             count=selected.total,
             limit=selected.limit,
             offset=selected.offset,
-            items=[
-                EnumOptionOutput(uuid=opt.id, value=opt.value, color=opt.color)
-                for opt in selected.items
-            ],
+            items=[EnumOptionOutput.from_obj(opt) for opt in selected.items],
         )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')
