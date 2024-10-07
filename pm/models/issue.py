@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Literal, Self
 from uuid import UUID, uuid4
@@ -12,8 +11,6 @@ from ._audit import audited_model
 from .custom_fields import CustomFieldLink, CustomFieldValue, CustomFieldValueT
 from .project import Project, ProjectLinkField
 from .user import User, UserLinkField
-
-logging.basicConfig(level=logging.INFO)
 
 __all__ = (
     'Issue',
@@ -45,8 +42,8 @@ class IssueComment(BaseModel):
 
 class IssueFieldChange(BaseModel):
     field: CustomFieldLink | Literal['subject', 'text']
-    old_value: CustomFieldValueT | str
-    new_value: CustomFieldValueT | str
+    old_value: CustomFieldValueT | str | None
+    new_value: CustomFieldValueT | str | None
 
 
 class IssueHistoryRecord(BaseModel):
@@ -99,27 +96,48 @@ class Issue(Document):
         for field_id, new_value in new_fields.items():
             old_value = old_fields.get(field_id)
             if old_value != new_value:
-                logging.info(f'Field {field_id} changed: {old_value} -> {new_value}')
                 diff[field_id] = (old_value, new_value)
+        return diff
+
+    def _params_diff(
+        self,
+    ) -> dict[Literal['subject', 'text'], tuple[str | None, str | None]]:
+        params_to_diff = ('subject', 'text')
+        old_state = self.__class__.model_validate(self.get_saved_state())
+        old_params = {param: getattr(old_state, param) for param in params_to_diff}
+        new_params = {param: getattr(self, param) for param in params_to_diff}
+        diff = {}
+        for param in params_to_diff:
+            if old_params[param] != new_params[param]:
+                diff[param] = (old_params[param], new_params[param])
         return diff
 
     def gen_history_record(self, author: 'User', time: datetime | None = None) -> None:
         time = time or utcnow()
         fields = {field.id: field for field in self.fields}
         fields_diff = self._fields_diff()
-        if not fields_diff:
+        params_diff = self._params_diff()
+        if not fields_diff and not params_diff:
             return
+        changes = [
+            IssueFieldChange(
+                field=CustomFieldLink.from_obj(fields[field_id]),
+                old_value=old_value,
+                new_value=new_value,
+            )
+            for field_id, (old_value, new_value) in fields_diff.items()
+        ] + [
+            IssueFieldChange(
+                field=param,
+                old_value=old_value,
+                new_value=new_value,
+            )
+            for param, (old_value, new_value) in params_diff.items()
+        ]
         record = IssueHistoryRecord(
             author=UserLinkField.from_obj(author),
             time=time,
-            changes=[
-                IssueFieldChange(
-                    field=CustomFieldLink.from_obj(fields[field_id]),
-                    old_value=old_value,
-                    new_value=new_value,
-                )
-                for field_id, (old_value, new_value) in fields_diff.items()
-            ],
+            changes=changes,
         )
         self.history.append(record)
 
