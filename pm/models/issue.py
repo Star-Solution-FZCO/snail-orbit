@@ -18,6 +18,7 @@ __all__ = (
     'IssueAttachment',
     'IssueHistoryRecord',
     'IssueFieldChange',
+    'IssueDraft',
 )
 
 
@@ -175,5 +176,56 @@ class Issue(Document):
         )
         await cls.find(cls.attachments.author.id == user.id).update(
             {'$set': {'attachments.$[a].author': UserLinkField.from_obj(user)}},
+            array_filters=[{'a.author.id': user.id}],
+        )
+
+
+@audited_model
+class IssueDraft(Document):
+    class Settings:
+        name = 'issue_drafts'
+        use_revision = False
+        use_state_management = True
+        state_management_save_previous = False
+
+    subject: str
+    text: str | None = None
+    project: ProjectLinkField
+    fields: list[CustomFieldValue] = Field(default_factory=list)
+    attachments: list[IssueAttachment] = Field(default_factory=list)
+    created_by: UserLinkField
+    created_at: datetime = Field(default_factory=utcnow)
+
+    async def get_project(self, fetch_links: bool = False) -> Project:
+        pr: Project | None = await Project.find_one(
+            Project.id == self.project.id, fetch_links=fetch_links
+        )
+        if not pr:
+            raise ValueError(f'Project {self.project.id} not found')
+        return pr
+
+    @classmethod
+    async def update_project_embedded_links(
+        cls,
+        project: Project | ProjectLinkField,
+    ) -> None:
+        if isinstance(project, Project):
+            project = ProjectLinkField.from_obj(project)
+        await cls.find(cls.project.id == project.id).update(
+            {'$set': {'project': project}}
+        )
+
+    @classmethod
+    async def update_user_embedded_links(
+        cls,
+        user: User | UserLinkField,
+    ) -> None:
+        if isinstance(user, User):
+            user = UserLinkField.from_obj(user)
+        await cls.find(cls.created_by.id == user.id).update(
+            {'$set': {'created_by': user}}
+        )
+        await cls.find(cls.attachments.author.id == user.id).update(
+            {'$set': {'attachments.$[a].author': user}},
             array_filters=[{'a.author.id': user.id}],
         )

@@ -12,6 +12,7 @@ from .user import UserOutput
 
 __all__ = (
     'IssueOutput',
+    'IssueDraftOutput',
     'IssueAttachmentOut',
     'ProjectField',
     'CustomFieldValueOut',
@@ -128,4 +129,30 @@ class IssueOutput(BaseModel):
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
             is_subscribed=current_user().user.id in obj.subscribers,
+        )
+
+
+class IssueDraftOutput(BaseModel):
+    id: PydanticObjectId
+    project: ProjectField
+    subject: str
+    text: str | None
+    fields: dict[str, CustomFieldValueOut]
+    attachments: list[IssueAttachmentOut]
+    created_at: datetime
+    created_by: UserOutput
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueDraft) -> Self:
+        return cls(
+            id=obj.id,
+            project=ProjectField.from_obj(obj.project),
+            subject=obj.subject,
+            text=obj.text,
+            fields={
+                field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
+            },
+            attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
+            created_at=obj.created_at,
+            created_by=UserOutput.from_obj(obj.created_by),
         )

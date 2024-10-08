@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Any
 from uuid import UUID
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -13,8 +14,9 @@ from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import transform_query
 from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueOutput
+from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.select import SelectParams
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.workflows import WorkflowException
@@ -64,6 +66,252 @@ async def list_issues(
         offset=query.offset,
         items=results,
     )
+
+
+@router.post('/draft')
+async def create_draft(
+    body: IssueCreate,
+) -> SuccessPayloadOutput[IssueDraftOutput]:
+    user_ctx = current_user()
+    now = utcnow()
+    project: m.Project | None = await m.Project.find_one(
+        m.Project.id == body.project_id, fetch_links=True
+    )
+    if not project:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+    attachments = {}
+    if body.attachments:
+        try:
+            attachments = await resolve_files(body.attachments)
+        except ValueError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+
+    validated_fields, validation_errors = await validate_custom_fields_values(
+        body.fields, project
+    )
+    obj = m.IssueDraft(
+        subject=body.subject,
+        text=body.text,
+        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
+        fields=validated_fields,
+        attachments=[
+            m.IssueAttachment(
+                id=a_id,
+                name=a_data.name,
+                size=a_data.size,
+                content_type=a_data.content_type,
+                author=m.UserLinkField.from_obj(user_ctx.user),
+                created_at=now,
+            )
+            for a_id, a_data in attachments.items()
+        ],
+        created_by=m.UserLinkField.from_obj(user_ctx.user),
+    )
+    if validation_errors:
+        raise ValidateModelException(
+            payload=IssueDraftOutput.from_obj(obj),
+            error_messages=['Custom field validation error'],
+            error_fields={e.field.name: e.msg for e in validation_errors},
+        )
+    await obj.insert()
+    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+
+
+@router.get('/draft/list')
+async def list_drafts(
+    limit: int = Query(50, le=50, description='limit results'),
+    offset: int = Query(0, description='offset'),
+) -> BaseListOutput[IssueDraftOutput]:
+    user_ctx = current_user()
+    q = m.IssueDraft.find(m.IssueDraft.created_by.id == user_ctx.user.id).sort(
+        m.IssueDraft.id
+    )
+    results = []
+    async for obj in q.limit(limit).skip(offset):
+        results.append(IssueDraftOutput.from_obj(obj))
+    return BaseListOutput.make(
+        count=await q.count(),
+        limit=limit,
+        offset=offset,
+        items=results,
+    )
+
+
+@router.get('/draft/select')
+async def select_draft(
+    query: SelectParams = Depends(),
+) -> BaseListOutput[IssueDraftOutput]:
+    user_ctx = current_user()
+    q = m.IssueDraft.find(
+        m.IssueDraft.created_by.id == user_ctx.user.id,
+        bo.RegEx(m.IssueDraft.subject, query.search, 'i'),
+    ).sort(m.IssueDraft.id)
+    return BaseListOutput.make(
+        count=await q.count(),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            IssueDraftOutput.from_obj(obj)
+            async for obj in q.limit(query.limit).skip(query.offset)
+        ],
+    )
+
+
+@router.get('/draft/{draft_id}')
+async def get_draft(
+    draft_id: PydanticObjectId,
+) -> SuccessPayloadOutput[IssueDraftOutput]:
+    user_ctx = current_user()
+    obj: m.IssueDraft | None = await m.IssueDraft.find_one(m.IssueDraft.id == draft_id)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
+    if obj.created_by.id != user_ctx.user.id:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'You do not have permission to read this draft'
+        )
+    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+
+
+@router.put('/draft/{draft_id}')
+async def update_draft(
+    draft_id: PydanticObjectId,
+    body: IssueUpdate,
+) -> SuccessPayloadOutput[IssueDraftOutput]:
+    user_ctx = current_user()
+    now = utcnow()
+    obj: m.IssueDraft | None = await m.IssueDraft.find_one(m.IssueDraft.id == draft_id)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
+    if obj.created_by.id != user_ctx.user.id:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'You do not have permission to update this draft'
+        )
+    project = await obj.get_project(fetch_links=True)
+    validation_errors = []
+    for k, v in body.dict(exclude_unset=True).items():
+        if k == 'fields':
+            f_val, validation_errors = await validate_custom_fields_values(
+                v, project, obj
+            )
+            obj.fields = f_val
+            continue
+        if k == 'attachments':
+            new_attachment_ids = set(v)
+            current_attachment_ids = set(a.id for a in obj.attachments)
+            extra_attachment_ids = new_attachment_ids - current_attachment_ids
+            remove_attachment_ids = current_attachment_ids - new_attachment_ids
+            try:
+                extra_attachments = await resolve_files(list(extra_attachment_ids))
+            except ValueError as err:
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            obj.attachments = [
+                a for a in obj.attachments if a.id not in remove_attachment_ids
+            ]
+            obj.attachments.extend(
+                [
+                    m.IssueAttachment(
+                        id=a_id,
+                        name=a_data.name,
+                        size=a_data.size,
+                        content_type=a_data.content_type,
+                        author=m.UserLinkField.from_obj(user_ctx.user),
+                        created_at=now,
+                    )
+                    for a_id, a_data in extra_attachments.items()
+                ]
+            )
+            continue
+        setattr(obj, k, v)
+    if validation_errors:
+        raise ValidateModelException(
+            payload=IssueDraftOutput.from_obj(obj),
+            error_messages=['Custom field validation error'],
+            error_fields={e.field.name: e.msg for e in validation_errors},
+        )
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+
+
+@router.delete('/draft/{draft_id}')
+async def delete_draft(
+    draft_id: PydanticObjectId,
+) -> ModelIdOutput:
+    user_ctx = current_user()
+    obj: m.IssueDraft | None = await m.IssueDraft.find_one(m.IssueDraft.id == draft_id)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
+    if obj.created_by.id != user_ctx.user.id:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'You do not have permission to delete this draft'
+        )
+    await obj.delete()
+    return ModelIdOutput.from_obj(obj)
+
+
+@router.post('/draft/{draft_id}/create')
+async def create_issue_from_draft(
+    draft_id: PydanticObjectId,
+) -> SuccessPayloadOutput[IssueOutput]:
+    user_ctx = current_user()
+    now = utcnow()
+    draft: m.IssueDraft | None = await m.IssueDraft.find_one(
+        m.IssueDraft.id == draft_id
+    )
+    if not draft:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
+    if draft.created_by.id != user_ctx.user.id:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            'You do not have permission to create issue from this draft',
+        )
+    project = await draft.get_project(fetch_links=True)
+    attachments = {}
+    if draft.attachments:
+        try:
+            attachments = await resolve_files([a.id for a in draft.attachments])
+        except ValueError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+
+    obj = m.Issue(
+        subject=draft.subject,
+        text=draft.text,
+        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
+        fields=draft.fields,
+        attachments=[
+            m.IssueAttachment(
+                id=a_id,
+                name=a_data.name,
+                size=a_data.size,
+                content_type=a_data.content_type,
+                author=m.UserLinkField.from_obj(user_ctx.user),
+                created_at=now,
+            )
+            for a_id, a_data in attachments.items()
+        ],
+        subscribers=[user_ctx.user.id],
+    )
+    try:
+        for wf in project.workflows:
+            await wf.run(obj)
+    except WorkflowException as err:
+        raise ValidateModelException(
+            payload=IssueOutput.from_obj(obj),
+            error_messages=[err.msg],
+            error_fields=err.fields_errors,
+        )
+    obj.aliases.append(await project.get_new_issue_alias())
+    await obj.insert()
+    await draft.delete()
+    await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
+    task_notify_by_pararam.delay(
+        'create',
+        obj.subject,
+        obj.id_readable,
+        [str(s) for s in obj.subscribers],
+        str(project.id),
+    )
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 @router.get('/{issue_id_or_alias}')
