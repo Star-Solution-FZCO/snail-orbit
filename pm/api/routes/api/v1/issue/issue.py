@@ -290,6 +290,7 @@ async def create_issue_from_draft(
             for a_id, a_data in attachments.items()
         ],
         subscribers=[user_ctx.user.id],
+        created_by=m.UserLinkField.from_obj(user_ctx.user),
     )
     try:
         for wf in project.workflows:
@@ -362,6 +363,7 @@ async def create_issue(
             for a_id, a_data in attachments.items()
         ],
         subscribers=[user_ctx.user.id],
+        created_by=m.UserLinkField.from_obj(user_ctx.user),
     )
     if validation_errors:
         raise ValidateModelException(

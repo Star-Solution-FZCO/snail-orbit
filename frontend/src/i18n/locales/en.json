@@ -33,6 +33,7 @@
     "copyLink.error": "Failed to copy link to clipboard",
     "copyLink.success": "Link copied to clipboard",
     "create": "Create",
+    "createdBy": "Created by",
     "customFields.create.success": "Custom Field created successfully",
     "customFields.create.title": "New custom field",
     "customFields.fields.name": "Name",
@@ -213,5 +214,6 @@
     "save": "Save",
     "somethingWentWrong": "Something went wrong",
     "somethingWentWrong.description": "Please try refreshing the page. If the problem persists, feel free to contact IT Support for assistance.",
-    "submit": "Submit"
+    "submit": "Submit",
+    "updatedBy": "Updated by"
 }

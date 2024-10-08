@@ -4,12 +4,16 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import {
     Box,
     IconButton,
-    Link,
     Menu,
     MenuItem,
+    Tooltip,
     Typography,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { Link } from "components";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { toast } from "react-toastify";
@@ -20,6 +24,9 @@ import { toastApiError } from "utils";
 import { transformIssue } from "../utils";
 import { DeleteIssueDialog } from "./delete_dialog";
 
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+
 interface IIssueHeadingProps {
     issue: IssueT;
 }
@@ -28,28 +35,24 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
     const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const menuOpen = Boolean(anchorEl);
-
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const menuOpen = Boolean(anchorEl);
 
     const [createIssue] = issueApi.useCreateIssueMutation();
 
-    const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleCloseMenu = () => {
-        setAnchorEl(null);
-    };
+    const handleCloseMenu = () => setAnchorEl(null);
 
-    const handleClickDeleteIssue = () => {
+    const handleDeleteDialogOpen = () => {
         handleCloseMenu();
         setDeleteDialogOpen(true);
     };
 
-    const handleClickCloneIssue = () => {
+    const handleCloneIssue = () => {
         handleCloseMenu();
-
         createIssue(transformIssue(issue))
             .unwrap()
             .then((response) => {
@@ -81,24 +84,81 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
             .catch(toastApiError);
     };
 
+    const renderTimestamp = (date: string) => (
+        <Tooltip
+            title={dayjs.utc(date).local().format("DD MMM YYYY HH:mm")}
+            placement="bottom"
+        >
+            <Typography component="span" fontSize="inherit">
+                {dayjs.utc(date).local().fromNow()}
+            </Typography>
+        </Tooltip>
+    );
+
+    const renderMenuItem = (
+        icon: React.ReactNode,
+        label: string,
+        onClick: () => void,
+        iconColor?: "error",
+    ) => (
+        <MenuItem
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            onClick={onClick}
+        >
+            {icon}
+            <Typography color={iconColor}>{label}</Typography>
+        </MenuItem>
+    );
+
     return (
         <Box
             width="calc(100% - 324px)"
             display="flex"
-            alignItems="flex-start"
+            flexDirection="column"
             gap={1}
         >
-            <Typography fontSize={24} fontWeight="bold" flex={1}>
-                {issue.subject}
-            </Typography>
+            <Box display="flex" alignItems="center" gap={2} fontSize={14}>
+                <Link>{issue.id_readable}</Link>
 
-            <IconButton
-                onClick={handleClickMenu}
-                color={menuOpen ? "primary" : "inherit"}
-                size="small"
-            >
-                <MoreHorizIcon />
-            </IconButton>
+                <Typography color="text.secondary" fontSize="inherit">
+                    {t("createdBy")}{" "}
+                    <Typography
+                        component="span"
+                        color="primary"
+                        fontSize="inherit"
+                    >
+                        {issue.created_by.name}
+                    </Typography>{" "}
+                    {renderTimestamp(issue.created_at)}
+                </Typography>
+
+                {issue.updated_by && issue.updated_at && (
+                    <Typography color="text.secondary" fontSize="inherit">
+                        {t("updatedBy")}{" "}
+                        <Typography
+                            component="span"
+                            color="primary"
+                            fontSize="inherit"
+                        >
+                            {issue.updated_by.name}
+                        </Typography>{" "}
+                        {renderTimestamp(issue.updated_at)}
+                    </Typography>
+                )}
+            </Box>
+
+            <Box display="flex" alignItems="flex-start" gap={1}>
+                <Typography fontSize={24} fontWeight="bold" flex={1}>
+                    {issue.subject}
+                </Typography>
+                <IconButton
+                    onClick={handleOpenMenu}
+                    color={menuOpen ? "primary" : "inherit"}
+                    size="small"
+                >
+                    <MoreHorizIcon />
+                </IconButton>
+            </Box>
 
             <Menu
                 anchorEl={anchorEl}
@@ -113,33 +173,17 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
                     horizontal: "left",
                 }}
             >
-                <MenuItem
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                    }}
-                    onClick={handleClickCloneIssue}
-                >
-                    <ContentCopyIcon />
-
-                    <Typography>{t("issues.clone")}</Typography>
-                </MenuItem>
-
-                <MenuItem
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                    }}
-                    onClick={handleClickDeleteIssue}
-                >
-                    <DeleteIcon color="error" />
-
-                    <Typography color="error">
-                        {t("issues.delete.title")}
-                    </Typography>
-                </MenuItem>
+                {renderMenuItem(
+                    <ContentCopyIcon />,
+                    t("issues.clone"),
+                    handleCloneIssue,
+                )}
+                {renderMenuItem(
+                    <DeleteIcon color="error" />,
+                    t("issues.delete.title"),
+                    handleDeleteDialogOpen,
+                    "error",
+                )}
             </Menu>
 
             <DeleteIssueDialog
