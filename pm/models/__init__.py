@@ -14,6 +14,7 @@ __beanie_models__ = [
     User,
     Project,
     Issue,
+    IssueDraft,
     Board,
     Role,
     CustomField,
