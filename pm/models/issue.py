@@ -3,7 +3,7 @@ from typing import Literal, Self
 from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, computed_field
 
 from pm.utils.dateutils import utcnow
 
@@ -77,9 +77,22 @@ class Issue(Document):
     history: list[IssueHistoryRecord] = Field(default_factory=list)
     subscribers: list[PydanticObjectId] = Field(default_factory=list)
 
+    created_by: UserLinkField
+    created_at: datetime = Field(default_factory=utcnow)
+
     @property
     def id_readable(self) -> str:
         return self.aliases[-1] if self.aliases else str(self.id)
+
+    @property
+    def updated_by(self) -> UserLinkField | None:
+        latest_item, _ = self._get_latest_comment_or_history()
+        return latest_item.author if latest_item else None
+
+    @property
+    def updated_at(self) -> datetime | None:
+        _, latest_time = self._get_latest_comment_or_history()
+        return latest_time
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -177,6 +190,23 @@ class Issue(Document):
         await cls.find(cls.attachments.author.id == user.id).update(
             {'$set': {'attachments.$[a].author': UserLinkField.from_obj(user)}},
             array_filters=[{'a.author.id': user.id}],
+        )
+
+    def _get_latest_comment_or_history(
+        self,
+    ) -> tuple[IssueComment | IssueHistoryRecord, datetime | None]:
+        latest_comment = max(self.comments, key=lambda c: c.created_at, default=None)
+        latest_history = max(self.history, key=lambda h: h.time, default=None)
+
+        if not latest_comment:
+            return latest_history, latest_history.time if latest_history else None
+        if not latest_history:
+            return latest_comment, latest_comment.created_at if latest_comment else None
+
+        return (
+            (latest_comment, latest_comment.created_at)
+            if latest_comment.created_at > latest_history.time
+            else (latest_history, latest_history.time)
         )
 
 

@@ -29,6 +29,10 @@ export type IssueT = {
     attachments: AttachmentT[];
     aliases: string[];
     is_subscribed: boolean;
+    created_by: BasicUserT;
+    created_at: string;
+    updated_by: BasicUserT | null;
+    updated_at: string | null;
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;

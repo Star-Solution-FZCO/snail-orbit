@@ -114,6 +114,10 @@ class IssueOutput(BaseModel):
     attachments: list[IssueAttachmentOut]
     is_subscribed: bool
     id_readable: str
+    created_by: UserOutput
+    created_at: datetime
+    updated_by: UserOutput | None
+    updated_at: datetime | None
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
@@ -129,6 +133,10 @@ class IssueOutput(BaseModel):
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
             is_subscribed=current_user().user.id in obj.subscribers,
+            created_by=UserOutput.from_obj(obj.created_by),
+            created_at=obj.created_at,
+            updated_by=UserOutput.from_obj(obj.updated_by) if obj.updated_by else None,
+            updated_at=obj.updated_at,
         )
 
 
