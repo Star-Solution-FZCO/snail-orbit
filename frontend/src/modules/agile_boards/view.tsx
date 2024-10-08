@@ -1,4 +1,4 @@
-import DeleteIcon from "@mui/icons-material/Delete";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
     Breadcrumbs,
@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
@@ -28,13 +28,10 @@ const AgileBoardView = () => {
     const { boardId } = routeApi.useParams();
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     const { data, error, refetch } =
         agileBoardApi.useGetAgileBoardQuery(boardId);
-
-    useEffect(() => {
-        console.log(data?.payload);
-    }, [data?.payload]);
 
     const [updateAgileBoard, { isLoading }] =
         agileBoardApi.useUpdateAgileBoardMutation();
@@ -69,14 +66,19 @@ const AgileBoardView = () => {
 
     return (
         <Stack direction="column">
-            <Container sx={{ pb: 4, px: 4 }} disableGutters>
+            <Container disableGutters>
                 <DeleteAgileBoardDialog
                     id={agileBoard.id}
                     open={deleteDialogOpen}
                     onClose={() => setDeleteDialogOpen(false)}
                 />
 
-                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    gap={1}
+                    mb={2}
+                >
                     <Breadcrumbs>
                         <Link to="/agiles" underline="hover">
                             <Typography fontSize={24} fontWeight="bold">
@@ -89,19 +91,24 @@ const AgileBoardView = () => {
                     </Breadcrumbs>
 
                     <IconButton
-                        onClick={() => setDeleteDialogOpen(true)}
-                        color="error"
+                        onClick={() => setSettingsOpen((prev) => !prev)}
+                        color="primary"
                         size="small"
                     >
-                        <DeleteIcon />
+                        <SettingsIcon />
                     </IconButton>
-                </Box>
+                </Stack>
 
-                <AgileBoardForm
-                    onSubmit={onSubmit}
-                    defaultValues={agileBoardToFormValues(agileBoard)}
-                    loading={isLoading}
-                />
+                {settingsOpen ? (
+                    <Box mb={2}>
+                        <AgileBoardForm
+                            onSubmit={onSubmit}
+                            defaultValues={agileBoardToFormValues(agileBoard)}
+                            loading={isLoading}
+                            onDelete={() => setDeleteDialogOpen(true)}
+                        />
+                    </Box>
+                ) : null}
             </Container>
             <Box sx={{ width: "100dvw" }}>
                 <AgileBoard boardData={agileBoard} />

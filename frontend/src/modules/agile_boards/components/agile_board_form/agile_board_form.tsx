@@ -18,14 +18,14 @@ interface IAgileBoardFormProps {
     defaultValues?: AgileBoardFormData;
     onSubmit: (formData: AgileBoardFormData) => void;
     loading?: boolean;
-    hideCancel?: boolean;
+    onDelete?: () => void;
 }
 
 const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     defaultValues,
     onSubmit,
     loading,
-    hideCancel,
+    onDelete,
 }) => {
     const { t } = useTranslation();
 
@@ -124,10 +124,10 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                         size="small"
                         loading={loading}
                     >
-                        {t("create")}
+                        {defaultValues ? t("update") : t("create")}
                     </LoadingButton>
 
-                    {!hideCancel && (
+                    {!defaultValues && (
                         <Link to="..">
                             <Button
                                 variant="outlined"
@@ -137,6 +137,17 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                                 {t("cancel")}
                             </Button>
                         </Link>
+                    )}
+
+                    {onDelete && (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={onDelete}
+                        >
+                            {t("delete")}
+                        </Button>
                     )}
                 </Box>
             </Box>
