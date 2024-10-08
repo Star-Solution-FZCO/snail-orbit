@@ -116,12 +116,6 @@ export const Kanban: FC<KanbanProps> = ({
         );
     }, [outerItems]);
 
-    useEffect(() => {
-        console.log(items);
-        console.log(containers);
-        console.log(swimLines);
-    }, [items, containers, swimLines]);
-
     const collisionDetectionStrategy: CollisionDetection = useCallback(
         (args) => {
             if (activeId && activeId in items) {

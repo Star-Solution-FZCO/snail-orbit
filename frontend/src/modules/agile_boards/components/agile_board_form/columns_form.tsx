@@ -1,20 +1,73 @@
-import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Button, FormLabel, IconButton, Stack, TextField } from "@mui/material";
-import { FC } from "react";
-import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import {
+    Autocomplete,
+    CircularProgress,
+    FormLabel,
+    IconButton,
+    Stack,
+    TextField,
+} from "@mui/material";
+import { FC, useMemo, useState } from "react";
+import {
+    Controller,
+    useFieldArray,
+    useFormContext,
+    useWatch,
+} from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi } from "store";
+import { useListQueryParams } from "utils";
+import { BasicUserT, EnumOptionT, StateOptionT } from "../../../../types";
 import { AgileBoardFormData } from "./agile_board_form.schema";
+
+const getOptionValue = (
+    option: EnumOptionT | StateOptionT | BasicUserT,
+): string => {
+    return "value" in option ? option.value : option.name;
+};
 
 export const ColumnsForm: FC = () => {
     const { t } = useTranslation();
 
+    const [selectInput, setSelectInput] = useState<string>("");
+    const [listQueryParams] = useListQueryParams({
+        limit: 0,
+    });
+
     const { control } = useFormContext<AgileBoardFormData>();
+
+    const field = useWatch({
+        name: "column_field",
+        control,
+    });
+
+    const columns = useWatch({
+        control,
+        name: "columns",
+    });
 
     const { fields, append, remove } = useFieldArray<AgileBoardFormData>({
         control,
         name: "columns",
     });
+
+    const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
+        customFieldsApi.useLazyListSelectOptionsQuery();
+
+    const handleSelectOpen = () => {
+        fetchOptions({ id: field.id, ...listQueryParams });
+    };
+
+    const filteredOptions = useMemo(() => {
+        return (
+            options?.payload?.items.filter(
+                (option) =>
+                    !columns.some(
+                        ({ name }) => name === getOptionValue(option),
+                    ),
+            ) || []
+        );
+    }, [options, columns]);
 
     return (
         <Stack gap={1}>
@@ -60,16 +113,42 @@ export const ColumnsForm: FC = () => {
                     </IconButton>
                 </Stack>
             ))}
-
-            <Button
-                sx={{ alignSelf: "flex-start" }}
-                variant="outlined"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() => append({ name: "" })}
-            >
-                {t("agileBoards.form.addColumn")}
-            </Button>
+            <Autocomplete
+                onOpen={handleSelectOpen}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        placeholder={t("agileBoard.columns.selectPlaceholder")}
+                        InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                                <>
+                                    {isOptionsLoading ? (
+                                        <CircularProgress
+                                            color="inherit"
+                                            size={12}
+                                        />
+                                    ) : null}
+                                    {params.InputProps.endAdornment}
+                                </>
+                            ),
+                        }}
+                        size="small"
+                    />
+                )}
+                options={filteredOptions}
+                getOptionLabel={getOptionValue}
+                inputValue={selectInput}
+                value={null}
+                onChange={(_, option) => {
+                    setSelectInput("");
+                    if (option)
+                        append({
+                            name: getOptionValue(option),
+                        });
+                }}
+                disableCloseOnSelect
+            />
         </Stack>
     );
 };
