@@ -10,8 +10,7 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
-from pm.api.views.custom_fields import CustomFieldLinkOutput
-from pm.api.views.issue import CustomFieldValueOutT, transform_custom_field_value
+from pm.api.views.issue import IssueFieldChangeOutput
 from pm.api.views.output import BaseListOutput
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
@@ -24,26 +23,6 @@ router = APIRouter(
     prefix='/{issue_id_or_alias}/history',
     tags=['history'],
 )
-
-
-class IssueFieldChangeOutput(BaseModel):
-    field: CustomFieldLinkOutput | Literal['subject', 'text']
-    old_value: CustomFieldValueOutT | str | None
-    new_value: CustomFieldValueOutT | str | None
-
-    @classmethod
-    def from_obj(cls, obj: m.IssueFieldChange) -> Self:
-        if isinstance(obj.field, str):
-            return cls(
-                field=obj.field,
-                old_value=obj.old_value,
-                new_value=obj.new_value,
-            )
-        return cls(
-            field=CustomFieldLinkOutput.from_obj(obj.field),
-            old_value=transform_custom_field_value(obj.old_value, obj.field),
-            new_value=transform_custom_field_value(obj.new_value, obj.field),
-        )
 
 
 class IssueHistoryOutput(BaseModel):
