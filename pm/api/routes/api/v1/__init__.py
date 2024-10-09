@@ -1,5 +1,6 @@
 from pm.api.utils.router import APIRouter
 
+from .activity import router as activity_router
 from .board import router as board_router
 from .custom_field import router as custom_field_router
 from .files import router as files_router
@@ -16,6 +17,7 @@ from .workflow import router as workflow_router
 __all__ = ('router',)
 
 router = APIRouter(prefix='/v1', tags=['v1'])
+router.include_router(activity_router)
 router.include_router(version_router)
 router.include_router(user_router)
 router.include_router(project_router)
