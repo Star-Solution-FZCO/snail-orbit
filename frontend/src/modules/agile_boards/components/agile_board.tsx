@@ -11,7 +11,11 @@ export type AgileBoardProps = {
 };
 
 export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
-    const { data, refetch } = agileBoardApi.useGetBoardIssuesQuery({
+    const {
+        currentData: data,
+        refetch,
+        requestId,
+    } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
     });
 
@@ -30,7 +34,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         }
 
         return res;
-    }, [data?.payload]);
+    }, [data?.payload, requestId]);
 
     const itemsMap: Record<string, IssueT> = useMemo(() => {
         if (!data?.payload) return {};
@@ -44,7 +48,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
             },
             {} as Record<string, IssueT>,
         );
-    }, [data?.payload]);
+    }, [data?.payload, requestId]);
 
     useEffect(() => {
         refetch();
