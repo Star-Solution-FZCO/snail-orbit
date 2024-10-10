@@ -38,7 +38,7 @@ export type IssueT = {
 export type UpdateIssueT = Partial<CreateIssueT>;
 
 export type FieldValueChangeT = {
-    field: BasicCustomFieldT;
+    field: BasicCustomFieldT | "subject" | "text";
     old_value: CustomFieldValueT;
     new_value: CustomFieldValueT;
 };
