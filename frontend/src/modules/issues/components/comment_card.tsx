@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
 import MDEditor from "@uiw/react-md-editor";
-import { UserAvatar } from "components";
+import { CKMDEditor, UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -342,18 +342,12 @@ const CommentCard: FC<ICommentCardProps> = ({
                 <UserAvatar src={author.avatar} size={32} />
 
                 <Box display="flex" flexDirection="column" gap={1} flex={1}>
-                    <Box minHeight="85px">
-                        <MDEditor
-                            value={text}
-                            onChange={(value) => setText(value || "")}
-                            textareaProps={{
-                                placeholder: t("issues.comments.write"),
-                            }}
-                            height="100%"
-                            minHeight={74}
-                            autoFocus
-                        />
-                    </Box>
+                    <CKMDEditor
+                        value={text}
+                        onChange={(value) => setText(value || "")}
+                        placeholder={t("issues.comments.write")}
+                        autoHeight
+                    />
 
                     <Box display="flex" gap={1}>
                         <LoadingButton
