@@ -87,7 +87,6 @@ export const ItemStyled = styled("div")<ItemStyledProps>(
         transition: `box-shadow ${theme.transitions.duration.short} ${theme.transitions.easing.easeOut}`,
 
         touchAction: "manipulation",
-        cursor: "grab",
 
         "&:focus-visible": {
             boxShadow: `0 0 4px 1px ${theme.palette.primary.main}, ${boxShadow}`,
