@@ -12,7 +12,9 @@ export type StyledContainerProps = {
     hover?: boolean;
 };
 
-export const StyledContainer = styled("div")<StyledContainerProps>(
+export const StyledContainer = styled("div", {
+    label: "kanbanContainer",
+})<StyledContainerProps>(
     ({ theme, scrollable, placeholder, shadow, focusVisible, hover }) => ({
         display: "flex",
         flexDirection: "column",
@@ -31,6 +33,8 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
         fontSize: theme.typography.fontSize,
         borderRight: "1px solid",
         borderColor: theme.palette.grey["700"],
+        flexBasis: 0,
+        flexGrow: 1,
 
         "&:last-of-type": {
             borderRight: 0,
@@ -82,7 +86,9 @@ export const StyledContainer = styled("div")<StyledContainerProps>(
     }),
 );
 
-export const StyledContainerList = styled("ul")(({ theme }) => ({
+export const StyledContainerList = styled("ul", {
+    label: "kanbanContainerList",
+})(({ theme }) => ({
     display: "grid",
     gridGap: "10px",
     gridTemplateColumns: "repeat(var(--columns, 1), 1fr)",
@@ -92,12 +98,14 @@ export const StyledContainerList = styled("ul")(({ theme }) => ({
     width: "100%",
 }));
 
-export const HeaderStyled = styled("div")(({ theme }) => ({
-    display: "flex",
-    padding: theme.spacing(1),
-    alignItems: "center",
-    justifyContent: "flex-start",
-    backgroundColor: backgroundColor,
-    borderTopLeftRadius: "5px",
-    borderTopRightRadius: "5px",
-}));
+export const HeaderStyled = styled("div", { label: "kanbanContainerHeader" })(
+    ({ theme }) => ({
+        display: "flex",
+        padding: theme.spacing(1),
+        alignItems: "center",
+        justifyContent: "flex-start",
+        backgroundColor: backgroundColor,
+        borderTopLeftRadius: "5px",
+        borderTopRightRadius: "5px",
+    }),
+);
