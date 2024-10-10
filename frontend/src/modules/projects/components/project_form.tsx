@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { MDEditor } from "components";
+import { CKMDEditor } from "components";
 import { FC, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -100,13 +100,11 @@ const ProjectForm: FC<IProjectFormProps> = ({
                     name="description"
                     control={control}
                     render={({ field: { value, onChange } }) => (
-                        <MDEditor
-                            value={value}
+                        <CKMDEditor
+                            value={value || ""}
                             onChange={onChange}
-                            textareaProps={{
-                                placeholder: t("description"),
-                                readOnly,
-                            }}
+                            placeholder={t("description")}
+                            readOnly={readOnly}
                         />
                     )}
                 />
