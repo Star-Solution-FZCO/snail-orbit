@@ -6,6 +6,7 @@ import utc from "dayjs/plugin/utc";
 import i18n from "i18n";
 import { t } from "i18next";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import {
     BasicCustomFieldT,
     BasicUserT,
@@ -20,10 +21,21 @@ dayjs.extend(utc);
 
 const renderValue = (
     value: CustomFieldValueT,
-    field: BasicCustomFieldT,
+    field: BasicCustomFieldT | "subject" | "text",
 ): string => {
     if (value === null || value === undefined) {
-        return `${i18n.t("common.no")} ${field.name}`;
+        return `${i18n.t("common.no")} ${typeof field === "string" ? field : field.name}`;
+    }
+
+    if (typeof field === "string") {
+        switch (field) {
+            case "subject":
+                return value as string;
+            case "text":
+                return value as string;
+            default:
+                return String(value);
+        }
     }
 
     switch (field.type) {
@@ -64,12 +76,13 @@ const renderValue = (
 };
 
 const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
+    const { t } = useTranslation();
     return (
         <Box display="flex" flexDirection="column" gap={0.5}>
             {changes.map(({ field, old_value, new_value }, index) => (
                 <Box key={index} display="flex" gap={1} fontSize={14}>
                     <Typography fontSize="inherit" color="text.secondary">
-                        {field.name}:
+                        {typeof field === "string" ? t(field) : field.name}:
                     </Typography>
 
                     <Typography fontSize="inherit">

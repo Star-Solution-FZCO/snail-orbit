@@ -214,6 +214,8 @@
     "save": "Save",
     "somethingWentWrong": "Something went wrong",
     "somethingWentWrong.description": "Please try refreshing the page. If the problem persists, feel free to contact IT Support for assistance.",
+    "subject": "Subject",
     "submit": "Submit",
+    "text": "Text",
     "updatedBy": "Updated by"
 }
