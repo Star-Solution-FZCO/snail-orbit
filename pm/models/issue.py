@@ -3,7 +3,7 @@ from typing import Literal, Self
 from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import BaseModel, Extra, Field, computed_field
+from pydantic import BaseModel, Extra, Field
 
 from pm.utils.dateutils import utcnow
 
