@@ -7,12 +7,13 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { ErrorHandler, Link } from "components";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
 import { CustomFieldT, UpdateCustomFieldT } from "types";
 import { toastApiError } from "utils";
+import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
 import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
 import { CustomFieldForm } from "./components/custom_field_form";
 import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
@@ -78,6 +79,9 @@ const CustomFieldView = () => {
     const [updateCustomField, { isLoading }] =
         customFieldsApi.useUpdateCustomFieldMutation();
 
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
+
     if (error) {
         return (
             <ErrorHandler
@@ -91,11 +95,27 @@ const CustomFieldView = () => {
 
     const customField = data.payload;
 
-    const onSubmit = (formData: UpdateCustomFieldT) => {
+    const handleSubmit = (formData: UpdateCustomFieldT) => {
+        setFormData(formData);
+        setConfirmDialogOpen(true);
+    };
+
+    const handleConfirm = () => {
+        if (!formData) return;
+
         updateCustomField({ id: customField.id, ...formData })
             .unwrap()
-            .then(() => toast.success(t("customFields.update.success")))
+            .then(() => {
+                toast.success(t("customFields.update.success"));
+                setConfirmDialogOpen(false);
+                setFormData(null);
+            })
             .catch(toastApiError);
+    };
+
+    const handleCloseConfirmDialog = () => {
+        setConfirmDialogOpen(false);
+        setFormData(null);
     };
 
     return (
@@ -108,7 +128,7 @@ const CustomFieldView = () => {
             <Box display="flex" gap={2}>
                 <Box flex={1} pt={isNonPrimitiveType(customField) ? "44px" : 0}>
                     <CustomFieldForm
-                        onSubmit={onSubmit}
+                        onSubmit={handleSubmit}
                         defaultValues={customField}
                         loading={isLoading}
                     />
@@ -127,6 +147,12 @@ const CustomFieldView = () => {
                     </>
                 )}
             </Box>
+
+            <ConfirmChangesDialog
+                open={confirmDialogOpen}
+                onSubmit={handleConfirm}
+                onClose={handleCloseConfirmDialog}
+            />
         </Container>
     );
 };

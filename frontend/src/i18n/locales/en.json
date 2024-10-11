@@ -218,5 +218,8 @@
     "submit": "Submit",
     "text": "Text",
     "updatedBy": "Updated by",
-    "common.changed": "Changed"
+    "common.changed": "Changed",
+    "common.warning": "Warning",
+    "customFields.saveChanges.title": "Save changes",
+    "customFields.save.warning": "The changes you are about to make will affect all projects that use this customizable field. Any changes to this field will be reflected across multiple projects, which may affect workflows and data consistency. Are you sure you want to proceed with these changes? Please confirm to continue"
 }
