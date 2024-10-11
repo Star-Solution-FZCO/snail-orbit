@@ -68,9 +68,7 @@ const RoleForm: FC<IRoleFormProps> = ({
                         <MDEditor
                             value={value || ""}
                             onChange={onChange}
-                            textareaProps={{
-                                placeholder: t("description"),
-                            }}
+                            placeholder={t("description")}
                         />
                     )}
                 />

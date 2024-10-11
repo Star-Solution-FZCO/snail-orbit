@@ -3,6 +3,7 @@ import { UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
+import { diffWords } from "diff";
 import i18n from "i18n";
 import { t } from "i18next";
 import { FC } from "react";
@@ -19,18 +20,51 @@ import {
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
+const renderDiff = (oldText: string, newText: string) => {
+    const diff = diffWords(oldText, newText);
+
+    return (
+        <Box
+            sx={{
+                fontSize: "inherit",
+                whiteSpace: "pre-wrap",
+                "& ins": {
+                    textDecoration: "none",
+                    backgroundColor: "rgba(54,89,71)",
+                },
+                "& del": {
+                    textDecoration: "none",
+                    backgroundColor: "rgba(143, 82, 71)",
+                },
+            }}
+        >
+            {diff.map((part, index) => {
+                if (part.added) {
+                    return <ins key={index}>{part.value}</ins>;
+                } else if (part.removed) {
+                    return <del key={index}>{part.value}</del>;
+                } else {
+                    return <span key={index}>{part.value}</span>;
+                }
+            })}
+        </Box>
+    );
+};
+
 const renderValue = (
     value: CustomFieldValueT,
     field: BasicCustomFieldT | "subject" | "text",
 ): string => {
     if (value === null || value === undefined) {
-        return `${i18n.t("common.no")} ${typeof field === "string" ? field : field.name}`;
+        if (typeof field === "string") {
+            return "";
+        }
+        return `${i18n.t("common.no")} ${field.name}`;
     }
 
     if (typeof field === "string") {
         switch (field) {
             case "subject":
-                return value as string;
             case "text":
                 return value as string;
             default:
@@ -77,18 +111,48 @@ const renderValue = (
 
 const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
     const { t } = useTranslation();
+
     return (
         <Box display="flex" flexDirection="column" gap={0.5}>
             {changes.map(({ field, old_value, new_value }, index) => (
-                <Box key={index} display="flex" gap={1} fontSize={14}>
-                    <Typography fontSize="inherit" color="text.secondary">
-                        {typeof field === "string" ? t(field) : field.name}:
-                    </Typography>
+                <Box
+                    key={index}
+                    display="flex"
+                    flexDirection="column"
+                    gap={0.5}
+                >
+                    {typeof field === "string" &&
+                    (field === "subject" || field === "text") ? (
+                        <>
+                            <Typography
+                                fontSize="inherit"
+                                color="text.secondary"
+                            >
+                                {t(field)} {t("common.changed").toLowerCase()}:
+                            </Typography>
 
-                    <Typography fontSize="inherit">
-                        {renderValue(old_value, field)} →{" "}
-                        {renderValue(new_value, field)}
-                    </Typography>
+                            {renderDiff(
+                                renderValue(old_value, field),
+                                renderValue(new_value, field),
+                            )}
+                        </>
+                    ) : (
+                        <Box display="flex" gap={1} fontSize={14}>
+                            <Typography
+                                fontSize="inherit"
+                                color="text.secondary"
+                            >
+                                {typeof field === "string"
+                                    ? t(field)
+                                    : field.name}
+                                :
+                            </Typography>
+                            <Typography fontSize="inherit">
+                                {renderValue(old_value, field)} →{" "}
+                                {renderValue(new_value, field)}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
             ))}
         </Box>

@@ -217,5 +217,6 @@
     "subject": "Subject",
     "submit": "Submit",
     "text": "Text",
-    "updatedBy": "Updated by"
+    "updatedBy": "Updated by",
+    "common.changed": "Changed"
 }

@@ -68,9 +68,7 @@ const GroupForm: FC<IGroupFormProps> = ({
                         <MDEditor
                             value={value || ""}
                             onChange={onChange}
-                            textareaProps={{
-                                placeholder: t("description"),
-                            }}
+                            placeholder={t("description")}
                         />
                     )}
                 />

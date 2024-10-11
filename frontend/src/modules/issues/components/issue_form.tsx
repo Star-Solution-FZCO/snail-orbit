@@ -93,9 +93,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                             <MDEditor
                                 value={value || ""}
                                 onChange={onChange}
-                                textareaProps={{
-                                    placeholder: t("issues.form.text"),
-                                }}
+                                placeholder={t("issues.form.text")}
                             />
                         )}
                     />
