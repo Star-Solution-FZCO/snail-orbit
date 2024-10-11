@@ -11,7 +11,7 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
-import { CKMDEditor, UserAvatar } from "components";
+import { MDEditor, UserAvatar } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
@@ -184,10 +184,11 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                     <UserAvatar src={user?.avatar || ""} size={32} />
 
                     <Box display="flex" flexDirection="column" gap={1} flex={1}>
-                        <CKMDEditor
+                        <MDEditor
                             value={text}
                             onChange={(value) => setText(value || "")}
                             placeholder={t("issues.comments.write")}
+                            autoFocus
                             autoHeight
                         />
 
