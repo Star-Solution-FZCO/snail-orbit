@@ -77,7 +77,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         register,
         handleSubmit,
         watch,
-        formState: { errors },
+        formState: { errors, isDirty },
     } = useForm({
         defaultValues: {
             name: defaultValues?.name || "",
@@ -87,8 +87,6 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         },
         resolver: yupResolver(customFieldSchema),
     });
-
-    console.log(defaultValues);
 
     const isDefaultValueVisible =
         editableDefaultValueTypes.includes(watch("type")) && !!defaultValues;
@@ -200,6 +198,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                     type="submit"
                     variant="outlined"
                     loading={loading}
+                    disabled={!isDirty}
                 >
                     {t("save")}
                 </LoadingButton>
