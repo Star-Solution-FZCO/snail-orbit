@@ -88,4 +88,4 @@ def _enum_filter(objs: Sequence[m.EnumOption], search: str) -> list[m.EnumOption
 def enum_option_select(
     objs: Sequence[m.EnumOption], query: SelectParams
 ) -> SelectResult[m.EnumOption]:
-    return _select(objs, query, _enum_filter, lambda o: o.value)
+    return _select(objs, query, _enum_filter, lambda o: o.value.value)

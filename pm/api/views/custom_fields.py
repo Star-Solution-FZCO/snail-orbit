@@ -25,6 +25,14 @@ class EnumOptionOutput(BaseModel):
     value: str
     color: str | None = None
 
+    @classmethod
+    def from_obj(cls, obj: m.EnumOption) -> Self:
+        return cls(
+            uuid=obj.id,
+            value=obj.value.value,
+            color=obj.value.color,
+        )
+
 
 class CustomFieldOutput(BaseModel):
     id: PydanticObjectId
@@ -69,10 +77,7 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
-            options=[
-                EnumOptionOutput(uuid=opt.id, value=opt.value, color=opt.color)
-                for opt in obj.options
-            ],
+            options=[EnumOptionOutput.from_obj(opt) for opt in obj.options],
         )
 
 
@@ -122,7 +127,7 @@ class StateOptionOutput(BaseModel):
         return cls(
             uuid=obj.id,
             value=obj.value.state,
-            color=obj.color,
+            color=obj.value.color,
             is_resolved=obj.value.is_resolved,
             is_closed=obj.value.is_closed,
         )
