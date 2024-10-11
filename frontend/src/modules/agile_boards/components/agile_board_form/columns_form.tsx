@@ -16,8 +16,8 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
+import { BasicUserT, EnumOptionT, StateOptionT } from "types";
 import { useListQueryParams } from "utils";
-import { BasicUserT, EnumOptionT, StateOptionT } from "../../../../types";
 import { AgileBoardFormData } from "./agile_board_form.schema";
 
 const getOptionValue = (
