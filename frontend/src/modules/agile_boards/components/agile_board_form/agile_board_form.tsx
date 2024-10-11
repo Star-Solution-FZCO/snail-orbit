@@ -69,11 +69,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                             <MDEditor
                                 value={value || ""}
                                 onChange={onChange}
-                                textareaProps={{
-                                    placeholder: t(
-                                        "agileBoards.form.description",
-                                    ),
-                                }}
+                                placeholder={t("agileBoards.form.description")}
                             />
                         )}
                     />

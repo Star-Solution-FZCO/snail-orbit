@@ -13,8 +13,7 @@ import {
     useTheme,
 } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
-import MDEditor from "@uiw/react-md-editor";
-import { UserAvatar } from "components";
+import { MarkdownPreview, MDEditor, UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -306,15 +305,9 @@ const CommentCard: FC<ICommentCardProps> = ({
                     />
                 </Box>
 
-                <MDEditor.Markdown
-                    source={comment.text || ""}
-                    style={{
-                        whiteSpace: "pre-wrap",
-                        fontSize: "inherit",
-                        color: theme.palette.text.primary,
-                        backgroundColor: "transparent",
-                    }}
-                />
+                <Box mt={0.5}>
+                    <MarkdownPreview text={comment.text} />
+                </Box>
 
                 {attachmentsExists && (
                     <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
@@ -342,18 +335,13 @@ const CommentCard: FC<ICommentCardProps> = ({
                 <UserAvatar src={author.avatar} size={32} />
 
                 <Box display="flex" flexDirection="column" gap={1} flex={1}>
-                    <Box minHeight="85px">
-                        <MDEditor
-                            value={text}
-                            onChange={(value) => setText(value || "")}
-                            textareaProps={{
-                                placeholder: t("issues.comments.write"),
-                            }}
-                            height="100%"
-                            minHeight={74}
-                            autoFocus
-                        />
-                    </Box>
+                    <MDEditor
+                        value={text}
+                        onChange={(value) => setText(value || "")}
+                        placeholder={t("issues.comments.write")}
+                        autoFocus
+                        autoHeight
+                    />
 
                     <Box display="flex" gap={1}>
                         <LoadingButton

@@ -184,18 +184,13 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                     <UserAvatar src={user?.avatar || ""} size={32} />
 
                     <Box display="flex" flexDirection="column" gap={1} flex={1}>
-                        <Box minHeight="85px">
-                            <MDEditor
-                                value={text}
-                                onChange={(value) => setText(value || "")}
-                                textareaProps={{
-                                    placeholder: t("issues.comments.write"),
-                                }}
-                                height="100%"
-                                minHeight={74}
-                                autoFocus
-                            />
-                        </Box>
+                        <MDEditor
+                            value={text}
+                            onChange={(value) => setText(value || "")}
+                            placeholder={t("issues.comments.write")}
+                            autoFocus
+                            autoHeight
+                        />
 
                         <Box display="flex" gap={1}>
                             <LoadingButton

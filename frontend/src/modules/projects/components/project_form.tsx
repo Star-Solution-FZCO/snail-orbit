@@ -101,12 +101,10 @@ const ProjectForm: FC<IProjectFormProps> = ({
                     control={control}
                     render={({ field: { value, onChange } }) => (
                         <MDEditor
-                            value={value}
+                            value={value || ""}
                             onChange={onChange}
-                            textareaProps={{
-                                placeholder: t("description"),
-                                readOnly,
-                            }}
+                            placeholder={t("description")}
+                            readOnly={readOnly}
                         />
                     )}
                 />
