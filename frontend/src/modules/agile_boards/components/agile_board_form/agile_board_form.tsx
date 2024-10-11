@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { CKMDEditor } from "components";
+import { MDEditor } from "components";
 import { FC } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -66,7 +66,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                         name="description"
                         control={control}
                         render={({ field: { value, onChange } }) => (
-                            <CKMDEditor
+                            <MDEditor
                                 value={value || ""}
                                 onChange={onChange}
                                 placeholder={t("agileBoards.form.description")}

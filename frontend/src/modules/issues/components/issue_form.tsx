@@ -3,7 +3,7 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, Stack, TextField } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link } from "@tanstack/react-router";
-import { CKMDEditor } from "components";
+import { MDEditor } from "components";
 import { FC, useEffect } from "react";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -90,7 +90,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                         name="text"
                         control={control}
                         render={({ field: { value, onChange } }) => (
-                            <CKMDEditor
+                            <MDEditor
                                 value={value || ""}
                                 onChange={onChange}
                                 placeholder={t("issues.form.text")}

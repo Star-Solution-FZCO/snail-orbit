@@ -1,6 +1,5 @@
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { Box, useTheme } from "@mui/material";
-import MDEditorLib from "@uiw/react-md-editor";
 import {
     Autoformat,
     BlockQuote,
@@ -13,7 +12,7 @@ import {
     Italic,
     Link,
     List,
-    Markdown,
+    Markdown as MarkdownPlugin,
     Paragraph,
     SourceEditing,
     Strikethrough,
@@ -23,23 +22,10 @@ import {
     TodoList,
 } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
-import { ComponentProps, FC } from "react";
+import { FC } from "react";
+import Markdown from "react-markdown";
 import "./md_editor.css";
 import { useCKEditorStyles } from "./utils";
-
-type IMDEditorProps = ComponentProps<typeof MDEditorLib>;
-
-const MDEditor: FC<IMDEditorProps> = (props) => {
-    const theme = useTheme();
-
-    return (
-        <Box data-color-mode={theme.palette.mode} width="100%" height="100%">
-            <Box className="wmde-markdown-var" />
-
-            <MDEditorLib {...props} />
-        </Box>
-    );
-};
 
 const plugins = [
     Essentials,
@@ -52,7 +38,7 @@ const plugins = [
     Italic,
     Link,
     List,
-    Markdown,
+    MarkdownPlugin,
     Paragraph,
     SourceEditing,
     Strikethrough,
@@ -86,21 +72,24 @@ const toolbar = [
     "sourceEditing",
 ];
 
-interface ICKMDEditorProps {
+interface IMDEditorProps {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
     readOnly?: boolean;
     autoHeight?: boolean;
+    autoFocus?: boolean;
 }
 
-const CKMDEditor: FC<ICKMDEditorProps> = ({
+const MDEditor: FC<IMDEditorProps> = ({
     value,
     onChange,
     placeholder,
     readOnly,
     autoHeight,
+    autoFocus,
 }) => {
+    const theme = useTheme();
     const editorStyles = useCKEditorStyles();
 
     return (
@@ -109,6 +98,13 @@ const CKMDEditor: FC<ICKMDEditorProps> = ({
                 ...editorStyles,
                 "& .ck-editor__editable": {
                     minHeight: autoHeight ? "auto" : "300px",
+                },
+                "& .ck-source-editing-area": {
+                    minHeight: autoHeight ? "auto" : "300px",
+                    "& textarea": {
+                        color: theme.palette.text.primary,
+                        backgroundColor: theme.palette.background.paper,
+                    },
                 },
             }}
         >
@@ -126,6 +122,9 @@ const CKMDEditor: FC<ICKMDEditorProps> = ({
                             editor.editing.view.document.getRoot(),
                         );
                     });
+                    if (autoFocus) {
+                        editor.editing.view.focus();
+                    }
                     if (readOnly) {
                         editor.enableReadOnlyMode("");
                     }
@@ -135,7 +134,11 @@ const CKMDEditor: FC<ICKMDEditorProps> = ({
                     toolbar,
                     placeholder,
                     table: {
-                        contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+                        contentToolbar: [
+                            "tableColumn",
+                            "tableRow",
+                            "mergeTableCells",
+                        ],
                     },
                 }}
             />
@@ -143,4 +146,18 @@ const CKMDEditor: FC<ICKMDEditorProps> = ({
     );
 };
 
-export { CKMDEditor, MDEditor };
+const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
+    return (
+        <Box
+            sx={{
+                "& *": {
+                    m: 0,
+                },
+            }}
+        >
+            <Markdown>{text}</Markdown>
+        </Box>
+    );
+};
+
+export { MarkdownPreview, MDEditor };
