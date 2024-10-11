@@ -1,135 +1,55 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {
-    Box,
-    Button,
-    CircularProgress,
-    debounce,
-    IconButton,
-    Popover,
-    TextField,
-    Typography,
-} from "@mui/material";
-import ColorPicker from "@uiw/react-color-compact";
-import { FC, useCallback, useState } from "react";
+import EditIcon from "@mui/icons-material/Edit";
+import { Box, CircularProgress, IconButton, Typography } from "@mui/material";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { CustomFieldT, EnumOptionT } from "types";
+import {
+    CreateEnumOptionT,
+    CustomFieldT,
+    EnumOptionT,
+    UpdateEnumOptionT,
+} from "types";
 import { toastApiError } from "utils";
 import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
+import { OptionFormDialog } from "./option_form_dialog";
 
 interface ICustomFieldEnumOptionProps {
-    customFieldId: string;
     option: EnumOptionT;
+    onEdit: (option: EnumOptionT) => void;
     onDelete: (option: EnumOptionT) => void;
 }
 
 const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
-    customFieldId,
     option,
+    onEdit,
     onDelete,
 }) => {
-    const { t } = useTranslation();
-
-    const [updateOption] =
-        customFieldsApi.useUpdateCustomFieldEnumOptionMutation();
-
-    const [color, setColor] = useState<string | null>(option.color);
-    const [value, setValue] = useState<string>(option.value);
-
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-    const handleClickColorPicker = (
-        event: React.MouseEvent<HTMLButtonElement>,
-    ) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseColorPicker = () => {
-        setAnchorEl(null);
-    };
-
-    const handleChangeColor = (newColor: string) => {
-        setColor(newColor);
-
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            color: newColor,
-        })
-            .unwrap()
-            .catch(toastApiError);
-
-        handleCloseColorPicker();
-    };
-
-    const updateValue = (newValue: string) => {
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            value: newValue,
-        })
-            .unwrap()
-            .catch(toastApiError);
-    };
-
-    const debouncedUpdateValue = useCallback(debounce(updateValue, 500), []);
-
-    const handleChangeValue = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
-            const newValue = event.target.value;
-
-            setValue(newValue);
-            debouncedUpdateValue(newValue);
-        },
-        [],
-    );
-
-    const open = Boolean(anchorEl);
-
     return (
-        <Box display="flex" alignItems="stretch" gap={1}>
-            <Button
+        <Box display="flex" alignItems="center" gap={1}>
+            <Box
                 sx={{
-                    minWidth: "40px",
-                    backgroundColor: color,
-                    "&:hover": {
-                        backgroundColor: color,
-                    },
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: option.color,
+                    borderRadius: 0.5,
                 }}
-                onClick={handleClickColorPicker}
-                variant="outlined"
-            />
-            <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleCloseColorPicker}
-                anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                }}
-            >
-                <ColorPicker
-                    color={color || ""}
-                    onChange={(color) => handleChangeColor(color.hex)}
-                />
-            </Popover>
-
-            <TextField
-                value={value}
-                onChange={handleChangeValue}
-                placeholder={t("customFields.options.value")}
-                size="small"
-                fullWidth
             />
 
-            <Button
+            <Typography flex={1}>{option.value}</Typography>
+
+            <IconButton onClick={() => onEdit(option)} size="small">
+                <EditIcon />
+            </IconButton>
+
+            <IconButton
                 onClick={() => onDelete(option)}
                 color="error"
-                variant="outlined"
+                size="small"
             >
                 <DeleteIcon />
-            </Button>
+            </IconButton>
         </Box>
     );
 };
@@ -143,6 +63,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<EnumOptionT | null>(
         null,
@@ -150,17 +71,50 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
 
     const [createOption, { isLoading: createLoading }] =
         customFieldsApi.useCreateCustomFieldEnumOptionMutation();
+    const [updateOption, { isLoading: updateLoading }] =
+        customFieldsApi.useUpdateCustomFieldEnumOptionMutation();
     const [deleteOption, { isLoading: deleteLoading }] =
         customFieldsApi.useDeleteCustomFieldEnumOptionMutation();
 
     const handleClickAddOption = () => {
-        createOption({
+        setFormDialogOpen(true);
+    };
+
+    const handleCloseFormDialog = () => {
+        setFormDialogOpen(false);
+        setSelectedOption(null);
+    };
+
+    const handleClickEditOption = (option: EnumOptionT) => {
+        setSelectedOption(option);
+        setFormDialogOpen(true);
+    };
+
+    const handleSaveOption = (
+        formData: CreateEnumOptionT | UpdateEnumOptionT,
+    ) => {
+        if (!selectedOption) {
+            createOption({
+                id: customField.id,
+                ...(formData as CreateEnumOptionT),
+            })
+                .unwrap()
+                .then(() => setFormDialogOpen(false))
+                .catch(toastApiError);
+
+            return;
+        }
+
+        updateOption({
             id: customField.id,
-            value: "",
-            color: null,
+            ...(formData as UpdateEnumOptionT),
+            option_id: selectedOption.uuid,
         })
             .unwrap()
-            .then()
+            .then(() => {
+                setFormDialogOpen(false);
+                setSelectedOption(null);
+            })
             .catch(toastApiError);
     };
 
@@ -211,11 +165,19 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
             {options.map((option) => (
                 <CustomFieldEnumOption
                     key={option.uuid}
-                    customFieldId={customField.id}
                     option={option as EnumOptionT}
+                    onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
+
+            <OptionFormDialog
+                open={formDialogOpen}
+                onClose={handleCloseFormDialog}
+                onSubmit={handleSaveOption}
+                defaultValues={selectedOption}
+                loading={createLoading || updateLoading}
+            />
 
             <DeleteCustomFieldOptionDialog
                 open={deleteDialogOpen}
