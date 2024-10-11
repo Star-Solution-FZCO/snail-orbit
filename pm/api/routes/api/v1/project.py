@@ -74,6 +74,7 @@ class ProjectOutput(BaseModel):
     name: str
     slug: str
     description: str | None
+    ai_description: str | None
     is_active: bool
     custom_fields: list[CustomFieldOutput]
     workflows: list[WorkflowOutput] = []
@@ -86,6 +87,7 @@ class ProjectOutput(BaseModel):
             name=obj.name,
             slug=obj.slug,
             description=obj.description,
+            ai_description=obj.ai_description,
             is_active=obj.is_active,
             custom_fields=[CustomFieldOutput.from_obj(v) for v in obj.custom_fields],
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
@@ -97,6 +99,7 @@ class ProjectCreate(CrudCreateBody[m.Project]):
     name: str
     slug: str
     description: str | None = None
+    ai_description: str | None = None
     is_active: bool = True
 
 
@@ -104,6 +107,7 @@ class ProjectUpdate(CrudUpdateBody[m.Project]):
     name: str | None = None
     slug: str | None = None
     description: str | None = None
+    ai_description: str | None = None
     is_active: bool | None = None
 
 

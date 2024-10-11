@@ -176,6 +176,8 @@ class CustomField(Document):
     type: CustomFieldTypeT
     is_nullable: bool
     default_value: Any | None = None
+    description: str | None = None
+    ai_description: str | None = None
 
     def validate_value(self, value: Any) -> Any:
         if value is None and not self.is_nullable:
