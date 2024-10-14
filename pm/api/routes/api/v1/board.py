@@ -44,6 +44,7 @@ class BoardOutput(BaseModel):
     columns: list[CustomFieldValueOutT]
     swimlane_field: CustomFieldLinkOutput | None = None
     swimlanes: list[CustomFieldValueOutT]
+    card_fields: list[CustomFieldLinkOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
@@ -64,6 +65,7 @@ class BoardOutput(BaseModel):
                 transform_custom_field_value(v, obj.swimlane_field)
                 for v in obj.swimlanes
             ],
+            card_fields=[CustomFieldLinkOutput.from_obj(f) for f in obj.card_fields],
         )
 
 
@@ -76,6 +78,7 @@ class BoardCreate(BaseModel):
     columns: list
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list = Field(default_factory=list)
+    card_fields: list[PydanticObjectId] = Field(default_factory=list)
 
 
 class BoardUpdate(BaseModel):
@@ -87,6 +90,7 @@ class BoardUpdate(BaseModel):
     columns: list | None = None
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list | None = None
+    card_fields: list[PydanticObjectId] | None = None
 
 
 class ColumnOutput(BaseModel):
@@ -135,7 +139,10 @@ async def create_board(
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
         )
-    _projects_has_custom_field(column_field, projects)
+    _all_projects_has_custom_field(column_field, projects)
+    card_fields = await _resolve_custom_fields(body.card_fields)
+    for cf in card_fields:
+        _any_projects_has_custom_field(cf, projects)
     columns = validate_custom_field_values(column_field, body.columns)
     swimlane_field: m.CustomField | None = None
     swimlanes = []
@@ -152,7 +159,7 @@ async def create_board(
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST, 'Swimlane field can' 't be of type MULTI'
             )
-        _projects_has_custom_field(swimlane_field, projects)
+        _all_projects_has_custom_field(swimlane_field, projects)
         swimlanes = validate_custom_field_values(swimlane_field, body.swimlanes)
     board = m.Board(
         name=body.name,
@@ -165,6 +172,7 @@ async def create_board(
         if swimlane_field
         else None,
         swimlanes=swimlanes,
+        card_fields=[m.CustomFieldLink.from_obj(cf) for cf in card_fields],
     )
     await board.insert()
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
@@ -251,11 +259,17 @@ async def update_board(
             swimlanes = []
     else:
         swimlanes = board.swimlanes
-    _projects_has_custom_field(column_field, projects)
+    card_fields: list[m.CustomField | m.CustomFieldLink] = board.card_fields
+    if 'card_fields' in data:
+        card_fields = await _resolve_custom_fields(body.card_fields)
+    for cf in card_fields:
+        _any_projects_has_custom_field(cf, projects)
+    board.card_fields = [m.CustomFieldLink.from_obj(cf) for cf in card_fields]
+    _all_projects_has_custom_field(column_field, projects)
     board.column_field = m.CustomFieldLink.from_obj(column_field)
     board.columns = validate_custom_field_values(column_field, columns)
     if swimlane_field:
-        _projects_has_custom_field(swimlane_field, projects)
+        _all_projects_has_custom_field(swimlane_field, projects)
         board.swimlanes = validate_custom_field_values(swimlane_field, swimlanes)
         board.swimlane_field = m.CustomFieldLink.from_obj(swimlane_field)
     else:
@@ -494,8 +508,8 @@ def _intersect_custom_fields(
     return fields
 
 
-def _projects_has_custom_field(
-    field: m.CustomField, projects: Sequence[m.Project]
+def _all_projects_has_custom_field(
+    field: m.CustomField | m.CustomFieldLink, projects: Sequence[m.Project]
 ) -> None:
     if not projects:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'No projects specified')
@@ -505,6 +519,33 @@ def _projects_has_custom_field(
                 HTTPStatus.BAD_REQUEST,
                 f'Field {field.name} not found in project {p.id}',
             )
+
+
+def _any_projects_has_custom_field(
+    field: m.CustomField | m.CustomFieldLink, projects: Sequence[m.Project]
+) -> None:
+    if not projects:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'No projects specified')
+    for p in projects:
+        if any(cf.id == field.id for cf in p.custom_fields):
+            return None
+    raise HTTPException(
+        HTTPStatus.BAD_REQUEST, f'Project {p.id} does not have custom field {field.id}'
+    )
+
+
+async def _resolve_custom_fields(
+    fields: list[PydanticObjectId],
+) -> list[m.CustomField]:
+    if not fields:
+        return []
+    results = await m.CustomField.find(
+        bo.In(m.CustomField.id, fields), with_children=True
+    ).to_list()
+    if len(results) != len(fields):
+        not_found = set(fields) - {cf.id for cf in results}
+        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Fields not found: {not_found}')
+    return results
 
 
 def validate_custom_field_values(
