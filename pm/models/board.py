@@ -25,6 +25,7 @@ class Board(Document):
     swimlane_field: CustomFieldLink | None = None
     swimlanes: list[CustomFieldValueT] = Field(default_factory=list)
     issues_order: list[PydanticObjectId] = Field(default_factory=list)
+    card_fields: list[CustomFieldLink] = Field(default_factory=list)
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
