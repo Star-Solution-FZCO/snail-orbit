@@ -3,33 +3,31 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Collapse, IconButton, Typography } from "@mui/material";
 import { FC, useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { issueApi, sharedApi } from "store";
-import { AttachmentT, SelectedAttachmentT } from "types";
+import { sharedApi } from "store";
+import { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
-import { IssueFormData } from "./issue_form";
 
 interface IIssueAttachmentsProps {
-    issueId?: string;
-    issueAttachments?: AttachmentT[];
+    issue: IssueT;
+    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    onUpdateCache: (issueValue: Partial<IssueT>) => void;
 }
 
 const IssueAttachments: FC<IIssueAttachmentsProps> = ({
-    issueId,
-    issueAttachments = [],
+    issue,
+    onUpdateIssue,
+    onUpdateCache,
 }) => {
     const { t } = useTranslation();
 
-    const { setValue, watch } = useFormContext<IssueFormData>();
-    const formAttachments = watch("attachments") || [];
-
+    const { attachments: issueAttachments, id: issueId } = issue;
     const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
-    const [updateIssue, { isLoading: updateLoading }] =
-        issueApi.useUpdateIssueMutation();
+
+    console.log(issue, issue.attachments);
 
     const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
@@ -57,25 +55,18 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 const response = await mutation.unwrap();
 
                 if (issueId) {
-                    await updateIssue({
-                        id: issueId,
+                    await onUpdateIssue({
                         attachments: [
                             ...issueAttachments.map(
                                 (attachment) => attachment.id,
                             ),
                             response.payload.id,
                         ],
-                    })
-                        .unwrap()
-                        .catch(toastApiError);
+                    });
+                    // There should be cache update but backend returns not enough data
                 } else {
                     setFiles((prevFiles) => [...prevFiles, file]);
                 }
-
-                setValue("attachments", [
-                    ...formAttachments,
-                    response.payload.id,
-                ]);
 
                 updateToast(
                     file.name,
@@ -96,10 +87,8 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
             }
         },
         [
-            formAttachments,
             issueAttachments,
             issueId,
-            setValue,
             uploadAttachment,
             showToast,
             updateToast,
@@ -124,10 +113,6 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         setFiles((prevFiles) =>
             prevFiles.filter((_, i) => i !== selectedAttachment.id),
         );
-        setValue(
-            "attachments",
-            formAttachments.filter((_, i) => i !== selectedAttachment.id),
-        );
         setOpenDeleteDialog(false);
     };
 
@@ -136,23 +121,19 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         if (!selectedAttachment) return;
         if (selectedAttachment.type !== "server") return;
 
-        updateIssue({
-            id: issueId,
+        onUpdateIssue({
             attachments: issueAttachments
                 .filter((attachment) => attachment.id !== selectedAttachment.id)
                 .map((attachment) => attachment.id),
-        })
-            .unwrap()
-            .then((response) => {
-                setValue(
-                    "attachments",
-                    response.payload.attachments.map(
-                        (attachment) => attachment.id,
-                    ),
-                );
-                setOpenDeleteDialog(false);
-            })
-            .catch(toastApiError);
+        });
+
+        onUpdateCache({
+            attachments: issueAttachments.filter(
+                (attachment) => attachment.id !== selectedAttachment.id,
+            ),
+        });
+
+        setOpenDeleteDialog(false);
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -260,7 +241,6 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                         ? deleteBrowserFile
                         : deleteAttachment
                 }
-                loading={updateLoading}
             />
         </Box>
     );

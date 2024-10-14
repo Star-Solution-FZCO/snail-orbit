@@ -26,6 +26,8 @@ export type EnumOptionT = {
     uuid: string;
 } & CreateEnumOptionT;
 
+export type EnumFieldT = Pick<CreateEnumOptionT, "value" | "color">;
+
 export type UpdateEnumOptionT = {
     option_id: string;
 } & Partial<CreateEnumOptionT>;
@@ -40,6 +42,7 @@ export type StateFieldT = {
     state: string;
     is_resolved: boolean;
     is_closed: boolean;
+    color: string;
 };
 
 export type CreateStateOptionT = {
@@ -64,6 +67,8 @@ export type CustomFieldValueT =
     | BasicUserT[]
     | CustomFieldT
     | StateFieldT
+    | EnumFieldT
+    | EnumFieldT[]
     | string
     | any
     | null;
@@ -82,14 +87,14 @@ export type CreateCustomFieldT = {
 
 type CustomFieldTypeMap = {
     string: string;
-    enum: string;
+    enum: EnumFieldT;
     date: string;
     datetime: string;
-    state: string;
+    state: StateFieldT;
     boolean: boolean;
     integer: number;
     float: number;
-    enum_multi: string[];
+    enum_multi: EnumFieldT[];
     user: BasicUserT;
     user_multi: BasicUserT[];
 };

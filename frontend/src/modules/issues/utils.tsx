@@ -5,6 +5,7 @@ import { toast, TypeOptions } from "react-toastify";
 import {
     CommentT,
     CreateIssueT,
+    CustomFieldT,
     FieldValueT,
     IssueActivityT,
     IssueActivityTypeT,
@@ -19,22 +20,28 @@ export const initialSelectedAttachment: SelectedAttachmentT = {
     type: "browser",
 };
 
+export const transformFields = (fields: CustomFieldT[]) =>
+    fields.reduce(
+        (prev, cur) => {
+            if (!cur) return prev;
+            if (cur.type === "user") prev[cur.name] = cur.value?.id;
+            else if (cur.type === "user_multi")
+                prev[cur.name] = cur.value?.map((el) => el.id);
+            else if (cur.type === "enum") prev[cur.name] = cur.value?.value;
+            else if (cur.type === "enum_multi")
+                prev[cur.name] = cur.value?.map((el) => el.value);
+            else if (cur.type === "state") prev[cur.name] = cur.value?.state;
+            else prev[cur.name] = cur.value;
+            return prev;
+        },
+        {} as Record<string, FieldValueT>,
+    );
+
 export const transformIssue = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
     text: issue.text,
     project_id: issue.project.id,
-    fields: Object.keys(issue.fields).reduce(
-        (prev, cur) => {
-            if (!issue.fields[cur].value) return prev;
-            if (issue.fields[cur].type === "user")
-                prev[cur] = issue.fields[cur].value.id;
-            else if (issue.fields[cur].type === "user_multi")
-                prev[cur] = issue.fields[cur].value.map((el) => el.id);
-            else prev[cur] = issue.fields[cur].value;
-            return prev;
-        },
-        {} as Record<string, FieldValueT>,
-    ),
+    fields: transformFields(Object.values(issue.fields)),
     attachments: issue.attachments.map((el) => el.id),
 });
 

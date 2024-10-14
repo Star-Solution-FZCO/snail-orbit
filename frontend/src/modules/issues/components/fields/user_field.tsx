@@ -1,76 +1,84 @@
-import { ForwardedRef, forwardRef, useEffect, useMemo } from "react";
+import { Avatar } from "@mui/material";
+import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import { userToSelectOption } from "./utils";
+import {
+    UserSelectOptionT,
+    userToSelectOption,
+    userToSelectOptions,
+} from "./utils";
 
-type UserFieldValueType<T extends boolean | undefined> = T extends true
-    ? string[]
-    : string;
-
-type UserFieldProps<T extends boolean | undefined> = {
-    value: UserFieldValueType<T>;
-    onChange: (value: UserFieldValueType<T>) => void;
+type UserFieldProps = {
+    value?: BasicUserT | BasicUserT[];
+    onChange: (value: BasicUserT | BasicUserT[]) => void;
     label: string;
-    multiple?: T;
+    multiple?: boolean;
     id: string;
 };
 
-const UserFieldComp = <T extends boolean | undefined>(
-    { value, onChange, label, multiple, id }: UserFieldProps<T>,
-    ref: ForwardedRef<unknown>,
-) => {
+export const UserField = ({
+    value,
+    label,
+    multiple,
+    id,
+    onChange,
+}: UserFieldProps) => {
     const [listQueryParams] = useListQueryParams({
-        limit: 50,
+        limit: 0,
     });
     const [fetchOptions, { data, isLoading }] =
         customFieldsApi.useLazyListSelectOptionsQuery();
-
-    // TODO: Fix this crap
-    const cardValue = useMemo(() => {
-        if (!value || !data) return "";
-        if (!multiple) {
-            let res = data.payload.items.find(
-                (el) => "id" in el && el.id === value,
-            );
-            console.debug(res, value);
-            if (res && "name" in res) return res.name;
-            else return "";
-        } else {
-            return data.payload.items
-                .filter((el) => "id" in el && value.includes(el.id))
-                .map((el) => (el as BasicUserT).name)
-                .join(", ");
-        }
-    }, [value, data]);
 
     const handleOpened = () => {
         fetchOptions({ id, ...listQueryParams });
     };
 
-    useEffect(() => {
-        handleOpened();
-    }, []);
+    const options = useMemo(() => {
+        return userToSelectOptions((data?.payload.items || []) as BasicUserT[]);
+    }, [data?.payload.items]);
+
+    const parsedValue = useMemo(() => {
+        if (!value) return undefined;
+        if (Array.isArray(value)) return userToSelectOptions(value);
+        else return userToSelectOption(value);
+    }, [value]);
+
+    const handleChange = (value: UserSelectOptionT | UserSelectOptionT[]) => {
+        if (Array.isArray(value)) onChange(value.map((el) => el.original));
+        else onChange(value.original);
+    };
+
+    const adornment = useMemo(() => {
+        if (!value || (Array.isArray(value) && !value.length)) return null;
+        return (
+            <Avatar
+                src={Array.isArray(value) ? value[0].avatar : value.avatar}
+                sx={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: "3px",
+                    mr: 1,
+                    my: "auto",
+                }}
+            />
+        );
+    }, [value]);
 
     return (
         <SelectField
             loading={isLoading}
-            options={userToSelectOption(
-                (data?.payload.items as BasicUserT[]) || [],
-            )}
-            value={value}
-            cardValue={cardValue || "?"}
-            onChange={(value) => onChange(value as UserFieldValueType<T>)}
+            options={options}
+            value={parsedValue}
             label={label}
+            rightAdornment={adornment}
+            onChange={handleChange}
             onOpened={handleOpened}
-            ref={ref}
             multiple={multiple}
             id={id}
         />
     );
 };
-
-export const UserField = forwardRef(UserFieldComp);
 
 export default UserField;
