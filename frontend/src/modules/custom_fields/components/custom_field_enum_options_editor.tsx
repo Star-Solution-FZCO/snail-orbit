@@ -13,7 +13,7 @@ import {
 } from "types";
 import { toastApiError } from "utils";
 import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
-import { OptionFormDialog } from "./option_form_dialog";
+import { EnumOptionFormDialog } from "./enum_option_form_dialog";
 
 interface ICustomFieldEnumOptionProps {
     option: EnumOptionT;
@@ -33,6 +33,8 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
                     width: "40px",
                     height: "40px",
                     backgroundColor: option.color,
+                    border: 1,
+                    borderColor: "divider",
                     borderRadius: 0.5,
                 }}
             />
@@ -171,7 +173,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
                 />
             ))}
 
-            <OptionFormDialog
+            <EnumOptionFormDialog
                 open={formDialogOpen}
                 onClose={handleCloseFormDialog}
                 onSubmit={handleSaveOption}

@@ -1,176 +1,58 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import {
     Box,
-    Button,
     Checkbox,
     CircularProgress,
-    debounce,
     FormControlLabel,
     IconButton,
-    Popover,
-    TextField,
     Typography,
 } from "@mui/material";
-import ColorPicker from "@uiw/react-color-compact";
-import { FC, useCallback, useState } from "react";
+import { t } from "i18next";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { CustomFieldT, EnumOptionT, StateOptionT } from "types";
+import {
+    CreateStateOptionT,
+    CustomFieldT,
+    StateOptionT,
+    UpdateStateOptionT,
+} from "types";
 import { toastApiError } from "utils";
 import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
+import { StateOptionFormDialog } from "./state_option_form_dialog";
 
 interface ICustomFieldStateOptionProps {
-    customFieldId: string;
     option: StateOptionT;
+    onEdit: (option: StateOptionT) => void;
     onDelete: (option: StateOptionT) => void;
 }
 
 const CustomFieldStateOption: FC<ICustomFieldStateOptionProps> = ({
-    customFieldId,
     option,
+    onEdit,
     onDelete,
 }) => {
-    const { t } = useTranslation();
-
-    const [updateOption, { isLoading }] =
-        customFieldsApi.useUpdateCustomFieldStateOptionMutation();
-
-    const [color, setColor] = useState<string | null>(option.color);
-    const [value, setValue] = useState<string>(option.value);
-    const [isResolved, setIsResolved] = useState<boolean>(option.is_resolved);
-    const [isClosed, setIsClosed] = useState<boolean>(option.is_closed);
-
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-    const handleClickColorPicker = (
-        event: React.MouseEvent<HTMLButtonElement>,
-    ) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseColorPicker = () => {
-        setAnchorEl(null);
-    };
-
-    const handleChangeColor = (newColor: string) => {
-        setColor(newColor);
-
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            color: newColor,
-        })
-            .unwrap()
-            .catch(toastApiError);
-
-        handleCloseColorPicker();
-    };
-
-    const updateState = (newValue: string) => {
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            state: newValue, // pay attention to StateOptionUpdateBody
-        })
-            .unwrap()
-            .catch(toastApiError);
-    };
-
-    const debouncedUpdateValue = useCallback(debounce(updateState, 500), []);
-
-    const handleChangeValue = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
-            const newValue = event.target.value;
-
-            setValue(newValue);
-            debouncedUpdateValue(newValue);
-        },
-        [],
-    );
-
-    const handleChangeIsResolved = (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const newValue = event.target.checked;
-
-        setIsResolved(newValue);
-
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            is_resolved: newValue,
-        })
-            .unwrap()
-            .catch(toastApiError);
-    };
-
-    const handleChangeIsClosed = (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const newValue = event.target.checked;
-
-        setIsClosed(newValue);
-
-        updateOption({
-            id: customFieldId,
-            option_id: option.uuid,
-            is_closed: newValue,
-        })
-            .unwrap()
-            .catch(toastApiError);
-    };
-
-    const open = Boolean(anchorEl);
-
     return (
-        <Box display="flex" alignItems="stretch" gap={1}>
-            <Button
+        <Box display="flex" alignItems="center" gap={1}>
+            <Box
                 sx={{
-                    minWidth: "40px",
-                    backgroundColor: color,
-                    "&:hover": {
-                        backgroundColor: color,
-                    },
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: option.color,
+                    border: 1,
+                    borderColor: "divider",
+                    borderRadius: 0.5,
                 }}
-                onClick={handleClickColorPicker}
-                variant="outlined"
             />
-            <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleCloseColorPicker}
-                anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                }}
-            >
-                <ColorPicker
-                    color={color || ""}
-                    onChange={(color) => handleChangeColor(color.hex)}
-                />
-            </Popover>
 
-            <TextField
-                value={value}
-                onChange={handleChangeValue}
-                InputProps={{
-                    endAdornment: isLoading && (
-                        <Box display="flex">
-                            <CircularProgress color="inherit" size={20} />
-                        </Box>
-                    ),
-                }}
-                placeholder={t("customFields.options.value")}
-                size="small"
-                fullWidth
-            />
+            <Typography flex={1}>{option.value}</Typography>
 
             <FormControlLabel
                 control={
                     <Checkbox
-                        checked={isResolved}
-                        onChange={handleChangeIsResolved}
+                        checked={option.is_resolved}
                         size="small"
                         disableRipple
                     />
@@ -181,8 +63,7 @@ const CustomFieldStateOption: FC<ICustomFieldStateOptionProps> = ({
             <FormControlLabel
                 control={
                     <Checkbox
-                        checked={isClosed}
-                        onChange={handleChangeIsClosed}
+                        checked={option.is_closed}
                         size="small"
                         disableRipple
                     />
@@ -190,13 +71,17 @@ const CustomFieldStateOption: FC<ICustomFieldStateOptionProps> = ({
                 label={t("customFields.options.state.closed")}
             />
 
-            <Button
+            <IconButton onClick={() => onEdit(option)} size="small">
+                <EditIcon />
+            </IconButton>
+
+            <IconButton
                 onClick={() => onDelete(option)}
                 color="error"
-                variant="outlined"
+                size="small"
             >
                 <DeleteIcon />
-            </Button>
+            </IconButton>
         </Box>
     );
 };
@@ -210,30 +95,62 @@ const CustomFieldStateOptionsEditor: FC<
 > = ({ customField }) => {
     const { t } = useTranslation();
 
+    const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedOption, setSelectedOption] = useState<EnumOptionT | null>(
+    const [selectedOption, setSelectedOption] = useState<StateOptionT | null>(
         null,
     );
 
     const [createOption, { isLoading: createLoading }] =
         customFieldsApi.useCreateCustomFieldStateOptionMutation();
+    const [updateOption, { isLoading: updateLoading }] =
+        customFieldsApi.useUpdateCustomFieldStateOptionMutation();
     const [deleteOption, { isLoading: deleteLoading }] =
         customFieldsApi.useDeleteCustomFieldStateOptionMutation();
 
     const handleClickAddOption = () => {
-        createOption({
+        setFormDialogOpen(true);
+    };
+
+    const handleCloseFormDialog = () => {
+        setFormDialogOpen(false);
+        setSelectedOption(null);
+    };
+
+    const handleClickEditOption = (option: StateOptionT) => {
+        setSelectedOption(option);
+        setFormDialogOpen(true);
+    };
+
+    const handleSaveOption = (
+        formData: CreateStateOptionT | UpdateStateOptionT,
+    ) => {
+        if (!selectedOption) {
+            createOption({
+                id: customField.id,
+                ...(formData as CreateStateOptionT),
+            })
+                .unwrap()
+                .then(() => setFormDialogOpen(false))
+                .catch(toastApiError);
+
+            return;
+        }
+
+        updateOption({
             id: customField.id,
-            value: "",
-            color: null,
-            is_resolved: false,
-            is_closed: false,
+            ...(formData as UpdateStateOptionT),
+            option_id: selectedOption.uuid,
         })
             .unwrap()
-            .then()
+            .then(() => {
+                setFormDialogOpen(false);
+                setSelectedOption(null);
+            })
             .catch(toastApiError);
     };
 
-    const handleClickDeleteOption = (option: EnumOptionT) => {
+    const handleClickDeleteOption = (option: StateOptionT) => {
         setSelectedOption(option);
         setDeleteDialogOpen(true);
     };
@@ -280,11 +197,19 @@ const CustomFieldStateOptionsEditor: FC<
             {options.map((option) => (
                 <CustomFieldStateOption
                     key={option.uuid}
-                    customFieldId={customField.id}
                     option={option as StateOptionT}
+                    onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
+
+            <StateOptionFormDialog
+                open={formDialogOpen}
+                onClose={handleCloseFormDialog}
+                onSubmit={handleSaveOption}
+                defaultValues={selectedOption}
+                loading={createLoading || updateLoading}
+            />
 
             <DeleteCustomFieldOptionDialog
                 open={deleteDialogOpen}
