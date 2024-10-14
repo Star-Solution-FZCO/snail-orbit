@@ -1,19 +1,21 @@
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
+import deepmerge from "deepmerge";
 import { FC, useCallback, useEffect } from "react";
-import { issueApi } from "store";
+import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
-import { UpdateIssueT } from "types";
+import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { IssueHeading } from "../components/heading";
-import IssueForm from "../components/issue_form";
+import IssueViewComp from "../components/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
 const IssueView: FC = () => {
     const navigate = useNavigate();
     const { issueId } = routeApi.useParams();
+    const dispatch = useAppDispatch();
 
     const { data, isLoading, error, refetch } =
         issueApi.useGetIssueQuery(issueId);
@@ -22,28 +24,33 @@ const IssueView: FC = () => {
         issueApi.useUpdateIssueMutation();
 
     const handleSubmit = useCallback(
-        (formData: UpdateIssueT) => {
-            updateIssue({ ...formData, id: issueId })
+        async (formData: UpdateIssueT) => {
+            await updateIssue({ ...formData, id: issueId })
                 .unwrap()
-                .then((response) => {
-                    const issueId = response.payload.id_readable;
-                    const subject = slugify(response.payload.subject);
-                    navigate({
-                        to: "/issues/$issueId/$subject",
-                        params: {
-                            issueId,
-                            subject,
-                        },
-                        replace: true,
-                    });
-                })
-                .catch(toastApiError)
-                .finally(refetch);
+                .catch(toastApiError);
         },
         [issueId, refetch, navigate],
     );
 
     const issue = data?.payload;
+
+    const handleUpdateCache = useCallback(
+        (issueValue: Partial<IssueT>) => {
+            if (!issue) return;
+            dispatch(
+                issueApi.util.updateQueryData(
+                    "getIssue",
+                    issue.id_readable,
+                    (draft) => {
+                        draft.payload = deepmerge(draft.payload, issueValue, {
+                            arrayMerge: (_, sourceArray) => sourceArray,
+                        });
+                    },
+                ),
+            );
+        },
+        [dispatch, issue],
+    );
 
     useEffect(() => {
         if (issue && issue.id_readable && issue.id_readable !== issueId) {
@@ -81,12 +88,14 @@ const IssueView: FC = () => {
                 <>
                     {issue && <IssueHeading issue={issue} />}
 
-                    <IssueForm
-                        onSubmit={handleSubmit}
-                        loading={isLoading || updateLoading}
-                        defaultValues={issue}
-                        hideGoBack
-                    />
+                    {issue && (
+                        <IssueViewComp
+                            loading={isLoading || updateLoading}
+                            onUpdateIssue={handleSubmit}
+                            onUpdateCache={handleUpdateCache}
+                            issue={issue}
+                        />
+                    )}
                 </>
             )}
         </Container>

@@ -1,5 +1,4 @@
 import { ClickAwayListener } from "@mui/material";
-import { ComponentRef, ForwardedRef, forwardRef, Ref } from "react";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
 import FormAutocompleteContent, {
     FormAutocompleteContentProps,
@@ -15,13 +14,16 @@ export type FormAutocompleteProps<
     open: boolean;
 } & FormAutocompleteContentProps<F, G>;
 
-const FormAutocompletePopoverComp = <
+export const FormAutocompletePopover = <
     F extends boolean | undefined,
     G extends boolean | undefined,
->(
-    { onClose, anchorEl, id, open, ...props }: FormAutocompleteProps<F, G>,
-    ref: ForwardedRef<unknown>,
-) => {
+>({
+    onClose,
+    anchorEl,
+    id,
+    open,
+    ...props
+}: FormAutocompleteProps<F, G>) => {
     const handleClose = () => {
         if (onClose) onClose();
     };
@@ -37,7 +39,6 @@ const FormAutocompletePopoverComp = <
             <ClickAwayListener onClickAway={handleClose}>
                 <div>
                     <FormAutocompleteContent<F, G>
-                        ref={ref}
                         onClose={handleClose}
                         {...props}
                     />
@@ -46,13 +47,3 @@ const FormAutocompletePopoverComp = <
         </FieldPopper>
     );
 };
-
-export const FormAutocompletePopover = forwardRef(
-    FormAutocompletePopoverComp,
-) as <F extends boolean | undefined, G extends boolean | undefined>(
-    props: FormAutocompleteProps<F, G> & {
-        ref?: Ref<ComponentRef<typeof FormAutocompletePopoverComp>>;
-    },
-) => ReturnType<typeof FormAutocompletePopoverComp>;
-
-export default FormAutocompletePopover;

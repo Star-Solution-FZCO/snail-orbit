@@ -56,10 +56,24 @@ export const issueApi = createApi({
                 body,
             }),
             invalidatesTags: (_result, _error, { id }) => [
-                { type: "Issues", id },
                 { type: "Issues", id: "LIST" },
                 { type: "IssueHistories", id },
             ],
+            async onQueryStarted(
+                { id },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        issueApi.util.upsertQueryData("getIssue", id, data),
+                    );
+                } catch {
+                    dispatch(
+                        issueApi.util.invalidateTags([{ type: "Issues", id }]),
+                    );
+                }
+            },
         }),
         deleteIssue: build.mutation<ApiResponse<{ id: string }>, string>({
             query: (id) => ({

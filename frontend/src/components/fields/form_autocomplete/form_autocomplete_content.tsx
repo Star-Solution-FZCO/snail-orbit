@@ -6,14 +6,7 @@ import {
     Checkbox,
     Stack,
 } from "@mui/material";
-import React, {
-    ComponentRef,
-    ForwardedRef,
-    forwardRef,
-    ReactNode,
-    Ref,
-    SyntheticEvent,
-} from "react";
+import React, { ReactNode, SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
 
@@ -33,24 +26,20 @@ export type FormAutocompleteContentProps<
     "renderOption" | "renderInput" | "renderTags" | "open"
 >;
 
-const FormAutocompleteContentComp = <
+export const FormAutocompleteContent = <
     F extends boolean | undefined,
     G extends boolean | undefined,
->(
-    {
-        multiple,
-        onClose,
-        onChange,
-        options,
-        ...props
-    }: FormAutocompleteContentProps<F, G>,
-    ref: ForwardedRef<unknown>,
-) => {
+>({
+    multiple,
+    onClose,
+    onChange,
+    options,
+    ...props
+}: FormAutocompleteContentProps<F, G>) => {
     const { t } = useTranslation();
 
     return (
         <Autocomplete<FormAutocompleteValueType, F, G>
-            ref={ref}
             open
             multiple={multiple}
             onClose={(
@@ -124,25 +113,19 @@ const FormAutocompleteContentComp = <
             }}
             options={options}
             getOptionLabel={(option) => option.label}
-            renderInput={(params) => (
-                <StyledInput
-                    ref={params.InputProps.ref}
-                    inputProps={params.inputProps}
-                    placeholder={t("autocomplete.filter")}
-                    autoFocus
-                />
-            )}
+            renderInput={(params) => {
+                return (
+                    <StyledInput
+                        ref={params.InputProps.ref}
+                        inputProps={params.inputProps}
+                        placeholder={t("autocomplete.filter")}
+                        autoFocus
+                    />
+                );
+            }}
             {...props}
         />
     );
 };
-
-export const FormAutocompleteContent = forwardRef(
-    FormAutocompleteContentComp,
-) as <F extends boolean | undefined, G extends boolean | undefined>(
-    props: FormAutocompleteContentProps<F, G> & {
-        ref?: Ref<ComponentRef<typeof FormAutocompleteContentComp>>;
-    },
-) => ReturnType<typeof FormAutocompleteContentComp>;
 
 export default FormAutocompleteContent;

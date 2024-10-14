@@ -2,21 +2,14 @@ import { AutocompleteValue } from "@mui/material";
 import FieldCard from "components/fields/field_card/field_card";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
-import {
-    ForwardedRef,
-    forwardRef,
-    ReactNode,
-    SyntheticEvent,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+import { ReactNode, SyntheticEvent, useEffect, useMemo, useState } from "react";
 
 export type SelectFieldOptionType = FormAutocompleteValueType & { id: string };
 
-type SelectFieldValueType<T extends boolean | undefined> = T extends true
-    ? string[]
-    : string;
+type SelectFieldReturnType<
+    T extends boolean | undefined,
+    K extends SelectFieldOptionType,
+> = T extends true ? K[] : K;
 
 type ValueType<T extends boolean | undefined> = AutocompleteValue<
     SelectFieldOptionType,
@@ -25,13 +18,16 @@ type ValueType<T extends boolean | undefined> = AutocompleteValue<
     false
 >;
 
-type SelectFieldProps<T extends boolean | undefined> = {
+type SelectFieldProps<
+    T extends boolean | undefined,
+    K extends SelectFieldOptionType,
+> = {
     id: string;
     options: SelectFieldOptionType[];
     label: string;
-    value: SelectFieldValueType<T>;
+    value?: ValueType<T>;
     cardValue?: string;
-    onChange: (value: SelectFieldValueType<T>) => void;
+    onChange: (value: SelectFieldReturnType<T, K>) => void;
     onOpened?: () => unknown;
     loading?: boolean;
     multiple?: T;
@@ -40,23 +36,23 @@ type SelectFieldProps<T extends boolean | undefined> = {
     rightAdornment?: ReactNode;
 };
 
-const SelectFieldComp = <T extends boolean | undefined>(
-    {
-        id,
-        options,
-        label,
-        value,
-        cardValue: customCardValue,
-        onChange,
-        onOpened,
-        loading,
-        multiple,
-        variant = "standard",
-        leftAdornment,
-        rightAdornment,
-    }: SelectFieldProps<T>,
-    ref: ForwardedRef<unknown>,
-) => {
+export const SelectField = <
+    T extends boolean | undefined,
+    K extends SelectFieldOptionType,
+>({
+    id,
+    options,
+    label,
+    value,
+    cardValue: customCardValue,
+    onChange,
+    onOpened,
+    loading,
+    multiple,
+    variant = "standard",
+    leftAdornment,
+    rightAdornment,
+}: SelectFieldProps<T, K>) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const initialValue = useMemo(() => {
@@ -64,42 +60,23 @@ const SelectFieldComp = <T extends boolean | undefined>(
 
         if (!value) return undefined;
 
-        if (!Array.isArray(value)) return undefined;
-
-        return options.filter((el) => value.includes(el.id)) as ValueType<T>;
+        return value;
     }, [options, value]);
 
     const cardValue = useMemo(() => {
         if (customCardValue) return customCardValue;
 
-        if (!value || !value.length) return undefined;
+        if (!value) return undefined;
 
-        if (!Array.isArray(value)) return value as string;
-        else return value.join(", ");
+        if (!Array.isArray(value)) return value.label;
+        else return value.map((el) => el.label).join(", ");
     }, [multiple, value, customCardValue]);
 
     const handleChange = (
         _: SyntheticEvent,
         value: FormAutocompleteValueType | FormAutocompleteValueType[] | null,
     ) => {
-        const getValueId = (val: FormAutocompleteValueType | null) =>
-            val ? val.id : "";
-
-        const getMultipleValueIds = (
-            val: FormAutocompleteValueType[] | null,
-        ) => (val ? val.map((el) => el.id) : []);
-
-        if (multiple) {
-            const result = Array.isArray(value)
-                ? getMultipleValueIds(value)
-                : getMultipleValueIds(value ? [value] : null);
-            onChange(result as SelectFieldValueType<T>);
-        } else {
-            const result = Array.isArray(value)
-                ? getValueId(value[0])
-                : getValueId(value);
-            onChange(result as SelectFieldValueType<T>);
-        }
+        onChange(value as SelectFieldReturnType<T, K>);
     };
 
     useEffect(() => {
@@ -120,7 +97,6 @@ const SelectFieldComp = <T extends boolean | undefined>(
 
             <FormAutocompletePopover
                 id={id}
-                ref={ref}
                 anchorEl={anchorEl}
                 options={options}
                 value={initialValue}
@@ -129,9 +105,8 @@ const SelectFieldComp = <T extends boolean | undefined>(
                 open={!!anchorEl}
                 multiple={multiple}
                 loading={loading}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
             />
         </>
     );
 };
-
-export const SelectField = forwardRef(SelectFieldComp);
