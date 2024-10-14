@@ -41,6 +41,22 @@ class IssueUpdate(BaseModel):
     attachments: list[UUID] | None = None
 
 
+class IssueDraftCreate(BaseModel):
+    project_id: PydanticObjectId | None = None
+    subject: str | None = None
+    text: str | None = None
+    fields: dict[str, Any] = Field(default_factory=dict)
+    attachments: list[UUID] = Field(default_factory=list)
+
+
+class IssueDraftUpdate(BaseModel):
+    project_id: PydanticObjectId | None = None
+    subject: str | None = None
+    text: str | None = None
+    fields: dict[str, Any] | None = None
+    attachments: list[UUID] | None = None
+
+
 class IssueListParams(BaseModel):
     q: str | None = Query(None, description='search query')
     limit: int = Query(50, le=50, description='limit results')
@@ -70,29 +86,40 @@ async def list_issues(
 
 @router.post('/draft')
 async def create_draft(
-    body: IssueCreate,
+    body: IssueDraftCreate,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
     user_ctx = current_user()
     now = utcnow()
-    project: m.Project | None = await m.Project.find_one(
-        m.Project.id == body.project_id, fetch_links=True
-    )
-    if not project:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+    project: m.Project | None = None
+    if body.project_id:
+        project = await m.Project.find_one(
+            m.Project.id == body.project_id, fetch_links=True
+        )
+        if not project:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
     attachments = {}
     if body.attachments:
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
-
-    validated_fields, validation_errors = await validate_custom_fields_values(
-        body.fields, project
-    )
+    if not project and body.fields:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
+        )
+    validated_fields, validation_errors = [], []
+    if project:
+        validated_fields, validation_errors = await validate_custom_fields_values(
+            body.fields,
+            project,
+            ignore_none_errors=True,
+        )
     obj = m.IssueDraft(
         subject=body.subject,
         text=body.text,
-        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
+        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug)
+        if project
+        else None,
         fields=validated_fields,
         attachments=[
             m.IssueAttachment(
@@ -175,7 +202,7 @@ async def get_draft(
 @router.put('/draft/{draft_id}')
 async def update_draft(
     draft_id: PydanticObjectId,
-    body: IssueUpdate,
+    body: IssueDraftUpdate,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
     user_ctx = current_user()
     now = utcnow()
@@ -186,15 +213,35 @@ async def update_draft(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You do not have permission to update this draft'
         )
-    project = await obj.get_project(fetch_links=True)
+    if 'project_id' in body.model_fields_set:
+        obj.fields = []
+        project: m.Project | None = None
+        if body.project_id:
+            if not (
+                project := await m.Project.find_one(
+                    m.Project.id == body.project_id, fetch_links=True
+                )
+            ):
+                raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+        obj.project = m.ProjectLinkField.from_obj(project) if project else None
+    else:
+        project = await obj.get_project(fetch_links=True)
+    if not project and body.fields:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
+        )
     validation_errors = []
-    for k, v in body.dict(exclude_unset=True).items():
-        if k == 'fields':
-            f_val, validation_errors = await validate_custom_fields_values(
-                v, project, obj
-            )
-            obj.fields = f_val
-            continue
+    if project:
+        f_val, validation_errors = await validate_custom_fields_values(
+            body.fields or {},
+            project,
+            obj,
+            ignore_none_errors=True,
+        )
+        obj.fields = f_val
+    for k, v in body.model_dump(
+        exclude={'project_id', 'fields'}, exclude_unset=True
+    ).items():
         if k == 'attachments':
             new_attachment_ids = set(v)
             current_attachment_ids = set(a.id for a in obj.attachments)
@@ -264,6 +311,14 @@ async def create_issue_from_draft(
         raise HTTPException(
             HTTPStatus.FORBIDDEN,
             'You do not have permission to create issue from this draft',
+        )
+    if not draft.project:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without a project'
+        )
+    if not draft.subject:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without subject'
         )
     project = await draft.get_project(fetch_links=True)
     attachments = {}
@@ -516,7 +571,10 @@ async def unsubscribe_issue(
 
 
 async def validate_custom_fields_values(
-    fields: dict[str, Any], project: m.Project, issue: m.Issue | None = None
+    fields: dict[str, Any],
+    project: m.Project,
+    issue: m.Issue | None = None,
+    ignore_none_errors: bool = False,
 ) -> tuple[list[m.CustomFieldValue], list[m.CustomFieldValidationError]]:
     project_fields = {f.name: f for f in project.custom_fields}
     issue_fields = {f.name: f for f in issue.fields} if issue else {}
@@ -536,6 +594,10 @@ async def validate_custom_fields_values(
             )
         try:
             val_ = f.validate_value(fields[f.name])
+        except m.CustomFieldCanBeNoneError as err:
+            val_ = None
+            if not ignore_none_errors:
+                errors.append(err)
         except m.CustomFieldValidationError as err:
             val_ = err.value
             errors.append(err)

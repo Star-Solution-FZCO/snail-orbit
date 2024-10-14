@@ -28,6 +28,7 @@ __all__ = (
     'EnumMultiCustomField',
     'CustomFieldValue',
     'CustomFieldValidationError',
+    'CustomFieldCanBeNoneError',
     'UserOptionType',
     'UserOption',
     'GroupOption',
@@ -129,6 +130,13 @@ class CustomFieldValidationError(ValueError):
         return self.args[0]
 
 
+class CustomFieldCanBeNoneError(CustomFieldValidationError):
+    def __init__(
+        self, field: 'CustomField', value: Any = None, msg: str = 'cannot be None'
+    ):
+        super().__init__(field, value, msg)
+
+
 @audited_model
 class CustomField(Document):
     class Settings:
@@ -145,9 +153,7 @@ class CustomField(Document):
 
     def validate_value(self, value: Any) -> Any:
         if value is None and not self.is_nullable:
-            raise CustomFieldValidationError(
-                field=self, value=value, msg='cannot be None'
-            )
+            raise CustomFieldCanBeNoneError(field=self)
         return value
 
     def __hash__(self) -> int:

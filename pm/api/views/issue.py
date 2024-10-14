@@ -143,8 +143,8 @@ class IssueOutput(BaseModel):
 
 class IssueDraftOutput(BaseModel):
     id: PydanticObjectId
-    project: ProjectField
-    subject: str
+    project: ProjectField | None
+    subject: str | None
     text: str | None
     fields: dict[str, CustomFieldValueOut]
     attachments: list[IssueAttachmentOut]
@@ -155,7 +155,7 @@ class IssueDraftOutput(BaseModel):
     def from_obj(cls, obj: m.IssueDraft) -> Self:
         return cls(
             id=obj.id,
-            project=ProjectField.from_obj(obj.project),
+            project=ProjectField.from_obj(obj.project) if obj.project else None,
             subject=obj.subject,
             text=obj.text,
             fields={
