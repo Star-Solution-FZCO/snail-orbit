@@ -2,6 +2,7 @@ import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogContent,
@@ -14,25 +15,27 @@ import ColorPicker from "@uiw/react-color-compact";
 import { FC, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { EnumOptionT } from "types";
+import { StateOptionT } from "types";
 import * as yup from "yup";
 
-const optionSchema = yup.object().shape({
+const stateOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     color: yup.string().nullable().default(null),
+    is_resolved: yup.boolean().default(false),
+    is_closed: yup.boolean().default(false),
 });
 
-type OptionFormData = yup.InferType<typeof optionSchema>;
+type EnumOptionFormData = yup.InferType<typeof stateOptionSchema>;
 
-interface IOptionFormDialogProps {
+interface IStateOptionFormDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: OptionFormData) => void;
-    defaultValues?: EnumOptionT | null;
+    onSubmit: (data: EnumOptionFormData) => void;
+    defaultValues?: StateOptionT | null;
     loading?: boolean;
 }
 
-const OptionFormDialog: FC<IOptionFormDialogProps> = ({
+const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
     open,
     onClose,
     onSubmit,
@@ -137,6 +140,46 @@ const OptionFormDialog: FC<IOptionFormDialogProps> = ({
                             />
                         )}
                     />
+
+                    <Controller
+                        name="is_resolved"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={value}
+                                        size="small"
+                                        disableRipple
+                                        onChange={(e) =>
+                                            onChange(e.target.checked)
+                                        }
+                                    />
+                                }
+                                label={t("customFields.options.state.resolved")}
+                            />
+                        )}
+                    />
+
+                    <Controller
+                        name="is_closed"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={value}
+                                        size="small"
+                                        disableRipple
+                                        onChange={(e) =>
+                                            onChange(e.target.checked)
+                                        }
+                                    />
+                                }
+                                label={t("customFields.options.state.closed")}
+                            />
+                        )}
+                    />
                 </Box>
             </DialogContent>
 
@@ -164,4 +207,4 @@ const OptionFormDialog: FC<IOptionFormDialogProps> = ({
     );
 };
 
-export { OptionFormDialog };
+export { StateOptionFormDialog };
