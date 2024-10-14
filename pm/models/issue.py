@@ -218,15 +218,17 @@ class IssueDraft(Document):
         use_state_management = True
         state_management_save_previous = False
 
-    subject: str
+    subject: str | None = None
     text: str | None = None
-    project: ProjectLinkField
+    project: ProjectLinkField | None = None
     fields: list[CustomFieldValue] = Field(default_factory=list)
     attachments: list[IssueAttachment] = Field(default_factory=list)
     created_by: UserLinkField
     created_at: datetime = Field(default_factory=utcnow)
 
-    async def get_project(self, fetch_links: bool = False) -> Project:
+    async def get_project(self, fetch_links: bool = False) -> Project | None:
+        if not self.project:
+            return None
         pr: Project | None = await Project.find_one(
             Project.id == self.project.id, fetch_links=fetch_links
         )
