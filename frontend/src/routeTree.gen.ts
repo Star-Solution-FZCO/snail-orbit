@@ -56,6 +56,9 @@ const AuthenticatedIssuesIssueIdLazyImport = createFileRoute(
 const AuthenticatedGroupsCreateLazyImport = createFileRoute(
   '/_authenticated/groups/create',
 )()
+const AuthenticatedDraftDraftIdLazyImport = createFileRoute(
+  '/_authenticated/draft/$draftId',
+)()
 const AuthenticatedCustomFieldsCreateLazyImport = createFileRoute(
   '/_authenticated/custom-fields/create',
 )()
@@ -176,6 +179,14 @@ const AuthenticatedGroupsCreateLazyRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/groups/create.lazy').then((d) => d.Route),
+  )
+
+const AuthenticatedDraftDraftIdLazyRoute =
+  AuthenticatedDraftDraftIdLazyImport.update({
+    path: '/draft/$draftId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/draft/$draftId.lazy').then((d) => d.Route),
   )
 
 const AuthenticatedCustomFieldsCreateLazyRoute =
@@ -315,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomFieldsCreateLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/draft/$draftId': {
+      id: '/_authenticated/draft/$draftId'
+      path: '/draft/$draftId'
+      fullPath: '/draft/$draftId'
+      preLoaderRoute: typeof AuthenticatedDraftDraftIdLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/groups/create': {
       id: '/_authenticated/groups/create'
       path: '/groups/create'
@@ -414,6 +432,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedAgilesCreateLazyRoute,
     AuthenticatedCustomFieldsCustomFieldIdLazyRoute,
     AuthenticatedCustomFieldsCreateLazyRoute,
+    AuthenticatedDraftDraftIdLazyRoute,
     AuthenticatedGroupsCreateLazyRoute,
     AuthenticatedIssuesIssueIdLazyRoute:
       AuthenticatedIssuesIssueIdLazyRoute.addChildren({
@@ -455,6 +474,7 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/agiles/create",
         "/_authenticated/custom-fields/$customFieldId",
         "/_authenticated/custom-fields/create",
+        "/_authenticated/draft/$draftId",
         "/_authenticated/groups/create",
         "/_authenticated/issues/$issueId",
         "/_authenticated/issues/create",
@@ -501,6 +521,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/custom-fields/create": {
       "filePath": "_authenticated/custom-fields/create.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/draft/$draftId": {
+      "filePath": "_authenticated/draft/$draftId.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/groups/create": {

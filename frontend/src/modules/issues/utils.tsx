@@ -40,7 +40,7 @@ export const transformFields = (fields: CustomFieldT[]) =>
 export const transformIssue = (issue: IssueT): CreateIssueT => ({
     subject: issue.subject,
     text: issue.text,
-    project_id: issue.project.id,
+    project_id: issue?.project?.id || "",
     fields: transformFields(Object.values(issue.fields)),
     attachments: issue.attachments.map((el) => el.id),
 });

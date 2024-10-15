@@ -1,6 +1,6 @@
 import { Avatar } from "@mui/material";
 import { ColorAdornment } from "components/fields/form_autocomplete/color_adornment";
-import { BasicUserT, EnumFieldT } from "types";
+import { BasicUserT, EnumFieldT, IssueProjectT } from "types";
 import { SelectFieldOptionType } from "./select_field";
 
 export type SelectFieldOptionTypeWithOriginal = SelectFieldOptionType & {
@@ -57,4 +57,24 @@ export const userToSelectOptions = (
     if (!options.length) return [];
 
     return options.map(userToSelectOption);
+};
+
+export type ProjectSelectOptionT = SelectFieldOptionType & {
+    original: IssueProjectT;
+};
+
+export const projectToSelectOption = (
+    project: IssueProjectT,
+): ProjectSelectOptionT => ({
+    label: project.name,
+    id: project.id,
+    original: project,
+});
+
+export const projectToSelectOptions = (
+    projects?: IssueProjectT[],
+): ProjectSelectOptionT[] => {
+    if (!projects || !projects.length) return [];
+
+    return projects.map(projectToSelectOption);
 };

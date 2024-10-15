@@ -1,46 +1,55 @@
-import { skipToken } from "@reduxjs/toolkit/query";
-import { FC, forwardRef, useMemo } from "react";
+import { FC, useMemo } from "react";
 import { projectApi } from "store";
-import { SelectField, SelectFieldOptionType } from "./select_field";
+import { IssueProjectT } from "../../../../types";
+import { SelectField } from "./select_field";
+import {
+    ProjectSelectOptionT,
+    projectToSelectOption,
+    projectToSelectOptions,
+} from "./utils";
 
 type ProjectFieldProps = {
-    value: string;
+    value?: IssueProjectT;
     label: string;
-    onChange: (value: string) => void;
+    onChange: (project: IssueProjectT) => void;
     error?: boolean;
 };
 
-export const ProjectField: FC<ProjectFieldProps> = forwardRef(
-    ({ value, label, onChange, error }, ref) => {
-        const [trigger, { data, isLoading }] =
-            projectApi.useLazyListProjectQuery();
+export const ProjectField: FC<ProjectFieldProps> = ({
+    value,
+    label,
+    onChange,
+    error,
+}) => {
+    const [trigger, { data, isLoading }] = projectApi.useLazyListProjectQuery();
 
-        const { data: fullProject } = projectApi.useGetProjectQuery(
-            value ?? skipToken,
-        );
+    const options = useMemo(() => {
+        return projectToSelectOptions(data?.payload.items);
+    }, [data]);
 
-        const options: SelectFieldOptionType[] = useMemo(() => {
-            if (!data) return [];
+    const parsedValue = useMemo(() => {
+        if (!value) return undefined;
+        return projectToSelectOption(value);
+    }, [value]);
 
-            return data.payload.items.map(({ id, name }) => ({
-                id: id,
-                label: name,
-            }));
-        }, [data]);
+    const handleChange = (
+        option: ProjectSelectOptionT | ProjectSelectOptionT[],
+    ) => {
+        if (Array.isArray(option)) onChange(option[0].original);
+        else onChange(option.original);
+    };
 
-        return (
-            <SelectField
-                id="projects"
-                ref={ref}
-                label={label}
-                options={options}
-                value={value}
-                cardValue={fullProject?.payload.name || "?"}
-                onChange={(value) => onChange(value as string)}
-                onOpened={trigger}
-                loading={isLoading}
-                variant={error ? "error" : "standard"}
-            />
-        );
-    },
-);
+    return (
+        <SelectField
+            id="projects"
+            label={label}
+            options={options}
+            value={parsedValue}
+            cardValue={value?.name || "?"}
+            onChange={handleChange}
+            onOpened={trigger}
+            loading={isLoading}
+            variant={error ? "error" : "standard"}
+        />
+    );
+};

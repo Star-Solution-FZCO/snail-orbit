@@ -1,6 +1,6 @@
 import { LoadingButton } from "@mui/lab";
-import { Box, TextField } from "@mui/material";
-import { FC, useState } from "react";
+import { Box, debounce, TextField } from "@mui/material";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MDEditor } from "../../../components";
 import { IssueT, UpdateIssueT } from "../../../types";
@@ -9,23 +9,40 @@ export type IssueDataProps = {
     issue: IssueT;
     loading?: boolean;
     onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    onSaveIssue?: () => Promise<void>;
+    isDraft?: boolean;
 };
 
 export const IssueData: FC<IssueDataProps> = ({
     issue,
     loading,
+    isDraft,
     onUpdateIssue,
+    onSaveIssue,
 }) => {
     const { t } = useTranslation();
     const [subject, setSubject] = useState<string>(issue?.subject || "");
     const [text, setText] = useState<string>(issue?.text || "");
 
-    const handleSave = () => {
-        onUpdateIssue({
-            text,
-            subject,
-        });
-    };
+    const debouncedUpdate = useCallback(
+        debounce((text: string, subject: string) => {
+            onUpdateIssue({ text, subject });
+        }, 300),
+        [],
+    );
+
+    const handleSave = useCallback(() => {
+        if (isDraft) onSaveIssue?.();
+        else
+            onUpdateIssue({
+                text,
+                subject,
+            });
+    }, [isDraft]);
+
+    useEffect(() => {
+        if (isDraft) debouncedUpdate(text, subject);
+    }, [text, subject, isDraft]);
 
     return (
         <>
