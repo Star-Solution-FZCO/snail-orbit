@@ -19,10 +19,12 @@ export type CreateIssueT = {
     attachments?: string[];
 };
 
+export type IssueProjectT = Pick<ProjectT, "id" | "name" | "slug">;
+
 export type IssueT = {
     id: string;
     id_readable: string;
-    project: Pick<ProjectT, "id" | "name" | "slug">;
+    project?: IssueProjectT;
     subject: string;
     text: string | null;
     fields: Record<string, CustomFieldT>;

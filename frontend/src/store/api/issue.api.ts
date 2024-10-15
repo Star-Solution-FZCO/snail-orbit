@@ -167,5 +167,44 @@ export const issueApi = createApi({
                 { type: "IssueHistories", id },
             ],
         }),
+        createDraft: build.mutation<ApiResponse<IssueT>, void>({
+            query: () => ({ url: "issue/draft", method: "POST", body: {} }),
+        }),
+        getDraft: build.query<ApiResponse<IssueT>, string>({
+            query: (id) => `issue/draft/${id}`,
+            providesTags: (_result, _error, id) => [{ type: "Drafts", id }],
+        }),
+        updateDraft: build.mutation<
+            ApiResponse<IssueT>,
+            { id: string } & UpdateIssueT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `issue/draft/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: () => [{ type: "Drafts", id: "LIST" }],
+            async onQueryStarted(
+                { id },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        issueApi.util.upsertQueryData("getDraft", id, data),
+                    );
+                } catch {
+                    dispatch(
+                        issueApi.util.invalidateTags([{ type: "Drafts", id }]),
+                    );
+                }
+            },
+        }),
+        createIssueFromDraft: build.mutation<ApiResponse<IssueT>, string>({
+            query: (id) => ({
+                url: `issue/draft/${id}/create`,
+                method: "POST",
+            }),
+        }),
     }),
 });

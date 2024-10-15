@@ -1,58 +1,38 @@
-import { Container, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import IssueView from "modules/issues/components/issue_view";
-import { FC } from "react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
+import { FC, useEffect, useRef } from "react";
 import { issueApi } from "store";
-import { slugify } from "transliteration";
-import { CreateIssueT } from "types";
-import { toastApiError } from "utils";
 
 const IssueCreate: FC = () => {
-    const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [createIssue, { isLoading: isCreateProjectLoading }] =
-        issueApi.useCreateIssueMutation();
+    const [createDraft, { isLoading }] = issueApi.useCreateDraftMutation();
+    const awaitingRef = useRef<boolean>(false);
 
-    const isLoading = isCreateProjectLoading;
-
-    const handleSubmit = (formData: CreateIssueT) => {
-        createIssue(formData)
-            .unwrap()
-            .then((response) => {
-                const issueId = response.payload.id_readable;
-                const subject = slugify(response.payload.subject);
-                navigate({
-                    to: "/issues/$issueId/$subject",
-                    params: {
-                        issueId,
-                        subject,
-                    },
+    useEffect(() => {
+        if (!isLoading && !awaitingRef.current) {
+            awaitingRef.current = true;
+            createDraft()
+                .unwrap()
+                .then((resp) => navigate({ to: `/draft/${resp.payload.id}` }))
+                .finally(() => {
+                    awaitingRef.current = false;
                 });
-                toast.success(t("issues.create.success"));
-            })
-            .catch(toastApiError);
-    };
+        }
+    }, [isLoading, createDraft]);
 
     return (
-        <Container
+        <Box
             sx={{
+                width: 1,
+                height: 1,
                 display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                px: 4,
-                pb: 4,
+                alignItems: "center",
+                justifyContent: "center",
             }}
-            disableGutters
         >
-            <Typography fontSize={24} fontWeight="bold">
-                {t("issues.create.title")}
-            </Typography>
-
-            <IssueView onSubmit={handleSubmit} loading={isLoading} />
-        </Container>
+            <CircularProgress />
+        </Box>
     );
 };
 

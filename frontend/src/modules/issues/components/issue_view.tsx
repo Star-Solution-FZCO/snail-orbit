@@ -15,7 +15,9 @@ type IssueFormProps = {
     issue: IssueT;
     onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
+    onSaveIssue?: () => Promise<void>;
     loading?: boolean;
+    isDraft?: boolean;
 };
 
 export const IssueView: FC<IssueFormProps> = ({
@@ -23,11 +25,13 @@ export const IssueView: FC<IssueFormProps> = ({
     loading,
     onUpdateIssue,
     onUpdateCache,
+    onSaveIssue,
+    isDraft,
 }) => {
     const { t } = useTranslation();
 
     const { data: projectData } = projectApi.useGetProjectQuery(
-        issue?.project.id ?? skipToken,
+        issue?.project?.id ?? skipToken,
     );
 
     return (
@@ -37,9 +41,11 @@ export const IssueView: FC<IssueFormProps> = ({
                     issue={issue}
                     loading={loading}
                     onUpdateIssue={onUpdateIssue}
+                    onSaveIssue={onSaveIssue}
+                    isDraft={isDraft}
                 />
 
-                {issue && (
+                {issue && !isDraft && (
                     <IssueAttachments
                         issue={issue}
                         onUpdateIssue={onUpdateIssue}
@@ -47,16 +53,19 @@ export const IssueView: FC<IssueFormProps> = ({
                     />
                 )}
 
-                {issue && <IssueActivities issueId={issue.id_readable} />}
+                {issue && !isDraft && (
+                    <IssueActivities issueId={issue.id_readable} />
+                )}
             </Stack>
 
             <FieldContainer>
                 <ProjectField
                     label={t("issues.form.project.label")}
-                    value={issue.project.id}
-                    onChange={(projectId) =>
-                        onUpdateIssue({ project_id: projectId })
-                    }
+                    value={issue?.project}
+                    onChange={(project) => {
+                        onUpdateIssue({ project_id: project.id });
+                        onUpdateCache({ project });
+                    }}
                 />
 
                 <CustomFieldsParser

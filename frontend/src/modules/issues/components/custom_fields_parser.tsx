@@ -202,7 +202,9 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
-                                        field && field.type === "state"
+                                        field &&
+                                        field.type === "state" &&
+                                        field.value
                                             ? {
                                                   ...field.value,
                                                   value: field.value.state,
