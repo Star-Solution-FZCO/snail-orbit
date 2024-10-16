@@ -13,7 +13,7 @@ import {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Issues", "IssueComments", "IssueHistories"];
+const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
 
 export const issueApi = createApi({
     reducerPath: "issuesApi",
@@ -169,6 +169,7 @@ export const issueApi = createApi({
         }),
         createDraft: build.mutation<ApiResponse<IssueT>, void>({
             query: () => ({ url: "issue/draft", method: "POST", body: {} }),
+            invalidatesTags: () => [{ type: "IssueDrafts", id: "LIST" }],
         }),
         getDraft: build.query<ApiResponse<IssueT>, string>({
             query: (id) => `issue/draft/${id}`,
@@ -183,7 +184,7 @@ export const issueApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: () => [{ type: "Drafts", id: "LIST" }],
+            invalidatesTags: () => [{ type: "IssueDrafts", id: "LIST" }],
             async onQueryStarted(
                 { id },
                 { dispatch, queryFulfilled },
@@ -195,7 +196,9 @@ export const issueApi = createApi({
                     );
                 } catch {
                     dispatch(
-                        issueApi.util.invalidateTags([{ type: "Drafts", id }]),
+                        issueApi.util.invalidateTags([
+                            { type: "IssueDrafts", id },
+                        ]),
                     );
                 }
             },
@@ -205,6 +208,7 @@ export const issueApi = createApi({
                 url: `issue/draft/${id}/create`,
                 method: "POST",
             }),
+            invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
         }),
     }),
 });

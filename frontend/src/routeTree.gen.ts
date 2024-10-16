@@ -56,9 +56,6 @@ const AuthenticatedIssuesIssueIdLazyImport = createFileRoute(
 const AuthenticatedGroupsCreateLazyImport = createFileRoute(
   '/_authenticated/groups/create',
 )()
-const AuthenticatedDraftDraftIdLazyImport = createFileRoute(
-  '/_authenticated/draft/$draftId',
-)()
 const AuthenticatedCustomFieldsCreateLazyImport = createFileRoute(
   '/_authenticated/custom-fields/create',
 )()
@@ -67,6 +64,9 @@ const AuthenticatedCustomFieldsCustomFieldIdLazyImport = createFileRoute(
 )()
 const AuthenticatedAgilesCreateLazyImport = createFileRoute(
   '/_authenticated/agiles/create',
+)()
+const AuthenticatedIssuesDraftDraftIdLazyImport = createFileRoute(
+  '/_authenticated/issues/draft/$draftId',
 )()
 const AuthenticatedIssuesIssueIdSubjectLazyImport = createFileRoute(
   '/_authenticated/issues/$issueId/$subject',
@@ -181,14 +181,6 @@ const AuthenticatedGroupsCreateLazyRoute =
     import('./routes/_authenticated/groups/create.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedDraftDraftIdLazyRoute =
-  AuthenticatedDraftDraftIdLazyImport.update({
-    path: '/draft/$draftId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/draft/$draftId.lazy').then((d) => d.Route),
-  )
-
 const AuthenticatedCustomFieldsCreateLazyRoute =
   AuthenticatedCustomFieldsCreateLazyImport.update({
     path: '/custom-fields/create',
@@ -241,6 +233,16 @@ const AuthenticatedAgilesBoardIdRoute = AuthenticatedAgilesBoardIdImport.update(
     getParentRoute: () => AuthenticatedRoute,
   } as any,
 )
+
+const AuthenticatedIssuesDraftDraftIdLazyRoute =
+  AuthenticatedIssuesDraftDraftIdLazyImport.update({
+    path: '/issues/draft/$draftId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/issues/draft.$draftId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 const AuthenticatedIssuesIssueIdSubjectLazyRoute =
   AuthenticatedIssuesIssueIdSubjectLazyImport.update({
@@ -324,13 +326,6 @@ declare module '@tanstack/react-router' {
       path: '/custom-fields/create'
       fullPath: '/custom-fields/create'
       preLoaderRoute: typeof AuthenticatedCustomFieldsCreateLazyImport
-      parentRoute: typeof AuthenticatedImport
-    }
-    '/_authenticated/draft/$draftId': {
-      id: '/_authenticated/draft/$draftId'
-      path: '/draft/$draftId'
-      fullPath: '/draft/$draftId'
-      preLoaderRoute: typeof AuthenticatedDraftDraftIdLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/groups/create': {
@@ -417,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIssuesIssueIdSubjectLazyImport
       parentRoute: typeof AuthenticatedIssuesIssueIdLazyImport
     }
+    '/_authenticated/issues/draft/$draftId': {
+      id: '/_authenticated/issues/draft/$draftId'
+      path: '/issues/draft/$draftId'
+      fullPath: '/issues/draft/$draftId'
+      preLoaderRoute: typeof AuthenticatedIssuesDraftDraftIdLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
   }
 }
 
@@ -432,7 +434,6 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedAgilesCreateLazyRoute,
     AuthenticatedCustomFieldsCustomFieldIdLazyRoute,
     AuthenticatedCustomFieldsCreateLazyRoute,
-    AuthenticatedDraftDraftIdLazyRoute,
     AuthenticatedGroupsCreateLazyRoute,
     AuthenticatedIssuesIssueIdLazyRoute:
       AuthenticatedIssuesIssueIdLazyRoute.addChildren({
@@ -447,6 +448,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedIssuesIndexLazyRoute,
     AuthenticatedProjectsIndexLazyRoute,
     AuthenticatedRolesIndexLazyRoute,
+    AuthenticatedIssuesDraftDraftIdLazyRoute,
   }),
   LoginRoute,
 })
@@ -474,7 +476,6 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/agiles/create",
         "/_authenticated/custom-fields/$customFieldId",
         "/_authenticated/custom-fields/create",
-        "/_authenticated/draft/$draftId",
         "/_authenticated/groups/create",
         "/_authenticated/issues/$issueId",
         "/_authenticated/issues/create",
@@ -485,7 +486,8 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/groups/",
         "/_authenticated/issues/",
         "/_authenticated/projects/",
-        "/_authenticated/roles/"
+        "/_authenticated/roles/",
+        "/_authenticated/issues/draft/$draftId"
       ]
     },
     "/login": {
@@ -521,10 +523,6 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/custom-fields/create": {
       "filePath": "_authenticated/custom-fields/create.lazy.tsx",
-      "parent": "/_authenticated"
-    },
-    "/_authenticated/draft/$draftId": {
-      "filePath": "_authenticated/draft/$draftId.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/groups/create": {
@@ -577,6 +575,10 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/issues/$issueId/$subject": {
       "filePath": "_authenticated/issues/$issueId.$subject.lazy.tsx",
       "parent": "/_authenticated/issues/$issueId"
+    },
+    "/_authenticated/issues/draft/$draftId": {
+      "filePath": "_authenticated/issues/draft.$draftId.lazy.tsx",
+      "parent": "/_authenticated"
     }
   }
 }

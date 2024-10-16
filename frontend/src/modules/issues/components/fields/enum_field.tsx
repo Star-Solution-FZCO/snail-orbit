@@ -1,8 +1,8 @@
+import { ColorAdornment } from "components/fields/form_autocomplete/color_adornment";
 import { FC, useMemo } from "react";
 import { customFieldsApi } from "store";
 import { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
-import { ColorAdornment } from "../../../../components/fields/form_autocomplete/color_adornment";
 import { SelectField } from "./select_field";
 import {
     enumToSelectOption,
