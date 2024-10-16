@@ -1,7 +1,8 @@
 import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MouseEventHandler, useState } from "react";
-import FormAutocompletePopover from "./form_autocomplete";
+
+import { FormAutocompletePopover } from "./form_autocomplete";
 import { FormAutocompleteValueType } from "./form_autocomplete_content";
 
 const meta = {

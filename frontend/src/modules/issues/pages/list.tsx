@@ -26,7 +26,7 @@ const IssueList: FC = () => {
             {
                 field: "project",
                 headerName: t("issues.fields.project"),
-                valueGetter: (_, row) => row.project.name,
+                valueGetter: (_, row) => row.project?.name || "-",
             },
             {
                 field: "subject",
