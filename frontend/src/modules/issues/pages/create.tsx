@@ -14,7 +14,12 @@ const IssueCreate: FC = () => {
             awaitingRef.current = true;
             createDraft()
                 .unwrap()
-                .then((resp) => navigate({ to: `/draft/${resp.payload.id}` }))
+                .then((resp) =>
+                    navigate({
+                        to: `/issues/draft/${resp.payload.id}`,
+                        replace: true,
+                    }),
+                )
                 .finally(() => {
                     awaitingRef.current = false;
                 });

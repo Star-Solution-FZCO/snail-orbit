@@ -6,13 +6,14 @@ import { FC, useCallback } from "react";
 import { issueApi, useAppDispatch } from "store";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
-import IssueViewComp from "../components/issue_view";
+import IssueView from "../components/issue_view";
 
-const routeApi = getRouteApi("/_authenticated/draft/$draftId");
+const routeApi = getRouteApi("/_authenticated/issues/draft/$draftId");
 
-const DraftView: FC = () => {
+const IssueDraft: FC = () => {
     const navigate = useNavigate();
     const { draftId } = routeApi.useParams();
+
     const dispatch = useAppDispatch();
 
     const { data, isLoading, error, refetch } =
@@ -47,6 +48,7 @@ const DraftView: FC = () => {
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
             if (!issue) return;
+
             dispatch(
                 issueApi.util.updateQueryData(
                     "getDraft",
@@ -84,7 +86,7 @@ const DraftView: FC = () => {
             ) : (
                 <>
                     {issue && (
-                        <IssueViewComp
+                        <IssueView
                             loading={
                                 isLoading || updateLoading || createLoading
                             }
@@ -101,4 +103,4 @@ const DraftView: FC = () => {
     );
 };
 
-export { DraftView };
+export { IssueDraft };

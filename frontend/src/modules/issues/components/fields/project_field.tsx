@@ -1,6 +1,6 @@
 import { FC, useMemo } from "react";
 import { projectApi } from "store";
-import { IssueProjectT } from "../../../../types";
+import { IssueProjectT } from "types";
 import { SelectField } from "./select_field";
 import {
     ProjectSelectOptionT,

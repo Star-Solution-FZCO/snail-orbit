@@ -1,9 +1,9 @@
 import { LoadingButton } from "@mui/lab";
 import { Box, debounce, TextField } from "@mui/material";
+import { MDEditor } from "components";
 import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MDEditor } from "../../../components";
-import { IssueT, UpdateIssueT } from "../../../types";
+import { IssueT, UpdateIssueT } from "types";
 
 export type IssueDataProps = {
     issue: IssueT;
