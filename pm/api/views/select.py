@@ -13,6 +13,7 @@ __all__ = (
     'user_link_select',
     'state_option_select',
     'enum_option_select',
+    'version_option_select',
 )
 
 T = TypeVar('T')
@@ -89,3 +90,17 @@ def enum_option_select(
     objs: Sequence[m.EnumOption], query: SelectParams
 ) -> SelectResult[m.EnumOption]:
     return _select(objs, query, _enum_filter, lambda o: o.value.value)
+
+
+def _version_filter(
+    objs: Sequence[m.VersionOption], search: str
+) -> list[m.VersionOption]:
+    return [
+        o for o in objs if re.search(re.escape(search), o.value.version, re.IGNORECASE)
+    ]
+
+
+def version_option_select(
+    objs: Sequence[m.VersionOption], query: SelectParams
+) -> SelectResult[m.VersionOption]:
+    return _select(objs, query, _version_filter, lambda o: o.value.version)

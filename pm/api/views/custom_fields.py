@@ -1,4 +1,5 @@
-from typing import Any, Self
+from datetime import date
+from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -13,9 +14,11 @@ __all__ = (
     'EnumOptionOutput',
     'StateOptionOutput',
     'CustomFieldOutput',
+    'VersionOptionOutput',
     'CustomFieldOutputWithStateOptions',
     'CustomFieldOutputWithEnumOptions',
     'CustomFieldOutputWithUserOptions',
+    'CustomFieldOutputWithVersionOptions',
     'CustomFieldLinkOutput',
 )
 
@@ -144,5 +147,40 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[StateOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=obj.default_value,
+        )
+
+
+class VersionOptionOutput(BaseModel):
+    uuid: UUID
+    value: str
+    release_date: date | None
+    is_released: bool
+    is_archived: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.VersionOption) -> Self:
+        return cls(
+            uuid=obj.id,
+            value=obj.value.version,
+            release_date=obj.value.release_date.date()
+            if obj.value.release_date
+            else None,
+            is_released=obj.value.is_released,
+            is_archived=obj.value.is_archived,
+        )
+
+
+class CustomFieldOutputWithVersionOptions(CustomFieldOutput):
+    options: list[VersionOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.VersionCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
+            is_nullable=obj.is_nullable,
+            options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
             default_value=obj.default_value,
         )

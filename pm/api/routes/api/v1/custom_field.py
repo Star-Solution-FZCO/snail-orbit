@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from http import HTTPStatus
 from typing import Any, Type
 from uuid import UUID, uuid4
@@ -14,8 +15,10 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputWithEnumOptions,
     CustomFieldOutputWithStateOptions,
     CustomFieldOutputWithUserOptions,
+    CustomFieldOutputWithVersionOptions,
     EnumOptionOutput,
     StateOptionOutput,
+    VersionOptionOutput,
 )
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
@@ -24,6 +27,7 @@ from pm.api.views.select import (
     enum_option_select,
     state_option_select,
     user_link_select,
+    version_option_select,
 )
 from pm.api.views.user import UserOutput
 
@@ -40,8 +44,11 @@ CustomFieldOutputT = (
     | CustomFieldOutputWithEnumOptions
     | CustomFieldOutputWithUserOptions
     | CustomFieldOutputWithStateOptions
+    | CustomFieldOutputWithVersionOptions
 )
-CustomFieldSelectOptionsT = EnumOptionOutput | UserOutput | StateOptionOutput
+CustomFieldSelectOptionsT = (
+    EnumOptionOutput | UserOutput | StateOptionOutput | VersionOptionOutput
+)
 
 
 class EnumOptionCreateBody(BaseModel):
@@ -61,6 +68,13 @@ class StateOptionCreateBody(BaseModel):
     is_closed: bool = False
 
 
+class VersionOptionCreateBody(BaseModel):
+    value: str
+    release_date: date | None = None
+    is_released: bool = False
+    is_archived: bool = False
+
+
 class EnumOptionUpdateBody(BaseModel):
     value: str | None = None
     color: str | None = None
@@ -71,6 +85,13 @@ class StateOptionUpdateBody(BaseModel):
     color: str | None = None
     is_resolved: bool | None = None
     is_closed: bool | None = None
+
+
+class VersionOptionUpdateBody(BaseModel):
+    value: str | None = None
+    release_date: date | None = None
+    is_released: bool | None = None
+    is_archived: bool | None = None
 
 
 class CustomFieldCreateBody(BaseModel):
@@ -109,6 +130,8 @@ def output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
         return CustomFieldOutputWithUserOptions.from_obj(obj)
     if obj.type == m.CustomFieldTypeT.STATE:
         return CustomFieldOutputWithStateOptions.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        return CustomFieldOutputWithVersionOptions.from_obj(obj)
     return CustomFieldOutput.from_obj(obj)
 
 
@@ -374,6 +397,78 @@ async def remove_state_option(
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
+@router.post('/{custom_field_id}/version-option')
+async def add_version_option(
+    custom_field_id: PydanticObjectId,
+    body: VersionOptionCreateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.VersionCustomField.find_one(
+        m.VersionCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if any(opt.value.version == body.value for opt in obj.options):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
+    obj.options.append(
+        m.VersionOption(
+            id=uuid4(),
+            value=m.VersionField(
+                version=body.value,
+                release_date=datetime.combine(body.release_date, datetime.min.time())
+                if body.release_date
+                else None,
+                is_released=body.is_released,
+                is_archived=body.is_archived,
+            ),
+        )
+    )
+    if obj.is_changed:
+        await obj.save_changes()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.put('/{custom_field_id}/version-option/{option_id}')
+async def update_version_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+    body: VersionOptionUpdateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.VersionCustomField.find_one(
+        m.VersionCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    for k, v in body.dict(exclude_unset=True).items():
+        if k == 'release_date':
+            v = datetime.combine(v, datetime.min.time()) if v else None
+        setattr(opt.value, k, v)
+    if obj.is_changed:
+        await obj.save_changes()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.delete('/{custom_field_id}/version-option/{option_id}')
+async def remove_version_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    obj: m.CustomField | None = await m.VersionCustomField.find_one(
+        m.VersionCustomField.id == custom_field_id
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    obj.options.remove(opt)
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
 @router.get('/{custom_field_id}/select')
 async def select_options(
     custom_field_id: PydanticObjectId,
@@ -407,5 +502,13 @@ async def select_options(
             limit=selected.limit,
             offset=selected.offset,
             items=[EnumOptionOutput.from_obj(opt) for opt in selected.items],
+        )
+    if isinstance(obj, m.VersionCustomField | m.VersionMultiCustomField):
+        selected = version_option_select(obj.options, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[VersionOptionOutput.from_obj(opt) for opt in selected.items],
         )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')

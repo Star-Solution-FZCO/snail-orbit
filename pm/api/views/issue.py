@@ -33,6 +33,8 @@ CustomFieldValueOutT = (
     | m.EnumField
     | list[m.EnumField]
     | m.StateField
+    | m.VersionField
+    | list[m.VersionField]
     | PydanticObjectId
     | Any
     | None

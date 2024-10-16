@@ -35,6 +35,10 @@ __all__ = (
     'StateOption',
     'StateCustomField',
     'StateField',
+    'VersionOption',
+    'VersionField',
+    'VersionCustomField',
+    'VersionMultiCustomField',
     'CustomFieldValueT',
 )
 
@@ -51,6 +55,8 @@ class CustomFieldTypeT(StrEnum):
     ENUM = 'enum'
     ENUM_MULTI = 'enum_multi'
     STATE = 'state'
+    VERSION = 'version'
+    VERSION_MULTI = 'version_multi'
 
     def get_field_class(self) -> type['CustomField']:
         return MAPPING[self]
@@ -114,6 +120,26 @@ class StateField(BaseModel):
 class StateOption(BaseModel):
     id: UUID
     value: StateField
+
+
+class VersionField(BaseModel):
+    version: str
+    release_date: datetime | None = None
+    is_released: bool = False
+    is_archived: bool = False
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, VersionField):
+            return False
+        return self.version == other.version
+
+    def __hash__(self) -> int:
+        return hash(self.version)
+
+
+class VersionOption(BaseModel):
+    id: UUID
+    value: VersionField
 
 
 class CustomFieldValidationError(ValueError):
@@ -499,6 +525,58 @@ class StateCustomField(CustomField):
         return opts[value]
 
 
+class VersionCustomField(CustomField):
+    type: CustomFieldTypeT = CustomFieldTypeT.VERSION
+    options: list[VersionOption] = Field(default_factory=list)
+    default_value: VersionField | None = None
+
+    def validate_value(self, value: Any) -> Any:
+        value = super().validate_value(value)
+        if value is None:
+            return value
+        if isinstance(value, VersionField):
+            value = value.version
+        opts = {opt.value.version: opt.value for opt in self.options}
+        if value not in opts:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='option not found'
+            )
+        return opts[value]
+
+
+class VersionMultiCustomField(CustomField):
+    type: CustomFieldTypeT = CustomFieldTypeT.VERSION_MULTI
+    options: list[VersionOption] = Field(default_factory=list)
+    default_value: list[str] | None = None
+
+    @staticmethod
+    def __transform_single_value(value: Any) -> Any:
+        if isinstance(value, VersionField):
+            return value.version
+        return value
+
+    def validate_value(self, value: Any) -> Any:
+        value = super().validate_value(value)
+        if value is None:
+            return value
+        if not isinstance(value, list):
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='must be a list'
+            )
+        if not self.is_nullable and not value:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='cannot be empty'
+            )
+        value = [self.__transform_single_value(val) for val in value]
+        opts = {opt.value.version: opt.value for opt in self.options}
+        for val in value:
+            if val not in opts:
+                raise CustomFieldValidationError(
+                    field=self, value=value, msg=f'option {val} not found'
+                )
+        return [opts[val] for val in value]
+
+
 MAPPING = {
     CustomFieldTypeT.STRING: StringCustomField,
     CustomFieldTypeT.INTEGER: IntegerCustomField,
@@ -511,6 +589,8 @@ MAPPING = {
     CustomFieldTypeT.ENUM: EnumCustomField,
     CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomField,
     CustomFieldTypeT.STATE: StateCustomField,
+    CustomFieldTypeT.VERSION: VersionCustomField,
+    CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomField,
 }
 
 CustomFieldValueT = (
@@ -523,6 +603,8 @@ CustomFieldValueT = (
     | EnumField
     | list[EnumField]
     | StateField
+    | VersionField
+    | list[VersionField]
     | PydanticObjectId
     | Any
     | None
