@@ -29,6 +29,8 @@ __beanie_models__ = [
     EnumCustomField,
     EnumMultiCustomField,
     StateCustomField,
+    VersionCustomField,
+    VersionMultiCustomField,
     Workflow,
     ScheduledWorkflow,
     OnChangeWorkflow,
