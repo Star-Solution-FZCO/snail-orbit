@@ -11,7 +11,7 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import Event, EventType
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import transform_query
+from pm.api.search.issue import TransformError, transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
 from pm.api.views.issue import (
@@ -301,7 +301,10 @@ async def get_board_issues(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     flt = {}
     if board.query:
-        flt, _ = transform_query(board.query)
+        try:
+            flt = await transform_query(board.query)
+        except TransformError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
     if board.swimlane_field:
         non_swimlane = None
         if None in board.swimlanes:
