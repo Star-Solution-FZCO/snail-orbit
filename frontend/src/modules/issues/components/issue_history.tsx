@@ -12,6 +12,7 @@ import {
     BasicCustomFieldT,
     BasicUserT,
     CustomFieldValueT,
+    EnumFieldT,
     FieldValueChangeT,
     IssueHistoryT,
     StateFieldT,
@@ -96,10 +97,12 @@ const renderValue = (
             return (value as BasicUserT[]).map((user) => user.name).join(", ");
 
         case "enum":
-            return value;
+            return (value as EnumFieldT).value;
 
         case "enum_multi":
-            return (value as string[]).join(", ");
+            return (value as EnumFieldT[])
+                .map((option) => option.value)
+                .join(", ");
 
         case "state":
             return (value as StateFieldT).state;
