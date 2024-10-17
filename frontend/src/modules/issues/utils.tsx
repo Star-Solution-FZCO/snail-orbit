@@ -78,8 +78,12 @@ export const useUploadToast = () => {
     const activeMutations = useRef<Record<string, any>>({});
 
     const handleCancelUpload = (fileName: string) => {
-        if (activeMutations.current[fileName]) {
+        if (activeMutations.current[fileName] && toastId.current[fileName]) {
             activeMutations.current[fileName].abort();
+            toast.dismiss(toastId.current[fileName]);
+
+            delete activeMutations.current[fileName];
+            delete toastId.current[fileName];
         }
     };
 
