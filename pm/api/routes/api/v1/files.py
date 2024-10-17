@@ -60,11 +60,12 @@ async def download_attachment(file_id: UUID) -> StreamingResponse:
         finally:
             await out_file.close()
 
+    file_name_header = file_header.name.encode('latin-1', 'replace').decode('latin-1')
     return StreamingResponse(
         _read_content(),
         media_type=file_header.content_type,
         headers={
-            'Content-Disposition': f'attachment; filename="{file_header.name}"',
+            'Content-Disposition': f'attachment; filename="{file_name_header}"',
             'Content-Length': str(file_header.size),
         },
     )
