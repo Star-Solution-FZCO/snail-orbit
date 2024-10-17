@@ -152,12 +152,13 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     };
 
     const handleClickCancel = () => {
-        if (text) setDiscardChangesDialogOpen(true);
+        if (text || files.length > 0) setDiscardChangesDialogOpen(true);
         else setMode("view");
     };
 
     const handleDiscardChanges = () => {
         setText("");
+        setFiles([]);
         setDiscardChangesDialogOpen(false);
         setMode("view");
     };
