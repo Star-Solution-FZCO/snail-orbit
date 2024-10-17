@@ -46,15 +46,15 @@ export const IssueView: FC<IssueFormProps> = ({
                 />
 
                 {issue && !isDraft && (
-                    <IssueAttachments
-                        issue={issue}
-                        onUpdateIssue={onUpdateIssue}
-                        onUpdateCache={onUpdateCache}
-                    />
-                )}
+                    <>
+                        <IssueAttachments
+                            issue={issue}
+                            onUpdateIssue={onUpdateIssue}
+                            onUpdateCache={onUpdateCache}
+                        />
 
-                {issue && !isDraft && (
-                    <IssueActivities issueId={issue.id_readable} />
+                        <IssueActivities issueId={issue.id_readable} />
+                    </>
                 )}
             </Stack>
 

@@ -1,7 +1,7 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Collapse, IconButton, Typography } from "@mui/material";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { sharedApi } from "store";
@@ -27,8 +27,6 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
     const { attachments: issueAttachments, id: issueId } = issue;
     const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
 
-    console.log(issue, issue.attachments);
-
     const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
     const [selectedAttachment, setSelectedAttachment] =
@@ -38,51 +36,89 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
     const { toastId, showToast, updateToast, activeMutations } =
         useUploadToast();
 
-    const onDrop = useCallback(
-        async (acceptedFiles: File[]) => {
-            const file = acceptedFiles[0];
+    const uploadFile = async (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
 
-            const formData = new FormData();
-            formData.append("file", file);
+        if (!toastId.current[file.name]) {
+            showToast(file.name);
+        }
 
-            if (!toastId.current[file.name]) {
-                showToast(file.name);
-            }
+        try {
+            const mutation = uploadAttachment(formData);
+            activeMutations.current[file.name] = mutation;
+            const response = await mutation.unwrap();
 
-            try {
-                const mutation = uploadAttachment(formData);
-                activeMutations.current[file.name] = mutation;
-                const response = await mutation.unwrap();
+            updateToast(
+                file.name,
+                t("issues.form.attachments.upload.success"),
+                "success",
+                3000,
+            );
 
-                if (issueId) {
-                    await onUpdateIssue({
-                        attachments: [
-                            ...issueAttachments.map(
-                                (attachment) => attachment.id,
-                            ),
-                            response.payload.id,
-                        ],
-                    });
-                    // There should be cache update but backend returns not enough data
-                } else {
-                    setFiles((prevFiles) => [...prevFiles, file]);
-                }
-
+            return response.payload.id;
+        } catch (error: any) {
+            if (error.name !== "AbortError") {
+                toastApiError(error);
                 updateToast(
                     file.name,
-                    t("issues.form.attachments.upload.success"),
-                    "success",
+                    t("issues.form.attachments.upload.error"),
+                    "error",
                     3000,
                 );
-            } catch (error: any) {
-                if (error.name !== "AbortError") {
-                    toastApiError(error);
-                    updateToast(
-                        file.name,
-                        t("issues.form.attachments.upload.error"),
-                        "error",
-                        3000,
-                    );
+            }
+            throw error;
+        }
+    };
+
+    const onDrop = useCallback(
+        async (acceptedFiles: File[]) => {
+            const newAttachmentIds = await Promise.all(
+                acceptedFiles.map(uploadFile),
+            );
+
+            const updatedAttachments = [
+                ...issueAttachments.map((attachment) => attachment.id),
+                ...newAttachmentIds,
+            ];
+
+            await onUpdateIssue({
+                attachments: updatedAttachments,
+            });
+        },
+        [
+            issueAttachments,
+            issueId,
+            uploadAttachment,
+            showToast,
+            updateToast,
+            activeMutations,
+            onUpdateIssue,
+        ],
+    );
+
+    const handlePaste = useCallback(
+        async (event: ClipboardEvent) => {
+            const clipboardItems = event.clipboardData?.items;
+            if (!clipboardItems) return;
+
+            for (let i = 0; i < clipboardItems.length; i++) {
+                const item = clipboardItems[i];
+
+                if (item.kind === "file") {
+                    const file = item.getAsFile();
+
+                    if (!file) continue;
+
+                    const attachmentId = await uploadFile(file);
+                    const updatedAttachments = [
+                        ...issueAttachments.map((attachment) => attachment.id),
+                        attachmentId,
+                    ];
+
+                    await onUpdateIssue({
+                        attachments: updatedAttachments,
+                    });
                 }
             }
         },
@@ -93,6 +129,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
             showToast,
             updateToast,
             activeMutations,
+            onUpdateIssue,
         ],
     );
 
@@ -138,8 +175,15 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
-        multiple: false,
     });
+
+    useEffect(() => {
+        window.addEventListener("paste", handlePaste);
+
+        return () => {
+            window.removeEventListener("paste", handlePaste);
+        };
+    }, [handlePaste]);
 
     const attachmentsExists = files.length > 0 || issueAttachments.length > 0;
 
