@@ -85,18 +85,18 @@ const IssueView: FC = () => {
                     <CircularProgress color="inherit" size={36} />
                 </Box>
             ) : (
-                <>
-                    {issue && <IssueHeading issue={issue} />}
+                issue && (
+                    <>
+                        <IssueHeading issue={issue} />
 
-                    {issue && (
                         <IssueViewComp
                             loading={isLoading || updateLoading}
                             onUpdateIssue={handleSubmit}
                             onUpdateCache={handleUpdateCache}
                             issue={issue}
                         />
-                    )}
-                </>
+                    </>
+                )
             )}
         </Container>
     );
