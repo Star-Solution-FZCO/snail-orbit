@@ -1,9 +1,10 @@
 FROM python:3.12-alpine3.20 AS get_requirements
 WORKDIR /app
-COPY Pipfile Pipfile.lock /app/
-RUN python3 -m pip install --upgrade pip pipenv && \
-    pipenv requirements > /app/requirements.txt && \
-    pipenv requirements --dev > /app/requirements-dev.txt
+COPY pyproject.toml poetry.lock /app/
+RUN python3 -m pip install --upgrade pip poetry && \
+    poetry export --without-hashes --format=requirements.txt > /app/requirements.txt && \
+    poetry export --without-hashes --format=requirements.txt --with ocr > /app/requirements-ocr.txt && \
+    poetry export --without-hashes --format=requirements.txt --with dev,ocr > /app/requirements-dev.txt
 
 FROM python:3.12-alpine3.20 AS back-common
 
@@ -46,3 +47,34 @@ ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy
 FROM api AS tasks
 ENTRYPOINT ["python3", "manage.py", "tasks"]
 CMD ["worker"]
+
+
+FROM python:3.12-slim AS ocr
+
+ENV APP_DIR=/app
+ENV APP_NAME=pm
+ENV PYTHONPATH="${APP_DIR}:${APP_DIR}/vendor"
+WORKDIR ${APP_DIR}
+
+COPY --from=get_requirements /app/requirements-ocr.txt ${APP_DIR}/requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
+    rm -rf requirements.txt
+
+RUN mkdir -p "${APP_DIR}/etc" &&\
+    ln -s ${APP_DIR}/etc/settings.toml ${APP_DIR}/settings.toml &&\
+    groupadd -r -g 998 ${APP_NAME} &&\
+    useradd -u 999 -g 998 -d ${APP_DIR} -r -c ${APP_NAME} ${APP_NAME} &&\
+    mkdir -p /data &&\
+    chown ${APP_NAME}:${APP_NAME} /data &&\
+    mkdir -p /var/easyocr &&\
+    chown ${APP_NAME}:${APP_NAME} /var/easyocr
+
+COPY . ${APP_DIR}/
+
+USER ${APP_NAME}
+VOLUME ["${APP_DIR}/etc"]
+VOLUME ["/data"]
+VOLUME ["/var/easyocr"]
+ARG version="__DEV__"
+ENV APP_VERSION=$version
+ENTRYPOINT ["python3", "manage.py", "ocr"]

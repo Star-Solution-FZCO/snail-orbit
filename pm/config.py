@@ -1,18 +1,14 @@
 import datetime
-import os
-from os.path import join as opj
 
 from dynaconf import Dynaconf, Validator
+
+from pm.constants import CONFIG_PATHS
 
 __all__ = ('CONFIG',)
 
 
-ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 CONFIG = Dynaconf(
-    settings_files=[
-        opj(ROOT, 'settings-' + os.environ.get('APP_ENV', 'production') + '.toml'),
-        opj(ROOT, 'settings.toml'),
-    ],
+    settings_files=CONFIG_PATHS,
     environments=True,
     load_dotenv=True,
     validators=[

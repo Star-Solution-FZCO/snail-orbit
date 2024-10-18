@@ -1,0 +1,53 @@
+[project]
+name = "snail-orbit"
+description = "Snail Orbit project manager"
+authors = ["StarSoultion Dev Team <dev@starsolution.team>"]
+readme = "README.md"
+dynamic = ["version"]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+bcrypt = "*"
+fastapi = "*"
+dynaconf = "*"
+uvicorn = "*"
+starlette-context = "*"
+starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
+pydantic = {version = ">=2.0"}
+motor = "*"
+beanie = "*"
+pyparsing = "*"
+aiofiles = "*"
+python-multipart = "*"
+redis = "*"
+aiohttp = "*"
+celery = "*"
+pillow = "*"
+pararamio = {version = ">=2.0.1"}
+lark = "*"
+elasticsearch = {version = "==8.15.1", extras = ["async"]}
+
+[tool.poetry.group.dev.dependencies]
+bandit = "*"
+mypy = "*"
+pylint = "*"
+ruff = "*"
+types-aiofiles = "*"
+types-redis = "*"
+faker = "*"
+
+[tool.poetry.group.ocr]
+optional = true
+
+[tool.poetry.group.ocr.dependencies]
+easyocr = "*"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
