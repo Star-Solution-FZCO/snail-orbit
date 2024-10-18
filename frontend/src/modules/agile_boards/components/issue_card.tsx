@@ -25,7 +25,7 @@ export const IssueCard: FC<IssueCardProps> = ({
     return (
         <IssueCardStyled>
             <Stack direction="row" spacing={1}>
-                <Link to={`"/issues/${id_readable}`}>{id_readable}</Link>
+                <Link to={`/issues/${id_readable}`}>{id_readable}</Link>
                 <span>{subject}</span>
             </Stack>
         </IssueCardStyled>

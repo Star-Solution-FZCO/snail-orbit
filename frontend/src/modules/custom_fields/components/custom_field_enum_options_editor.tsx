@@ -173,20 +173,24 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
                 />
             ))}
 
-            <EnumOptionFormDialog
-                open={formDialogOpen}
-                onClose={handleCloseFormDialog}
-                onSubmit={handleSaveOption}
-                defaultValues={selectedOption}
-                loading={createLoading || updateLoading}
-            />
+            {formDialogOpen && (
+                <EnumOptionFormDialog
+                    open={formDialogOpen}
+                    onClose={handleCloseFormDialog}
+                    onSubmit={handleSaveOption}
+                    defaultValues={selectedOption}
+                    loading={createLoading || updateLoading}
+                />
+            )}
 
-            <DeleteCustomFieldOptionDialog
-                open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
-                onDelete={deleteSelectedOption}
-                loading={deleteLoading}
-            />
+            {deleteDialogOpen && (
+                <DeleteCustomFieldOptionDialog
+                    open={deleteDialogOpen}
+                    onClose={() => setDeleteDialogOpen(false)}
+                    onDelete={deleteSelectedOption}
+                    loading={deleteLoading}
+                />
+            )}
         </Box>
     );
 };

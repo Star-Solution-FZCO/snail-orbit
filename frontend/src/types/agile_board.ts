@@ -28,13 +28,18 @@ export type AgileBoardT = Omit<CreateAgileBoardT, "projects"> & {
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
 
+export type FieldValueT = {
+    value: string | null;
+    color?: string;
+};
+
 export type AgileColumnT = {
-    field_value: string | null;
+    field_value: FieldValueT | null;
     issues: IssueT[];
 };
 
 export type AgileSwimLineT = {
-    field_value: string | null;
+    field_value: FieldValueT | null;
     columns: AgileColumnT[];
 };
 

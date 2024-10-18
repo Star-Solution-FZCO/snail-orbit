@@ -1,7 +1,7 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
 
-export const fieldValueToKey = (value: string | null): string => {
-    if (value == null) return "__NULL__";
+export const fieldValueToKey = (value: string | null | undefined): string => {
+    if (value === null || value === undefined) return "__NULL__";
     return value;
 };
 
