@@ -54,6 +54,7 @@ class Project(Document):
     name: str = Indexed(str)
     slug: str = Indexed(str, unique=True)
     description: str | None = None
+    ai_description: str | None = None
     is_active: bool = True
     custom_fields: list[Link['CustomField']] = Field(default_factory=list)
     workflows: list[Link['Workflow']] = Field(default_factory=list)

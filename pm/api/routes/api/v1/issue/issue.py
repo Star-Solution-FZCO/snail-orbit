@@ -11,7 +11,7 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import Event, EventType
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import transform_query
+from pm.api.search.issue import TransformError, transform_query
 from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
@@ -67,11 +67,17 @@ class IssueListParams(BaseModel):
 async def list_issues(
     query: IssueListParams = Depends(),
 ) -> BaseListOutput[IssueOutput]:
+    user_ctx = current_user()
     flt = {}
     sort = (m.Issue.id,)
     if query.q:
-        flt, sort_ = transform_query(query.q)
-        sort = sort_ or sort
+        try:
+            flt = await transform_query(query.q, current_user_email=user_ctx.user.email)
+        except TransformError as err:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                err.message,
+            )
     q = m.Issue.find(flt).sort(*sort)
     results = []
     async for obj in q.limit(query.limit).skip(query.offset):

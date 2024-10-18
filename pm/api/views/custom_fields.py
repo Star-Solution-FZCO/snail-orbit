@@ -43,6 +43,8 @@ class CustomFieldOutput(BaseModel):
     type: m.CustomFieldTypeT
     is_nullable: bool
     default_value: m.CustomFieldValueT
+    description: str | None = None
+    ai_description: str | None = None
 
     @classmethod
     def from_obj(cls, obj: m.CustomField) -> 'CustomFieldOutput':
@@ -52,6 +54,8 @@ class CustomFieldOutput(BaseModel):
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
+            description=obj.description,
+            ai_description=obj.ai_description,
         )
 
 

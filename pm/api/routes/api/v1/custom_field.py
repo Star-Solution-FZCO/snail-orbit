@@ -99,12 +99,16 @@ class CustomFieldCreateBody(BaseModel):
     type: m.CustomFieldTypeT
     is_nullable: bool
     default_value: Any | None = None
+    description: str | None = None
+    ai_description: str | None = None
 
     def create_obj(self, cls: Type[m.CustomField]) -> m.CustomField:
         obj = cls(
             name=self.name,
             type=self.type,
             is_nullable=self.is_nullable,
+            description=self.description,
+            ai_description=self.ai_description,
         )
         if self.default_value is not None:
             obj.default_value = obj.validate_value(self.default_value)
@@ -115,6 +119,8 @@ class CustomFieldUpdateBody(BaseModel):
     name: str | None = None
     is_nullable: bool | None = None
     default_value: Any | None = None
+    description: str | None = None
+    ai_description: str | None = None
 
     def update_obj(self, obj: m.CustomField) -> None:
         for k, v in self.dict(exclude_unset=True).items():
