@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -23,8 +23,9 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.role import RoleOutput
+from pm.api.views.role import PERMISSIONS_BY_CATEGORY, RoleLinkOutput, RoleOutput
 from pm.api.views.user import UserOutput
+from pm.permissions import Permissions
 
 __all__ = ('router',)
 
@@ -66,6 +67,82 @@ class ProjectPermissionOutput(BaseModel):
             target_type=obj.target_type,
             target=target,
             role=RoleOutput.from_obj(obj.role),
+        )
+
+
+class PermissionSourceOutput(BaseModel):
+    permission_id: UUID
+    role: RoleLinkOutput
+    type: m.PermissionTargetType
+    source_group: GroupOutput | None
+
+
+class PermissionResolvedOutput(BaseModel):
+    key: Permissions
+    label: str
+    granted: bool
+    sources: list[PermissionSourceOutput]
+
+
+class PermissionCategoryResolvedOutput(BaseModel):
+    label: str
+    permissions: list[PermissionResolvedOutput]
+
+
+class ProjectResolvedPermissionOutput(BaseModel):
+    user: UserOutput
+    permissions: list[PermissionCategoryResolvedOutput]
+
+    @classmethod
+    def resolve_from_project(cls, project: m.Project, user: m.User) -> Self:
+        resolved: dict[Permissions, list[PermissionSourceOutput]] = {
+            Permissions(perm): [] for perm in Permissions
+        }
+        user_groups = {gr.id for gr in user.groups}
+        for perm in project.permissions:
+            if (
+                perm.target_type == m.PermissionTargetType.USER
+                and perm.target.id == user.id
+            ):
+                for p in perm.role.permissions:
+                    resolved[p].append(
+                        PermissionSourceOutput(
+                            permission_id=perm.id,
+                            role=RoleLinkOutput.from_obj(perm.role),
+                            type=perm.target_type,
+                            source_group=None,
+                        )
+                    )
+            if (
+                perm.target_type == m.PermissionTargetType.GROUP
+                and perm.target.id in user_groups
+            ):
+                for p in perm.role.permissions:
+                    resolved[p].append(
+                        PermissionSourceOutput(
+                            permission_id=perm.id,
+                            role=RoleLinkOutput.from_obj(perm.role),
+                            type=perm.target_type,
+                            source_group=GroupOutput.from_obj(perm.target),
+                        )
+                    )
+        return cls(
+            user=UserOutput.from_obj(user),
+            permissions=[
+                PermissionCategoryResolvedOutput(
+                    label=category,
+                    permissions=[
+                        PermissionResolvedOutput(
+                            key=key,
+                            label=label,
+                            granted=bool(resolved[key]),
+                            sources=resolved[key],
+                        )
+                    ],
+                )
+                for category, perms in PERMISSIONS_BY_CATEGORY.items()
+                for key, label in perms.items()
+            ],
         )
 
 
@@ -245,6 +322,41 @@ async def get_project_permissions(
             ProjectPermissionOutput.from_obj(perm)
             for perm in project.permissions[query.offset : query.offset + query.limit]
         ],
+    )
+
+
+@router.get('/{project_id}/permissions/resolve')
+async def resolve_permissions(
+    project_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[ProjectResolvedPermissionOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    results = []
+    for project_permission in project.permissions:
+        if project_permission.target_type == m.PermissionTargetType.GROUP:
+            group_users = await m.User.find(
+                m.User.groups.id == project_permission.target.id
+            ).to_list()
+            for user in group_users:
+                results.append(
+                    ProjectResolvedPermissionOutput.resolve_from_project(project, user)
+                )
+        else:
+            user = await m.User.find_one(m.User.id == project_permission.target.id)
+            if not user:
+                continue
+            results.append(
+                ProjectResolvedPermissionOutput.resolve_from_project(project, user)
+            )
+
+    return BaseListOutput.make(
+        count=len(results),
+        limit=query.limit,
+        offset=query.offset,
+        items=results[query.offset : query.offset + query.limit],
     )
 
 

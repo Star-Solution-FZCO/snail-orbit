@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Self
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
@@ -10,6 +9,7 @@ from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.api.views.role import RoleOutput
 from pm.permissions import Permissions
 
 __all__ = ('router',)
@@ -18,74 +18,6 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/role', tags=['role'], dependencies=[Depends(admin_context_dependency)]
 )
-
-PERMISSIONS_BY_CATEGORY = {
-    'Project': {
-        Permissions.PROJECT_READ: 'Read project',
-        Permissions.PROJECT_UPDATE: 'Update project',
-        Permissions.PROJECT_DELETE: 'Delete project',
-    },
-    'Issue': {
-        Permissions.ISSUE_CREATE: 'Create issue',
-        Permissions.ISSUE_READ: 'Read issue',
-        Permissions.ISSUE_UPDATE: 'Update issue',
-        Permissions.ISSUE_DELETE: 'Delete issue',
-    },
-    'Comment': {
-        Permissions.COMMENT_CREATE: 'Create comment',
-        Permissions.COMMENT_READ: 'Read comment',
-        Permissions.COMMENT_UPDATE: 'Update comment',
-        Permissions.COMMENT_DELETE_OWN: 'Delete own comment',
-        Permissions.COMMENT_DELETE: 'Delete comment',
-    },
-    'Attachment': {
-        Permissions.ATTACHMENT_CREATE: 'Create attachment',
-        Permissions.ATTACHMENT_READ: 'Read attachment',
-        Permissions.ATTACHMENT_DELETE_OWN: 'Delete own attachment',
-        Permissions.ATTACHMENT_DELETE: 'Delete attachment',
-    },
-}
-
-
-class PermissionOutput(BaseModel):
-    key: Permissions
-    label: str
-    granted: bool
-
-
-class PermissionCategoryOutput(BaseModel):
-    label: str
-    permissions: list[PermissionOutput]
-
-
-class RoleOutput(BaseModel):
-    id: PydanticObjectId
-    name: str
-    description: str | None
-    permissions: list[PermissionCategoryOutput]
-
-    @classmethod
-    def from_obj(cls, obj: m.Role) -> Self:
-        role_permissions = set(obj.permissions)
-        return cls(
-            id=obj.id,
-            name=obj.name,
-            description=obj.description,
-            permissions=[
-                PermissionCategoryOutput(
-                    label=category,
-                    permissions=[
-                        PermissionOutput(
-                            key=key,
-                            label=label,
-                            granted=key in role_permissions,
-                        )
-                        for key, label in permissions.items()
-                    ],
-                )
-                for category, permissions in PERMISSIONS_BY_CATEGORY.items()
-            ],
-        )
 
 
 class RoleCreate(BaseModel):
