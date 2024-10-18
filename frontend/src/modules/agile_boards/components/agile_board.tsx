@@ -1,6 +1,6 @@
 import { Kanban as KanbanComp } from "components/kanban/kanban";
 import { Items, KanbanProps } from "components/kanban/kanban.types";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useEffect, useState } from "react";
 import { agileBoardApi } from "store";
 import { AgileBoardT, IssueT } from "types";
 import { fieldKeyToValue, fieldValueToKey } from "../utils/fieldValueToKey";
@@ -11,44 +11,47 @@ export type AgileBoardProps = {
 };
 
 export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
-    const {
-        currentData: data,
-        refetch,
-        requestId,
-    } = agileBoardApi.useGetBoardIssuesQuery({
+    const { data, refetch, isFetching } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
     });
 
     const [moveIssue] = agileBoardApi.useMoveIssueMutation();
 
-    const items: Items | null = useMemo(() => {
-        if (!data || !data.payload) return null;
+    const [items, setItems] = useState<Items | null>(null);
+    const [itemsMap, setItemsMap] = useState<Record<string, IssueT>>({});
+
+    // We use useEffect instead of useMemo here to be able to await for fetching to complete
+    useEffect(() => {
+        if (!data || !data.payload) return setItems(null);
+        if (isFetching) return;
         const res: Items = {};
         for (const swimLine of data.payload.items) {
-            const swimLineKey = fieldValueToKey(swimLine.field_value);
+            const swimLineKey = fieldValueToKey(swimLine?.field_value?.value);
             res[swimLineKey] = {};
             for (const column of swimLine.columns) {
-                const columnKey = fieldValueToKey(column.field_value);
+                const columnKey = fieldValueToKey(column?.field_value?.value);
                 res[swimLineKey][columnKey] = column.issues.map((el) => el.id);
             }
         }
 
-        return res;
-    }, [data?.payload, requestId]);
+        setItems(res);
+    }, [data?.payload, isFetching]);
 
-    const itemsMap: Record<string, IssueT> = useMemo(() => {
-        if (!data?.payload) return {};
+    useEffect(() => {
+        if (!data?.payload) return setItemsMap({});
+        if (isFetching) return;
         const allItems = data.payload.items
             .flatMap((el) => el.columns)
             .flatMap((el) => el.issues);
-        return allItems.reduce(
+        const map = allItems.reduce(
             (prev, cur) => {
                 prev[cur.id] = cur;
                 return prev;
             },
             {} as Record<string, IssueT>,
         );
-    }, [data?.payload, requestId]);
+        setItemsMap(map);
+    }, [data?.payload, isFetching]);
 
     useEffect(() => {
         refetch();

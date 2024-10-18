@@ -126,9 +126,10 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                                         >
                                             <ColorPicker
                                                 color={value || ""}
-                                                onChange={(color) =>
-                                                    onChange(color.hex)
-                                                }
+                                                onChange={(color) => {
+                                                    onChange(color.hex);
+                                                    setAnchorEl(null);
+                                                }}
                                             />
                                         </Popover>
                                     </>

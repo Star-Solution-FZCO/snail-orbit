@@ -109,7 +109,6 @@ export const agileBoardApi = createApi({
                 body: params,
             }),
             invalidatesTags: (_result, _error, { board_id }) => [
-                { type: "AgileBoards", id: board_id },
                 { type: "AgileBoardIssues", id: board_id },
             ],
         }),
