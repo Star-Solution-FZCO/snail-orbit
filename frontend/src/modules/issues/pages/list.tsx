@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Link } from "components";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
@@ -11,7 +11,6 @@ import { formatErrorMessages, useListQueryParams } from "utils";
 
 const IssueList: FC = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: 50,
@@ -22,7 +21,21 @@ const IssueList: FC = () => {
 
     const columns: GridColDef<IssueT>[] = useMemo(
         () => [
-            { field: "id_readable", headerName: t("issues.fields.id") },
+            {
+                field: "id_readable",
+                headerName: t("issues.fields.id"),
+                renderCell: (params) => (
+                    <Link
+                        to="/issues/$issueId/$subject"
+                        params={{
+                            issueId: params.value,
+                            subject: slugify(params.row.subject),
+                        }}
+                    >
+                        {params.value}
+                    </Link>
+                ),
+            },
             {
                 field: "project",
                 headerName: t("issues.fields.project"),
@@ -36,18 +49,6 @@ const IssueList: FC = () => {
         ],
         [t],
     );
-
-    const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
-        const issueId = row.id_readable;
-        const subject = slugify(row.subject);
-        navigate({
-            to: "/issues/$issueId/$subject",
-            params: {
-                issueId,
-                subject,
-            },
-        });
-    };
 
     const paginationModel = {
         page: listQueryParams.offset / listQueryParams.limit,
@@ -108,15 +109,9 @@ const IssueList: FC = () => {
             </Stack>
 
             <DataGrid
-                sx={{
-                    "& .MuiDataGrid-row": {
-                        cursor: "pointer",
-                    },
-                }}
                 columns={columns}
                 rows={rows}
                 rowCount={rowCount}
-                onRowClick={handleClickRow}
                 paginationModel={paginationModel}
                 onPaginationModelChange={handlePaginationModelChange}
                 loading={isLoading || isFetching}
