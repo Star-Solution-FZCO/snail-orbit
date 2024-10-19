@@ -1,19 +1,32 @@
+import { Search } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    InputAdornment,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Link } from "components";
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
 import { slugify } from "transliteration";
 import { IssueT } from "types";
 import { formatErrorMessages, useListQueryParams } from "utils";
+import useDebouncedState from "../../../utils/hooks/use-debounced-state";
 
 const IssueList: FC = () => {
     const { t } = useTranslation();
 
+    const [debouncedSearch, setSearch, search] = useDebouncedState<string>("");
+
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: 50,
+        q: debouncedSearch,
     });
 
     const { data, isLoading, isFetching, error } =
@@ -65,6 +78,10 @@ const IssueList: FC = () => {
         });
     };
 
+    useEffect(() => {
+        updateListQueryParams({ q: debouncedSearch });
+    }, [debouncedSearch]);
+
     const rows = data?.payload.items || [];
     const rowCount = data?.payload.count || 0;
 
@@ -107,6 +124,27 @@ const IssueList: FC = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            <TextField
+                fullWidth
+                size="small"
+                placeholder={t("placeholder.search")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                slotProps={{
+                    input: {
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                {isFetching ? (
+                                    <CircularProgress size={14} />
+                                ) : (
+                                    <Search />
+                                )}
+                            </InputAdornment>
+                        ),
+                    },
+                }}
+            />
 
             <DataGrid
                 columns={columns}
