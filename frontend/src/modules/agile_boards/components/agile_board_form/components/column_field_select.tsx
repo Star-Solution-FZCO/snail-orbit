@@ -10,7 +10,7 @@ import {
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { AgileBoardColumnField } from "./agile_board_form.schema";
+import { AgileBoardColumnField } from "../agile_board_form.schema";
 
 interface IColumnFieldSelectProps {
     value?: AgileBoardColumnField;
@@ -70,19 +70,21 @@ const ColumnFieldSelect = forwardRef<HTMLElement, IColumnFieldSelectProps>(
                     <TextField
                         {...params}
                         label={t("agileBoards.form.columnField")}
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {isLoading ? (
-                                        <CircularProgress
-                                            color="inherit"
-                                            size={12}
-                                        />
-                                    ) : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
+                        slotProps={{
+                            input: {
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {isLoading ? (
+                                            <CircularProgress
+                                                color="inherit"
+                                                size={12}
+                                            />
+                                        ) : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            },
                         }}
                         error={!!error}
                         helperText={t(error?.message || "")}

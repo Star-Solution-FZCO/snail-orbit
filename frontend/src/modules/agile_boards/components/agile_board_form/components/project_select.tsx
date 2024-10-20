@@ -11,7 +11,7 @@ import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { noLimitListQueryParams } from "utils";
-import { AgileBoardProject } from "./agile_board_form.schema";
+import { AgileBoardProject } from "../agile_board_form.schema";
 
 export type ProjectSelectProps = {
     value?: AgileBoardProject[];

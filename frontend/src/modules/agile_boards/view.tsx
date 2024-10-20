@@ -1,3 +1,4 @@
+import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
@@ -9,7 +10,7 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
@@ -30,11 +31,16 @@ const AgileBoardView = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
 
-    const { data, error, refetch } =
-        agileBoardApi.useGetAgileBoardQuery(boardId);
+    const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
-    const [updateAgileBoard, { isLoading }] =
-        agileBoardApi.useUpdateAgileBoardMutation();
+    const [updateAgileBoard] = agileBoardApi.useUpdateAgileBoardMutation();
+
+    const agileBoard = useMemo(() => data?.payload, [data]);
+
+    const formValues = useMemo(
+        () => (agileBoard ? agileBoardToFormValues(agileBoard) : undefined),
+        [agileBoard],
+    );
 
     if (error) {
         return (
@@ -47,9 +53,7 @@ const AgileBoardView = () => {
         );
     }
 
-    if (!data) return null;
-
-    const agileBoard = data.payload;
+    if (!agileBoard) return null;
 
     const onSubmit = (formData: AgileBoardFormData) => {
         updateAgileBoard({
@@ -59,7 +63,6 @@ const AgileBoardView = () => {
             .unwrap()
             .then(() => {
                 toast.success(t("agileBoards.update.success"));
-                refetch();
             })
             .catch(toastApiError);
     };
@@ -90,22 +93,34 @@ const AgileBoardView = () => {
                         </Typography>
                     </Breadcrumbs>
 
-                    <IconButton
-                        onClick={() => setSettingsOpen((prev) => !prev)}
-                        color="primary"
-                        size="small"
-                    >
-                        <SettingsIcon />
-                    </IconButton>
+                    <Stack direction="row" gap={1}>
+                        {settingsOpen && (
+                            <IconButton
+                                onClick={() =>
+                                    setDeleteDialogOpen((prev) => !prev)
+                                }
+                                color="error"
+                                size="small"
+                            >
+                                <DeleteIcon />
+                            </IconButton>
+                        )}
+
+                        <IconButton
+                            onClick={() => setSettingsOpen((prev) => !prev)}
+                            color="primary"
+                            size="small"
+                        >
+                            <SettingsIcon />
+                        </IconButton>
+                    </Stack>
                 </Stack>
 
-                {settingsOpen ? (
+                {settingsOpen && formValues ? (
                     <Box mb={2}>
                         <AgileBoardForm
                             onSubmit={onSubmit}
-                            defaultValues={agileBoardToFormValues(agileBoard)}
-                            loading={isLoading}
-                            onDelete={() => setDeleteDialogOpen(true)}
+                            defaultValues={formValues}
                         />
                     </Box>
                 ) : null}

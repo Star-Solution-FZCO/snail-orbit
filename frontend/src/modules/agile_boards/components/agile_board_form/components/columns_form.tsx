@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import { BasicUserT, EnumOptionT, StateOptionT } from "types";
 import { useListQueryParams } from "utils";
-import { AgileBoardFormData } from "./agile_board_form.schema";
+import { AgileBoardFormData } from "../agile_board_form.schema";
 
 const getOptionValue = (
     option: EnumOptionT | StateOptionT | BasicUserT,
@@ -63,7 +63,7 @@ export const ColumnsForm: FC = () => {
             options?.payload?.items.filter(
                 (option) =>
                     !columns.some(
-                        ({ name }) => name === getOptionValue(option),
+                        ({ value }) => value === getOptionValue(option),
                     ),
             ) || []
         );
@@ -96,7 +96,7 @@ export const ColumnsForm: FC = () => {
                                 variant="outlined"
                                 size="small"
                                 fullWidth
-                                value={value.name}
+                                value={value.value}
                                 onChange={(e) =>
                                     onChange({ name: e.target.value })
                                 }
@@ -119,19 +119,21 @@ export const ColumnsForm: FC = () => {
                     <TextField
                         {...params}
                         placeholder={t("agileBoard.columns.selectPlaceholder")}
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {isOptionsLoading ? (
-                                        <CircularProgress
-                                            color="inherit"
-                                            size={12}
-                                        />
-                                    ) : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
+                        slotProps={{
+                            input: {
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {isOptionsLoading ? (
+                                            <CircularProgress
+                                                color="inherit"
+                                                size={12}
+                                            />
+                                        ) : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            },
                         }}
                         size="small"
                     />
@@ -144,7 +146,11 @@ export const ColumnsForm: FC = () => {
                     setSelectInput("");
                     if (option)
                         append({
-                            name: getOptionValue(option),
+                            value: getOptionValue(option),
+                            color:
+                                "color" in option
+                                    ? option.color || undefined
+                                    : undefined,
                         });
                 }}
                 disableCloseOnSelect
