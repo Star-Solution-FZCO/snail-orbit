@@ -73,9 +73,11 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         <div>
             <KanbanComp
                 items={items}
-                renderItemContent={(args) => (
-                    <IssueCard {...args} issue={itemsMap[args.id]} /> // TODO: Move and preserve issue data inside kanban
-                )}
+                renderItemContent={(args) =>
+                    itemsMap[args.id] ? (
+                        <IssueCard {...args} issue={itemsMap[args.id]} />
+                    ) : null // TODO: Move and preserve issue data inside kanban
+                }
                 swimLineProps={{ hideHandle: true, label: "All tasks" }}
                 containerProps={{ hideHandle: true, label: "" }}
                 onCardMoved={handleCardMoved}

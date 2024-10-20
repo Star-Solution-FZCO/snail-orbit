@@ -5,7 +5,7 @@ export const formValuesToCreateForm = (
     form: AgileBoardFormData,
 ): CreateAgileBoardT => ({
     ...form,
-    columns: form.columns.map((el) => el.name),
+    columns: form.columns.map((el) => el.value),
     projects: form.projects.map((project) => project.id),
     column_field: form.column_field.id,
 });

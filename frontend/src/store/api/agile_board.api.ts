@@ -80,9 +80,27 @@ export const agileBoardApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                { type: "AgileBoards", id },
-            ],
+            async onQueryStarted(
+                { id },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        agileBoardApi.util.upsertQueryData(
+                            "getAgileBoard",
+                            id,
+                            data,
+                        ),
+                    );
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoards", id },
+                        ]),
+                    );
+                }
+            },
         }),
         deleteAgileBoard: build.mutation<ApiResponse<AgileBoardT>, string>({
             query: (id) => ({

@@ -1,152 +1,98 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
-import { Box, Button, TextField } from "@mui/material";
-import { Link } from "@tanstack/react-router";
-import { MDEditor } from "components";
-import { FC } from "react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { TabContext } from "@mui/lab";
+import { Box, debounce, Tab, Tabs } from "@mui/material";
+import { TabPanel } from "components";
+import { FC, useEffect, useMemo, useState } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useSchema } from "utils/hooks/use-schema";
 import {
     AgileBoardFormData,
-    agileBoardSchema,
+    getAgileBoardSchema,
 } from "./agile_board_form.schema";
-import { ColumnFieldSelect } from "./column_field_select";
-import { ColumnsForm } from "./columns_form";
-import { ProjectSelect } from "./project_select";
+import { ColumnSwimLines } from "./tabs/column_swim_lines";
+import { MainInfo } from "./tabs/main_info";
 
 interface IAgileBoardFormProps {
     defaultValues?: AgileBoardFormData;
     onSubmit: (formData: AgileBoardFormData) => void;
-    loading?: boolean;
-    onDelete?: () => void;
+}
+
+const enum tabs {
+    main = "main",
+    column_and_swim_lines = "column_and_swim_lines",
 }
 
 const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     defaultValues,
     onSubmit,
-    loading,
-    onDelete,
 }) => {
     const { t } = useTranslation();
+    const agileBoardSchema = useSchema(getAgileBoardSchema);
+    const [currentTab, setTab] = useState<tabs>(tabs.main);
 
     const form = useForm<AgileBoardFormData>({
-        defaultValues: defaultValues,
+        defaultValues,
         resolver: yupResolver(agileBoardSchema),
     });
 
     const {
-        control,
-        register,
         handleSubmit,
-        formState: { errors },
-        watch,
+        formState: { isDirty },
+        control,
+        reset,
     } = form;
+
+    useEffect(() => {
+        reset(defaultValues);
+    }, [defaultValues]);
+
+    const fieldValues = useWatch({ control });
+
+    const debouncedSubmit = useMemo(
+        () => debounce(handleSubmit(onSubmit), 400),
+        [onSubmit, handleSubmit],
+    );
+
+    useEffect(() => {
+        if (isDirty) debouncedSubmit();
+    }, [fieldValues, isDirty]);
 
     return (
         <FormProvider {...form}>
-            <Box
-                component="form"
-                display="flex"
-                flexDirection="column"
-                gap={2}
-                onSubmit={handleSubmit(onSubmit)}
-            >
-                <TextField
-                    {...register("name")}
-                    label={t("agileBoards.form.name")}
-                    error={!!errors.name}
-                    helperText={t(errors.name?.message || "")}
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                />
-
-                {!!defaultValues && (
-                    <Controller
-                        name="description"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <MDEditor
-                                value={value || ""}
-                                onChange={onChange}
-                                placeholder={t("agileBoards.form.description")}
-                            />
-                        )}
-                    />
-                )}
-
-                <Controller
-                    control={control}
-                    name="projects"
-                    render={({ field, fieldState: { error: fieldError } }) => (
-                        <ProjectSelect {...field} error={fieldError} />
-                    )}
-                />
-
-                <Controller
-                    control={control}
-                    name="column_field"
-                    render={({ field, formState: { errors } }) => (
-                        <ColumnFieldSelect
-                            {...field}
-                            error={errors.column_field}
-                            projectId={(watch("projects") || []).map(
-                                (project) => project.id,
-                            )}
-                        />
-                    )}
-                />
-
-                {!!defaultValues && (
-                    <>
-                        <TextField
-                            {...register("query")}
-                            label={t("agileBoards.form.query")}
-                            error={!!errors.query}
-                            helperText={t(errors.query?.message || "")}
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                        />
-
-                        <ColumnsForm />
-                    </>
-                )}
-
-                <Box display="flex" gap={1}>
-                    <LoadingButton
-                        type="submit"
-                        variant="contained"
-                        size="small"
-                        loading={loading}
-                    >
-                        {defaultValues ? t("update") : t("create")}
-                    </LoadingButton>
-
-                    {!defaultValues && (
-                        <Link to="..">
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                            >
-                                {t("cancel")}
-                            </Button>
-                        </Link>
-                    )}
-
-                    {onDelete && (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            onClick={onDelete}
+            <TabContext value={currentTab}>
+                <Box
+                    component="form"
+                    display="flex"
+                    flexDirection="column"
+                    gap={2}
+                    onSubmit={handleSubmit(onSubmit)}
+                >
+                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                        <Tabs
+                            value={currentTab}
+                            onChange={(_, value) => setTab(value)}
                         >
-                            {t("delete")}
-                        </Button>
-                    )}
+                            <Tab
+                                label={t("agileBoardForm.tab.main")}
+                                value={tabs.main}
+                            />
+                            <Tab
+                                label={t(
+                                    "agileBoardForm.tab.columnAndSwimLines",
+                                )}
+                                value={tabs.column_and_swim_lines}
+                            />
+                        </Tabs>
+                    </Box>
+                    <TabPanel value={tabs.main}>
+                        <MainInfo />
+                    </TabPanel>
+                    <TabPanel value={tabs.column_and_swim_lines}>
+                        <ColumnSwimLines />
+                    </TabPanel>
                 </Box>
-            </Box>
+            </TabContext>
         </FormProvider>
     );
 };

@@ -5,5 +5,4 @@ export const agileBoardToFormValues = (
     values: AgileBoardT,
 ): AgileBoardFormData => ({
     ...values,
-    columns: values.columns.map((value) => ({ name: value })),
 });
