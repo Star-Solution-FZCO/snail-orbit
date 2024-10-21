@@ -8,4 +8,6 @@ export const formValuesToCreateForm = (
     columns: form.columns.map((el) => el.value),
     projects: form.projects.map((project) => project.id),
     column_field: form.column_field.id,
+    swimlane_field: form.swimlane_field?.id || null,
+    swimlanes: form.swimlanes.map((el) => el.value),
 });
