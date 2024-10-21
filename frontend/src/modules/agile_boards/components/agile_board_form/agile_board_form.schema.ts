@@ -18,6 +18,13 @@ export type AgileBoardColumnField = yup.InferType<
     typeof agileBoardColumnFieldSchema
 >;
 
+export const agileBoardColumnSchema = yup.object().shape({
+    value: yup.string().required(),
+    color: yup.string(),
+});
+
+export type AgileBoardColumn = yup.InferType<typeof agileBoardColumnSchema>;
+
 export const getAgileBoardSchema = (t: TFunction) =>
     yup.object().shape({
         name: yup.string().required(t("form.validation.required")),
@@ -26,25 +33,16 @@ export const getAgileBoardSchema = (t: TFunction) =>
         column_field: agileBoardColumnFieldSchema.required(
             t("form.validation.required"),
         ),
-        columns: yup
-            .array()
-            .of(
-                yup.object().shape({
-                    value: yup.string().required(),
-                    color: yup.string(),
-                }),
-            )
-            .required()
-            .default([]),
+        columns: yup.array().of(agileBoardColumnSchema).required().default([]),
         projects: yup
             .array()
             .of(agileBoardProjectSchema.required())
             .required(t("form.validation.required"))
             .default([]),
-        swimlane_field: yup.string().nullable().default(null),
+        swimlane_field: agileBoardColumnFieldSchema.nullable().default(null),
         swimlanes: yup
             .array()
-            .of(yup.string().required())
+            .of(agileBoardColumnSchema)
             .required()
             .default([]),
     });
