@@ -8,6 +8,7 @@ import aiofiles
 from aiofiles import os as aio_os
 
 from pm.config import CONFIG
+from pm.utils.file_storage import S3StorageClient
 
 if TYPE_CHECKING:
     from aiofiles.threadpool.binary import AsyncBufferedIOBase, AsyncBufferedReader
@@ -56,11 +57,16 @@ FileIDT = TypeVar('FileIDT', bound=str | UUID)
 
 async def resolve_file(id_: FileIDT) -> FileHeader:
     id_ = str(id_)
-    try:
-        async with aiofiles.open(opj(dir_by_id(id_), id_), 'rb') as file:
-            return await FileHeader.read(file)
-    except Exception as err:
-        raise ValueError(f'failed to find {id_} file') from err
+    s3_client = S3StorageClient(
+        access_key_id=CONFIG.S3_ACCESS_KEY_ID,
+        access_key_secret=CONFIG.S3_ACCESS_KEY_SECRET,
+        endpoint=CONFIG.S3_ENDPOINT,
+        bucket=CONFIG.S3_BUCKET,
+        region=CONFIG.S3_REGION,
+        verify=CONFIG.S3_VERIFY,
+        public_endpoint=CONFIG.S3_PUBLIC_ENDPOINT,
+    )
+    return await s3_client.get_file_info(id_)
 
 
 async def resolve_files(ids: list[FileIDT]) -> dict[FileIDT, FileHeader]:
