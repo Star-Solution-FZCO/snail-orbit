@@ -1,17 +1,13 @@
-from collections.abc import AsyncIterator
-from http import HTTPStatus
-from os.path import join as opj
-from uuid import UUID
+from uuid import UUID, uuid4
 
-import aiofiles
-from aiofiles import os as aio_os
-from fastapi import File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi import File, UploadFile
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
-from pm.api.utils.files import FileHeader, dir_by_id, write_through_tmp_file
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
+from pm.config import CONFIG
+from pm.utils.file_storage import S3StorageClient
 
 __all__ = ('router',)
 
@@ -28,44 +24,33 @@ class FileUploadOutput(BaseModel):
 async def upload_attachment(
     file: UploadFile = File(...),
 ) -> SuccessPayloadOutput[FileUploadOutput]:
-    try:
-        file_hash = await write_through_tmp_file(file, chunk_size=FILE_CHUNK_SIZE)
-    except Exception as err:
-        raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Failed to save file'
-        ) from err
+    file_hash = str(uuid4())
+    s3_client = S3StorageClient(
+        access_key_id=CONFIG.S3_ACCESS_KEY_ID,
+        access_key_secret=CONFIG.S3_ACCESS_KEY_SECRET,
+        endpoint=CONFIG.S3_ENDPOINT,
+        bucket=CONFIG.S3_BUCKET,
+        region=CONFIG.S3_REGION,
+        verify=CONFIG.S3_VERIFY,
+        public_endpoint=CONFIG.S3_PUBLIC_ENDPOINT,
+    )
+    await s3_client.upload_file(
+        file_hash, file.file, content_type=file.content_type, filename=file.filename
+    )
     return SuccessPayloadOutput(payload=FileUploadOutput(id=UUID(file_hash)))
 
 
 @router.get('/{file_id}')
-async def download_attachment(file_id: UUID) -> StreamingResponse:
+async def download_attachment(file_id: UUID) -> RedirectResponse:
     file_id = str(file_id)
-    file_path = opj(dir_by_id(file_id), file_id)
-    if not await aio_os.path.exists(file_path):
-        raise HTTPException(HTTPStatus.NOT_FOUND, 'File not found')
-
-    out_file = await aiofiles.open(file_path, mode='rb')
-    try:
-        file_header = await FileHeader.read(out_file)
-    except Exception as err:
-        await out_file.close()
-        raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Failed to read file header'
-        ) from err
-
-    async def _read_content() -> AsyncIterator[bytes]:
-        try:
-            while chunk := await out_file.read(FILE_CHUNK_SIZE):
-                yield chunk
-        finally:
-            await out_file.close()
-
-    file_name_header = file_header.name.encode('latin-1', 'replace').decode('latin-1')
-    return StreamingResponse(
-        _read_content(),
-        media_type=file_header.content_type,
-        headers={
-            'Content-Disposition': f'attachment; filename="{file_name_header}"',
-            'Content-Length': str(file_header.size),
-        },
+    s3_client = S3StorageClient(
+        access_key_id=CONFIG.S3_ACCESS_KEY_ID,
+        access_key_secret=CONFIG.S3_ACCESS_KEY_SECRET,
+        endpoint=CONFIG.S3_ENDPOINT,
+        bucket=CONFIG.S3_BUCKET,
+        region=CONFIG.S3_REGION,
+        verify=CONFIG.S3_VERIFY,
+        public_endpoint=CONFIG.S3_PUBLIC_ENDPOINT,
     )
+    presigned_url = await s3_client.get_presigned_url(file_id)
+    return RedirectResponse(url=presigned_url)

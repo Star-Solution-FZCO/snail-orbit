@@ -1,10 +1,16 @@
 import datetime
+from enum import StrEnum
 
 from dynaconf import Dynaconf, Validator
 
 from pm.constants import CONFIG_PATHS
 
 __all__ = ('CONFIG',)
+
+
+class FileStorageModeT(StrEnum):
+    LOCAL = 'local'
+    S3 = 's3'
 
 
 CONFIG = Dynaconf(
@@ -64,10 +70,6 @@ CONFIG = Dynaconf(
             'ACCESS_TOKEN_EXPIRES',
             cast=int,
             default=int(datetime.timedelta(minutes=15).total_seconds()),
-        ),
-        Validator(
-            'FILE_STORAGE_DIR',
-            default='/data/file_storage',
         ),
         Validator(
             'REDIS_EVENT_BUS_URL',
@@ -161,6 +163,79 @@ CONFIG = Dynaconf(
             is_type_of=str,
             default='http://localhost:3000',
             description='Base URL for public links',
+        ),
+        Validator(
+            'FILE_STORAGE_MODE',
+            cast=FileStorageModeT,
+            default=FileStorageModeT.LOCAL,
+            description='File storage method (local or s3)',
+        ),
+        Validator(
+            'FILE_STORAGE_DIR',
+            default='/data/file_storage',
+            description='Directory for file storage',
+        ),
+        Validator(
+            'S3_ACCESS_KEY_ID',
+            is_type_of=str,
+            must_exist=True,
+            description='S3 access key ID',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_ACCESS_KEY_SECRET',
+            is_type_of=str,
+            must_exist=True,
+            description='S3 access key secret',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_ENDPOINT',
+            is_type_of=str,
+            must_exist=True,
+            description='S3 endpoint',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_REGION',
+            is_type_of=str,
+            must_exist=True,
+            description='S3 region name',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_BUCKET',
+            is_type_of=str,
+            default='snail-orbit',
+            description='S3 bucket name',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_VERIFY',
+            cast=bool,
+            default=True,
+            description='Verify SSL for S3',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
+        ),
+        Validator(
+            'S3_PUBLIC_ENDPOINT',
+            default=None,
+            description='Public S3 endpoint',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+            ),
         ),
     ],
 )
