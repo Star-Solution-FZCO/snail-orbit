@@ -15,21 +15,22 @@ export type CreateAgileBoardT = {
     swimlanes: string[]; // list of custom field ids
 };
 
-export type AgileBoardT = Omit<CreateAgileBoardT, "projects"> & {
+export type AgileBoardT = {
     id: string;
+    name: string;
     description: string | null;
     query: string | null;
     projects: BasicProjectT[];
-    columns: ColumnT[];
-    column_field: ColumnT | null;
+    columns: AgileFieldValueT[];
+    column_field: ColumnT;
     swimlane_field: ColumnT | null;
-    swimlanes: ColumnT[];
+    swimlanes: AgileFieldValueT[];
 };
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
 
 export type AgileFieldValueT = {
-    value: string | null;
+    value: string;
     color?: string;
 };
 
