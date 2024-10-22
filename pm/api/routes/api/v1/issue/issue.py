@@ -9,16 +9,17 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
-from pm.api.events_bus import Event, EventType
+from pm.api.events_bus import send_event, send_task
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import TransformError, transform_query
-from pm.api.utils.files import resolve_files
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.select import SelectParams
+from pm.services.files import resolve_files
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
+from pm.utils.events_bus import Event, EventType, Task, TaskType
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
@@ -365,7 +366,9 @@ async def create_issue_from_draft(
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await draft.delete()
-    await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
+    await send_event(Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}))
+    for a in obj.attachments:
+        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
         'create',
         obj.subject,
@@ -443,7 +446,9 @@ async def create_issue(
         )
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
-    await Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}).send()
+    await send_event(Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}))
+    for a in obj.attachments:
+        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
         'create',
         obj.subject,
@@ -466,6 +471,7 @@ async def update_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     project = await obj.get_project(fetch_links=True)
     validation_errors = []
+    extra_attachment_ids = set()
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'fields':
             f_val, validation_errors = await validate_custom_fields_values(
@@ -525,7 +531,11 @@ async def update_issue(
             [str(s) for s in obj.subscribers],
             str(obj.project.id),
         )
-        await Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)}).send()
+        await send_event(
+            Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)})
+        )
+        for a_id in extra_attachment_ids:
+            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
@@ -544,7 +554,7 @@ async def delete_issue(
         [str(s) for s in obj.subscribers],
         str(obj.project.id),
     )
-    await Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}).send()
+    await send_event(Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}))
     return ModelIdOutput.from_obj(obj)
 
 

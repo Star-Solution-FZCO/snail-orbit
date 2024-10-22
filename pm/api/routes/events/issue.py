@@ -8,10 +8,10 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
 import pm.models as m
-from pm.api.events_bus import Event, EventType
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueOutput
 from pm.config import CONFIG
+from pm.utils.events_bus import Event, EventType
 
 from ._base import SentEventOutput, SentEventType, with_ping
 

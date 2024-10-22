@@ -1,23 +1,19 @@
-from collections.abc import AsyncIterator
 from http import HTTPStatus
-from os.path import join as opj
-from uuid import UUID
+from uuid import UUID, uuid4
 
-import aiofiles
-from aiofiles import os as aio_os
-from fastapi import File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi import File, UploadFile
+from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
-from pm.api.utils.files import FileHeader, dir_by_id, write_through_tmp_file
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
+from pm.services.files import get_storage_client
+from pm.utils.file_storage import FileHeader
+from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = ('router',)
 
 router = APIRouter(prefix='/files', tags=['files'])
-
-FILE_CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
 class FileUploadOutput(BaseModel):
@@ -28,44 +24,40 @@ class FileUploadOutput(BaseModel):
 async def upload_attachment(
     file: UploadFile = File(...),
 ) -> SuccessPayloadOutput[FileUploadOutput]:
-    try:
-        file_hash = await write_through_tmp_file(file, chunk_size=FILE_CHUNK_SIZE)
-    except Exception as err:
-        raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Failed to save file'
-        ) from err
+    file_hash = str(uuid4())
+    file_header = FileHeader(
+        size=file.size, name=file.filename, content_type=file.content_type
+    )
+    client = get_storage_client()
+    await client.upload_file(file_hash, file, file_header)
     return SuccessPayloadOutput(payload=FileUploadOutput(id=UUID(file_hash)))
 
 
 @router.get('/{file_id}')
+async def get_attachment(file_id: UUID) -> RedirectResponse:
+    file_id = str(file_id)
+    client = get_storage_client()
+    if isinstance(client, S3StorageClient):
+        return RedirectResponse(
+            url=await client.get_presigned_url(file_id),
+            status_code=HTTPStatus.TEMPORARY_REDIRECT,
+        )
+    return RedirectResponse(
+        url=f'{file_id}/stream',
+        status_code=HTTPStatus.TEMPORARY_REDIRECT,
+    )
+
+
+@router.get('/{file_id}/stream')
 async def download_attachment(file_id: UUID) -> StreamingResponse:
     file_id = str(file_id)
-    file_path = opj(dir_by_id(file_id), file_id)
-    if not await aio_os.path.exists(file_path):
-        raise HTTPException(HTTPStatus.NOT_FOUND, 'File not found')
-
-    out_file = await aiofiles.open(file_path, mode='rb')
-    try:
-        file_header = await FileHeader.read(out_file)
-    except Exception as err:
-        await out_file.close()
-        raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Failed to read file header'
-        ) from err
-
-    async def _read_content() -> AsyncIterator[bytes]:
-        try:
-            while chunk := await out_file.read(FILE_CHUNK_SIZE):
-                yield chunk
-        finally:
-            await out_file.close()
-
-    file_name_header = file_header.name.encode('latin-1', 'replace').decode('latin-1')
+    client = get_storage_client()
+    file_header = await client.get_file_info(file_id)
     return StreamingResponse(
-        _read_content(),
+        content=client.get_file_stream(file_id),  # type: ignore
         media_type=file_header.content_type,
         headers={
-            'Content-Disposition': f'attachment; filename="{file_name_header}"',
+            'Content-Disposition': f'attachment; {file_header.encode_filename_disposition()}',
             'Content-Length': str(file_header.size),
         },
     )
