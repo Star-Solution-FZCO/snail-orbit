@@ -3,6 +3,7 @@
   "agileBoards.search.placeholder": "Filter cards on the board",
   "agileBoards.select.label": "Agile Board",
   "back": "Back",
+  "create": "Create",
   "customFields.form.title": "General info",
   "customFields.item.fetch.error": "Failed to fetch custom field",
   "customFields.list.fetch.error": "Failed to fetch custom fields",
@@ -22,7 +23,6 @@
   "customFields.types.user_multi": "User Multi",
   "customFields.users.empty": "No users",
   "customFields.users.title": "Users",
-  "form.validation.required": "Required field",
   "formInputPopover.cancel": "Cancel",
   "formInputPopover.submit": "Submit",
   "groups.form.description": "Description",
@@ -57,5 +57,6 @@
   "roles.list.fetch.error": "Failed to fetch roles",
   "roles.sections.settings": "Settings",
   "subject": "Subject",
-  "text": "Text"
+  "text": "Text",
+  "update": "update"
 }
