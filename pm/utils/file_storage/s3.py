@@ -1,14 +1,20 @@
-from dataclasses import dataclass
+from collections.abc import AsyncGenerator
 from os.path import join as opj
-from typing import TYPE_CHECKING, BinaryIO, Literal
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import quote, unquote
 
 import aioboto3
 
+from ._base import BaseStorageClient, FileHeader, FileIDT
+
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
 
+    from ._typing import AsyncReadable, AsyncWritable
+
 __all__ = ('S3StorageClient',)
+
+STREAM_CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
 def encode_filename_disposition(filename: str) -> str:
@@ -19,14 +25,7 @@ def decode_filename_disposition(disposition: str) -> str:
     return unquote(disposition.split("''", 1)[1])
 
 
-@dataclass
-class FileHeader:
-    size: int
-    name: str
-    content_type: str
-
-
-class S3StorageClient:
+class S3StorageClient(BaseStorageClient):
     __bucket: str
     __endpoint: str
     __public_endpoint: str
@@ -67,42 +66,61 @@ class S3StorageClient:
 
     async def upload_file(
         self,
-        file_id: str,
-        src: BinaryIO,
+        file_id: FileIDT,
+        src: 'AsyncReadable',
+        file_header: FileHeader,
         folder: str = 'storage',
-        filename: str | None = None,
-        content_type: str = 'binary/octet-stream',
     ) -> None:
-        filepath = opj(folder, file_id)
+        filepath = opj(folder, str(file_id))
         async with self._get_client_ctx() as client:
             await client.upload_fileobj(
                 src,
                 self.__bucket,
                 filepath,
                 ExtraArgs={
-                    'ContentDisposition': f'attachment; {encode_filename_disposition(filename or file_id)}',
-                    'ContentType': content_type,
+                    'ContentDisposition': f'attachment; {encode_filename_disposition(file_header.name)}',
+                    'ContentType': file_header.content_type,
                 },
             )
 
     async def download_file(
         self,
-        file_id: str,
-        dst: BinaryIO,
+        file_id: FileIDT,
+        dst: 'AsyncWritable',
         folder: str = 'storage',
     ) -> None:
-        filepath = opj(folder, file_id)
+        filepath = opj(folder, str(file_id))
         async with self._get_client_ctx() as client:
             await client.download_fileobj(self.__bucket, filepath, dst)
 
+    async def get_file_stream(
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
+    ) -> AsyncGenerator[bytes]:
+        filepath = opj(folder, str(file_id))
+        file_header = await self.get_file_info(file_id, folder)
+        async with self._get_client_ctx() as client:
+            for chunk_start in range(0, file_header.size, STREAM_CHUNK_SIZE):
+                chunk_end = min(
+                    chunk_start + STREAM_CHUNK_SIZE - 1, file_header.size - 1
+                )
+                resp = await client.get_object(
+                    Bucket=self.__bucket,
+                    Key=filepath,
+                    Range=f'bytes={chunk_start}-{chunk_end}',
+                )
+                async with resp['Body'] as body:
+                    yield await body.read()
+
     async def get_presigned_url(
         self,
-        file_id: str,
+        file_id: FileIDT,
         method: Literal['get_object', 'put_object'] = 'get_object',
         folder: str = 'storage',
         expiration: int = 3600,
     ) -> str:
-        filepath = opj(folder, file_id)
+        filepath = opj(folder, str(file_id))
         async with self._get_client_ctx(public=True) as client:
             return await client.generate_presigned_url(
                 method,
@@ -113,8 +131,10 @@ class S3StorageClient:
                 ExpiresIn=expiration,
             )
 
-    async def get_file_info(self, file_id: str, folder: str = 'storage') -> FileHeader:
-        filepath = opj(folder, file_id)
+    async def get_file_info(
+        self, file_id: FileIDT, folder: str = 'storage'
+    ) -> FileHeader:
+        filepath = opj(folder, str(file_id))
         async with self._get_client_ctx() as client:
             head = await client.head_object(Bucket=self.__bucket, Key=filepath)
             return FileHeader(
