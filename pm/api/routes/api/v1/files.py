@@ -5,9 +5,9 @@ from fastapi import File, UploadFile
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
-from pm.api.utils.files import get_storage_client
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
+from pm.services.files import get_storage_client
 from pm.utils.file_storage import FileHeader
 from pm.utils.file_storage.s3 import S3StorageClient
 

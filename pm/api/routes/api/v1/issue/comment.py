@@ -9,14 +9,16 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
-from pm.api.utils.files import resolve_files
+from pm.api.events_bus import send_task
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueAttachmentOut
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
 from pm.permissions import Permissions
+from pm.services.files import resolve_files
 from pm.utils.dateutils import utcnow
+from pm.utils.events_bus import Task, TaskType
 
 __all__ = ('router',)
 
@@ -156,6 +158,8 @@ async def create_comment(
     )
     issue.comments.append(comment)
     await issue.save_changes()
+    for a in comment.attachments:
+        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
@@ -183,7 +187,7 @@ async def update_comment(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You can only update your own comments'
         )
-
+    extra_attachment_ids = set()
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'attachments':
             new_attachment_ids = set(v)
@@ -215,6 +219,8 @@ async def update_comment(
     if issue.is_changed:
         comment.updated_at = now
         await issue.save_changes()
+        for a_id in extra_attachment_ids:
+            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
