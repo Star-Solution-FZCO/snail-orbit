@@ -19,7 +19,7 @@ from beanie import (
     after_event,
     before_event,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from starlette_context import context
 from starlette_context.errors import ContextDoesNotExistError
 
@@ -31,6 +31,8 @@ __all__ = (
     'AuditAuthorField',
     'audited_model',
 )
+
+_DB_AUDIT = True
 
 
 class AuditActionT(StrEnum):
@@ -200,6 +202,8 @@ AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)
 
 
 def audited_model(cls: type[AuditedTypeVar]) -> type[AuditedTypeVar]:
+    if not _DB_AUDIT:
+        return cls
     cls._after_insert_callback = _after_insert_callback
     cls._before_delete_callback = _before_delete_callback
     cls._before_update_callback = _before_update_callback

@@ -1,15 +1,11 @@
-import json
-from dataclasses import dataclass
-from enum import IntEnum
-from typing import Self
-
 import redis.asyncio as aioredis
 
 from pm.config import CONFIG
+from pm.utils.events_bus import Event, Task
 
 __all__ = (
-    'EventType',
-    'Event',
+    'send_event',
+    'send_task',
 )
 
 pool = None
@@ -17,35 +13,15 @@ if CONFIG.REDIS_EVENT_BUS_URL:
     pool = aioredis.ConnectionPool.from_url(CONFIG.REDIS_EVENT_BUS_URL)
 
 
-class EventType(IntEnum):
-    ISSUE_UPDATE = 0
-    ISSUE_CREATE = 1
-    ISSUE_DELETE = 2
+async def send_event(event: Event) -> None:
+    if not pool:
+        return
+    async with aioredis.Redis(connection_pool=pool) as client:
+        await event.send(client=client)
 
 
-@dataclass
-class Event:
-    type: EventType
-    data: dict
-
-    def _to_bus_msg(self) -> bytes:
-        return json.dumps(
-            {
-                'type': self.type,
-                'data': self.data,
-            }
-        ).encode()
-
-    async def send(self) -> None:
-        if not pool:
-            return
-        async with aioredis.Redis(connection_pool=pool) as client:
-            await client.publish('events', self._to_bus_msg())
-
-    @classmethod
-    def from_bus_msg(cls, msg: bytes) -> Self:
-        data = json.loads(msg)
-        return cls(
-            type=EventType(data['type']),
-            data=data['data'],
-        )
+async def send_task(task: Task) -> None:
+    if not pool:
+        return
+    async with aioredis.Redis(connection_pool=pool) as client:
+        await task.send(client=client)

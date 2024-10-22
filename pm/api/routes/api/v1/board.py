@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
-from pm.api.events_bus import Event, EventType
+from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelException
 from pm.api.search.issue import TransformError, transform_query
 from pm.api.utils.router import APIRouter
@@ -23,6 +23,7 @@ from pm.api.views.issue import (
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.tasks.actions import task_notify_by_pararam
+from pm.utils.events_bus import Event, EventType
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
@@ -450,9 +451,9 @@ async def move_issue(
             [str(s) for s in issue.subscribers],
             str(issue.project.id),
         )
-        await Event(
-            type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)}
-        ).send()
+        await send_event(
+            Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)})
+        )
     board.move_issue(issue.id, after_issue.id if after_issue else None)
     await board.save_changes()
     return ModelIdOutput.make(issue_id)
