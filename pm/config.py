@@ -5,7 +5,7 @@ from dynaconf import Dynaconf, Validator
 
 from pm.constants import CONFIG_PATHS
 
-__all__ = ('CONFIG',)
+__all__ = ('CONFIG', 'FileStorageModeT')
 
 
 class FileStorageModeT(StrEnum):
