@@ -46,10 +46,12 @@ const dropAnimation: DropAnimation = {
 
 // I hate this :c
 // TODO: Rewrite to use 3 arrays as input instead of the tree
+// TODO: Rewrite after new version of dnd-kit become stable (Jan or later)
 export const Kanban: FC<KanbanProps> = ({
     adjustScale = false,
     cancelDrop,
     columns,
+    headers,
     items: outerItems,
     containerStyle,
     coordinateGetter = multipleContainersKeyboardCoordinates,
@@ -426,12 +428,14 @@ export const Kanban: FC<KanbanProps> = ({
             onDragCancel={onDragCancel}
             modifiers={modifiers}
         >
-            <Header
-                columns={Object.keys(containerToSwimLineMap).map((id) => ({
-                    id,
-                    label: id,
-                }))}
-            />
+            {headers && (
+                <Header
+                    columns={headers.map((id) => ({
+                        id,
+                        label: id,
+                    }))}
+                />
+            )}
             <SortableContext
                 items={swimLines}
                 strategy={

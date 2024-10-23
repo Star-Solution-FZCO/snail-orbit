@@ -55,6 +55,15 @@ export const agileBoardApi = createApi({
                 params,
             }),
         }),
+        listAvailableSwimlanes: build.query<
+            ListResponse<ColumnT>,
+            { project_id: string[] }
+        >({
+            query: (params) => ({
+                url: "board/swimlane_field/select",
+                params,
+            }),
+        }),
         createAgileBoard: build.mutation<
             ApiResponse<AgileBoardT>,
             CreateAgileBoardT

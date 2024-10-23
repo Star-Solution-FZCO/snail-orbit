@@ -3,7 +3,12 @@ import { Items, KanbanProps } from "components/kanban/kanban.types";
 import { FC, useEffect, useState } from "react";
 import { agileBoardApi } from "store";
 import { AgileBoardT, IssueT } from "types";
-import { fieldKeyToValue, fieldValueToKey } from "../utils/fieldValueToKey";
+import {
+    columnKeyToFieldValue,
+    fieldValueToColumnKey,
+    fieldValueToSwimlaneKey,
+    swimlaneKeyToFieldValue,
+} from "../utils/fieldValueToKey";
 import { IssueCard } from "./issue_card";
 
 export type AgileBoardProps = {
@@ -19,18 +24,24 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
 
     const [items, setItems] = useState<Items | null>(null);
     const [itemsMap, setItemsMap] = useState<Record<string, IssueT>>({});
+    const [headers, setHeaders] = useState<string[]>([]);
 
     // We use useEffect instead of useMemo here to be able to await for fetching to complete
     useEffect(() => {
         if (!data || !data.payload) return setItems(null);
         if (isFetching) return;
         const res: Items = {};
-        for (const swimLine of data.payload.items) {
-            const swimLineKey = fieldValueToKey(swimLine?.field_value?.value);
-            res[swimLineKey] = {};
-            for (const column of swimLine.columns) {
-                const columnKey = fieldValueToKey(column?.field_value?.value);
-                res[swimLineKey][columnKey] = column.issues.map((el) => el.id);
+        for (const swimlane of data.payload.items) {
+            const swimlaneKey = fieldValueToSwimlaneKey(
+                swimlane?.field_value?.value,
+            );
+            res[swimlaneKey] = {};
+            for (const column of swimlane.columns) {
+                const columnKey = fieldValueToColumnKey(
+                    swimlane?.field_value?.value,
+                    column?.field_value?.value || "",
+                );
+                res[swimlaneKey][columnKey] = column.issues.map((el) => el.id);
             }
         }
 
@@ -54,6 +65,14 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
     }, [data?.payload, isFetching]);
 
     useEffect(() => {
+        setHeaders(
+            data?.payload.items[0].columns.map(
+                (el) => el.field_value?.value || "",
+            ) || [],
+        );
+    }, [data?.payload]);
+
+    useEffect(() => {
         refetch();
     }, [boardData]);
 
@@ -61,9 +80,9 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         moveIssue({
             issue_id: id.toString(),
             board_id: boardData.id,
-            column: fieldKeyToValue(to.column),
-            swimline: fieldKeyToValue(to.swimLine),
-            after_issue: fieldKeyToValue(to.after),
+            column: columnKeyToFieldValue(to.column),
+            swimlane: swimlaneKeyToFieldValue(to.swimLine),
+            after_issue: to.after?.toString() || null,
         });
     };
 
@@ -72,13 +91,18 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
     return (
         <div>
             <KanbanComp
+                headers={headers}
                 items={items}
-                renderItemContent={(args) =>
-                    itemsMap[args.id] ? (
-                        <IssueCard {...args} issue={itemsMap[args.id]} />
-                    ) : null // TODO: Move and preserve issue data inside kanban
+                renderItemContent={
+                    (args) =>
+                        itemsMap[args.id] ? (
+                            <IssueCard {...args} issue={itemsMap[args.id]} />
+                        ) : null // TODO: Move and preserve issue data inside kanban
                 }
-                swimLineProps={{ hideHandle: true, label: "All tasks" }}
+                swimLineProps={(swimlaneId) => ({
+                    hideHandle: true,
+                    label: swimlaneId.toString(),
+                })}
                 containerProps={{ hideHandle: true, label: "" }}
                 onCardMoved={handleCardMoved}
             />

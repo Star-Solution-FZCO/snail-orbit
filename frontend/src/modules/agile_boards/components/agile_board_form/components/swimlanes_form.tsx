@@ -26,7 +26,7 @@ const getOptionValue = (
     return "value" in option ? option.value : option.name;
 };
 
-export const ColumnsForm: FC = () => {
+export const SwimlanesForm: FC = () => {
     const { t } = useTranslation();
 
     const [selectInput, setSelectInput] = useState<string>("");
@@ -37,41 +37,41 @@ export const ColumnsForm: FC = () => {
     const { control } = useFormContext<AgileBoardFormData>();
 
     const field = useWatch({
-        name: "column_field",
+        name: "swimlane_field",
         control,
     });
 
-    const columns = useWatch({
+    const swimlanes = useWatch({
         control,
-        name: "columns",
+        name: "swimlanes",
     });
 
     const { fields, append, remove } = useFieldArray<AgileBoardFormData>({
         control,
-        name: "columns",
+        name: "swimlanes",
     });
 
     const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
         customFieldsApi.useLazyListSelectOptionsQuery();
 
     const handleSelectOpen = () => {
-        fetchOptions({ id: field.id, ...listQueryParams });
+        if (field) fetchOptions({ id: field.id, ...listQueryParams });
     };
 
     const filteredOptions = useMemo(() => {
         return (
             options?.payload?.items.filter(
                 (option) =>
-                    !columns.some(
+                    !swimlanes.some(
                         ({ value }) => value === getOptionValue(option),
                     ),
             ) || []
         );
-    }, [options, columns]);
+    }, [options, swimlanes]);
 
     return (
         <Stack gap={1}>
-            <FormLabel>{t("agileBoards.form.columns")}</FormLabel>
+            <FormLabel>{t("agileBoards.form.swimlanes")}</FormLabel>
 
             {fields.map((field, index) => (
                 <Stack
@@ -82,13 +82,13 @@ export const ColumnsForm: FC = () => {
                 >
                     <Controller
                         control={control}
-                        name={`columns.${index}` as const}
+                        name={`swimlanes.${index}` as const}
                         render={({
                             field: { value, onChange, ...rest },
                             fieldState: { invalid, error },
                         }) => (
                             <TextField
-                                placeholder={t(`agileBoards.form.column`)}
+                                placeholder={t(`agileBoards.form.swimlane`)}
                                 error={invalid}
                                 helperText={
                                     error?.message ? t(error.message) : null
@@ -118,7 +118,9 @@ export const ColumnsForm: FC = () => {
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        placeholder={t("agileBoard.columns.selectPlaceholder")}
+                        placeholder={t(
+                            "agileBoard.swimlanes.selectPlaceholder",
+                        )}
                         slotProps={{
                             input: {
                                 ...params.InputProps,
