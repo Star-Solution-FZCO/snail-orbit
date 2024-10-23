@@ -18,6 +18,7 @@ export type KanbanProps = {
     adjustScale?: boolean;
     cancelDrop?: CancelDrop;
     columns?: number;
+    headers?: string[];
     containerStyle?: CSSProperties;
     coordinateGetter?: KeyboardCoordinateGetter;
     getItemStyles?(args: {

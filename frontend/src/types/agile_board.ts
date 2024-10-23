@@ -48,6 +48,6 @@ export type MoveIssueT = {
     board_id: string;
     issue_id: string;
     column: string | null;
-    swimline: string | null;
+    swimlane: string | null;
     after_issue: string | null;
 };

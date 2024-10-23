@@ -1,11 +1,13 @@
-import { Stack } from "@mui/material";
+import { Divider, Stack } from "@mui/material";
 import { FC } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { AgileBoardFormData } from "../agile_board_form.schema";
 import { ColumnFieldSelect } from "../components/column_field_select";
 import { ColumnsForm } from "../components/columns_form";
+import { SwimlaneFieldSelect } from "../components/swim_line_field_select";
+import { SwimlanesForm } from "../components/swimlanes_form";
 
-export const ColumnSwimLines: FC = () => {
+export const ColumnSwimlanes: FC = () => {
     const { control } = useFormContext<AgileBoardFormData>();
 
     const projects = useWatch({ control, name: "projects" });
@@ -25,6 +27,22 @@ export const ColumnSwimLines: FC = () => {
             />
 
             <ColumnsForm />
+
+            <Divider />
+
+            <Controller
+                control={control}
+                name="swimlane_field"
+                render={({ field, formState: { errors } }) => (
+                    <SwimlaneFieldSelect
+                        {...field}
+                        error={errors.swimlane_field}
+                        projectId={projects.map((project) => project.id)}
+                    />
+                )}
+            />
+
+            <SwimlanesForm />
         </Stack>
     );
 };

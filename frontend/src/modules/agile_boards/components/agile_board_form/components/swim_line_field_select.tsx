@@ -5,14 +5,14 @@ import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
 import { AgileBoardColumnField } from "../agile_board_form.schema";
 
-interface IColumnFieldSelectProps {
-    value?: AgileBoardColumnField;
-    onChange: (value: AgileBoardColumnField) => void;
+interface ISwimlaneFieldSelectProps {
+    value?: AgileBoardColumnField | null;
+    onChange: (value: AgileBoardColumnField | null) => void;
     error?: Merge<FieldError, any>;
     projectId: string[];
 }
 
-const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
+export const SwimlaneFieldSelect: FC<ISwimlaneFieldSelectProps> = ({
     value,
     onChange,
     error,
@@ -22,8 +22,8 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    const [fetchCustomFields, { data, isLoading }] =
-        agileBoardApi.useLazyListAvailableColumnsQuery();
+    const [fetchSwimlaneFields, { data, isLoading }] =
+        agileBoardApi.useLazyListAvailableSwimlanesQuery();
 
     const options = useMemo(() => {
         if (!data) return [];
@@ -33,7 +33,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
     const handleOpen = useCallback(() => {
         setIsOpen(true);
 
-        fetchCustomFields({ project_id: projectId });
+        fetchSwimlaneFields({ project_id: projectId });
     }, [setIsOpen, projectId]);
 
     const handleClose = useCallback(() => {
@@ -44,7 +44,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
         _: SyntheticEvent,
         value: AgileBoardColumnField | null,
     ) => {
-        if (value && onChange) onChange(value);
+        if (onChange) onChange(value);
     };
 
     return (
@@ -60,7 +60,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
             renderInput={(params) => (
                 <TextField
                     {...params}
-                    label={t("agileBoards.form.columnField")}
+                    label={t("agileBoards.form.swimlaneField")}
                     slotProps={{
                         input: {
                             ...params.InputProps,
@@ -87,5 +87,3 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
         />
     );
 };
-
-export { ColumnFieldSelect };

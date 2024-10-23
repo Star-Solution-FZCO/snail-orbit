@@ -10,7 +10,7 @@ import {
     AgileBoardFormData,
     getAgileBoardSchema,
 } from "./agile_board_form.schema";
-import { ColumnSwimLines } from "./tabs/column_swim_lines";
+import { ColumnSwimlanes } from "./tabs/column_swimlanes";
 import { MainInfo } from "./tabs/main_info";
 
 interface IAgileBoardFormProps {
@@ -89,7 +89,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                         <MainInfo />
                     </TabPanel>
                     <TabPanel value={tabs.column_and_swim_lines}>
-                        <ColumnSwimLines />
+                        <ColumnSwimlanes />
                     </TabPanel>
                 </Box>
             </TabContext>
