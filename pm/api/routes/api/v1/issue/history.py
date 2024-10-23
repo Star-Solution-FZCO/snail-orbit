@@ -51,11 +51,7 @@ async def list_history(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.ISSUE_READ):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to read this issue',
-        )
+    user_ctx.validate_issue_permission(issue, Permissions.ISSUE_READ)
 
     items = sorted(
         [IssueHistoryOutput.from_obj(record) for record in issue.history],

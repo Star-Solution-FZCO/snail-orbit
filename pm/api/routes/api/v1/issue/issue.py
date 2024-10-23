@@ -16,6 +16,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.select import SelectParams
+from pm.permissions import PermAnd, Permissions
 from pm.services.files import resolve_files
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
@@ -79,7 +80,16 @@ async def list_issues(
                 HTTPStatus.BAD_REQUEST,
                 err.message,
             )
-    q = m.Issue.find(flt).sort(*sort)
+    q = (
+        m.Issue.find(flt)
+        .find(
+            bo.In(
+                m.Issue.project.id,
+                user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
+            )
+        )
+        .sort(*sort)
+    )
     results = []
     async for obj in q.limit(query.limit).skip(query.offset):
         results.append(IssueOutput.from_obj(obj))
@@ -323,6 +333,11 @@ async def create_issue_from_draft(
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without a project'
         )
+
+    user_ctx.validate_project_permission(
+        draft.project, PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ)
+    )
+
     if not draft.subject:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without subject'
@@ -386,6 +401,10 @@ async def get_issue(
     obj = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
@@ -400,6 +419,11 @@ async def create_issue(
     )
     if not project:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+
+    user_ctx.validate_project_permission(
+        project, PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ)
+    )
+
     attachments = {}
     if body.attachments:
         try:
@@ -469,6 +493,11 @@ async def update_issue(
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
     project = await obj.get_project(fetch_links=True)
     validation_errors = []
     extra_attachment_ids = set()
@@ -546,6 +575,12 @@ async def delete_issue(
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_DELETE, Permissions.ISSUE_READ)
+    )
+
     await obj.delete()
     task_notify_by_pararam.delay(
         'delete',
@@ -565,7 +600,10 @@ async def subscribe_issue(
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
     user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
     if user_ctx.user.id not in obj.subscribers:
         obj.subscribers.append(user_ctx.user.id)
         await obj.replace()
@@ -579,7 +617,10 @@ async def unsubscribe_issue(
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
     user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
     if user_ctx.user.id in obj.subscribers:
         obj.subscribers.remove(user_ctx.user.id)
         await obj.replace()
