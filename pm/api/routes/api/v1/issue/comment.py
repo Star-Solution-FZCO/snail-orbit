@@ -15,7 +15,7 @@ from pm.api.views.issue import IssueAttachmentOut
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
-from pm.permissions import Permissions
+from pm.permissions import PermAnd, Permissions, PermOr
 from pm.services.files import resolve_files
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
@@ -69,11 +69,7 @@ async def list_comments(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_READ):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to read comments on this issue',
-        )
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
 
     items = sorted(
         [
@@ -100,12 +96,9 @@ async def get_comment(
     issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_READ):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to read comments on this issue',
-        )
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
@@ -124,17 +117,12 @@ async def create_comment(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_CREATE):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You do not have permission to comment on this issue'
-        )
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE)
+    )
+
     attachments = {}
     if body.attachments:
-        if not user_ctx.has_permission(issue.project.id, Permissions.ATTACHMENT_CREATE):
-            raise HTTPException(
-                HTTPStatus.FORBIDDEN,
-                'You do not have permission to attach files to this issue',
-            )
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
@@ -174,15 +162,14 @@ async def update_comment(
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_UPDATE)
+    )
+
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
-    user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_UPDATE):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to update comments on this issue',
-        )
     if comment.author.id != user_ctx.user.id:
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You can only update your own comments'
@@ -233,26 +220,18 @@ async def delete_comment(
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
+
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
-    user_ctx = current_user()
-    can_delete_all = user_ctx.has_permission(
-        issue.project.id, Permissions.COMMENT_DELETE
+
+    if comment.author.id != user_ctx.user.id:
+        user_ctx.validate_issue_permission(issue, Permissions.COMMENT_DELETE)
+    user_ctx.validate_issue_permission(
+        issue, PermOr(Permissions.COMMENT_DELETE_OWN, Permissions.COMMENT_DELETE)
     )
-    can_delete_own = (
-        user_ctx.has_permission(issue.project.id, Permissions.COMMENT_DELETE_OWN)
-        or can_delete_all
-    )
-    if not can_delete_own:
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to delete comments on this issue',
-        )
-    if comment.author.id != user_ctx.user.id and not can_delete_all:
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You can only delete your own comments'
-        )
 
     issue.comments = [c for c in issue.comments if c.id != comment_id]
     await issue.replace()

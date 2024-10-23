@@ -32,12 +32,6 @@ PERMISSIONS_BY_CATEGORY = {
         Permissions.COMMENT_DELETE_OWN: 'Delete own comment',
         Permissions.COMMENT_DELETE: 'Delete comment',
     },
-    'Attachment': {
-        Permissions.ATTACHMENT_CREATE: 'Create attachment',
-        Permissions.ATTACHMENT_READ: 'Read attachment',
-        Permissions.ATTACHMENT_DELETE_OWN: 'Delete own attachment',
-        Permissions.ATTACHMENT_DELETE: 'Delete attachment',
-    },
 }
 
 

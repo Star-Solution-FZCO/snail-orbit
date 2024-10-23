@@ -1,6 +1,14 @@
+from abc import ABC, abstractmethod
+from collections.abc import Collection
 from enum import StrEnum
+from typing import Self
 
-__all__ = ('Permissions',)
+__all__ = (
+    'Permissions',
+    'PermAnd',
+    'PermOr',
+    'PermissionT',
+)
 
 
 class Permissions(StrEnum):
@@ -19,7 +27,35 @@ class Permissions(StrEnum):
     COMMENT_DELETE_OWN = 'comment:delete_own'
     COMMENT_DELETE = 'comment:delete'
 
-    ATTACHMENT_CREATE = 'attachment:create'
-    ATTACHMENT_READ = 'attachment:read'
-    ATTACHMENT_DELETE_OWN = 'attachment:delete_own'
-    ATTACHMENT_DELETE = 'attachment:delete'
+    def check(self, permissions: Collection[Self]) -> bool:
+        return self in permissions
+
+
+class PermBinOp(ABC):
+    _permissions: list[Permissions | Self]
+
+    def __init__(self, *args: Permissions | Self) -> None:
+        self._permissions = list(args)
+
+    @abstractmethod
+    def check(self, permissions: Collection[Permissions]) -> bool:
+        pass
+
+
+class PermAnd(PermBinOp):
+    def check(self, permissions: Collection[Permissions]) -> bool:
+        return all(p.check(permissions) for p in self._permissions)
+
+    def __str__(self):
+        return '(' + ' and '.join(str(p) for p in self._permissions) + ')'
+
+
+class PermOr(PermBinOp):
+    def check(self, permissions: Collection[Permissions]) -> bool:
+        return any(p.check(permissions) for p in self._permissions)
+
+    def __str__(self):
+        return '(' + ' or '.join(str(p) for p in self._permissions) + ')'
+
+
+PermissionT = Permissions | PermBinOp
