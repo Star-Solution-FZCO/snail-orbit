@@ -3,13 +3,14 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Box, Tooltip, Typography } from "@mui/material";
 import { API_URL, apiVersion } from "config";
 import { FC, useEffect, useMemo, useState } from "react";
-import { useAppSelector } from "store";
+import { openFilePreview, useAppDispatch, useAppSelector } from "store";
 import { AttachmentT } from "types";
 
 interface IBaseAttachmentCardProps {
     filename: string;
     isImage: boolean;
     url: string;
+    onClick: () => void;
     onDownload?: () => void;
     onDelete: () => void;
     canDelete?: boolean;
@@ -19,6 +20,7 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
     filename,
     isImage,
     url,
+    onClick,
     onDownload,
     onDelete,
     canDelete = true,
@@ -84,6 +86,7 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
                         transform: "translateY(0px)",
                     },
                 }}
+                onClick={onClick}
             >
                 {isImage ? (
                     <Box
@@ -180,7 +183,24 @@ interface IBrowserFileCardProps {
 }
 
 const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
+    const dispatch = useAppDispatch();
     const [fileUrl, setFileUrl] = useState<string>("");
+
+    const isImage = file.type.startsWith("image/");
+
+    const handleClick = () => {
+        if (isImage) {
+            dispatch(
+                openFilePreview({
+                    src: fileUrl,
+                    name: file.name,
+                    size: file.size,
+                }),
+            );
+        } else {
+            window.open(fileUrl, "_blank");
+        }
+    };
 
     useEffect(() => {
         setFileUrl(URL.createObjectURL(file));
@@ -195,6 +215,7 @@ const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
             filename={file.name}
             isImage={file.type.startsWith("image/")}
             url={fileUrl}
+            onClick={handleClick}
             onDelete={onDelete}
         />
     );
@@ -206,9 +227,25 @@ interface IAttachmentCardProps {
 }
 
 const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
+    const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.profile.user);
 
     const fileUrl = API_URL + apiVersion + "/files/" + attachment.id;
+    const isImage = attachment.content_type.startsWith("image/");
+
+    const handleClick = () => {
+        if (isImage) {
+            dispatch(
+                openFilePreview({
+                    src: fileUrl,
+                    name: attachment.name,
+                    size: attachment.size,
+                }),
+            );
+        } else {
+            window.open(fileUrl, "_blank");
+        }
+    };
 
     const handleDownload = () => {
         window.location.assign(fileUrl);
@@ -217,8 +254,9 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
     return (
         <BaseAttachmentCard
             filename={attachment.name}
-            isImage={attachment.content_type.startsWith("image/")}
+            isImage={isImage}
             url={fileUrl}
+            onClick={handleClick}
             onDownload={handleDownload}
             onDelete={onDelete}
             canDelete={user?.id === attachment.author.id}
