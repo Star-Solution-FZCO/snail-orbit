@@ -10,7 +10,7 @@ from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.permissions import Permissions
+from pm.permissions import Permissions, PermissionT
 
 __all__ = (
     'current_user_context_dependency',
@@ -28,9 +28,34 @@ class UserContext:
     permissions: dict[PydanticObjectId, set[Permissions]]
 
     def has_permission(
-        self, project_id: PydanticObjectId, permission: Permissions
+        self, project_id: PydanticObjectId, permission: PermissionT
     ) -> bool:
-        return permission in self.permissions.get(project_id, set())
+        return permission.check(self.permissions.get(project_id, set()))
+
+    def validate_issue_permission(
+        self, issue: m.Issue, permission: PermissionT
+    ) -> None:
+        if not self.has_permission(issue.project.id, permission):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                f'Permission {permission} required for this operation',
+            )
+
+    def validate_project_permission(
+        self, project: m.Project | m.ProjectLinkField, permission: PermissionT
+    ) -> None:
+        if not self.has_permission(project.id, permission):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                f'Permission {permission} required for this operation',
+            )
+
+    def get_projects_with_permission(
+        self, permission: PermissionT
+    ) -> set[PydanticObjectId]:
+        return {
+            pr for pr in self.permissions.keys() if self.has_permission(pr, permission)
+        }
 
 
 def get_bearer_token(
