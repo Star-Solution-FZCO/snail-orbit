@@ -1,5 +1,6 @@
 export * from "./error_fallback";
 export * from "./error_handler";
+export * from "./file_preview";
 export * from "./layout";
 export * from "./link";
 export * from "./md_editor";

@@ -53,8 +53,7 @@ const ActionButtons: FC<IActionButtonsProps> = ({
     const { t } = useTranslation();
 
     const handleClickCopyLink = () => {
-        const pageUrl = `${window.location.protocol + "//" + window.location.hostname + window.location.pathname + window.location.port}`;
-        const commentUrl = `${pageUrl}#comment-${comment.id}`;
+        const commentUrl = `${window.location.href}#comment-${comment.id}`;
 
         navigator.clipboard
             .writeText(commentUrl)
