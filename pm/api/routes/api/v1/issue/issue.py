@@ -37,6 +37,7 @@ class IssueCreate(BaseModel):
 
 
 class IssueUpdate(BaseModel):
+    project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
     fields: dict[str, Any] | None = None
@@ -231,7 +232,6 @@ async def update_draft(
             HTTPStatus.FORBIDDEN, 'You do not have permission to update this draft'
         )
     if 'project_id' in body.model_fields_set:
-        obj.fields = []
         project: m.Project | None = None
         if body.project_id:
             if not (
@@ -241,6 +241,7 @@ async def update_draft(
             ):
                 raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
         obj.project = m.ProjectLinkField.from_obj(project) if project else None
+        obj.fields = filter_valid_project_fields(obj.fields, project)
     else:
         project = await obj.get_project(fetch_links=True)
     if not project and body.fields:
@@ -498,7 +499,20 @@ async def update_issue(
         obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
     )
 
-    project = await obj.get_project(fetch_links=True)
+    if 'project_id' in body.model_fields_set:
+        project = await m.Project.find_one(
+            m.Project.id == body.project_id, fetch_links=True
+        )
+        if not project:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+        user_ctx.validate_project_permission(
+            project, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_CREATE)
+        )
+        obj.project = m.ProjectLinkField.from_obj(project)
+        obj.fields = filter_valid_project_fields(obj.fields, project)
+    else:
+        project = await obj.get_project(fetch_links=True)
+
     validation_errors = []
     extra_attachment_ids = set()
     for k, v in body.dict(exclude_unset=True).items():
@@ -667,3 +681,12 @@ async def validate_custom_fields_values(
             )
         )
     return results, errors
+
+
+def filter_valid_project_fields(
+    fields: list[m.CustomFieldValue], project: m.Project | None
+) -> list[m.CustomFieldValue]:
+    if not project:
+        return []
+    project_field_ids = {f.id for f in project.custom_fields}
+    return [f for f in fields if f.id in project_field_ids]
