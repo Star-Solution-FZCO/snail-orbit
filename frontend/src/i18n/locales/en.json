@@ -233,5 +233,7 @@
   "submit": "Submit",
   "text": "Text",
   "update": "update",
-  "updatedBy": "Updated by"
+  "updatedBy": "Updated by",
+  "download": "Download",
+  "copyLink": "Copy link"
 }
