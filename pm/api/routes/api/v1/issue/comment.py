@@ -15,7 +15,7 @@ from pm.api.views.issue import IssueAttachmentOut
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
-from pm.permissions import Permissions
+from pm.permissions import PermAnd, Permissions, PermOr
 from pm.services.files import resolve_files
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
@@ -36,16 +36,20 @@ class IssueCommentOutput(BaseModel):
     created_at: datetime
     updated_at: datetime
     attachments: list[IssueAttachmentOut]
+    is_hidden: bool
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
         return cls(
             id=obj.id,
-            text=obj.text,
+            text=obj.text if not obj.is_hidden else None,
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
-            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments],
+            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments]
+            if not obj.is_hidden
+            else [],
+            is_hidden=obj.is_hidden,
         )
 
 
@@ -69,11 +73,7 @@ async def list_comments(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_READ):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to read comments on this issue',
-        )
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
 
     items = sorted(
         [
@@ -100,12 +100,9 @@ async def get_comment(
     issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_READ):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to read comments on this issue',
-        )
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
@@ -124,17 +121,12 @@ async def create_comment(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_CREATE):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You do not have permission to comment on this issue'
-        )
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE)
+    )
+
     attachments = {}
     if body.attachments:
-        if not user_ctx.has_permission(issue.project.id, Permissions.ATTACHMENT_CREATE):
-            raise HTTPException(
-                HTTPStatus.FORBIDDEN,
-                'You do not have permission to attach files to this issue',
-            )
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
@@ -174,19 +166,20 @@ async def update_comment(
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_UPDATE)
+    )
+
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
-    user_ctx = current_user()
-    if not user_ctx.has_permission(issue.project.id, Permissions.COMMENT_UPDATE):
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to update comments on this issue',
-        )
     if comment.author.id != user_ctx.user.id:
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You can only update your own comments'
         )
+    if comment.is_hidden:
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot update hidden comments')
     extra_attachment_ids = set()
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'attachments':
@@ -233,27 +226,69 @@ async def delete_comment(
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
+
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
-    user_ctx = current_user()
-    can_delete_all = user_ctx.has_permission(
-        issue.project.id, Permissions.COMMENT_DELETE
+
+    if comment.author.id != user_ctx.user.id:
+        user_ctx.validate_issue_permission(issue, Permissions.COMMENT_DELETE)
+    user_ctx.validate_issue_permission(
+        issue, PermOr(Permissions.COMMENT_DELETE_OWN, Permissions.COMMENT_DELETE)
     )
-    can_delete_own = (
-        user_ctx.has_permission(issue.project.id, Permissions.COMMENT_DELETE_OWN)
-        or can_delete_all
-    )
-    if not can_delete_own:
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'You do not have permission to delete comments on this issue',
-        )
-    if comment.author.id != user_ctx.user.id and not can_delete_all:
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You can only delete your own comments'
-        )
 
     issue.comments = [c for c in issue.comments if c.id != comment_id]
     await issue.replace()
     return UUIDOutput.make(comment_id)
+
+
+@router.put('/{comment_id}/hide')
+async def hide_comment(
+    issue_id_or_alias: PydanticObjectId | str,
+    comment_id: UUID,
+) -> SuccessPayloadOutput[IssueCommentOutput]:
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not issue:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_HIDE)
+    )
+
+    comment = next((c for c in issue.comments if c.id == comment_id), None)
+    if not comment:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
+    if comment.is_hidden:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Comment is already hidden')
+
+    comment.is_hidden = True
+    await issue.save_changes()
+    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+
+
+@router.put('/{comment_id}/restore')
+async def restore_comment(
+    issue_id_or_alias: PydanticObjectId | str,
+    comment_id: UUID,
+) -> SuccessPayloadOutput[IssueCommentOutput]:
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not issue:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_RESTORE)
+    )
+
+    comment = next((c for c in issue.comments if c.id == comment_id), None)
+    if not comment:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
+    if not comment.is_hidden:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Comment is not hidden')
+
+    comment.is_hidden = False
+    await issue.save_changes()
+    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))

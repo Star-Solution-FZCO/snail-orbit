@@ -22,6 +22,7 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
+from pm.permissions import PermAnd, Permissions
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.events_bus import Event, EventType
 from pm.workflows import WorkflowException
@@ -297,6 +298,7 @@ async def delete_board(
 async def get_board_issues(
     board_id: PydanticObjectId,
 ) -> BaseListOutput[SwimlaneOutput]:
+    user_ctx = current_user()
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
@@ -318,7 +320,19 @@ async def get_board_issues(
     else:
         non_swimlane = {col: [] for col in board.columns}
         swimlanes = {}
-    for issue in await m.Issue.find(flt).sort(m.Issue.id).to_list():
+
+    q = (
+        m.Issue.find(flt)
+        .find(
+            bo.In(
+                m.Issue.project.id,
+                user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
+            )
+        )
+        .sort(m.Issue.id)
+    )
+
+    for issue in await q.to_list():
         if board.swimlane_field and not (
             sl_field := issue.get_field_by_id(board.swimlane_field.id)
         ):
@@ -400,6 +414,11 @@ async def move_issue(
     issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+    )
+
     data = body.dict(exclude_unset=True)
     if 'column' in data:
         column_field = await board.column_field.resolve()

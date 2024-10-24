@@ -1,44 +1,15 @@
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.permissions import Permissions
+from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
 __all__ = (
     'RoleOutput',
     'RoleLinkOutput',
-    'PERMISSIONS_BY_CATEGORY',
 )
-
-
-PERMISSIONS_BY_CATEGORY = {
-    'Project': {
-        Permissions.PROJECT_READ: 'Read project',
-        Permissions.PROJECT_UPDATE: 'Update project',
-        Permissions.PROJECT_DELETE: 'Delete project',
-    },
-    'Issue': {
-        Permissions.ISSUE_CREATE: 'Create issue',
-        Permissions.ISSUE_READ: 'Read issue',
-        Permissions.ISSUE_UPDATE: 'Update issue',
-        Permissions.ISSUE_DELETE: 'Delete issue',
-    },
-    'Comment': {
-        Permissions.COMMENT_CREATE: 'Create comment',
-        Permissions.COMMENT_READ: 'Read comment',
-        Permissions.COMMENT_UPDATE: 'Update comment',
-        Permissions.COMMENT_DELETE_OWN: 'Delete own comment',
-        Permissions.COMMENT_DELETE: 'Delete comment',
-    },
-    'Attachment': {
-        Permissions.ATTACHMENT_CREATE: 'Create attachment',
-        Permissions.ATTACHMENT_READ: 'Read attachment',
-        Permissions.ATTACHMENT_DELETE_OWN: 'Delete own attachment',
-        Permissions.ATTACHMENT_DELETE: 'Delete attachment',
-    },
-}
 
 
 class PermissionOutput(BaseModel):

@@ -39,6 +39,7 @@ class IssueComment(BaseModel):
     created_at: datetime
     updated_at: datetime
     attachments: list[IssueAttachment] = Field(default_factory=list)
+    is_hidden: bool = False
 
 
 class IssueFieldChange(BaseModel):
@@ -52,6 +53,7 @@ class IssueHistoryRecord(BaseModel):
     author: UserLinkField
     time: datetime
     changes: list[IssueFieldChange]
+    is_hidden: bool = False
 
 
 @audited_model
