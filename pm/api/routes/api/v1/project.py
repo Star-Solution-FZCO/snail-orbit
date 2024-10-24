@@ -23,9 +23,9 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.role import PERMISSIONS_BY_CATEGORY, RoleLinkOutput, RoleOutput
+from pm.api.views.role import RoleLinkOutput, RoleOutput
 from pm.api.views.user import UserOutput
-from pm.permissions import Permissions
+from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
 __all__ = ('router',)
 

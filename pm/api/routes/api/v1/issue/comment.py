@@ -36,16 +36,20 @@ class IssueCommentOutput(BaseModel):
     created_at: datetime
     updated_at: datetime
     attachments: list[IssueAttachmentOut]
+    is_hidden: bool
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
         return cls(
             id=obj.id,
-            text=obj.text,
+            text=obj.text if not obj.is_hidden else None,
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
-            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments],
+            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments]
+            if not obj.is_hidden
+            else [],
+            is_hidden=obj.is_hidden,
         )
 
 
@@ -174,6 +178,8 @@ async def update_comment(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'You can only update your own comments'
         )
+    if comment.is_hidden:
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot update hidden comments')
     extra_attachment_ids = set()
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'attachments':
@@ -236,3 +242,53 @@ async def delete_comment(
     issue.comments = [c for c in issue.comments if c.id != comment_id]
     await issue.replace()
     return UUIDOutput.make(comment_id)
+
+
+@router.put('/{comment_id}/hide')
+async def hide_comment(
+    issue_id_or_alias: PydanticObjectId | str,
+    comment_id: UUID,
+) -> SuccessPayloadOutput[IssueCommentOutput]:
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not issue:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_HIDE)
+    )
+
+    comment = next((c for c in issue.comments if c.id == comment_id), None)
+    if not comment:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
+    if comment.is_hidden:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Comment is already hidden')
+
+    comment.is_hidden = True
+    await issue.save_changes()
+    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+
+
+@router.put('/{comment_id}/restore')
+async def restore_comment(
+    issue_id_or_alias: PydanticObjectId | str,
+    comment_id: UUID,
+) -> SuccessPayloadOutput[IssueCommentOutput]:
+    issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not issue:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_RESTORE)
+    )
+
+    comment = next((c for c in issue.comments if c.id == comment_id), None)
+    if not comment:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
+    if not comment.is_hidden:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Comment is not hidden')
+
+    comment.is_hidden = False
+    await issue.save_changes()
+    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
