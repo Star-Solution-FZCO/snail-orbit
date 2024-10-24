@@ -16,7 +16,7 @@ import { MarkdownPreview, MDEditor, UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import { FC, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
@@ -148,12 +148,7 @@ const CommentCard: FC<ICommentCardProps> = ({
             .catch(toastApiError);
     };
 
-    const handleChangeFileInput = async (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        if (!event.target.files) return;
-
-        const file = event.target.files[0];
+    const uploadFile = async (file: File) => {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -166,21 +161,14 @@ const CommentCard: FC<ICommentCardProps> = ({
             activeMutations.current[file.name] = mutation;
             const response = await mutation.unwrap();
 
-            await updateComment({
-                id: issueId,
-                commentId: comment.id,
-                attachments: [
-                    ...comment.attachments.map((a) => a.id),
-                    response.payload.id,
-                ],
-            });
-
             updateToast(
                 file.name,
                 t("issues.form.attachments.upload.success"),
                 "success",
                 3000,
             );
+
+            return response.payload.id;
         } catch (error: any) {
             if (error.name !== "AbortError") {
                 toastApiError(error);
@@ -191,8 +179,39 @@ const CommentCard: FC<ICommentCardProps> = ({
                     3000,
                 );
             }
+            throw error;
         }
     };
+
+    const handleChangeFileInput = useCallback(
+        async (event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (!files) return;
+
+            const newAttachmentIds = await Promise.all(
+                Array.from(files).map(uploadFile),
+            );
+
+            await updateComment({
+                id: issueId,
+                commentId: comment.id,
+                attachments: [
+                    ...comment.attachments.map((a) => a.id),
+                    ...newAttachmentIds,
+                ],
+            });
+        },
+        [
+            uploadAttachment,
+            showToast,
+            updateToast,
+            activeMutations,
+            updateComment,
+            issueId,
+            comment.id,
+            comment.attachments,
+        ],
+    );
 
     const handleClickDeleteAttachment = (id: string, filename: string) => {
         setSelectedAttachment({ id, filename, type: "server" });
@@ -363,7 +382,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                             <HiddenInput
                                 type="file"
                                 onChange={handleChangeFileInput}
-                                multiple={false}
+                                multiple
                             />
                         </Button>
 
