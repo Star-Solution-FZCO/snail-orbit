@@ -1,5 +1,6 @@
 import { Box, Stack } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { FilePreview } from "components";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
@@ -73,6 +74,8 @@ export const IssueView: FC<IssueFormProps> = ({
                     onUpdateCache={onUpdateCache}
                 />
             </FieldContainer>
+
+            <FilePreview />
         </Box>
     );
 };
