@@ -12,7 +12,7 @@ import {
     TextField,
 } from "@mui/material";
 import { MDEditor, UserAvatar } from "components";
-import { FC, useState } from "react";
+import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { toastApiError } from "utils";
@@ -100,13 +100,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             .catch(toastApiError);
     };
 
-    const handleChangeFileInput = async (
-        event: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const files = event.target.files;
-        if (!files) return;
-
-        const file = files[0];
+    const uploadFile = async (file: File) => {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -119,15 +113,14 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             activeMutations.current[file.name] = mutation;
             const response = await mutation.unwrap();
 
-            setFiles((prev) => [...prev, file]);
-            setAttachments((prev) => [...prev, response.payload.id]);
-
             updateToast(
                 file.name,
                 t("issues.form.attachments.upload.success"),
                 "success",
                 3000,
             );
+
+            return response.payload.id;
         } catch (error: any) {
             if (error.name !== "AbortError") {
                 toastApiError(error);
@@ -138,8 +131,31 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                     3000,
                 );
             }
+            throw error;
         }
     };
+
+    const handleChangeFileInput = useCallback(
+        async (event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (!files) return;
+
+            const newAttachmentIds = await Promise.all(
+                Array.from(files).map(uploadFile),
+            );
+
+            setFiles((prev) => [...prev, ...files]);
+            setAttachments((prev) => [...prev, ...newAttachmentIds]);
+        },
+        [
+            uploadAttachment,
+            showToast,
+            updateToast,
+            activeMutations,
+            setFiles,
+            setAttachments,
+        ],
+    );
 
     const handleClickDeleteFileAttachment = (
         index: number,
@@ -216,7 +232,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                 <HiddenInput
                                     type="file"
                                     onChange={handleChangeFileInput}
-                                    multiple={false}
+                                    multiple
                                 />
                             </Button>
 
