@@ -1,5 +1,8 @@
+import asyncio
+
 import pm.models as m
 from pm.config import CONFIG
+from pm.services.avatars import generate_default_avatar
 from pm.utils.wb import WbAPIClient
 
 __all__ = ('wb_user_sync',)
@@ -35,7 +38,16 @@ async def wb_user_sync() -> None:
         ):
             continue
         users[user.email].origin = m.UserOriginType.WB
+        users[user.email].avatar_type = m.UserAvatarType.EXTERNAL
         for field in FIELDS_MAP:
             setattr(users[user.email], FIELDS_MAP[field], getattr(user, field))
         if users[user.email].is_changed:
             await users[user.email].save_changes()
+            await asyncio.gather(
+                m.Project.update_user_embedded_links(users[user.email]),
+                m.Issue.update_user_embedded_links(users[user.email]),
+                m.IssueDraft.update_user_embedded_links(users[user.email]),
+                m.UserMultiCustomField.update_user_embedded_links(users[user.email]),
+                m.UserCustomField.update_user_embedded_links(users[user.email]),
+            )
+            await generate_default_avatar(users[user.email])

@@ -174,6 +174,9 @@ CONFIG = Dynaconf(
             'FILE_STORAGE_DIR',
             default='/data/file_storage',
             description='Directory for file storage',
+            when=Validator(
+                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.LOCAL
+            ),
         ),
         Validator(
             'S3_ACCESS_KEY_ID',
