@@ -5,15 +5,17 @@ from typing import Self
 import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
+from pydantic import computed_field
 
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
+from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
+from pm.services.avatars import generate_default_avatar
 
 __all__ = ('router',)
 
@@ -23,9 +25,9 @@ router = APIRouter(
 
 
 class UserFullOutput(UserOutput):
-    is_active: bool
     is_admin: bool
     origin: m.UserOriginType
+    avatar_type: m.UserAvatarType
 
     @classmethod
     def from_obj(cls, obj: m.User) -> Self:
@@ -34,8 +36,10 @@ class UserFullOutput(UserOutput):
             email=obj.email,
             name=obj.name,
             is_active=obj.is_active,
+            _use_external_avatar=obj.use_external_avatar,
             is_admin=obj.is_admin,
             origin=obj.origin,
+            avatar_type=obj.avatar_type,
         )
 
 
@@ -106,6 +110,7 @@ async def create_user(
 ) -> SuccessPayloadOutput[UserFullOutput]:
     obj = body.create_obj(m.User)
     await obj.insert()
+    await generate_default_avatar(obj)
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
@@ -117,13 +122,19 @@ async def update_user(
     obj: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+    if obj.origin != m.UserOriginType.LOCAL:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'Cannot update user with external origin'
+        )
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
         await asyncio.gather(
             m.Project.update_user_embedded_links(obj),
             m.Issue.update_user_embedded_links(obj),
+            m.IssueDraft.update_user_embedded_links(obj),
             m.UserMultiCustomField.update_user_embedded_links(obj),
             m.UserCustomField.update_user_embedded_links(obj),
         )
+        await generate_default_avatar(obj)
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))

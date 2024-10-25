@@ -18,6 +18,7 @@ async def init_db() -> None:
 
 async def create_user(args: argparse.Namespace) -> None:
     from pm.models import User
+    from pm.services.avatars import generate_default_avatar
 
     await init_db()
     password = getpass('Enter password: ')
@@ -28,6 +29,7 @@ async def create_user(args: argparse.Namespace) -> None:
     user = User(email=args.email, name=name, is_admin=args.admin)
     user.password_hash = User.hash_password(password)
     await user.insert()
+    await generate_default_avatar(user)
     print(f'User {args.email} created successfully, id={user.id}')
 
 

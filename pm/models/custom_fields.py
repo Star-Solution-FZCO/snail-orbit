@@ -334,9 +334,14 @@ class UserCustomFieldMixin:
         ).update(
             {'$set': {'options.$[o].value.users.$[u]': UserLinkField.from_obj(user)}},
             array_filters=[
-                {'o.value.users.id': user.id, 'o.type': UserOptionType.USER},
+                {'o.value.users.id': user.id, 'o.type': UserOptionType.GROUP},
                 {'u.id': user.id},
             ],
+        )
+        await cls.find(
+            {'default_value.id': user.id},
+        ).update(
+            {'$set': {'default_value': UserLinkField.from_obj(user)}},
         )
 
     @classmethod
