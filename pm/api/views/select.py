@@ -36,12 +36,11 @@ class SelectParams(BaseModel):
 def _select(
     objs: Sequence[T],
     query: SelectParams,
-    filter_fn: Callable[[Sequence[T], str], list[T]],
+    filter_fn: Callable[[T, str | None], bool],
     sort_key_fn: Callable[[T], Any],
 ) -> SelectResult[T]:
     objs = sorted(objs, key=sort_key_fn)
-    if query.search:
-        objs = filter_fn(objs, query.search)
+    objs = [o for o in objs if filter_fn(o, query.search)]
     cnt = len(objs)
     if query.limit != 0:
         objs = objs[query.offset : query.offset + query.limit]
@@ -53,15 +52,13 @@ def _select(
     )
 
 
-def _user_link_filter(
-    objs: Sequence[m.UserLinkField], search: str
-) -> list[m.UserLinkField]:
-    return [
-        o
-        for o in objs
-        if re.search(re.escape(search), o.name, re.IGNORECASE)
-        or re.search(re.escape(search), o.email, re.IGNORECASE)
-    ]
+def _user_link_filter(obj: m.UserLinkField, search: str | None) -> bool:
+    if not search:
+        return True
+    return bool(
+        re.search(re.escape(search), obj.name, re.IGNORECASE)
+        or re.search(re.escape(search), obj.email, re.IGNORECASE)
+    )
 
 
 def user_link_select(
@@ -70,10 +67,12 @@ def user_link_select(
     return _select(objs, query, _user_link_filter, lambda o: o.name)
 
 
-def _state_filter(objs: Sequence[m.StateOption], search: str) -> list[m.StateOption]:
-    return [
-        o for o in objs if re.search(re.escape(search), o.value.state, re.IGNORECASE)
-    ]
+def _state_filter(obj: m.StateOption, search: str | None) -> bool:
+    if obj.value.is_archived:
+        return False
+    if not search:
+        return True
+    return bool(re.search(re.escape(search), obj.value.state, re.IGNORECASE))
 
 
 def state_option_select(
@@ -82,8 +81,12 @@ def state_option_select(
     return _select(objs, query, _state_filter, lambda o: o.value.state)
 
 
-def _enum_filter(objs: Sequence[m.EnumOption], search: str) -> list[m.EnumOption]:
-    return [o for o in objs if re.search(re.escape(search), o.value, re.IGNORECASE)]
+def _enum_filter(obj: m.EnumOption, search: str | None) -> bool:
+    if obj.value.is_archived:
+        return False
+    if not search:
+        return True
+    return bool(re.search(re.escape(search), obj.value.value, re.IGNORECASE))
 
 
 def enum_option_select(
@@ -92,12 +95,12 @@ def enum_option_select(
     return _select(objs, query, _enum_filter, lambda o: o.value.value)
 
 
-def _version_filter(
-    objs: Sequence[m.VersionOption], search: str
-) -> list[m.VersionOption]:
-    return [
-        o for o in objs if re.search(re.escape(search), o.value.version, re.IGNORECASE)
-    ]
+def _version_filter(obj: m.VersionOption, search: str | None) -> bool:
+    if obj.value.is_archived:
+        return False
+    if not search:
+        return True
+    return bool(re.search(re.escape(search), obj.value.version, re.IGNORECASE))
 
 
 def version_option_select(
