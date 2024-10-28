@@ -65,6 +65,7 @@ class CustomFieldTypeT(StrEnum):
 class EnumField(BaseModel):
     value: str
     color: str | None = None
+    is_archived: bool = False
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, EnumField):
@@ -106,6 +107,7 @@ class StateField(BaseModel):
     state: str
     is_resolved: bool = False
     is_closed: bool = False
+    is_archived: bool = False
     color: str | None = None
 
     def __eq__(self, other: Any) -> bool:

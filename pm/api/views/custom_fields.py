@@ -27,6 +27,7 @@ class EnumOptionOutput(BaseModel):
     uuid: UUID
     value: str
     color: str | None = None
+    is_archived: bool = False
 
     @classmethod
     def from_obj(cls, obj: m.EnumOption) -> Self:
@@ -34,6 +35,7 @@ class EnumOptionOutput(BaseModel):
             uuid=obj.id,
             value=obj.value.value,
             color=obj.value.color,
+            is_archived=obj.value.is_archived,
         )
 
 
@@ -128,6 +130,7 @@ class StateOptionOutput(BaseModel):
     color: str | None = None
     is_resolved: bool = False
     is_closed: bool = False
+    is_archived: bool = False
 
     @classmethod
     def from_obj(cls, obj: m.StateOption) -> Self:
@@ -137,6 +140,7 @@ class StateOptionOutput(BaseModel):
             color=obj.value.color,
             is_resolved=obj.value.is_resolved,
             is_closed=obj.value.is_closed,
+            is_archived=obj.value.is_archived,
         )
 
 
