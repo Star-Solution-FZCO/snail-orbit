@@ -18,6 +18,7 @@ __all__ = (
     'User',
     'UserLinkField',
     'UserOriginType',
+    'UserAvatarType',
 )
 
 
@@ -26,10 +27,18 @@ class UserOriginType(StrEnum):
     WB = 'wb'
 
 
+class UserAvatarType(StrEnum):
+    EXTERNAL = 'external'
+    LOCAL = 'local'
+    DEFAULT = 'default'
+
+
 class UserLinkField(BaseModel):
     id: PydanticObjectId
     name: str
     email: str
+    is_active: bool
+    use_external_avatar: bool
 
     @classmethod
     def from_obj(cls, obj: 'User') -> Self:
@@ -37,6 +46,8 @@ class UserLinkField(BaseModel):
             id=obj.id,
             name=obj.name,
             email=obj.email,
+            is_active=obj.is_active,
+            use_external_avatar=obj.use_external_avatar,
         )
 
     def __eq__(self, other: object) -> bool:
@@ -83,6 +94,11 @@ class User(Document):
     api_tokens: list[APIToken] = Field(default_factory=list)
     groups: list[GroupLinkField] = Field(default_factory=list)
     origin: UserOriginType = UserOriginType.LOCAL
+    avatar_type: UserAvatarType = UserAvatarType.DEFAULT
+
+    @property
+    def use_external_avatar(self) -> bool:
+        return self.avatar_type == UserAvatarType.EXTERNAL
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:

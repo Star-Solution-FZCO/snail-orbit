@@ -1,27 +1,35 @@
 from typing import TYPE_CHECKING, Self
-from urllib.parse import quote
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel, computed_field
 
+from pm.services.avatars import external_avatar_url, local_avatar_url
+
 if TYPE_CHECKING:
-    import pm.models as m
+    pass
 
 
 __all__ = ('UserOutput',)
-
-AVATAR_URL = '/api/avatar?email={email}'
 
 
 class UserOutput(BaseModel):
     id: PydanticObjectId
     name: str
     email: str
+    is_active: bool
+
+    _use_external_avatar: bool
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._use_external_avatar = data.get('_use_external_avatar', False)
 
     @computed_field
     @property
     def avatar(self) -> str:
-        return AVATAR_URL.format(email=quote(self.email))
+        if self._use_external_avatar and (url := external_avatar_url(self.email)):
+            return url
+        return local_avatar_url(self.email)
 
     @classmethod
     def from_obj(cls, obj: 'm.User | m.UserLinkField') -> Self:
@@ -29,4 +37,6 @@ class UserOutput(BaseModel):
             id=obj.id,
             name=obj.name,
             email=obj.email,
+            is_active=obj.is_active,
+            _use_external_avatar=obj.use_external_avatar,
         )

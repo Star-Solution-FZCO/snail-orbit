@@ -1,5 +1,4 @@
 import asyncio
-from io import BytesIO
 from uuid import UUID
 
 import beanie.operators as bo
@@ -17,19 +16,9 @@ from pm.models import Issue, IssueAttachment, __beanie_models__
 from pm.ocr.config import OCR_CONFIG
 from pm.services.files import get_storage_client
 from pm.utils.events_bus import Task, TaskType
+from pm.utils.file_storage.utils import PseudoAsyncWriteBuffer
 
 IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/bmp'}
-
-
-class PseudoAsyncWriteBuffer:
-    buffer: BytesIO
-
-    def __init__(self):
-        self.buffer = BytesIO()
-
-    async def write(self, data: bytes) -> None:
-        self.buffer.write(data)
-        self.buffer.seek(0)
 
 
 async def init_db() -> None:
