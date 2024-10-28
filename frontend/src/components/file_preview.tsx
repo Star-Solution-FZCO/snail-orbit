@@ -1,19 +1,38 @@
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
+import React, { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { closeFilePreview, useAppDispatch, useAppSelector } from "store";
+import {
+    clearFiles,
+    closeFilePreview,
+    selectFilePreviewByIndex,
+    setFiles,
+    setNextFilePreview,
+    useAppDispatch,
+    useAppSelector,
+} from "store";
+import { AttachmentT } from "types";
 import { formatBytes } from "utils";
 
-const FilePreview = () => {
+interface IFilePreviewProps {
+    attachments: AttachmentT[];
+}
+
+const FilePreview: FC<IFilePreviewProps> = ({ attachments }) => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
-    const { open: open, file } = useAppSelector(
-        (state) => state.shared.filePreview,
-    );
+    const {
+        open,
+        currentFile: file,
+        files,
+        currentIndex,
+    } = useAppSelector((state) => state.shared.filePreview);
 
     const handleClose = () => {
         dispatch(closeFilePreview());
@@ -36,6 +55,32 @@ const FilePreview = () => {
                 toast.error(t("copyLink.error"));
             });
     };
+
+    const handleClickNextFile = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        dispatch(setNextFilePreview());
+    };
+
+    const handleClickPreviousFile = (
+        e: React.MouseEvent<HTMLButtonElement>,
+    ) => {
+        e.stopPropagation();
+        dispatch(setNextFilePreview());
+    };
+
+    const handleClickThumbnail = (index: number) => {
+        dispatch(selectFilePreviewByIndex(index));
+    };
+
+    useEffect(() => {
+        dispatch(setFiles(attachments));
+
+        return () => {
+            dispatch(clearFiles());
+        };
+    }, [attachments]);
+
+    const showNavigationControls = files.length > 1;
 
     return (
         <Modal
@@ -82,14 +127,16 @@ const FilePreview = () => {
                     width={1}
                     height={1}
                     display="flex"
-                    justifyContent="center"
+                    justifyContent="space-between"
                     alignItems="center"
                     px={4}
                     onClick={handleClose}
                 >
-                    {/* <IconButton>
-                        <ArrowBackIosNewIcon />
-                    </IconButton> */}
+                    {showNavigationControls && (
+                        <IconButton onClick={handleClickPreviousFile}>
+                            <ArrowBackIosNewIcon />
+                        </IconButton>
+                    )}
 
                     <Box
                         component="img"
@@ -103,29 +150,81 @@ const FilePreview = () => {
                         onClick={(e) => e.stopPropagation()}
                     />
 
-                    {/* <IconButton>
-                        <ArrowForwardIosIcon />
-                    </IconButton> */}
+                    {showNavigationControls && (
+                        <IconButton onClick={handleClickNextFile}>
+                            <ArrowForwardIosIcon />
+                        </IconButton>
+                    )}
                 </Box>
 
                 <Box
                     display="flex"
                     alignItems="center"
-                    minHeight="64px"
                     px={4}
-                    gap={1}
+                    gap={3}
+                    minHeight="64px"
                 >
-                    <Tooltip title={t("download")}>
-                        <IconButton onClick={handleDownload}>
-                            <DownloadIcon />
-                        </IconButton>
-                    </Tooltip>
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        flexBasis="30%"
+                    >
+                        <Tooltip title={t("download")}>
+                            <IconButton onClick={handleDownload}>
+                                <DownloadIcon />
+                            </IconButton>
+                        </Tooltip>
 
-                    <Tooltip title={t("copyLink")}>
-                        <IconButton onClick={handleCopyLink}>
-                            <LinkIcon />
-                        </IconButton>
-                    </Tooltip>
+                        <Tooltip title={t("copyLink")}>
+                            <IconButton onClick={handleCopyLink}>
+                                <LinkIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+
+                    <Box
+                        px={4}
+                        flex={1}
+                        display="flex"
+                        gap={1}
+                        justifyContent="center"
+                        alignItems="center"
+                        overflow="auto"
+                    >
+                        {files.map((file, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    width: 64,
+                                    height: 40,
+                                    borderRadius: 1,
+                                    cursor: "pointer",
+                                    borderWidth: 4,
+                                    borderColor:
+                                        currentIndex === index
+                                            ? "info.dark"
+                                            : "transparent",
+                                    borderStyle: "solid",
+                                    boxSizing: "border-box",
+                                }}
+                                onClick={() => handleClickThumbnail(index)}
+                            >
+                                <Box
+                                    component="img"
+                                    src={file.src}
+                                    width="100%"
+                                    height="100%"
+                                    sx={{
+                                        objectFit: "cover",
+                                        objectPosition: "center",
+                                    }}
+                                />
+                            </Box>
+                        ))}
+                    </Box>
+
+                    <Box flexBasis="30%" />
                 </Box>
             </Box>
         </Modal>
