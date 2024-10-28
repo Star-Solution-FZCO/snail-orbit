@@ -10,7 +10,7 @@ interface IBaseAttachmentCardProps {
     filename: string;
     isImage: boolean;
     url: string;
-    onClick: () => void;
+    onClick?: () => void;
     onDownload?: () => void;
     onDelete: () => void;
     canDelete?: boolean;
@@ -183,23 +183,10 @@ interface IBrowserFileCardProps {
 }
 
 const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
-    const dispatch = useAppDispatch();
     const [fileUrl, setFileUrl] = useState<string>("");
 
-    const isImage = file.type.startsWith("image/");
-
     const handleClick = () => {
-        if (isImage) {
-            dispatch(
-                openFilePreview({
-                    src: fileUrl,
-                    name: file.name,
-                    size: file.size,
-                }),
-            );
-        } else {
-            window.open(fileUrl, "_blank");
-        }
+        window.open(fileUrl, "_blank");
     };
 
     useEffect(() => {
@@ -237,6 +224,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
         if (isImage) {
             dispatch(
                 openFilePreview({
+                    id: attachment.id,
                     src: fileUrl,
                     name: attachment.name,
                     size: attachment.size,

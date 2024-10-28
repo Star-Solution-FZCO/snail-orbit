@@ -48,7 +48,7 @@ const NavBarLink: FC<INavBarLinkProps & PropsWithChildren> = ({
     children,
 }) => {
     const theme = useTheme();
-    
+
     return (
         <Link
             to={to}

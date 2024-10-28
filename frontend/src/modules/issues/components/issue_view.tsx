@@ -52,9 +52,7 @@ export const IssueView: FC<IssueFormProps> = ({
                     onUpdateCache={onUpdateCache}
                 />
 
-                {issue && !isDraft && (
-                    <IssueActivities issueId={issue.id_readable} />
-                )}
+                {!isDraft && <IssueActivities issueId={issue.id_readable} />}
             </Stack>
 
             <FieldContainer>
@@ -75,7 +73,7 @@ export const IssueView: FC<IssueFormProps> = ({
                 />
             </FieldContainer>
 
-            <FilePreview />
+            <FilePreview attachments={issue.attachments} />
         </Box>
     );
 };
