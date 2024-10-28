@@ -194,7 +194,7 @@
   "projects.item.fetch.error": "Failed to fetch project",
   "projects.list.fetch.error": "Failed to fetch projects",
   "projects.new": "New Project",
-  "projects.no_projects": "projects.no_projects",
+  "projects.no_projects": "No projects",
   "projects.search.placeholder": "Filter by name",
   "projects.sections.access": "Access",
   "projects.sections.customFields": "Custom Fields",

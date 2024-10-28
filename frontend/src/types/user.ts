@@ -7,7 +7,7 @@ export type BasicUserT = {
 
 export type UserT = BasicUserT & {
     is_admin: boolean;
-    origin: "local" | "wb";
+    is_active: boolean;
 };
 
 export type CreateUserT = {
