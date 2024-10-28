@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date, datetime
 from http import HTTPStatus
 from typing import Any, Type
@@ -54,6 +55,7 @@ CustomFieldSelectOptionsT = (
 class EnumOptionCreateBody(BaseModel):
     value: str
     color: str | None = None
+    is_archived: bool = False
 
 
 class UserOptionCreateBody(BaseModel):
@@ -66,6 +68,7 @@ class StateOptionCreateBody(BaseModel):
     color: str | None = None
     is_resolved: bool = False
     is_closed: bool = False
+    is_archived: bool = False
 
 
 class VersionOptionCreateBody(BaseModel):
@@ -78,6 +81,7 @@ class VersionOptionCreateBody(BaseModel):
 class EnumOptionUpdateBody(BaseModel):
     value: str | None = None
     color: str | None = None
+    is_archived: bool | None = None
 
 
 class StateOptionUpdateBody(BaseModel):
@@ -85,6 +89,7 @@ class StateOptionUpdateBody(BaseModel):
     color: str | None = None
     is_resolved: bool | None = None
     is_closed: bool | None = None
+    is_archived: bool | None = None
 
 
 class VersionOptionUpdateBody(BaseModel):
@@ -196,6 +201,10 @@ async def update_custom_field(
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.Issue.update_field_embedded_links(obj),
+            m.Board.update_field_embedded_links(obj),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -214,7 +223,12 @@ async def add_enum_option(
     if any(opt.value.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.EnumOption(id=uuid4(), value=m.EnumField(value=body.value, color=body.color))
+        m.EnumOption(
+            id=uuid4(),
+            value=m.EnumField(
+                value=body.value, color=body.color, is_archived=body.is_archived
+            ),
+        )
     )
     if obj.is_changed:
         await obj.save_changes()
@@ -353,6 +367,7 @@ async def add_state_option(
                 is_resolved=body.is_resolved,
                 is_closed=body.is_closed,
                 color=body.color,
+                is_archived=body.is_archived,
             ),
         )
     )

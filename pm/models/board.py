@@ -2,7 +2,7 @@ from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
 from ._audit import audited_model
-from .custom_fields import CustomFieldLink, CustomFieldValueT
+from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
 from .project import ProjectLinkField
 
 __all__ = ('Board',)
@@ -43,3 +43,20 @@ class Board(Document):
                 self.issues_order.append(issue_id)
                 return
         self.issues_order.insert(new_idx, issue_id)
+
+    @classmethod
+    async def update_field_embedded_links(
+        cls, field: CustomField | CustomFieldLink
+    ) -> None:
+        if isinstance(field, CustomField):
+            field = CustomFieldLink.from_obj(field)
+        await cls.find(cls.column_field.id == field.id).update(
+            {'$set': {'column_field': field}}
+        )
+        await cls.find(cls.swimlane_field.id == field.id).update(
+            {'$set': {'swimlane_field': field}}
+        )
+        await cls.find(cls.card_fields.id == field.id).update(
+            {'$set': {'card_fields.$[f]': field}},
+            array_filters=[{'f.id': field.id}],
+        )
