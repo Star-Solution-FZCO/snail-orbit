@@ -8,7 +8,12 @@ from pydantic import BaseModel, Extra, Field
 from pm.utils.dateutils import utcnow
 
 from ._audit import audited_model
-from .custom_fields import CustomFieldLink, CustomFieldValue, CustomFieldValueT
+from .custom_fields import (
+    CustomField,
+    CustomFieldLink,
+    CustomFieldValue,
+    CustomFieldValueT,
+)
 from .project import Project, ProjectLinkField
 from .user import User, UserLinkField
 
@@ -201,6 +206,25 @@ class Issue(Document):
         await cls.find(cls.history.author.id == user.id).update(
             {'$set': {'history.$[h].author': user}},
             array_filters=[{'h.author.id': user.id}],
+        )
+
+    @classmethod
+    async def update_field_embedded_links(
+        cls, field: CustomFieldLink | CustomField
+    ) -> None:
+        if isinstance(field, CustomField):
+            field = CustomFieldLink.from_obj(field)
+        await cls.find(
+            cls.fields.id == field.id,
+        ).update(
+            {'$set': {'fields.$[f].name': field.name}},
+            array_filters=[{'f.id': field.id}],
+        )
+        await cls.find(
+            cls.history.changes.field.id == field.id,
+        ).update(
+            {'$set': {'history.$[].changes.$[c].field': field}},
+            array_filters=[{'c.field.id': field.id}],
         )
 
     def _get_latest_comment_or_history(
