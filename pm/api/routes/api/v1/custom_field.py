@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date, datetime
 from http import HTTPStatus
 from typing import Any, Type
@@ -200,6 +201,10 @@ async def update_custom_field(
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.Issue.update_field_embedded_links(obj),
+            m.Board.update_field_embedded_links(obj),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
