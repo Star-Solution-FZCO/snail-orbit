@@ -18,16 +18,16 @@ router = APIRouter(
 
 
 class Profile(UserOutput):
-    is_active: bool
     is_admin: bool
 
     @classmethod
     def from_obj(cls, obj: m.User) -> Self:
         return cls(
             id=obj.id,
-            name=obj.name,
             email=obj.email,
+            name=obj.name,
             is_active=obj.is_active,
+            _use_external_avatar=obj.use_external_avatar,
             is_admin=obj.is_admin,
         )
 

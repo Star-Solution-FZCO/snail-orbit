@@ -183,15 +183,24 @@ class Issue(Document):
     @classmethod
     async def update_user_embedded_links(
         cls,
-        user: User,
+        user: User | UserLinkField,
     ) -> None:
+        if isinstance(user, User):
+            user = UserLinkField.from_obj(user)
         await cls.find(cls.comments.author.id == user.id).update(
-            {'$set': {'comments.$[c].author': UserLinkField.from_obj(user)}},
+            {'$set': {'comments.$[c].author': user}},
             array_filters=[{'c.author.id': user.id}],
         )
         await cls.find(cls.attachments.author.id == user.id).update(
-            {'$set': {'attachments.$[a].author': UserLinkField.from_obj(user)}},
+            {'$set': {'attachments.$[a].author': user}},
             array_filters=[{'a.author.id': user.id}],
+        )
+        await cls.find(cls.created_by.id == user.id).update(
+            {'$set': {'created_by': user}}
+        )
+        await cls.find(cls.history.author.id == user.id).update(
+            {'$set': {'history.$[h].author': user}},
+            array_filters=[{'h.author.id': user.id}],
         )
 
     def _get_latest_comment_or_history(
