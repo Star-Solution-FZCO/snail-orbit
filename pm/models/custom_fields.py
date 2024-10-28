@@ -464,7 +464,7 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
     options: list[EnumOption] = Field(default_factory=list)
-    default_value: str | None = None
+    default_value: EnumField | None = None
 
     def validate_value(self, value: Any) -> Any:
         value = super().validate_value(value)
@@ -483,7 +483,7 @@ class EnumCustomField(CustomField):
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
     options: list[EnumOption] = Field(default_factory=list)
-    default_value: list[str] | None = None
+    default_value: list[EnumField] | None = None
 
     @staticmethod
     def __transform_single_value(value: Any) -> Any:
