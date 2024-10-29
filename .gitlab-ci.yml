@@ -15,6 +15,9 @@ default:
 
 sec-trivy-src-scan:
   stage: lint
+  variables:
+    TRIVY_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-db"
+    TRIVY_JAVA_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-java-db"
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
