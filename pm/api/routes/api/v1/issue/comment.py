@@ -1,6 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import Self
+from typing import Annotated, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -55,7 +55,7 @@ class IssueCommentOutput(BaseModel):
 
 class IssueCommentCreate(BaseModel):
     text: str | None = None
-    attachments: list[UUID] = Field(default_factory=list)
+    attachments: Annotated[list[UUID], Field(default_factory=list)]
 
 
 class IssueCommentUpdate(BaseModel):
