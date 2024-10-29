@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
 import beanie.operators as bo
@@ -32,8 +32,8 @@ class IssueCreate(BaseModel):
     project_id: PydanticObjectId
     subject: str
     text: str | None = None
-    fields: dict[str, Any] = Field(default_factory=dict)
-    attachments: list[UUID] = Field(default_factory=list)
+    fields: Annotated[dict[str, Any], Field(default_factory=dict)]
+    attachments: Annotated[list[UUID], Field(default_factory=list)]
 
 
 class IssueUpdate(BaseModel):
@@ -48,8 +48,8 @@ class IssueDraftCreate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
-    fields: dict[str, Any] = Field(default_factory=dict)
-    attachments: list[UUID] = Field(default_factory=list)
+    fields: Annotated[dict[str, Any], Field(default_factory=dict)]
+    attachments: Annotated[list[UUID], Field(default_factory=list)]
 
 
 class IssueDraftUpdate(BaseModel):

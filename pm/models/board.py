@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
@@ -19,13 +21,13 @@ class Board(Document):
     name: str = Indexed(str)
     description: str | None = None
     query: str | None = None
-    projects: list[ProjectLinkField] = Field(default_factory=list)
+    projects: Annotated[list[ProjectLinkField], Field(default_factory=list)]
     column_field: CustomFieldLink
-    columns: list[CustomFieldValueT] = Field(default_factory=list)
+    columns: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
     swimlane_field: CustomFieldLink | None = None
-    swimlanes: list[CustomFieldValueT] = Field(default_factory=list)
-    issues_order: list[PydanticObjectId] = Field(default_factory=list)
-    card_fields: list[CustomFieldLink] = Field(default_factory=list)
+    swimlanes: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
+    issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None

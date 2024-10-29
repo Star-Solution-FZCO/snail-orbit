@@ -2,7 +2,7 @@ import base64
 import secrets
 from datetime import datetime
 from enum import StrEnum
-from typing import Self
+from typing import Annotated, Self
 
 import bcrypt
 from beanie import Document, Indexed, PydanticObjectId
@@ -64,7 +64,7 @@ class APIToken(BaseModel):
     last_digits: str
     secret_hash: str
     expires_at: datetime | None = None
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
     def check_secret(self, secret: str) -> bool:
         return bcrypt.checkpw(secret.encode('utf-8'), self.secret_hash.encode('utf-8'))
@@ -91,8 +91,8 @@ class User(Document):
     password_hash: str | None = None
     is_active: bool = True
     is_admin: bool = False
-    api_tokens: list[APIToken] = Field(default_factory=list)
-    groups: list[GroupLinkField] = Field(default_factory=list)
+    api_tokens: Annotated[list[APIToken], Field(default_factory=list)]
+    groups: Annotated[list[GroupLinkField], Field(default_factory=list)]
     origin: UserOriginType = UserOriginType.LOCAL
     avatar_type: UserAvatarType = UserAvatarType.DEFAULT
 

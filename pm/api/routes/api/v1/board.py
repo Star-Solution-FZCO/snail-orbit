@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from http import HTTPStatus
-from typing import Any
+from typing import Annotated, Any
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -79,8 +79,8 @@ class BoardCreate(BaseModel):
     column_field: PydanticObjectId
     columns: list
     swimlane_field: PydanticObjectId | None = None
-    swimlanes: list = Field(default_factory=list)
-    card_fields: list[PydanticObjectId] = Field(default_factory=list)
+    swimlanes: Annotated[list, Field(default_factory=list)]
+    card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
 
 
 class BoardUpdate(BaseModel):
