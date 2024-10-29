@@ -20,6 +20,7 @@ def connect_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ValidateModelException, validate_model_exception_handler)
 
 
+# pylint: disable=unused-argument
 async def http_exception_handler(
     request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:

@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 import argparse
 from getpass import getpass
 
@@ -33,6 +34,7 @@ async def create_user(args: argparse.Namespace) -> None:
     print(f'User {args.email} created successfully, id={user.id}')
 
 
+# pylint: disable=unused-argument
 async def show_users(args: argparse.Namespace) -> None:
     from pm.models import User
 

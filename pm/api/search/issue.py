@@ -80,6 +80,7 @@ GRAMMAR = """
 """
 
 
+# pylint: disable=invalid-name, unused-argument
 # noinspection PyMethodMayBeStatic, PyUnusedLocal, PyPep8Naming
 class MongoQueryTransformer(Transformer):
     __current_user: str | None
@@ -138,6 +139,7 @@ class MongoQueryTransformer(Transformer):
             return {
                 'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': False}}
             }
+        raise ValueError(f'Unknown hashtag value: {val}')
 
     def attribute_condition(self, args):
         field, value = args
@@ -241,13 +243,17 @@ async def transform_query(q: str, current_user_email: str | None = None) -> dict
     except UnexpectedToken as err:
         raise TransformError(
             'Failed to parse query', position=err.pos_in_stream, expected=err.expected
-        )
+        ) from err
     except UnexpectedCharacters as err:
-        raise TransformError('Failed to parse query', position=err.pos_in_stream)
+        raise TransformError(
+            'Failed to parse query', position=err.pos_in_stream
+        ) from err
     except UnexpectedEOF as err:
-        raise TransformError('Failed to parse query', position=err.pos_in_stream)
+        raise TransformError(
+            'Failed to parse query', position=err.pos_in_stream
+        ) from err
     except ValueError as err:
-        raise TransformError(str(err))
+        raise TransformError(str(err)) from err
 
 
 async def _get_custom_fields() -> dict:

@@ -242,10 +242,10 @@ class FloatCustomField(CustomField):
         if value is not None:
             try:
                 value = float(value)
-            except Exception:
+            except Exception as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a float'
-                )
+                ) from err
         return value
 
 

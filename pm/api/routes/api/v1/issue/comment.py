@@ -130,7 +130,7 @@ async def create_comment(
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     comment = m.IssueComment(
         text=body.text,
         author=m.UserLinkField.from_obj(user_ctx.user),
@@ -190,7 +190,7 @@ async def update_comment(
             try:
                 extra_attachments = await resolve_files(list(extra_attachment_ids))
             except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
             comment.attachments = [
                 a for a in comment.attachments if a.id not in remove_attachment_ids
             ]

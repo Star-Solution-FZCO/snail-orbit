@@ -8,20 +8,20 @@ __all__ = (
     'send_task',
 )
 
-pool = None
+_POOL = None
 if CONFIG.REDIS_EVENT_BUS_URL:
-    pool = aioredis.ConnectionPool.from_url(CONFIG.REDIS_EVENT_BUS_URL)
+    _POOL = aioredis.ConnectionPool.from_url(CONFIG.REDIS_EVENT_BUS_URL)
 
 
 async def send_event(event: Event) -> None:
-    if not pool:
+    if not _POOL:
         return
-    async with aioredis.Redis(connection_pool=pool) as client:
+    async with aioredis.Redis(connection_pool=_POOL) as client:
         await event.send(client=client)
 
 
 async def send_task(task: Task) -> None:
-    if not pool:
+    if not _POOL:
         return
-    async with aioredis.Redis(connection_pool=pool) as client:
+    async with aioredis.Redis(connection_pool=_POOL) as client:
         await task.send(client=client)

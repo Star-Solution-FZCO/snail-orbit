@@ -1,8 +1,10 @@
+# pylint: disable=import-outside-toplevel
 import argparse
 
 __all__ = ('add_tasks_args',)
 
 
+# pylint: disable=unused-argument
 def run_worker(args: argparse.Namespace) -> None:
     from pm.tasks.app import celery_app
 

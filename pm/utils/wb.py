@@ -129,8 +129,7 @@ class WbAPIClient:
         params: Collection[tuple[str, str]] | None = None,
         load_per_request: int = MAX_LIMIT_SIZE,
     ) -> AsyncIterator[Any]:
-        if load_per_request > MAX_LIMIT_SIZE:
-            load_per_request = MAX_LIMIT_SIZE
+        load_per_request = min(load_per_request, MAX_LIMIT_SIZE)
         step = 0
         params = params or []
         while True:

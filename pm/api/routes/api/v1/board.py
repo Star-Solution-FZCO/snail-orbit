@@ -159,7 +159,7 @@ async def create_board(
             m.CustomFieldTypeT.USER_MULTI,
         ):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Swimlane field can' 't be of type MULTI'
+                HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
             )
         _all_projects_has_custom_field(swimlane_field, projects)
         swimlanes = validate_custom_field_values(swimlane_field, body.swimlanes)
@@ -244,7 +244,7 @@ async def update_board(
                 m.CustomFieldTypeT.USER_MULTI,
             ):
                 raise HTTPException(
-                    HTTPStatus.BAD_REQUEST, 'Swimlane field can' 't be of type MULTI'
+                    HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
                 )
             board.swimlane_field = m.CustomFieldLink.from_obj(swimlane_field)
         else:
@@ -460,7 +460,7 @@ async def move_issue(
                 payload=IssueOutput.from_obj(issue),
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
-            )
+            ) from err
         issue.gen_history_record(user_ctx.user)
         await issue.replace()
         task_notify_by_pararam.delay(
@@ -553,7 +553,7 @@ def _any_projects_has_custom_field(
         if any(cf.id == field.id for cf in p.custom_fields):
             return None
     raise HTTPException(
-        HTTPStatus.BAD_REQUEST, f'Project {p.id} does not have custom field {field.id}'
+        HTTPStatus.BAD_REQUEST, f'Projects does not have custom field {field.id}'
     )
 
 
@@ -580,4 +580,4 @@ def validate_custom_field_values(
     except m.CustomFieldValidationError as err:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, f'Invalid value {err.value} for field {field.name}'
-        )
+        ) from err

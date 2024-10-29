@@ -5,7 +5,6 @@ from typing import Self
 import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import computed_field
 
 import pm.models as m
 from pm.api.context import admin_context_dependency
