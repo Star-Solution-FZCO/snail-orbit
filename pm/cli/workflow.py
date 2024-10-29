@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 import argparse
 
 __all__ = ('add_workflow_args',)
@@ -16,7 +17,7 @@ async def init_db() -> None:
 
 
 async def create_wf(args: argparse.Namespace) -> None:
-    from pm.models import OnChangeWorkflow, ScheduledWorkflow, WorkflowType
+    from pm.models import OnChangeWorkflow, WorkflowType
 
     await init_db()
     obj = OnChangeWorkflow(
@@ -29,6 +30,7 @@ async def create_wf(args: argparse.Namespace) -> None:
     print(f'Workflow {args.name} created successfully, id={obj.id}')
 
 
+# pylint: disable=unused-argument
 async def show_wf(args: argparse.Namespace) -> None:
     from pm.models import Workflow
 

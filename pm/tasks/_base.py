@@ -4,6 +4,7 @@ __all__ = ('run_task',)
 
 
 def run_task(task: Coroutine) -> None:
+    # pylint: disable=import-outside-toplevel
     import asyncio
 
     from beanie import init_beanie

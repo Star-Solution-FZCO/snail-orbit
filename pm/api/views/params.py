@@ -16,7 +16,7 @@ class ListParams(BaseModel):
     )
 
     @field_validator('direction')
-    def check_direction(cls, v: str) -> str:
+    def check_direction(cls, v: str) -> str:  # pylint: disable=no-self-argument
         if v not in ('desc', 'asc'):
             raise ValueError('wrong direction')
         return v

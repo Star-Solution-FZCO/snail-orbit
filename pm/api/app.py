@@ -24,6 +24,7 @@ app.add_middleware(
 
 @app.on_event('startup')
 async def app_init() -> None:
+    # pylint: disable=import-outside-toplevel
     from pm.models import __beanie_models__
 
     client = AsyncIOMotorClient(CONFIG.DB_URI)
@@ -53,6 +54,7 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
     )
 
 
+# pylint: disable=wrong-import-position
 from pm.api.error_handlers import connect_error_handlers  # noqa
 
 connect_error_handlers(app)

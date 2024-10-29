@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Literal, Self
+from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId

@@ -94,7 +94,7 @@ class AuditRecord(Document):
             author=author,
             time=utcnow(),
         )
-        obj.__data = data
+        obj.__data = data  # pylint: disable=unused-private-member
         return obj
 
     async def _save_data(self, path: str) -> None:
@@ -162,11 +162,13 @@ async def _before_delete_callback(self: Document) -> None:
 
 @before_event(SaveChanges)
 async def _before_update_callback(self: Document) -> None:
+    # pylint: disable=protected-access
     self.__prev_revision_id = self.revision_id
 
 
 @after_event(SaveChanges)
 async def _after_update_callback(self: Document) -> None:
+    # pylint: disable=protected-access
     obj = AuditRecord.create_record(
         collection=self.__class__.Settings.name,
         object_id=self.id,
@@ -181,11 +183,13 @@ async def _after_update_callback(self: Document) -> None:
 
 @before_event(Replace)
 async def _before_replace_callback(self: Document) -> None:
+    # pylint: disable=protected-access
     self.__prev_revision_id = self.revision_id
 
 
 @after_event(Replace)
 async def _after_replace_callback(self: Document) -> None:
+    # pylint: disable=protected-access
     obj = AuditRecord.create_record(
         collection=self.__class__.Settings.name,
         object_id=self.id,
@@ -202,6 +206,7 @@ AuditedTypeVar = TypeVar('AuditedTypeVar', bound=Document)
 
 
 def audited_model(cls: type[AuditedTypeVar]) -> type[AuditedTypeVar]:
+    # pylint: disable=protected-access
     if not _DB_AUDIT:
         return cls
     cls._after_insert_callback = _after_insert_callback

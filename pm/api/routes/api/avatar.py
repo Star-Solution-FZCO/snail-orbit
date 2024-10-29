@@ -26,8 +26,8 @@ async def get_avatar(
         )
     try:
         file_header = await client.get_file_info(email_hash, folder=AVATAR_STORAGE_DIR)
-    except StorageFileNotFound:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND)
+    except StorageFileNotFound as err:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
         content=client.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore
         media_type=file_header.content_type,

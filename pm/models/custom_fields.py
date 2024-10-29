@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 from enum import StrEnum
-from typing import Any, Self
+from typing import Annotated, Any, Self
 from uuid import UUID
 
 from beanie import Document, PydanticObjectId
@@ -242,10 +242,10 @@ class FloatCustomField(CustomField):
         if value is not None:
             try:
                 value = float(value)
-            except Exception:
+            except Exception as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a float'
-                )
+                ) from err
         return value
 
 
@@ -312,7 +312,7 @@ class DateTimeCustomField(CustomField):
 
 
 class UserCustomFieldMixin:
-    options: list[UserOption] = Field(default_factory=list)
+    options: Annotated[list[UserOption], Field(default_factory=list)]
 
     @property
     def users(self) -> set[UserLinkField]:
@@ -465,7 +465,7 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
-    options: list[EnumOption] = Field(default_factory=list)
+    options: Annotated[list[EnumOption], Field(default_factory=list)]
     default_value: EnumField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -484,7 +484,7 @@ class EnumCustomField(CustomField):
 
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
-    options: list[EnumOption] = Field(default_factory=list)
+    options: Annotated[list[EnumOption], Field(default_factory=list)]
     default_value: list[EnumField] | None = None
 
     @staticmethod
@@ -517,7 +517,7 @@ class EnumMultiCustomField(CustomField):
 
 class StateCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STATE
-    options: list[StateOption] = Field(default_factory=list)
+    options: Annotated[list[StateOption], Field(default_factory=list)]
     default_value: StateField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -536,7 +536,7 @@ class StateCustomField(CustomField):
 
 class VersionCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.VERSION
-    options: list[VersionOption] = Field(default_factory=list)
+    options: Annotated[list[VersionOption], Field(default_factory=list)]
     default_value: VersionField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -555,7 +555,7 @@ class VersionCustomField(CustomField):
 
 class VersionMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.VERSION_MULTI
-    options: list[VersionOption] = Field(default_factory=list)
+    options: Annotated[list[VersionOption], Field(default_factory=list)]
     default_value: list[str] | None = None
 
     @staticmethod

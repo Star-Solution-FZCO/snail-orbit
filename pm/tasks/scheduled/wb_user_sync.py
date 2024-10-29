@@ -39,8 +39,8 @@ async def wb_user_sync() -> None:
             continue
         users[user.email].origin = m.UserOriginType.WB
         users[user.email].avatar_type = m.UserAvatarType.EXTERNAL
-        for field in FIELDS_MAP:
-            setattr(users[user.email], FIELDS_MAP[field], getattr(user, field))
+        for field, mapped_field in FIELDS_MAP.items():
+            setattr(users[user.email], mapped_field, getattr(user, field))
         if users[user.email].is_changed:
             await users[user.email].save_changes()
             await asyncio.gather(

@@ -9,8 +9,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 import pm.models._audit as _db_audit
 
-_db_audit._DB_AUDIT = False
+_db_audit._DB_AUDIT = False  # pylint: disable=protected-access
 
+# pylint: disable=wrong-import-position
 from pm.config import CONFIG
 from pm.models import Issue, IssueAttachment, __beanie_models__
 from pm.ocr.config import OCR_CONFIG

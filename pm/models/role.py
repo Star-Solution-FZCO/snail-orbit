@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Annotated, Self
 
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Field
@@ -42,6 +42,6 @@ class Role(Document):
         use_state_management = True
         state_management_save_previous = True
 
-    name: str = Indexed(str)
+    name: Annotated[str, Indexed(str)]
     description: str | None = None
-    permissions: list[Permissions] = Field(default_factory=list)
+    permissions: Annotated[list[Permissions], Field(default_factory=list)]

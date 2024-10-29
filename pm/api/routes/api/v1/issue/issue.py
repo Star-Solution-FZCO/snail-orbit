@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
 import beanie.operators as bo
@@ -32,8 +32,8 @@ class IssueCreate(BaseModel):
     project_id: PydanticObjectId
     subject: str
     text: str | None = None
-    fields: dict[str, Any] = Field(default_factory=dict)
-    attachments: list[UUID] = Field(default_factory=list)
+    fields: Annotated[dict[str, Any], Field(default_factory=dict)]
+    attachments: Annotated[list[UUID], Field(default_factory=list)]
 
 
 class IssueUpdate(BaseModel):
@@ -48,8 +48,8 @@ class IssueDraftCreate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
-    fields: dict[str, Any] = Field(default_factory=dict)
-    attachments: list[UUID] = Field(default_factory=list)
+    fields: Annotated[dict[str, Any], Field(default_factory=dict)]
+    attachments: Annotated[list[UUID], Field(default_factory=list)]
 
 
 class IssueDraftUpdate(BaseModel):
@@ -80,7 +80,7 @@ async def list_issues(
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 err.message,
-            )
+            ) from err
     q = (
         m.Issue.find(flt)
         .find(
@@ -120,7 +120,7 @@ async def create_draft(
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if not project and body.fields:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
@@ -268,7 +268,7 @@ async def update_draft(
             try:
                 extra_attachments = await resolve_files(list(extra_attachment_ids))
             except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
             obj.attachments = [
                 a for a in obj.attachments if a.id not in remove_attachment_ids
             ]
@@ -349,7 +349,7 @@ async def create_issue_from_draft(
         try:
             attachments = await resolve_files([a.id for a in draft.attachments])
         except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
 
     obj = m.Issue(
         subject=draft.subject,
@@ -378,7 +378,7 @@ async def create_issue_from_draft(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
-        )
+        ) from err
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await draft.delete()
@@ -430,7 +430,7 @@ async def create_issue(
         try:
             attachments = await resolve_files(body.attachments)
         except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
 
     validated_fields, validation_errors = await validate_custom_fields_values(
         body.fields, project
@@ -468,7 +468,7 @@ async def create_issue(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
-        )
+        ) from err
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await send_event(Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}))
@@ -530,7 +530,7 @@ async def update_issue(
             try:
                 extra_attachments = await resolve_files(list(extra_attachment_ids))
             except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err))
+                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
             obj.attachments = [
                 a for a in obj.attachments if a.id not in remove_attachment_ids
             ]
@@ -563,7 +563,7 @@ async def update_issue(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
-        )
+        ) from err
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
         await obj.replace()

@@ -1,8 +1,10 @@
+# pylint: disable=import-outside-toplevel
 import argparse
 
 __all__ = ('add_ocr_args',)
 
 
+# pylint: disable=unused-argument
 def run_ocr(args: argparse.Namespace) -> None:
     from pm.ocr.app import run
 
