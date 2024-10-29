@@ -2,6 +2,7 @@ FROM python:3.12-alpine3.20 AS get_requirements
 WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 RUN python3 -m pip install --upgrade pip poetry && \
+    poetry self add poetry-plugin-export && \
     poetry export --without-hashes --format=requirements.txt > /app/requirements.txt && \
     poetry export --without-hashes --format=requirements.txt --with ocr > /app/requirements-ocr.txt && \
     poetry export --without-hashes --format=requirements.txt --with dev,ocr > /app/requirements-dev.txt
@@ -78,3 +79,13 @@ VOLUME ["/var/easyocr"]
 ARG version="__DEV__"
 ENV APP_VERSION=$version
 ENTRYPOINT ["python3", "manage.py", "ocr"]
+
+
+FROM python:3.12-slim AS test
+
+WORKDIR /app
+
+COPY --from=get_requirements /app/requirements-dev.txt /app/requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
+    rm -rf requirements.txt
+COPY . /app/
