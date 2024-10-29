@@ -73,7 +73,7 @@ export const IssueView: FC<IssueFormProps> = ({
                 />
             </FieldContainer>
 
-            <FilePreview attachments={issue.attachments} />
+            <FilePreview issue={issue} isDraft={isDraft} />
         </Box>
     );
 };
