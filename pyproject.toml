@@ -5,6 +5,10 @@ authors = ["StarSoultion Dev Team <dev@starsolution.team>"]
 readme = "README.md"
 dynamic = ["version"]
 
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 package-mode = false
 
@@ -50,6 +54,24 @@ easyocr = "*"
 [tool.ruff.format]
 quote-style = "single"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.FORMAT]
+max-line-length = 160
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-locals",
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-public-methods",
+    "broad-exception-caught",
+    "duplicate-code",
+    "fixme",
+]

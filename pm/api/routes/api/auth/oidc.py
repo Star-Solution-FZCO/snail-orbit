@@ -150,10 +150,10 @@ def _decode_state(req: Request, state: str) -> dict:
             CONFIG.JWT_SECRET,
             algorithms=['HS256'],
         )
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as err:
         raise StateCheckException(
             detail='Invalid state',
-        )
+        ) from err
     if not isinstance(data, dict):
         raise StateCheckException(
             detail='Invalid state',
