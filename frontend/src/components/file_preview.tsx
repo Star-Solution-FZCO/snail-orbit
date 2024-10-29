@@ -10,20 +10,22 @@ import { toast } from "react-toastify";
 import {
     clearFiles,
     closeFilePreview,
+    issueApi,
     selectFilePreviewByIndex,
     setFiles,
     setNextFilePreview,
     useAppDispatch,
     useAppSelector,
 } from "store";
-import { AttachmentT } from "types";
+import { IssueT } from "types";
 import { formatBytes } from "utils";
 
 interface IFilePreviewProps {
-    attachments: AttachmentT[];
+    issue: IssueT;
+    isDraft?: boolean;
 }
 
-const FilePreview: FC<IFilePreviewProps> = ({ attachments }) => {
+const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
@@ -33,6 +35,15 @@ const FilePreview: FC<IFilePreviewProps> = ({ attachments }) => {
         files,
         currentIndex,
     } = useAppSelector((state) => state.shared.filePreview);
+
+    const { data: commentsData } = issueApi.useListIssueCommentsQuery(
+        {
+            id: issue.id_readable,
+        },
+        {
+            skip: isDraft,
+        },
+    );
 
     const handleClose = () => {
         dispatch(closeFilePreview());
@@ -73,12 +84,17 @@ const FilePreview: FC<IFilePreviewProps> = ({ attachments }) => {
     };
 
     useEffect(() => {
-        dispatch(setFiles(attachments));
+        const commentsAttachments = commentsData
+            ? commentsData.payload.items
+                  .flatMap((comment) => comment.attachments)
+                  .reverse()
+            : [];
+        dispatch(setFiles([...issue.attachments, ...commentsAttachments]));
 
         return () => {
             dispatch(clearFiles());
         };
-    }, [attachments]);
+    }, [issue.attachments, commentsData?.payload]);
 
     const showNavigationControls = files.length > 1;
 
@@ -127,7 +143,9 @@ const FilePreview: FC<IFilePreviewProps> = ({ attachments }) => {
                     width={1}
                     height={1}
                     display="flex"
-                    justifyContent="space-between"
+                    justifyContent={
+                        showNavigationControls ? "space-between" : "center"
+                    }
                     alignItems="center"
                     px={4}
                     onClick={handleClose}
