@@ -1,4 +1,5 @@
 stages:
+  - build-test-images
   - lint
   - build
 
@@ -12,6 +13,32 @@ default:
 
 .template-init-buildx: &template-init-buildx
   - docker buildx create --use
+
+build-test-api:
+  stage: build-test-images
+  before_script:
+    - *template-login-internal-registry
+    - *template-init-buildx
+  script:
+    - docker buildx build --push
+      --platform linux/amd64
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
+      -t $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target test .
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+lint-backend:
+  stage: lint
+  needs:
+    - job: build-test-api
+  image:
+    name: $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
+  script:
+    - python3 lint.py
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 sec-trivy-src-scan:
   stage: lint

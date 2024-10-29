@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
@@ -38,12 +38,12 @@ class IssueAttachment(BaseModel):
 
 
 class IssueComment(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: Annotated[UUID, Field(default_factory=uuid4)]
     author: UserLinkField
     text: str | None
     created_at: datetime
     updated_at: datetime
-    attachments: list[IssueAttachment] = Field(default_factory=list)
+    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     is_hidden: bool = False
 
 
@@ -54,7 +54,7 @@ class IssueFieldChange(BaseModel):
 
 
 class IssueHistoryRecord(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: Annotated[UUID, Field(default_factory=uuid4)]
     author: UserLinkField
     time: datetime
     changes: list[IssueFieldChange]
@@ -72,20 +72,20 @@ class Issue(Document):
     class Config:
         extra = Extra.allow
 
-    subject: str = Indexed(str)
+    subject: Annotated[str, Indexed(str)]
     text: str | None = None
-    aliases: list[str] = Field(default_factory=list)
+    aliases: Annotated[list[str], Field(default_factory=list)]
 
     project: ProjectLinkField
-    comments: list[IssueComment] = Field(default_factory=list)
-    attachments: list[IssueAttachment] = Field(default_factory=list)
+    comments: Annotated[list[IssueComment], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
 
-    fields: list[CustomFieldValue] = Field(default_factory=list)
-    history: list[IssueHistoryRecord] = Field(default_factory=list)
-    subscribers: list[PydanticObjectId] = Field(default_factory=list)
+    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
+    history: Annotated[list[IssueHistoryRecord], Field(default_factory=list)]
+    subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
 
     created_by: UserLinkField
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
     @property
     def id_readable(self) -> str:
@@ -256,10 +256,10 @@ class IssueDraft(Document):
     subject: str | None = None
     text: str | None = None
     project: ProjectLinkField | None = None
-    fields: list[CustomFieldValue] = Field(default_factory=list)
-    attachments: list[IssueAttachment] = Field(default_factory=list)
+    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     created_by: UserLinkField
-    created_at: datetime = Field(default_factory=utcnow)
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
     async def get_project(self, fetch_links: bool = False) -> Project | None:
         if not self.project:

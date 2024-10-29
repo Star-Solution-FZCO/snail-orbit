@@ -54,9 +54,9 @@ class LocalStorageClient(BaseStorageClient):
                 while content := await src.read(FILE_CHUNK_SIZE):
                     await tmp_file.write(content)
             await aio_os.replace(tmp_path, self.get_file_path(file_id_))
-        except Exception:
+        except Exception as err:
             await aio_os.remove(tmp_path)
-            raise StorageInternalError(file_id, message='Failed to write file')
+            raise StorageInternalError(file_id, message='Failed to write file') from err
 
     async def download_file(
         self, file_id: FileIDT, dst: 'AsyncWritable', folder: str = 'storage'
