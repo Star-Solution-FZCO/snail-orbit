@@ -30,12 +30,12 @@ class EnumOptionOutput(BaseModel):
     is_archived: bool = False
 
     @classmethod
-    def from_obj(cls, obj: m.EnumOption) -> Self:
+    def from_obj(cls, obj: m.EnumField) -> Self:
         return cls(
             uuid=obj.id,
-            value=obj.value.value,
-            color=obj.value.color,
-            is_archived=obj.value.is_archived,
+            value=obj.value,
+            color=obj.color,
+            is_archived=obj.is_archived,
         )
 
 
@@ -50,12 +50,15 @@ class CustomFieldOutput(BaseModel):
 
     @classmethod
     def from_obj(cls, obj: m.CustomField) -> 'CustomFieldOutput':
+        default_value = obj.default_value
+        if obj.type == m.CustomFieldTypeT.DATE:
+            default_value = obj.default_value.date() if obj.default_value else None
         return cls(
             id=obj.id,
             name=obj.name,
             type=obj.type,
             is_nullable=obj.is_nullable,
-            default_value=obj.default_value,
+            default_value=default_value,
             description=obj.description,
             ai_description=obj.ai_description,
         )
@@ -83,6 +86,8 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
@@ -107,6 +112,8 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[
@@ -133,14 +140,14 @@ class StateOptionOutput(BaseModel):
     is_archived: bool = False
 
     @classmethod
-    def from_obj(cls, obj: m.StateOption) -> Self:
+    def from_obj(cls, obj: m.StateField) -> Self:
         return cls(
             uuid=obj.id,
-            value=obj.value.state,
-            color=obj.value.color,
-            is_resolved=obj.value.is_resolved,
-            is_closed=obj.value.is_closed,
-            is_archived=obj.value.is_archived,
+            value=obj.state,
+            color=obj.color,
+            is_resolved=obj.is_resolved,
+            is_closed=obj.is_closed,
+            is_archived=obj.is_archived,
         )
 
 
@@ -152,6 +159,8 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[StateOptionOutput.from_obj(opt) for opt in obj.options],
@@ -167,15 +176,13 @@ class VersionOptionOutput(BaseModel):
     is_archived: bool
 
     @classmethod
-    def from_obj(cls, obj: m.VersionOption) -> Self:
+    def from_obj(cls, obj: m.VersionField) -> Self:
         return cls(
             uuid=obj.id,
-            value=obj.value.version,
-            release_date=obj.value.release_date.date()
-            if obj.value.release_date
-            else None,
-            is_released=obj.value.is_released,
-            is_archived=obj.value.is_archived,
+            value=obj.version,
+            release_date=obj.release_date.date() if obj.release_date else None,
+            is_released=obj.is_released,
+            is_archived=obj.is_archived,
         )
 
 
@@ -187,6 +194,8 @@ class CustomFieldOutputWithVersionOptions(CustomFieldOutput):
         return cls(
             id=obj.id,
             name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
