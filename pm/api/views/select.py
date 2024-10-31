@@ -67,43 +67,43 @@ def user_link_select(
     return _select(objs, query, _user_link_filter, lambda o: o.name)
 
 
-def _state_filter(obj: m.StateOption, search: str | None) -> bool:
+def _state_filter(obj: m.StateField, search: str | None) -> bool:
     if obj.value.is_archived:
         return False
     if not search:
         return True
-    return bool(re.search(re.escape(search), obj.value.state, re.IGNORECASE))
+    return bool(re.search(re.escape(search), obj.state, re.IGNORECASE))
 
 
 def state_option_select(
-    objs: Sequence[m.StateOption], query: SelectParams
-) -> SelectResult[m.StateOption]:
-    return _select(objs, query, _state_filter, lambda o: o.value.state)
+    objs: Sequence[m.StateField], query: SelectParams
+) -> SelectResult[m.StateField]:
+    return _select(objs, query, _state_filter, lambda o: o.state)
 
 
-def _enum_filter(obj: m.EnumOption, search: str | None) -> bool:
-    if obj.value.is_archived:
+def _enum_filter(obj: m.EnumField, search: str | None) -> bool:
+    if obj.is_archived:
         return False
     if not search:
         return True
-    return bool(re.search(re.escape(search), obj.value.value, re.IGNORECASE))
+    return bool(re.search(re.escape(search), obj.value, re.IGNORECASE))
 
 
 def enum_option_select(
-    objs: Sequence[m.EnumOption], query: SelectParams
-) -> SelectResult[m.EnumOption]:
-    return _select(objs, query, _enum_filter, lambda o: o.value.value)
+    objs: Sequence[m.EnumField], query: SelectParams
+) -> SelectResult[m.EnumField]:
+    return _select(objs, query, _enum_filter, lambda o: o.value)
 
 
-def _version_filter(obj: m.VersionOption, search: str | None) -> bool:
+def _version_filter(obj: m.VersionField, search: str | None) -> bool:
     if obj.value.is_archived:
         return False
     if not search:
         return True
-    return bool(re.search(re.escape(search), obj.value.version, re.IGNORECASE))
+    return bool(re.search(re.escape(search), obj.version, re.IGNORECASE))
 
 
 def version_option_select(
-    objs: Sequence[m.VersionOption], query: SelectParams
-) -> SelectResult[m.VersionOption]:
-    return _select(objs, query, _version_filter, lambda o: o.value.version)
+    objs: Sequence[m.VersionField], query: SelectParams
+) -> SelectResult[m.VersionField]:
+    return _select(objs, query, _version_filter, lambda o: o.version)
