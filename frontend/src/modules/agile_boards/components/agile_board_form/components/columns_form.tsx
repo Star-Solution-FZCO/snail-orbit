@@ -16,12 +16,12 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { BasicUserT, EnumOptionT, StateOptionT } from "types";
+import { BasicUserT, EnumOptionT, StateOptionT, VersionOptionT } from "types";
 import { useListQueryParams } from "utils";
 import { AgileBoardFormData } from "../agile_board_form.schema";
 
 const getOptionValue = (
-    option: EnumOptionT | StateOptionT | BasicUserT,
+    option: EnumOptionT | StateOptionT | BasicUserT | VersionOptionT,
 ): string => {
     return "value" in option ? option.value : option.name;
 };

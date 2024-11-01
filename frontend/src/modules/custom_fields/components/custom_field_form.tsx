@@ -23,6 +23,8 @@ const editableDefaultValueTypes = ["user", "enum", "state"];
 
 const customFieldSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
+    description: yup.string().nullable().default(null),
+    ai_description: yup.string().nullable().default(null),
     type: yup
         .string()
         .oneOf(customFieldsTypes)
@@ -82,6 +84,8 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         defaultValues: {
             name: defaultValues?.name || "",
             type: defaultValues?.type || "string",
+            description: defaultValues?.description || null,
+            ai_description: defaultValues?.ai_description || null,
             is_nullable: defaultValues?.is_nullable || false,
             default_value: defaultValues?.default_value || null,
         },
@@ -175,6 +179,30 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                     )}
                 />
             )}
+
+            <TextField
+                {...register("description")}
+                label={t("description")}
+                error={!!errors.description}
+                helperText={t(errors.description?.message || "")}
+                variant="outlined"
+                size="small"
+                multiline
+                rows={6}
+                fullWidth
+            />
+
+            <TextField
+                {...register("ai_description")}
+                label={t("customFields.form.aiDescription")}
+                error={!!errors.ai_description}
+                helperText={t(errors.ai_description?.message || "")}
+                variant="outlined"
+                size="small"
+                multiline
+                rows={6}
+                fullWidth
+            />
 
             <Controller
                 name="is_nullable"

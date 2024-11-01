@@ -8,37 +8,38 @@ import {
     DialogContent,
     DialogTitle,
     FormControlLabel,
-    Popover,
     TextField,
 } from "@mui/material";
-import ColorPicker from "@uiw/react-color-compact";
-import { FC, useEffect, useState } from "react";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import { FC, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { StateOptionT } from "types";
+import { VersionOptionT } from "types";
 import * as yup from "yup";
 
-const stateOptionSchema = yup.object().shape({
+const versionOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
-    color: yup.string().nullable().default(null),
-    is_resolved: yup.boolean().default(false),
-    is_closed: yup.boolean().default(false),
+    release_date: yup.string().nullable().default(null),
+    is_released: yup.boolean().default(false),
+    is_archived: yup.boolean().default(false),
 });
 
-type StateOptionFormData = yup.InferType<typeof stateOptionSchema>;
+type VersionOptionFormData = yup.InferType<typeof versionOptionSchema>;
 
-interface IStateOptionFormDialogProps {
+interface IVersionOptionFormDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: StateOptionFormData) => void;
-    defaultValues?: StateOptionT | null;
+    onSubmit: (data: VersionOptionFormData) => void;
+    defaultValues?: VersionOptionT | null;
     loading?: boolean;
 }
 
-const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
+const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
     open,
     onClose,
-    onSubmit,
+    onSubmit: onSubmitFromProps,
     defaultValues,
     loading,
 }) => {
@@ -50,24 +51,22 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         handleSubmit,
         reset,
         formState: { errors, isDirty },
-    } = useForm({ defaultValues: defaultValues || { value: "", color: null } });
+    } = useForm({
+        defaultValues: defaultValues || { value: "", release_date: null },
+    });
 
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-    const handleClickColorPicker = (
-        event: React.MouseEvent<HTMLButtonElement>,
-    ) => {
-        setAnchorEl(event.currentTarget);
+    const onSubmit = (data: VersionOptionFormData) => {
+        const formattedData = {
+            ...data,
+            release_date: data.release_date
+                ? dayjs(data.release_date).format("YYYY-MM-DD")
+                : null,
+        };
+        onSubmitFromProps(formattedData);
     };
-
-    const handleCloseColorPicker = () => {
-        setAnchorEl(null);
-    };
-
-    const popoverOpen = Boolean(anchorEl);
 
     useEffect(() => {
-        reset(defaultValues || { value: "", color: null });
+        reset(defaultValues || { value: "", release_date: null });
     }, [defaultValues, reset]);
 
     return (
@@ -93,56 +92,32 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                     />
 
                     <Controller
-                        name="color"
+                        name="release_date"
                         control={control}
                         render={({ field: { value, onChange } }) => (
-                            <FormControlLabel
-                                sx={{
-                                    "&.MuiFormControlLabel-root": {
-                                        m: 0,
-                                    },
-                                }}
-                                control={
-                                    <>
-                                        <Button
-                                            sx={{
-                                                minWidth: "40px",
-                                                height: "40px",
-                                                mr: 1,
-                                                backgroundColor: value,
-                                                "&:hover": {
-                                                    backgroundColor: value,
-                                                },
-                                            }}
-                                            onClick={handleClickColorPicker}
-                                            variant="outlined"
-                                        />
-
-                                        <Popover
-                                            open={popoverOpen}
-                                            anchorEl={anchorEl}
-                                            onClose={handleCloseColorPicker}
-                                            anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "left",
-                                            }}
-                                        >
-                                            <ColorPicker
-                                                color={value || ""}
-                                                onChange={(color) =>
-                                                    onChange(color.hex)
-                                                }
-                                            />
-                                        </Popover>
-                                    </>
-                                }
-                                label={t("customFields.options.color")}
-                            />
+                            <LocalizationProvider
+                                dateAdapter={AdapterDayjs}
+                                adapterLocale="en-gb"
+                            >
+                                <DatePicker
+                                    value={value}
+                                    label={t(
+                                        "customFields.options.version.releaseDate",
+                                    )}
+                                    onChange={onChange}
+                                    format="DD-MM-YYYY"
+                                    slotProps={{
+                                        textField: {
+                                            size: "small",
+                                        },
+                                    }}
+                                />
+                            </LocalizationProvider>
                         )}
                     />
 
                     <Controller
-                        name="is_resolved"
+                        name="is_released"
                         control={control}
                         render={({ field: { value, onChange } }) => (
                             <FormControlLabel
@@ -156,13 +131,15 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                                         }
                                     />
                                 }
-                                label={t("customFields.options.state.resolved")}
+                                label={t(
+                                    "customFields.options.version.released",
+                                )}
                             />
                         )}
                     />
 
                     <Controller
-                        name="is_closed"
+                        name="is_archived"
                         control={control}
                         render={({ field: { value, onChange } }) => (
                             <FormControlLabel
@@ -176,7 +153,9 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                                         }
                                     />
                                 }
-                                label={t("customFields.options.state.closed")}
+                                label={t(
+                                    "customFields.options.version.archived",
+                                )}
                             />
                         )}
                     />
@@ -207,4 +186,4 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
     );
 };
 
-export { StateOptionFormDialog };
+export { VersionOptionFormDialog };
