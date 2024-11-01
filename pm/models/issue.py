@@ -11,8 +11,12 @@ from ._audit import audited_model
 from .custom_fields import (
     CustomField,
     CustomFieldLink,
+    CustomFieldTypeT,
     CustomFieldValue,
     CustomFieldValueT,
+    EnumField,
+    StateField,
+    VersionField,
 )
 from .project import Project, ProjectLinkField
 from .user import User, UserLinkField
@@ -227,6 +231,27 @@ class Issue(Document):
             array_filters=[{'c.field.id': field.id}],
         )
 
+    @classmethod
+    async def update_field_option_embedded_links(
+        cls,
+        field: CustomField | CustomFieldLink,
+        option: VersionField | StateField | EnumField,
+    ) -> None:
+        if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
+            await cls.find(
+                {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
+            ).update(
+                {'$set': {'fields.$[f].value.$[val]': option}},
+                array_filters=[{'f.id': field.id}, {'val.id': option.id}],
+            )
+            return
+        await cls.find(
+            {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
+        ).update(
+            {'$set': {'fields.$[f].value': option}},
+            array_filters=[{'f.id': field.id, 'f.value.id': option.id}],
+        )
+
     def _get_latest_comment_or_history(
         self,
     ) -> tuple[IssueComment | IssueHistoryRecord, datetime | None]:
@@ -295,4 +320,25 @@ class IssueDraft(Document):
         await cls.find(cls.attachments.author.id == user.id).update(
             {'$set': {'attachments.$[a].author': user}},
             array_filters=[{'a.author.id': user.id}],
+        )
+
+    @classmethod
+    async def update_field_option_embedded_links(
+        cls,
+        field: CustomField | CustomFieldLink,
+        option: VersionField | StateField | EnumField,
+    ) -> None:
+        if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
+            await cls.find(
+                {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
+            ).update(
+                {'$set': {'fields.$[f].value.$[val]': option}},
+                array_filters=[{'f.id': field.id}, {'val.id': option.id}],
+            )
+            return
+        await cls.find(
+            {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
+        ).update(
+            {'$set': {'fields.$[f].value': option}},
+            array_filters=[{'f.id': field.id, 'f.value.id': option.id}],
         )
