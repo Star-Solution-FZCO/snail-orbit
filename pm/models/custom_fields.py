@@ -506,8 +506,8 @@ class StateCustomField(CustomField):
         if value is None:
             return value
         if isinstance(value, StateField):
-            value = value.value
-        opts = {opt.value: opt for opt in self.options}
+            value = value.state
+        opts = {opt.state: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'

@@ -68,7 +68,7 @@ def user_link_select(
 
 
 def _state_filter(obj: m.StateField, search: str | None) -> bool:
-    if obj.value.is_archived:
+    if obj.is_archived:
         return False
     if not search:
         return True
@@ -96,7 +96,7 @@ def enum_option_select(
 
 
 def _version_filter(obj: m.VersionField, search: str | None) -> bool:
-    if obj.value.is_archived:
+    if obj.is_archived:
         return False
     if not search:
         return True
