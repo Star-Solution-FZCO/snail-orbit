@@ -1,4 +1,6 @@
 import asyncio
+import os
+import secrets
 
 import mock
 import pytest
@@ -7,9 +9,31 @@ from beanie import init_beanie
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient
 
-import pm.models as m
-from pm.config import CONFIG
 from tests.utils.aiofiles_fake import aio_fs
+
+if dns_servers := os.getenv('DNS_SERVERS'):
+    import dns.resolver
+
+    dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+    dns.resolver.default_resolver.nameservers = dns_servers.split(',')
+
+
+TEST_CONFIG = {
+    'DEV_MODE': True,
+    'DEBUG': True,
+    'JWT_SECRET': secrets.token_hex(32),
+    'DEV_PASSWORD': secrets.token_hex(32),
+}
+ENV_PREFIX = 'SNAIL_ORBIT'
+
+
+@pytest.fixture(autouse=True, scope='session')
+def set_env():
+    for k, v in TEST_CONFIG.items():
+        os.environ[f'{ENV_PREFIX}_{k}'] = str(v)
+    yield
+    for k in TEST_CONFIG:
+        os.unsetenv(f'{ENV_PREFIX}_{k}')
 
 
 @pytest.fixture(autouse=True)
@@ -19,6 +43,9 @@ def fs_session():
 
 @pytest_asyncio.fixture(autouse=True)
 async def init_db():
+    import pm.models as m
+    from pm.config import CONFIG
+
     client = AsyncIOMotorClient(
         CONFIG.DB_URI,
     )
