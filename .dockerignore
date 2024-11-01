@@ -4,6 +4,11 @@ snippets/
 .dockerignore
 .docker
 
+# coverage and tests
+.coverage
+coverage-report.xml
+pytest-report.xml
+
 # Frontend
 frontend/
 

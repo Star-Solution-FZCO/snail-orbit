@@ -49,6 +49,7 @@ pytest = "*"
 pytest-asyncio = "*"
 httpx = "*"
 pyfakefs = "*"
+pytest-cov = "*"
 
 [tool.poetry.group.ocr]
 optional = true
