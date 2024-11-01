@@ -15,6 +15,14 @@ default:
 .template-init-buildx: &template-init-buildx
   - docker buildx create --use
 
+.backend-changes: &backend-changes
+  changes:
+    - "**/*.py"
+    - "pyproject.toml"
+    - "poetry.lock"
+    - "Dockerfile"
+
+
 build-test-api:
   stage: build-test-images
   before_script:
@@ -29,17 +37,17 @@ build-test-api:
       --build-arg version=$CI_COMMIT_SHORT_SHA --target test .
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
 
 lint-backend:
   stage: lint
-  needs:
-    - job: build-test-api
   image:
     name: $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
   script:
     - python3 lint.py
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
 
 test-backend:
   stage: test
@@ -59,6 +67,7 @@ test-backend:
         path: coverage-report.xml
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
 
 sec-trivy-src-scan:
   stage: lint
