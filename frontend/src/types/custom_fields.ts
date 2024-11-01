@@ -13,6 +13,8 @@ export const customFieldsTypes = [
     "enum",
     "enum_multi",
     "state",
+    "version",
+    "version_multi",
 ] as const;
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
@@ -60,6 +62,21 @@ export type UpdateStateOptionT = {
     option_id: string;
 } & Partial<Omit<CreateStateOptionT, "value"> & { state: string }>;
 
+export type CreateVersionOptionT = {
+    value: string;
+    release_date: string | null;
+    is_released: boolean;
+    is_archived: boolean;
+};
+
+export type VersionOptionT = {
+    uuid: string;
+} & CreateVersionOptionT;
+
+export type UpdateVersionOptionT = {
+    option_id: string;
+} & Partial<CreateVersionOptionT>;
+
 export type CustomFieldValueT =
     | boolean
     | number
@@ -76,10 +93,13 @@ export type CustomFieldValueT =
 export type CustomFieldOptionT =
     | EnumOptionT
     | StateOptionT
-    | UserOrGroupOptionT;
+    | UserOrGroupOptionT
+    | VersionOptionT;
 
 export type CreateCustomFieldT = {
     name: string;
+    description: string | null;
+    ai_description: string | null;
     type: CustomFieldTypeT;
     is_nullable: boolean;
     default_value: CustomFieldValueT;
@@ -108,7 +128,7 @@ type CustomFieldTypeValuePair = {
 
 export type CustomFieldT = CreateCustomFieldT & {
     id: string;
-    options?: EnumOptionT[];
+    options?: CustomFieldOptionT[];
 } & CustomFieldTypeValuePair;
 
 export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;

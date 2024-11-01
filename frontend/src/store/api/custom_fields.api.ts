@@ -5,6 +5,7 @@ import {
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateStateOptionT,
+    CreateVersionOptionT,
     CustomFieldT,
     EnumOptionT,
     ListQueryParams,
@@ -14,6 +15,8 @@ import {
     UpdateCustomFieldT,
     UpdateEnumOptionT,
     UpdateStateOptionT,
+    UpdateVersionOptionT,
+    VersionOptionT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
@@ -183,8 +186,48 @@ export const customFieldsApi = createApi({
                 { type: "CustomFields", id },
             ],
         }),
+        createCustomFieldVersionOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & CreateVersionOptionT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `custom_field/${id}/version-option`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        updateCustomFieldVersionOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & UpdateVersionOptionT
+        >({
+            query: ({ id, option_id, ...body }) => ({
+                url: `custom_field/${id}/version-option/${option_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        deleteCustomFieldVersionOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string; option_id: string }
+        >({
+            query: ({ id, option_id }) => ({
+                url: `custom_field/${id}/version-option/${option_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
         listSelectOptions: build.query<
-            ListResponse<EnumOptionT | StateOptionT | BasicUserT>,
+            ListResponse<
+                EnumOptionT | StateOptionT | BasicUserT | VersionOptionT
+            >,
             { id: string } & (ListQueryParams | void)
         >({
             query: ({ id, ...params }) => ({
