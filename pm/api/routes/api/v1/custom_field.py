@@ -85,7 +85,7 @@ class EnumOptionUpdateBody(BaseModel):
 
 
 class StateOptionUpdateBody(BaseModel):
-    state: str | None = None
+    value: str | None = None
     color: str | None = None
     is_resolved: bool | None = None
     is_closed: bool | None = None
@@ -256,9 +256,13 @@ async def update_enum_option(
         setattr(opt, k, v)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
-    # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
+
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -278,11 +282,14 @@ async def remove_enum_option(
     opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
-    # todo: validate option is not in use
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = None
     obj.options.remove(opt)
-    # todo: update issues
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -396,12 +403,16 @@ async def update_state_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        setattr(opt.value, k, v)
+        k = 'state' if k == 'value' else k
+        setattr(opt, k, v)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
-    # todo: update issues
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -419,10 +430,14 @@ async def remove_state_option(
     opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
     obj.options.remove(opt)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = None
-    # todo: update issues
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -482,6 +497,7 @@ async def update_version_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
+        k = 'version' if k == 'value' else k
         if k == 'release_date':
             v = datetime.combine(v, datetime.min.time()) if v else None
         setattr(opt, k, v)
@@ -489,6 +505,10 @@ async def update_version_option(
         obj.default_value = opt
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -511,6 +531,11 @@ async def remove_version_option(
     opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
     obj.options.remove(opt)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = None
@@ -562,3 +587,11 @@ async def select_options(
             items=[VersionOptionOutput.from_obj(opt) for opt in selected.items],
         )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')
+
+
+async def count_issues_with_option(
+    custom_field_id: PydanticObjectId, option_id: str
+) -> int:
+    return await m.Issue.find(
+        {'fields': {'$elemMatch': {'id': custom_field_id, 'value.id': option_id}}}
+    ).count()
