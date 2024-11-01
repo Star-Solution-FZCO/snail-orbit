@@ -1,18 +1,26 @@
 from typing import TYPE_CHECKING
 
+import mock
 import pytest
 import pytest_asyncio
 
 from tests.utils.avatar import gravatar_like_hash
+from tests.utils.dict_utils import filter_dict
 
 from .create import (
+    ALL_PERMISSIONS,
+    ROLE_PERMISSIONS_BY_CATEGORY,
     create_group,
     create_groups,
     create_project,
     create_role,
     create_user,
 )
-from .custom_fields import create_custom_field
+from .custom_fields import (
+    create_custom_field,
+    create_custom_fields,
+    link_custom_field_to_project,
+)
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
@@ -351,7 +359,12 @@ async def test_api_v1_user_update(
     'role_payload',
     [
         pytest.param(
-            {'name': 'Test role', 'description': 'Test role description'}, id='role'
+            {
+                'name': 'Test role',
+                'description': 'Test role description',
+                'permissions': ['issue:create', 'issue:read'],
+            },
+            id='role',
         )
     ],
 )
@@ -364,7 +377,12 @@ async def test_api_v1_role_post(create_role: str, role_payload: dict) -> None:
     'role_payload',
     [
         pytest.param(
-            {'name': 'Test role', 'description': 'Test role description'}, id='role'
+            {
+                'name': 'Test role',
+                'description': 'Test role description',
+                'permissions': ['issue:create', 'issue:read'],
+            },
+            id='role',
         )
     ],
 )
@@ -376,11 +394,29 @@ async def test_api_v1_role_get(
 ) -> None:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
+    permissions = set(role_payload.get('permissions', []))
+
     response = test_client.get(f'/api/v1/role/{create_role}', headers=headers)
     assert response.status_code == 200
     data = response.json()
-    del data['payload']['permissions']
-    assert data == {'success': True, 'payload': {'id': create_role, **role_payload}}
+    expected_permissions = [
+        {
+            'label': cat,
+            'permissions': [
+                {'key': perm_k, 'label': perm_l, 'granted': perm_k in permissions}
+                for perm_k, perm_l in perms.items()
+            ],
+        }
+        for cat, perms in ROLE_PERMISSIONS_BY_CATEGORY.items()
+    ]
+    assert data == {
+        'success': True,
+        'payload': {
+            'id': create_role,
+            **role_payload,
+            'permissions': expected_permissions,
+        },
+    }
 
 
 @pytest.mark.asyncio
@@ -830,3 +866,329 @@ async def test_api_v1_custom_field_get_list_update(
         'success': True,
         'payload': {**expected_payload, 'name': 'Updated name'},
     }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'custom_field_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test field',
+                'type': 'string',
+                'is_nullable': True,
+                'description': 'Enum custom field description',
+                'ai_description': None,
+                'default_value': None,
+            },
+            id='string',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test project',
+                'slug': 'test',
+                'description': 'Test project description',
+                'ai_description': 'Test project AI description',
+            },
+            id='project',
+        )
+    ],
+)
+async def test_api_v1_custom_field_project_link(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_project: str,
+    create_custom_field: dict,
+    project_payload: dict,
+    custom_field_payload: dict,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        f'/api/v1/project/{create_project}/field/{create_custom_field["id"]}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            'id': create_project,
+            **project_payload,
+            'custom_fields': [
+                {'id': create_custom_field['id'], **custom_field_payload}
+            ],
+            'workflows': [],
+            'is_subscribed': False,
+            'is_active': True,
+        },
+    }
+
+    response = test_client.get(
+        f'/api/v1/project/{create_project}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            'id': create_project,
+            **project_payload,
+            'custom_fields': [
+                {'id': create_custom_field['id'], **custom_field_payload}
+            ],
+            'workflows': [],
+            'is_subscribed': False,
+            'is_active': True,
+        },
+    }
+
+    response = test_client.delete(
+        f'/api/v1/project/{create_project}/field/{create_custom_field["id"]}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            'id': create_project,
+            **project_payload,
+            'custom_fields': [],
+            'workflows': [],
+            'is_subscribed': False,
+            'is_active': True,
+        },
+    }
+
+
+@pytest_asyncio.fixture
+async def create_project_with_custom_fields(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_project: str,
+    create_custom_fields: list[dict],
+) -> dict:
+    for cf in create_custom_fields:
+        await link_custom_field_to_project(
+            test_client, create_initial_admin, create_project, cf['id']
+        )
+    return {
+        'project_id': create_project,
+        'custom_fields': create_custom_fields,
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+                {
+                    'name': 'Test field 2',
+                    'type': 'integer',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test project',
+                'slug': 'test',
+                'description': 'Test project description',
+                'ai_description': 'Test project AI description',
+            },
+            id='project',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {'name': 'Test role', 'description': 'Test role description'}, id='role'
+        )
+    ],
+)
+async def test_api_v1_custom_field_project_link_multiple(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_project_with_custom_fields: dict,
+    project_payload: dict,
+    custom_field_payloads: list[dict],
+    create_role: str,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    project_id = create_project_with_custom_fields['project_id']
+    cf_ids = {cf['id'] for cf in create_project_with_custom_fields['custom_fields']}
+    response = test_client.get(
+        f'/api/v1/project/{project_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == project_id
+    assert cf_ids == {cf['id'] for cf in data['payload']['custom_fields']}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+                {
+                    'name': 'Test field 2',
+                    'type': 'integer',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test project',
+                'slug': 'test',
+                'description': 'Test project description',
+                'ai_description': 'Test project AI description',
+            },
+            id='project',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test role',
+                'description': 'Test role description',
+                'permissions': ALL_PERMISSIONS,
+            },
+            id='role',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'issue_payload',
+    [
+        pytest.param(
+            {
+                'subject': 'Test issue',
+                'text': 'Test issue text\nBlah blah blah',
+            },
+            id='issue',
+        )
+    ],
+)
+async def test_api_v1_issue(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_role: str,
+    create_project_with_custom_fields: dict,
+    custom_field_payloads: list[dict],
+    issue_payload: dict,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    project_id = create_project_with_custom_fields['project_id']
+
+    response = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': create_role,
+        },
+    )
+    assert response.status_code == 200
+
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+        response = test_client.post(
+            f'/api/v1/issue',
+            headers=headers,
+            json={
+                'project_id': project_id,
+                **issue_payload,
+            },
+        )
+        mock_notify.assert_called_once()
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    issue_id = data['payload']['id']
+    issue_readable_id = data['payload']['id_readable']
+
+    response = test_client.get(
+        f'/api/v1/issue/{issue_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert filter_dict(
+        data['payload'], excluded_keys={'created_at', 'created_by', 'fields', 'project'}
+    ) == {
+        'id': issue_id,
+        'aliases': [issue_readable_id],
+        'id_readable': issue_readable_id,
+        **issue_payload,
+        'attachments': [],
+        'is_subscribed': True,
+        'updated_at': None,
+        'updated_by': None,
+    }
+    assert data['payload']['project']['id'] == project_id
+    assert data['payload']['created_by']['id'] == admin_id
+    assert data['payload']['fields'].keys() == {
+        cf['name'] for cf in custom_field_payloads
+    }
+
+    response = test_client.get(
+        f'/api/v1/issue/{issue_readable_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == issue_id

@@ -7,7 +7,12 @@ if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
 
-__all__ = ('create_custom_field',)
+__all__ = (
+    'create_custom_field',
+    'create_custom_fields',
+    'link_custom_field_to_project',
+    'unlink_custom_field_from_project',
+)
 
 CUSTOM_FIELDS_PLAIN_TYPES = (
     'string',
@@ -245,3 +250,41 @@ async def create_custom_fields(
         )
         res.append(data)
     return res
+
+
+async def link_custom_field_to_project(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    project_id: str,
+    custom_field_id: str,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        f'/api/v1/project/{project_id}/field/{custom_field_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == project_id
+    assert any(cf['id'] == custom_field_id for cf in data['payload']['custom_fields'])
+
+
+async def unlink_custom_field_from_project(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    project_id: str,
+    custom_field_id: str,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.delete(
+        f'/api/v1/project/{project_id}/field/{custom_field_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == project_id
+    assert all(cf['id'] != custom_field_id for cf in data['payload']['custom_fields'])

@@ -4,6 +4,7 @@ import pytest
 import pytest_asyncio
 
 from tests.utils.avatar import gravatar_like_hash
+from tests.utils.dict_utils import filter_dict
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
@@ -17,7 +18,59 @@ __all__ = (
     'create_roles',
     'create_group',
     'create_groups',
+    'ROLE_PERMISSIONS_BY_CATEGORY',
+    'ALL_PERMISSIONS',
 )
+
+
+ROLE_PERMISSIONS_BY_CATEGORY = {
+    'Project': {
+        'project:read': 'Read project',
+        'project:update': 'Update project',
+        'project:delete': 'Delete project',
+    },
+    'Issue': {
+        'issue:create': 'Create issue',
+        'issue:read': 'Read issue',
+        'issue:update': 'Update issue',
+        'issue:delete': 'Delete issue',
+    },
+    'Comment': {
+        'comment:create': 'Create comment',
+        'comment:read': 'Read comment',
+        'comment:update': 'Update comment',
+        'comment:delete_own': 'Delete own comment',
+        'comment:delete': 'Delete comment',
+        'comment:hide': 'Hide comment',
+        'comment:restore': 'Restore hidden comment',
+    },
+    'History': {
+        'history:hide': 'Hide history record',
+        'history:restore': 'Restore hidden history record',
+    },
+}
+
+EMPTY_ROLE_PERMISSIONS = [
+    {
+        'label': cat,
+        'permissions': [
+            {'key': perm_k, 'label': perm_l, 'granted': False}
+            for perm_k, perm_l in perms.items()
+        ],
+    }
+    for cat, perms in ROLE_PERMISSIONS_BY_CATEGORY.items()
+]
+
+ALL_PERMISSIONS = {
+    perm for perms in ROLE_PERMISSIONS_BY_CATEGORY.values() for perm in perms
+}
+
+
+def get_category_by_permission(permission: str) -> str:
+    for cat, perms in ROLE_PERMISSIONS_BY_CATEGORY.items():
+        if permission in perms:
+            return cat
+    raise ValueError(f'Unknown permission: {permission}')
 
 
 async def _create_project(
@@ -118,6 +171,32 @@ async def create_users(
     return user_ids
 
 
+async def grant_permission(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    role_id: str,
+    permission_key: str,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        f'/api/v1/role/{role_id}/permission/{permission_key}', headers=headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == role_id
+    cat_perm = next(
+        cat['permissions']
+        for cat in data['payload']['permissions']
+        if cat['label'] == get_category_by_permission(permission_key)
+    )
+    assert cat_perm, f'{data["payload"]["permissions"]=}'
+    assert any(
+        perm['key'] == permission_key and perm['granted'] for perm in cat_perm
+    ), f'{cat_perm=}'
+
+
 async def _create_role(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
@@ -125,15 +204,27 @@ async def _create_role(
 ) -> str:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.post('/api/v1/role', headers=headers, json=role_payload)
+    role_payload_ = filter_dict(role_payload, excluded_keys=('permissions',))
+    permissions = set(role_payload.get('permissions', []))
+
+    response = test_client.post('/api/v1/role', headers=headers, json=role_payload_)
     assert response.status_code == 200
     data = response.json()
     assert data['payload']['id']
-    del data['payload']['permissions']
     assert data == {
         'success': True,
-        'payload': {'id': data['payload']['id'], **role_payload},
-    }
+        'payload': {
+            'id': data['payload']['id'],
+            **role_payload,
+            'permissions': EMPTY_ROLE_PERMISSIONS,
+        },
+    }, f'{data=}'
+
+    for perm in permissions:
+        await grant_permission(
+            test_client, create_initial_admin, data['payload']['id'], perm
+        )
+
     return data['payload']['id']
 
 
