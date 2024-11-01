@@ -85,3 +85,4 @@ disable = [
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings -v --color=yes"
+asyncio_default_fixture_loop_scope = "function"
