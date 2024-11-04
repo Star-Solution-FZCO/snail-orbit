@@ -85,7 +85,7 @@ class EnumOptionUpdateBody(BaseModel):
 
 
 class StateOptionUpdateBody(BaseModel):
-    state: str | None = None
+    value: str | None = None
     color: str | None = None
     is_resolved: bool | None = None
     is_closed: bool | None = None
@@ -220,14 +220,14 @@ async def add_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    if any(opt.value.value == body.value for opt in obj.options):
+    if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.EnumOption(
-            id=uuid4(),
-            value=m.EnumField(
-                value=body.value, color=body.color, is_archived=body.is_archived
-            ),
+        m.EnumField(
+            id=str(uuid4()),
+            value=body.value,
+            color=body.color,
+            is_archived=body.is_archived,
         )
     )
     if obj.is_changed:
@@ -241,6 +241,7 @@ async def update_enum_option(
     option_id: UUID,
     body: EnumOptionUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -248,14 +249,20 @@ async def update_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        setattr(opt.value, k, v)
-    # todo: update issues
+        setattr(opt, k, v)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = opt
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
+
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -264,6 +271,7 @@ async def remove_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    option_id_ = str(option_id)
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -271,12 +279,17 @@ async def remove_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
-    # todo: validate option is not in use
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = None
     obj.options.remove(opt)
-    # todo: update issues
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -357,18 +370,16 @@ async def add_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.value.state == body.value for opt in obj.options):
+    if any(opt.state == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.StateOption(
-            id=uuid4(),
-            value=m.StateField(
-                state=body.value,
-                is_resolved=body.is_resolved,
-                is_closed=body.is_closed,
-                color=body.color,
-                is_archived=body.is_archived,
-            ),
+        m.StateField(
+            id=str(uuid4()),
+            state=body.value,
+            is_resolved=body.is_resolved,
+            is_closed=body.is_closed,
+            color=body.color,
+            is_archived=body.is_archived,
         )
     )
     if obj.is_changed:
@@ -382,19 +393,26 @@ async def update_state_option(
     option_id: UUID,
     body: StateOptionUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
         m.StateCustomField.id == custom_field_id
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        setattr(opt.value, k, v)
-    # todo: update issues
+        k = 'state' if k == 'value' else k
+        setattr(opt, k, v)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = opt
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -403,16 +421,23 @@ async def remove_state_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
+    option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
         m.StateCustomField.id == custom_field_id
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
     obj.options.remove(opt)
-    # todo: update issues
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = None
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -423,25 +448,28 @@ async def add_version_option(
     custom_field_id: PydanticObjectId,
     body: VersionOptionCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
-    obj: m.CustomField | None = await m.VersionCustomField.find_one(
-        m.VersionCustomField.id == custom_field_id
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id, with_children=True
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.value.version == body.version for opt in obj.options):
+    if obj.type not in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Custom field is not of type VERSION or VERSION_MULTI',
+        )
+    if any(opt.version == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.VersionOption(
-            id=uuid4(),
-            value=m.VersionField(
-                version=body.value,
-                release_date=datetime.combine(body.release_date, datetime.min.time())
-                if body.release_date
-                else None,
-                is_released=body.is_released,
-                is_archived=body.is_archived,
-            ),
-        )
+        m.VersionField(
+            id=str(uuid4()),
+            version=body.value,
+            release_date=datetime.combine(body.release_date, datetime.min.time())
+            if body.release_date
+            else None,
+            is_released=body.is_released,
+            is_archived=body.is_archived,
+        ),
     )
     if obj.is_changed:
         await obj.save_changes()
@@ -454,23 +482,33 @@ async def update_version_option(
     option_id: UUID,
     body: VersionOptionUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
-    obj: m.CustomField | None = await m.VersionCustomField.find_one(
-        m.VersionCustomField.id == custom_field_id
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id, with_children=True
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if obj.type not in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Custom field is not of type VERSION or VERSION_MULTI',
+        )
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
+        k = 'version' if k == 'value' else k
         if k == 'release_date':
             v = datetime.combine(v, datetime.min.time()) if v else None
-        if k == 'value':
-            opt.value.version = v
-            continue
-        setattr(opt.value, k, v)
+        setattr(opt, k, v)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = opt
     if obj.is_changed:
         await obj.save_changes()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
@@ -479,15 +517,28 @@ async def remove_version_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
-    obj: m.CustomField | None = await m.VersionCustomField.find_one(
-        m.VersionCustomField.id == custom_field_id
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id, with_children=True
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id))
+    if obj.type not in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Custom field is not of type VERSION or VERSION_MULTI',
+        )
+    opt = next((opt for opt in obj.options if opt.id == option_id_))
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
     obj.options.remove(opt)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = None
     if obj.is_changed:
         await obj.replace()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -536,3 +587,11 @@ async def select_options(
             items=[VersionOptionOutput.from_obj(opt) for opt in selected.items],
         )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')
+
+
+async def count_issues_with_option(
+    custom_field_id: PydanticObjectId, option_id: str
+) -> int:
+    return await m.Issue.find(
+        {'fields': {'$elemMatch': {'id': custom_field_id, 'value.id': option_id}}}
+    ).count()

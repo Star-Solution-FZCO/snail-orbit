@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Annotated, Any, Self
 from uuid import UUID
@@ -15,7 +15,6 @@ __all__ = (
     'CustomField',
     'CustomFieldLink',
     'EnumField',
-    'EnumOption',
     'StringCustomField',
     'IntegerCustomField',
     'FloatCustomField',
@@ -32,10 +31,8 @@ __all__ = (
     'UserOptionType',
     'UserOption',
     'GroupOption',
-    'StateOption',
     'StateCustomField',
     'StateField',
-    'VersionOption',
     'VersionField',
     'VersionCustomField',
     'VersionMultiCustomField',
@@ -63,6 +60,7 @@ class CustomFieldTypeT(StrEnum):
 
 
 class EnumField(BaseModel):
+    id: str
     value: str
     color: str | None = None
     is_archived: bool = False
@@ -74,11 +72,6 @@ class EnumField(BaseModel):
 
     def __hash__(self) -> int:
         return hash(self.value)
-
-
-class EnumOption(BaseModel):
-    id: UUID
-    value: EnumField
 
 
 class UserOptionType(StrEnum):
@@ -104,6 +97,7 @@ class UserOption(BaseModel):
 
 
 class StateField(BaseModel):
+    id: str
     state: str
     is_resolved: bool = False
     is_closed: bool = False
@@ -119,12 +113,8 @@ class StateField(BaseModel):
         return hash(self.state)
 
 
-class StateOption(BaseModel):
-    id: UUID
-    value: StateField
-
-
 class VersionField(BaseModel):
+    id: str
     version: str
     release_date: datetime | None = None
     is_released: bool = False
@@ -137,11 +127,6 @@ class VersionField(BaseModel):
 
     def __hash__(self) -> int:
         return hash(self.version)
-
-
-class VersionOption(BaseModel):
-    id: UUID
-    value: VersionField
 
 
 class CustomFieldValidationError(ValueError):
@@ -294,14 +279,10 @@ class DateTimeCustomField(CustomField):
         if value is None:
             return value
         if isinstance(value, datetime):
-            return value.astimezone(tz=timezone.utc).replace(tzinfo=None)
+            return value.replace(tzinfo=None)
         if isinstance(value, str):
             try:
-                return (
-                    datetime.fromisoformat(value)
-                    .astimezone(tz=timezone.utc)
-                    .replace(tzinfo=None)
-                )
+                return datetime.fromisoformat(value).replace(tzinfo=None)
             except ValueError as err:
                 raise CustomFieldValidationError(
                     field=self, value=value, msg='must be a datetime in ISO format'
@@ -465,7 +446,7 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 
 class EnumCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM
-    options: Annotated[list[EnumOption], Field(default_factory=list)]
+    options: Annotated[list[EnumField], Field(default_factory=list)]
     default_value: EnumField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -474,7 +455,7 @@ class EnumCustomField(CustomField):
             return value
         if isinstance(value, EnumField):
             value = value.value
-        opts = {opt.value.value: opt.value for opt in self.options}
+        opts = {opt.value: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
@@ -484,7 +465,7 @@ class EnumCustomField(CustomField):
 
 class EnumMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.ENUM_MULTI
-    options: Annotated[list[EnumOption], Field(default_factory=list)]
+    options: Annotated[list[EnumField], Field(default_factory=list)]
     default_value: list[EnumField] | None = None
 
     @staticmethod
@@ -506,7 +487,7 @@ class EnumMultiCustomField(CustomField):
                 field=self, value=value, msg='cannot be empty'
             )
         value = [self.__transform_single_value(val) for val in value]
-        opts = {opt.value.value: opt.value for opt in self.options}
+        opts = {opt.value: opt for opt in self.options}
         for val in value:
             if val not in opts:
                 raise CustomFieldValidationError(
@@ -517,7 +498,7 @@ class EnumMultiCustomField(CustomField):
 
 class StateCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STATE
-    options: Annotated[list[StateOption], Field(default_factory=list)]
+    options: Annotated[list[StateField], Field(default_factory=list)]
     default_value: StateField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -526,7 +507,7 @@ class StateCustomField(CustomField):
             return value
         if isinstance(value, StateField):
             value = value.state
-        opts = {opt.value.state: opt.value for opt in self.options}
+        opts = {opt.state: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
@@ -536,7 +517,7 @@ class StateCustomField(CustomField):
 
 class VersionCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.VERSION
-    options: Annotated[list[VersionOption], Field(default_factory=list)]
+    options: Annotated[list[VersionField], Field(default_factory=list)]
     default_value: VersionField | None = None
 
     def validate_value(self, value: Any) -> Any:
@@ -545,7 +526,7 @@ class VersionCustomField(CustomField):
             return value
         if isinstance(value, VersionField):
             value = value.version
-        opts = {opt.value.version: opt.value for opt in self.options}
+        opts = {opt.version: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'
@@ -555,8 +536,8 @@ class VersionCustomField(CustomField):
 
 class VersionMultiCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.VERSION_MULTI
-    options: Annotated[list[VersionOption], Field(default_factory=list)]
-    default_value: list[str] | None = None
+    options: Annotated[list[VersionField], Field(default_factory=list)]
+    default_value: list[VersionField] | None = None
 
     @staticmethod
     def __transform_single_value(value: Any) -> Any:
@@ -577,7 +558,7 @@ class VersionMultiCustomField(CustomField):
                 field=self, value=value, msg='cannot be empty'
             )
         value = [self.__transform_single_value(val) for val in value]
-        opts = {opt.value.version: opt.value for opt in self.options}
+        opts = {opt.version: opt for opt in self.options}
         for val in value:
             if val not in opts:
                 raise CustomFieldValidationError(
