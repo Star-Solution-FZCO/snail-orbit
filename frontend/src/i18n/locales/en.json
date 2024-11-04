@@ -63,6 +63,7 @@
   "customFields.options.new": "New Option",
   "customFields.options.state.closed": "Closed",
   "customFields.options.state.resolved": "Resolved",
+  "customFields.options.version": "Version",
   "customFields.options.version.releaseDate": "Release Date",
   "customFields.options.version.released": "Released",
   "customFields.options.version.archived": "Archived",

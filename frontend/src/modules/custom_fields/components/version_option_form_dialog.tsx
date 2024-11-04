@@ -20,7 +20,7 @@ import { VersionOptionT } from "types";
 import * as yup from "yup";
 
 const versionOptionSchema = yup.object().shape({
-    value: yup.string().required("form.validation.required"),
+    version: yup.string().required("form.validation.required"),
     release_date: yup.string().nullable().default(null),
     is_released: yup.boolean().default(false),
     is_archived: yup.boolean().default(false),
@@ -52,7 +52,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
         reset,
         formState: { errors, isDirty },
     } = useForm({
-        defaultValues: defaultValues || { value: "", release_date: null },
+        defaultValues: defaultValues || { version: "", release_date: null },
     });
 
     const onSubmit = (data: VersionOptionFormData) => {
@@ -66,7 +66,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
     };
 
     useEffect(() => {
-        reset(defaultValues || { value: "", release_date: null });
+        reset(defaultValues || { version: "", release_date: null });
     }, [defaultValues, reset]);
 
     return (
@@ -82,10 +82,10 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
             <DialogContent>
                 <Box display="flex" flexDirection="column" gap={1} mt={1}>
                     <TextField
-                        {...register("value")}
-                        label={t("customFields.options.value")}
-                        error={!!errors.value}
-                        helperText={t(errors.value?.message || "")}
+                        {...register("version")}
+                        label={t("customFields.options.version")}
+                        error={!!errors.version}
+                        helperText={t(errors.version?.message || "")}
                         variant="outlined"
                         size="small"
                         fullWidth
@@ -100,7 +100,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                                 adapterLocale="en-gb"
                             >
                                 <DatePicker
-                                    value={value}
+                                    value={value ? dayjs(value) : null}
                                     label={t(
                                         "customFields.options.version.releaseDate",
                                     )}
@@ -109,6 +109,9 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                                     slotProps={{
                                         textField: {
                                             size: "small",
+                                        },
+                                        actionBar: {
+                                            actions: ["clear"],
                                         },
                                     }}
                                 />

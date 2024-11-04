@@ -63,7 +63,7 @@ export type UpdateStateOptionT = {
 } & Partial<Omit<CreateStateOptionT, "value"> & { state: string }>;
 
 export type CreateVersionOptionT = {
-    value: string;
+    version: string;
     release_date: string | null;
     is_released: boolean;
     is_archived: boolean;

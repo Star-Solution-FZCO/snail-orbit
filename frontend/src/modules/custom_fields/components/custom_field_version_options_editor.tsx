@@ -9,6 +9,7 @@ import {
     IconButton,
     Typography,
 } from "@mui/material";
+import dayjs from "dayjs";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,11 +35,15 @@ const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
     onEdit,
     onDelete,
 }) => {
+    const releaseDate = option.release_date
+        ? `(${dayjs(option.release_date).format("DD MMM YYYY")})`
+        : null;
+
     return (
         <Box display="flex" alignItems="center" gap={1}>
-            <Typography flex={1}>{option.value}</Typography>
-
-            <Typography flex={1}>{option.release_date}</Typography>
+            <Typography flex={1}>
+                {option.version} {releaseDate}
+            </Typography>
 
             <FormControlLabel
                 control={
