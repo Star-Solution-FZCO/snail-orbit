@@ -72,7 +72,7 @@ class StateOptionCreateBody(BaseModel):
 
 
 class VersionOptionCreateBody(BaseModel):
-    value: str
+    version: str
     release_date: date | None = None
     is_released: bool = False
     is_archived: bool = False
@@ -93,7 +93,7 @@ class StateOptionUpdateBody(BaseModel):
 
 
 class VersionOptionUpdateBody(BaseModel):
-    value: str | None = None
+    version: str | None = None
     release_date: date | None = None
     is_released: bool | None = None
     is_archived: bool | None = None
@@ -428,13 +428,13 @@ async def add_version_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.value.version == body.value for opt in obj.options):
+    if any(opt.value.version == body.version for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
         m.VersionOption(
             id=uuid4(),
             value=m.VersionField(
-                version=body.value,
+                version=body.version,
                 release_date=datetime.combine(body.release_date, datetime.min.time())
                 if body.release_date
                 else None,

@@ -25,12 +25,12 @@ const stateOptionSchema = yup.object().shape({
     is_closed: yup.boolean().default(false),
 });
 
-type EnumOptionFormData = yup.InferType<typeof stateOptionSchema>;
+type StateOptionFormData = yup.InferType<typeof stateOptionSchema>;
 
 interface IStateOptionFormDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: EnumOptionFormData) => void;
+    onSubmit: (data: StateOptionFormData) => void;
     defaultValues?: StateOptionT | null;
     loading?: boolean;
 }
