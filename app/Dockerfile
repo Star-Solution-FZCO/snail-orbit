@@ -90,4 +90,3 @@ WORKDIR /app
 COPY --from=get_requirements /app/requirements-dev.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
     rm -rf requirements.txt
-COPY . /app/
