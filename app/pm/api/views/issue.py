@@ -3,7 +3,7 @@ from typing import Any, Literal, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user
