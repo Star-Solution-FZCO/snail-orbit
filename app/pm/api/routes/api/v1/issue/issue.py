@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from typing import Annotated, Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -64,6 +64,11 @@ class IssueListParams(BaseModel):
     q: str | None = Query(None, description='search query')
     limit: int = Query(50, le=50, description='limit results')
     offset: int = Query(0, description='offset')
+
+
+class IssueInterlinkCreate(BaseModel):
+    target_issue: PydanticObjectId | str
+    type: m.IssueInterlinkTypeT
 
 
 @router.get('/list')
@@ -579,6 +584,7 @@ async def update_issue(
         )
         for a_id in extra_attachment_ids:
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
+        await m.Issue.update_issue_embedded_links(obj)
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
@@ -638,6 +644,103 @@ async def unsubscribe_issue(
     if user_ctx.user.id in obj.subscribers:
         obj.subscribers.remove(user_ctx.user.id)
         await obj.replace()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.post('/{issue_id_or_alias}/link')
+async def link_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueInterlinkCreate,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
+    target_obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(
+        body.target_issue
+    )
+    if not target_obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Target issue not found')
+
+    user_ctx.validate_issue_permission(
+        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+    )
+
+    if obj.id == target_obj.id:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Cannot link issue to itself')
+
+    if il := next((il for il in obj.interlinks if il.issue.id == target_obj.id), None):
+        raise HTTPException(
+            HTTPStatus.CONFLICT, f'Issue already linked as {il.link_type}'
+        )
+
+    il_id = uuid4()
+
+    obj.interlinks.append(
+        m.IssueInterlink(
+            id=il_id,
+            issue=m.IssueLinkField.from_obj(target_obj),
+            type=body.type,
+        )
+    )
+    target_obj.interlinks.append(
+        m.IssueInterlink(
+            id=il_id,
+            issue=m.IssueLinkField.from_obj(obj),
+            type=body.type.inverse(),
+        )
+    )
+
+    await obj.replace()
+    await target_obj.replace()
+
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.delete('/{issue_id_or_alias}/link/{interlink_id}')
+async def unlink_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+    interlink_id: UUID,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
+    src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
+    if not src_il:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Interlink not found')
+
+    target_obj: m.Issue | None = await m.Issue.find_one(m.Issue.id == src_il.issue.id)
+    if not target_obj:
+        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Target issue not found')
+    target_il = next(
+        (il for il in target_obj.interlinks if il.id == interlink_id), None
+    )
+    if not target_il:
+        raise HTTPException(
+            HTTPStatus.INTERNAL_SERVER_ERROR, 'Target interlink not found'
+        )
+
+    user_ctx.validate_issue_permission(
+        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+    )
+
+    obj.interlinks.remove(src_il)
+    target_obj.interlinks.remove(target_il)
+
+    await obj.replace()
+    await target_obj.replace()
+
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
