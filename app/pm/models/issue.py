@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 from typing import Annotated, Literal, Self
 from uuid import UUID, uuid4
 
@@ -28,7 +29,62 @@ __all__ = (
     'IssueHistoryRecord',
     'IssueFieldChange',
     'IssueDraft',
+    'IssueInterlinkTypeT',
+    'IssueInterlink',
+    'IssueLinkField',
 )
+
+
+class IssueInterlinkTypeT(StrEnum):
+    RELATED = 'related'
+    REQUIRED_FOR = 'required_for'
+    DEPENDS_ON = 'depends_on'
+    DUPLICATED_BY = 'duplicated_by'
+    DUPLICATES = 'duplicates'
+    SUBTASK_OF = 'subtask_of'
+    PARENT_OF = 'parent_of'
+    BLOCKS = 'blocks'
+    BLOCKED_BY = 'blocked_by'
+
+    def inverse(self) -> Self:
+        return _INVERSE_INTERLINKS[self]
+
+
+_INVERSE_INTERLINKS = {
+    IssueInterlinkTypeT.RELATED: IssueInterlinkTypeT.RELATED,
+    IssueInterlinkTypeT.REQUIRED_FOR: IssueInterlinkTypeT.DEPENDS_ON,
+    IssueInterlinkTypeT.DEPENDS_ON: IssueInterlinkTypeT.REQUIRED_FOR,
+    IssueInterlinkTypeT.DUPLICATED_BY: IssueInterlinkTypeT.DUPLICATES,
+    IssueInterlinkTypeT.DUPLICATES: IssueInterlinkTypeT.DUPLICATED_BY,
+    IssueInterlinkTypeT.SUBTASK_OF: IssueInterlinkTypeT.PARENT_OF,
+    IssueInterlinkTypeT.PARENT_OF: IssueInterlinkTypeT.SUBTASK_OF,
+    IssueInterlinkTypeT.BLOCKS: IssueInterlinkTypeT.BLOCKED_BY,
+    IssueInterlinkTypeT.BLOCKED_BY: IssueInterlinkTypeT.BLOCKS,
+}
+
+
+class IssueLinkField(BaseModel):
+    id: PydanticObjectId
+    aliases: list[str]
+    subject: str
+
+    @property
+    def id_readable(self) -> str:
+        return self.aliases[-1] if self.aliases else str(self.id)
+
+    @classmethod
+    def from_obj(cls, obj: 'Issue | Self') -> Self:
+        return cls(
+            id=obj.id,
+            aliases=obj.aliases,
+            subject=obj.subject,
+        )
+
+
+class IssueInterlink(BaseModel):
+    id: UUID
+    type: IssueInterlinkTypeT
+    issue: IssueLinkField
 
 
 class IssueAttachment(BaseModel):
@@ -90,6 +146,8 @@ class Issue(Document):
 
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+    interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
 
     @property
     def id_readable(self) -> str:
@@ -250,6 +308,18 @@ class Issue(Document):
         ).update(
             {'$set': {'fields.$[f].value': option}},
             array_filters=[{'f.id': field.id, 'f.value.id': option.id}],
+        )
+
+    @classmethod
+    async def update_issue_embedded_links(
+        cls,
+        issue: Self | IssueLinkField,
+    ) -> None:
+        await cls.find(
+            {'interlinks': {'$elemMatch': {'issue.id': issue.id}}},
+        ).update(
+            {'$set': {'interlinks.$[i].issue': IssueLinkField.from_obj(issue)}},
+            array_filters=[{'i.issue.id': issue.id}],
         )
 
     def _get_latest_comment_or_history(

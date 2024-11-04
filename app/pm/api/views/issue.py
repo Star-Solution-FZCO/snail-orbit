@@ -3,7 +3,7 @@ from typing import Any, Literal, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 import pm.models as m
 from pm.api.context import current_user
@@ -107,6 +107,36 @@ class CustomFieldValueOut(BaseModel):
         )
 
 
+class IssueLinkFieldOutput(BaseModel):
+    id: PydanticObjectId
+    aliases: list[str]
+    subject: str
+    id_readable: str
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueLinkField) -> Self:
+        return cls(
+            id=obj.id,
+            aliases=obj.aliases,
+            subject=obj.subject,
+            id_readable=obj.id_readable,
+        )
+
+
+class IssueInterlinkOutput(BaseModel):
+    id: UUID
+    issue: IssueLinkFieldOutput
+    type: m.IssueInterlinkTypeT
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueInterlink) -> Self:
+        return cls(
+            id=obj.id,
+            issue=IssueLinkFieldOutput.from_obj(obj.issue),
+            type=obj.type,
+        )
+
+
 class IssueOutput(BaseModel):
     id: PydanticObjectId
     aliases: list[str]
@@ -121,6 +151,7 @@ class IssueOutput(BaseModel):
     created_at: datetime
     updated_by: UserOutput | None
     updated_at: datetime | None
+    interlinks: list[IssueInterlinkOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
@@ -140,6 +171,7 @@ class IssueOutput(BaseModel):
             created_at=obj.created_at,
             updated_by=UserOutput.from_obj(obj.updated_by) if obj.updated_by else None,
             updated_at=obj.updated_at,
+            interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
         )
 
 
