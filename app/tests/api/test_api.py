@@ -1186,6 +1186,7 @@ async def test_api_v1_issue(
         'id_readable': issue_readable_id,
         **issue_payload,
         'attachments': [],
+        'interlinks': [],
         'is_subscribed': True,
         'updated_at': None,
         'updated_by': None,
