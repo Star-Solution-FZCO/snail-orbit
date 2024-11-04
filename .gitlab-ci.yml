@@ -41,6 +41,7 @@ lint-backend:
   image:
     name: $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
   script:
+    - cd app
     - python3 lint.py
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -53,15 +54,16 @@ test-backend:
     DNS_SERVERS: $TEST_DNS_SERVERS
     SNAIL_ORBIT_DB_URI: $TEST_SNAIL_ORBIT_DB_URI
   script:
+    - cd app
     - pytest --cov --cov-report term --cov-report xml:coverage-report.xml --junitxml=pytest-report.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
     reports:
-      junit: pytest-report.xml
+      junit: app/pytest-report.xml
       coverage_report:
         coverage_format: cobertura
-        path: coverage-report.xml
+        path: app/coverage-report.xml
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       <<: *backend-changes
