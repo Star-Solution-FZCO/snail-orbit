@@ -35,7 +35,7 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
 RUN mkdir -p /data &&\
     chown ${APP_NAME}:${APP_NAME} /data
 
-COPY LICENSE manage.py ${APP_DIR}/
+COPY manage.py ${APP_DIR}/
 COPY pm ${APP_DIR}/pm
 
 USER ${APP_NAME}
@@ -71,7 +71,7 @@ RUN mkdir -p "${APP_DIR}/etc" &&\
     mkdir -p /var/easyocr &&\
     chown ${APP_NAME}:${APP_NAME} /var/easyocr
 
-COPY LICENSE manage.py ${APP_DIR}/
+COPY manage.py ${APP_DIR}/
 COPY pm ${APP_DIR}/pm
 
 USER ${APP_NAME}
