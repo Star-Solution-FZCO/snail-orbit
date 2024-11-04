@@ -42,7 +42,7 @@ const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
     return (
         <Box display="flex" alignItems="center" gap={1}>
             <Typography flex={1}>
-                {option.version} {releaseDate}
+                {option.value} {releaseDate}
             </Typography>
 
             <FormControlLabel

@@ -20,7 +20,7 @@ import { VersionOptionT } from "types";
 import * as yup from "yup";
 
 const versionOptionSchema = yup.object().shape({
-    version: yup.string().required("form.validation.required"),
+    value: yup.string().required("form.validation.required"),
     release_date: yup.string().nullable().default(null),
     is_released: yup.boolean().default(false),
     is_archived: yup.boolean().default(false),
@@ -52,7 +52,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
         reset,
         formState: { errors, isDirty },
     } = useForm({
-        defaultValues: defaultValues || { version: "", release_date: null },
+        defaultValues: defaultValues || { value: "", release_date: null },
     });
 
     const onSubmit = (data: VersionOptionFormData) => {
@@ -66,7 +66,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
     };
 
     useEffect(() => {
-        reset(defaultValues || { version: "", release_date: null });
+        reset(defaultValues || { value: "", release_date: null });
     }, [defaultValues, reset]);
 
     return (
@@ -82,10 +82,10 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
             <DialogContent>
                 <Box display="flex" flexDirection="column" gap={1} mt={1}>
                     <TextField
-                        {...register("version")}
+                        {...register("value")}
                         label={t("customFields.options.version")}
-                        error={!!errors.version}
-                        helperText={t(errors.version?.message || "")}
+                        error={!!errors.value}
+                        helperText={t(errors.value?.message || "")}
                         variant="outlined"
                         size="small"
                         fullWidth
