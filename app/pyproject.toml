@@ -44,6 +44,12 @@ types-aiofiles = "*"
 types-redis = "*"
 types-aioboto3 = {version = "*", extras = ["s3"]}
 faker = "*"
+mock = "*"
+pytest = "*"
+pytest-asyncio = "*"
+httpx = "*"
+pyfakefs = "*"
+pytest-cov = "*"
 
 [tool.poetry.group.ocr]
 optional = true
@@ -75,3 +81,8 @@ disable = [
     "duplicate-code",
     "fixme",
 ]
+
+
+[tool.pytest.ini_options]
+addopts = "-p no:warnings -v --color=yes"
+asyncio_default_fixture_loop_scope = "function"

@@ -16,6 +16,7 @@ class FileStorageModeT(StrEnum):
 CONFIG = Dynaconf(
     settings_files=CONFIG_PATHS,
     environments=True,
+    envvar_prefix='SNAIL_ORBIT',
     load_dotenv=True,
     validators=[
         Validator('DEV_MODE', cast=bool, default=False),

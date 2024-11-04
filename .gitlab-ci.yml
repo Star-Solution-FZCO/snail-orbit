@@ -1,5 +1,6 @@
 stages:
   - build-test-images
+  - test
   - lint
   - build
 
@@ -14,6 +15,11 @@ default:
 .template-init-buildx: &template-init-buildx
   - docker buildx create --use
 
+.backend-changes: &backend-changes
+  changes:
+    - "app/**/*"
+
+
 build-test-api:
   stage: build-test-images
   before_script:
@@ -25,20 +31,42 @@ build-test-api:
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
       -t $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target test .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target test app
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
 
 lint-backend:
   stage: lint
-  needs:
-    - job: build-test-api
   image:
     name: $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
   script:
+    - cd app
     - python3 lint.py
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
+
+test-backend:
+  stage: test
+  image: $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
+  variables:
+    DNS_SERVERS: $TEST_DNS_SERVERS
+    SNAIL_ORBIT_DB_URI: $TEST_SNAIL_ORBIT_DB_URI
+  script:
+    - cd app
+    - pytest --cov --cov-report term --cov-report xml:coverage-report.xml --junitxml=pytest-report.xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: app/pytest-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: app/coverage-report.xml
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *backend-changes
 
 sec-trivy-src-scan:
   stage: lint
@@ -74,12 +102,12 @@ build-dev-api:
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       -t $CI_REGISTRY_IMAGE/api:dev
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target api .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target api app
     - docker buildx build --push
       --platform linux/amd64
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       -t $CI_REGISTRY_IMAGE/tasks:dev
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target tasks .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target tasks app
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG == null'
 

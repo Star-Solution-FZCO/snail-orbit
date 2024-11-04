@@ -35,7 +35,8 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
 RUN mkdir -p /data &&\
     chown ${APP_NAME}:${APP_NAME} /data
 
-COPY . ${APP_DIR}/
+COPY manage.py ${APP_DIR}/
+COPY pm ${APP_DIR}/pm
 
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
@@ -70,7 +71,8 @@ RUN mkdir -p "${APP_DIR}/etc" &&\
     mkdir -p /var/easyocr &&\
     chown ${APP_NAME}:${APP_NAME} /var/easyocr
 
-COPY . ${APP_DIR}/
+COPY manage.py ${APP_DIR}/
+COPY pm ${APP_DIR}/pm
 
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
@@ -88,4 +90,3 @@ WORKDIR /app
 COPY --from=get_requirements /app/requirements-dev.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt &&\
     rm -rf requirements.txt
-COPY . /app/

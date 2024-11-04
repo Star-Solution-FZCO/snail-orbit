@@ -1,11 +1,1 @@
-snippets/
-
-# Cache
-__pycache__/
-.mypy_cache/
-
-# JetBrains
-.idea/
-
-# MacOS
 .DS_Store
