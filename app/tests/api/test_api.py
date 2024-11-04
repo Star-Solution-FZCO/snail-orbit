@@ -25,6 +25,18 @@ from .custom_fields import (
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
+INTERLINK_TYPES = (
+    ('related', 'related'),
+    ('required_for', 'depends_on'),
+    ('depends_on', 'required_for'),
+    ('duplicated_by', 'duplicates'),
+    ('duplicates', 'duplicated_by'),
+    ('subtask_of', 'parent_of'),
+    ('parent_of', 'subtask_of'),
+    ('blocks', 'blocked_by'),
+    ('blocked_by', 'blocks'),
+)
+
 
 @pytest_asyncio.fixture
 async def create_initial_admin() -> tuple[str, str]:
@@ -1174,6 +1186,7 @@ async def test_api_v1_issue(
         'id_readable': issue_readable_id,
         **issue_payload,
         'attachments': [],
+        'interlinks': [],
         'is_subscribed': True,
         'updated_at': None,
         'updated_by': None,
@@ -1192,3 +1205,137 @@ async def test_api_v1_issue(
     data = response.json()
     assert data['success']
     assert data['payload']['id'] == issue_id
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test project',
+                'slug': 'test',
+                'description': 'Test project description',
+                'ai_description': 'Test project AI description',
+            },
+            id='project',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test role',
+                'description': 'Test role description',
+                'permissions': ALL_PERMISSIONS,
+            },
+            id='role',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'issue_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'subject': 'Test issue1',
+                    'text': 'Test issue text\nBlah blah blah',
+                },
+                {
+                    'subject': 'Test issue 2',
+                    'text': 'Test issue text\nBlah blah blah',
+                },
+            ],
+            id='issues',
+        )
+    ],
+)
+async def test_api_v1_issue_link(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_role: str,
+    create_project: str,
+    issue_payloads: list[dict],
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    project_id = create_project
+
+    response = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': create_role,
+        },
+    )
+    assert response.status_code == 200
+
+    issues = []
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay'):
+        for issue_payload in issue_payloads:
+            response = test_client.post(
+                f'/api/v1/issue',
+                headers=headers,
+                json={
+                    'project_id': project_id,
+                    **issue_payload,
+                },
+            )
+            assert response.status_code == 200
+            issues.append(response.json()['payload'])
+
+    for link_type in INTERLINK_TYPES:
+        response = test_client.post(
+            f'/api/v1/issue/{issues[0]['id']}/link',
+            headers=headers,
+            json={
+                'type': link_type[0],
+                'target_issue': issues[1]['id'],
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success']
+        assert len(data['payload']['interlinks']) == 1
+        assert data['payload']['interlinks'][0]['type'] == link_type[0]
+        assert data['payload']['interlinks'][0]['issue'] == filter_dict(
+            issues[1], include_keys={'id', 'aliases', 'subject', 'id_readable'}
+        )
+        interlink_id = data['payload']['interlinks'][0]['id']
+
+        response = test_client.get(
+            f'/api/v1/issue/{issues[1]["id"]}',
+            headers=headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success']
+        assert len(data['payload']['interlinks']) == 1
+        assert data['payload']['interlinks'][0]['type'] == link_type[1]
+        assert data['payload']['interlinks'][0]['issue'] == filter_dict(
+            issues[0], include_keys={'id', 'aliases', 'subject', 'id_readable'}
+        )
+        assert data['payload']['interlinks'][0]['id'] == interlink_id
+
+        response = test_client.delete(
+            f'/api/v1/issue/{issues[0]["id"]}/link/{interlink_id}',
+            headers=headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success']
+        assert len(data['payload']['interlinks']) == 0
+
+        response = test_client.get(
+            f'/api/v1/issue/{issues[1]["id"]}',
+            headers=headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success']
+        assert len(data['payload']['interlinks']) == 0
