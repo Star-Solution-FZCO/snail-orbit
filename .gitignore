@@ -1,17 +1,1 @@
-settings.toml
-snippets/
-
-# coverage
-.coverage
-coverage-report.xml
-pytest-report.xml
-
-# Cache
-__pycache__/
-.mypy_cache/
-
-# JetBrains
-.idea/
-
-# MacOS
 .DS_Store

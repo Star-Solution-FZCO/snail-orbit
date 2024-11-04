@@ -2,7 +2,7 @@ name: project-manager
 services:
   api:
     build:
-      context: ..
+      context: ../app
       dockerfile: Dockerfile
       target: api
     ports:
@@ -17,7 +17,7 @@ services:
         condition: service_healthy
   tasks-worker:
     build:
-      context: ..
+      context: ../app
       target: tasks
     command: worker
     volumes:
@@ -29,7 +29,7 @@ services:
         condition: service_healthy
   tasks-beat:
     build:
-      context: ..
+      context: ../app
       target: tasks
     command: beat
     volumes:

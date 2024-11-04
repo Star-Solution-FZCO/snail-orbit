@@ -17,10 +17,7 @@ default:
 
 .backend-changes: &backend-changes
   changes:
-    - "**/*.py"
-    - "pyproject.toml"
-    - "poetry.lock"
-    - "Dockerfile"
+    - "app/**/*"
 
 
 build-test-api:
@@ -34,7 +31,7 @@ build-test-api:
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/test:cache
       -t $CI_REGISTRY_IMAGE/test:$CI_COMMIT_SHORT_SHA
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target test .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target test app
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       <<: *backend-changes
@@ -103,12 +100,12 @@ build-dev-api:
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       -t $CI_REGISTRY_IMAGE/api:dev
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target api .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target api app
     - docker buildx build --push
       --platform linux/amd64
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache-dev
       -t $CI_REGISTRY_IMAGE/tasks:dev
-      --build-arg version=$CI_COMMIT_SHORT_SHA --target tasks .
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target tasks app
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG == null'
 
