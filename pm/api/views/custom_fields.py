@@ -161,7 +161,7 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
 
 class VersionOptionOutput(BaseModel):
     uuid: UUID
-    version: str
+    value: str
     release_date: date | None
     is_released: bool
     is_archived: bool
@@ -170,7 +170,7 @@ class VersionOptionOutput(BaseModel):
     def from_obj(cls, obj: m.VersionOption) -> Self:
         return cls(
             uuid=obj.id,
-            version=obj.value.version,
+            value=obj.value.version,
             release_date=obj.value.release_date.date()
             if obj.value.release_date
             else None,

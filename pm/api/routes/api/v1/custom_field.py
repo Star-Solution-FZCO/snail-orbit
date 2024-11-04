@@ -72,7 +72,7 @@ class StateOptionCreateBody(BaseModel):
 
 
 class VersionOptionCreateBody(BaseModel):
-    version: str
+    value: str
     release_date: date | None = None
     is_released: bool = False
     is_archived: bool = False
@@ -93,7 +93,7 @@ class StateOptionUpdateBody(BaseModel):
 
 
 class VersionOptionUpdateBody(BaseModel):
-    version: str | None = None
+    value: str | None = None
     release_date: date | None = None
     is_released: bool | None = None
     is_archived: bool | None = None
@@ -434,7 +434,7 @@ async def add_version_option(
         m.VersionOption(
             id=uuid4(),
             value=m.VersionField(
-                version=body.version,
+                version=body.value,
                 release_date=datetime.combine(body.release_date, datetime.min.time())
                 if body.release_date
                 else None,
@@ -465,6 +465,9 @@ async def update_version_option(
     for k, v in body.dict(exclude_unset=True).items():
         if k == 'release_date':
             v = datetime.combine(v, datetime.min.time()) if v else None
+        if k == 'value':
+            opt.value.version = v
+            continue
         setattr(opt.value, k, v)
     if obj.is_changed:
         await obj.save_changes()
