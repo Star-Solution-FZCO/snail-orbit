@@ -47,6 +47,7 @@ class BoardOutput(BaseModel):
     swimlane_field: CustomFieldLinkOutput | None = None
     swimlanes: list[CustomFieldValueOutT]
     card_fields: list[CustomFieldLinkOutput]
+    ui_settings: dict
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
@@ -68,6 +69,7 @@ class BoardOutput(BaseModel):
                 for v in obj.swimlanes
             ],
             card_fields=[CustomFieldLinkOutput.from_obj(f) for f in obj.card_fields],
+            ui_settings=obj.ui_settings,
         )
 
 
@@ -81,6 +83,7 @@ class BoardCreate(BaseModel):
     swimlane_field: PydanticObjectId | None = None
     swimlanes: Annotated[list, Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    ui_settings: Annotated[dict, Field(default_factory=dict)]
 
 
 class BoardUpdate(BaseModel):
@@ -93,6 +96,7 @@ class BoardUpdate(BaseModel):
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list | None = None
     card_fields: list[PydanticObjectId] | None = None
+    ui_settings: dict | None = None
 
 
 class ColumnOutput(BaseModel):
@@ -175,6 +179,7 @@ async def create_board(
         else None,
         swimlanes=swimlanes,
         card_fields=[m.CustomFieldLink.from_obj(cf) for cf in card_fields],
+        ui_settings=body.ui_settings,
     )
     await board.insert()
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
@@ -199,7 +204,7 @@ async def update_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     data = body.dict(exclude_unset=True)
-    for k in ('name', 'description', 'query'):
+    for k in ('name', 'description', 'query', 'ui_settings'):
         if k in data:
             setattr(board, k, data[k])
     if 'projects' in data:
