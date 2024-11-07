@@ -17,7 +17,7 @@ import { issueApi } from "store";
 import { slugify } from "transliteration";
 import { IssueT } from "types";
 import { formatErrorMessages, useListQueryParams } from "utils";
-import useDebouncedState from "../../../utils/hooks/use-debounced-state";
+import useDebouncedState from "utils/hooks/use-debounced-state";
 
 const IssueList: FC = () => {
     const { t } = useTranslation();

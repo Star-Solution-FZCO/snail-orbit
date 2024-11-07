@@ -6,12 +6,14 @@ type IQueryPaginationProps = {
     count: number;
     queryParams: ListQueryParams;
     updateQueryParams: (newParams: Partial<ListQueryParams>) => void;
+    size?: "small" | "medium" | "large";
 };
 
 const QueryPagination: FC<IQueryPaginationProps> = ({
     count,
     queryParams,
     updateQueryParams,
+    size = "medium",
 }) => {
     const { limit, offset } = queryParams;
 
@@ -34,6 +36,7 @@ const QueryPagination: FC<IQueryPaginationProps> = ({
             onChange={handlePageChange}
             variant="outlined"
             shape="rounded"
+            size={size}
         />
     );
 };

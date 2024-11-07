@@ -5,6 +5,7 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { IssueT, UpdateIssueT } from "types";
+import { AddLinks } from "./add_links";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
@@ -45,6 +46,14 @@ export const IssueView: FC<IssueFormProps> = ({
                     onSaveIssue={onSaveIssue}
                     isDraft={isDraft}
                 />
+
+                {!isDraft && (
+                    <>
+                        <AddLinks issueId={issue.id_readable} />
+
+                        {/* <IssueLinks /> */}
+                    </>
+                )}
 
                 <IssueAttachments
                     issue={issue}

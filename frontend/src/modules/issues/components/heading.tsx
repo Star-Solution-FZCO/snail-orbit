@@ -1,5 +1,6 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import {
     Box,
@@ -17,7 +18,7 @@ import utc from "dayjs/plugin/utc";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { toast } from "react-toastify";
-import { issueApi } from "store";
+import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT } from "types";
 import { toastApiError } from "utils";
@@ -32,6 +33,7 @@ interface IIssueHeadingProps {
 }
 
 const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -39,6 +41,10 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
     const menuOpen = Boolean(anchorEl);
 
     const [createIssue] = issueApi.useCreateIssueMutation();
+
+    const handleClickLinkButton = () => {
+        dispatch(toggleIssueLinks());
+    };
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -151,13 +157,25 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
                 <Typography fontSize={24} fontWeight="bold" flex={1}>
                     {issue.subject}
                 </Typography>
-                <IconButton
-                    onClick={handleOpenMenu}
-                    color={menuOpen ? "primary" : "inherit"}
-                    size="small"
+
+                <Tooltip
+                    title={t("issues.heading.links.add")}
+                    onClick={handleClickLinkButton}
                 >
-                    <MoreHorizIcon />
-                </IconButton>
+                    <IconButton size="small">
+                        <LinkIcon />
+                    </IconButton>
+                </Tooltip>
+
+                <Tooltip title={t("issues.heading.showMore")}>
+                    <IconButton
+                        onClick={handleOpenMenu}
+                        color={menuOpen ? "primary" : "inherit"}
+                        size="small"
+                    >
+                        <MoreHorizIcon />
+                    </IconButton>
+                </Tooltip>
             </Box>
 
             <Menu
