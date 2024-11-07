@@ -22,6 +22,7 @@ import {
     TodoList,
 } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
+import i18n from "i18n";
 import { FC } from "react";
 import Markdown from "react-markdown";
 import "./md_editor.css";
@@ -48,29 +49,36 @@ const plugins = [
     TodoList,
 ];
 
-const toolbar = [
-    "undo",
-    "redo",
-    "|",
-    "heading",
-    "|",
-    "bold",
-    "italic",
-    "strikethrough",
-    "|",
-    "blockQuote",
-    "code",
-    "link",
-    "|",
-    "bulletedList",
-    "numberedList",
-    "todoList",
-    "|",
-    "codeBlock",
-    "insertTable",
-    "|",
-    "sourceEditing",
-];
+const toolbar = {
+    items: [
+        "undo",
+        "redo",
+        "|",
+        "heading",
+        "|",
+        "bold",
+        "italic",
+        "strikethrough",
+        "|",
+        "blockQuote",
+        "code",
+        "link",
+        "|",
+        "bulletedList",
+        "numberedList",
+        "todoList",
+        "|",
+        "codeBlock",
+        "insertTable",
+        "|",
+        {
+            label: i18n.t("more"),
+            icon: "threeVerticalDots",
+            items: ["sourceEditing"],
+        },
+    ],
+    shouldNotGroupWhenFull: false,
+};
 
 interface IMDEditorProps {
     value: string;
