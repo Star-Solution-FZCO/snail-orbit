@@ -28,6 +28,7 @@ class Board(Document):
     swimlanes: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
     issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
+    ui_settings: dict = Field(default_factory=dict)
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
