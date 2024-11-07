@@ -23,6 +23,9 @@ export interface SharedState {
         currentIndex: number;
         files: PreviewFile[];
     };
+    issueLinks: {
+        open: boolean;
+    };
 }
 
 const initialState: SharedState = {
@@ -31,6 +34,9 @@ const initialState: SharedState = {
         currentFile: initialPreviewFile,
         currentIndex: 0,
         files: [],
+    },
+    issueLinks: {
+        open: true,
     },
 };
 
@@ -89,6 +95,12 @@ const sharedSlice = createSlice({
                 state.filePreview.open = true;
             }
         },
+        toggleIssueLinks(state) {
+            state.issueLinks.open = !state.issueLinks.open;
+        },
+        closeIssueLinks(state) {
+            state.issueLinks.open = false;
+        },
     },
 });
 
@@ -100,6 +112,8 @@ export const {
     setNextFilePreview,
     setPreviousFilePreview,
     selectFilePreviewByIndex,
+    toggleIssueLinks,
+    closeIssueLinks,
 } = sharedSlice.actions;
 
 export const sharedReducer = sharedSlice.reducer;
