@@ -170,6 +170,8 @@
   "issues.links.type.blocked_by": "Is blocked by",
   "issues.links.linkedAs": "linked as",
   "issues.links.to": "to",
+  "issues.links.remove": "Remove link",
+  "issues.links.title": "Links",
   "issues.new": "New Issue",
   "issues.title": "Issues",
   "issues.update.success": "Issue updated successfully",

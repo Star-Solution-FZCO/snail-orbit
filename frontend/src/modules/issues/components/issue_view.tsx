@@ -12,6 +12,7 @@ import { ProjectField } from "./fields/project_field";
 import { IssueActivities } from "./issue_activities";
 import { IssueAttachments } from "./issue_attachments";
 import { IssueData } from "./issue_data";
+import { IssueLinks } from "./issue_links";
 
 type IssueFormProps = {
     issue: IssueT;
@@ -36,6 +37,8 @@ export const IssueView: FC<IssueFormProps> = ({
         issue?.project?.id ?? skipToken,
     );
 
+    const issueId = issue.id_readable;
+
     return (
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
@@ -49,9 +52,12 @@ export const IssueView: FC<IssueFormProps> = ({
 
                 {!isDraft && (
                     <>
-                        <AddLinks issueId={issue.id_readable} />
+                        <AddLinks issueId={issueId} />
 
-                        {/* <IssueLinks /> */}
+                        <IssueLinks
+                            issueId={issueId}
+                            links={issue.interlinks}
+                        />
                     </>
                 )}
 
@@ -61,7 +67,7 @@ export const IssueView: FC<IssueFormProps> = ({
                     onUpdateCache={onUpdateCache}
                 />
 
-                {!isDraft && <IssueActivities issueId={issue.id_readable} />}
+                {!isDraft && <IssueActivities issueId={issueId} />}
             </Stack>
 
             <FieldContainer>

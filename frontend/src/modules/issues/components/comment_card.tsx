@@ -161,13 +161,6 @@ const CommentCard: FC<ICommentCardProps> = ({
             activeMutations.current[file.name] = mutation;
             const response = await mutation.unwrap();
 
-            updateToast(
-                file.name,
-                t("issues.form.attachments.upload.success"),
-                "success",
-                3000,
-            );
-
             return response.payload.id;
         } catch (error: any) {
             if (error.name !== "AbortError") {

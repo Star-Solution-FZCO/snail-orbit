@@ -36,7 +36,7 @@ const initialState: SharedState = {
         files: [],
     },
     issueLinks: {
-        open: true,
+        open: false,
     },
 };
 
