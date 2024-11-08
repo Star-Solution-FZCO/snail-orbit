@@ -247,7 +247,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
         }
     };
 
-    const handleDownload = (e) => {
+    const handleDownload = () => {
         window.location.assign(fileUrl);
     };
 
