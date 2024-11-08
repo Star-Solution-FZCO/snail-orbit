@@ -35,6 +35,7 @@ export type IssueT = {
     created_at: string;
     updated_by: BasicUserT | null;
     updated_at: string | null;
+    interlinks: IssueLinkT[];
 };
 
 export type UpdateIssueT = Partial<CreateIssueT>;
@@ -59,4 +60,29 @@ export type IssueActivityT = {
     type: IssueActivityTypeT;
     time: string;
     data: CommentT | IssueHistoryT;
+};
+
+export type IssueLinkFieldT = Pick<
+    IssueT,
+    "id" | "aliases" | "subject" | "id_readable"
+>;
+
+export const linkTypes = [
+    "related",
+    "required_for",
+    "depends_on",
+    "duplicated_by",
+    "duplicates",
+    "subtask_of",
+    "parent_for",
+    "blocks",
+    "blocked_by",
+] as const;
+
+export type IssueLinkTypeT = (typeof linkTypes)[number];
+
+export type IssueLinkT = {
+    id: string;
+    issue: IssueLinkFieldT;
+    type: IssueLinkTypeT;
 };

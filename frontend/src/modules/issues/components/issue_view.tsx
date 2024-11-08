@@ -5,12 +5,14 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { IssueT, UpdateIssueT } from "types";
+import { AddLinks } from "./add_links";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { ProjectField } from "./fields/project_field";
 import { IssueActivities } from "./issue_activities";
 import { IssueAttachments } from "./issue_attachments";
 import { IssueData } from "./issue_data";
+import { IssueLinks } from "./issue_links";
 
 type IssueFormProps = {
     issue: IssueT;
@@ -35,6 +37,8 @@ export const IssueView: FC<IssueFormProps> = ({
         issue?.project?.id ?? skipToken,
     );
 
+    const issueId = issue.id_readable;
+
     return (
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
@@ -46,13 +50,24 @@ export const IssueView: FC<IssueFormProps> = ({
                     isDraft={isDraft}
                 />
 
+                {!isDraft && (
+                    <>
+                        <AddLinks issueId={issueId} />
+
+                        <IssueLinks
+                            issueId={issueId}
+                            links={issue.interlinks}
+                        />
+                    </>
+                )}
+
                 <IssueAttachments
                     issue={issue}
                     onUpdateIssue={onUpdateIssue}
                     onUpdateCache={onUpdateCache}
                 />
 
-                {!isDraft && <IssueActivities issueId={issue.id_readable} />}
+                {!isDraft && <IssueActivities issueId={issueId} />}
             </Stack>
 
             <FieldContainer>
