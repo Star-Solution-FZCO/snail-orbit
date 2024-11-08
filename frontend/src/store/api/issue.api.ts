@@ -5,6 +5,7 @@ import {
     CreateCommentT,
     CreateIssueT,
     IssueHistoryT,
+    IssueLinkTypeT,
     IssueT,
     ListQueryParams,
     ListResponse,
@@ -57,6 +58,7 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
                 { type: "IssueHistories", id },
             ],
             async onQueryStarted(
@@ -209,6 +211,35 @@ export const issueApi = createApi({
                 method: "POST",
             }),
             invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
+        }),
+        linkIssue: build.mutation<
+            ApiResponse<IssueT>,
+            { id: string; target_issue: string; type: IssueLinkTypeT }
+        >({
+            query: ({ id, ...body }) => ({
+                url: `issue/${id}/link`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
+                { type: "IssueHistories", id },
+            ],
+        }),
+        unlinkIssue: build.mutation<
+            ApiResponse<IssueT>,
+            { id: string; interlink_id: string }
+        >({
+            query: ({ id, interlink_id }) => ({
+                url: `issue/${id}/link/${interlink_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
+                { type: "IssueHistories", id },
+            ],
         }),
     }),
 });

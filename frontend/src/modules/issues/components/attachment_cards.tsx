@@ -53,10 +53,22 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
         return (
             <>
                 {onDownload && (
-                    <DownloadIcon onClick={onDownload} fontSize="small" />
+                    <DownloadIcon
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDownload();
+                        }}
+                        fontSize="small"
+                    />
                 )}
                 {canDelete && (
-                    <DeleteIcon onClick={onDelete} fontSize="small" />
+                    <DeleteIcon
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete();
+                        }}
+                        fontSize="small"
+                    />
                 )}
             </>
         );
@@ -235,7 +247,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
         }
     };
 
-    const handleDownload = () => {
+    const handleDownload = (e) => {
         window.location.assign(fileUrl);
     };
 
