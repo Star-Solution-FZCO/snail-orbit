@@ -39,7 +39,7 @@ interface IIssueCardProps {
 
 const IssueCard: FC<IIssueCardProps> = ({ issue, onSelect, selected }) => {
     return (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={1} fontSize={14}>
             <Checkbox
                 sx={{ p: 0 }}
                 checked={selected}
