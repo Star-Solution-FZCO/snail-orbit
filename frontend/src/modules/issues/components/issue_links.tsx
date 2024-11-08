@@ -1,16 +1,23 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import LinkIcon from "@mui/icons-material/Link";
 import {
     Box,
     Button,
     Collapse,
     Divider,
     IconButton,
+    Link as MuiLink,
     Typography,
 } from "@mui/material";
 import { Link } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi } from "store";
+import {
+    issueApi,
+    toggleIssueLinks,
+    useAppDispatch,
+    useAppSelector,
+} from "store";
 import { slugify } from "transliteration";
 import { IssueLinkT, IssueLinkTypeT } from "types";
 import { toastApiError } from "utils";
@@ -45,8 +52,9 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({ link, onRemove }) => {
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 gap: 1,
-                px: 1,
-                py: 0.5,
+                px: 0.5,
+                py: 0.25,
+                borderRadius: 1,
                 "&:hover": {
                     backgroundColor: "action.hover",
                     "& .remove-btn": {
@@ -107,6 +115,11 @@ interface IIssueLinksProps {
 
 const IssueLinks: FC<IIssueLinksProps> = ({ issueId, links }) => {
     const { t } = useTranslation();
+    const dispatch = useAppDispatch();
+
+    const addLinksComponentClosed = useAppSelector(
+        (state) => !state.shared.issueLinks.open,
+    );
 
     const [linksExpanded, setLinksExpanded] = useState(true);
 
@@ -144,15 +157,37 @@ const IssueLinks: FC<IIssueLinksProps> = ({ issueId, links }) => {
                     />
                 </IconButton>
 
-                <Box display="flex" gap={2} overflow="auto">
-                    {Object.entries(groupedLinks).map(([type, linkItems]) => (
-                        <Typography fontWeight="bold">
-                            {t(`issues.links.type.${type}`)}{" "}
-                            <Typography component="span" color="text.secondary">
-                                {linkItems.length}
-                            </Typography>
-                        </Typography>
-                    ))}
+                <Box display="flex" gap={1} width={1}>
+                    <Box display="flex" gap={2} overflow="auto" flex={1}>
+                        {Object.entries(groupedLinks).map(
+                            ([type, linkItems]) => (
+                                <Typography fontWeight="bold">
+                                    {t(`issues.links.type.${type}`)}{" "}
+                                    <Typography
+                                        component="span"
+                                        color="text.secondary"
+                                    >
+                                        {linkItems.length}
+                                    </Typography>
+                                </Typography>
+                            ),
+                        )}
+                    </Box>
+
+                    {addLinksComponentClosed && (
+                        <MuiLink
+                            sx={{
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}
+                            onClick={() => dispatch(toggleIssueLinks())}
+                        >
+                            <LinkIcon />
+                            {t("issues.links.add.title")}
+                        </MuiLink>
+                    )}
                 </Box>
             </Box>
 

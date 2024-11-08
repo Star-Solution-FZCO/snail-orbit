@@ -147,6 +147,7 @@
   "issues.form.project.label": "Project",
   "issues.form.subject": "Subject",
   "issues.form.text": "Text",
+  "issues.heading.showMore": "Show more",
   "issues.history.empty": "No history",
   "issues.history.fetch.error": "Failed to fetch issue history",
   "issues.history.title": "Issue history",
