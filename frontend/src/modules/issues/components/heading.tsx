@@ -159,7 +159,7 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
                 </Typography>
 
                 <Tooltip
-                    title={t("issues.heading.links.add")}
+                    title={t("issues.links.add.title")}
                     onClick={handleClickLinkButton}
                 >
                     <IconButton size="small">
