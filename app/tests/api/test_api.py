@@ -35,6 +35,8 @@ INTERLINK_TYPES = (
     ('parent_of', 'subtask_of'),
     ('blocks', 'blocked_by'),
     ('blocked_by', 'blocks'),
+    ('clones', 'cloned_by'),
+    ('cloned_by', 'clones'),
 )
 
 
