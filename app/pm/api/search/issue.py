@@ -1,25 +1,37 @@
 from datetime import date, datetime
 from typing import Any
 
-from lark import Lark, Transformer, UnexpectedCharacters, UnexpectedEOF, UnexpectedToken
+from lark import (
+    Lark,
+    Transformer,
+    UnexpectedCharacters,
+    UnexpectedEOF,
+    UnexpectedToken,
+)
 
 import pm.models as m
+from pm.api.search.parse_logical_expression import (
+    BracketError,
+    ExpressionNode,
+    LogicalOperatorT,
+    Node,
+    OperatorError,
+    OperatorNode,
+    UnexpectedEndOfExpression,
+    check_brackets,
+    parse_logical_expression,
+)
 
 __all__ = (
     'transform_query',
     'TransformError',
+    'get_suggestions',
 )
 
+HASHTAG_VALUES = {'#resolved', '#unresolved'}
 
-GRAMMAR = """
-    start: or_expression
-
-    or_expression: and_expression (_OR and_expression)*
-    and_expression: primary (_AND primary)*
-
-    primary: attribute_condition
-             | hashtag_value
-             | _LEFT_BRACKET or_expression _RIGHT_BRACKET -> group_expr
+EXPRESSION_GRAMMAR = """
+    start: attribute_condition | hashtag_value
 
     hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED
 
@@ -57,12 +69,8 @@ GRAMMAR = """
     datetime_right_inf_range: DATETIME_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
     user_value: USER_ME | EMAIL
 
-    _AND: "and"i
-    _OR: "or"i
     _RANGE_DELIMITER: ".."
     _COLON: ":"
-    _RIGHT_BRACKET: ")"
-    _LEFT_BRACKET: "("
     USER_ME: "me"
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
     DATE_VALUE: /[0-9]{4}-[0-9]{2}-[0-9]{2}/
@@ -115,19 +123,6 @@ class MongoQueryTransformer(Transformer):
         self.__current_user = current_user
         self.__cached_fields = cached_fields
         super().__init__()
-
-    def or_expression(self, args):
-        if len(args) == 1:
-            return args[0]
-        return {'$or': args}
-
-    def and_expression(self, args):
-        if len(args) == 1:
-            return args[0]
-        return {'$and': args}
-
-    def group_expr(self, args):
-        return args[0]
 
     def hashtag_value(self, args):
         val = args[0].value
@@ -206,10 +201,7 @@ class MongoQueryTransformer(Transformer):
         return {'$gt': args[0]}
 
     def FIELD_NAME(self, token):
-        return token.value
-
-    def primary(self, args):
-        return args[0]
+        return str.strip(token.value)
 
     def start(self, args):
         return args[0]
@@ -232,10 +224,12 @@ class TransformError(Exception):
         super().__init__(message)
 
 
-async def transform_query(q: str, current_user_email: str | None = None) -> dict:
-    parser = Lark(GRAMMAR, parser='lalr', propagate_positions=True)
+async def transform_expression(
+    expression: str, current_user_email: str | None = None
+) -> dict:
+    parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False)
     try:
-        tree = parser.parse(q)
+        tree = parser.parse(expression)
         transformer = MongoQueryTransformer(
             current_user_email, cached_fields=await _get_custom_fields()
         )
@@ -254,6 +248,99 @@ async def transform_query(q: str, current_user_email: str | None = None) -> dict
         ) from err
     except ValueError as err:
         raise TransformError(str(err)) from err
+
+
+OPERATOR_MAP = {
+    LogicalOperatorT.AND: '$and',
+    LogicalOperatorT.OR: '$or',
+}
+
+
+async def transform_tree(node: Node, current_user_email: str | None = None) -> dict:
+    if isinstance(node, ExpressionNode):
+        return await transform_expression(node.expression, current_user_email)
+    if isinstance(node, OperatorNode):
+        left = await transform_tree(node.left, current_user_email)
+        right = await transform_tree(node.right, current_user_email)
+        return {OPERATOR_MAP[node.operator]: [left, right]}
+
+
+async def transform_query(query: str, current_user_email: str | None = None) -> dict:
+    try:
+        check_brackets(query)
+    except BracketError as err:
+        if err.value:
+            raise TransformError(
+                f'Invalid bracket "{err.value}" at position {err.pos}',
+                position=err.pos,
+            ) from err
+    try:
+        tree = parse_logical_expression(query)
+    except OperatorError as err:
+        raise TransformError(
+            f'Invalid operator "{err.operator}" at position {err.pos}',
+            position=err.pos,
+            expected=err.expected,
+        ) from err
+    if not tree:
+        return {}
+
+    return await transform_tree(tree, current_user_email)
+
+
+async def get_suggestions(query: str) -> list:
+    custom_fields = await _get_custom_fields()
+    suggestions = []
+    try:
+        check_brackets(query)
+    except BracketError as err:
+        if err.value:
+            raise TransformError(
+                f'Invalid bracket "{err.value}" at position {err.pos}',
+                position=err.pos,
+            ) from err
+        suggestions.append(')')
+    try:
+        tree = parse_logical_expression(query)
+    except OperatorError as err:
+        if err.pos != len(query) - 1:
+            raise TransformError(
+                f'Invalid operator "{err.operator}" at position {err.pos}',
+                position=err.pos,
+                expected=err.expected,
+            ) from err
+        suggestions.extend(_transform_expected(err.expected, custom_fields))
+        return suggestions
+    except UnexpectedEndOfExpression as err:
+        suggestions.extend(_transform_expected(err.expected, custom_fields))
+        return suggestions
+    if not tree:
+        suggestions.append('(')
+        suggestions.extend(custom_fields.keys())
+        suggestions.extend(HASHTAG_VALUES)
+        return suggestions
+
+    try:
+        await transform_tree(tree)
+    except OperatorError as err:
+        raise TransformError(
+            f'Invalid operator "{err.operator}" at position {err.pos}',
+            position=err.pos,
+            expected=err.expected,
+        ) from err
+    suggestions.extend(('AND', 'OR'))
+    return suggestions
+
+
+def _transform_expected(expected: set[str], custom_fields: dict) -> set[str]:
+    res = set()
+    for exp in expected:
+        if exp == 'expression':
+            res.update(custom_fields.keys())
+            res.update(HASHTAG_VALUES)
+            continue
+        res.add(exp.upper())
+    return res
 
 
 async def _get_custom_fields() -> dict:
