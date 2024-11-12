@@ -74,9 +74,11 @@ export const linkTypes = [
     "duplicated_by",
     "duplicates",
     "subtask_of",
-    "parent_for",
+    "parent_of",
     "blocks",
     "blocked_by",
+    "clones",
+    "cloned_by",
 ] as const;
 
 export type IssueLinkTypeT = (typeof linkTypes)[number];

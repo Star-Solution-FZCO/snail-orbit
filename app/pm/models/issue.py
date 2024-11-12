@@ -45,6 +45,8 @@ class IssueInterlinkTypeT(StrEnum):
     PARENT_OF = 'parent_of'
     BLOCKS = 'blocks'
     BLOCKED_BY = 'blocked_by'
+    CLONES = 'clones'
+    CLONED_BY = 'cloned_by'
 
     def inverse(self) -> Self:
         return _INVERSE_INTERLINKS[self]
@@ -60,6 +62,8 @@ _INVERSE_INTERLINKS = {
     IssueInterlinkTypeT.PARENT_OF: IssueInterlinkTypeT.SUBTASK_OF,
     IssueInterlinkTypeT.BLOCKS: IssueInterlinkTypeT.BLOCKED_BY,
     IssueInterlinkTypeT.BLOCKED_BY: IssueInterlinkTypeT.BLOCKS,
+    IssueInterlinkTypeT.CLONES: IssueInterlinkTypeT.CLONED_BY,
+    IssueInterlinkTypeT.CLONED_BY: IssueInterlinkTypeT.CLONES,
 }
 
 
