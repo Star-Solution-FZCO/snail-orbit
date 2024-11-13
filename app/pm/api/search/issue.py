@@ -225,13 +225,13 @@ class TransformError(Exception):
 
 
 async def transform_expression(
-    expression: str, current_user_email: str | None = None
+    expression: str, cached_fields: dict, current_user_email: str | None = None
 ) -> dict:
     parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False)
     try:
         tree = parser.parse(expression)
         transformer = MongoQueryTransformer(
-            current_user_email, cached_fields=await _get_custom_fields()
+            current_user_email, cached_fields=cached_fields
         )
         return transformer.transform(tree)
     except UnexpectedToken as err:
@@ -256,12 +256,12 @@ OPERATOR_MAP = {
 }
 
 
-async def transform_tree(node: Node, current_user_email: str | None = None) -> dict:
+async def transform_tree(node: Node, cached_fields: dict, current_user_email: str | None = None) -> dict:
     if isinstance(node, ExpressionNode):
-        return await transform_expression(node.expression, current_user_email)
+        return await transform_expression(node.expression, cached_fields, current_user_email)
     if isinstance(node, OperatorNode):
-        left = await transform_tree(node.left, current_user_email)
-        right = await transform_tree(node.right, current_user_email)
+        left = await transform_tree(node.left, cached_fields, current_user_email)
+        right = await transform_tree(node.right, cached_fields, current_user_email)
         return {OPERATOR_MAP[node.operator]: [left, right]}
 
 
@@ -284,11 +284,11 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
         ) from err
     if not tree:
         return {}
+    custom_fields = await _get_custom_fields()
+    return await transform_tree(tree, cached_fields=custom_fields, current_user_email=current_user_email)
 
-    return await transform_tree(tree, current_user_email)
 
-
-async def get_suggestions(query: str) -> list:
+async def get_suggestions(query: str, current_user_email: str | None = None) -> list:
     custom_fields = await _get_custom_fields()
     suggestions = []
     try:
@@ -321,7 +321,7 @@ async def get_suggestions(query: str) -> list:
         return suggestions
 
     try:
-        await transform_tree(tree)
+        await transform_tree(tree, cached_fields=custom_fields, current_user_email=current_user_email)
     except OperatorError as err:
         raise TransformError(
             f'Invalid operator "{err.operator}" at position {err.pos}',
