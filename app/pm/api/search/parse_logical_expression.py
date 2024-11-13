@@ -1,4 +1,6 @@
 import re
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 from enum import StrEnum
 
 __all__ = (
@@ -21,8 +23,14 @@ class LogicalOperatorT(StrEnum):
     OR = 'or'
 
 
-class Node:
-    pass
+class Node(ABC):
+    @abstractmethod
+    def get_last_token(self) -> 'Node':
+        pass
+
+    @abstractmethod
+    def print_tree(self, print_fn: Callable[[str], None], level: int = 0) -> None:
+        pass
 
 
 class OperatorNode(Node):
@@ -38,6 +46,14 @@ class OperatorNode(Node):
     def __repr__(self) -> str:
         return f'({self.left} {self.operator} {self.right})'
 
+    def get_last_token(self) -> Node:
+        return self.right.get_last_token()
+
+    def print_tree(self, print_fn: Callable[[str], None], level: int = 0) -> None:
+        print_fn(' ' * level * 4 + self.operator)
+        self.left.print_tree(print_fn, level + 1)
+        self.right.print_tree(print_fn, level + 1)
+
 
 class ExpressionNode(Node):
     expression: str
@@ -51,6 +67,12 @@ class ExpressionNode(Node):
 
     def __repr__(self) -> str:
         return self.expression
+
+    def get_last_token(self) -> Node:
+        return self
+
+    def print_tree(self, print_fn: Callable[[str], None], level: int = 0) -> None:
+        print_fn(' ' * level * 4 + self.expression)
 
 
 class OperatorError(ValueError):

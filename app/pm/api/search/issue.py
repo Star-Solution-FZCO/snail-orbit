@@ -256,9 +256,13 @@ OPERATOR_MAP = {
 }
 
 
-async def transform_tree(node: Node, cached_fields: dict, current_user_email: str | None = None) -> dict:
+async def transform_tree(
+    node: Node, cached_fields: dict, current_user_email: str | None = None
+) -> dict:
     if isinstance(node, ExpressionNode):
-        return await transform_expression(node.expression, cached_fields, current_user_email)
+        return await transform_expression(
+            node.expression, cached_fields, current_user_email
+        )
     if isinstance(node, OperatorNode):
         left = await transform_tree(node.left, cached_fields, current_user_email)
         right = await transform_tree(node.right, cached_fields, current_user_email)
@@ -285,12 +289,14 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
     if not tree:
         return {}
     custom_fields = await _get_custom_fields()
-    return await transform_tree(tree, cached_fields=custom_fields, current_user_email=current_user_email)
+    return await transform_tree(
+        tree, cached_fields=custom_fields, current_user_email=current_user_email
+    )
 
 
 async def get_suggestions(query: str, current_user_email: str | None = None) -> list:
     custom_fields = await _get_custom_fields()
-    suggestions = []
+    missing_closing_brackets = False
     try:
         check_brackets(query)
     except BracketError as err:
@@ -299,7 +305,7 @@ async def get_suggestions(query: str, current_user_email: str | None = None) -> 
                 f'Invalid bracket "{err.value}" at position {err.pos}',
                 position=err.pos,
             ) from err
-        suggestions.append(')')
+        missing_closing_brackets = True
     try:
         tree = parse_logical_expression(query)
     except OperatorError as err:
@@ -309,27 +315,50 @@ async def get_suggestions(query: str, current_user_email: str | None = None) -> 
                 position=err.pos,
                 expected=err.expected,
             ) from err
-        suggestions.extend(_transform_expected(err.expected, custom_fields))
-        return suggestions
+        return list(_transform_expected(err.expected, custom_fields))
     except UnexpectedEndOfExpression as err:
-        suggestions.extend(_transform_expected(err.expected, custom_fields))
-        return suggestions
+        return list(_transform_expected(err.expected, custom_fields))
     if not tree:
-        suggestions.append('(')
-        suggestions.extend(custom_fields.keys())
-        suggestions.extend(HASHTAG_VALUES)
-        return suggestions
+        return ['(', *custom_fields.keys(), *HASHTAG_VALUES]
+    last_expression_token = tree.get_last_token()
+    if not isinstance(last_expression_token, ExpressionNode):
+        return []
 
     try:
-        await transform_tree(tree, cached_fields=custom_fields, current_user_email=current_user_email)
-    except OperatorError as err:
-        raise TransformError(
-            f'Invalid operator "{err.operator}" at position {err.pos}',
-            position=err.pos,
-            expected=err.expected,
-        ) from err
-    suggestions.extend(('AND', 'OR'))
-    return suggestions
+        await transform_expression(
+            last_expression_token.expression,
+            cached_fields=custom_fields,
+            current_user_email=current_user_email,
+        )
+    except TransformError as err:
+        if last_expression_token.expression.startswith('#'):
+            return [
+                hash_val[len(last_expression_token.expression) :]
+                for hash_val in HASHTAG_VALUES
+                if hash_val.startswith(last_expression_token.expression)
+            ]
+        if '_COLON' in err.expected:
+            suggestions = set()
+            for field in custom_fields:
+                if field == last_expression_token.expression:
+                    suggestions.add(':')
+                    continue
+                if field.startswith(last_expression_token.expression):
+                    suggestions.add(field[len(last_expression_token.expression) - 1 :])
+            return list(suggestions)
+        if 'NULL_VALUE' in err.expected:
+            field_name = last_expression_token.expression.split(':')[0].strip()
+            return list(get_field_possible_values(field_name, custom_fields))
+        return []
+    if last_expression_token.expression not in HASHTAG_VALUES:
+        field_name, val = map(
+            str.strip, last_expression_token.expression.split(':', maxsplit=1)
+        )
+        possible_values = get_field_possible_values(field_name, custom_fields)
+        if not possible_values or val in possible_values:
+            return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
+        return [val_[len(val) :] for val_ in possible_values if val_.startswith(val)]
+    return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
 
 
 def _transform_expected(expected: set[str], custom_fields: dict) -> set[str]:
@@ -343,6 +372,7 @@ def _transform_expected(expected: set[str], custom_fields: dict) -> set[str]:
     return res
 
 
+# todo: store in redis cache with ttl
 async def _get_custom_fields() -> dict:
     fields = await m.CustomField.find(with_children=True).to_list()
     res = {}
@@ -351,3 +381,25 @@ async def _get_custom_fields() -> dict:
             res[field.name] = []
         res[field.name].append(field)
     return res
+
+
+def get_field_possible_values(field_name: str, fields: dict) -> set[str]:
+    results = set()
+    if field_name not in fields:
+        return results
+    for field in fields[field_name]:
+        if field.is_nullable:
+            results.add('null')
+        if field.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+            results.update([option.value for option in field.options])
+            continue
+        if field.type == m.CustomFieldTypeT.STATE:
+            results.update([option.state for option in field.options])
+            continue
+        if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
+            results.update([user.email for user in field.users])
+            continue
+        if field.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+            results.update([version.version for version in field.versions])
+            continue
+    return results
