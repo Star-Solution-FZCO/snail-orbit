@@ -115,6 +115,7 @@ async def test_api_v1_project_get(
             'id': create_project,
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
@@ -187,6 +188,7 @@ async def test_api_v1_project_put(
             'id': create_project,
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
@@ -228,6 +230,7 @@ async def test_api_v1_project_subscription(
             'id': create_project,
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': True,
             'is_active': True,
@@ -243,6 +246,7 @@ async def test_api_v1_project_subscription(
             'id': create_project,
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
@@ -936,6 +940,28 @@ async def test_api_v1_custom_field_project_link(
             'custom_fields': [
                 {'id': create_custom_field['id'], **custom_field_payload}
             ],
+            'card_fields': [],
+            'workflows': [],
+            'is_subscribed': False,
+            'is_active': True,
+        },
+    }
+
+    response = test_client.put(
+        f'/api/v1/project/{create_project}',
+        headers=headers,
+        json={'card_fields': [create_custom_field['id']]},
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            'id': create_project,
+            **project_payload,
+            'custom_fields': [
+                {'id': create_custom_field['id'], **custom_field_payload}
+            ],
+            'card_fields': [create_custom_field['id']],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
@@ -955,6 +981,7 @@ async def test_api_v1_custom_field_project_link(
             'custom_fields': [
                 {'id': create_custom_field['id'], **custom_field_payload}
             ],
+            'card_fields': [create_custom_field['id']],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
@@ -972,6 +999,7 @@ async def test_api_v1_custom_field_project_link(
             'id': create_project,
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
