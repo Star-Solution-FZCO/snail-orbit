@@ -197,6 +197,10 @@ class GrantPermissionBody(BaseModel):
     role_id: PydanticObjectId
 
 
+class FieldMoveBody(BaseModel):
+    after_id: PydanticObjectId | None = None
+
+
 @router.get('/list')
 async def list_projects(
     query: ListParams = Depends(),
@@ -323,6 +327,45 @@ async def remove_field(
         project.card_fields.remove(field.id)
     except ValueError:
         pass
+    if project.is_changed:
+        await project.save_changes()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.put('/{project_id}/field/{field_id}/move')
+async def move_field(
+    project_id: PydanticObjectId,
+    field_id: PydanticObjectId,
+    body: FieldMoveBody,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    if body.after_id == field_id:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Field cannot be moved after itself'
+        )
+    try:
+        field_idx = next(
+            i for i, f in enumerate(project.custom_fields) if f.id == field_id
+        )
+        field = project.custom_fields.pop(field_idx)
+    except StopIteration:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Field {field_id} not found in project fields'
+        )
+    after_field_idx = -1
+    if body.after_id:
+        try:
+            after_field_idx = next(
+                i for i, f in enumerate(project.custom_fields) if f.id == body.after_id
+            )
+        except StopIteration:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Field {body.after_id} not found in project fields',
+            )
+    project.custom_fields.insert(after_field_idx + 1, field)
     if project.is_changed:
         await project.save_changes()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
