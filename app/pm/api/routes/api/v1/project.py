@@ -350,21 +350,21 @@ async def move_field(
             i for i, f in enumerate(project.custom_fields) if f.id == field_id
         )
         field = project.custom_fields.pop(field_idx)
-    except StopIteration:
+    except StopIteration as err:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, f'Field {field_id} not found in project fields'
-        )
+        ) from err
     after_field_idx = -1
     if body.after_id:
         try:
             after_field_idx = next(
                 i for i, f in enumerate(project.custom_fields) if f.id == body.after_id
             )
-        except StopIteration:
+        except StopIteration as err:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 f'Field {body.after_id} not found in project fields',
-            )
+            ) from err
     project.custom_fields.insert(after_field_idx + 1, field)
     if project.is_changed:
         await project.save_changes()
