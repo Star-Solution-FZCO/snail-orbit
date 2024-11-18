@@ -92,6 +92,7 @@ async def _create_project(
             'id': data['payload']['id'],
             **project_payload,
             'custom_fields': [],
+            'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
