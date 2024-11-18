@@ -154,6 +154,7 @@ class ProjectOutput(BaseModel):
     ai_description: str | None
     is_active: bool
     custom_fields: list[CustomFieldOutput]
+    card_fields: list[PydanticObjectId]
     workflows: list[WorkflowOutput] = []
     is_subscribed: bool = False
 
@@ -167,6 +168,7 @@ class ProjectOutput(BaseModel):
             ai_description=obj.ai_description,
             is_active=obj.is_active,
             custom_fields=[CustomFieldOutput.from_obj(v) for v in obj.custom_fields],
+            card_fields=obj.card_fields,
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
             is_subscribed=current_user().user.id in obj.subscribers,
         )
@@ -186,12 +188,17 @@ class ProjectUpdate(CrudUpdateBody[m.Project]):
     description: str | None = None
     ai_description: str | None = None
     is_active: bool | None = None
+    card_fields: list[PydanticObjectId] | None = None
 
 
 class GrantPermissionBody(BaseModel):
     target_type: m.PermissionTargetType
     target_id: PydanticObjectId
     role_id: PydanticObjectId
+
+
+class FieldMoveBody(BaseModel):
+    after_id: PydanticObjectId | None = None
 
 
 @router.get('/list')
@@ -239,6 +246,21 @@ async def update_project(
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    if 'card_fields' in body.model_dump(exclude_unset=True):
+        project_field_ids = {field.id for field in obj.custom_fields}
+        unknown_card_field = next(
+            (
+                field_id
+                for field_id in body.card_fields
+                if field_id not in project_field_ids
+            ),
+            None,
+        )
+        if unknown_card_field:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Custom field id={unknown_card_field} not found in project fields',
+            )
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
@@ -255,7 +277,7 @@ async def delete_project(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     await obj.delete()
-    # todo: remove all issues in project
+    await m.Issue.find(m.Issue.project.id == project_id).delete()
     return ModelIdOutput.make(project_id)
 
 
@@ -301,6 +323,49 @@ async def remove_field(
         project.custom_fields.remove(field)
     except ValueError as err:
         raise HTTPException(HTTPStatus.CONFLICT, 'Field not found in project') from err
+    try:
+        project.card_fields.remove(field.id)
+    except ValueError:
+        pass
+    if project.is_changed:
+        await project.save_changes()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.put('/{project_id}/field/{field_id}/move')
+async def move_field(
+    project_id: PydanticObjectId,
+    field_id: PydanticObjectId,
+    body: FieldMoveBody,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    if body.after_id == field_id:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Field cannot be moved after itself'
+        )
+    try:
+        field_idx = next(
+            i for i, f in enumerate(project.custom_fields) if f.id == field_id
+        )
+        field = project.custom_fields.pop(field_idx)
+    except StopIteration as err:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Field {field_id} not found in project fields'
+        ) from err
+    after_field_idx = -1
+    if body.after_id:
+        try:
+            after_field_idx = next(
+                i for i, f in enumerate(project.custom_fields) if f.id == body.after_id
+            )
+        except StopIteration as err:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Field {body.after_id} not found in project fields',
+            ) from err
+    project.custom_fields.insert(after_field_idx + 1, field)
     if project.is_changed:
         await project.save_changes()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))

@@ -61,6 +61,7 @@ class Project(Document):
     permissions: Annotated[list[ProjectPermission], Field(default_factory=list)]
     issue_counter: int = 0
     subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
 
     async def get_new_issue_alias(self) -> str:
         await self.update(
