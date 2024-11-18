@@ -277,7 +277,7 @@ async def delete_project(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     await obj.delete()
-    # todo: remove all issues in project
+    await m.Issue.find(m.Issue.project.id == project_id).delete()
     return ModelIdOutput.make(project_id)
 
 
