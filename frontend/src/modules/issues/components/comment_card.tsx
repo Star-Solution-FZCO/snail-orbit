@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { CommentT, SelectedAttachmentT } from "types";
-import {formatPeriodInSeconds, toastApiError} from "utils";
+import { formatSpentTime, toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
@@ -244,6 +244,7 @@ const CommentCard: FC<ICommentCardProps> = ({
     const author = comment.author;
     const isOwner = user?.id === author.id;
     const attachmentsExists = comment.attachments.length > 0;
+    const spentTime = comment.spent_time;
 
     const renderViewMode = () => (
         <Box
@@ -314,12 +315,15 @@ const CommentCard: FC<ICommentCardProps> = ({
                     />
                 </Box>
 
-                { comment.spent_time > 0 && (
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <Typography fontSize="inherit" color="text.secondary">
-                            Spent time: {formatPeriodInSeconds(comment.spent_time)}
-                        </Typography>
-                    </Box>
+                {spentTime > 0 && (
+                    <Typography
+                        mt={0.5}
+                        fontSize="inherit"
+                        color="text.secondary"
+                        fontWeight="bold"
+                    >
+                        {t("issues.spentTime")}: {formatSpentTime(spentTime)}
+                    </Typography>
                 )}
 
                 <Box mt={0.5}>
@@ -386,6 +390,8 @@ const CommentCard: FC<ICommentCardProps> = ({
                                 multiple
                             />
                         </Button>
+
+                        <Button></Button>
 
                         <Button
                             onClick={onCancel}
