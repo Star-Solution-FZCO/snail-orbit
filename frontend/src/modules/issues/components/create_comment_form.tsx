@@ -1,5 +1,6 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -160,6 +161,8 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
         );
     };
 
+    const handleClickAddSpentTime = () => {};
+
     const handleClickCancel = () => {
         if (text || files.length > 0) setDiscardChangesDialogOpen(true);
         else setMode("view");
@@ -227,6 +230,16 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                     onChange={handleChangeFileInput}
                                     multiple
                                 />
+                            </Button>
+
+                            <Button
+                                onClick={handleClickAddSpentTime}
+                                startIcon={<HourglassTopIcon />}
+                                variant="outlined"
+                                size="small"
+                                color="info"
+                            >
+                                {t("issues.comments.addSpentTime")}
                             </Button>
 
                             <Button

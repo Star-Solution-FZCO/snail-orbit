@@ -183,6 +183,8 @@
   "issues.new": "New Issue",
   "issues.title": "Issues",
   "issues.update.success": "Issue updated successfully",
+  "issues.spentTime": "Spent time",
+  "issues.spentTime.add": "Add spent time",
   "mainPage": "Main page",
   "more": "More",
   "navbar.agileBoards": "Agile Boards",
