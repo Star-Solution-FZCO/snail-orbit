@@ -1,4 +1,5 @@
 import { TFunction } from "i18next";
+import { customFieldsTypes } from "types";
 import * as yup from "yup";
 
 export const agileBoardProjectSchema = yup.object().shape({
@@ -25,6 +26,16 @@ export const agileBoardColumnSchema = yup.object().shape({
 
 export type AgileBoardColumn = yup.InferType<typeof agileBoardColumnSchema>;
 
+export const agileBoardCardFieldSchema = yup.object().shape({
+    id: yup.string().required(),
+    name: yup.string().required(),
+    type: yup.string().oneOf(customFieldsTypes).required(),
+});
+
+export const uiSettingsSchema = yup.object().shape({
+    minCardHeight: yup.string().default(""),
+});
+
 export const getAgileBoardSchema = (t: TFunction) =>
     yup.object().shape({
         name: yup.string().required(t("form.validation.required")),
@@ -45,6 +56,12 @@ export const getAgileBoardSchema = (t: TFunction) =>
             .of(agileBoardColumnSchema)
             .required()
             .default([]),
+        card_fields: yup
+            .array()
+            .of(agileBoardCardFieldSchema)
+            .required()
+            .default([]),
+        ui_settings: uiSettingsSchema,
     });
 
 export type AgileBoardFormData = yup.InferType<

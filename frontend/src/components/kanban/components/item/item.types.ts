@@ -4,10 +4,8 @@ import { CSSProperties, ReactNode } from "react";
 
 export type ItemProps = {
     dragOverlay?: boolean;
-    color?: string;
     disabled?: boolean;
     dragging?: boolean;
-    height?: number;
     index?: number;
     fadeIn?: boolean;
     transform?: Transform | null;

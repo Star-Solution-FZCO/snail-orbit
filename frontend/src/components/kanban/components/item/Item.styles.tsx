@@ -59,13 +59,12 @@ export const ItemContainer = styled("li")<ItemContainerProps>(
 export type ItemStyledProps = {
     dragging?: boolean;
     disabled?: boolean;
-    useColor?: boolean;
     dragOverlay?: boolean;
     focusVisible?: boolean;
 };
 
 export const ItemStyled = styled("div")<ItemStyledProps>(
-    ({ theme, disabled, dragging, useColor, dragOverlay }) => ({
+    ({ theme, disabled, dragging, dragOverlay }) => ({
         position: "relative",
         display: "flex",
         flexGrow: 1,
@@ -121,24 +120,6 @@ export const ItemStyled = styled("div")<ItemStyledProps>(
                   transform: "scale(var(--scale))",
                   boxShadow: "var(--box-shadow-picked-up)",
                   opacity: 1,
-              }
-            : {}),
-
-        ...(useColor
-            ? {
-                  "&:before": {
-                      content: "",
-                      position: "absolute",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      left: 0,
-                      height: "100%",
-                      width: "3px",
-                      display: "block",
-                      borderTopLeftRadius: theme.shape.borderRadius,
-                      borderTopRightRadius: theme.shape.borderRadius,
-                      backgroundColor: "var(--color)",
-                  },
               }
             : {}),
     }),

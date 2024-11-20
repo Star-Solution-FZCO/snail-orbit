@@ -29,6 +29,7 @@ export const columnKeyToFieldValue = (
 ): string | null => {
     if (value === null) return null;
     if (Number.isInteger(value)) return value.toString();
+    if (!(value as string).includes("!#!")) return value.toString();
     const [_, column] = (value as string).split("!#!");
     return column;
 };

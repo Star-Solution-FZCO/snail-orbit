@@ -9,7 +9,7 @@ import {
     fieldValueToSwimlaneKey,
     swimlaneKeyToFieldValue,
 } from "../utils/fieldValueToKey";
-import { IssueCard } from "./issue_card";
+import { AgileCard } from "./agile_card";
 
 export type AgileBoardProps = {
     boardData: AgileBoardT;
@@ -66,9 +66,11 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
 
     useEffect(() => {
         setHeaders(
-            data?.payload.items[0].columns.map(
-                (el) => el.field_value?.value || "",
-            ) || [],
+            data?.payload.items?.length
+                ? data.payload.items[0].columns.map(
+                      (el) => el.field_value?.value || "",
+                  )
+                : [],
         );
     }, [data?.payload]);
 
@@ -81,7 +83,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
             issue_id: id.toString(),
             board_id: boardData.id,
             column: columnKeyToFieldValue(to.column),
-            swimlane: swimlaneKeyToFieldValue(to.swimLine),
+            swimlane: swimlaneKeyToFieldValue(to.swimLine) || undefined,
             after_issue: to.after?.toString() || null,
         });
     };
@@ -94,9 +96,12 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
                 headers={headers}
                 items={items}
                 renderItemContent={
-                    (args) =>
-                        itemsMap[args.id] ? (
-                            <IssueCard {...args} issue={itemsMap[args.id]} />
+                    ({ id }) =>
+                        itemsMap[id] ? (
+                            <AgileCard
+                                issue={itemsMap[id]}
+                                cardSetting={boardData.ui_settings}
+                            />
                         ) : null // TODO: Move and preserve issue data inside kanban
                 }
                 swimLineProps={(swimlaneId) => ({

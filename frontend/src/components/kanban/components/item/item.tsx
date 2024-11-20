@@ -2,17 +2,14 @@ import { CSSProperties, forwardRef, memo, useEffect } from "react";
 import { ItemContainer, ItemStyled } from "./Item.styles";
 import { ItemProps } from "./item.types";
 
-// TODO: Add sx support
 const Item = memo(
     forwardRef<HTMLLIElement, ItemProps>(
         (
             {
-                color,
                 dragOverlay,
                 dragging,
                 disabled,
                 fadeIn,
-                height,
                 index,
                 listeners,
                 renderItemContent,
@@ -61,7 +58,6 @@ const Item = memo(
                                 ? `${transform.scaleY}`
                                 : undefined,
                             "--index": index,
-                            "--color": color,
                         } as CSSProperties
                     }
                     ref={ref}
@@ -70,7 +66,6 @@ const Item = memo(
                         dragging={dragging}
                         dragOverlay={dragOverlay}
                         disabled={disabled}
-                        useColor={!!color}
                         style={style}
                         {...listeners}
                         {...props}

@@ -5,6 +5,7 @@ import {
     ApiResponse,
     ColumnT,
     CreateAgileBoardT,
+    CustomFieldT,
     ListQueryParams,
     ListResponse,
     MoveIssueT,
@@ -61,6 +62,15 @@ export const agileBoardApi = createApi({
         >({
             query: (params) => ({
                 url: "board/swimlane_field/select",
+                params,
+            }),
+        }),
+        listAvailableCustomFields: build.query<
+            ListResponse<CustomFieldT>,
+            { project_id: string[] }
+        >({
+            query: (params) => ({
+                url: "board/custom_field/select",
                 params,
             }),
         }),

@@ -1,4 +1,7 @@
+import functools
+import operator
 from collections.abc import Sequence
+from functools import reduce
 from http import HTTPStatus
 from typing import Annotated, Any
 
@@ -517,6 +520,26 @@ async def select_swimlane_field(
         for cf in _intersect_custom_fields(projects)
         if cf.type not in (m.CustomFieldTypeT.ENUM_MULTI, m.CustomFieldTypeT.USER_MULTI)
     ]
+    return BaseListOutput.make(
+        count=len(fields),
+        limit=len(fields),
+        offset=0,
+        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+    )
+
+@router.get('/custom_field/select')
+async def select_custom_field(
+    project_id: list[PydanticObjectId] = Query(...),
+) -> BaseListOutput[CustomFieldLinkOutput]:
+    projects = await m.Project.find(
+        bo.In(m.Project.id, project_id),
+        fetch_links=True,
+    ).to_list()
+    fields = set()
+    for project in projects:
+        for field in project.custom_fields:
+            fields.add(field)
+    fields = [cf for cf in fields]
     return BaseListOutput.make(
         count=len(fields),
         limit=len(fields),
