@@ -49,5 +49,6 @@ async def wb_user_sync() -> None:
                 m.IssueDraft.update_user_embedded_links(users[user.email]),
                 m.UserMultiCustomField.update_user_embedded_links(users[user.email]),
                 m.UserCustomField.update_user_embedded_links(users[user.email]),
+                m.Tag.update_user_embedded_links(users[user.email]),
             )
             await generate_default_avatar(users[user.email])
