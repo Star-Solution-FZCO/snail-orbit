@@ -1,7 +1,4 @@
-import functools
-import operator
 from collections.abc import Sequence
-from functools import reduce
 from http import HTTPStatus
 from typing import Annotated, Any
 
@@ -527,6 +524,7 @@ async def select_swimlane_field(
         items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
     )
 
+
 @router.get('/custom_field/select')
 async def select_custom_field(
     project_id: list[PydanticObjectId] = Query(...),
@@ -539,7 +537,6 @@ async def select_custom_field(
     for project in projects:
         for field in project.custom_fields:
             fields.add(field)
-    fields = [cf for cf in fields]
     return BaseListOutput.make(
         count=len(fields),
         limit=len(fields),
