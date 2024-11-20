@@ -10,6 +10,7 @@ import {
     AgileBoardFormData,
     getAgileBoardSchema,
 } from "./agile_board_form.schema";
+import { Card } from "./tabs/card";
 import { ColumnSwimlanes } from "./tabs/column_swimlanes";
 import { MainInfo } from "./tabs/main_info";
 
@@ -21,6 +22,7 @@ interface IAgileBoardFormProps {
 const enum tabs {
     main = "main",
     column_and_swim_lines = "column_and_swim_lines",
+    card = "card",
 }
 
 const AgileBoardForm: FC<IAgileBoardFormProps> = ({
@@ -83,6 +85,10 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                                 )}
                                 value={tabs.column_and_swim_lines}
                             />
+                            <Tab
+                                label={t("agileBoardForm.tab.card")}
+                                value={tabs.card}
+                            />
                         </Tabs>
                     </Box>
                     <TabPanel value={tabs.main}>
@@ -90,6 +96,9 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                     </TabPanel>
                     <TabPanel value={tabs.column_and_swim_lines}>
                         <ColumnSwimlanes />
+                    </TabPanel>
+                    <TabPanel value={tabs.card}>
+                        <Card />
                     </TabPanel>
                 </Box>
             </TabContext>

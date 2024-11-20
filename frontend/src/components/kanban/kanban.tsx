@@ -185,8 +185,8 @@ export const Kanban: FC<KanbanProps> = ({
     );
 
     const sensors = useSensors(
-        useSensor(MouseSensor),
-        useSensor(TouchSensor),
+        useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, {
             coordinateGetter,
         }),
