@@ -169,6 +169,20 @@ class Issue(Document):
         _, latest_time = self._get_latest_comment_or_history()
         return latest_time
 
+    @property
+    def is_resolved(self) -> bool:
+        return any(
+            field.type == CustomFieldTypeT.STATE and field.value.is_resolved
+            for field in self.fields
+        )
+
+    @property
+    def is_closed(self) -> bool:
+        return any(
+            field.type == CustomFieldTypeT.STATE and field.value.is_closed
+            for field in self.fields
+        )
+
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
 

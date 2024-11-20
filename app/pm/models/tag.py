@@ -32,6 +32,12 @@ class TagLinkField(BaseModel):
             color=obj.color,
         )
 
+    async def resolve(self) -> 'Tag':
+        obj = await Tag.find_one(Tag.id == self.id)
+        if obj is None:
+            raise ValueError(f'Tag not found: {self.id}')
+        return obj
+
 
 @audited_model
 class Tag(Document):
