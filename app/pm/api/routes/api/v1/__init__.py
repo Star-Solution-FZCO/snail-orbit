@@ -10,10 +10,10 @@ from .profile import router as profile_router
 from .project import router as project_router
 from .role import router as role_router
 from .settings import router as settings_router
+from .tag import router as tag_router
 from .user import router as user_router
 from .version import router as version_router
 from .workflow import router as workflow_router
-from .tag import router as tag_router
 
 __all__ = ('router',)
 

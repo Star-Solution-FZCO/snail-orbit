@@ -14,8 +14,8 @@ from .create import (
     create_groups,
     create_project,
     create_role,
-    create_user,
     create_tag,
+    create_user,
 )
 from .custom_fields import (
     create_custom_field,
@@ -632,7 +632,7 @@ async def test_api_v1_group_delete(
                 'untag_on_resolve': True,
                 'untag_on_close': True,
             },
-            id='tag'
+            id='tag',
         )
     ],
 )
@@ -654,10 +654,7 @@ async def test_api_v1_tag(
     data = response.json()
     assert data['success']
     del data['payload']['created_by']
-    assert data['payload'] == {
-        'id': tag_id,
-        **tag_payload
-    }
+    assert data['payload'] == {'id': tag_id, **tag_payload}
 
     response = test_client.put(
         f'/api/v1/tag/{tag_id}',
