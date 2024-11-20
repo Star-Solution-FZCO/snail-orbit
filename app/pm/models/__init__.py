@@ -5,6 +5,7 @@ from .group import *
 from .issue import *
 from .project import *
 from .role import *
+from .tag import *
 from .user import *
 from .workflow import *
 
@@ -34,4 +35,5 @@ __beanie_models__ = [
     Workflow,
     ScheduledWorkflow,
     OnChangeWorkflow,
+    Tag,
 ]

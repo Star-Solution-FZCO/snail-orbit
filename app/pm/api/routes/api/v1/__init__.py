@@ -13,6 +13,7 @@ from .settings import router as settings_router
 from .user import router as user_router
 from .version import router as version_router
 from .workflow import router as workflow_router
+from .tag import router as tag_router
 
 __all__ = ('router',)
 
@@ -30,3 +31,5 @@ router.include_router(files_router)
 router.include_router(group_router)
 router.include_router(role_router)
 router.include_router(workflow_router)
+
+router.include_router(tag_router)
