@@ -116,7 +116,7 @@ const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
     const { t } = useTranslation();
 
     return (
-        <Box display="flex" flexDirection="column" gap={0.5}>
+        <Box display="flex" flexDirection="column" gap={0.5} mt={0.5}>
             {changes.map(({ field, old_value, new_value }, index) => (
                 <Box
                     key={index}

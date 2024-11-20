@@ -10,6 +10,7 @@ import {
     IssueActivityT,
     IssueActivityTypeT,
     IssueHistoryT,
+    IssueSpentTimeRecordT,
     IssueT,
     SelectedAttachmentT,
 } from "types";
@@ -45,17 +46,29 @@ export const transformIssue = (issue: IssueT): CreateIssueT => ({
     attachments: issue.attachments.map((el) => el.id),
 });
 
-export const mergeCommentsAndHistoryRecords = (
+export const mergeActivityRecords = (
     comments: CommentT[],
+    spentTimeRecords: IssueSpentTimeRecordT[],
     historyRecords: IssueHistoryT[],
     displayingActivities: IssueActivityTypeT[],
 ): IssueActivityT[] => {
-    const commentActivities: IssueActivityT[] = comments.map((comment) => ({
-        id: comment.id,
-        type: "comment",
-        time: comment.created_at,
-        data: comment,
-    }));
+    const commentActivities: IssueActivityT[] = comments
+        .filter((comment) => comment.spent_time === 0)
+        .map((comment) => ({
+            id: comment.id,
+            type: "comment",
+            time: comment.created_at,
+            data: comment,
+        }));
+
+    const spentTimeActivities: IssueActivityT[] = spentTimeRecords.map(
+        (record) => ({
+            id: record.id,
+            type: "spent_time",
+            time: record.created_at,
+            data: record,
+        }),
+    );
 
     const historyActivities: IssueActivityT[] = historyRecords.map(
         (record) => ({
@@ -66,7 +79,7 @@ export const mergeCommentsAndHistoryRecords = (
         }),
     );
 
-    return [...commentActivities, ...historyActivities]
+    return [...commentActivities, ...spentTimeActivities, ...historyActivities]
         .filter((activity) => displayingActivities.includes(activity.type))
         .sort(
             (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),

@@ -50,7 +50,14 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         handleSubmit,
         reset,
         formState: { errors, isDirty },
-    } = useForm({ defaultValues: defaultValues || { value: "", color: null } });
+    } = useForm({
+        defaultValues: defaultValues || {
+            value: "",
+            color: null,
+            is_resolved: false,
+            is_closed: false,
+        },
+    });
 
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
@@ -67,8 +74,15 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
     const popoverOpen = Boolean(anchorEl);
 
     useEffect(() => {
-        reset(defaultValues || { value: "", color: null });
-    }, [defaultValues, reset]);
+        reset(
+            defaultValues || {
+                value: "",
+                color: null,
+                is_resolved: false,
+                is_closed: false,
+            },
+        );
+    }, [open, defaultValues, reset]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

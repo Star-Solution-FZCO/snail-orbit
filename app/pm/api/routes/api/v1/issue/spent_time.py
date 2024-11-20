@@ -1,4 +1,6 @@
+from datetime import datetime
 from http import HTTPStatus
+from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import HTTPException
@@ -20,8 +22,10 @@ router = APIRouter(
 
 
 class IssueSpentTimeRecordOutput(BaseModel):
+    id: UUID
     user: UserOutput
     spent_time: int
+    created_at: datetime
 
 
 class IssueSpentTimeOutput(BaseModel):
@@ -36,26 +40,20 @@ async def get_spent_time(
     issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
-
     user_ctx = current_user()
     user_ctx.validate_issue_permission(issue, PermAnd(Permissions.ISSUE_READ))
-
     all_authors = {c.author.id: c.author for c in issue.comments}
-    records: dict[PydanticObjectId, int] = {}
-    for comment in issue.comments:
-        if not comment.spent_time:
-            continue
-        if comment.author.id not in records:
-            records[comment.author.id] = 0
-        records[comment.author.id] += comment.spent_time
-
+    records = [
+        IssueSpentTimeRecordOutput(
+            id=comment.id,
+            user=UserOutput.from_obj(all_authors[comment.author.id]),
+            spent_time=comment.spent_time,
+            created_at=comment.created_at,
+        )
+        for comment in issue.comments
+        if comment.spent_time
+    ]
     return IssueSpentTimeOutput(
         total_spent_time=sum((c.spent_time for c in issue.comments), start=0),
-        records=[
-            IssueSpentTimeRecordOutput(
-                user=UserOutput.from_obj(all_authors[user_id]),
-                spent_time=spent_time,
-            )
-            for user_id, spent_time in records.items()
-        ],
+        records=records,
     )
