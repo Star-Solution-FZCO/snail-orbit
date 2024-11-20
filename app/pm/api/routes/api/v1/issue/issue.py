@@ -18,6 +18,7 @@ from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOut
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.files import resolve_files
+from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
@@ -568,6 +569,7 @@ async def update_issue(
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
+    await update_tags_on_close_resolve(obj)
     try:
         for wf in project.workflows:
             await wf.run(obj)

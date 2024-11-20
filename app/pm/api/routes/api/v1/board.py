@@ -23,6 +23,7 @@ from pm.api.views.issue import (
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.permissions import PermAnd, Permissions
+from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.events_bus import Event, EventType
 from pm.workflows import WorkflowException
@@ -457,6 +458,7 @@ async def move_issue(
         after_issue = None
     if issue.is_changed:
         pr = await issue.get_project(fetch_links=True)
+        await update_tags_on_close_resolve(issue)
         try:
             for wf in pr.workflows:
                 await wf.run(issue)
