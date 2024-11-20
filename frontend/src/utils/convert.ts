@@ -1,8 +1,3 @@
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-
-dayjs.extend(duration);
-
 export function formatBytes(bytes: number) {
     if (bytes === 0) return "0 B";
     const sizes = ["B", "KB", "MB", "GB", "TB"];
@@ -13,13 +8,22 @@ export function formatBytes(bytes: number) {
 export function formatSpentTime(seconds: number) {
     if (seconds === 0) return "0s";
 
-    const dur = dayjs.duration(seconds, "seconds");
+    const weekInSeconds = 5 * 8 * 60 * 60;
+    const dayInSeconds = 8 * 60 * 60;
+    const hourInSeconds = 60 * 60;
+    const minuteInSeconds = 60;
 
-    const weeks = Math.floor(dur.asWeeks());
-    const days = dur.days();
-    const hours = dur.hours();
-    const minutes = dur.minutes();
-    const secs = dur.seconds();
+    const weeks = Math.floor(seconds / weekInSeconds);
+    seconds %= weekInSeconds;
+
+    const days = Math.floor(seconds / dayInSeconds);
+    seconds %= dayInSeconds;
+
+    const hours = Math.floor(seconds / hourInSeconds);
+    seconds %= hourInSeconds;
+
+    const minutes = Math.floor(seconds / minuteInSeconds);
+    const secs = seconds % minuteInSeconds;
 
     let result = "";
     if (weeks > 0) result += `${weeks}w `;

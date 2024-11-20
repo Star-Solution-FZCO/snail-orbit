@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { LoadingButton } from "@mui/lab";
 import {
+    Box,
     Button,
     Dialog,
     DialogActions,
@@ -8,23 +9,41 @@ import {
     DialogTitle,
     IconButton,
 } from "@mui/material";
-import { FC } from "react";
+import { DurationField } from "components";
+import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatSpentTime } from "utils";
 
-interface ISpentTimeFormProps {
+interface ISpentTimeDialogProps {
     open: boolean;
+    initialSpentTime?: number;
     onClose: () => void;
-    onSubmit: () => void;
+    onSubmit: (spentTime: number) => void;
+    mode: "add" | "edit";
     loading?: boolean;
 }
 
-const SpentTimeForm: FC<ISpentTimeFormProps> = ({
+const SpentTimeDialog: FC<ISpentTimeDialogProps> = ({
     open,
+    initialSpentTime,
     onClose,
     onSubmit,
+    mode,
     loading,
 }) => {
     const { t } = useTranslation();
+
+    const [spentTime, setSpentTime] = useState(0);
+
+    const handleClickSave = () => {
+        onSubmit(spentTime);
+    };
+
+    useEffect(() => {
+        if (initialSpentTime) {
+            setSpentTime(initialSpentTime);
+        }
+    }, [initialSpentTime]);
 
     return (
         <Dialog open={open} onClose={onClose}>
@@ -36,14 +55,28 @@ const SpentTimeForm: FC<ISpentTimeFormProps> = ({
                     gap: 1,
                 }}
             >
-                {t("issues.spentTime.add")}
+                {t(
+                    mode === "add"
+                        ? "issues.spentTime.add"
+                        : "issues.spentTime.edit",
+                )}
 
                 <IconButton onClick={onClose} size="small" disabled={loading}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent></DialogContent>
+            <DialogContent>
+                <Box mt={1} minHeight="85px">
+                    <DurationField
+                        label={t("issues.spentTime")}
+                        initialValue={
+                            spentTime ? formatSpentTime(spentTime) : undefined
+                        }
+                        onChange={setSpentTime}
+                    />
+                </Box>
+            </DialogContent>
 
             <DialogActions>
                 <Button
@@ -56,9 +89,10 @@ const SpentTimeForm: FC<ISpentTimeFormProps> = ({
                 </Button>
 
                 <LoadingButton
-                    onClick={onSubmit}
+                    onClick={handleClickSave}
                     variant="outlined"
                     loading={loading}
+                    disabled={spentTime === 0}
                 >
                     {t("save")}
                 </LoadingButton>
@@ -67,4 +101,4 @@ const SpentTimeForm: FC<ISpentTimeFormProps> = ({
     );
 };
 
-export { SpentTimeForm };
+export { SpentTimeDialog };

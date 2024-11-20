@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { CommentT, SelectedAttachmentT } from "types";
-import { formatSpentTime, toastApiError } from "utils";
+import { toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
@@ -244,7 +244,6 @@ const CommentCard: FC<ICommentCardProps> = ({
     const author = comment.author;
     const isOwner = user?.id === author.id;
     const attachmentsExists = comment.attachments.length > 0;
-    const spentTime = comment.spent_time;
 
     const renderViewMode = () => (
         <Box
@@ -314,17 +313,6 @@ const CommentCard: FC<ICommentCardProps> = ({
                         onDelete={onDelete}
                     />
                 </Box>
-
-                {spentTime > 0 && (
-                    <Typography
-                        mt={0.5}
-                        fontSize="inherit"
-                        color="text.secondary"
-                        fontWeight="bold"
-                    >
-                        {t("issues.spentTime")}: {formatSpentTime(spentTime)}
-                    </Typography>
-                )}
 
                 <Box mt={0.5}>
                     <MarkdownPreview text={comment.text} />

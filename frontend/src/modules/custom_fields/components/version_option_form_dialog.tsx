@@ -67,7 +67,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
 
     useEffect(() => {
         reset(defaultValues || { value: "", release_date: null });
-    }, [defaultValues, reset]);
+    }, [open, defaultValues, reset]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

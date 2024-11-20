@@ -17,4 +17,5 @@ export type CommentT = {
     updated_at: string;
     attachments: AttachmentT[];
     spent_time: number;
+    is_hidden: boolean;
 };

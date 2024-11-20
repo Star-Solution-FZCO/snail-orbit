@@ -20,6 +20,7 @@ import { toastApiError } from "utils";
 import { useUploadToast } from "../utils";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
+import { SpentTimeDialog } from "./spent_time_dialog";
 
 interface IUnsavedChangesDialogProps {
     open: boolean;
@@ -79,6 +80,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     const [attachments, setAttachments] = useState<string[]>([]);
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
+    const [spentTimeDialogOpen, setSpentTimeDialogOpen] = useState(false);
 
     const [createComment, { isLoading }] =
         issueApi.useCreateIssueCommentMutation();
@@ -161,7 +163,24 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
         );
     };
 
-    const handleClickAddSpentTime = () => {};
+    const handleClickAddSpentTime = () => {
+        setSpentTimeDialogOpen(true);
+    };
+
+    const addSpentTime = (spentTime: number) => {
+        createComment({
+            id: issueId,
+            text: null,
+            spent_time: spentTime,
+        })
+            .unwrap()
+            .then(() => {
+                setText("");
+                setMode("view");
+                setSpentTimeDialogOpen(false);
+            })
+            .catch(toastApiError);
+    };
 
     const handleClickCancel = () => {
         if (text || files.length > 0) setDiscardChangesDialogOpen(true);
@@ -239,7 +258,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                 size="small"
                                 color="info"
                             >
-                                {t("issues.comments.addSpentTime")}
+                                {t("issues.spentTime.add")}
                             </Button>
 
                             <Button
@@ -257,6 +276,14 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                         open={discardChangesDialogOpen}
                         onClose={() => setDiscardChangesDialogOpen(false)}
                         onDiscard={handleDiscardChanges}
+                    />
+
+                    <SpentTimeDialog
+                        open={spentTimeDialogOpen}
+                        onClose={() => setSpentTimeDialogOpen(false)}
+                        onSubmit={addSpentTime}
+                        mode="add"
+                        loading={isLoading}
                     />
                 </Box>
 

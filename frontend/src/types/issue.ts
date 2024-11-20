@@ -53,13 +53,13 @@ export type IssueHistoryT = {
     changes: FieldValueChangeT[];
 };
 
-export type IssueActivityTypeT = "comment" | "history";
+export type IssueActivityTypeT = "comment" | "spent_time" | "history";
 
 export type IssueActivityT = {
     id: string;
     type: IssueActivityTypeT;
     time: string;
-    data: CommentT | IssueHistoryT;
+    data: CommentT | IssueSpentTimeRecordT | IssueHistoryT;
 };
 
 export type IssueLinkFieldT = Pick<
@@ -87,4 +87,16 @@ export type IssueLinkT = {
     id: string;
     issue: IssueLinkFieldT;
     type: IssueLinkTypeT;
+};
+
+export type IssueSpentTimeRecordT = {
+    id: string;
+    user: BasicUserT;
+    spent_time: number;
+    created_at: string;
+};
+
+export type IssueSpentTimeT = {
+    total_spent_time: number;
+    records: IssueSpentTimeRecordT[];
 };
