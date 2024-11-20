@@ -18,6 +18,7 @@ from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOut
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.files import resolve_files
+from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
@@ -69,6 +70,14 @@ class IssueListParams(BaseModel):
 class IssueInterlinkCreate(BaseModel):
     target_issue: PydanticObjectId | str
     type: m.IssueInterlinkTypeT
+
+
+class IssueTagCreate(BaseModel):
+    tag_id: PydanticObjectId
+
+
+class IssueTagDelete(BaseModel):
+    tag_id: PydanticObjectId
 
 
 @router.get('/list')
@@ -560,6 +569,7 @@ async def update_issue(
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
+    await update_tags_on_close_resolve(obj)
     try:
         for wf in project.workflows:
             await wf.run(obj)
@@ -740,6 +750,60 @@ async def unlink_issue(
 
     await obj.replace()
     await target_obj.replace()
+
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.put('/{issue_id_or_alias}/tag')
+async def tag_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueTagCreate,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
+    tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
+    if not tag:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Tag not found')
+
+    if tag.id in {t.id for t in obj.tags}:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Issue already tagged')
+
+    obj.tags.append(m.TagLinkField.from_obj(tag))
+    await obj.replace()
+
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.put('/{issue_id_or_alias}/untag')
+async def untag_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueTagDelete,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
+    tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
+    if not tag:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Tag not found')
+
+    if tag.id not in {t.id for t in obj.tags}:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Issue not tagged')
+
+    obj.tags = [t for t in obj.tags if t.id != tag.id]
+    await obj.replace()
 
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 

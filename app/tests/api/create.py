@@ -290,3 +290,45 @@ async def create_groups(
         group_id = await _create_group(test_client, create_initial_admin, group_payload)
         group_ids.append(group_id)
     return group_ids
+
+
+async def _create_tag(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    tag_payload: dict,
+) -> str:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post('/api/v1/tag', headers=headers, json=tag_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['payload']['id']
+    assert data['payload']['created_by']['id'] == create_initial_admin[0]
+    del data['payload']['created_by']
+    assert data == {
+        'success': True,
+        'payload': {'id': data['payload']['id'], **tag_payload},
+    }
+    return data['payload']['id']
+
+
+@pytest_asyncio.fixture
+async def create_tag(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    tag_payload: dict,
+) -> str:
+    return await _create_tag(test_client, create_initial_admin, tag_payload)
+
+
+@pytest_asyncio.fixture
+async def create_tags(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    tag_payloads: list[dict],
+) -> list[str]:
+    tag_ids = []
+    for tag_payload in tag_payloads:
+        tag_id = await _create_tag(test_client, create_initial_admin, tag_payload)
+        tag_ids.append(tag_id)
+    return tag_ids
