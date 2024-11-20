@@ -134,6 +134,7 @@ async def update_user(
             m.IssueDraft.update_user_embedded_links(obj),
             m.UserMultiCustomField.update_user_embedded_links(obj),
             m.UserCustomField.update_user_embedded_links(obj),
+            m.Tag.update_user_embedded_links(obj),
         )
         await generate_default_avatar(obj)
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))

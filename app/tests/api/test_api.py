@@ -14,6 +14,7 @@ from .create import (
     create_groups,
     create_project,
     create_role,
+    create_tag,
     create_user,
 )
 from .custom_fields import (
@@ -620,6 +621,75 @@ async def test_api_v1_group_delete(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    'tag_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test tag',
+                'description': 'Test tag description',
+                'ai_description': 'Test tag AI description',
+                'color': '#ff0000',
+                'untag_on_resolve': True,
+                'untag_on_close': True,
+            },
+            id='tag',
+        )
+    ],
+)
+async def test_api_v1_tag(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_tag: str,
+    tag_payload: dict,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    tag_id = create_tag
+
+    response = test_client.get(
+        f'/api/v1/tag/{tag_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    del data['payload']['created_by']
+    assert data['payload'] == {'id': tag_id, **tag_payload}
+
+    response = test_client.put(
+        f'/api/v1/tag/{tag_id}',
+        headers=headers,
+        json={'name': 'Updated name'},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['created_by']['id'] == admin_id
+    del data['payload']['created_by']
+    assert data['payload'] == {
+        'id': tag_id,
+        **tag_payload,
+        'name': 'Updated name',
+    }
+
+    response = test_client.delete(
+        f'/api/v1/tag/{tag_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload'] == {'id': tag_id}
+
+    response = test_client.get(
+        f'/api/v1/tag/{tag_id}',
+        headers=headers,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     'custom_field_payload',
     [
         pytest.param(
@@ -1217,6 +1287,7 @@ async def test_api_v1_issue(
         **issue_payload,
         'attachments': [],
         'interlinks': [],
+        'tags': [],
         'is_subscribed': True,
         'updated_at': None,
         'updated_by': None,

@@ -20,6 +20,7 @@ from .custom_fields import (
     VersionField,
 )
 from .project import Project, ProjectLinkField
+from .tag import Tag, TagLinkField
 from .user import User, UserLinkField
 
 __all__ = (
@@ -152,6 +153,7 @@ class Issue(Document):
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
     interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
+    tags: Annotated[list[TagLinkField], Field(default_factory=list)]
 
     @property
     def id_readable(self) -> str:
@@ -166,6 +168,20 @@ class Issue(Document):
     def updated_at(self) -> datetime | None:
         _, latest_time = self._get_latest_comment_or_history()
         return latest_time
+
+    @property
+    def is_resolved(self) -> bool:
+        return any(
+            field.type == CustomFieldTypeT.STATE and field.value.is_resolved
+            for field in self.fields
+        )
+
+    @property
+    def is_closed(self) -> bool:
+        return any(
+            field.type == CustomFieldTypeT.STATE and field.value.is_closed
+            for field in self.fields
+        )
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -324,6 +340,26 @@ class Issue(Document):
         ).update(
             {'$set': {'interlinks.$[i].issue': IssueLinkField.from_obj(issue)}},
             array_filters=[{'i.issue.id': issue.id}],
+        )
+
+    @classmethod
+    async def update_tag_embedded_links(
+        cls,
+        tag: Tag | TagLinkField,
+    ) -> None:
+        if isinstance(tag, Tag):
+            tag = TagLinkField.from_obj(tag)
+        await cls.find(
+            {'tags': {'$elemMatch': {'id': tag.id}}},
+        ).update(
+            {'$set': {'tags.$[t]': tag}},
+            array_filters=[{'t.id': tag.id}],
+        )
+
+    @classmethod
+    async def remove_tag_embedded_links(cls, tag_id: PydanticObjectId) -> None:
+        await cls.find({'tags': {'$elemMatch': {'id': tag_id}}}).update(
+            {'$pull': {'tags': {'id': tag_id}}}
         )
 
     def _get_latest_comment_or_history(

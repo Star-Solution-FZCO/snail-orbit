@@ -9,6 +9,7 @@ import pm.models as m
 from pm.api.context import current_user
 
 from .custom_fields import CustomFieldLinkOutput
+from .tag import TagLinkOutput
 from .user import UserOutput
 
 __all__ = (
@@ -152,6 +153,7 @@ class IssueOutput(BaseModel):
     updated_by: UserOutput | None
     updated_at: datetime | None
     interlinks: list[IssueInterlinkOutput]
+    tags: list[TagLinkOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
@@ -172,6 +174,7 @@ class IssueOutput(BaseModel):
             updated_by=UserOutput.from_obj(obj.updated_by) if obj.updated_by else None,
             updated_at=obj.updated_at,
             interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
+            tags=[TagLinkOutput.from_obj(tag) for tag in obj.tags],
         )
 
 
