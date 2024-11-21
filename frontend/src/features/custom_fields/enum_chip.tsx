@@ -1,16 +1,16 @@
-import { ColorAdornment } from "components/fields/form_autocomplete/color_adornment";
+import { ColorAdornment } from "components/fields/adornments/color_adornment";
 import { FC, useMemo } from "react";
 import { customFieldsApi } from "store";
 import { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
-import { SelectField } from "./select_field";
+import { SelectChip } from "./select_chip";
 import {
     enumToSelectOption,
     enumToSelectOptions,
-    SelectFieldOptionTypeWithOriginal,
+    SelectOptionTypeWithOriginal,
 } from "./utils";
 
-type EnumFieldProps = {
+type EnumChipProps = {
     value?: EnumFieldT | EnumFieldT[];
     onChange: (value: EnumFieldT | EnumFieldT[]) => void;
     label: string;
@@ -18,7 +18,7 @@ type EnumFieldProps = {
     multiple?: boolean;
 };
 
-export const EnumField: FC<EnumFieldProps> = ({
+export const EnumChip: FC<EnumChipProps> = ({
     value,
     onChange,
     label,
@@ -26,7 +26,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     multiple,
 }) => {
     const [listQueryParams] = useListQueryParams({
-        limit: 50,
+        limit: -1,
     });
 
     const [fetchOptions, { data, isLoading }] =
@@ -48,9 +48,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     }, [value]);
 
     const handleChange = (
-        value:
-            | SelectFieldOptionTypeWithOriginal
-            | SelectFieldOptionTypeWithOriginal[],
+        value: SelectOptionTypeWithOriginal | SelectOptionTypeWithOriginal[],
     ) => {
         if (Array.isArray(value)) onChange(value.map((el) => el.original));
         else onChange(value.original);
@@ -60,15 +58,15 @@ export const EnumField: FC<EnumFieldProps> = ({
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
         if (targetValue.color)
-            return <ColorAdornment color={targetValue.color} />;
+            return <ColorAdornment color={targetValue.color} size="small" />;
     }, [value]);
 
     return (
-        <SelectField
+        <SelectChip
             loading={isLoading}
             options={enumToSelectOptions(items)}
             value={parsedValue}
-            rightAdornment={adornment}
+            leftAdornment={adornment}
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}

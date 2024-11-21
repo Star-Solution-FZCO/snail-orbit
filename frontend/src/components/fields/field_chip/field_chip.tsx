@@ -1,19 +1,25 @@
-import { FC, memo } from "react";
-import { FieldChipBoxStyled, FieldChipStyled } from "./field_chip.styles";
+import { FC, forwardRef, memo } from "react";
+import { FieldChipStyled } from "./field_chip.styles";
 import { FieldChipProps } from "./field_chip.types";
 
 export const FieldChip: FC<FieldChipProps> = memo(
-    ({ children, onClick, boxColor }) => {
-        return (
-            <FieldChipStyled
-                onClick={onClick}
-                sx={{ cursor: onClick ? "pointer" : "default" }}
-            >
-                {boxColor ? (
-                    <FieldChipBoxStyled style={{ backgroundColor: boxColor }} />
-                ) : null}
-                {children}
-            </FieldChipStyled>
-        );
-    },
+    forwardRef(
+        (
+            { children, onClick, sx, leftAdornment, rightAdornment, ...props },
+            ref,
+        ) => {
+            return (
+                <FieldChipStyled
+                    onClick={onClick}
+                    {...props}
+                    sx={{ cursor: onClick ? "pointer" : "default", ...sx }}
+                    ref={ref}
+                >
+                    {leftAdornment}
+                    {children}
+                    {rightAdornment}
+                </FieldChipStyled>
+            );
+        },
+    ),
 );

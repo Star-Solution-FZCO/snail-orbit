@@ -17,8 +17,7 @@ const IssueView: FC = () => {
     const { issueId } = routeApi.useParams();
     const dispatch = useAppDispatch();
 
-    const { data, isLoading, error, refetch } =
-        issueApi.useGetIssueQuery(issueId);
+    const { data, isLoading, error } = issueApi.useGetIssueQuery(issueId);
 
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssueMutation();
@@ -29,7 +28,7 @@ const IssueView: FC = () => {
                 .unwrap()
                 .catch(toastApiError);
         },
-        [issueId, refetch, navigate],
+        [issueId],
     );
 
     const issue = data?.payload;

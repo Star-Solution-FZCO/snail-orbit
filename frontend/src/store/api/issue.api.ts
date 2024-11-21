@@ -56,11 +56,7 @@ export const issueApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                { type: "Issues", id: "LIST" },
-                { type: "Issues", id },
-                { type: "IssueHistories", id },
-            ],
+            invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
             async onQueryStarted(
                 { id },
                 { dispatch, queryFulfilled },
@@ -70,10 +66,8 @@ export const issueApi = createApi({
                     dispatch(
                         issueApi.util.upsertQueryData("getIssue", id, data),
                     );
-                } catch {
-                    dispatch(
-                        issueApi.util.invalidateTags([{ type: "Issues", id }]),
-                    );
+                } catch (e) {
+                    console.error(e);
                 }
             },
         }),
