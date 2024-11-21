@@ -87,6 +87,12 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
         );
         const isValid = isValidDuration(value);
 
+        setError(!isValid);
+
+        if (isValid) {
+            onChange(convertToSeconds(value));
+        }
+
         if (!isComplete && /^\d+$/.test(lastPart)) {
             const usedUnits = new Set(
                 parts
