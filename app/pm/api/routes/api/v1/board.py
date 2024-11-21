@@ -48,6 +48,7 @@ class BoardOutput(BaseModel):
     swimlane_field: CustomFieldLinkOutput | None = None
     swimlanes: list[CustomFieldValueOutT]
     card_fields: list[CustomFieldLinkOutput]
+    card_colors_fields: list[CustomFieldLinkOutput]
     ui_settings: dict
 
     @classmethod
@@ -70,6 +71,9 @@ class BoardOutput(BaseModel):
                 for v in obj.swimlanes
             ],
             card_fields=[CustomFieldLinkOutput.from_obj(f) for f in obj.card_fields],
+            card_colors_fields=[
+                CustomFieldLinkOutput.from_obj(f) for f in obj.card_colors_fields
+            ],
             ui_settings=obj.ui_settings,
         )
 
@@ -84,6 +88,7 @@ class BoardCreate(BaseModel):
     swimlane_field: PydanticObjectId | None = None
     swimlanes: Annotated[list, Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    card_colors_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     ui_settings: Annotated[dict, Field(default_factory=dict)]
 
 
@@ -97,6 +102,7 @@ class BoardUpdate(BaseModel):
     swimlane_field: PydanticObjectId | None = None
     swimlanes: list | None = None
     card_fields: list[PydanticObjectId] | None = None
+    card_colors_fields: list[PydanticObjectId] | None = None
     ui_settings: dict | None = None
 
 
@@ -150,6 +156,10 @@ async def create_board(
     card_fields = await _resolve_custom_fields(body.card_fields)
     for cf in card_fields:
         _any_projects_has_custom_field(cf, projects)
+    card_colors_fields = await _resolve_custom_fields(body.card_colors_fields)
+    for cf in card_colors_fields:
+        validate_custom_field_has_one_color(cf)
+        _all_projects_has_custom_field(cf, projects)
     columns = validate_custom_field_values(column_field, body.columns)
     swimlane_field: m.CustomField | None = None
     swimlanes = []
@@ -180,6 +190,9 @@ async def create_board(
         else None,
         swimlanes=swimlanes,
         card_fields=[m.CustomFieldLink.from_obj(cf) for cf in card_fields],
+        card_colors_fields=[
+            m.CustomFieldLink.from_obj(cf) for cf in card_colors_fields
+        ],
         ui_settings=body.ui_settings,
     )
     await board.insert()
@@ -267,12 +280,26 @@ async def update_board(
             swimlanes = []
     else:
         swimlanes = board.swimlanes
+
     card_fields: list[m.CustomField | m.CustomFieldLink] = board.card_fields
     if 'card_fields' in data:
         card_fields = await _resolve_custom_fields(body.card_fields)
     for cf in card_fields:
         _any_projects_has_custom_field(cf, projects)
     board.card_fields = [m.CustomFieldLink.from_obj(cf) for cf in card_fields]
+
+    card_colors_fields: list[m.CustomField | m.CustomFieldLink] = (
+        board.card_colors_fields
+    )
+    if 'card_colors_fields' in data:
+        card_colors_fields = await _resolve_custom_fields(body.card_colors_fields)
+    for cf in card_colors_fields:
+        validate_custom_field_has_one_color(cf)
+        _all_projects_has_custom_field(cf, projects)
+    board.card_colors_fields = [
+        m.CustomFieldLink.from_obj(cf) for cf in card_colors_fields
+    ]
+
     _all_projects_has_custom_field(column_field, projects)
     board.column_field = m.CustomFieldLink.from_obj(column_field)
     board.columns = validate_custom_field_values(column_field, columns)
@@ -547,6 +574,31 @@ async def select_custom_field(
     )
 
 
+@router.get('/card_color_field/select')
+async def select_card_color_field(
+    project_id: list[PydanticObjectId] = Query(...),
+) -> BaseListOutput[CustomFieldLinkOutput]:
+    projects = await m.Project.find(
+        bo.In(m.Project.id, project_id),
+        fetch_links=True,
+    ).to_list()
+    fields = [
+        cf
+        for cf in _intersect_custom_fields(projects)
+        if cf.type
+        in (
+            m.CustomFieldTypeT.ENUM,
+            m.CustomFieldTypeT.STATE,
+        )
+    ]
+    return BaseListOutput.make(
+        count=len(fields),
+        limit=len(fields),
+        offset=0,
+        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+    )
+
+
 def _intersect_custom_fields(
     projects: Sequence[m.Project],
 ) -> set[m.CustomField]:
@@ -608,3 +660,15 @@ def validate_custom_field_values(
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, f'Invalid value {err.value} for field {field.name}'
         ) from err
+
+
+def validate_custom_field_has_one_color(
+    field: m.CustomField,
+) -> None:
+    if field.type not in (
+        m.CustomFieldTypeT.ENUM,
+        m.CustomFieldTypeT.STATE,
+    ):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Card color field must be of type ENUM or STATE'
+        )
