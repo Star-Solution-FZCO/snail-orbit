@@ -34,6 +34,7 @@ pararamio = {version = ">=2.0.1"}
 lark = "*"
 elasticsearch = {version = "==8.15.1", extras = ["async"]}
 aioboto3 = "*"
+croniter = "^5.0.1"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"
