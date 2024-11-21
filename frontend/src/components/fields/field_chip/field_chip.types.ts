@@ -1,6 +1,7 @@
-import { PropsWithChildren } from "react";
+import { Box } from "@mui/material";
+import { ComponentProps, ReactNode } from "react";
 
 export type FieldChipProps = {
-    onClick?: () => void;
-    boxColor?: string;
-} & PropsWithChildren;
+    leftAdornment?: ReactNode;
+    rightAdornment?: ReactNode;
+} & ComponentProps<typeof Box>;

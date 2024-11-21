@@ -4,13 +4,9 @@ import { useRef } from "react";
 import { toast, TypeOptions } from "react-toastify";
 import {
     CommentT,
-    CreateIssueT,
-    CustomFieldT,
-    FieldValueT,
     IssueActivityT,
     IssueActivityTypeT,
     IssueHistoryT,
-    IssueT,
     SelectedAttachmentT,
 } from "types";
 

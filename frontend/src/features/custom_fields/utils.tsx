@@ -1,33 +1,39 @@
-import { Avatar } from "@mui/material";
-import { ColorAdornment } from "components/fields/form_autocomplete/color_adornment";
+import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
+import { ColorAdornment } from "components/fields/adornments/color_adornment";
+import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
 import { BasicUserT, EnumFieldT, IssueProjectT } from "types";
-import { SelectFieldOptionType } from "./select_field";
 
-export type SelectFieldOptionTypeWithOriginal = SelectFieldOptionType & {
+export type SelectOptionType = FormAutocompleteValueType & { id: string };
+
+export type SelectOptionTypeWithOriginal = SelectOptionType & {
     original: EnumFieldT;
 };
 
 export const enumToSelectOption = (
     option: EnumFieldT,
-): SelectFieldOptionTypeWithOriginal => ({
+): SelectOptionTypeWithOriginal => ({
     label: option.value,
     id: option.value,
     rightAdornment: option.color ? (
-        <ColorAdornment color={option.color} />
+        <ColorAdornment
+            color={option.color}
+            size="medium"
+            sx={{ mr: 1, my: "auto" }}
+        />
     ) : null,
     original: option,
 });
 
 export const enumToSelectOptions = (
     options: EnumFieldT[] | undefined,
-): SelectFieldOptionTypeWithOriginal[] => {
+): SelectOptionTypeWithOriginal[] => {
     if (!options) return [];
     if (!options.length) return [];
 
     return options.map(enumToSelectOption);
 };
 
-export type UserSelectOptionT = SelectFieldOptionType & {
+export type UserSelectOptionT = SelectOptionType & {
     original: BasicUserT;
 };
 
@@ -36,12 +42,9 @@ export const userToSelectOption = (user: BasicUserT): UserSelectOptionT => ({
     id: user.id,
     description: user.email,
     rightAdornment: user.avatar ? (
-        <Avatar
+        <AvatarAdornment
             src={user.avatar}
             sx={{
-                width: 26,
-                height: 26,
-                borderRadius: "3px",
                 mr: 1,
                 my: "auto",
             }}
@@ -59,7 +62,7 @@ export const userToSelectOptions = (
     return options.map(userToSelectOption);
 };
 
-export type ProjectSelectOptionT = SelectFieldOptionType & {
+export type ProjectSelectOptionT = SelectOptionType & {
     original: IssueProjectT;
 };
 

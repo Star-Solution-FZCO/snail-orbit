@@ -1,16 +1,16 @@
-import { Avatar } from "@mui/material";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
-import { SelectField } from "./select_field";
+import { AvatarAdornment } from "../../components/fields/adornments/avatar_adornment";
+import { SelectChip } from "./select_chip";
 import {
     UserSelectOptionT,
     userToSelectOption,
     userToSelectOptions,
 } from "./utils";
 
-type UserFieldProps = {
+type UserChipProps = {
     value?: BasicUserT | BasicUserT[];
     onChange: (value: BasicUserT | BasicUserT[]) => void;
     label: string;
@@ -18,13 +18,13 @@ type UserFieldProps = {
     id: string;
 };
 
-export const UserField = ({
+export const UserChip = ({
     value,
     label,
     multiple,
     id,
     onChange,
-}: UserFieldProps) => {
+}: UserChipProps) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
@@ -53,26 +53,24 @@ export const UserField = ({
     const adornment = useMemo(() => {
         if (!value || (Array.isArray(value) && !value.length)) return null;
         return (
-            <Avatar
+            <AvatarAdornment
                 src={Array.isArray(value) ? value[0].avatar : value.avatar}
                 sx={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: "3px",
                     mr: 1,
                     my: "auto",
                 }}
+                size="small"
             />
         );
     }, [value]);
 
     return (
-        <SelectField
+        <SelectChip
             loading={isLoading}
             options={options}
             value={parsedValue}
             label={label}
-            rightAdornment={adornment}
+            leftAdornment={adornment}
             onChange={handleChange}
             onOpened={handleOpened}
             multiple={multiple}
@@ -81,4 +79,4 @@ export const UserField = ({
     );
 };
 
-export default UserField;
+export default UserChip;

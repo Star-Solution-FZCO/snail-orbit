@@ -1,17 +1,18 @@
-import FieldCard from "components/fields/field_card/field_card";
+import { Tooltip } from "@mui/material";
+import { FieldChip } from "components/fields/field_chip/field_chip";
 import FormDatePopover, {
     FormDatePopoverProps,
 } from "components/fields/form_date/form_date";
 import { Dayjs } from "dayjs";
-import { ForwardedRef, forwardRef, useState } from "react";
+import { ForwardedRef, forwardRef, useMemo, useState } from "react";
 
-type InputFieldProps = {
+type DateChipProps = {
     label: string;
 } & Pick<FormDatePopoverProps, "value" | "onChange" | "id" | "type">;
 
-export const DateField = forwardRef(
+export const DateChip = forwardRef(
     (
-        { value, onChange, label, id, type }: InputFieldProps,
+        { value, onChange, label, id, type }: DateChipProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -21,20 +22,25 @@ export const DateField = forwardRef(
             setAnchorEl(null);
         };
 
+        const formatedValue = useMemo(
+            () =>
+                value?.format(
+                    type === "date" ? "DD MMM YYYY" : "DD MMM YYYY HH:mm",
+                ) || "?",
+            [value],
+        );
+
         return (
             <>
-                <FieldCard
-                    label={label}
-                    value={
-                        value?.format(
-                            type === "date"
-                                ? "DD MMM YYYY"
-                                : "DD MMM YYYY HH:mm",
-                        ) || "?"
-                    }
-                    orientation="vertical"
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                />
+                <Tooltip
+                    arrow
+                    title={`${label}: ${formatedValue}`}
+                    enterDelay={1000}
+                >
+                    <FieldChip onClick={(e) => setAnchorEl(e.currentTarget)}>
+                        {formatedValue}
+                    </FieldChip>
+                </Tooltip>
                 <FormDatePopover
                     ref={ref}
                     anchorEl={anchorEl}
