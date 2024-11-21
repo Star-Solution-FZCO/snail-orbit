@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pm.models.issue import Issue
+    from pm.models.project import Project
 
 
 __all__ = (
@@ -33,7 +34,7 @@ class OnChangeWorkflowScript(ABC):
 
 class ScheduledWorkflowScript(ABC):
     @abstractmethod
-    async def run(self):
+    async def run(self, project: 'Project'):
         pass
 
 
