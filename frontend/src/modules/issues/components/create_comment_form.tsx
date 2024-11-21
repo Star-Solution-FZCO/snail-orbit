@@ -1,6 +1,5 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
-import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -12,15 +11,14 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
-import { MDEditor, UserAvatar } from "components";
+import { MDEditor, SpentTimeField, UserAvatar } from "components";
 import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
-import { toastApiError } from "utils";
+import { formatSpentTime, toastApiError } from "utils";
 import { useUploadToast } from "../utils";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
-import { SpentTimeDialog } from "./spent_time_dialog";
 
 interface IUnsavedChangesDialogProps {
     open: boolean;
@@ -75,12 +73,13 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     const user = useAppSelector((state) => state.profile.user);
 
     const [mode, setMode] = useState<"view" | "edit">("view");
-    const [text, setText] = useState<string>("");
+    const [text, setText] = useState("");
+    const [spentTime, setSpentTime] = useState(0);
     const [files, setFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<string[]>([]);
+
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
-    const [spentTimeDialogOpen, setSpentTimeDialogOpen] = useState(false);
 
     const [createComment, { isLoading }] =
         issueApi.useCreateIssueCommentMutation();
@@ -93,6 +92,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
         createComment({
             id: issueId,
             text,
+            spent_time: spentTime,
             attachments,
         })
             .unwrap()
@@ -163,32 +163,15 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
         );
     };
 
-    const handleClickAddSpentTime = () => {
-        setSpentTimeDialogOpen(true);
-    };
-
-    const addSpentTime = (spentTime: number) => {
-        createComment({
-            id: issueId,
-            text: null,
-            spent_time: spentTime,
-        })
-            .unwrap()
-            .then(() => {
-                setText("");
-                setMode("view");
-                setSpentTimeDialogOpen(false);
-            })
-            .catch(toastApiError);
-    };
-
     const handleClickCancel = () => {
-        if (text || files.length > 0) setDiscardChangesDialogOpen(true);
+        if (text || spentTime || files.length > 0)
+            setDiscardChangesDialogOpen(true);
         else setMode("view");
     };
 
     const handleDiscardChanges = () => {
         setText("");
+        setSpentTime(0);
         setFiles([]);
         setDiscardChangesDialogOpen(false);
         setMode("view");
@@ -251,15 +234,15 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                 />
                             </Button>
 
-                            <Button
-                                onClick={handleClickAddSpentTime}
-                                startIcon={<HourglassTopIcon />}
-                                variant="outlined"
-                                size="small"
-                                color="info"
-                            >
-                                {t("issues.spentTime.add")}
-                            </Button>
+                            <SpentTimeField
+                                label={t("issues.spentTime")}
+                                initialValue={
+                                    spentTime
+                                        ? formatSpentTime(spentTime)
+                                        : undefined
+                                }
+                                onChange={setSpentTime}
+                            />
 
                             <Button
                                 onClick={handleClickCancel}
@@ -276,14 +259,6 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                         open={discardChangesDialogOpen}
                         onClose={() => setDiscardChangesDialogOpen(false)}
                         onDiscard={handleDiscardChanges}
-                    />
-
-                    <SpentTimeDialog
-                        open={spentTimeDialogOpen}
-                        onClose={() => setSpentTimeDialogOpen(false)}
-                        onSubmit={addSpentTime}
-                        mode="add"
-                        loading={isLoading}
                     />
                 </Box>
 

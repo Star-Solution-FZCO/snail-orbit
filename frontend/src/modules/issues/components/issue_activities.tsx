@@ -1,7 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import HistoryIcon from "@mui/icons-material/History";
-import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -19,19 +18,12 @@ import {
 import { t } from "i18next";
 import { FC, useMemo, useState } from "react";
 import { issueApi } from "store";
-import {
-    CommentT,
-    IssueActivityTypeT,
-    IssueHistoryT,
-    IssueSpentTimeRecordT,
-} from "types";
+import { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
 import { formatSpentTime, noLimitListQueryParams, toastApiError } from "utils";
 import { mergeActivityRecords } from "../utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 import { IssueHistory } from "./issue_history";
-import { SpentTimeCard } from "./spent_time_card";
-import { SpentTimeDialog } from "./spent_time_dialog";
 
 const ActivityTypeButton = styled(Button, {
     shouldForwardProp: (name) => name !== "enabled",
@@ -121,67 +113,6 @@ const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
     );
 };
 
-interface IDeleteSpentTimeRecordDialogProps {
-    issueId: string;
-    open: boolean;
-    record: IssueSpentTimeRecordT | null;
-    onClose: () => void;
-}
-
-const DeleteSpentTimeRecordDialog: FC<IDeleteSpentTimeRecordDialogProps> = ({
-    issueId,
-    open,
-    record,
-    onClose,
-}) => {
-    const [deleteComment, { isLoading }] =
-        issueApi.useDeleteIssueCommentMutation();
-
-    const handleClickDelete = () => {
-        if (!record) return;
-
-        deleteComment({ id: issueId, commentId: record.id })
-            .unwrap()
-            .then(onClose)
-            .catch(toastApiError);
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
-                {t("issues.spentTime.delete.title")}
-
-                <IconButton onClick={onClose} size="small" disabled={isLoading}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <DialogActions>
-                <Button
-                    onClick={onClose}
-                    variant="outlined"
-                    color="error"
-                    disabled={isLoading}
-                >
-                    {t("cancel")}
-                </Button>
-                <LoadingButton
-                    onClick={handleClickDelete}
-                    variant="outlined"
-                    loading={isLoading}
-                >
-                    {t("delete")}
-                </LoadingButton>
-            </DialogActions>
-        </Dialog>
-    );
-};
-
 interface IIssueActivitiesProps {
     issueId: string;
 }
@@ -201,25 +132,14 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
     const { data: issueSpentTime, isLoading: spentTimeLoading } =
         issueApi.useGetIssueSpentTimeQuery(issueId);
 
-    const [updateComment, { isLoading: updateCommentLoading }] =
-        issueApi.useUpdateIssueCommentMutation();
-
     const [currentEditingComment, setCurrentEditingComment] =
         useState<CommentT | null>(null);
-    const [selectedSpentTimeRecord, setSelectedSpentTimeRecord] =
-        useState<IssueSpentTimeRecordT | null>(null);
-
     const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] =
         useState(false);
-    const [
-        deleteSpentTimeRecordDialogOpen,
-        setDeleteSpentTimeRecordDialogOpen,
-    ] = useState(false);
-    const [spentTimeDialogOpen, setSpentTimeDialogOpen] = useState(false);
 
     const [displayingActivities, setDisplayingActivities] = useState<
         IssueActivityTypeT[]
-    >(["comment", "spent_time", "history"]);
+    >(["comment", "history"]);
 
     const handleClickDeleteComment = (comment: CommentT) => {
         setCurrentEditingComment(comment);
@@ -231,38 +151,6 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
         setCurrentEditingComment(null);
     };
 
-    const handleClickEditSpentTimeRecord = (record: IssueSpentTimeRecordT) => {
-        setSelectedSpentTimeRecord(record);
-        setSpentTimeDialogOpen(true);
-    };
-
-    const handleCloseDeleteSpentTimeRecordDialog = () => {
-        setDeleteSpentTimeRecordDialogOpen(false);
-        setSelectedSpentTimeRecord(null);
-    };
-
-    const handleClickDeleteSpentTimeRecord = (
-        record: IssueSpentTimeRecordT,
-    ) => {
-        setSelectedSpentTimeRecord(record);
-        setDeleteSpentTimeRecordDialogOpen(true);
-    };
-
-    const updateSpentTimeRecord = (spentTime: number) => {
-        if (!selectedSpentTimeRecord) return;
-
-        updateComment({
-            id: issueId,
-            commentId: selectedSpentTimeRecord.id,
-            spent_time: spentTime,
-        })
-            .unwrap()
-            .then(() => {
-                setSpentTimeDialogOpen(false);
-            })
-            .catch(toastApiError);
-    };
-
     const handleClickActivityType = (type: IssueActivityTypeT) => {
         setDisplayingActivities((prevActivities) =>
             prevActivities.includes(type)
@@ -272,7 +160,6 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
     };
 
     const comments = commentsData?.payload.items || [];
-    const spentTimeRecords = issueSpentTime?.records || [];
     const historyRecords = historyData?.payload.items || [];
 
     const totalSpentTime = issueSpentTime?.total_spent_time || 0;
@@ -281,11 +168,10 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
         () =>
             mergeActivityRecords(
                 comments,
-                spentTimeRecords,
                 historyRecords,
                 displayingActivities,
             ),
-        [comments, spentTimeRecords, historyRecords, displayingActivities],
+        [comments, historyRecords, displayingActivities],
     );
 
     return (
@@ -306,17 +192,6 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                         size="small"
                     >
                         <CommentIcon />
-                    </ActivityTypeButton>
-                </Tooltip>
-
-                <Tooltip title={t("issues.spentTime")} placement="top">
-                    <ActivityTypeButton
-                        onClick={() => handleClickActivityType("spent_time")}
-                        enabled={displayingActivities.includes("spent_time")}
-                        variant="outlined"
-                        size="small"
-                    >
-                        <HourglassTopIcon />
                     </ActivityTypeButton>
                 </Tooltip>
 
@@ -367,18 +242,6 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                         return <IssueHistory key={record.id} record={record} />;
                     }
 
-                    if (activity.type === "spent_time") {
-                        const record = activity.data as IssueSpentTimeRecordT;
-                        return (
-                            <SpentTimeCard
-                                key={record.id}
-                                record={record}
-                                onEdit={handleClickEditSpentTimeRecord}
-                                onDelete={handleClickDeleteSpentTimeRecord}
-                            />
-                        );
-                    }
-
                     return null;
                 })}
             </Box>
@@ -388,22 +251,6 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                 open={deleteCommentDialogOpen}
                 comment={currentEditingComment}
                 onClose={handleCloseDeleteCommentDialog}
-            />
-
-            <SpentTimeDialog
-                open={spentTimeDialogOpen}
-                initialSpentTime={selectedSpentTimeRecord?.spent_time}
-                onClose={() => setSpentTimeDialogOpen(false)}
-                onSubmit={updateSpentTimeRecord}
-                mode="edit"
-                loading={updateCommentLoading}
-            />
-
-            <DeleteSpentTimeRecordDialog
-                issueId={issueId}
-                open={deleteSpentTimeRecordDialogOpen}
-                record={selectedSpentTimeRecord}
-                onClose={handleCloseDeleteSpentTimeRecordDialog}
             />
         </Box>
     );
