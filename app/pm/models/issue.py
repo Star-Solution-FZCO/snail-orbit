@@ -110,6 +110,7 @@ class IssueComment(BaseModel):
     updated_at: datetime
     attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     is_hidden: bool = False
+    spent_time: int = 0
 
 
 class IssueFieldChange(BaseModel):

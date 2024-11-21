@@ -6,6 +6,7 @@ import {
     CreateIssueT,
     IssueHistoryT,
     IssueLinkTypeT,
+    IssueSpentTimeT,
     IssueT,
     ListQueryParams,
     ListResponse,
@@ -232,6 +233,13 @@ export const issueApi = createApi({
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Issues", id: "LIST" },
                 { type: "Issues", id },
+                { type: "IssueHistories", id },
+            ],
+        }),
+        getIssueSpentTime: build.query<IssueSpentTimeT, string>({
+            query: (id) => `issue/${id}/spent_time`,
+            providesTags: (_result, _error, id) => [
+                { type: "IssueComments", id: "LIST" },
                 { type: "IssueHistories", id },
             ],
         }),

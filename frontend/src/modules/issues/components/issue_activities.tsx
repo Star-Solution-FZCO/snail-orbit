@@ -13,13 +13,14 @@ import {
     IconButton,
     styled,
     Tooltip,
+    Typography,
 } from "@mui/material";
 import { t } from "i18next";
 import { FC, useMemo, useState } from "react";
 import { issueApi } from "store";
 import { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
-import { noLimitListQueryParams, toastApiError } from "utils";
-import { mergeCommentsAndHistoryRecords } from "../utils";
+import { formatSpentTime, noLimitListQueryParams, toastApiError } from "utils";
+import { mergeActivityRecords } from "../utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 import { IssueHistory } from "./issue_history";
@@ -128,20 +129,25 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
             params: noLimitListQueryParams,
         });
 
+    const { data: issueSpentTime, isLoading: spentTimeLoading } =
+        issueApi.useGetIssueSpentTimeQuery(issueId);
+
     const [currentEditingComment, setCurrentEditingComment] =
         useState<CommentT | null>(null);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] =
+        useState(false);
+
     const [displayingActivities, setDisplayingActivities] = useState<
         IssueActivityTypeT[]
     >(["comment", "history"]);
 
     const handleClickDeleteComment = (comment: CommentT) => {
         setCurrentEditingComment(comment);
-        setDeleteDialogOpen(true);
+        setDeleteCommentDialogOpen(true);
     };
 
-    const handleCloseDeleteDialog = () => {
-        setDeleteDialogOpen(false);
+    const handleCloseDeleteCommentDialog = () => {
+        setDeleteCommentDialogOpen(false);
         setCurrentEditingComment(null);
     };
 
@@ -156,9 +162,11 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
     const comments = commentsData?.payload.items || [];
     const historyRecords = historyData?.payload.items || [];
 
+    const totalSpentTime = issueSpentTime?.total_spent_time || 0;
+
     const activities = useMemo(
         () =>
-            mergeCommentsAndHistoryRecords(
+            mergeActivityRecords(
                 comments,
                 historyRecords,
                 displayingActivities,
@@ -168,6 +176,13 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
 
     return (
         <Box display="flex" flexDirection="column">
+            {totalSpentTime > 0 && (
+                <Typography fontSize={14} fontWeight="bold" mb={1}>
+                    {t("issues.spentTime.total")}:{" "}
+                    {formatSpentTime(totalSpentTime)}
+                </Typography>
+            )}
+
             <Box display="flex" borderTop={1} borderColor="divider">
                 <Tooltip title={t("issues.comments.title")} placement="top">
                     <ActivityTypeButton
@@ -196,7 +211,7 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                 <CreateCommentForm issueId={issueId} />
             </Box>
 
-            {(commentsLoading || historyLoading) && (
+            {(commentsLoading || spentTimeLoading || historyLoading) && (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={20} />
                 </Box>
@@ -216,7 +231,7 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                                 onDelete={handleClickDeleteComment}
                                 isEditing={
                                     currentEditingComment?.id === comment.id &&
-                                    !deleteDialogOpen
+                                    !deleteCommentDialogOpen
                                 }
                             />
                         );
@@ -233,9 +248,9 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
 
             <DeleteCommentDialog
                 issueId={issueId}
-                open={deleteDialogOpen}
+                open={deleteCommentDialogOpen}
                 comment={currentEditingComment}
-                onClose={handleCloseDeleteDialog}
+                onClose={handleCloseDeleteCommentDialog}
             />
         </Box>
     );

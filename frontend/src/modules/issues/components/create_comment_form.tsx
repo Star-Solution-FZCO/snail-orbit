@@ -11,11 +11,11 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
-import { MDEditor, UserAvatar } from "components";
+import { MDEditor, SpentTimeField, UserAvatar } from "components";
 import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
-import { toastApiError } from "utils";
+import { formatSpentTime, toastApiError } from "utils";
 import { useUploadToast } from "../utils";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
@@ -73,9 +73,11 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     const user = useAppSelector((state) => state.profile.user);
 
     const [mode, setMode] = useState<"view" | "edit">("view");
-    const [text, setText] = useState<string>("");
+    const [text, setText] = useState("");
+    const [spentTime, setSpentTime] = useState(0);
     const [files, setFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<string[]>([]);
+
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
 
@@ -90,6 +92,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
         createComment({
             id: issueId,
             text,
+            spent_time: spentTime,
             attachments,
         })
             .unwrap()
@@ -161,12 +164,14 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     };
 
     const handleClickCancel = () => {
-        if (text || files.length > 0) setDiscardChangesDialogOpen(true);
+        if (text || spentTime || files.length > 0)
+            setDiscardChangesDialogOpen(true);
         else setMode("view");
     };
 
     const handleDiscardChanges = () => {
         setText("");
+        setSpentTime(0);
         setFiles([]);
         setDiscardChangesDialogOpen(false);
         setMode("view");
@@ -228,6 +233,16 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                     multiple
                                 />
                             </Button>
+
+                            <SpentTimeField
+                                label={t("issues.spentTime")}
+                                initialValue={
+                                    spentTime
+                                        ? formatSpentTime(spentTime)
+                                        : undefined
+                                }
+                                onChange={setSpentTime}
+                            />
 
                             <Button
                                 onClick={handleClickCancel}

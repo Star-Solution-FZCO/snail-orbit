@@ -12,7 +12,12 @@ import {
     Typography,
 } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
-import { MarkdownPreview, MDEditor, UserAvatar } from "components";
+import {
+    MarkdownPreview,
+    MDEditor,
+    SpentTimeField,
+    UserAvatar,
+} from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -21,7 +26,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { CommentT, SelectedAttachmentT } from "types";
-import { toastApiError } from "utils";
+import { formatSpentTime, toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
@@ -125,7 +130,8 @@ const CommentCard: FC<ICommentCardProps> = ({
 
     const user = useAppSelector((state) => state.profile.user);
 
-    const [text, setText] = useState<string>(comment.text || "");
+    const [text, setText] = useState(comment.text || "");
+    const [spentTime, setSpentTime] = useState(comment.spent_time);
     const [selectedAttachment, setSelectedAttachment] =
         useState<SelectedAttachmentT>(initialSelectedAttachment);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -142,6 +148,7 @@ const CommentCard: FC<ICommentCardProps> = ({
             id: issueId,
             commentId: comment.id,
             text,
+            spent_time: spentTime,
         })
             .unwrap()
             .then(onCancel)
@@ -314,6 +321,20 @@ const CommentCard: FC<ICommentCardProps> = ({
                     />
                 </Box>
 
+                {comment.spent_time > 0 && (
+                    <Typography fontSize="inherit" color="text.secondary">
+                        {t("issues.spentTime")}:{" "}
+                        <Typography
+                            component="span"
+                            fontSize="inherit"
+                            fontWeight="bold"
+                            color="text.primary"
+                        >
+                            {formatSpentTime(comment.spent_time)}
+                        </Typography>
+                    </Typography>
+                )}
+
                 <Box mt={0.5}>
                     <MarkdownPreview text={comment.text} />
                 </Box>
@@ -378,6 +399,16 @@ const CommentCard: FC<ICommentCardProps> = ({
                                 multiple
                             />
                         </Button>
+
+                        <SpentTimeField
+                            label={t("issues.spentTime")}
+                            initialValue={
+                                spentTime
+                                    ? formatSpentTime(spentTime)
+                                    : undefined
+                            }
+                            onChange={setSpentTime}
+                        />
 
                         <Button
                             onClick={onCancel}
