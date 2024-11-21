@@ -9,7 +9,7 @@ import {
     DialogTitle,
     IconButton,
 } from "@mui/material";
-import { DurationField } from "components";
+import { SpentTimeField } from "components";
 import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatSpentTime } from "utils";
@@ -68,7 +68,7 @@ const SpentTimeDialog: FC<ISpentTimeDialogProps> = ({
 
             <DialogContent>
                 <Box mt={1} minHeight="85px">
-                    <DurationField
+                    <SpentTimeField
                         label={t("issues.spentTime")}
                         initialValue={
                             spentTime ? formatSpentTime(spentTime) : undefined
