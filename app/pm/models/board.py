@@ -28,6 +28,7 @@ class Board(Document):
     swimlanes: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
     issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
+    card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     ui_settings: dict = Field(default_factory=dict)
 
     def move_issue(
@@ -61,5 +62,9 @@ class Board(Document):
         )
         await cls.find(cls.card_fields.id == field.id).update(
             {'$set': {'card_fields.$[f]': field}},
+            array_filters=[{'f.id': field.id}],
+        )
+        await cls.find(cls.card_colors_fields.id == field.id).update(
+            {'$set': {'card_colors_fields.$[f]': field}},
             array_filters=[{'f.id': field.id}],
         )
