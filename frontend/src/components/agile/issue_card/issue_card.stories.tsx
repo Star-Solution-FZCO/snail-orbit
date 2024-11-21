@@ -48,14 +48,10 @@ export const Basic: Story = {
                     <span>Hello world</span>
                 </IssueCardHeader>
                 <IssueCardBottom>
-                    <FieldChip onClick={fn()} boxColor="pink">
-                        Test
-                    </FieldChip>
-                    <FieldChip onClick={fn()} boxColor="red">
-                        Test 2
-                    </FieldChip>
+                    <FieldChip onClick={fn()}>Test</FieldChip>
+                    <FieldChip onClick={fn()}>Test 2</FieldChip>
                     <FieldChip onClick={fn()}>No box</FieldChip>
-                    <FieldChip onClick={fn()} boxColor="blue"></FieldChip>
+                    <FieldChip onClick={fn()}></FieldChip>
                 </IssueCardBottom>
             </IssueCardBody>
         </IssueCard>
