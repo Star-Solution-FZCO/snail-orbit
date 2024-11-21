@@ -12,4 +12,5 @@ export const formValuesToApiData = (
     swimlanes: [],
     swimlane_field: null,
     query: "",
+    card_fields: [],
 });
