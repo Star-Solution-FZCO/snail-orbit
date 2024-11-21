@@ -65,7 +65,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
 
     useEffect(() => {
         reset(defaultValues || { value: "", color: null });
-    }, [defaultValues, reset]);
+    }, [open, defaultValues, reset]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

@@ -183,6 +183,12 @@
   "issues.new": "New Issue",
   "issues.title": "Issues",
   "issues.update.success": "Issue updated successfully",
+  "issues.spentTime": "Spent time",
+  "issues.spentTime.add": "Add spent time",
+  "issues.spentTime.edit": "Edit spent time",
+  "issues.spentTime.total": "Total spent time",
+  "issues.spentTime.updated": "Updated about",
+  "issues.spentTime.delete.title": "Are you sure you want to delete this work item?",
   "mainPage": "Main page",
   "more": "More",
   "navbar.agileBoards": "Agile Boards",
@@ -268,5 +274,12 @@
   "submit": "Submit",
   "text": "Text",
   "update": "update",
-  "updatedBy": "Updated by"
+  "updatedBy": "Updated by",
+  "download": "Download",
+  "copyLink": "Copy link",
+  "durationField.invalidFormat": "Invalid format. Input contains an expected sequence of symbols or characters.",
+  "durationField.week": "week",
+  "durationField.day": "day",
+  "durationField.hour": "hour",
+  "durationField.minute": "minute"
 }

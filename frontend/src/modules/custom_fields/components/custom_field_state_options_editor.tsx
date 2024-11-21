@@ -109,6 +109,7 @@ const CustomFieldStateOptionsEditor: FC<
         customFieldsApi.useDeleteCustomFieldStateOptionMutation();
 
     const handleClickAddOption = () => {
+        setSelectedOption(null);
         setFormDialogOpen(true);
     };
 

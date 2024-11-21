@@ -37,6 +37,7 @@ class IssueCommentOutput(BaseModel):
     updated_at: datetime
     attachments: list[IssueAttachmentOut]
     is_hidden: bool
+    spent_time: int
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
@@ -50,17 +51,20 @@ class IssueCommentOutput(BaseModel):
             if not obj.is_hidden
             else [],
             is_hidden=obj.is_hidden,
+            spent_time=obj.spent_time,
         )
 
 
 class IssueCommentCreate(BaseModel):
     text: str | None = None
     attachments: Annotated[list[UUID], Field(default_factory=list)]
+    spent_time: int = 0
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
     attachments: list[UUID] | None = None
+    spent_time: int | None = None
 
 
 @router.get('/list')
@@ -136,6 +140,7 @@ async def create_comment(
         author=m.UserLinkField.from_obj(user_ctx.user),
         created_at=now,
         updated_at=now,
+        spent_time=body.spent_time,
         attachments=[
             m.IssueAttachment(
                 id=a_id,
@@ -208,6 +213,8 @@ async def update_comment(
                 ]
             )
             continue
+        if k == 'spent_time':
+            v = v or 0
         setattr(comment, k, v)
     if issue.is_changed:
         comment.updated_at = now
