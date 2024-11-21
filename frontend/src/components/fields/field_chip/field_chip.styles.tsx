@@ -1,6 +1,6 @@
-import { styled } from "@mui/material";
+import { Box, styled } from "@mui/material";
 
-export const FieldChipStyled = styled("div", { label: "FieldChip" })(
+export const FieldChipStyled = styled(Box, { label: "FieldChip" })(
     ({ theme }) => ({
         fontSize: theme.typography.pxToRem(12),
         color: theme.palette.text.secondary,
@@ -18,7 +18,7 @@ export const FieldChipStyled = styled("div", { label: "FieldChip" })(
     }),
 );
 
-export const FieldChipBoxStyled = styled("div")(({ theme }) => ({
+export const FieldChipBoxStyled = styled(Box)(({ theme }) => ({
     width: theme.typography.pxToRem(20),
     height: theme.typography.pxToRem(20),
     borderRadius: 3,

@@ -53,5 +53,6 @@ export const IssueCardBottom = styled(Box, { label: "IssueCardBottom" })(
         display: "flex",
         flexDirection: "row",
         gap: theme.spacing(1),
+        flexWrap: "wrap",
     }),
 );

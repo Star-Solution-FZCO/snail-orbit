@@ -1,58 +1,56 @@
-import { AutocompleteValue } from "@mui/material";
-import FieldCard from "components/fields/field_card/field_card";
+import { AutocompleteValue, Tooltip } from "@mui/material";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
 import { ReactNode, SyntheticEvent, useEffect, useMemo, useState } from "react";
+import { FieldChip } from "../../components/fields/field_chip/field_chip";
 
-export type SelectFieldOptionType = FormAutocompleteValueType & { id: string };
+export type SelectChipOptionType = FormAutocompleteValueType & { id: string };
 
-type SelectFieldReturnType<
+type SelectChipReturnType<
     T extends boolean | undefined,
-    K extends SelectFieldOptionType,
+    K extends SelectChipOptionType,
 > = T extends true ? K[] : K;
 
 type ValueType<T extends boolean | undefined> = AutocompleteValue<
-    SelectFieldOptionType,
+    SelectChipOptionType,
     T,
     boolean | undefined,
     false
 >;
 
-type SelectFieldProps<
+type SelectChipProps<
     T extends boolean | undefined,
-    K extends SelectFieldOptionType,
+    K extends SelectChipOptionType,
 > = {
     id: string;
-    options: SelectFieldOptionType[];
+    options: SelectChipOptionType[];
     label: string;
     value?: ValueType<T>;
-    cardValue?: string;
-    onChange: (value: SelectFieldReturnType<T, K>) => void;
+    chipValue?: string;
+    onChange: (value: SelectChipReturnType<T, K>) => void;
     onOpened?: () => unknown;
     loading?: boolean;
     multiple?: T;
-    variant?: "standard" | "error";
     leftAdornment?: ReactNode;
     rightAdornment?: ReactNode;
 };
 
-export const SelectField = <
+export const SelectChip = <
     T extends boolean | undefined,
-    K extends SelectFieldOptionType,
+    K extends SelectChipOptionType,
 >({
     id,
     options,
     label,
     value,
-    cardValue: customCardValue,
+    chipValue: customChipValue,
     onChange,
     onOpened,
     loading,
     multiple,
-    variant = "standard",
     leftAdornment,
     rightAdornment,
-}: SelectFieldProps<T, K>) => {
+}: SelectChipProps<T, K>) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const initialValue = useMemo(() => {
@@ -64,19 +62,34 @@ export const SelectField = <
     }, [options, value]);
 
     const cardValue = useMemo(() => {
-        if (customCardValue) return customCardValue;
+        if (customChipValue) return customChipValue;
 
-        if (!value) return undefined;
+        if (!value) return "?";
+
+        if (!Array.isArray(value)) return value.label;
+        else {
+            if (!value.length) return "?";
+            return (
+                value[0].label +
+                (value.length > 1 ? `+${value.length - 1}` : "")
+            );
+        }
+    }, [multiple, value, customChipValue]);
+
+    const tooltipValue = useMemo(() => {
+        if (customChipValue) return customChipValue;
+
+        if (!value) return "?";
 
         if (!Array.isArray(value)) return value.label;
         else return value.map((el) => el.label).join(", ");
-    }, [multiple, value, customCardValue]);
+    }, [multiple, value, customChipValue]);
 
     const handleChange = (
         _: SyntheticEvent,
         value: FormAutocompleteValueType | FormAutocompleteValueType[] | null,
     ) => {
-        onChange(value as SelectFieldReturnType<T, K>);
+        onChange(value as SelectChipReturnType<T, K>);
     };
 
     useEffect(() => {
@@ -85,15 +98,19 @@ export const SelectField = <
 
     return (
         <>
-            <FieldCard
-                label={label}
-                value={cardValue || "?"}
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                variant={variant}
-                orientation="vertical"
-                leftAdornment={leftAdornment}
-                rightAdornment={rightAdornment}
-            />
+            <Tooltip
+                arrow
+                title={`${label}: ${tooltipValue}`}
+                enterDelay={1000}
+            >
+                <FieldChip
+                    leftAdornment={leftAdornment}
+                    rightAdornment={rightAdornment}
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                >
+                    {cardValue}
+                </FieldChip>
+            </Tooltip>
 
             <FormAutocompletePopover
                 id={id}

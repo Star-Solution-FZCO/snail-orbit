@@ -22,7 +22,7 @@ import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT } from "types";
 import { toastApiError } from "utils";
-import { transformIssue } from "../utils";
+import { issueToCreateIssue } from "../../../store/utils/issue";
 import { DeleteIssueDialog } from "./delete_dialog";
 
 dayjs.extend(relativeTime);
@@ -59,7 +59,7 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
 
     const handleCloneIssue = () => {
         handleCloseMenu();
-        createIssue(transformIssue(issue))
+        createIssue(issueToCreateIssue(issue))
             .unwrap()
             .then((response) => {
                 const issueId = response.payload.id_readable;

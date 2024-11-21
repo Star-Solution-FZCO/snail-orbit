@@ -1,8 +1,9 @@
 import { Kanban as KanbanComp } from "components/kanban/kanban";
 import { Items, KanbanProps } from "components/kanban/kanban.types";
-import { FC, useEffect, useState } from "react";
-import { agileBoardApi } from "store";
-import { AgileBoardT, IssueT } from "types";
+import { FC, useCallback, useEffect, useState } from "react";
+import { agileBoardApi, issueApi } from "store";
+import { AgileBoardT, IssueT, UpdateIssueT } from "types";
+import { toastApiError } from "../../../utils";
 import {
     columnKeyToFieldValue,
     fieldValueToColumnKey,
@@ -21,6 +22,17 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
     });
 
     const [moveIssue] = agileBoardApi.useMoveIssueMutation();
+    const [updateIssue] = issueApi.useUpdateIssueMutation();
+
+    const handleUpdateIssue = useCallback(
+        async (issueId: string, formData: UpdateIssueT) => {
+            await updateIssue({ ...formData, id: issueId })
+                .unwrap()
+                .then(refetch)
+                .catch(toastApiError);
+        },
+        [],
+    );
 
     const [items, setItems] = useState<Items | null>(null);
     const [itemsMap, setItemsMap] = useState<Record<string, IssueT>>({});
@@ -101,6 +113,8 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
                             <AgileCard
                                 issue={itemsMap[id]}
                                 cardSetting={boardData.ui_settings}
+                                cardFields={boardData.card_fields}
+                                onUpdateIssue={handleUpdateIssue}
                             />
                         ) : null // TODO: Move and preserve issue data inside kanban
                 }
