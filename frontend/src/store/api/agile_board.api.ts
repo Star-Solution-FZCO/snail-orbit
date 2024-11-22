@@ -74,6 +74,15 @@ export const agileBoardApi = createApi({
                 params,
             }),
         }),
+        listAvailableColorsCustomFields: build.query<
+            ListResponse<CustomFieldT>,
+            { project_id: string[] }
+        >({
+            query: (params) => ({
+                url: "board/card_color_field/select",
+                params,
+            }),
+        }),
         createAgileBoard: build.mutation<
             ApiResponse<AgileBoardT>,
             CreateAgileBoardT
