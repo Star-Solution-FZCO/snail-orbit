@@ -31,7 +31,7 @@ async def create_wf(args: argparse.Namespace) -> None:
             description=args.description,
         )
         await obj.insert()
-    if args.type == WorkflowType.SCHEDULED:
+    elif args.type == WorkflowType.SCHEDULED:
         if not args.schedule:
             raise ValueError('Schedule is required for scheduled workflows')
         if not croniter.is_valid(args.schedule):
