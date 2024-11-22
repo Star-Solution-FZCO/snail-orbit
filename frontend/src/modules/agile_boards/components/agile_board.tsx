@@ -3,13 +3,14 @@ import { Items, KanbanProps } from "components/kanban/kanban.types";
 import { FC, useCallback, useEffect, useState } from "react";
 import { agileBoardApi, issueApi } from "store";
 import { AgileBoardT, IssueT, UpdateIssueT } from "types";
-import { toastApiError } from "../../../utils";
+import { toastApiError } from "utils";
 import {
     columnKeyToFieldValue,
     fieldValueToColumnKey,
     fieldValueToSwimlaneKey,
     swimlaneKeyToFieldValue,
 } from "../utils/fieldValueToKey";
+import { useCalcColumns } from "../utils/useCalcColumns";
 import { AgileCard } from "./agile_card";
 
 export type AgileBoardProps = {
@@ -90,6 +91,15 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         refetch();
     }, [boardData]);
 
+    const columns = useCalcColumns({
+        boardColumns: headers.length,
+        strategy: boardData.ui_settings.columnsStrategy,
+        value:
+            boardData.ui_settings.columnsStrategy === "column"
+                ? boardData.ui_settings.columns || 1
+                : boardData.ui_settings.columnMaxWidth || 120,
+    });
+
     const handleCardMoved: KanbanProps["onCardMoved"] = (id, _from, to) => {
         moveIssue({
             issue_id: id.toString(),
@@ -107,6 +117,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
             <KanbanComp
                 headers={headers}
                 items={items}
+                columns={columns}
                 renderItemContent={
                     ({ id }) =>
                         itemsMap[id] ? (
@@ -115,6 +126,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
                                 cardSetting={boardData.ui_settings}
                                 cardFields={boardData.card_fields}
                                 onUpdateIssue={handleUpdateIssue}
+                                cardColorFields={boardData.card_colors_fields}
                             />
                         ) : null // TODO: Move and preserve issue data inside kanban
                 }

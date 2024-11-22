@@ -11,4 +11,5 @@ export const formValuesToCreateForm = (
     swimlane_field: form.swimlane_field?.id || null,
     swimlanes: form.swimlanes.map((el) => el.value),
     card_fields: form.card_fields.map((field) => field.id),
+    card_colors_fields: form.card_colors_fields.map((field) => field.id),
 });

@@ -125,7 +125,7 @@ const AgileBoardView = () => {
                     </Box>
                 ) : null}
             </Container>
-            <Box sx={{ width: "100dvw" }}>
+            <Box sx={{ width: "100%" }}>
                 <AgileBoard boardData={agileBoard} />
             </Box>
         </Stack>

@@ -14,10 +14,19 @@ export type CreateAgileBoardT = {
     swimlane_field: string | null; // custom field id
     swimlanes: string[]; // list of custom field ids
     card_fields: string[]; // list of custom field ids
+    card_colors_fields: string[]; // list of custom field ids
+    ui_settings?: UiSettingT;
 };
+
+export const columnsStrategies = ["column", "maxWidth"] as const;
+
+export type ColumnStrategyT = (typeof columnsStrategies)[number];
 
 export type UiSettingT = {
     minCardHeight?: string;
+    columnsStrategy: ColumnStrategyT;
+    columns?: number;
+    columnMaxWidth?: number;
 };
 
 export type AgileBoardT = {
@@ -31,6 +40,7 @@ export type AgileBoardT = {
     swimlane_field: ColumnT | null;
     swimlanes: AgileFieldValueT[];
     card_fields: AgileBoardCardFieldT[];
+    card_colors_fields: AgileBoardCardFieldT[];
     ui_settings: UiSettingT;
 };
 

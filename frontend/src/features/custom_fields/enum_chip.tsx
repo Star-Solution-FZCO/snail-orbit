@@ -26,7 +26,7 @@ export const EnumChip: FC<EnumChipProps> = ({
     multiple,
 }) => {
     const [listQueryParams] = useListQueryParams({
-        limit: -1,
+        limit: 0,
     });
 
     const [fetchOptions, { data, isLoading }] =

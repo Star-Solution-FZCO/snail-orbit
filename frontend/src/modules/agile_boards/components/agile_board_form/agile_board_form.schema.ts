@@ -1,5 +1,5 @@
 import { TFunction } from "i18next";
-import { customFieldsTypes } from "types";
+import { columnsStrategies, customFieldsTypes } from "types";
 import * as yup from "yup";
 
 export const agileBoardProjectSchema = yup.object().shape({
@@ -34,6 +34,13 @@ export const agileBoardCardFieldSchema = yup.object().shape({
 
 export const uiSettingsSchema = yup.object().shape({
     minCardHeight: yup.string().default(""),
+    columnsStrategy: yup
+        .string()
+        .oneOf(columnsStrategies)
+        .required()
+        .default("column"),
+    columns: yup.number().default(1),
+    columnMaxWidth: yup.number().default(120),
 });
 
 export const getAgileBoardSchema = (t: TFunction) =>
@@ -57,6 +64,11 @@ export const getAgileBoardSchema = (t: TFunction) =>
             .required()
             .default([]),
         card_fields: yup
+            .array()
+            .of(agileBoardCardFieldSchema)
+            .required()
+            .default([]),
+        card_colors_fields: yup
             .array()
             .of(agileBoardCardFieldSchema)
             .required()
