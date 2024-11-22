@@ -22,7 +22,7 @@ from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
-from pm.workflows import WorkflowException, OnChangeWorkflowScript
+from pm.workflows import OnChangeWorkflowScript, WorkflowException
 
 __all__ = ('router',)
 
