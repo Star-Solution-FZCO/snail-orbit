@@ -18,7 +18,8 @@ async def init_db() -> None:
 
 async def create_wf(args: argparse.Namespace) -> None:
     from croniter import croniter
-    from pm.models import OnChangeWorkflow, WorkflowType, ScheduledWorkflow
+
+    from pm.models import OnChangeWorkflow, ScheduledWorkflow, WorkflowType
 
     await init_db()
 
@@ -32,9 +33,9 @@ async def create_wf(args: argparse.Namespace) -> None:
         await obj.insert()
     if args.type == WorkflowType.SCHEDULED:
         if not args.schedule:
-            raise ValueError("Schedule is required for scheduled workflows")
+            raise ValueError('Schedule is required for scheduled workflows')
         if not croniter.is_valid(args.schedule):
-            raise ValueError(f"Invalid cron expression: {args.schedule}")
+            raise ValueError(f'Invalid cron expression: {args.schedule}')
         obj = ScheduledWorkflow(
             name=args.name,
             script=args.script_path,
@@ -44,7 +45,7 @@ async def create_wf(args: argparse.Namespace) -> None:
         )
         await obj.insert()
     else:
-        raise ValueError(f"Unknown workflow type: {args.type}")
+        raise ValueError(f'Unknown workflow type: {args.type}')
     print(f'Workflow {args.name} created successfully, id={obj.id}')
 
 
@@ -64,7 +65,9 @@ def add_workflow_args(parser: argparse.ArgumentParser) -> None:
     create_parser = subparsers.add_parser('create', help='Create a new workflow')
     create_parser.add_argument('name', type=str)
     create_parser.add_argument('script_path', type=str)
-    create_parser.add_argument('-t', '--type', choices=['on_change', 'scheduled'], required=True)
+    create_parser.add_argument(
+        '-t', '--type', choices=['on_change', 'scheduled'], required=True
+    )
     create_parser.add_argument('--description', type=str)
     create_parser.add_argument('-s', '--schedule', type=str)
     create_parser.set_defaults(func=create_wf)
