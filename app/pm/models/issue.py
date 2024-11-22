@@ -173,14 +173,18 @@ class Issue(Document):
     @property
     def is_resolved(self) -> bool:
         return any(
-            field.type == CustomFieldTypeT.STATE and field.value.is_resolved
+            field.type == CustomFieldTypeT.STATE
+            and field.value
+            and field.value.is_resolved
             for field in self.fields
         )
 
     @property
     def is_closed(self) -> bool:
         return any(
-            field.type == CustomFieldTypeT.STATE and field.value.is_closed
+            field.type == CustomFieldTypeT.STATE
+            and field.value
+            and field.value.is_closed
             for field in self.fields
         )
 
