@@ -22,7 +22,7 @@ from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
-from pm.workflows import OnChangeWorkflowScript, WorkflowException
+from pm.workflows import WorkflowException
 
 __all__ = ('router',)
 
@@ -386,7 +386,7 @@ async def create_issue_from_draft(
     )
     try:
         for wf in project.workflows:
-            if isinstance(wf, OnChangeWorkflowScript):
+            if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
         raise ValidateModelException(
@@ -477,7 +477,7 @@ async def create_issue(
         )
     try:
         for wf in project.workflows:
-            if isinstance(wf, OnChangeWorkflowScript):
+            if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
         raise ValidateModelException(
@@ -574,7 +574,7 @@ async def update_issue(
     await update_tags_on_close_resolve(obj)
     try:
         for wf in project.workflows:
-            if isinstance(wf, OnChangeWorkflowScript):
+            if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
         raise ValidateModelException(
