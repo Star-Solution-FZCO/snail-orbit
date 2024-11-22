@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: lint
+        language: system
+        entry: python3 app/lint.py
+        types: [ python ]
