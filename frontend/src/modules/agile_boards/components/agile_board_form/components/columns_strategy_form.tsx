@@ -15,7 +15,7 @@ import { AgileBoardFormData } from "../agile_board_form.schema";
 export const ColumnsStrategyForm: FC = () => {
     const { t } = useTranslation();
 
-    const { control, watch } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardFormData>();
 
     const strategy = useWatch({ control, name: "ui_settings.columnsStrategy" });
 
