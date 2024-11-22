@@ -59,6 +59,9 @@ optional = true
 [tool.poetry.group.ocr.dependencies]
 easyocr = "*"
 
+[tool.ruff.lint]
+select = ["I"]
+
 [tool.ruff.format]
 quote-style = "single"
 
