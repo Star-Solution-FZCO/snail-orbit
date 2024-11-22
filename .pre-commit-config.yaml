@@ -1,0 +1,22 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-fix
+        name: ruff-fix
+        language: system
+        entry: ruff check --fix app
+        types_or: [ python, pyi ]
+      - id: ruff-format
+        name: ruff-format
+        language: system
+        entry: ruff format --no-cache app
+        types_or: [ python, pyi ]
+      - id: lint
+        name: lint
+        language: system
+        entry: python3 app/lint.py
+        types: [ python ]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
