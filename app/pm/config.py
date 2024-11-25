@@ -1,16 +1,71 @@
 import datetime
+import re
+from dataclasses import dataclass, field
 from enum import StrEnum
+from ipaddress import IPv4Address
+from typing import Any
 
 from dynaconf import Dynaconf, Validator
 
 from pm.constants import CONFIG_PATHS
 
-__all__ = ('CONFIG', 'FileStorageModeT')
+__all__ = (
+    'CONFIG',
+    'FileStorageModeT',
+    'APIServiceTokenKeyT',
+    'API_SERVICE_TOKEN_KEYS',
+)
 
 
 class FileStorageModeT(StrEnum):
     LOCAL = 'local'
     S3 = 's3'
+
+
+@dataclass
+class APIServiceTokenKeyT:
+    kid: str
+    name: str
+    secret: str
+    paths: dict[str, list[str]]
+    ips: list[IPv4Address]
+    __paths_patterns__: list[tuple[re.Pattern, list[str]]] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.__paths_patterns__ = [
+            (re.compile(f'^{p}$'), methods) for p, methods in self.paths.items()
+        ]
+
+    def check_path(self, path: str, method: str) -> bool:
+        return any(
+            pattern.fullmatch(path) and method in methods
+            for pattern, methods in self.__paths_patterns__
+        )
+
+    def check_ip(self, ip: IPv4Address | str) -> bool:
+        if not self.ips:
+            return True
+        if isinstance(ip, str):
+            ip = IPv4Address(ip)
+        return ip in self.ips
+
+
+def parse_api_service_token_keys(
+    keys: dict[str, Any],
+) -> dict[str, APIServiceTokenKeyT]:
+    result = {
+        kid: APIServiceTokenKeyT(
+            kid=kid,
+            name=data['name'],
+            secret=data['secret'],
+            paths={p['path']: p.get('methods', ['GET']) for p in data['paths']},
+            ips=[IPv4Address(ip) for ip in data.get('ips', [])],
+        )
+        for kid, data in keys.items()
+    }
+    if len(result) != len(keys):
+        raise ValueError('Duplicate key ids')
+    return result
 
 
 CONFIG = Dynaconf(
@@ -241,6 +296,15 @@ CONFIG = Dynaconf(
                 'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
             ),
         ),
+        Validator(
+            'API_SERVICE_TOKEN_MAX_AGE',
+            cast=int,
+            default=2 * 60,
+            description='API service token max age in seconds',
+        ),
+        Validator('API_SERVICE_TOKEN_KEYS', default={}),
     ],
 )
 CONFIG.configure()
+
+API_SERVICE_TOKEN_KEYS = parse_api_service_token_keys(CONFIG.API_SERVICE_TOKEN_KEYS)

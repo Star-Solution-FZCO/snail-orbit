@@ -1,15 +1,18 @@
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
+from hashlib import sha1
 from http import HTTPStatus
 from typing import cast
 
 from beanie import PydanticObjectId
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
+from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
+from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
 from pm.permissions import Permissions, PermissionT
 
 __all__ = (
@@ -67,11 +70,15 @@ def get_bearer_token(
 
 
 async def user_dependency(
+    request: Request,
     jwt_auth: AuthJWT = Depends(AuthJWT),
     bearer_token: str | None = Depends(get_bearer_token),
 ) -> 'm.User':
     if bearer_token:
-        user: m.User | None = await m.User.get_by_api_token(bearer_token)
+        if is_jwt(bearer_token):
+            user = await get_user_from_service_token(bearer_token, request)
+        else:
+            user = await m.User.get_by_api_token(bearer_token)
     else:
         jwt_auth.jwt_required()
         user_login = jwt_auth.get_jwt_subject()
@@ -113,3 +120,34 @@ async def resolve_user_permissions(
 ) -> dict[PydanticObjectId, set[Permissions]]:
     projects = await m.Project.find_all().to_list()
     return {pr.id: pr.get_user_permissions(user) for pr in projects}
+
+
+async def get_user_from_service_token(token: str, request: Request) -> m.User | None:
+    try:
+        kid, data = validate_jwt(
+            token,
+            keys={k: v.secret for k, v in API_SERVICE_TOKEN_KEYS.items()},
+            required_additional_claims=('req_hash',),
+            max_age=CONFIG.API_SERVICE_TOKEN_MAX_AGE,
+        )
+    except JWTValidationError as err:
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, err.msg) from err
+
+    if not (key := API_SERVICE_TOKEN_KEYS.get(kid)):
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid token key ID')
+    if not key.check_path(request.url.path, request.method):
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid path or method')
+    if not key.check_ip(request.client.host):
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid source IP')
+
+    url_path = request.url.path + ('?' + request.url.query if request.url.query else '')
+    real_req_hash = sha1(
+        (request.method + url_path).encode('utf-8'), usedforsecurity=False
+    ).hexdigest()
+    if data['req_hash'] != real_req_hash:
+        raise HTTPException(
+            HTTPStatus.UNAUTHORIZED,
+            'Invalid request hash',
+        )
+    user: m.User | None = await m.User.find_one(m.User.email == data['sub'])
+    return user
