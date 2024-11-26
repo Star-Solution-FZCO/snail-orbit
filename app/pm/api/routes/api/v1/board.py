@@ -364,6 +364,8 @@ async def get_board_issues(
         )
         .sort(m.Issue.id)
     )
+    if board.projects:
+        q = q.find(bo.In(m.Issue.project.id, [p.id for p in board.projects]))
 
     for issue in await q.to_list():
         if board.swimlane_field and not (
