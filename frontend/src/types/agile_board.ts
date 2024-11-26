@@ -1,6 +1,11 @@
-import { BasicCustomFieldT, CustomFieldTypeT } from "./custom_fields";
-import { IssueT } from "./issue";
-import { BasicProjectT } from "./project";
+import type {
+    BasicCustomFieldT,
+    CustomFieldTypeT,
+    EnumFieldT,
+    StateFieldT,
+} from "./custom_fields";
+import type { IssueT } from "./issue";
+import type { BasicProjectT } from "./project";
 
 export type ColumnT = BasicCustomFieldT;
 
@@ -46,10 +51,7 @@ export type AgileBoardT = {
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
 
-export type AgileFieldValueT = {
-    value: string;
-    color?: string;
-};
+export type AgileFieldValueT = EnumFieldT | StateFieldT;
 
 export type AgileBoardCardFieldT = {
     id: string;

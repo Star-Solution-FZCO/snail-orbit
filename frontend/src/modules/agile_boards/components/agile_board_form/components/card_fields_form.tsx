@@ -7,7 +7,8 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import {
     Controller,
     useFieldArray,
@@ -16,7 +17,7 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardFormData } from "../agile_board_form.schema";
 
 export const CardFieldsForm: FC = () => {
     const { t } = useTranslation();
@@ -80,6 +81,7 @@ export const CardFieldsForm: FC = () => {
                                 variant="outlined"
                                 size="small"
                                 fullWidth
+                                disabled
                                 value={value.name}
                                 onChange={(e) =>
                                     onChange({ name: e.target.value })

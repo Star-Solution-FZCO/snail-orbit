@@ -7,7 +7,8 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import {
     Controller,
     useFieldArray,
@@ -16,9 +17,14 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { BasicUserT, EnumOptionT, StateOptionT, VersionOptionT } from "types";
+import type {
+    BasicUserT,
+    EnumOptionT,
+    StateOptionT,
+    VersionOptionT,
+} from "types";
 import { useListQueryParams } from "utils";
-import { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardFormData } from "../agile_board_form.schema";
 
 const getOptionValue = (
     option: EnumOptionT | StateOptionT | BasicUserT | VersionOptionT,
@@ -96,6 +102,7 @@ export const SwimlanesForm: FC = () => {
                                 variant="outlined"
                                 size="small"
                                 fullWidth
+                                disabled
                                 value={value.value}
                                 onChange={(e) =>
                                     onChange({ name: e.target.value })

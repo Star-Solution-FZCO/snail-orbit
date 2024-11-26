@@ -1,5 +1,5 @@
-import { CreateAgileBoardT } from "types";
-import { AgileBoardFormData } from "../components/agile_board_form/agile_board_form.schema";
+import type { CreateAgileBoardT } from "types";
+import type { AgileBoardFormData } from "../components/agile_board_form/agile_board_form.schema";
 
 export const formValuesToCreateForm = (
     form: AgileBoardFormData,

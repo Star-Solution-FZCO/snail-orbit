@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ColumnStrategyT } from "types";
+import type { ColumnStrategyT } from "types";
 import useWindowDimensions from "utils/hooks/use-window-dimensions";
 
 type UseCalcColumnsProps = {

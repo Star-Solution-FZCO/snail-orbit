@@ -10,6 +10,7 @@ import {
     fieldValueToSwimlaneKey,
     swimlaneKeyToFieldValue,
 } from "../utils/fieldValueToKey";
+import { normalizeFieldValue } from "../utils/normalizeFieldValue";
 import { useCalcColumns } from "../utils/useCalcColumns";
 import { AgileCard } from "./agile_card";
 
@@ -45,14 +46,20 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
         if (isFetching) return;
         const res: Items = {};
         for (const swimlane of data.payload.items) {
+            const normalizedSwimLane = swimlane.field_value
+                ? normalizeFieldValue(swimlane.field_value)
+                : undefined;
             const swimlaneKey = fieldValueToSwimlaneKey(
-                swimlane?.field_value?.value,
+                normalizedSwimLane?.value,
             );
             res[swimlaneKey] = {};
             for (const column of swimlane.columns) {
+                const normalizedColumn = column.field_value
+                    ? normalizeFieldValue(column.field_value)
+                    : undefined;
                 const columnKey = fieldValueToColumnKey(
-                    swimlane?.field_value?.value,
-                    column?.field_value?.value || "",
+                    normalizedSwimLane?.value,
+                    normalizedColumn?.value || "",
                 );
                 res[swimlaneKey][columnKey] = column.issues.map((el) => el.id);
             }
@@ -80,8 +87,10 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
     useEffect(() => {
         setHeaders(
             data?.payload.items?.length
-                ? data.payload.items[0].columns.map(
-                      (el) => el.field_value?.value || "",
+                ? data.payload.items[0].columns.map((el) =>
+                      el.field_value
+                          ? normalizeFieldValue(el.field_value).value
+                          : "",
                   )
                 : [],
         );
