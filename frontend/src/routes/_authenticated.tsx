@@ -11,7 +11,10 @@ export const Route = createFileRoute("/_authenticated")({
                 <Navigate
                     to="/login"
                     search={{
-                        redirect: location.pathname,
+                        redirect:
+                            location.pathname !== "/"
+                                ? location.pathname
+                                : undefined,
                     }}
                 />
             );
