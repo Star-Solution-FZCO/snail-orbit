@@ -6,18 +6,18 @@ export const initialListQueryParams: ListQueryParams = {
     offset: 0,
 };
 
-export const useListQueryParams = (params: Partial<ListQueryParams> = {}) => {
-    const initialParams = {
+export const useListQueryParams = <T extends ListQueryParams>(
+    params: Partial<T> = {},
+) => {
+    const initialParams: T = {
         ...initialListQueryParams,
         ...params,
-    };
+    } as T;
 
-    const [queryParams, setQueryParams] =
-        useState<ListQueryParams>(initialParams);
+    const [queryParams, setQueryParams] = useState<T>(initialParams);
 
-    const updateQueryParams = (newParams: Partial<ListQueryParams>) => {
-        const updatedParams = { ...queryParams, ...newParams };
-        setQueryParams(updatedParams);
+    const updateQueryParams = (newParams: Partial<T>) => {
+        setQueryParams((prev) => ({ ...prev, ...newParams }));
     };
 
     const resetQueryParams = () => {

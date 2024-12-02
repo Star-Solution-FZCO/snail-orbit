@@ -4,6 +4,8 @@ import {
     Autocomplete,
     Box,
     Button,
+    CircularProgress,
+    debounce,
     Dialog,
     DialogActions,
     DialogContent,
@@ -12,11 +14,11 @@ import {
     TextField,
 } from "@mui/material";
 import { UserAvatar } from "components";
-import { FC, useState } from "react";
+import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
-import { BasicUserT } from "types";
-import { noLimitListQueryParams, toastApiError } from "utils";
+import { BasicUserT, ListSelectQueryParams } from "types";
+import { toastApiError, useListQueryParams } from "utils";
 
 interface AddGroupMemberDialogProps {
     groupId: string;
@@ -33,10 +35,54 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
 
     const [user, setUser] = useState<BasicUserT | null>(null);
 
-    const { data } = userApi.useListSelectUserQuery(noLimitListQueryParams);
+    const [queryParams, updateQueryParams, resetQueryParams] =
+        useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
+    const [autocompleteOpen, setAutocompleteOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const {
+        data,
+        isLoading: usersLoading,
+        isFetching: usersFetching,
+    } = userApi.useListSelectUserQuery(queryParams, {
+        skip: !autocompleteOpen,
+    });
 
     const [addGroupMember, { isLoading }] =
         groupApi.useAddGroupMemberMutation();
+
+    const handleOpenAutocomplete = () => {
+        setAutocompleteOpen(true);
+    };
+
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            resetQueryParams();
+            updateQueryParams({
+                search: value.length > 0 ? value : undefined,
+                offset: 0,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
+        const listboxNode = event.currentTarget;
+        if (
+            listboxNode.scrollTop + listboxNode.clientHeight >=
+                listboxNode.scrollHeight &&
+            !dataLoading
+        ) {
+            updateQueryParams({
+                offset: queryParams.offset + queryParams.limit,
+            });
+        }
+    };
+
+    const handleSearchInputChange = (_: unknown, value: string) => {
+        setSearchQuery(value);
+        debouncedSearch(value);
+    };
 
     const handleClickAdd = () => {
         if (!user) return;
@@ -51,6 +97,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
     };
 
     const users = data?.payload?.items || [];
+    const dataLoading = usersLoading || usersFetching;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -71,13 +118,35 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
             >
                 <Autocomplete
                     value={user}
+                    inputValue={searchQuery}
                     options={users}
                     getOptionLabel={(option) => option.name}
+                    onOpen={handleOpenAutocomplete}
                     onChange={(_, value) => setUser(value)}
+                    onInputChange={handleSearchInputChange}
+                    ListboxProps={{
+                        onScroll: handleScroll,
+                    }}
                     renderInput={(params) => (
                         <TextField
                             {...params}
                             placeholder={t("groups.members.filter")}
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {dataLoading ? (
+                                                <CircularProgress
+                                                    color="inherit"
+                                                    size={20}
+                                                />
+                                            ) : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                },
+                            }}
                         />
                     )}
                     renderOption={(props, option) => {
