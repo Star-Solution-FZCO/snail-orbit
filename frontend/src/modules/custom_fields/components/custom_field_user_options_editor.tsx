@@ -7,6 +7,8 @@ import {
     Autocomplete,
     Box,
     Button,
+    CircularProgress,
+    debounce,
     Dialog,
     DialogActions,
     DialogContent,
@@ -18,11 +20,16 @@ import {
 } from "@mui/material";
 import { UserAvatar } from "components";
 import { mergeUsersAndGroups } from "modules/projects/utils";
-import { FC, useState } from "react";
+import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi, groupApi, userApi } from "store";
-import { BasicUserT, CustomFieldT, UserOrGroupOptionT } from "types";
-import { noLimitListQueryParams, toastApiError } from "utils";
+import {
+    BasicUserT,
+    CustomFieldT,
+    ListSelectQueryParams,
+    UserOrGroupOptionT,
+} from "types";
+import { toastApiError, useListQueryParams } from "utils";
 
 interface IUserOrGroupOptionProps {
     entity: UserOrGroupOptionT;
@@ -73,10 +80,26 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         avatar?: string;
     } | null>(null);
 
-    const { data: users } = userApi.useListSelectUserQuery(
-        noLimitListQueryParams,
-    );
-    const { data: groups } = groupApi.useListGroupQuery(noLimitListQueryParams);
+    const [queryParams, updateQueryParams, resetQueryParams] =
+        useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
+    const [autocompleteOpen, setAutocompleteOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const {
+        data: users,
+        isLoading: usersLoading,
+        isFetching: usersFetching,
+    } = userApi.useListSelectUserQuery(queryParams, {
+        skip: !autocompleteOpen,
+    });
+
+    const {
+        data: groups,
+        isLoading: groupsLoading,
+        isFetching: groupsFetching,
+    } = groupApi.useListGroupQuery(queryParams, {
+        skip: !autocompleteOpen,
+    });
 
     const [addEntity, { isLoading }] =
         customFieldsApi.useCreateCustomFieldUserOptionMutation();
@@ -84,6 +107,39 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
     const handleClose = () => {
         onClose();
         setEntity(null);
+    };
+
+    const handleOpenAutocomplete = () => {
+        setAutocompleteOpen(true);
+    };
+
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            resetQueryParams();
+            updateQueryParams({
+                search: value.length > 0 ? value : undefined,
+                offset: 0,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
+        const listboxNode = event.currentTarget;
+        if (
+            listboxNode.scrollTop + listboxNode.clientHeight >=
+                listboxNode.scrollHeight &&
+            !dataLoading
+        ) {
+            updateQueryParams({
+                offset: queryParams.offset + queryParams.limit,
+            });
+        }
+    };
+
+    const handleSearchInputChange = (_: unknown, value: string) => {
+        setSearchQuery(value);
+        debouncedSearch(value);
     };
 
     const handleClickAdd = () => {
@@ -109,6 +165,9 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         groups?.payload.items || [],
     );
 
+    const dataLoading =
+        usersLoading || groupsLoading || usersFetching || groupsFetching;
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
             <DialogTitle
@@ -129,17 +188,39 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                 <Autocomplete
                     sx={{ mt: 1 }}
                     value={entity}
+                    inputValue={searchQuery}
                     options={usersAndGroups}
+                    onOpen={handleOpenAutocomplete}
                     renderInput={(params) => (
                         <TextField
                             {...params}
                             label={t("projects.access.userOrGroup")}
                             placeholder={t("projects.access.selectUserOrGroup")}
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {dataLoading ? (
+                                                <CircularProgress
+                                                    color="inherit"
+                                                    size={20}
+                                                />
+                                            ) : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                },
+                            }}
                             size="small"
                         />
                     )}
                     getOptionLabel={(option) => option.name}
                     onChange={(_, value) => setEntity(value)}
+                    onInputChange={handleSearchInputChange}
+                    ListboxProps={{
+                        onScroll: handleScroll,
+                    }}
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
