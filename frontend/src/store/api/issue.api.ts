@@ -57,7 +57,11 @@ export const issueApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
+                { type: "IssueHistories", id },
+            ],
             async onQueryStarted(
                 { id },
                 { dispatch, queryFulfilled },

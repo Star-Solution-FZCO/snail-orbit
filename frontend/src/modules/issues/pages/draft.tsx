@@ -94,6 +94,7 @@ const IssueDraft: FC = () => {
                             onUpdateCache={handleUpdateCache}
                             onSaveIssue={handleCreateDraft}
                             issue={issue}
+                            displayMode="edit"
                             isDraft
                         />
                     )}

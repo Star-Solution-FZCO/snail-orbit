@@ -104,6 +104,7 @@ const NavBar = () => {
             alignItems="center"
             justifyContent="space-between"
             px={4}
+            zIndex={800}
         >
             <Box display="flex" alignItems="center" gap={4}>
                 {links.map((link) => (
