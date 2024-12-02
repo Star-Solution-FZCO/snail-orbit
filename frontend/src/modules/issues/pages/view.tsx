@@ -2,12 +2,11 @@ import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
 import deepmerge from "deepmerge";
-import { FC, useCallback, useEffect } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
-import { IssueHeading } from "../components/heading";
 import IssueViewComp from "../components/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
@@ -16,6 +15,8 @@ const IssueView: FC = () => {
     const navigate = useNavigate();
     const { issueId } = routeApi.useParams();
     const dispatch = useAppDispatch();
+
+    const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
 
     const { data, isLoading, error } = issueApi.useGetIssueQuery(issueId);
 
@@ -85,16 +86,14 @@ const IssueView: FC = () => {
                 </Box>
             ) : (
                 issue && (
-                    <>
-                        <IssueHeading issue={issue} />
-
-                        <IssueViewComp
-                            loading={isLoading || updateLoading}
-                            onUpdateIssue={handleSubmit}
-                            onUpdateCache={handleUpdateCache}
-                            issue={issue}
-                        />
-                    </>
+                    <IssueViewComp
+                        issue={issue}
+                        displayMode={displayMode}
+                        onUpdateIssue={handleSubmit}
+                        onUpdateCache={handleUpdateCache}
+                        onChangeDisplayMode={setDisplayMode}
+                        loading={isLoading || updateLoading}
+                    />
                 )
             )}
         </Container>

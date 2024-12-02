@@ -1,93 +1,30 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/Delete";
-import LinkIcon from "@mui/icons-material/Link";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import {
-    Box,
-    IconButton,
-    Menu,
-    MenuItem,
-    Tooltip,
-    Typography,
-} from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import EditIcon from "@mui/icons-material/Edit";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { Link } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import { t } from "i18next";
-import { FC, useState } from "react";
-import { toast } from "react-toastify";
-import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
-import { slugify } from "transliteration";
+import { FC } from "react";
 import { IssueT } from "types";
-import { toastApiError } from "utils";
-import { issueToCreateIssue } from "../../../store/utils/issue";
-import { DeleteIssueDialog } from "./delete_dialog";
+import { HeadingControls } from "./heading_controls";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
 interface IIssueHeadingProps {
     issue: IssueT;
+    displayMode: "view" | "edit";
+    onChangeDisplayMode?: (mode: "view" | "edit") => void;
 }
 
-const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
-
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const menuOpen = Boolean(anchorEl);
-
-    const [createIssue] = issueApi.useCreateIssueMutation();
-
-    const handleClickLinkButton = () => {
-        dispatch(toggleIssueLinks());
-    };
-
-    const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseMenu = () => setAnchorEl(null);
-
-    const handleDeleteDialogOpen = () => {
-        handleCloseMenu();
-        setDeleteDialogOpen(true);
-    };
-
-    const handleCloneIssue = () => {
-        handleCloseMenu();
-        createIssue(issueToCreateIssue(issue))
-            .unwrap()
-            .then((response) => {
-                const issueId = response.payload.id_readable;
-                toast.success(
-                    <Typography>
-                        {t("issues.clone.created")}:{" "}
-                        <Link
-                            href={`/issues/${issueId}`}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                navigate({
-                                    to: "/issues/$issueId/$subject",
-                                    params: {
-                                        issueId,
-                                        subject: slugify(issue.subject),
-                                    },
-                                });
-                            }}
-                        >
-                            {issueId}
-                        </Link>
-                    </Typography>,
-                    {
-                        autoClose: false,
-                    },
-                );
-            })
-            .catch(toastApiError);
+const IssueHeading: FC<IIssueHeadingProps> = ({
+    issue,
+    displayMode,
+    onChangeDisplayMode,
+}) => {
+    const handleClickEdit = () => {
+        onChangeDisplayMode?.("edit");
     };
 
     const renderTimestamp = (date: string) => (
@@ -101,28 +38,8 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
         </Tooltip>
     );
 
-    const renderMenuItem = (
-        icon: React.ReactNode,
-        label: string,
-        onClick: () => void,
-        iconColor?: "error",
-    ) => (
-        <MenuItem
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            onClick={onClick}
-        >
-            {icon}
-            <Typography color={iconColor}>{label}</Typography>
-        </MenuItem>
-    );
-
     return (
-        <Box
-            width="calc(100% - 324px)"
-            display="flex"
-            flexDirection="column"
-            gap={1}
-        >
+        <Box display="flex" flexDirection="column" gap={2}>
             <Box display="flex" alignItems="center" gap={2} fontSize={14}>
                 <Link>{issue.id_readable}</Link>
 
@@ -153,62 +70,31 @@ const IssueHeading: FC<IIssueHeadingProps> = ({ issue }) => {
                 )}
             </Box>
 
-            <Box display="flex" alignItems="flex-start" gap={1}>
-                <Typography fontSize={24} fontWeight="bold" flex={1}>
-                    {issue.subject}
-                </Typography>
+            {displayMode === "view" && (
+                <Box display="flex" alignItems="flex-start" gap={1}>
+                    <Typography fontSize={24} fontWeight="bold" flex={1}>
+                        {issue.subject}
+                    </Typography>
 
-                <Tooltip
-                    title={t("issues.links.add.title")}
-                    onClick={handleClickLinkButton}
-                >
-                    <IconButton size="small">
-                        <LinkIcon />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title={t("issues.heading.showMore")}>
-                    <IconButton
-                        onClick={handleOpenMenu}
-                        color={menuOpen ? "primary" : "inherit"}
-                        size="small"
+                    <Box
+                        height="40px"
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
                     >
-                        <MoreHorizIcon />
-                    </IconButton>
-                </Tooltip>
-            </Box>
+                        <Tooltip
+                            title={t("issues.heading.edit")}
+                            onClick={handleClickEdit}
+                        >
+                            <IconButton size="small">
+                                <EditIcon />
+                            </IconButton>
+                        </Tooltip>
 
-            <Menu
-                anchorEl={anchorEl}
-                open={menuOpen}
-                onClose={handleCloseMenu}
-                anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                }}
-                transformOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                }}
-            >
-                {renderMenuItem(
-                    <ContentCopyIcon />,
-                    t("issues.clone"),
-                    handleCloneIssue,
-                )}
-                {renderMenuItem(
-                    <DeleteIcon color="error" />,
-                    t("issues.delete.title"),
-                    handleDeleteDialogOpen,
-                    "error",
-                )}
-            </Menu>
-
-            <DeleteIssueDialog
-                id={issue.id}
-                open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
-            />
+                        <HeadingControls issue={issue} />
+                    </Box>
+                </Box>
+            )}
         </Box>
     );
 };
