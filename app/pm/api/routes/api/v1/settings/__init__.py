@@ -4,6 +4,7 @@ from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 
 from .api_token import router as api_token_router
+from .mfa import router as mfa_router
 
 __all__ = ('router',)
 
@@ -13,3 +14,4 @@ router = APIRouter(
     dependencies=[Depends(current_user_context_dependency)],
 )
 router.include_router(api_token_router)
+router.include_router(mfa_router)

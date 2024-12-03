@@ -2356,13 +2356,13 @@ files = [
 
 [[package]]
 name = "pydantic"
-version = "2.10.2"
+version = "2.10.3"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic-2.10.2-py3-none-any.whl", hash = "sha256:cfb96e45951117c3024e6b67b25cdc33a3cb7b2fa62e239f7af1378358a1d99e"},
-    {file = "pydantic-2.10.2.tar.gz", hash = "sha256:2bc2d7f17232e0841cbba4641e65ba1eb6fafb3a08de3a091ff3ce14a197c4fa"},
+    {file = "pydantic-2.10.3-py3-none-any.whl", hash = "sha256:be04d85bbc7b65651c5f8e6b9976ed9c6f41782a55524cef079a34a0bb82144d"},
+    {file = "pydantic-2.10.3.tar.gz", hash = "sha256:cb5ac360ce894ceacd69c403187900a02c4b20b693a9dd1d643e1effab9eadf9"},
 ]
 
 [package.dependencies]
@@ -3259,6 +3259,17 @@ pyjwt = "*"
 
 [package.extras]
 asymmetric = ["cryptography (>=2.6)"]
+
+[[package]]
+name = "starsol-otp"
+version = "1.0.0"
+description = "OTP library"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "starsol_otp-1.0.0-py3-none-any.whl", hash = "sha256:f53e2b26683fd67b01284e6a855e839031311906ac3a07000c116e4b84bc3651"},
+    {file = "starsol_otp-1.0.0.tar.gz", hash = "sha256:f2933c847c9c48f7bb39bcd21ff97b8ee64bf77cf4e3315e78bfe6dd2a1ce919"},
+]
 
 [[package]]
 name = "stevedore"
@@ -4631,4 +4642,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "b779527d170de86199b90b9f84236491fb7184f3b65530af1f51c69183bab1df"
+content-hash = "937857800c30e4d3515ed5d16068dfcb60509a2417d83819018c90a1c99bbb03"
