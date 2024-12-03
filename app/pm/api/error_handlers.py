@@ -6,8 +6,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from pm.api.exceptions import ValidateModelException
-from pm.api.views.output import ErrorOutput, ErrorPayloadOutput
+from pm.api.exceptions import MFARequiredException, ValidateModelException
+from pm.api.views.output import ErrorOutput, ErrorPayloadOutput, MFARequiredOutput
 
 __all__ = ('connect_error_handlers',)
 
@@ -18,6 +18,7 @@ def connect_error_handlers(app: FastAPI) -> None:
         RequestValidationError, request_validation_exception_handler
     )
     app.add_exception_handler(ValidateModelException, validate_model_exception_handler)
+    app.add_exception_handler(MFARequiredException, mfa_required_exception_handler)
 
 
 # pylint: disable=unused-argument
@@ -58,4 +59,13 @@ async def validate_model_exception_handler(
                 error_fields=exc.error_fields,
             )
         ),
+    )
+
+
+async def mfa_required_exception_handler(
+    request: Request, exc: MFARequiredException
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=HTTPStatus.BAD_REQUEST,
+        content=jsonable_encoder(MFARequiredOutput()),
     )

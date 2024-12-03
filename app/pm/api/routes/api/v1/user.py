@@ -1,15 +1,16 @@
 import asyncio
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Self
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
+from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.factories.crud import CrudCreateBody, CrudUpdateBody
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
@@ -21,6 +22,8 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/user', tags=['user'], dependencies=[Depends(admin_context_dependency)]
 )
+
+INVITE_PASSWORD_TOKEN_LIFETIME = timedelta(days=7)
 
 
 class UserFullOutput(UserOutput):
@@ -42,14 +45,15 @@ class UserFullOutput(UserOutput):
         )
 
 
-class UserCreate(CrudCreateBody[m.User]):
+class UserCreate(BaseModel):
     email: str
     name: str
     is_active: bool = True
     is_admin: bool = False
+    send_invite: bool = True
 
 
-class UserUpdate(CrudUpdateBody[m.User]):
+class UserUpdate(BaseModel):
     email: str | None = None
     name: str | None = None
     is_active: bool | None = None
@@ -107,9 +111,21 @@ async def get_user(
 async def create_user(
     body: UserCreate,
 ) -> SuccessPayloadOutput[UserFullOutput]:
-    obj = body.create_obj(m.User)
+    obj = m.User(
+        email=body.email,
+        name=body.name,
+        is_active=body.is_active,
+        is_admin=body.is_admin,
+        origin=m.UserOriginType.LOCAL,
+    )
+    if body.send_invite:
+        password_token, password_token_obj = obj.gen_new_password_reset_token(
+            INVITE_PASSWORD_TOKEN_LIFETIME
+        )
+        obj.password_reset_token = password_token_obj
     await obj.insert()
     await generate_default_avatar(obj)
+    # todo: send email with invite link
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
@@ -125,7 +141,8 @@ async def update_user(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'Cannot update user with external origin'
         )
-    body.update_obj(obj)
+    for k, v in body.model_dump(exclude_unset=True).items():
+        setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
         await asyncio.gather(

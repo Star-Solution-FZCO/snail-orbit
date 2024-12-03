@@ -82,7 +82,10 @@ async def user_dependency(
     else:
         jwt_auth.jwt_required()
         user_login = jwt_auth.get_jwt_subject()
+        mfa_passed = (jwt_auth.get_raw_jwt() or {}).get('mfa_passed', False)
         user = await m.User.find_one(m.User.email == user_login)
+        if user and user.mfa_enabled and not mfa_passed:
+            raise HTTPException(HTTPStatus.UNAUTHORIZED, 'MFA required')
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user
