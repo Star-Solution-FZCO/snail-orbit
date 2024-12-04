@@ -1,14 +1,17 @@
 import base64
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Annotated, Self
 
 import bcrypt
 from beanie import Document, Indexed, PydanticObjectId
+from cryptography.fernet import Fernet
 from pydantic import BaseModel, Field
+from starsol_otp import TOTP, generate_random_base32_secret
 
-from pm.utils.dateutils import utcnow
+from pm.config import DB_ENCRYPTION_KEY
+from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
 from .group import GroupLinkField
@@ -19,7 +22,11 @@ __all__ = (
     'UserLinkField',
     'UserOriginType',
     'UserAvatarType',
+    'TOTPSettings',
 )
+
+
+TOTP_WINDOW = 1
 
 
 class UserOriginType(StrEnum):
@@ -78,6 +85,65 @@ class APIToken(BaseModel):
         return bcrypt.hashpw(secret.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
+class PasswordResetToken(BaseModel):
+    secret_hash: str
+    expires_at: datetime
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+    @property
+    def is_active(self) -> bool:
+        return self.expires_at > utcnow()
+
+    @staticmethod
+    def hash_secret(secret: str) -> str:
+        return bcrypt.hashpw(secret.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_secret(self, secret: str) -> bool:
+        return bcrypt.checkpw(secret.encode('utf-8'), self.secret_hash.encode('utf-8'))
+
+
+class TOTPSettings(BaseModel):
+    secret_encrypted: bytes
+    period: int
+    digits: int
+    digest: str
+    created_at: datetime
+
+    @classmethod
+    def create(cls, secret: str, period: int, digits: int, digest: str) -> Self:
+        if not DB_ENCRYPTION_KEY:
+            raise ValueError('DB_ENCRYPTION_KEY is not set')
+        fernet = Fernet(DB_ENCRYPTION_KEY)
+        return cls(
+            secret_encrypted=fernet.encrypt(secret.encode('utf-8')),
+            period=period,
+            digits=digits,
+            digest=digest,
+            created_at=utcnow(),
+        )
+
+    @classmethod
+    def generate(
+        cls, period: int = 30, digits: int = 6, digest: str = 'sha1'
+    ) -> tuple[Self, str]:
+        secret = generate_random_base32_secret()
+        return cls.create(secret, period, digits, digest), secret
+
+    def _get_verifier(self) -> TOTP:
+        if not DB_ENCRYPTION_KEY:
+            raise ValueError('DB_ENCRYPTION_KEY is not set')
+
+        fernet = Fernet(DB_ENCRYPTION_KEY)
+        secret = fernet.decrypt(self.secret_encrypted).decode('utf-8')
+        return TOTP(secret, period=self.period, digits=self.digits, digest=self.digest)
+
+    def check_code(self, code: str) -> bool:
+        return self._get_verifier().verify(code, window=TOTP_WINDOW)
+
+    def get_url(self, name: str, issuer: str) -> str:
+        return self._get_verifier().url(name, issuer=issuer)
+
+
 @audited_model
 class User(Document):
     class Settings:
@@ -89,6 +155,9 @@ class User(Document):
     name: str = Indexed(str)
     email: str = Indexed(str, unique=True)
     password_hash: str | None = None
+    password_reset_token: PasswordResetToken | None = None
+    totp: TOTPSettings | None = None
+    mfa_enabled: bool = False
     is_active: bool = True
     is_admin: bool = False
     api_tokens: Annotated[list[APIToken], Field(default_factory=list)]
@@ -110,6 +179,9 @@ class User(Document):
     @staticmethod
     def hash_password(password: str) -> str:
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def set_password(self, password: str) -> None:
+        self.password_hash = self.hash_password(password)
 
     def gen_new_api_token(
         self, name: str, expires_at: datetime | None = None
@@ -144,3 +216,42 @@ class User(Document):
         ):
             return None
         return user
+
+    def gen_new_password_reset_token(
+        self, ttl: int | timedelta
+    ) -> tuple[str, PasswordResetToken]:
+        if isinstance(ttl, int):
+            ttl = timedelta(seconds=ttl)
+        secret = secrets.token_hex(32)
+        now = utcnow()
+        token = base64.b64encode(
+            f'{self.id}:{secret}:{timestamp_from_utc(now)}'.encode('utf-8'),
+            altchars=b'-:',
+        ).decode('utf-8')
+        obj = PasswordResetToken(
+            secret_hash=PasswordResetToken.hash_secret(secret),
+            created_at=now,
+            expires_at=now + ttl,
+        )
+        return token, obj
+
+    @classmethod
+    async def get_by_password_reset_token(cls, token: str) -> Self | None:
+        split_token = (
+            base64.b64decode(token.encode(), altchars=b'-:').decode().split(':')
+        )
+        if len(split_token) != 3:
+            return None
+        user_id, secret, _ = split_token
+        if not (user := await cls.find_one(cls.id == PydanticObjectId(user_id))):
+            return None
+        if not user.password_reset_token:
+            return None
+        if not user.password_reset_token.check_secret(secret):
+            return None
+        return user
+
+    def check_totp(self, code: str) -> bool:
+        if not self.totp:
+            return False
+        return self.totp.check_code(code)

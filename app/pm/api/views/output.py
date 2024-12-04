@@ -14,6 +14,7 @@ __all__ = (
     'BaseListOutput',
     'ModelIdOutput',
     'UUIDOutput',
+    'MFARequiredOutput',
 )
 
 
@@ -28,6 +29,11 @@ class SuccessOutput(BaseOutput):
 class ErrorOutput(BaseOutput):
     success: bool = False
     error_messages: list[str]
+
+
+class MFARequiredOutput(BaseOutput):
+    success: bool = False
+    mfa_required: bool = True
 
 
 T = TypeVar('T')
