@@ -77,6 +77,11 @@ export type UpdateVersionOptionT = {
     option_id: string;
 } & Partial<CreateVersionOptionT>;
 
+export type VersionFieldT = Omit<VersionOptionT, "uuid" | "value"> & {
+    id: string;
+    version: string;
+};
+
 export type CustomFieldValueT =
     | boolean
     | number
@@ -117,6 +122,8 @@ type CustomFieldTypeMap = {
     enum_multi: EnumFieldT[];
     user: BasicUserT;
     user_multi: BasicUserT[];
+    version: VersionFieldT;
+    version_multi: VersionFieldT[];
 };
 
 type CustomFieldTypeValuePair = {

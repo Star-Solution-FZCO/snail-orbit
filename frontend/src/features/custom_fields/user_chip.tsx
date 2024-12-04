@@ -1,8 +1,8 @@
+import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
-import { AvatarAdornment } from "../../components/fields/adornments/avatar_adornment";
 import { SelectChip } from "./select_chip";
 import {
     UserSelectOptionT,

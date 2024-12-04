@@ -176,14 +176,12 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
 
     return (
         <Box display="flex" flexDirection="column">
-            {totalSpentTime > 0 && (
-                <Typography fontSize={14} fontWeight="bold" mb={1}>
-                    {t("issues.spentTime.total")}:{" "}
-                    {formatSpentTime(totalSpentTime)}
-                </Typography>
-            )}
-
-            <Box display="flex" borderTop={1} borderColor="divider">
+            <Box
+                display="flex"
+                alignItems="center"
+                borderTop={1}
+                borderColor="divider"
+            >
                 <Tooltip title={t("issues.comments.title")} placement="top">
                     <ActivityTypeButton
                         onClick={() => handleClickActivityType("comment")}
@@ -205,6 +203,15 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                         <HistoryIcon />
                     </ActivityTypeButton>
                 </Tooltip>
+
+                <Box flex={1} />
+
+                {totalSpentTime > 0 && (
+                    <Typography fontSize={14} fontWeight="bold">
+                        {t("issues.spentTime.total")}:{" "}
+                        {formatSpentTime(totalSpentTime)}
+                    </Typography>
+                )}
             </Box>
 
             <Box pl={1} my={2}>

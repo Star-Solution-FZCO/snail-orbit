@@ -7,6 +7,8 @@ import {
     Autocomplete,
     Box,
     Button,
+    CircularProgress,
+    debounce,
     Dialog,
     DialogActions,
     DialogContent,
@@ -18,12 +20,13 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { UserAvatar } from "components";
-import { FC, useMemo, useState } from "react";
+import { FC, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { groupApi, projectApi, roleApi, userApi } from "store";
 import {
     BasicUserT,
+    ListSelectQueryParams,
     ProjectDetailT,
     ProjectPermissionT,
     ProjectPermissionTargetT,
@@ -56,25 +59,64 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
     >(null);
     const [role, setRole] = useState<RoleT | null>(null);
 
+    const [queryParams, updateQueryParams, resetQueryParams] =
+        useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
+    const [autocompleteOpen, setAutocompleteOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
     const { data: roles } = roleApi.useListRoleQuery(noLimitListQueryParams);
-    const { data: users } = userApi.useListSelectUserQuery(
-        noLimitListQueryParams,
-    );
-    const { data: groups } = groupApi.useListGroupQuery(noLimitListQueryParams);
+    const {
+        data: users,
+        isLoading: usersLoading,
+        isFetching: usersFetching,
+    } = userApi.useListSelectUserQuery(queryParams, {
+        skip: !autocompleteOpen,
+    });
+
+    const {
+        data: groups,
+        isLoading: groupsLoading,
+        isFetching: groupsFetching,
+    } = groupApi.useListGroupQuery(queryParams, { skip: !autocompleteOpen });
 
     const [grantProjectPermission, { isLoading }] =
         projectApi.useGrantProjectPermissionMutation();
 
-    const handleClose = () => {
-        onClose();
-        setTarget(null);
-        setRole(null);
+    const handleOpenAutocomplete = () => {
+        setAutocompleteOpen(true);
+    };
+
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            resetQueryParams();
+            updateQueryParams({
+                search: value.length > 0 ? value : undefined,
+                offset: 0,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
+        const listboxNode = event.currentTarget;
+        if (
+            listboxNode.scrollTop + listboxNode.clientHeight >=
+                listboxNode.scrollHeight &&
+            !dataLoading
+        ) {
+            updateQueryParams({
+                offset: queryParams.offset + queryParams.limit,
+            });
+        }
+    };
+
+    const handleSearchInputChange = (_: unknown, value: string) => {
+        setSearchQuery(value);
+        debouncedSearch(value);
     };
 
     const handleClickGrant = () => {
-        if (!target || !role) {
-            return;
-        }
+        if (!target || !role) return;
 
         grantProjectPermission({
             id: projectId,
@@ -97,18 +139,18 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
         groups?.payload.items || [],
     );
 
+    const dataLoading =
+        usersLoading || usersFetching || groupsLoading || groupsFetching;
+
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
             >
                 {t("projects.access.grantPermission")}
-
-                <IconButton onClick={handleClose} size="small">
+                <IconButton onClick={onClose} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -134,17 +176,37 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
 
                 <Autocomplete
                     value={target}
+                    inputValue={searchQuery}
                     options={usersAndGroups}
+                    getOptionLabel={(option) => option.name}
+                    onOpen={handleOpenAutocomplete}
+                    onChange={(_, value) => setTarget(value)}
+                    onInputChange={handleSearchInputChange}
+                    ListboxProps={{
+                        onScroll: handleScroll,
+                    }}
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label={t("projects.access.userOrGroup")}
-                            placeholder={t("projects.access.selectUserOrGroup")}
-                            size="small"
+                            placeholder={t("projects.access.userOrGroup")}
+                            slotProps={{
+                                input: {
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {dataLoading ? (
+                                                <CircularProgress
+                                                    color="inherit"
+                                                    size={20}
+                                                />
+                                            ) : null}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    ),
+                                },
+                            }}
                         />
                     )}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(_, value) => setTarget(value)}
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
@@ -167,15 +229,20 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={handleClose} variant="outlined" color="error">
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    disabled={isLoading}
+                >
                     {t("cancel")}
                 </Button>
 
                 <LoadingButton
                     onClick={handleClickGrant}
-                    loading={isLoading}
-                    disabled={!target || !role}
                     variant="outlined"
+                    disabled={!target || !role}
+                    loading={isLoading}
                 >
                     {t("projects.access.grant")}
                 </LoadingButton>

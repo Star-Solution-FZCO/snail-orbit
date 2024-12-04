@@ -7,8 +7,7 @@ import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
-import { IssueHeading } from "../components/heading";
-import IssueViewComp from "../components/issue_view";
+import IssueViewComponent from "../components/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
@@ -85,16 +84,12 @@ const IssueView: FC = () => {
                 </Box>
             ) : (
                 issue && (
-                    <>
-                        <IssueHeading issue={issue} />
-
-                        <IssueViewComp
-                            loading={isLoading || updateLoading}
-                            onUpdateIssue={handleSubmit}
-                            onUpdateCache={handleUpdateCache}
-                            issue={issue}
-                        />
-                    </>
+                    <IssueViewComponent
+                        issue={issue}
+                        onUpdateIssue={handleSubmit}
+                        onUpdateCache={handleUpdateCache}
+                        loading={isLoading || updateLoading}
+                    />
                 )
             )}
         </Container>
