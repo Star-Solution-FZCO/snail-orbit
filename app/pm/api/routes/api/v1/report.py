@@ -102,20 +102,6 @@ class Matrix:
         )
 
 
-def get_field_value(custom_field: m.CustomFieldValue | None) -> Any:
-    if custom_field is None:
-        return None
-    if hasattr(custom_field, 'name'):
-        return custom_field.name
-    if hasattr(custom_field, 'value'):
-        return custom_field.value
-    if hasattr(custom_field, 'state'):
-        return custom_field.state
-    if isinstance(custom_field, (bool, int, float, str)):
-        return custom_field
-    return str(custom_field)
-
-
 @router.post('/by-field')
 async def make_report_by_field(
     body: ReportCreate,
@@ -150,24 +136,17 @@ async def make_report_by_field(
     counts = defaultdict(int)
     issues = 0
     async for obj in q:
-        if field := obj.get_field_by_name(body.field):
-            issues += 1
-            field_value = field.value
-            if not field_value or isinstance(field_value, bool):
-                counts[field_value] += 1
-                continue
-            if field.type in (
-                CustomFieldTypeT.USER_MULTI,
-                CustomFieldTypeT.ENUM_MULTI,
-            ):
-                for val in field_value:
-                    value = get_field_value(val)
-                    counts[value] += 1
-                continue
-            value = get_field_value(field_value)
-            counts[value] += 1
-        else:
+        field = obj.get_field_by_name(body.field)
+        if field is None or field.value is None:
             counts[None] += 1
+            issues += 1
+            continue
+        issues += 1
+        if field.type in (CustomFieldTypeT.USER_MULTI, CustomFieldTypeT.ENUM_MULTI):
+            for val in field.value:
+                counts[val] += 1
+            continue
+        counts[field.value] += 1
     items = [ReportItem(value=value, count=count) for value, count in counts.items()]
     items.sort(key=lambda x: x.count, reverse=True)
     return BaseListOutput[ReportOutput].make(
@@ -205,7 +184,7 @@ async def make_report_by_project(
     issues = 0
     for project in projects:
         count = await m.Issue.find(bo.Eq(m.Issue.project.id, project.id)).count()
-        items.append(ReportItem(value=project.name, count=count))
+        items.append(ReportItem(value=project, count=count))
         issues += count
     items.sort(key=lambda x: x.count, reverse=True)
     return BaseListOutput[ReportOutput].make(
@@ -271,5 +250,5 @@ def process_field_value(
     if field.value is None:
         return [None]
     if field.type in (CustomFieldTypeT.USER_MULTI, CustomFieldTypeT.ENUM_MULTI):
-        return [get_field_value(v) for v in field.value]
-    return [get_field_value(field.value)]
+        return field.value
+    return [field.value]
