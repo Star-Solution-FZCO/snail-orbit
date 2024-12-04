@@ -1,11 +1,11 @@
 import { Box, Stack } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FilePreview } from "components";
-import { FC } from "react";
+import { ProjectField } from "features/custom_fields/project_field";
+import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { IssueT, UpdateIssueT } from "types";
-import { ProjectField } from "../../../features/custom_fields/project_field";
 import { AddLinks } from "./add_links";
 import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
@@ -17,10 +17,8 @@ import { IssueLinks } from "./issue_links";
 
 type IssueFormProps = {
     issue: IssueT;
-    displayMode: "view" | "edit";
     onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
-    onChangeDisplayMode?: (mode: "view" | "edit") => void;
     onSaveIssue?: () => Promise<void>;
     isDraft?: boolean;
     loading?: boolean;
@@ -28,10 +26,8 @@ type IssueFormProps = {
 
 export const IssueView: FC<IssueFormProps> = ({
     issue,
-    displayMode,
     onUpdateIssue,
     onUpdateCache,
-    onChangeDisplayMode,
     onSaveIssue,
     loading,
     isDraft,
@@ -42,6 +38,8 @@ export const IssueView: FC<IssueFormProps> = ({
         issue?.project?.id ?? skipToken,
     );
 
+    const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
+
     const issueId = issue.id_readable;
 
     return (
@@ -51,7 +49,7 @@ export const IssueView: FC<IssueFormProps> = ({
                     <IssueHeading
                         issue={issue}
                         displayMode={displayMode}
-                        onChangeDisplayMode={onChangeDisplayMode}
+                        onChangeDisplayMode={setDisplayMode}
                     />
                 )}
 
@@ -59,7 +57,7 @@ export const IssueView: FC<IssueFormProps> = ({
                     issue={issue}
                     mode={displayMode}
                     onUpdateIssue={onUpdateIssue}
-                    onChangeDisplayMode={onChangeDisplayMode}
+                    onChangeDisplayMode={setDisplayMode}
                     onSaveIssue={onSaveIssue}
                     loading={loading}
                     isDraft={isDraft}
