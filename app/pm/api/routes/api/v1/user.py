@@ -15,7 +15,9 @@ from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
+from pm.email_templates import render_template
 from pm.services.avatars import generate_default_avatar
+from pm.tasks.actions import task_send_email
 
 __all__ = ('router',)
 
@@ -125,7 +127,16 @@ async def create_user(
         obj.password_reset_token = password_token_obj
     await obj.insert()
     await generate_default_avatar(obj)
-    # todo: send email with invite link
+    if body.send_invite:
+        task_send_email.delay(
+            recipients=[obj.email],
+            subject='Snail orbit registration',
+            body=render_template(
+                'invite',
+                user=obj,
+                register_token=password_token,
+            ),
+        )
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 

@@ -1,0 +1,8 @@
+<pre>
+Dear {{ user.name }}!
+You were registered in the <a href="{{ public_base_url }}">Snail Orbit</a> project manager.
+Your login: {{ user.email }}
+To complete the registration, please follow the link below and set a password for your account.
+<br>
+<a href="{{ public_base_url }}/password-reset?reset_token={{ register_token }}">Set password</a>
+</pre>

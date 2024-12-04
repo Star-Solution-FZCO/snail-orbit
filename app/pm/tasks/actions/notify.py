@@ -10,7 +10,7 @@ from pm.config import CONFIG
 from pm.tasks._base import run_task
 from pm.tasks.app import celery_app
 
-__all__ = ('notify_by_pararam',)
+__all__ = ('task_notify_by_pararam',)
 
 
 def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
