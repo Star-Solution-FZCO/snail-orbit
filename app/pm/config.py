@@ -14,6 +14,7 @@ __all__ = (
     'FileStorageModeT',
     'APIServiceTokenKeyT',
     'API_SERVICE_TOKEN_KEYS',
+    'DB_ENCRYPTION_KEY',
 )
 
 
@@ -152,6 +153,12 @@ CONFIG = Dynaconf(
             'OIDC_CLIENT_SECRET',
             is_type_of=str,
             must_exist=True,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'OIDC_MFA_PAGE',
+            is_type_of=str,
+            default='/login_mfa',
             when=Validator('OIDC_ENABLED', condition=bool),
         ),
         Validator(
@@ -303,8 +310,14 @@ CONFIG = Dynaconf(
             description='API service token max age in seconds',
         ),
         Validator('API_SERVICE_TOKEN_KEYS', default={}),
+        Validator('DB_ENCRYPTION_KEY', default=None),
+        Validator('MFA_TOTP_NAME', default='snail-orbit'),
+        Validator('MFA_TOTP_ISSUER', default='snail-orbit'),
     ],
 )
 CONFIG.configure()
 
 API_SERVICE_TOKEN_KEYS = parse_api_service_token_keys(CONFIG.API_SERVICE_TOKEN_KEYS)
+DB_ENCRYPTION_KEY: bytes | None = (
+    CONFIG.DB_ENCRYPTION_KEY.encode('utf-8') if CONFIG.DB_ENCRYPTION_KEY else None
+)

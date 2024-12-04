@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import mock
 import pytest
 import pytest_asyncio
 
@@ -132,7 +133,9 @@ async def _create_user(
 ) -> str:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+    with mock.patch('pm.tasks.actions.task_send_email.delay') as mock_email:
+        response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+        mock_email.assert_called_once()
     assert response.status_code == 200
     data = response.json()
     assert data['payload']['id']

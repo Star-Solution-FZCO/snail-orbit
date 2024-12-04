@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 
-__all__ = ('ValidateModelException',)
+__all__ = (
+    'ValidateModelException',
+    'MFARequiredException',
+)
 
 
 class ValidateModelException(Exception):
@@ -14,3 +17,7 @@ class ValidateModelException(Exception):
         self.payload = payload
         self.error_messages = error_messages
         self.error_fields = error_fields
+
+
+class MFARequiredException(Exception):
+    pass
