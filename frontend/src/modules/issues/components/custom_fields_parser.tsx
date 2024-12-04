@@ -5,7 +5,9 @@ import { DateField } from "features/custom_fields/date_field";
 import { EnumField } from "features/custom_fields/enum_field";
 import { InputField } from "features/custom_fields/input_field";
 import { UserField } from "features/custom_fields/user_field";
+import { VersionField } from "features/custom_fields/version_field";
 import { FC } from "react";
+import { fieldsToFieldValueMap } from "store/utils/issue";
 import {
     CustomFieldT,
     CustomFieldValueT,
@@ -13,8 +15,6 @@ import {
     IssueT,
     UpdateIssueT,
 } from "types";
-
-import { fieldsToFieldValueMap } from "../../../store/utils/issue";
 
 dayjs.extend(utc);
 
@@ -233,6 +233,37 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                         );
                                     }}
                                     enumFieldId={fieldData.id}
+                                />
+                            );
+                        // TODO: fix version field and option types from api
+                        case "version":
+                        case "version_multi":
+                            return (
+                                <VersionField
+                                    key={fieldData.id}
+                                    label={fieldData.name}
+                                    value={
+                                        field &&
+                                        (field.type === "version" ||
+                                            field.type === "version_multi")
+                                            ? field.value
+                                            : undefined
+                                    }
+                                    onChange={(value) => {
+                                        updateCustomFields(
+                                            fieldData.name,
+                                            Array.isArray(value)
+                                                ? // @ts-ignore
+                                                  value.map((el) => el.value)
+                                                : // @ts-ignore
+                                                  value.value,
+                                        );
+                                        updateCache(fieldData.name, value);
+                                    }}
+                                    multiple={
+                                        fieldData.type === "version_multi"
+                                    }
+                                    fieldId={fieldData.id}
                                 />
                             );
                         default:

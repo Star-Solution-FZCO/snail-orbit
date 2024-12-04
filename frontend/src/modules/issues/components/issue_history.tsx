@@ -16,6 +16,7 @@ import {
     FieldValueChangeT,
     IssueHistoryT,
     StateFieldT,
+    VersionFieldT,
 } from "types";
 
 dayjs.extend(relativeTime);
@@ -50,6 +51,14 @@ const renderDiff = (oldText: string, newText: string) => {
             })}
         </Box>
     );
+};
+
+const renderVersion = (version: VersionFieldT) => {
+    return version.release_date
+        ? `${version.version} (${dayjs(version.release_date).format(
+              "DD MMM YYYY",
+          )})`
+        : version.version;
 };
 
 const renderValue = (
@@ -103,6 +112,12 @@ const renderValue = (
             return (value as EnumFieldT[])
                 .map((option) => option.value)
                 .join(", ");
+
+        case "version":
+            return renderVersion(value as VersionFieldT);
+
+        case "version_multi":
+            return (value as VersionFieldT[]).map(renderVersion).join(", ");
 
         case "state":
             return (value as StateFieldT).state;

@@ -1,4 +1,4 @@
-import { CreateIssueT, CustomFieldT, FieldValueT, IssueT } from "../../types";
+import { CreateIssueT, CustomFieldT, FieldValueT, IssueT } from "types";
 
 export const fieldsToFieldValueMap = (fields: CustomFieldT[]) =>
     fields.reduce(
@@ -11,6 +11,10 @@ export const fieldsToFieldValueMap = (fields: CustomFieldT[]) =>
             else if (cur.type === "enum_multi")
                 prev[cur.name] = cur.value?.map((el) => el.value);
             else if (cur.type === "state") prev[cur.name] = cur.value?.state;
+            else if (cur.type === "version")
+                prev[cur.name] = cur.value?.version;
+            else if (cur.type === "version_multi")
+                prev[cur.name] = cur.value?.map((el) => el.version);
             else prev[cur.name] = cur.value;
             return prev;
         },

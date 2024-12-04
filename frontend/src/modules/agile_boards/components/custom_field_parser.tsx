@@ -1,8 +1,11 @@
 import { Tooltip } from "@mui/material";
+import { FieldChip } from "components/fields/field_chip/field_chip";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { DateChip } from "features/custom_fields/date_chip";
 import { EnumChip } from "features/custom_fields/enum_chip";
+import { InputChip } from "features/custom_fields/input_chip";
+import UserChip from "features/custom_fields/user_chip";
 import { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
 import type {
@@ -11,9 +14,6 @@ import type {
     IssueT,
     UpdateIssueT,
 } from "types";
-import { FieldChip } from "../../../components/fields/field_chip/field_chip";
-import { InputChip } from "../../../features/custom_fields/input_chip";
-import UserChip from "../../../features/custom_fields/user_chip";
 
 dayjs.extend(utc);
 

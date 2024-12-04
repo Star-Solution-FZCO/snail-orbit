@@ -1,8 +1,8 @@
 import { AutocompleteValue, Tooltip } from "@mui/material";
+import { FieldChip } from "components/fields/field_chip/field_chip";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
 import { ReactNode, SyntheticEvent, useEffect, useMemo, useState } from "react";
-import { FieldChip } from "../../components/fields/field_chip/field_chip";
 
 export type SelectChipOptionType = FormAutocompleteValueType & { id: string };
 
