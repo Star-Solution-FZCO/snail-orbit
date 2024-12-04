@@ -11,8 +11,7 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
-from pm.api.views.params import ListParams
+from pm.api.views.output import SuccessPayloadOutput
 from pm.models import CustomFieldTypeT
 from pm.permissions import PermAnd, Permissions
 
@@ -62,7 +61,7 @@ class MatrixReportOutput(BaseModel):
 
 
 @dataclasses.dataclass
-class Matrix:
+class MatrixReport:
     rows: set[Any] = dataclasses.field(default_factory=set)
     columns: set[Any] = dataclasses.field(default_factory=set)
     counts: dict = dataclasses.field(
@@ -105,8 +104,7 @@ class Matrix:
 @router.post('/by-field')
 async def make_report_by_field(
     body: ReportCreate,
-    query: ListParams = Depends(),
-) -> BaseListOutput[ReportOutput]:
+) -> SuccessPayloadOutput[ReportOutput]:
     project_ids = set(body.projects)
     if not project_ids:
         raise HTTPException(
@@ -149,24 +147,13 @@ async def make_report_by_field(
         counts[field.value] += 1
     items = [ReportItem(value=value, count=count) for value, count in counts.items()]
     items.sort(key=lambda x: x.count, reverse=True)
-    return BaseListOutput[ReportOutput].make(
-        count=len(items),
-        limit=query.limit,
-        offset=query.offset,
-        items=[
-            ReportOutput(
-                values=items[query.offset : query.offset + query.limit],
-                count=issues,
-            )
-        ],
-    )
+    return SuccessPayloadOutput(payload=ReportOutput(values=items, count=issues))
 
 
 @router.post('/by-project')
 async def make_report_by_project(
     body: Projects,
-    query: ListParams = Depends(),
-) -> BaseListOutput[ReportOutput]:
+) -> SuccessPayloadOutput[ReportOutput]:
     user_ctx = current_user()
     project_ids = set(body.projects)
     if not project_ids:
@@ -187,17 +174,7 @@ async def make_report_by_project(
         items.append(ReportItem(value=project, count=count))
         issues += count
     items.sort(key=lambda x: x.count, reverse=True)
-    return BaseListOutput[ReportOutput].make(
-        count=len(items),
-        limit=query.limit,
-        offset=query.offset,
-        items=[
-            ReportOutput(
-                values=items[query.offset : query.offset + query.limit],
-                count=issues,
-            )
-        ],
-    )
+    return SuccessPayloadOutput(payload=ReportOutput(values=items, count=issues))
 
 
 @router.post('/matrix')
@@ -233,7 +210,7 @@ async def make_matrix_report(
                     detail=f'Field {field} not found in {project.id}',
                 )
     column_field, row_field = body.fields
-    matrix = Matrix()
+    matrix = MatrixReport()
     async for issue in m.Issue.find(bo.In(m.Issue.project.id, project_ids)):
         row = issue.get_field_by_name(row_field)
         col = issue.get_field_by_name(column_field)
