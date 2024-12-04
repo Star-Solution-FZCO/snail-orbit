@@ -1,7 +1,14 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
 import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
-import { BasicUserT, EnumFieldT, IssueProjectT } from "types";
+import dayjs from "dayjs";
+import {
+    BasicUserT,
+    EnumFieldT,
+    IssueProjectT,
+    VersionFieldT,
+    VersionOptionT,
+} from "types";
 
 export type SelectOptionType = FormAutocompleteValueType & { id: string };
 
@@ -80,4 +87,41 @@ export const projectToSelectOptions = (
     if (!projects || !projects.length) return [];
 
     return projects.map(projectToSelectOption);
+};
+
+export type VersionSelectOptionT = SelectOptionType & {
+    original: VersionFieldT;
+};
+
+const formatVersion = (version: string, releaseDate: string | null): string => {
+    if (!releaseDate) return version;
+
+    return `${version} (${dayjs(releaseDate).format("DD MMM YYYY")})`;
+};
+
+export const versionOptionToSelectOption = (
+    option: VersionOptionT,
+): SelectOptionType & {
+    original: VersionOptionT;
+} => ({
+    label: formatVersion(option.value, option.release_date),
+    id: option.uuid,
+    original: option,
+});
+
+export const versionFieldToSelectOption = (
+    option: VersionFieldT,
+): VersionSelectOptionT => ({
+    label: formatVersion(option.version, option.release_date),
+    id: option.id,
+    original: option,
+});
+
+export const versionFieldToSelectOptions = (
+    options: VersionFieldT[] | undefined,
+): VersionSelectOptionT[] => {
+    if (!options) return [];
+    if (!options.length) return [];
+
+    return options.map(versionFieldToSelectOption);
 };
