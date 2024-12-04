@@ -58,7 +58,10 @@ async def init_db():
 
 @pytest.fixture(scope='session')
 def test_client():
-    with mock.patch('pm.services.avatars.generate_default_avatar', mock.AsyncMock()):
+    with (
+        mock.patch('pm.services.avatars.generate_default_avatar', mock.AsyncMock()),
+        mock.patch('pm.email_templates.render_template', mock.Mock()),
+    ):
         from pm.api.app import app
 
         yield TestClient(app)
