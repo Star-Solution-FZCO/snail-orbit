@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
+from pm.api.views.output import SuccessPayloadOutput
 from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, Permissions
 
@@ -36,7 +37,7 @@ class IssueSpentTimeOutput(BaseModel):
 @router.get('/')
 async def get_spent_time(
     issue_id_or_alias: PydanticObjectId | str,
-) -> IssueSpentTimeOutput:
+) -> SuccessPayloadOutput[IssueSpentTimeOutput]:
     issue = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -53,7 +54,9 @@ async def get_spent_time(
         for comment in issue.comments
         if comment.spent_time
     ]
-    return IssueSpentTimeOutput(
-        total_spent_time=sum((c.spent_time for c in issue.comments), start=0),
-        records=records,
+    return SuccessPayloadOutput(
+        payload=IssueSpentTimeOutput(
+            total_spent_time=sum((c.spent_time for c in issue.comments), start=0),
+            records=records,
+        )
     )
