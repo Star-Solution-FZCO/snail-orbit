@@ -23,3 +23,8 @@ if CONFIG.WB_SYNC_ENABLED:
             minute='*/5',
         ),
     }
+
+celery_app.conf.beat_schedule['task-workflow-scheduler'] = {
+    'task': 'workflow_scheduler',
+    'schedule': crontab(minute='*'),
+}

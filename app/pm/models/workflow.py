@@ -1,15 +1,15 @@
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from beanie import Document, Indexed
 
-from pm.workflows import get_on_change_script, get_scheduled_script
+from pm.workflows import get_on_change_script
 
 from ._audit import audited_model
 
 if TYPE_CHECKING:
     from .issue import Issue
-    from .project import Project
 
 __all__ = (
     'Workflow',
@@ -42,10 +42,7 @@ class Workflow(Document):
 class ScheduledWorkflow(Workflow):
     type: WorkflowType = WorkflowType.SCHEDULED
     schedule: str
-
-    async def run(self, project: 'Project') -> None:
-        script = get_scheduled_script(self.script)
-        await script.run(project)
+    last_run: datetime | None = None
 
 
 class OnChangeWorkflow(Workflow):
