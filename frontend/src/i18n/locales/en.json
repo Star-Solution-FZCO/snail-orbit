@@ -3,7 +3,7 @@
   "agileBoard.columns.selectPlaceholder": "Search by column name",
   "agileBoard.swimlanes.selectPlaceholder": "Search by column name",
   "agileBoardForm.tab.card": "Card",
-  "agileBoardForm.tab.columnAndSwimLines": "Columns and SwimLines",
+  "agileBoardForm.tab.columnAndSwimLanes": "Columns and SwimLanes",
   "agileBoardForm.tab.main": "Main data",
   "agileBoards.create.success": "Agile Board created successfully",
   "agileBoards.create.title": "New board",
