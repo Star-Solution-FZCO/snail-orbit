@@ -29,7 +29,7 @@ router = APIRouter(
 
 class SearchShareOutput(BaseModel):
     target_type: m.SearchShareType
-    target: UserOutput | GroupOutput | None
+    target: UserOutput | GroupOutput
 
 
 class SearchOutput(BaseModel):
