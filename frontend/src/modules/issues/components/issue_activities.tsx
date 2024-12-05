@@ -162,7 +162,7 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
     const comments = commentsData?.payload.items || [];
     const historyRecords = historyData?.payload.items || [];
 
-    const totalSpentTime = issueSpentTime?.total_spent_time || 0;
+    const totalSpentTime = issueSpentTime?.payload.total_spent_time || 0;
 
     const activities = useMemo(
         () =>
