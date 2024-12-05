@@ -234,18 +234,25 @@ async def unshare_search(
             detail='You cannot modify share list for this search',
         )
     results = []
+    unique = set()
     for p in body:
-        found = False
-        for obj in search.shared:
-            if obj.target_type == p.target_type and obj.target.id == p.target:
-                results.append(obj)
-                found = True
-                break
-        if not found:
+        shared: None | m.SearchShare = next(
+            (
+                obj
+                for obj in search.shared
+                if obj.target_type == p.target_type and obj.target.id == p.target
+            ),
+            None,
+        )
+        if not shared:
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
                 detail=f'Search is not shared with {p.target_type} {p.target}',
             )
+        if shared.target.id in unique:
+            continue
+        unique.add(shared.target.id)
+        results.append(shared)
     for r in results:
         search.shared.remove(r)
     if search.is_changed:
