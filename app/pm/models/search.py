@@ -8,17 +8,16 @@ from ._audit import audited_model
 from .group import GroupLinkField
 from .user import UserLinkField
 
-__all__ = ('Search', 'SearchPermissionTargetType', 'SearchPermission')
+__all__ = ('Search', 'SearchShareType', 'SearchShare')
 
 
-class SearchPermissionTargetType(StrEnum):
+class SearchShareType(StrEnum):
     GROUP = 'group'
-    PRIVATE = 'private'
-    PUBLIC = 'public'
+    USER = 'user'
 
 
-class SearchPermission(BaseModel):
-    target_type: SearchPermissionTargetType
+class SearchShare(BaseModel):
+    target_type: SearchShareType
     target: GroupLinkField | UserLinkField | None
 
 
@@ -32,5 +31,5 @@ class Search(Document):
 
     name: str = Indexed(str)
     query: str
-    created_by: UserLinkField
-    permissions: Annotated[list[SearchPermission], Field(default_factory=list)]
+    owner: UserLinkField
+    shared: Annotated[list[SearchShare], Field(default_factory=list)]
