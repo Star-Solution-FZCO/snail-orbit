@@ -81,7 +81,7 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                             />
                             <Tab
                                 label={t(
-                                    "agileBoardForm.tab.columnAndSwimLines",
+                                    "agileBoardForm.tab.columnAndSwimLanes",
                                 )}
                                 value={tabs.column_and_swim_lines}
                             />
