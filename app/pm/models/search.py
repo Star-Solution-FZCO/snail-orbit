@@ -18,7 +18,7 @@ class SearchShareType(StrEnum):
 
 class SearchShare(BaseModel):
     target_type: SearchShareType
-    target: GroupLinkField | UserLinkField | None
+    target: GroupLinkField | UserLinkField
 
 
 @audited_model
