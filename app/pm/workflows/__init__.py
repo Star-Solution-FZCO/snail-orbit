@@ -34,7 +34,7 @@ class OnChangeWorkflowScript(ABC):
 
 class ScheduledWorkflowScript(ABC):
     @abstractmethod
-    async def run(self, project: 'Project'):
+    async def run(self, project: 'Project'):  # todo: should run on the list of projects
         pass
 
 
