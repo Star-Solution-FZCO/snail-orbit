@@ -240,7 +240,7 @@ export const issueApi = createApi({
                 { type: "IssueHistories", id },
             ],
         }),
-        getIssueSpentTime: build.query<IssueSpentTimeT, string>({
+        getIssueSpentTime: build.query<ApiResponse<IssueSpentTimeT>, string>({
             query: (id) => `issue/${id}/spent_time`,
             providesTags: (_result, _error, id) => [
                 { type: "IssueComments", id: "LIST" },
