@@ -153,8 +153,7 @@ def parse_primary(tokens: list[tuple[str, int, int]]):
         if tokens and tokens[0][0] == ')':
             tokens.pop(0)
         return expr
-    else:
-        return ExpressionNode(token[0], start_pos=token[1], end_pos=token[2])
+    return ExpressionNode(token[0], start_pos=token[1], end_pos=token[2])
 
 
 def tokenize_expression(query: str) -> list[tuple[str, int, int]]:

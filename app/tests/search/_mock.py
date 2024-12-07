@@ -4,8 +4,14 @@ from pm.models import CustomFieldTypeT
 
 __all__ = (
     'FakeCustomField',
+    'FakeProject',
     'get_fake_custom_fields',
+    'get_fake_projects',
 )
+
+
+class FakeProject(BaseModel):
+    name: str
 
 
 class FakeCustomField(BaseModel):
@@ -59,5 +65,14 @@ def get_fake_custom_fields(
 ) -> dict[str, list[FakeCustomField]]:
     res = {}
     for field in fields:
-        res.setdefault(field['name'], []).append(parse_dict_to_field(field))
+        res.setdefault(field['name'].lower(), []).append(parse_dict_to_field(field))
+    return res
+
+
+def get_fake_projects(
+    projects: list[str],
+) -> dict[str, list[FakeProject]]:
+    res = {}
+    for project in projects:
+        res.setdefault(project.lower(), []).append(FakeProject(name=project))
     return res

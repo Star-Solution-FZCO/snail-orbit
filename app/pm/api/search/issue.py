@@ -29,14 +29,15 @@ __all__ = (
 )
 
 HASHTAG_VALUES = {'#resolved', '#unresolved'}
+RESERVED_FIELDS = {'subject', 'text', 'project'}
 
 EXPRESSION_GRAMMAR = """
     start: attribute_condition | hashtag_value
 
     hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED
 
-    HASHTAG_RESOLVED: "#resolved"
-    HASHTAG_UNRESOLVED: "#unresolved"
+    HASHTAG_RESOLVED: "#resolved"i
+    HASHTAG_UNRESOLVED: "#unresolved"i
 
     attribute_condition: FIELD_NAME _COLON attribute_values
 
@@ -71,13 +72,13 @@ EXPRESSION_GRAMMAR = """
 
     _RANGE_DELIMITER: ".."
     _COLON: ":"
-    USER_ME: "me"
+    USER_ME: "me"i
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
     DATE_VALUE: /[0-9]{4}-[0-9]{2}-[0-9]{2}/
     DATETIME_VALUE: /[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/
-    NULL_VALUE: "null"
-    INF_PLUS_VALUE: "inf"
-    INF_MINUS_VALUE: "-inf"
+    NULL_VALUE: "null"i
+    INF_PLUS_VALUE: "inf"i
+    INF_MINUS_VALUE: "-inf"i
     FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ ]*/
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?/
     STRING_VALUE: /[^:()" ]+/
@@ -92,10 +93,10 @@ EXPRESSION_GRAMMAR = """
 # noinspection PyMethodMayBeStatic, PyUnusedLocal, PyPep8Naming
 class MongoQueryTransformer(Transformer):
     __current_user: str | None
-    __cached_fields: dict
+    __cached_fields: dict[str, list[m.CustomField]]
 
     def __fields_by_name(self, field_name: str) -> list[m.CustomField]:
-        return self.__cached_fields.get(field_name, [])
+        return self.__cached_fields.get(field_name.lower(), [])
 
     def __transform_single_field_value(self, field: m.CustomField, value: Any) -> dict:
         if field.type == m.CustomFieldTypeT.STATE:
@@ -119,7 +120,9 @@ class MongoQueryTransformer(Transformer):
             ]
         }
 
-    def __init__(self, current_user: str | None, cached_fields: dict):
+    def __init__(
+        self, current_user: str | None, cached_fields: dict[str, list[m.CustomField]]
+    ):
         self.__current_user = current_user
         self.__cached_fields = cached_fields
         super().__init__()
@@ -138,10 +141,16 @@ class MongoQueryTransformer(Transformer):
 
     def attribute_condition(self, args):
         field, value = args
+        if field == 'project':
+            return {'project.name': {'$regex': f'^{value}$', '$options': 'i'}}
+        if field == 'subject':
+            return {'subject': {'$regex': value, '$options': 'i'}}
+        if field == 'text':
+            return {'$text': {'$search': value}}
         return {
             'fields': {
                 '$elemMatch': {
-                    'name': field,
+                    'name': {'$regex': f'^{field.lower()}$', '$options': 'i'},
                     **self.__transform_field_value(field, value),
                 }
             }
@@ -163,7 +172,7 @@ class MongoQueryTransformer(Transformer):
         return datetime.fromisoformat(token.value)
 
     def user_value(self, args):
-        if args[0] == 'me':
+        if args[0] and args[0].lower() == 'me':
             return self.__current_user
         return args[0]
 
@@ -225,13 +234,16 @@ class TransformError(Exception):
 
 
 async def transform_expression(
-    expression: str, cached_fields: dict, current_user_email: str | None = None
+    expression: str,
+    cached_fields: dict[str, list[m.CustomField]],
+    current_user_email: str | None = None,
 ) -> dict:
     parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False)
     try:
         tree = parser.parse(expression)
         transformer = MongoQueryTransformer(
-            current_user_email, cached_fields=cached_fields
+            current_user_email,
+            cached_fields=cached_fields,
         )
         return transformer.transform(tree)
     except UnexpectedToken as err:
@@ -257,15 +269,27 @@ OPERATOR_MAP = {
 
 
 async def transform_tree(
-    node: Node, cached_fields: dict, current_user_email: str | None = None
+    node: Node,
+    cached_fields: dict[str, list[m.CustomField]],
+    current_user_email: str | None = None,
 ) -> dict:
     if isinstance(node, ExpressionNode):
         return await transform_expression(
-            node.expression, cached_fields, current_user_email
+            node.expression,
+            cached_fields=cached_fields,
+            current_user_email=current_user_email,
         )
     if isinstance(node, OperatorNode):
-        left = await transform_tree(node.left, cached_fields, current_user_email)
-        right = await transform_tree(node.right, cached_fields, current_user_email)
+        left = await transform_tree(
+            node.left,
+            cached_fields=cached_fields,
+            current_user_email=current_user_email,
+        )
+        right = await transform_tree(
+            node.right,
+            cached_fields=cached_fields,
+            current_user_email=current_user_email,
+        )
         return {OPERATOR_MAP[node.operator]: [left, right]}
 
 
@@ -296,6 +320,7 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
 
 async def get_suggestions(query: str, current_user_email: str | None = None) -> list:
     custom_fields = await _get_custom_fields()
+    projects = await _get_projects()
     missing_closing_brackets = False
     try:
         check_brackets(query)
@@ -319,7 +344,7 @@ async def get_suggestions(query: str, current_user_email: str | None = None) -> 
     except UnexpectedEndOfExpression as err:
         return list(_transform_expected(err.expected, custom_fields))
     if not tree:
-        return ['(', *custom_fields.keys(), *HASHTAG_VALUES]
+        return ['(', *custom_fields.keys(), *HASHTAG_VALUES, *RESERVED_FIELDS]
     last_expression_token = tree.get_last_token()
     if not isinstance(last_expression_token, ExpressionNode):
         return []
@@ -340,32 +365,35 @@ async def get_suggestions(query: str, current_user_email: str | None = None) -> 
         if '_COLON' in err.expected:
             suggestions = set()
             for field in custom_fields:
-                if field == last_expression_token.expression:
+                if field == last_expression_token.expression.lower():
                     suggestions.add(':')
                     continue
-                if field.startswith(last_expression_token.expression):
+                if field.startswith(last_expression_token.expression.lower()):
                     suggestions.add(field[len(last_expression_token.expression) - 1 :])
             return list(suggestions)
         if 'NULL_VALUE' in err.expected:
             field_name = last_expression_token.expression.split(':')[0].strip()
-            return list(get_field_possible_values(field_name, custom_fields))
+            return list(get_field_possible_values(field_name, custom_fields, projects))
         return []
     if last_expression_token.expression not in HASHTAG_VALUES:
         field_name, val = map(
             str.strip, last_expression_token.expression.split(':', maxsplit=1)
         )
-        possible_values = get_field_possible_values(field_name, custom_fields)
+        possible_values = get_field_possible_values(field_name, custom_fields, projects)
         if not possible_values or val in possible_values:
             return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
         return [val_[len(val) :] for val_ in possible_values if val_.startswith(val)]
     return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
 
 
-def _transform_expected(expected: set[str], custom_fields: dict) -> set[str]:
+def _transform_expected(
+    expected: set[str], custom_fields: dict[str, list[m.CustomField]]
+) -> set[str]:
     res = set()
     for exp in expected:
         if exp == 'expression':
             res.update(custom_fields.keys())
+            res.update(RESERVED_FIELDS)
             res.update(HASHTAG_VALUES)
             continue
         res.add(exp.upper())
@@ -373,18 +401,34 @@ def _transform_expected(expected: set[str], custom_fields: dict) -> set[str]:
 
 
 # todo: store in redis cache with ttl
-async def _get_custom_fields() -> dict:
+async def _get_custom_fields() -> dict[str, list[m.CustomField]]:
     fields = await m.CustomField.find(with_children=True).to_list()
     res = {}
     for field in fields:
-        if field.name not in res:
-            res[field.name] = []
-        res[field.name].append(field)
+        res.setdefault(field.name.lower(), []).append(field)
     return res
 
 
-def get_field_possible_values(field_name: str, fields: dict) -> set[str]:
+# todo: store in redis cache with ttl
+async def _get_projects() -> dict[str, list[m.Project]]:
+    projects = await m.Project.find().to_list()
+    res = {}
+    for project in projects:
+        res.setdefault(project.name.lower(), []).append(project)
+    return res
+
+
+def get_field_possible_values(
+    field_name: str,
+    fields: dict[str, list[m.CustomField]],
+    projects: dict[str, list[m.Project]],
+) -> set[str]:
     results = set()
+    field_name = field_name.lower()
+    if field_name in ('subject', 'text'):
+        return results
+    if field_name == 'project':
+        return set(projects.keys())
     if field_name not in fields:
         return results
     for field in fields[field_name]:
