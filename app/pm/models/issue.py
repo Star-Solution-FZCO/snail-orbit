@@ -3,6 +3,7 @@ from enum import StrEnum
 from typing import Annotated, Literal, Self
 from uuid import UUID, uuid4
 
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
@@ -134,6 +135,17 @@ class Issue(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel(
+                [
+                    ('subject', pymongo.TEXT),
+                    ('text', pymongo.TEXT),
+                    ('attachments.ocr_text', pymongo.TEXT),
+                    ('comments.text', pymongo.TEXT),
+                ],
+                name='text_index',
+            ),
+        ]
 
     class Config:
         extra = Extra.allow

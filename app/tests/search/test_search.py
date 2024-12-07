@@ -3,7 +3,7 @@ import pytest
 
 from pm.models import CustomFieldTypeT
 
-from ._mock import get_fake_custom_fields
+from ._mock import get_fake_custom_fields, get_fake_projects
 
 CUSTOM_FIELDS = [
     {
@@ -19,28 +19,70 @@ CUSTOM_FIELDS = [
         'options': ['Low', 'Medium', 'High'],
     },
 ]
+PROJECTS = ['TEST', 'SnailOrbit']
 
 
 @mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
+@mock.patch('pm.api.search.issue._get_projects', new_callable=mock.AsyncMock)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query, expected',
     [
         pytest.param(
-            '', {'State', 'Priority', '#unresolved', '#resolved', '('}, id='empty'
+            '',
+            {
+                'state',
+                'priority',
+                'project',
+                'subject',
+                'text',
+                '#unresolved',
+                '#resolved',
+                '(',
+            },
+            id='empty',
         ),
         pytest.param(
-            ' ', {'State', 'Priority', '#unresolved', '#resolved', '('}, id='only space'
+            ' ',
+            {
+                'state',
+                'priority',
+                'project',
+                'subject',
+                'text',
+                '#unresolved',
+                '#resolved',
+                '(',
+            },
+            id='only space',
         ),
         pytest.param(
             ' (',
-            {'State', 'Priority', '#unresolved', '#resolved', '('},
+            {
+                'state',
+                'priority',
+                'project',
+                'subject',
+                'text',
+                '#unresolved',
+                '#resolved',
+                '(',
+            },
             id='open bracket',
         ),
         pytest.param('State: open', {'AND', 'OR'}, id='state open'),
         pytest.param(
             'State: open AND',
-            {'State', 'Priority', '#unresolved', '#resolved', '('},
+            {
+                'state',
+                'priority',
+                'project',
+                'subject',
+                'text',
+                '#unresolved',
+                '#resolved',
+                '(',
+            },
             id='state open and',
         ),
         pytest.param(
@@ -53,7 +95,16 @@ CUSTOM_FIELDS = [
         ),
         pytest.param(
             '(State: open AND',
-            {'State', 'Priority', '#unresolved', '#resolved', '('},
+            {
+                'state',
+                'priority',
+                'project',
+                'subject',
+                'text',
+                '#unresolved',
+                '#resolved',
+                '(',
+            },
             id='state open and',
         ),
         pytest.param(
@@ -80,14 +131,19 @@ CUSTOM_FIELDS = [
     ],
 )
 async def test_suggestions(
-    mock__get_custom_fields: mock.AsyncMock, query: str, expected: set[str]
+    mock__get_projects: mock.AsyncMock,
+    mock__get_custom_fields: mock.AsyncMock,
+    query: str,
+    expected: set[str],
 ) -> None:
     mock__get_custom_fields.return_value = get_fake_custom_fields(CUSTOM_FIELDS)
+    mock__get_projects.return_value = get_fake_projects(PROJECTS)
 
     from pm.api.search.issue import get_suggestions
 
     res = await get_suggestions(query)
     mock__get_custom_fields.assert_awaited_once()
+    mock__get_projects.assert_awaited_once()
     assert set(res) == expected
     assert len(res) == len(expected)
 
@@ -101,7 +157,14 @@ async def test_suggestions(
         pytest.param(' ', {}, id='only space'),
         pytest.param(
             'State: open',
-            {'fields': {'$elemMatch': {'name': 'State', 'value.state': 'open'}}},
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^state$', '$options': 'i'},
+                        'value.state': 'open',
+                    }
+                }
+            },
             id='state open',
         ),
         pytest.param(
@@ -110,12 +173,18 @@ async def test_suggestions(
                 '$and': [
                     {
                         'fields': {
-                            '$elemMatch': {'name': 'State', 'value.state': 'open'},
+                            '$elemMatch': {
+                                'name': {'$regex': '^state$', '$options': 'i'},
+                                'value.state': 'open',
+                            },
                         }
                     },
                     {
                         'fields': {
-                            '$elemMatch': {'name': 'Priority', 'value.value': 'High'},
+                            '$elemMatch': {
+                                'name': {'$regex': '^priority$', '$options': 'i'},
+                                'value.value': 'High',
+                            },
                         }
                     },
                 ],
@@ -128,12 +197,18 @@ async def test_suggestions(
                 '$or': [
                     {
                         'fields': {
-                            '$elemMatch': {'name': 'State', 'value.state': 'open'},
+                            '$elemMatch': {
+                                'name': {'$regex': '^state$', '$options': 'i'},
+                                'value.state': 'open',
+                            },
                         }
                     },
                     {
                         'fields': {
-                            '$elemMatch': {'name': 'Priority', 'value.value': 'High'},
+                            '$elemMatch': {
+                                'name': {'$regex': '^priority$', '$options': 'i'},
+                                'value.value': 'High',
+                            },
                         }
                     },
                 ],
@@ -149,7 +224,7 @@ async def test_suggestions(
                             {
                                 'fields': {
                                     '$elemMatch': {
-                                        'name': 'State',
+                                        'name': {'$regex': '^state$', '$options': 'i'},
                                         'value.state': 'open',
                                     },
                                 }
@@ -159,7 +234,10 @@ async def test_suggestions(
                                     {
                                         'fields': {
                                             '$elemMatch': {
-                                                'name': 'Priority',
+                                                'name': {
+                                                    '$regex': '^priority$',
+                                                    '$options': 'i',
+                                                },
                                                 'value.value': 'High',
                                             }
                                         }
@@ -167,7 +245,10 @@ async def test_suggestions(
                                     {
                                         'fields': {
                                             '$elemMatch': {
-                                                'name': 'State',
+                                                'name': {
+                                                    '$regex': '^state$',
+                                                    '$options': 'i',
+                                                },
                                                 'value.state': 'closed',
                                             }
                                         }
@@ -188,7 +269,9 @@ async def test_suggestions(
     ],
 )
 async def test_search_transformation(
-    mock__get_custom_fields: mock.AsyncMock, query: str, expected: dict
+    mock__get_custom_fields: mock.AsyncMock,
+    query: str,
+    expected: dict,
 ) -> None:
     mock__get_custom_fields.return_value = get_fake_custom_fields(CUSTOM_FIELDS)
 
