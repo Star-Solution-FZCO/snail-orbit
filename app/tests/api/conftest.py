@@ -1,6 +1,5 @@
 import asyncio
 import os
-import secrets
 
 import mock
 import pytest
@@ -16,24 +15,6 @@ if dns_servers := os.getenv('DNS_SERVERS'):
 
     dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
     dns.resolver.default_resolver.nameservers = dns_servers.split(',')
-
-
-TEST_CONFIG = {
-    'DEV_MODE': True,
-    'DEBUG': True,
-    'JWT_SECRET': secrets.token_hex(32),
-    'DEV_PASSWORD': secrets.token_hex(32),
-}
-ENV_PREFIX = 'SNAIL_ORBIT'
-
-
-@pytest.fixture(autouse=True, scope='session')
-def set_env():
-    for k, v in TEST_CONFIG.items():
-        os.environ[f'{ENV_PREFIX}_{k}'] = str(v)
-    yield
-    for k in TEST_CONFIG:
-        os.unsetenv(f'{ENV_PREFIX}_{k}')
 
 
 @pytest.fixture(autouse=True)

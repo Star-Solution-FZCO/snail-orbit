@@ -85,6 +85,7 @@ disable = [
     "too-many-branches",
     "too-many-statements",
     "too-many-public-methods",
+    "too-many-return-statements",
     "broad-exception-caught",
     "duplicate-code",
     "fixme",
