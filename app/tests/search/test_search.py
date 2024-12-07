@@ -1,25 +1,28 @@
 import mock
 import pytest
 
-from pm.models import CustomFieldTypeT
-
 from ._mock import get_fake_custom_fields, get_fake_projects
 
-CUSTOM_FIELDS = [
-    {
-        'name': 'State',
-        'type': CustomFieldTypeT.STATE,
-        'is_nullable': True,
-        'options': ['open', 'closed', 'new'],
-    },
-    {
-        'name': 'Priority',
-        'type': CustomFieldTypeT.ENUM,
-        'is_nullable': True,
-        'options': ['Low', 'Medium', 'High'],
-    },
-]
 PROJECTS = ['TEST', 'SnailOrbit']
+
+
+def _custom_fields():
+    from pm.models import CustomFieldTypeT
+
+    return [
+        {
+            'name': 'State',
+            'type': CustomFieldTypeT.STATE,
+            'is_nullable': True,
+            'options': ['open', 'closed', 'new'],
+        },
+        {
+            'name': 'Priority',
+            'type': CustomFieldTypeT.ENUM,
+            'is_nullable': True,
+            'options': ['Low', 'Medium', 'High'],
+        },
+    ]
 
 
 @mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
@@ -136,7 +139,7 @@ async def test_suggestions(
     query: str,
     expected: set[str],
 ) -> None:
-    mock__get_custom_fields.return_value = get_fake_custom_fields(CUSTOM_FIELDS)
+    mock__get_custom_fields.return_value = get_fake_custom_fields(_custom_fields())
     mock__get_projects.return_value = get_fake_projects(PROJECTS)
 
     from pm.api.search.issue import get_suggestions
@@ -273,7 +276,7 @@ async def test_search_transformation(
     query: str,
     expected: dict,
 ) -> None:
-    mock__get_custom_fields.return_value = get_fake_custom_fields(CUSTOM_FIELDS)
+    mock__get_custom_fields.return_value = get_fake_custom_fields(_custom_fields())
 
     from pm.api.search.issue import transform_query
 

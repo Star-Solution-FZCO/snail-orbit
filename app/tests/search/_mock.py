@@ -1,6 +1,9 @@
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
-from pm.models import CustomFieldTypeT
+if TYPE_CHECKING:
+    from pm.models import CustomFieldTypeT
 
 __all__ = (
     'FakeCustomField',
@@ -16,7 +19,7 @@ class FakeProject(BaseModel):
 
 class FakeCustomField(BaseModel):
     name: str
-    type: CustomFieldTypeT
+    type: 'CustomFieldTypeT'
     is_nullable: bool
 
 
@@ -29,16 +32,16 @@ class FakeStateField(BaseModel):
 
 
 class FakeEnumCustomField(FakeCustomField):
-    type: CustomFieldTypeT = CustomFieldTypeT.ENUM
     options: list[FakeEnumField]
 
 
 class FakeStateCustomField(FakeCustomField):
-    type: CustomFieldTypeT = CustomFieldTypeT.STATE
     options: list[FakeStateField]
 
 
 def parse_dict_to_field(field: dict) -> FakeCustomField:
+    from pm.models import CustomFieldTypeT
+
     if field['type'] == CustomFieldTypeT.ENUM:
         return FakeEnumCustomField(
             name=field['name'],
