@@ -5,13 +5,14 @@ from uuid import UUID, uuid4
 import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_event, send_task
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import TransformError, transform_query
+from pm.api.search.issue import TransformError, get_suggestions, transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
@@ -114,6 +115,20 @@ async def list_issues(
         offset=query.offset,
         items=results,
     )
+
+
+@router.get('/search/suggest')
+async def get_search_suggestion(
+    q: str = Query(),
+) -> JSONResponse:
+    try:
+        suggestions = await get_suggestions(q)
+    except TransformError as err:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            err.message,
+        ) from err
+    return JSONResponse(content=suggestions)
 
 
 @router.post('/draft')
