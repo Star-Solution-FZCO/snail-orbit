@@ -1,14 +1,12 @@
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import { FC, useMemo } from "react";
+import type { FC } from "react";
+import { useMemo } from "react";
 import { customFieldsApi } from "store";
-import { EnumFieldT } from "types";
+import type { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectChip } from "./select_chip";
-import {
-    enumToSelectOption,
-    enumToSelectOptions,
-    SelectOptionTypeWithOriginal,
-} from "./utils";
+import type { SelectOptionTypeWithOriginal } from "./utils";
+import { enumToSelectOption, enumToSelectOptions } from "./utils";
 
 type EnumChipProps = {
     value?: EnumFieldT | EnumFieldT[];
