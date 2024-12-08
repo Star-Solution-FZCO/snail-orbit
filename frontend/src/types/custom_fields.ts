@@ -1,5 +1,5 @@
-import { GroupT } from "./group";
-import { BasicUserT } from "./user";
+import type { GroupT } from "./group";
+import type { BasicUserT } from "./user";
 
 export const customFieldsTypes = [
     "string",
@@ -28,7 +28,8 @@ export type EnumOptionT = {
     uuid: string;
 } & CreateEnumOptionT;
 
-export type EnumFieldT = Pick<CreateEnumOptionT, "value" | "color">;
+export type EnumFieldT = Pick<CreateEnumOptionT, "value"> &
+    Partial<Pick<CreateEnumOptionT, "color">>;
 
 export type UpdateEnumOptionT = {
     option_id: string;

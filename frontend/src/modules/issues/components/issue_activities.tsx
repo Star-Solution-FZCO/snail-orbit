@@ -16,9 +16,10 @@ import {
     Typography,
 } from "@mui/material";
 import { t } from "i18next";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { issueApi } from "store";
-import { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
+import type { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
 import { formatSpentTime, noLimitListQueryParams, toastApiError } from "utils";
 import { mergeActivityRecords } from "../utils";
 import { CommentCard } from "./comment_card";
@@ -159,10 +160,16 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
         );
     };
 
-    const comments = commentsData?.payload.items || [];
-    const historyRecords = historyData?.payload.items || [];
+    const comments = useMemo(
+        () => commentsData?.payload.items || [],
+        [commentsData],
+    );
+    const historyRecords = useMemo(
+        () => historyData?.payload.items || [],
+        [historyData],
+    );
 
-    const totalSpentTime = issueSpentTime?.payload.total_spent_time || 0;
+    const totalSpentTime = issueSpentTime?.payload?.total_spent_time || 0;
 
     const activities = useMemo(
         () =>

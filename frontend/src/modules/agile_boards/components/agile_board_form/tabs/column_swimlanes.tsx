@@ -1,7 +1,7 @@
 import { Divider, Stack } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
-import { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardFormData } from "../agile_board_form.schema";
 import { ColumnFieldSelect } from "../components/column_field_select";
 import { ColumnsForm } from "../components/columns_form";
 import { SwimlaneFieldSelect } from "../components/swim_line_field_select";

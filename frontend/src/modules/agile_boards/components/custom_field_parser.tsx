@@ -6,7 +6,7 @@ import { DateChip } from "features/custom_fields/date_chip";
 import { EnumChip } from "features/custom_fields/enum_chip";
 import { InputChip } from "features/custom_fields/input_chip";
 import UserChip from "features/custom_fields/user_chip";
-import { FC } from "react";
+import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
 import type {
     AgileBoardCardFieldT,
@@ -36,6 +36,8 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
             },
         });
     };
+
+    console.log(issue.fields);
 
     return (
         <>
@@ -197,6 +199,40 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                                   value: field.value.state,
                                               }
                                             : undefined
+                                    }
+                                    onChange={(value) => {
+                                        updateCustomFields(
+                                            fieldData.name,
+                                            Array.isArray(value)
+                                                ? value.map((el) => el.value)
+                                                : value.value,
+                                        );
+                                    }}
+                                    enumFieldId={fieldData.id}
+                                />
+                            );
+                        case "version":
+                        case "version_multi":
+                            return (
+                                <EnumChip
+                                    key={fieldData.id}
+                                    label={fieldData.name}
+                                    value={
+                                        (field &&
+                                            field.value &&
+                                            (field.type === "version"
+                                                ? {
+                                                      ...field.value,
+                                                      value: field.value
+                                                          .version,
+                                                  }
+                                                : field.type === "version_multi"
+                                                  ? field.value.map((el) => ({
+                                                        ...el,
+                                                        value: el.version,
+                                                    }))
+                                                  : undefined)) ||
+                                        undefined
                                     }
                                     onChange={(value) => {
                                         updateCustomFields(
