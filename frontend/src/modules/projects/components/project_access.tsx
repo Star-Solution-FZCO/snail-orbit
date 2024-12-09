@@ -205,6 +205,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                                     ),
                                 },
                             }}
+                            size="small"
                         />
                     )}
                     renderOption={(props, option) => {
