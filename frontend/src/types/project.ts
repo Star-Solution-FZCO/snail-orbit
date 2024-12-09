@@ -1,6 +1,6 @@
-import { CustomFieldT } from "./custom_fields";
-import { BasicUserT } from "./user";
-import { WorkflowT } from "./workflow";
+import type { CustomFieldT } from "./custom_fields";
+import type { BasicUserT } from "./user";
+import type { WorkflowT } from "./workflow";
 
 export type BasicProjectT = {
     id: string;
@@ -24,9 +24,11 @@ export type ProjectT = CreateProjectT & {
 export type ProjectDetailT = ProjectT & {
     custom_fields: CustomFieldT[];
     workflows: WorkflowT[];
+    card_fields: string[];
 };
 
-export type UpdateProjectT = Partial<CreateProjectT>;
+export type UpdateProjectT = Partial<CreateProjectT> &
+    Partial<Pick<ProjectDetailT, "card_fields">>;
 
 export type ProjectPermissionTargetT = {
     id: string;

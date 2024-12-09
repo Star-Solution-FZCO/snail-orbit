@@ -1,32 +1,54 @@
-import {
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import type {
     BasicUserT,
     GroupT,
     ProjectPermissionTargetT,
     TargetTypeT,
 } from "types";
 
-export const tabs = [
-    {
-        label: "projects.sections.generalInfo",
-        value: "general",
-        adminOnly: false,
-    },
-    {
-        label: "projects.sections.access",
-        value: "access",
-        adminOnly: true,
-    },
-    {
-        label: "projects.sections.customFields",
-        value: "custom-fields",
-        adminOnly: true,
-    },
-    {
-        label: "projects.sections.workflows",
-        value: "workflows",
-        adminOnly: true,
-    },
-];
+export const enum ProjectFormTabKey {
+    GENERAL = "general",
+    ACCESS = "access",
+    CUSTOM_FIELDS = "customFields",
+    WORKFLOWS = "workflows",
+    LIST_VIEW = "listView",
+}
+
+export const useProjectFormTabs = () => {
+    const { t, i18n } = useTranslation();
+
+    return useMemo(
+        () => [
+            {
+                label: t("projects.sections.generalInfo"),
+                value: ProjectFormTabKey.GENERAL,
+                adminOnly: false,
+            },
+            {
+                label: t("projects.sections.access"),
+                value: ProjectFormTabKey.ACCESS,
+                adminOnly: true,
+            },
+            {
+                label: t("projects.sections.customFields"),
+                value: ProjectFormTabKey.CUSTOM_FIELDS,
+                adminOnly: true,
+            },
+            {
+                label: t("projects.sections.workflows"),
+                value: ProjectFormTabKey.WORKFLOWS,
+                adminOnly: true,
+            },
+            {
+                label: t("projects.sections.listView"),
+                value: ProjectFormTabKey.LIST_VIEW,
+                adminOnly: true,
+            },
+        ],
+        [t, i18n.language],
+    );
+};
 
 export const mergeUsersAndGroups = (
     users: BasicUserT[],
@@ -62,7 +84,7 @@ export const generateSlug = (name: string): string => {
 
     let slug = "";
 
-    for (let word of words) {
+    for (const word of words) {
         const capitals = word.match(/[A-Z0-9]/g);
 
         if (capitals) {

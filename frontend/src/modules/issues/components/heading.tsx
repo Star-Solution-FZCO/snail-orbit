@@ -5,8 +5,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import { t } from "i18next";
-import { FC } from "react";
-import { IssueT } from "types";
+import type { FC } from "react";
+import type { IssueT } from "types";
 import { HeadingControls } from "./heading_controls";
 
 dayjs.extend(relativeTime);

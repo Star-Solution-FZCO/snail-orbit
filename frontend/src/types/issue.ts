@@ -1,12 +1,12 @@
-import { AttachmentT } from "./attachment";
-import { CommentT } from "./comment";
-import {
+import type { AttachmentT } from "./attachment";
+import type { CommentT } from "./comment";
+import type {
     BasicCustomFieldT,
     CustomFieldT,
     CustomFieldValueT,
 } from "./custom_fields";
-import { ProjectT } from "./project";
-import { BasicUserT } from "./user";
+import type { ProjectT } from "./project";
+import type { BasicUserT } from "./user";
 
 // TODO: specify type
 export type FieldValueT = string | number | boolean | null | string[];

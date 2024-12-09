@@ -15,13 +15,15 @@ import {
     IconButton,
     Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { Link } from "components";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, projectApi } from "store";
-import { CustomFieldT, ProjectDetailT } from "types";
+import type { CustomFieldT, ProjectDetailT } from "types";
 import {
     formatErrorMessages,
     noLimitListQueryParams,
@@ -29,11 +31,12 @@ import {
 } from "utils";
 
 interface ICustomFieldListProps {
-    projectId: string;
+    project: ProjectDetailT;
 }
 
-const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
+const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
     const { t } = useTranslation();
+    const { id: projectId, custom_fields } = project;
 
     const {
         data: customFields,
@@ -52,6 +55,15 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
             })
             .catch(toastApiError);
     };
+
+    const filteredFields = useMemo(() => {
+        if (!customFields || !customFields.success || !customFields.payload)
+            return [];
+        const usedFields = new Set(custom_fields.map((field) => field.id));
+        return customFields.payload.items.filter(
+            (field) => !usedFields.has(field.id),
+        );
+    }, [customFields]);
 
     if (customFieldsLoading)
         return (
@@ -79,8 +91,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
-                    {customFields.payload.items.length}{" "}
-                    {t("projects.customFields.fields")}
+                    {filteredFields.length} {t("projects.customFields.fields")}
                 </Typography>
 
                 {addProjectCustomFieldLoading && (
@@ -97,7 +108,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ projectId }) => {
                 flex={1}
                 overflow="auto"
             >
-                {customFields.payload.items.map((field) => (
+                {filteredFields.map((field) => (
                     <Box
                         key={field.id}
                         display="flex"
@@ -242,6 +253,15 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 field: "name",
                 headerName: t("customFields.fields.name"),
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Link
+                        to={`/custom-fields/${row.id}`}
+                        flex={1}
+                        fontWeight="bold"
+                    >
+                        {row.name}
+                    </Link>
+                ),
             },
             {
                 field: "type",
@@ -277,7 +297,7 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 </Box>
 
                 <Box flex={1}>
-                    <CustomFieldList projectId={project.id} />
+                    <CustomFieldList project={project} />
                 </Box>
             </Box>
         </Box>
