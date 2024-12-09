@@ -39,6 +39,15 @@ export const userApi = createApi({
                 url: "user/select",
                 params: params ?? undefined,
             }),
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems) => {
+                currentCache.payload.items.push(...newItems.payload.items);
+                currentCache.payload.offset = newItems.payload.offset;
+                currentCache.payload.count = newItems.payload.count;
+            },
+            forceRefetch: ({ currentArg, previousArg }) => {
+                return currentArg?.offset !== previousArg?.offset;
+            },
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
         getUser: build.query<ApiResponse<UserT>, string>({
