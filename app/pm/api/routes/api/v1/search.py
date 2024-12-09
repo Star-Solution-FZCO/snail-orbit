@@ -15,6 +15,7 @@ from pm.api.views.output import (
     BaseListOutput,
     ModelIdOutput,
     SuccessPayloadOutput,
+    UUIDOutput,
 )
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
@@ -226,7 +227,7 @@ async def share_search(
 @router.delete('/{search_id}/permission/{permission_id}')
 async def unshare_search(
     search_id: PydanticObjectId, permission_id: UUID
-) -> SuccessPayloadOutput[SearchOutput]:
+) -> UUIDOutput:
     user_ctx = current_user()
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
@@ -249,4 +250,4 @@ async def unshare_search(
     search.permissions.remove(target)
     if search.is_changed:
         await search.save_changes()
-    return SuccessPayloadOutput(payload=SearchOutput.from_obj(search))
+    return UUIDOutput.make(target.id)
