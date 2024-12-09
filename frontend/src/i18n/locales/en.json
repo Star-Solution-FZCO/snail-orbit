@@ -201,6 +201,7 @@
   "issues.links.type.subtask_of": "Subtask of",
   "issues.list.fetch.error": "Failed to fetch issues",
   "issues.new": "New Issue",
+  "issues.project.required": "Project is required",
   "issues.spentTime": "Spent time",
   "issues.spentTime.add": "Add spent time",
   "issues.spentTime.delete.title": "Are you sure you want to delete this work item?",
