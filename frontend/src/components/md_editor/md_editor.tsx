@@ -22,9 +22,11 @@ import {
     TodoList,
 } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
+import "github-markdown-css";
 import i18n from "i18n";
 import { FC } from "react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./md_editor.css";
 import { useCKEditorStyles } from "./utils";
 
@@ -158,12 +160,14 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
     return (
         <Box
             sx={{
-                "& *": {
-                    m: 0,
+                "& .markdown-body": {
+                    backgroundColor: "unset",
                 },
             }}
         >
-            <Markdown>{text}</Markdown>
+            <Markdown className="markdown-body" remarkPlugins={[remarkGfm]}>
+                {text}
+            </Markdown>
         </Box>
     );
 };

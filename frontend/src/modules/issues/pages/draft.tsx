@@ -3,6 +3,8 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
 import deepmerge from "deepmerge";
 import { FC, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "store";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
@@ -11,6 +13,7 @@ import IssueView from "../components/issue_view";
 const routeApi = getRouteApi("/_authenticated/issues/draft/$draftId");
 
 const IssueDraft: FC = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { draftId } = routeApi.useParams();
 
@@ -22,7 +25,7 @@ const IssueDraft: FC = () => {
     const [updateDraft, { isLoading: updateLoading }] =
         issueApi.useUpdateDraftMutation();
 
-    const [createDraft, { isLoading: createLoading }] =
+    const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
 
     const handleSubmit = useCallback(
@@ -34,16 +37,21 @@ const IssueDraft: FC = () => {
         [draftId, refetch],
     );
 
-    const handleCreateDraft = useCallback(async () => {
-        await createDraft(draftId)
+    const issue = data?.payload;
+
+    const handleCreateIssue = useCallback(async () => {
+        if (!issue?.project) {
+            toast.error(t("issues.project.required"));
+            throw new Error(t("issues.project.required"));
+        }
+
+        await createIssue(draftId)
             .unwrap()
             .then((issue) =>
                 navigate({ to: `/issues/${issue.payload.id_readable}` }),
             )
             .catch(toastApiError);
-    }, [draftId, navigate]);
-
-    const issue = data?.payload;
+    }, [draftId, issue, navigate]);
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
@@ -87,13 +95,13 @@ const IssueDraft: FC = () => {
                 <>
                     {issue && (
                         <IssueView
+                            issue={issue}
+                            onUpdateIssue={handleSubmit}
+                            onUpdateCache={handleUpdateCache}
+                            onSaveIssue={handleCreateIssue}
                             loading={
                                 isLoading || updateLoading || createLoading
                             }
-                            onUpdateIssue={handleSubmit}
-                            onUpdateCache={handleUpdateCache}
-                            onSaveIssue={handleCreateDraft}
-                            issue={issue}
                             isDraft
                         />
                     )}
