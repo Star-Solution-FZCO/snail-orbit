@@ -1,6 +1,6 @@
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, debounce, TextField, Typography } from "@mui/material";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { MarkdownPreview, MDEditor } from "components";
 import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +27,7 @@ export const IssueForm: FC<IssueFormProps> = ({
     isDraft,
 }) => {
     const { t } = useTranslation();
-    const { history } = useRouter();
+    const navigate = useNavigate();
 
     const [subject, setSubject] = useState<string>(issue?.subject || "");
     const [text, setText] = useState<string>(issue?.text || "");
@@ -59,7 +59,7 @@ export const IssueForm: FC<IssueFormProps> = ({
 
     const handleClickCancel = () => {
         if (isDraft) {
-            history.go(-1);
+            navigate({ to: "/issues" });
         }
         onChangeDisplayMode?.("view");
     };
@@ -69,16 +69,20 @@ export const IssueForm: FC<IssueFormProps> = ({
     }, [text, subject, isDraft]);
 
     if (mode === "view") {
-        return text ? (
-            <MarkdownPreview text={text} />
-        ) : (
-            <Box
-                sx={{ cursor: "pointer" }}
-                onClick={() => onChangeDisplayMode?.("edit")}
-            >
-                <Typography color="textSecondary">
-                    {t("issues.text.empty")}
-                </Typography>
+        return (
+            <Box mt={-1}>
+                {text ? (
+                    <MarkdownPreview text={text} />
+                ) : (
+                    <Box
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => onChangeDisplayMode?.("edit")}
+                    >
+                        <Typography color="textSecondary">
+                            {t("issues.text.empty")}
+                        </Typography>
+                    </Box>
+                )}
             </Box>
         );
     }

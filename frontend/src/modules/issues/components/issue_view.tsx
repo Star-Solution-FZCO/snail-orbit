@@ -20,8 +20,8 @@ type IssueFormProps = {
     onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     onSaveIssue?: () => Promise<void>;
-    isDraft?: boolean;
     loading?: boolean;
+    isDraft?: boolean;
 };
 
 export const IssueView: FC<IssueFormProps> = ({
@@ -38,7 +38,9 @@ export const IssueView: FC<IssueFormProps> = ({
         issue?.project?.id ?? skipToken,
     );
 
-    const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
+    const [displayMode, setDisplayMode] = useState<"view" | "edit">(
+        isDraft ? "edit" : "view",
+    );
 
     const issueId = issue.id_readable;
 
