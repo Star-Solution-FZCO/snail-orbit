@@ -2,14 +2,16 @@ import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, TabPanel } from "components";
+import type { SyntheticEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi, useAppSelector } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
+import { ProjectListView } from "./components/project_list_view";
 import { ProjectWorkflows } from "./components/project_workflows";
-import { tabs } from "./utils";
+import { ProjectFormTabKey, useProjectFormTabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/projects/$projectId");
 
@@ -19,13 +21,15 @@ const ProjectView = () => {
     const { projectId } = routeApi.useParams();
     const search = routeApi.useSearch();
 
+    const tabs = useProjectFormTabs();
+
     const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
 
-    const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
+    const handleChangeTab = (_: SyntheticEvent, value: string) => {
         setCurrentTab(value);
         navigate({ search: { tab: value } });
     };
@@ -76,22 +80,26 @@ const ProjectView = () => {
                         </TabList>
                     </Box>
 
-                    <TabPanel value="general">
+                    <TabPanel value={ProjectFormTabKey.GENERAL}>
                         <ProjectGeneralInfo project={project} />
                     </TabPanel>
 
                     {isAdmin && (
                         <>
-                            <TabPanel value="access">
+                            <TabPanel value={ProjectFormTabKey.ACCESS}>
                                 <ProjectAccess project={project} />
                             </TabPanel>
 
-                            <TabPanel value="custom-fields">
+                            <TabPanel value={ProjectFormTabKey.CUSTOM_FIELDS}>
                                 <ProjectCustomFields project={project} />
                             </TabPanel>
 
-                            <TabPanel value="workflows">
+                            <TabPanel value={ProjectFormTabKey.WORKFLOWS}>
                                 <ProjectWorkflows project={project} />
+                            </TabPanel>
+
+                            <TabPanel value={ProjectFormTabKey.LIST_VIEW}>
+                                <ProjectListView project={project} />
                             </TabPanel>
                         </>
                     )}

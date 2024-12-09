@@ -2,10 +2,11 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { Avatar, Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ProjectT } from "types";
-import { tabs } from "../utils";
+import type { ProjectT } from "types";
+import { useProjectFormTabs } from "../utils";
 
 interface IProjectCardProps {
     project: ProjectT;
@@ -14,6 +15,7 @@ interface IProjectCardProps {
 const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const tabs = useProjectFormTabs();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);

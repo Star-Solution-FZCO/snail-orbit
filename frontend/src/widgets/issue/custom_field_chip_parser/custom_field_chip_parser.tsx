@@ -8,22 +8,12 @@ import { InputChip } from "features/custom_fields/input_chip";
 import UserChip from "features/custom_fields/user_chip";
 import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
-import type {
-    AgileBoardCardFieldT,
-    FieldValueT,
-    IssueT,
-    UpdateIssueT,
-} from "types";
+import type { FieldValueT } from "types";
+import type { CustomFieldsChipParserProps } from "./custom_field_chip_parser.types";
 
 dayjs.extend(utc);
 
-type CustomFieldsParserProps = {
-    fields: AgileBoardCardFieldT[];
-    issue: IssueT;
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void> | void;
-};
-
-export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
+export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
     fields,
     issue,
     onUpdateIssue,
@@ -36,8 +26,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
             },
         });
     };
-
-    console.log(issue.fields);
 
     return (
         <>

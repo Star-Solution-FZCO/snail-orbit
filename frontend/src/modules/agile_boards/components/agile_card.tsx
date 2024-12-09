@@ -4,10 +4,10 @@ import {
     IssueCardBottom,
     IssueCardHeader,
 } from "components/agile/issue_card/issue_card.styles";
-import { Link } from "components/link";
 import { ComponentProps, FC, memo, useCallback, useMemo } from "react";
 import { AgileBoardCardFieldT, IssueT, UiSettingT, UpdateIssueT } from "types";
-import { CustomFieldsParser } from "./custom_field_parser";
+import { IssueLink } from "../../../components/issue_link";
+import { CustomFieldsChipParser } from "../../../widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 
 export type IssueCardProps = {
     issue: IssueT;
@@ -62,11 +62,13 @@ export const AgileCard: FC<IssueCardProps> = memo(
             >
                 <IssueCardBody>
                     <IssueCardHeader>
-                        <Link to={`/issues/${id_readable}`}>{id_readable}</Link>
+                        <IssueLink to={`/issues/${id_readable}`}>
+                            {id_readable}
+                        </IssueLink>
                         <span>{subject}</span>
                     </IssueCardHeader>
                     <IssueCardBottom>
-                        <CustomFieldsParser
+                        <CustomFieldsChipParser
                             issue={issue}
                             fields={cardFields}
                             onUpdateIssue={handleUpdateIssue}

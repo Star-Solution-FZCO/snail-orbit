@@ -17,13 +17,15 @@ import {
     IconButton,
     Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { FC, useMemo, useState } from "react";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { workflowApi } from "store/api/workflow.api";
-import { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
+import type { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
 import {
     formatErrorMessages,
     noLimitListQueryParams,

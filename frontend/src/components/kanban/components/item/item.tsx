@@ -1,6 +1,7 @@
-import { CSSProperties, forwardRef, memo, useEffect } from "react";
+import type { CSSProperties } from "react";
+import { forwardRef, memo, useEffect } from "react";
 import { ItemContainer, ItemStyled } from "./Item.styles";
-import { ItemProps } from "./item.types";
+import type { ItemProps } from "./item.types";
 
 const Item = memo(
     forwardRef<HTMLLIElement, ItemProps>(

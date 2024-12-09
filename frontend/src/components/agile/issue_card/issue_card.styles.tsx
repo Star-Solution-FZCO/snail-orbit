@@ -1,7 +1,8 @@
 import { Box, styled } from "@mui/material";
 
 export const IssueCardStyled = styled(Box, {
-    label: "IssueCard",
+    name: "IssueCard",
+    slot: "root",
 })<{
     colors?: string[];
 }>(({ theme, colors }) => ({
@@ -29,7 +30,7 @@ export const IssueCardStyled = styled(Box, {
             : undefined,
 }));
 
-export const IssueCardBody = styled(Box, { label: "IssueCardBody" })(
+export const IssueCardBody = styled(Box, { name: "IssueCard", slot: "body" })(
     ({ theme }) => ({
         padding: theme.spacing(1),
         display: "flex",
@@ -40,19 +41,21 @@ export const IssueCardBody = styled(Box, { label: "IssueCardBody" })(
     }),
 );
 
-export const IssueCardHeader = styled(Box, { label: "IssueCardHeader" })(
-    ({ theme }) => ({
-        display: "flex",
-        flexDirection: "row",
-        gap: theme.spacing(1),
-    }),
-);
+export const IssueCardHeader = styled(Box, {
+    name: "IssueCard",
+    slot: "header",
+})(({ theme }) => ({
+    display: "flex",
+    flexDirection: "row",
+    gap: theme.spacing(1),
+}));
 
-export const IssueCardBottom = styled(Box, { label: "IssueCardBottom" })(
-    ({ theme }) => ({
-        display: "flex",
-        flexDirection: "row",
-        gap: theme.spacing(1),
-        flexWrap: "wrap",
-    }),
-);
+export const IssueCardBottom = styled(Box, {
+    name: "IssueCard",
+    slot: "bottom",
+})(({ theme }) => ({
+    display: "flex",
+    flexDirection: "row",
+    gap: theme.spacing(1),
+    flexWrap: "wrap",
+}));

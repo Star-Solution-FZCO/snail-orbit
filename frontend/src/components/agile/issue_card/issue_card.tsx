@@ -1,6 +1,6 @@
-import { CSSProperties, FC } from "react";
+import type { CSSProperties, FC } from "react";
 import { IssueCardStyled } from "./issue_card.styles";
-import { IssueCardProps } from "./issue_card.types";
+import type { IssueCardProps } from "./issue_card.types";
 
 const getGradientString = (colors?: string[]) => {
     if (!colors || !colors.length) return "";

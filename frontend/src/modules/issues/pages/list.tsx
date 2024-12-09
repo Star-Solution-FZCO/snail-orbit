@@ -9,15 +9,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Link } from "components";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
-import { slugify } from "transliteration";
-import { IssueT } from "types";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
+import IssuesList from "../components/list/issues_list";
 
 const IssueList: FC = () => {
     const { t } = useTranslation();
@@ -29,61 +27,14 @@ const IssueList: FC = () => {
         q: debouncedSearch,
     });
 
-    const { data, isLoading, isFetching, error } =
+    const { data, isFetching, error, isLoading } =
         issueApi.useListIssuesQuery(listQueryParams);
-
-    const columns: GridColDef<IssueT>[] = useMemo(
-        () => [
-            {
-                field: "id_readable",
-                headerName: t("issues.fields.id"),
-                renderCell: (params) => (
-                    <Link
-                        to="/issues/$issueId/$subject"
-                        params={{
-                            issueId: params.value,
-                            subject: slugify(params.row.subject),
-                        }}
-                    >
-                        {params.value}
-                    </Link>
-                ),
-            },
-            {
-                field: "project",
-                headerName: t("issues.fields.project"),
-                valueGetter: (_, row) => row.project?.name || "-",
-            },
-            {
-                field: "subject",
-                headerName: t("issues.fields.subject"),
-                flex: 1,
-            },
-        ],
-        [t],
-    );
-
-    const paginationModel = {
-        page: listQueryParams.offset / listQueryParams.limit,
-        pageSize: listQueryParams.limit,
-    };
-
-    const handlePaginationModelChange = (model: {
-        page: number;
-        pageSize: number;
-    }) => {
-        updateListQueryParams({
-            limit: model.pageSize,
-            offset: model.page * model.pageSize,
-        });
-    };
 
     useEffect(() => {
         updateListQueryParams({ q: debouncedSearch });
     }, [debouncedSearch]);
 
     const rows = data?.payload.items || [];
-    const rowCount = data?.payload.count || 0;
 
     return (
         <Box
@@ -146,17 +97,7 @@ const IssueList: FC = () => {
                 }}
             />
 
-            <DataGrid
-                columns={columns}
-                rows={rows}
-                rowCount={rowCount}
-                paginationModel={paginationModel}
-                onPaginationModelChange={handlePaginationModelChange}
-                loading={isLoading || isFetching}
-                paginationMode="server"
-                density="compact"
-                checkboxSelection
-            />
+            {isLoading ? <CircularProgress /> : <IssuesList issues={rows} />}
         </Box>
     );
 };
