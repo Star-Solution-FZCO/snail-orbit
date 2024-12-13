@@ -219,6 +219,7 @@
   "navbar.issues": "Issues",
   "navbar.projects": "Projects",
   "navbar.roles": "Roles",
+  "navbar.users": "Users",
   "pageNotFound": "Page not found",
   "pageNotFound.description": "It could mean that the URL points to a page that doesn't exist or the URL is correct and you don't have permission to view this content.",
   "placeholder.search": "Search issue",
@@ -301,5 +302,13 @@
   "type": "Type",
   "ui_settings.columnsStrategy.label": "Card dimensions",
   "update": "update",
-  "updatedBy": "Updated by"
+  "updatedBy": "Updated by",
+  "users.title": "Users",
+  "users.fields.name": "Name",
+  "users.fields.email": "Email",
+  "users.fields.origin": "Origin",
+  "users.fields.active": "Active",
+  "users.fields.admin": "Admin",
+  "users.new": "New User",
+  "users.list.fetch.error": "Failed to fetch users"
 }
