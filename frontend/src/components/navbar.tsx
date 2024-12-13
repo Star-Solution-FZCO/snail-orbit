@@ -164,6 +164,9 @@ const NavBar = () => {
                 <MenuItem onClick={() => handleClickMenuItem("/roles")}>
                     {t("navbar.roles")}
                 </MenuItem>
+                <MenuItem onClick={() => handleClickMenuItem("/users")}>
+                    {t("navbar.users")}
+                </MenuItem>
             </Menu>
         </Box>
     );
