@@ -3,7 +3,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { ErrorFallback, NotFound } from "components";
 import React, { Suspense } from "react";
 import { Provider as StoreProvider } from "react-redux";
-import { ToastContainer } from "react-toastify";
+import { Slide, ToastContainer } from "react-toastify";
 import { store } from "store";
 import { theme } from "theme";
 import { routeTree } from "./routeTree.gen";
@@ -39,6 +39,8 @@ const App = () => {
                     position="bottom-right"
                     theme={theme.palette.mode}
                     closeOnClick
+                    stacked
+                    transition={Slide}
                 />
 
                 <RouterProvider router={router} />
