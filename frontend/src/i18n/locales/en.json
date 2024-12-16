@@ -140,6 +140,8 @@
   "groups.title": "Groups",
   "groups.update.success": "Group updated successfully",
   "in": "in",
+  "issueListPage.issueCount_one": "{{count}} issue",
+  "issueListPage.issueCount_other": "{{count}} issues",
   "issueRow.updateTime.tooltip": "Issue at {{time}} by {{user}}",
   "issues.attachments.delete.confirmation": "Are you sure you want to delete attachment",
   "issues.attachments.delete.title": "Delete attachment",

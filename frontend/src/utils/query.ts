@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ListQueryParams } from "types";
+import type { ListQueryParams } from "types";
 
 export const initialListQueryParams: ListQueryParams = {
     limit: 10,
