@@ -7,23 +7,51 @@ import {
     InputAdornment,
     Stack,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
 } from "@mui/material";
 import { Link } from "components";
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
+import { IssueRowViewParams } from "../components/list/issue_row/issue_row.types";
 import IssuesList from "../components/list/issues_list";
+
+const perPage = 10;
+
+const issueListSettingOptions: Record<
+    string,
+    IssueRowViewParams & { label: string }
+> = {
+    small: {
+        label: "S",
+        showDescription: false,
+        showCustomFields: false,
+    },
+    medium: {
+        label: "M",
+        showDescription: false,
+        showCustomFields: true,
+    },
+    large: {
+        label: "L",
+        showDescription: true,
+        showCustomFields: true,
+    },
+};
 
 const IssueList: FC = () => {
     const { t } = useTranslation();
 
+    const [selectedIssueViewOption, setSelectedIssueViewOption] =
+        useState<string>("medium");
     const [debouncedSearch, setSearch, search] = useDebouncedState<string>("");
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
-        limit: 50,
+        limit: perPage,
         q: debouncedSearch,
     });
 
@@ -97,7 +125,61 @@ const IssueList: FC = () => {
                 }}
             />
 
-            {isLoading ? <CircularProgress /> : <IssuesList issues={rows} />}
+            {isLoading ? (
+                <CircularProgress />
+            ) : (
+                <Stack direction="column" gap={1}>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                    >
+                        <Typography
+                            fontSize={12}
+                            color="textDisabled"
+                            variant="subtitle2"
+                        >
+                            {t("issueListPage.issueCount", {
+                                count: data?.payload.count || 0,
+                            })}
+                        </Typography>
+                        <ToggleButtonGroup
+                            size="small"
+                            exclusive
+                            value={selectedIssueViewOption}
+                            onChange={(_, value) =>
+                                setSelectedIssueViewOption(value)
+                            }
+                        >
+                            {Object.keys(issueListSettingOptions).map((key) => (
+                                <ToggleButton
+                                    value={key}
+                                    sx={{ px: 0.8, py: 0.2 }}
+                                >
+                                    {issueListSettingOptions[key].label}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Stack>
+                    <IssuesList
+                        issues={rows}
+                        page={
+                            listQueryParams.offset / listQueryParams.limit + 1
+                        }
+                        pageCount={Math.ceil(
+                            (data?.payload.count || 0) / listQueryParams.limit,
+                        )}
+                        onChangePage={(page) =>
+                            updateListQueryParams({
+                                offset: (page - 1) * perPage,
+                            })
+                        }
+                        viewSettings={
+                            issueListSettingOptions[selectedIssueViewOption]
+                        }
+                    />
+                </Stack>
+            )}
         </Box>
     );
 };

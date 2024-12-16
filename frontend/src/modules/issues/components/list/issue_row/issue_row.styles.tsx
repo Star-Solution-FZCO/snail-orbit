@@ -30,7 +30,14 @@ export const IssueRowHeader = styled("div", {
 }));
 
 export const IssueRowBody = styled("div", { name: "IssueRow", slot: "body" })(
-    () => ({}),
+    () => ({
+        marginBottom: theme.spacing(1),
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        display: "-webkit-box",
+        "-webkit-line-clamp": "2",
+        "-webkit-box-orient": "vertical",
+    }),
 );
 
 export const IssueRowFieldsContainer = styled("div", {
