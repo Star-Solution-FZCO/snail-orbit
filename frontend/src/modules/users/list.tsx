@@ -108,7 +108,7 @@ export const UserList = () => {
             >
                 <Box display="flex" alignItems="center" gap={2}>
                     <Typography fontSize={24} fontWeight="bold">
-                        {rows.length} {t("users.title").toLowerCase()}
+                        {t("usersWithCount", { count: rows.length })}
                     </Typography>
                 </Box>
 
