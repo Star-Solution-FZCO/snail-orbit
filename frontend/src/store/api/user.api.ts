@@ -20,8 +20,8 @@ export const userApi = createApi({
     endpoints: (build) => ({
         getProfile: build.query<ApiResponse<UserT>, void>({
             query: () => "profile",
-            providesTags: (_result, _error) => [
-                { type: "Users", id: "PROFILE" },
+            providesTags: (result, _error) => [
+                { type: "Users", id: result?.payload.id },
             ],
         }),
         listUser: build.query<ListResponse<UserT>, ListQueryParams | void>({
@@ -73,6 +73,7 @@ export const userApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Users", id },
+                { type: "Users", id: "LIST" },
             ],
         }),
     }),

@@ -121,6 +121,7 @@
   "durationField.week": "week",
   "error.default": "An error has occurred. Contact support",
   "form.validation.required": "Required field",
+  "form.validation.email": "Invalid email",
   "formInputPopover.cancel": "Cancel",
   "formInputPopover.submit": "Submit",
   "groups.create.success": "Group created successfully",
@@ -303,6 +304,7 @@
   "ui_settings.columnsStrategy.label": "Card dimensions",
   "update": "update",
   "updatedBy": "Updated by",
+  "usersWithCount_other": "{{count}} users",
   "users.title": "Users",
   "users.fields.name": "Name",
   "users.fields.email": "Email",
@@ -310,5 +312,14 @@
   "users.fields.active": "Active",
   "users.fields.admin": "Admin",
   "users.new": "New User",
-  "users.list.fetch.error": "Failed to fetch users"
+  "users.list.fetch.error": "Failed to fetch users",
+  "users.item.fetch.error": "Failed to fetch user",
+  "users.create.title": "New user",
+  "users.create.success": "User created successfully",
+  "users.update.success": "User updated successfully",
+  "users.form.email": "Email",
+  "users.form.name": "Name",
+  "users.form.active": "Active",
+  "users.form.admin": "Admin",
+  "users.form.sendInvite": "Send invite"
 }
