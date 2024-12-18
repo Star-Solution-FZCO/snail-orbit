@@ -8,6 +8,7 @@ from .group import router as group_router
 from .issue import router as issue_router
 from .profile import router as profile_router
 from .project import router as project_router
+from .report import router as report_router
 from .role import router as role_router
 from .search import router as search_router
 from .settings import router as settings_router
@@ -35,3 +36,4 @@ router.include_router(workflow_router)
 
 router.include_router(tag_router)
 router.include_router(search_router)
+router.include_router(report_router)
