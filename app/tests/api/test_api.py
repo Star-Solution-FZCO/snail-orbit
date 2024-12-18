@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING
 
 import mock
@@ -1440,3 +1441,520 @@ async def test_api_v1_issue_link(
         data = response.json()
         assert data['success']
         assert len(data['payload']['interlinks']) == 0
+
+@pytest_asyncio.fixture
+async def create_initial_user() -> tuple[str, str]:
+    from pm.models import User, UserOriginType
+
+    user = User(
+        email='test_user@localhost.localdomain',
+        name='Test User',
+        is_active=True,
+        is_admin=False,
+        origin=UserOriginType.LOCAL,
+    )
+    await user.insert()
+    token, token_obj = user.gen_new_api_token('test_token')
+    user.api_tokens.append(token_obj)
+    await user.save()
+    return str(user.id), token
+
+
+async def _create_search(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    search_payload: dict,
+) -> str:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        '/api/v1/search/', headers=headers, json=search_payload
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    return str(data['payload']['id'])
+
+
+@pytest_asyncio.fixture
+async def create_search(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    search_payload: dict,
+    create_custom_fields: list[dict],
+) -> str:
+    return await _create_search(test_client, create_initial_admin, search_payload)
+
+
+async def add_user_to_group(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    user_id: str,
+    group_id: str,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        f'/api/v1/group/{group_id}/members/{user_id}', headers=headers
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Search Share',
+                'query': 'Test field: "test query"',
+            },
+            id='share_search',
+        )
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_create(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_search: str,
+    search_payload: dict,
+):
+    pass
+
+
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Test field',
+                    'default_value': None,
+                    'ai_description': None,
+                }
+            ],
+            id='custom_fields',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload,expected_status',
+    [
+        pytest.param(
+            {
+                'name': 'Field Search',
+                'query': 'Test field:"test value"',
+            },
+            200,
+            id='valid_search',
+        ),
+        pytest.param(
+            {
+                'name': 'Invalid Search',
+                'query': 'Test field::',
+            },
+            400,
+            id='invalid_query_syntax',
+        ),
+        pytest.param(
+            {
+                'name': 'Non-existent Field',
+                'query': 'NonExistentField:value',
+            },
+            400,
+            id='unknown_field',
+        ),
+        pytest.param(
+            {
+                'query': 'Test field:"test value"',
+            },
+            422,
+            id='no_search_name',
+        ),
+        pytest.param(
+            {
+                'name': 'Test',
+            },
+            422,
+            id='no_search_query',
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_create_test_body_params(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_custom_fields: list[dict],
+    search_payload: dict,
+    expected_status: int,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        '/api/v1/search', headers=headers, json=search_payload
+    )
+    assert response.status_code == expected_status
+    if expected_status == 200:
+        data = response.json()
+        assert data['success']
+        assert data['payload']['name'] == search_payload['name']
+        assert data['payload']['query'] == search_payload['query']
+        assert data['payload']['permissions'] == []
+
+
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Search Share',
+                'query': 'Test field: "test query"',
+            },
+            id='share_search',
+        )
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_create_permission_with_user_flow(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_search: str,
+    search_payload: dict,
+    create_custom_fields: list[dict],
+    create_initial_user,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    user_id, user_token = create_initial_user
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+    share_payload = [{'target_type': 'user', 'target': user_id}]
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=[{'target_type': 'user', 'target': '675579dff68118dbf878902c'}],
+    )
+    assert response.status_code == 404
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=[{'target_type': 'user', 'target': admin_id}],
+    )
+    assert response.status_code == 400
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['permissions']) == 1
+    assert data['payload']['permissions'][0]['target_type'] == 'user'
+    assert data['payload']['permissions'][0]['target']['id'] == user_id
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 409
+    response = test_client.get(
+        f'/api/v1/search/list',
+        headers=user_headers,
+    )
+    data = response.json()
+    assert data['payload']['count'] == 1
+
+
+@pytest.mark.parametrize(
+    'group_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Group',
+                'description': 'Test group for search sharing',
+            },
+            id='share_group',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Search Share',
+                'query': 'Test field: "test query"',
+            },
+            id='share_search',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_create_and_delete_permission_with_group_flow(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_search: str,
+    create_group: str,
+    search_payload: dict,
+    create_custom_fields: list[dict],
+    create_initial_user,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    user_id, user_token = create_initial_user
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+    share_payload = [{'target_type': 'group', 'target': create_group}]
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 403  # cause admin yet not in group
+    await add_user_to_group(test_client, create_initial_admin, admin_id, create_group)
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=[{'target_type': 'group', 'target': '675579dff68118dbf878902c'}],
+    )
+    assert response.status_code == 404
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['permissions']) == 1
+    id = data['payload']['permissions'][0]['id']
+    assert data['payload']['permissions'][0]['target_type'] == 'group'
+    assert data['payload']['permissions'][0]['target']['id'] == create_group
+    response = test_client.get(
+        f'/api/v1/search/list',
+        headers=user_headers,
+    )
+    data = response.json()
+    assert (
+        data['payload']['count'] == 0
+    )  # user doesn't see shared search list because it's not in same group as admin
+    await add_user_to_group(test_client, create_initial_admin, user_id, create_group)
+    response = test_client.get(
+        f'/api/v1/search/list',
+        headers=user_headers,
+    )
+    data = response.json()
+    assert data['payload']['count'] == 1
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 409
+    response = test_client.delete(
+        f'/api/v1/search/{create_search}/permission/{uuid.uuid4()}',
+        headers=user_headers,
+    )
+    assert response.status_code == 403
+    response = test_client.delete(
+        f'/api/v1/search/{create_search}/permission/{id}',
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['id'] == id
+    response = test_client.delete(
+        f'/api/v1/search/{create_search}/permission/{id}',
+        headers=admin_headers,
+    )
+    assert response.status_code == 409
+    response = test_client.get(
+        f'/api/v1/search/list',
+        headers=user_headers,
+    )
+    assert response.json()['payload']['count'] == 0
+
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Search Share',
+                'query': 'Test field: "test query"',
+            },
+            id='share_search',
+        )
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_delete(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_search: str,
+    search_payload: dict,
+    create_custom_fields: list[dict],
+    create_initial_user,
+    custom_field_payloads,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    user_id, user_token = create_initial_user
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+    response = test_client.delete(
+        f'/api/v1/search/{create_search}', headers=user_headers
+    )
+    assert response.status_code == 403
+    response = test_client.delete(
+        f'/api/v1/search/675579dff68118dbf878902c', headers=admin_headers
+    )
+    assert response.status_code == 404
+    response = test_client.delete(
+        f'/api/v1/search/{create_search}', headers=admin_headers
+    )
+    data = response.json()
+    assert data['success']
+    assert data['payload']['id'] == create_search
+
+
+@pytest.mark.parametrize(
+    'group_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Group',
+                'description': 'Test group for search sharing',
+            },
+            id='share_group',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'search_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Search Share',
+                'query': 'Test field: "test query"',
+            },
+            id='share_search',
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Test field',
+                    'type': 'string',
+                    'is_nullable': True,
+                    'description': 'Custom field description',
+                    'ai_description': None,
+                    'default_value': None,
+                },
+            ],
+            id='custom_fields',
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_search_create_permission_test_exceptions(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_search: str,
+    create_group: str,
+    search_payload: dict,
+    create_custom_fields: list[dict],
+    create_initial_user,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    user_id, user_token = create_initial_user
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+    share_payload = [{'target_type': 'group', 'target': create_group}]
+    response = test_client.post(
+        f'/api/v1/search/675579dff68118dbf878902c/permission',
+        headers=admin_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 404
+    response = test_client.post(
+        f'/api/v1/search/{create_search}/permission',
+        headers=user_headers,
+        json=share_payload,
+    )
+    assert response.status_code == 403
