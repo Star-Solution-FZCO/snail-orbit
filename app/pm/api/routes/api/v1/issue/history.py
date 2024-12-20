@@ -1,19 +1,15 @@
-from datetime import datetime
 from http import HTTPStatus
-from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueFieldChangeOutput
+from pm.api.views.issue import IssueHistoryOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
-from pm.api.views.user import UserOutput
 from pm.permissions import Permissions
 
 __all__ = ('router',)
@@ -23,26 +19,6 @@ router = APIRouter(
     prefix='/{issue_id_or_alias}/history',
     tags=['history'],
 )
-
-
-class IssueHistoryOutput(BaseModel):
-    id: UUID
-    author: UserOutput
-    time: datetime
-    changes: list[IssueFieldChangeOutput]
-    is_hidden: bool
-
-    @classmethod
-    def from_obj(cls, obj: m.IssueHistoryRecord) -> Self:
-        return cls(
-            id=obj.id,
-            author=UserOutput.from_obj(obj.author),
-            time=obj.time,
-            changes=[IssueFieldChangeOutput.from_obj(c) for c in obj.changes]
-            if not obj.is_hidden
-            else [],
-            is_hidden=obj.is_hidden,
-        )
 
 
 @router.get('/list')
