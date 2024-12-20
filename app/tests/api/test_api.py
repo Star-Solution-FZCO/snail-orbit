@@ -1442,6 +1442,7 @@ async def test_api_v1_issue_link(
         assert data['success']
         assert len(data['payload']['interlinks']) == 0
 
+
 @pytest_asyncio.fixture
 async def create_initial_user() -> tuple[str, str]:
     from pm.models import User, UserOriginType
@@ -1467,9 +1468,7 @@ async def _create_search(
 ) -> str:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.post(
-        '/api/v1/search/', headers=headers, json=search_payload
-    )
+    response = test_client.post('/api/v1/search/', headers=headers, json=search_payload)
     assert response.status_code == 200
     data = response.json()
     assert data['success']
@@ -1611,9 +1610,7 @@ async def test_api_v1_search_create_test_body_params(
 ) -> None:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.post(
-        '/api/v1/search', headers=headers, json=search_payload
-    )
+    response = test_client.post('/api/v1/search', headers=headers, json=search_payload)
     assert response.status_code == expected_status
     if expected_status == 200:
         data = response.json()
@@ -1828,6 +1825,7 @@ async def test_api_v1_search_create_and_delete_permission_with_group_flow(
         headers=user_headers,
     )
     assert response.json()['payload']['count'] == 0
+
 
 @pytest.mark.parametrize(
     'custom_field_payloads',
