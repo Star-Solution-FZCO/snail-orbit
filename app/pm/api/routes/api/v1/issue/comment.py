@@ -1,6 +1,5 @@
-from datetime import datetime
 from http import HTTPStatus
-from typing import Annotated, Self
+from typing import Annotated
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -11,10 +10,9 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_task
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueAttachmentOut
+from pm.api.views.issue import IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
-from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, Permissions, PermOr
 from pm.services.files import resolve_files
 from pm.utils.dateutils import utcnow
@@ -27,32 +25,6 @@ router = APIRouter(
     prefix='/{issue_id_or_alias}/comment',
     tags=['comment'],
 )
-
-
-class IssueCommentOutput(BaseModel):
-    id: UUID
-    text: str | None
-    author: UserOutput
-    created_at: datetime
-    updated_at: datetime
-    attachments: list[IssueAttachmentOut]
-    is_hidden: bool
-    spent_time: int
-
-    @classmethod
-    def from_obj(cls, obj: m.IssueComment) -> Self:
-        return cls(
-            id=obj.id,
-            text=obj.text if not obj.is_hidden else None,
-            author=UserOutput.from_obj(obj.author),
-            created_at=obj.created_at,
-            updated_at=obj.updated_at,
-            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments]
-            if not obj.is_hidden
-            else [],
-            is_hidden=obj.is_hidden,
-            spent_time=obj.spent_time,
-        )
 
 
 class IssueCommentCreate(BaseModel):

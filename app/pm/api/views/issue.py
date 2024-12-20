@@ -17,6 +17,8 @@ __all__ = (
     'IssueDraftOutput',
     'IssueAttachmentOut',
     'IssueFieldChangeOutput',
+    'IssueCommentOutput',
+    'IssueHistoryOutput',
     'ProjectField',
     'CustomFieldValueOut',
     'CustomFieldValueOutT',
@@ -221,4 +223,50 @@ class IssueFieldChangeOutput(BaseModel):
             field=CustomFieldLinkOutput.from_obj(obj.field),
             old_value=transform_custom_field_value(obj.old_value, obj.field),
             new_value=transform_custom_field_value(obj.new_value, obj.field),
+        )
+
+
+class IssueCommentOutput(BaseModel):
+    id: UUID
+    text: str | None
+    author: UserOutput
+    created_at: datetime
+    updated_at: datetime
+    attachments: list[IssueAttachmentOut]
+    is_hidden: bool
+    spent_time: int
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueComment) -> Self:
+        return cls(
+            id=obj.id,
+            text=obj.text if not obj.is_hidden else None,
+            author=UserOutput.from_obj(obj.author),
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments]
+            if not obj.is_hidden
+            else [],
+            is_hidden=obj.is_hidden,
+            spent_time=obj.spent_time,
+        )
+
+
+class IssueHistoryOutput(BaseModel):
+    id: UUID
+    author: UserOutput
+    time: datetime
+    changes: list[IssueFieldChangeOutput]
+    is_hidden: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueHistoryRecord) -> Self:
+        return cls(
+            id=obj.id,
+            author=UserOutput.from_obj(obj.author),
+            time=obj.time,
+            changes=[IssueFieldChangeOutput.from_obj(c) for c in obj.changes]
+            if not obj.is_hidden
+            else [],
+            is_hidden=obj.is_hidden,
         )
