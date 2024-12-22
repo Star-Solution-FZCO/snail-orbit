@@ -1,16 +1,24 @@
 import FieldCard from "components/fields/field_card/field_card";
-import FormInputPopover, {
-    FormInputPopoverProps,
-} from "components/fields/form_input/form_input";
-import { ForwardedRef, forwardRef, useState } from "react";
+import type { FormInputPopoverProps } from "components/fields/form_input/form_input";
+import FormInputPopover from "components/fields/form_input/form_input";
+import type { ForwardedRef, ReactNode } from "react";
+import { forwardRef, useState } from "react";
 
 type InputFieldProps = {
     label: string;
+    rightAdornment?: ReactNode;
 } & Pick<FormInputPopoverProps, "value" | "onChange" | "id" | "inputMode">;
 
 export const InputField = forwardRef(
     (
-        { value, onChange, label, id, inputMode }: InputFieldProps,
+        {
+            value,
+            onChange,
+            label,
+            id,
+            inputMode,
+            rightAdornment,
+        }: InputFieldProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -25,6 +33,7 @@ export const InputField = forwardRef(
                 <FieldCard
                     label={label}
                     value={value ?? "?"}
+                    rightAdornment={rightAdornment}
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                 />

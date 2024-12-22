@@ -21,10 +21,12 @@ export const IssuesList: FC<IssuesListProps> = ({
 }) => {
     return (
         <Stack>
-            {issues.map((issue) => (
-                <IssueRow issue={issue} {...viewSettings} />
-            ))}
-            {pageCount && (
+            <>
+                {issues.map((issue) => (
+                    <IssueRow key={issue.id} issue={issue} {...viewSettings} />
+                ))}
+            </>
+            {pageCount ? (
                 <Pagination
                     size="small"
                     sx={{ mx: "auto", mt: 2 }}
@@ -32,7 +34,7 @@ export const IssuesList: FC<IssuesListProps> = ({
                     page={page}
                     onChange={(_, newPage) => onChangePage?.(newPage)}
                 />
-            )}
+            ) : null}
         </Stack>
     );
 };

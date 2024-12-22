@@ -1,14 +1,12 @@
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import { FC, useMemo } from "react";
+import type { FC, ReactNode } from "react";
+import { useMemo } from "react";
 import { customFieldsApi } from "store";
-import { EnumFieldT } from "types";
+import type { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import {
-    enumToSelectOption,
-    enumToSelectOptions,
-    SelectOptionTypeWithOriginal,
-} from "./utils";
+import type { SelectOptionTypeWithOriginal } from "./utils";
+import { enumToSelectOption, enumToSelectOptions } from "./utils";
 
 type EnumFieldProps = {
     value?: EnumFieldT | EnumFieldT[];
@@ -16,6 +14,7 @@ type EnumFieldProps = {
     label: string;
     enumFieldId: string;
     multiple?: boolean;
+    rightAdornment?: ReactNode;
 };
 
 export const EnumField: FC<EnumFieldProps> = ({
@@ -24,6 +23,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     label,
     enumFieldId,
     multiple,
+    rightAdornment,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -55,6 +55,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     };
 
     const adornment = useMemo(() => {
+        if (rightAdornment) return rightAdornment;
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
         if (targetValue.color)
@@ -65,7 +66,7 @@ export const EnumField: FC<EnumFieldProps> = ({
                     sx={{ mr: 1, my: "auto" }}
                 />
             );
-    }, [value]);
+    }, [value, rightAdornment]);
 
     return (
         <SelectField

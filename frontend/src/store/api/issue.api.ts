@@ -1,9 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import {
+import type {
     ApiResponse,
     CommentT,
     CreateCommentT,
     CreateIssueT,
+    FieldValueT,
     IssueHistoryT,
     IssueLinkTypeT,
     IssueSpentTimeT,
@@ -125,9 +126,7 @@ export const issueApi = createApi({
                 method: "POST",
                 body,
             }),
-            invalidatesTags: (_result, _error) => [
-                { type: "IssueComments", id: "LIST" },
-            ],
+            invalidatesTags: () => [{ type: "IssueComments", id: "LIST" }],
         }),
         updateIssueComment: build.mutation<
             ApiResponse<CommentT>,
@@ -246,6 +245,31 @@ export const issueApi = createApi({
                 { type: "IssueComments", id: "LIST" },
                 { type: "IssueHistories", id },
             ],
+        }),
+        filterBuildQueryString: build.query<
+            ApiResponse<{ query: string }>,
+            { filters: { field: string; value: FieldValueT }[] }
+        >({
+            query: (body) => ({
+                url: `issue/filters/build-query`,
+                body,
+                method: "POST",
+            }),
+        }),
+        filterParseQueryString: build.query<
+            ApiResponse<{
+                filters: {
+                    field: { id: string; name: string };
+                    value: FieldValueT;
+                }[];
+            }>,
+            { query: string }
+        >({
+            query: (body) => ({
+                url: `issue/filters/parse-query`,
+                body,
+                method: "POST",
+            }),
         }),
     }),
 });

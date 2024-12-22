@@ -2,12 +2,13 @@ import { Box, Stack } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FilePreview } from "components";
 import { ProjectField } from "features/custom_fields/project_field";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
+import { CustomFieldsParser } from "widgets/issue/CustomFieldsParser/CustomFieldsParser";
 import { AddLinks } from "./add_links";
-import { CustomFieldsParser } from "./custom_fields_parser";
 import { FieldContainer } from "./field_container";
 import { IssueHeading } from "./heading";
 import { IssueActivities } from "./issue_activities";
@@ -96,10 +97,10 @@ export const IssueView: FC<IssueFormProps> = ({
                 />
 
                 <CustomFieldsParser
-                    fields={projectData?.payload.custom_fields || []}
-                    issue={issue}
-                    onUpdateIssue={onUpdateIssue}
-                    onUpdateCache={onUpdateCache}
+                    availableFields={projectData?.payload.custom_fields || []}
+                    activeFields={issue.fields}
+                    onUpdateIssue={(fields) => onUpdateIssue({ fields })}
+                    onUpdateCache={(fields) => onUpdateCache({ fields })}
                 />
             </FieldContainer>
 

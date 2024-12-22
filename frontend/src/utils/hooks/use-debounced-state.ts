@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useState } from "react";
 
 const useDebouncedState = <T>(
     initialValue: T,
@@ -6,11 +7,6 @@ const useDebouncedState = <T>(
 ): [T, Dispatch<SetStateAction<T>>, T] => {
     const [value, setValue] = useState(initialValue);
     const [debouncedValue, setDebouncedValue] = useState(initialValue);
-
-    useEffect(() => {
-        setValue(initialValue);
-        setDebouncedValue(initialValue);
-    }, [initialValue]);
 
     useEffect(() => {
         const handler = setTimeout(() => {

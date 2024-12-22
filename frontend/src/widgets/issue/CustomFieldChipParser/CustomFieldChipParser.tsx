@@ -1,66 +1,40 @@
-import FieldCard from "components/fields/field_card/field_card";
+import { Tooltip } from "@mui/material";
+import { FieldChip } from "components/fields/field_chip/field_chip";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { DateField } from "features/custom_fields/date_field";
-import { EnumField } from "features/custom_fields/enum_field";
-import { InputField } from "features/custom_fields/input_field";
-import { UserField } from "features/custom_fields/user_field";
-import { VersionField } from "features/custom_fields/version_field";
-import { FC } from "react";
+import { DateChip } from "features/custom_fields/date_chip";
+import { EnumChip } from "features/custom_fields/enum_chip";
+import { InputChip } from "features/custom_fields/input_chip";
+import UserChip from "features/custom_fields/user_chip";
+import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
-import {
-    CustomFieldT,
-    CustomFieldValueT,
-    FieldValueT,
-    IssueT,
-    UpdateIssueT,
-} from "types";
+import type { FieldValueT } from "types";
+import type { CustomFieldsChipParserProps } from "./CustomFieldChipParser.types";
 
 dayjs.extend(utc);
 
-type CustomFieldsParserProps = {
-    fields: CustomFieldT[];
-    issue: IssueT;
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
-    onUpdateCache: (issueValue: Partial<IssueT>) => void;
-};
-
-export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
-    fields,
-    issue,
+export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
+    availableFields,
+    activeFields,
     onUpdateIssue,
-    onUpdateCache,
 }) => {
     const updateCustomFields = (key: string, value: FieldValueT) => {
         onUpdateIssue({
-            fields: {
-                ...fieldsToFieldValueMap(Object.values(issue.fields)),
-                [key]: value,
-            },
+            ...fieldsToFieldValueMap(Object.values(activeFields)),
+            [key]: value,
         });
-    };
-
-    const updateCache = (key: string, value: CustomFieldValueT) => {
-        const targetField = issue.fields[key];
-        if (targetField)
-            onUpdateCache({ fields: { [key]: { ...targetField, value } } });
-        else {
-            const field = fields.find((el) => el.name === key);
-            if (field)
-                onUpdateCache({ fields: { [key]: { ...field, value } } });
-        }
     };
 
     return (
         <>
-            {fields
+            {availableFields
                 .map((fieldData) => {
-                    const field = issue.fields[fieldData.name];
+                    const field = activeFields[fieldData.name];
                     switch (fieldData.type) {
                         case "enum":
                         case "enum_multi":
                             return (
-                                <EnumField
+                                <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
@@ -77,7 +51,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                                 ? value.map((el) => el.value)
                                                 : value.value,
                                         );
-                                        updateCache(fieldData.name, value);
                                     }}
                                     multiple={fieldData.type === "enum_multi"}
                                     enumFieldId={fieldData.id}
@@ -87,7 +60,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                         case "integer":
                         case "float":
                             return (
-                                <InputField
+                                <InputChip
                                     key={fieldData.id}
                                     onChange={(val) => {
                                         const newValue =
@@ -98,7 +71,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                             fieldData.name,
                                             newValue,
                                         );
-                                        updateCache(fieldData.name, newValue);
                                     }}
                                     value={
                                         field &&
@@ -120,27 +92,10 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                     }
                                 />
                             );
-                        case "boolean":
-                            return (
-                                <FieldCard
-                                    key={fieldData.id}
-                                    orientation="vertical"
-                                    label={fieldData.name}
-                                    value={field?.value ? "+" : "-"}
-                                    onClick={() => {
-                                        const newValue = !field?.value;
-                                        updateCustomFields(
-                                            fieldData.name,
-                                            newValue,
-                                        );
-                                        updateCache(fieldData.name, newValue);
-                                    }}
-                                />
-                            );
                         case "user":
                         case "user_multi":
                             return (
-                                <UserField
+                                <UserChip
                                     key={fieldData.id}
                                     value={
                                         field &&
@@ -156,7 +111,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                                 ? value.map((el) => el.id)
                                                 : value.id,
                                         );
-                                        updateCache(fieldData.name, value);
                                     }}
                                     label={fieldData.name}
                                     multiple={fieldData.type === "user_multi"}
@@ -166,7 +120,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                         case "date":
                         case "datetime":
                             return (
-                                <DateField
+                                <DateChip
                                     key={fieldData.id}
                                     value={
                                         field &&
@@ -186,7 +140,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                             fieldData.name,
                                             newValue,
                                         );
-                                        updateCache(fieldData.name, newValue);
                                     }}
                                     label={fieldData.name}
                                     id={fieldData.id}
@@ -197,9 +150,30 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                     }
                                 />
                             );
+                        case "boolean":
+                            return (
+                                <Tooltip
+                                    key={fieldData.id}
+                                    arrow
+                                    title={`${fieldData.name}: ${field?.value ? "+" : "-"}`}
+                                    enterDelay={1000}
+                                >
+                                    <FieldChip
+                                        onClick={() => {
+                                            const newValue = !field?.value;
+                                            updateCustomFields(
+                                                fieldData.name,
+                                                newValue,
+                                            );
+                                        }}
+                                    >
+                                        {field?.value ? "+" : "-"}
+                                    </FieldChip>
+                                </Tooltip>
+                            );
                         case "state":
                             return (
-                                <EnumField
+                                <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
@@ -219,51 +193,42 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                                 ? value.map((el) => el.value)
                                                 : value.value,
                                         );
-                                        updateCache(
-                                            fieldData.name,
-                                            Array.isArray(value)
-                                                ? value.map((el) => ({
-                                                      ...el,
-                                                      state: el.value,
-                                                  }))
-                                                : {
-                                                      ...value,
-                                                      state: value.value,
-                                                  },
-                                        );
                                     }}
                                     enumFieldId={fieldData.id}
                                 />
                             );
-                        // TODO: fix version field and option types from api
                         case "version":
                         case "version_multi":
                             return (
-                                <VersionField
+                                <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
-                                        field &&
-                                        (field.type === "version" ||
-                                            field.type === "version_multi")
-                                            ? field.value
-                                            : undefined
+                                        (field &&
+                                            field.value &&
+                                            (field.type === "version"
+                                                ? {
+                                                      ...field.value,
+                                                      value: field.value
+                                                          .version,
+                                                  }
+                                                : field.type === "version_multi"
+                                                  ? field.value.map((el) => ({
+                                                        ...el,
+                                                        value: el.version,
+                                                    }))
+                                                  : undefined)) ||
+                                        undefined
                                     }
                                     onChange={(value) => {
                                         updateCustomFields(
                                             fieldData.name,
                                             Array.isArray(value)
-                                                ? // @ts-ignore
-                                                  value.map((el) => el.value)
-                                                : // @ts-ignore
-                                                  value.value,
+                                                ? value.map((el) => el.value)
+                                                : value.value,
                                         );
-                                        updateCache(fieldData.name, value);
                                     }}
-                                    multiple={
-                                        fieldData.type === "version_multi"
-                                    }
-                                    fieldId={fieldData.id}
+                                    enumFieldId={fieldData.id}
                                 />
                             );
                         default:

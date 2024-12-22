@@ -1,10 +1,11 @@
-import { FC, useMemo } from "react";
+import type { FC, ReactNode } from "react";
+import { useMemo } from "react";
 import { customFieldsApi } from "store";
-import { VersionFieldT, VersionOptionT } from "types";
+import type { VersionFieldT, VersionOptionT } from "types";
 import { noLimitListQueryParams } from "utils";
 import { SelectField } from "./select_field";
+import type { VersionSelectOptionT } from "./utils";
 import {
-    VersionSelectOptionT,
     versionFieldToSelectOption,
     versionFieldToSelectOptions,
     versionOptionToSelectOption,
@@ -16,6 +17,7 @@ type VersionFieldProps = {
     label: string;
     fieldId: string;
     multiple?: boolean;
+    rightAdornment?: ReactNode;
 };
 
 export const VersionField: FC<VersionFieldProps> = ({
@@ -24,6 +26,7 @@ export const VersionField: FC<VersionFieldProps> = ({
     label,
     fieldId,
     multiple,
+    rightAdornment,
 }) => {
     const [fetchOptions, { data, isLoading }] =
         customFieldsApi.useLazyListSelectOptionsQuery();
@@ -56,6 +59,7 @@ export const VersionField: FC<VersionFieldProps> = ({
             loading={isLoading}
             options={options}
             value={parsedValue}
+            rightAdornment={rightAdornment}
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}

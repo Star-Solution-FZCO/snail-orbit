@@ -78,7 +78,7 @@ export type UpdateVersionOptionT = {
     option_id: string;
 } & Partial<CreateVersionOptionT>;
 
-export type VersionFieldT = Omit<VersionOptionT, "uuid" | "value"> & {
+export type VersionFieldT = Omit<VersionOptionT, "uuid"> & {
     id: string;
     version: string;
 };
