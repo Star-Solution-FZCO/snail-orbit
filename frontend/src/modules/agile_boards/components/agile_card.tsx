@@ -4,10 +4,16 @@ import {
     IssueCardBottom,
     IssueCardHeader,
 } from "components/agile/issue_card/issue_card.styles";
+import { IssueLink } from "components/issue_link";
 import { ComponentProps, FC, memo, useCallback, useMemo } from "react";
-import { AgileBoardCardFieldT, IssueT, UiSettingT, UpdateIssueT } from "types";
-import { IssueLink } from "../../../components/issue_link";
-import { CustomFieldsChipParser } from "../../../widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
+import {
+    AgileBoardCardFieldT,
+    FieldValueT,
+    IssueT,
+    UiSettingT,
+    UpdateIssueT,
+} from "types";
+import { CustomFieldsChipParser } from "widgets/issue/CustomFieldChipParser/CustomFieldChipParser";
 
 export type IssueCardProps = {
     issue: IssueT;
@@ -33,8 +39,8 @@ export const AgileCard: FC<IssueCardProps> = memo(
         const { minCardHeight } = cardSetting;
 
         const handleUpdateIssue = useCallback(
-            (issueValues: UpdateIssueT) =>
-                onUpdateIssue(id_readable, issueValues),
+            (fields: Record<string, FieldValueT>) =>
+                onUpdateIssue(id_readable, { fields }),
             [id_readable],
         );
 
@@ -69,8 +75,8 @@ export const AgileCard: FC<IssueCardProps> = memo(
                     </IssueCardHeader>
                     <IssueCardBottom>
                         <CustomFieldsChipParser
-                            issue={issue}
-                            fields={cardFields}
+                            activeFields={issue.fields}
+                            availableFields={cardFields}
                             onUpdateIssue={handleUpdateIssue}
                         />
                     </IssueCardBottom>

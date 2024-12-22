@@ -1,42 +1,53 @@
-import { Tooltip } from "@mui/material";
-import { FieldChip } from "components/fields/field_chip/field_chip";
+import FieldCard from "components/fields/field_card/field_card";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { DateChip } from "features/custom_fields/date_chip";
-import { EnumChip } from "features/custom_fields/enum_chip";
-import { InputChip } from "features/custom_fields/input_chip";
-import UserChip from "features/custom_fields/user_chip";
+import { DateField } from "features/custom_fields/date_field";
+import { EnumField } from "features/custom_fields/enum_field";
+import { InputField } from "features/custom_fields/input_field";
+import { UserField } from "features/custom_fields/user_field";
+import { VersionField } from "features/custom_fields/version_field";
 import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
-import type { FieldValueT } from "types";
-import type { CustomFieldsChipParserProps } from "./custom_field_chip_parser.types";
+import type { CustomFieldValueT, FieldValueT } from "types";
+import type { CustomFieldsParserProps } from "./CustomFieldsParser.types";
 
 dayjs.extend(utc);
 
-export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
-    fields,
-    issue,
+export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
+    availableFields,
+    activeFields,
     onUpdateIssue,
+    onUpdateCache,
+    rightAdornmentRenderer,
 }) => {
     const updateCustomFields = (key: string, value: FieldValueT) => {
+        if (!onUpdateIssue) return;
         onUpdateIssue({
-            fields: {
-                ...fieldsToFieldValueMap(Object.values(issue.fields)),
-                [key]: value,
-            },
+            ...fieldsToFieldValueMap(Object.values(activeFields)),
+            [key]: value,
         });
+    };
+
+    const updateCache = (key: string, value: CustomFieldValueT) => {
+        if (!onUpdateCache) return;
+        const targetField = activeFields[key];
+        if (targetField) onUpdateCache({ [key]: { ...targetField, value } });
+        else {
+            const field = availableFields.find((el) => el.name === key);
+            if (field) onUpdateCache({ [key]: { ...field, value } });
+        }
     };
 
     return (
         <>
-            {fields
+            {availableFields
                 .map((fieldData) => {
-                    const field = issue.fields[fieldData.name];
+                    const field = activeFields[fieldData.name];
                     switch (fieldData.type) {
                         case "enum":
                         case "enum_multi":
                             return (
-                                <EnumChip
+                                <EnumField
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
@@ -53,16 +64,20 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                                 ? value.map((el) => el.value)
                                                 : value.value,
                                         );
+                                        updateCache(fieldData.name, value);
                                     }}
                                     multiple={fieldData.type === "enum_multi"}
                                     enumFieldId={fieldData.id}
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
                             );
                         case "string":
                         case "integer":
                         case "float":
                             return (
-                                <InputChip
+                                <InputField
                                     key={fieldData.id}
                                     onChange={(val) => {
                                         const newValue =
@@ -73,6 +88,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                             fieldData.name,
                                             newValue,
                                         );
+                                        updateCache(fieldData.name, newValue);
                                     }}
                                     value={
                                         field &&
@@ -92,12 +108,35 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                               ? "numeric"
                                               : "text"
                                     }
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
+                                />
+                            );
+                        case "boolean":
+                            return (
+                                <FieldCard
+                                    key={fieldData.id}
+                                    orientation="vertical"
+                                    label={fieldData.name}
+                                    value={field?.value ? "+" : "-"}
+                                    onClick={() => {
+                                        const newValue = !field?.value;
+                                        updateCustomFields(
+                                            fieldData.name,
+                                            newValue,
+                                        );
+                                        updateCache(fieldData.name, newValue);
+                                    }}
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
                             );
                         case "user":
                         case "user_multi":
                             return (
-                                <UserChip
+                                <UserField
                                     key={fieldData.id}
                                     value={
                                         field &&
@@ -113,16 +152,20 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                                 ? value.map((el) => el.id)
                                                 : value.id,
                                         );
+                                        updateCache(fieldData.name, value);
                                     }}
                                     label={fieldData.name}
                                     multiple={fieldData.type === "user_multi"}
                                     id={fieldData.id}
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
                             );
                         case "date":
                         case "datetime":
                             return (
-                                <DateChip
+                                <DateField
                                     key={fieldData.id}
                                     value={
                                         field &&
@@ -142,6 +185,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                             fieldData.name,
                                             newValue,
                                         );
+                                        updateCache(fieldData.name, newValue);
                                     }}
                                     label={fieldData.name}
                                     id={fieldData.id}
@@ -150,32 +194,14 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                             ? "date"
                                             : "datetime"
                                     }
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
-                            );
-                        case "boolean":
-                            return (
-                                <Tooltip
-                                    key={fieldData.id}
-                                    arrow
-                                    title={`${fieldData.name}: ${field?.value ? "+" : "-"}`}
-                                    enterDelay={1000}
-                                >
-                                    <FieldChip
-                                        onClick={() => {
-                                            const newValue = !field?.value;
-                                            updateCustomFields(
-                                                fieldData.name,
-                                                newValue,
-                                            );
-                                        }}
-                                    >
-                                        {field?.value ? "+" : "-"}
-                                    </FieldChip>
-                                </Tooltip>
                             );
                         case "state":
                             return (
-                                <EnumChip
+                                <EnumField
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
@@ -195,32 +221,37 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                                 ? value.map((el) => el.value)
                                                 : value.value,
                                         );
+                                        updateCache(
+                                            fieldData.name,
+                                            Array.isArray(value)
+                                                ? value.map((el) => ({
+                                                      ...el,
+                                                      state: el.value,
+                                                  }))
+                                                : {
+                                                      ...value,
+                                                      state: value.value,
+                                                  },
+                                        );
                                     }}
                                     enumFieldId={fieldData.id}
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
                             );
                         case "version":
                         case "version_multi":
                             return (
-                                <EnumChip
+                                <VersionField
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
-                                        (field &&
-                                            field.value &&
-                                            (field.type === "version"
-                                                ? {
-                                                      ...field.value,
-                                                      value: field.value
-                                                          .version,
-                                                  }
-                                                : field.type === "version_multi"
-                                                  ? field.value.map((el) => ({
-                                                        ...el,
-                                                        value: el.version,
-                                                    }))
-                                                  : undefined)) ||
-                                        undefined
+                                        field &&
+                                        (field.type === "version" ||
+                                            field.type === "version_multi")
+                                            ? field.value
+                                            : undefined
                                     }
                                     onChange={(value) => {
                                         updateCustomFields(
@@ -229,8 +260,15 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                                 ? value.map((el) => el.value)
                                                 : value.value,
                                         );
+                                        updateCache(fieldData.name, value);
                                     }}
-                                    enumFieldId={fieldData.id}
+                                    multiple={
+                                        fieldData.type === "version_multi"
+                                    }
+                                    fieldId={fieldData.id}
+                                    rightAdornment={rightAdornmentRenderer?.(
+                                        fieldData,
+                                    )}
                                 />
                             );
                         default:

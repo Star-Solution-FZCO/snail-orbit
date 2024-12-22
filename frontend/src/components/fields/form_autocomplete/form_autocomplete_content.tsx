@@ -1,12 +1,7 @@
-import {
-    Autocomplete,
-    AutocompleteCloseReason,
-    AutocompleteProps,
-    Box,
-    Checkbox,
-    Stack,
-} from "@mui/material";
-import React, { ReactNode, SyntheticEvent } from "react";
+import type { AutocompleteCloseReason, AutocompleteProps } from "@mui/material";
+import { Autocomplete, Box, Checkbox, Stack } from "@mui/material";
+import type { ReactNode, SyntheticEvent } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
 
@@ -15,7 +10,7 @@ export type FormAutocompleteValueType = {
     description?: string | null;
     leftAdornment?: ReactNode;
     rightAdornment?: ReactNode;
-    [key: string]: any;
+    [key: string]: unknown;
 };
 
 export type FormAutocompleteContentProps<

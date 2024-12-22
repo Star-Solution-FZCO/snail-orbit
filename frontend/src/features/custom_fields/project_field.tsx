@@ -1,18 +1,17 @@
-import { FC, useMemo } from "react";
+import type { FC } from "react";
+import { useMemo } from "react";
 import { projectApi } from "store";
-import { IssueProjectT } from "types";
+import type { IssueProjectT } from "types";
 import { SelectField } from "./select_field";
-import {
-    ProjectSelectOptionT,
-    projectToSelectOption,
-    projectToSelectOptions,
-} from "./utils";
+import type { ProjectSelectOptionT } from "./utils";
+import { projectToSelectOption, projectToSelectOptions } from "./utils";
 
 type ProjectFieldProps = {
     value?: IssueProjectT;
     label: string;
     onChange: (project: IssueProjectT) => void;
     error?: boolean;
+    rightAdornment?: boolean;
 };
 
 export const ProjectField: FC<ProjectFieldProps> = ({
@@ -20,6 +19,7 @@ export const ProjectField: FC<ProjectFieldProps> = ({
     label,
     onChange,
     error,
+    rightAdornment,
 }) => {
     const [trigger, { data, isLoading }] = projectApi.useLazyListProjectQuery();
 
@@ -47,6 +47,7 @@ export const ProjectField: FC<ProjectFieldProps> = ({
             value={parsedValue}
             cardValue={value?.name || "?"}
             onChange={handleChange}
+            rightAdornment={rightAdornment}
             onOpened={trigger}
             loading={isLoading}
             variant={error ? "error" : "standard"}

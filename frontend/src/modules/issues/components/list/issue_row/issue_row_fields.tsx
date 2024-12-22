@@ -1,8 +1,8 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FC, memo, useCallback, useMemo } from "react";
 import { issueApi, projectApi } from "store";
-import type { CreateIssueT, IssueT } from "types";
-import { CustomFieldsChipParser } from "../../../../../widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
+import type { FieldValueT, IssueT } from "types";
+import { CustomFieldsChipParser } from "widgets/issue/CustomFieldChipParser/CustomFieldChipParser";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 
 type IssueRowFieldsProps = {
@@ -26,8 +26,8 @@ export const IssueRowFields: FC<IssueRowFieldsProps> = memo(({ issue }) => {
     }, [projectData.data?.payload]);
 
     const handleUpdateIssue = useCallback(
-        (data: Partial<CreateIssueT>) => {
-            updateIssue({ id: issue.id, ...data });
+        (fields: Record<string, FieldValueT>) => {
+            updateIssue({ id: issue.id, fields });
         },
         [issue.id],
     );
@@ -37,8 +37,8 @@ export const IssueRowFields: FC<IssueRowFieldsProps> = memo(({ issue }) => {
     return (
         <IssueRowFieldsContainer>
             <CustomFieldsChipParser
-                issue={issue}
-                fields={availableFields}
+                activeFields={issue.fields}
+                availableFields={availableFields}
                 onUpdateIssue={handleUpdateIssue}
             />
         </IssueRowFieldsContainer>

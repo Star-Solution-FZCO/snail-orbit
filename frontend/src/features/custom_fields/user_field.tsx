@@ -1,14 +1,12 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
+import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
-import { BasicUserT } from "types";
+import type { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import {
-    UserSelectOptionT,
-    userToSelectOption,
-    userToSelectOptions,
-} from "./utils";
+import type { UserSelectOptionT } from "./utils";
+import { userToSelectOption, userToSelectOptions } from "./utils";
 
 type UserFieldProps = {
     value?: BasicUserT | BasicUserT[];
@@ -16,6 +14,7 @@ type UserFieldProps = {
     label: string;
     multiple?: boolean;
     id: string;
+    rightAdornment?: ReactNode;
 };
 
 export const UserField = ({
@@ -24,6 +23,7 @@ export const UserField = ({
     multiple,
     id,
     onChange,
+    rightAdornment,
 }: UserFieldProps) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -51,6 +51,7 @@ export const UserField = ({
     };
 
     const adornment = useMemo(() => {
+        if (rightAdornment) return rightAdornment;
         if (!value || (Array.isArray(value) && !value.length)) return null;
         return (
             <AvatarAdornment
@@ -61,7 +62,7 @@ export const UserField = ({
                 }}
             />
         );
-    }, [value]);
+    }, [value, rightAdornment]);
 
     return (
         <SelectField
