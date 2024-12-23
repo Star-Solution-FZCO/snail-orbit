@@ -40,6 +40,7 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
             <Typography fontSize={24} fontWeight="bold">
                 {t("queryBuilder.title")}
             </Typography>
+
             {isLoading || !availableFields || !availableFields.length ? (
                 <Box
                     sx={{

@@ -159,11 +159,12 @@ const MDEditor: FC<IMDEditorProps> = ({
 const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
     return (
         <Box
-            sx={{
+            sx={(theme) => ({
                 "& .markdown-body": {
-                    backgroundColor: "unset",
+                    backgroundColor: theme.palette.background.default,
+                    color: theme.palette.text.primary,
                 },
-            }}
+            })}
         >
             <Markdown className="markdown-body" remarkPlugins={[remarkGfm]}>
                 {text}
