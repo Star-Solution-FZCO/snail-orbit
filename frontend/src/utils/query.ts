@@ -6,18 +6,26 @@ export const initialListQueryParams: ListQueryParams = {
     offset: 0,
 };
 
+const cleanParams = <T>(obj: Partial<T>): Partial<T> => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(
+            ([_, value]) => value !== "",
+        ),
+    ) as Partial<T>;
+};
+
 export const useListQueryParams = <T extends ListQueryParams>(
     params: Partial<T> = {},
 ) => {
     const initialParams: T = {
         ...initialListQueryParams,
-        ...params,
+        ...cleanParams(params),
     } as T;
 
     const [queryParams, setQueryParams] = useState<T>(initialParams);
 
     const updateQueryParams = (newParams: Partial<T>) => {
-        setQueryParams((prev) => ({ ...prev, ...newParams }));
+        setQueryParams((prev) => ({ ...prev, ...cleanParams(newParams) }));
     };
 
     const resetQueryParams = () => {

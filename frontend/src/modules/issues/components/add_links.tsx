@@ -28,7 +28,7 @@ import {
     useAppSelector,
 } from "store";
 import { slugify } from "transliteration";
-import { IssueLinkTypeT, IssueT, linkTypes } from "types";
+import { IssueLinkTypeT, IssueT, linkTypes, ListQueryParams } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 
 interface IIssueCardProps {
@@ -92,6 +92,12 @@ interface IAddLinksProps {
     issueId: string;
 }
 
+const limit = 10;
+const initialQueryParams = {
+    limit,
+    offset: 0,
+};
+
 const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
@@ -103,7 +109,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     const [selectedIssue, setSelectedIssue] = useState<IssueT | null>(null);
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
-        limit: 10,
+        ...initialQueryParams,
         q: query,
     });
 
@@ -117,8 +123,13 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     };
 
     const handleSearch = useCallback(() => {
-        fetchIssues(listQueryParams, true);
-    }, [listQueryParams]);
+        const newParams = {
+            ...initialQueryParams,
+            q: query,
+        };
+        updateListQueryParams(newParams);
+        fetchIssues(newParams).unwrap().catch(toastApiError);
+    }, [query]);
 
     const handleKeyDownSearchField = useCallback(
         (event: React.KeyboardEvent) => {
@@ -131,7 +142,23 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
 
     const handleClearSearchField = () => {
         setQuery("");
-        handleSearch();
+        const newParams = {
+            ...initialQueryParams,
+            q: undefined,
+        };
+        updateListQueryParams(newParams);
+        fetchIssues(newParams).unwrap().catch(toastApiError);
+    };
+
+    const handleChangePagination = (params: Partial<ListQueryParams>) => {
+        updateListQueryParams(params);
+        fetchIssues(
+            {
+                ...listQueryParams,
+                ...params,
+            },
+            true,
+        );
     };
 
     const handleSelectIssue = (issue: IssueT) => {
@@ -167,13 +194,12 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     const issueCount = issuesData?.payload.count || 0;
 
     useEffect(() => {
-        updateListQueryParams({ q: query });
-    }, [query]);
-
-    useEffect(() => {
         if (open) {
-            fetchIssues(listQueryParams, true);
+            fetchIssues(initialQueryParams).unwrap().catch(toastApiError);
         }
+        return () => {
+            open && dispatch(closeIssueLinks());
+        };
     }, [open]);
 
     if (!open) return null;
@@ -301,7 +327,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                         <QueryPagination
                             count={issueCount}
                             queryParams={listQueryParams}
-                            updateQueryParams={updateListQueryParams}
+                            updateQueryParams={handleChangePagination}
                             size="small"
                         />
                     </>
