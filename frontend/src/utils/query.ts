@@ -8,9 +8,7 @@ export const initialListQueryParams: ListQueryParams = {
 
 const cleanParams = <T>(obj: Partial<T>): Partial<T> => {
     return Object.fromEntries(
-        Object.entries(obj).filter(
-            ([_, value]) => value !== "",
-        ),
+        Object.entries(obj).filter(([_, value]) => value !== ""),
     ) as Partial<T>;
 };
 
