@@ -280,7 +280,9 @@ export const issueApi = createApi({
                 url: `issue/${id}/feed/list`,
                 params,
             }),
-            serializeQueryArgs: ({ endpointName }) => endpointName,
+            serializeQueryArgs: ({ endpointName, queryArgs }) => {
+                return `${endpointName}:${queryArgs.id}`;
+            },
             merge: (currentCache, newItems) => {
                 const existingIds = new Set(
                     currentCache.payload.items.map((item) => item.data.id),
@@ -308,6 +310,7 @@ export const issueApi = createApi({
             },
             providesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
+                { type: "IssueHistories", id },
             ],
         }),
     }),
