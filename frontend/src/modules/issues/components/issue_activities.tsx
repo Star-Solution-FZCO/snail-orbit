@@ -17,15 +17,13 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { issueApi } from "store";
 import type { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
-import { formatSpentTime, noLimitListQueryParams, toastApiError } from "utils";
-import { mergeActivityRecords } from "../utils";
+import { formatSpentTime, toastApiError, useListQueryParams } from "utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 import { IssueHistory } from "./issue_history";
-
 const ActivityTypeButton = styled(Button, {
     shouldForwardProp: (name) => name !== "enabled",
 })<{ enabled?: boolean }>(({ theme, enabled }) => ({
@@ -119,16 +117,12 @@ interface IIssueActivitiesProps {
 }
 
 const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
-    const { data: commentsData, isLoading: commentsLoading } =
-        issueApi.useListIssueCommentsQuery({
-            id: issueId,
-        });
+    const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data: historyData, isLoading: historyLoading } =
-        issueApi.useListIssueHistoryQuery({
-            id: issueId,
-            params: noLimitListQueryParams,
-        });
+    const { data, isLoading: feedLoading } = issueApi.useListIssueFeedQuery({
+        id: issueId,
+        params: listQueryParams,
+    });
 
     const { data: issueSpentTime, isLoading: spentTimeLoading } =
         issueApi.useGetIssueSpentTimeQuery(issueId);
@@ -160,26 +154,21 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
         );
     };
 
-    const comments = useMemo(
-        () => commentsData?.payload.items || [],
-        [commentsData],
-    );
-    const historyRecords = useMemo(
-        () => historyData?.payload.items || [],
-        [historyData],
-    );
-
-    const totalSpentTime = issueSpentTime?.payload?.total_spent_time || 0;
+    const handleClickLoadMore = useCallback(() => {
+        updateListQueryParams({
+            offset: listQueryParams.offset + listQueryParams.limit,
+        });
+    }, [listQueryParams, updateListQueryParams]);
 
     const activities = useMemo(
         () =>
-            mergeActivityRecords(
-                comments,
-                historyRecords,
-                displayingActivities,
+            (data?.payload.items || []).filter((activity) =>
+                displayingActivities.includes(activity.type),
             ),
-        [comments, historyRecords, displayingActivities],
+        [data, displayingActivities],
     );
+    const rowCount = data?.payload.count || 0;
+    const totalSpentTime = issueSpentTime?.payload?.total_spent_time || 0;
 
     return (
         <Box display="flex" flexDirection="column">
@@ -225,7 +214,7 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                 <CreateCommentForm issueId={issueId} />
             </Box>
 
-            {(commentsLoading || spentTimeLoading || historyLoading) && (
+            {(feedLoading || spentTimeLoading) && (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={20} />
                 </Box>
@@ -259,6 +248,19 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                     return null;
                 })}
             </Box>
+
+            {rowCount > listQueryParams.offset + listQueryParams.limit &&
+                displayingActivities.length > 0 && (
+                    <Button
+                        sx={{ mt: 1 }}
+                        onClick={handleClickLoadMore}
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                    >
+                        {t("issues.activities.loadMore")}
+                    </Button>
+                )}
 
             <DeleteCommentDialog
                 issueId={issueId}
