@@ -3,46 +3,12 @@ import { Box, IconButton, LinearProgress, Typography } from "@mui/material";
 import { useRef } from "react";
 import type { TypeOptions } from "react-toastify";
 import { toast } from "react-toastify";
-import type {
-    CommentT,
-    IssueActivityT,
-    IssueActivityTypeT,
-    IssueHistoryT,
-    SelectedAttachmentT,
-} from "types";
+import type { SelectedAttachmentT } from "types";
 
 export const initialSelectedAttachment: SelectedAttachmentT = {
     id: "",
     filename: "",
     type: "browser",
-};
-
-export const mergeActivityRecords = (
-    comments: CommentT[],
-    historyRecords: IssueHistoryT[],
-    displayingActivities: IssueActivityTypeT[],
-): IssueActivityT[] => {
-    const commentActivities: IssueActivityT[] = comments.map((comment) => ({
-        id: comment.id,
-        type: "comment",
-        time: comment.created_at,
-        data: comment,
-    }));
-
-    const historyActivities: IssueActivityT[] = historyRecords.map(
-        (record) => ({
-            id: record.id,
-            type: "history",
-            time: record.time,
-            data: record,
-        }),
-    );
-
-    return [...commentActivities, ...historyActivities]
-        .filter((activity) => displayingActivities.includes(activity.type))
-        .sort(
-            (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime(),
-        );
 };
 
 export const useUploadToast = () => {

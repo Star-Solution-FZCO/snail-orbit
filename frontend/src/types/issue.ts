@@ -100,3 +100,9 @@ export type IssueSpentTimeT = {
     total_spent_time: number;
     records: IssueSpentTimeRecordT[];
 };
+
+export type IssueFeedRecordT = {
+    type: "comment" | "history";
+    data: CommentT | IssueHistoryT;
+    time: string;
+};

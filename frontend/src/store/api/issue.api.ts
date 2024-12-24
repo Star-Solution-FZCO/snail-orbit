@@ -5,6 +5,7 @@ import type {
     CreateCommentT,
     CreateIssueT,
     FieldValueT,
+    IssueFeedRecordT,
     IssueHistoryT,
     IssueLinkTypeT,
     IssueSpentTimeT,
@@ -126,7 +127,9 @@ export const issueApi = createApi({
                 method: "POST",
                 body,
             }),
-            invalidatesTags: () => [{ type: "IssueComments", id: "LIST" }],
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueComments", id },
+            ],
         }),
         updateIssueComment: build.mutation<
             ApiResponse<CommentT>,
@@ -139,7 +142,6 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { commentId }) => [
                 { type: "IssueComments", id: commentId },
-                { type: "IssueComments", id: "LIST" },
             ],
         }),
         deleteIssueComment: build.mutation<
@@ -152,7 +154,6 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { commentId }) => [
                 { type: "IssueComments", id: commentId },
-                { type: "IssueComments", id: "LIST" },
             ],
         }),
         listIssueHistory: build.query<
@@ -242,7 +243,7 @@ export const issueApi = createApi({
         getIssueSpentTime: build.query<ApiResponse<IssueSpentTimeT>, string>({
             query: (id) => `issue/${id}/spent_time`,
             providesTags: (_result, _error, id) => [
-                { type: "IssueComments", id: "LIST" },
+                { type: "IssueComments", id },
                 { type: "IssueHistories", id },
             ],
         }),
@@ -270,6 +271,44 @@ export const issueApi = createApi({
                 body,
                 method: "POST",
             }),
+        }),
+        listIssueFeed: build.query<
+            ListResponse<IssueFeedRecordT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `issue/${id}/feed/list`,
+                params,
+            }),
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems) => {
+                const existingIds = new Set(
+                    currentCache.payload.items.map((item) => item.data.id),
+                );
+
+                const uniqueItems = newItems.payload.items.filter(
+                    (item) => !existingIds.has(item.data.id),
+                );
+
+                currentCache.payload.items = [
+                    ...currentCache.payload.items,
+                    ...uniqueItems,
+                ];
+                currentCache.payload.items.sort(
+                    (a, b) =>
+                        new Date(b.time).getTime() - new Date(a.time).getTime(),
+                );
+                currentCache.payload.offset = newItems.payload.offset;
+                currentCache.payload.count = newItems.payload.count;
+            },
+            forceRefetch: ({ currentArg, previousArg }) => {
+                return (
+                    currentArg?.params?.offset !== previousArg?.params?.offset
+                );
+            },
+            providesTags: (_result, _error, { id }) => [
+                { type: "IssueComments", id },
+            ],
         }),
     }),
 });
