@@ -95,9 +95,9 @@ export const UserList = () => {
             display="flex"
             flexDirection="column"
             gap={2}
-            height="100%"
             px={4}
             pb={4}
+            height={1}
         >
             <Stack
                 direction="row"
@@ -123,22 +123,26 @@ export const UserList = () => {
                 </Link>
             </Stack>
 
-            <DataGrid
-                sx={{
-                    "& .MuiDataGrid-row": {
-                        cursor: "pointer",
-                    },
-                }}
-                columns={columns}
-                rows={rows}
-                rowCount={rowCount}
-                onRowClick={handleClickRow}
-                paginationModel={paginationModel}
-                onPaginationModelChange={handlePaginationModelChange}
-                loading={isLoading || isFetching}
-                paginationMode="server"
-                density="compact"
-            />
+            <Box flex={1} position="relative">
+                <Box sx={{ position: "absolute", inset: 0 }}>
+                    <DataGrid
+                        sx={{
+                            "& .MuiDataGrid-row": {
+                                cursor: "pointer",
+                            },
+                        }}
+                        columns={columns}
+                        rows={rows}
+                        rowCount={rowCount}
+                        onRowClick={handleClickRow}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={handlePaginationModelChange}
+                        loading={isLoading || isFetching}
+                        paginationMode="server"
+                        density="compact"
+                    />
+                </Box>
+            </Box>
         </Box>
     );
 };
