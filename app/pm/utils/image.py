@@ -26,7 +26,7 @@ def generate_initials_image(
     mode: str = 'RGBA',
 ) -> Image.Image:
     if not background_color_bytes or len(background_color_bytes) < 3:
-        background_color_bytes = random.randbytes(3)
+        background_color_bytes = random.randbytes(3)  # nosec: blacklist
     initials = ''.join(
         word[0].upper() for word in name.split() if word and word[0].isalpha()
     )

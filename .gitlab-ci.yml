@@ -91,6 +91,16 @@ sec-gitleaks:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
+sec-bandit:
+  stage: lint
+  image:
+    name: ghcr.io/pycqa/bandit/bandit:latest
+    entrypoint: [""]
+  script:
+    - bandit -c app/pyproject.toml -r app
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
 build-dev-api:
   stage: build
   before_script:
