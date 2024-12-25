@@ -28,7 +28,7 @@ def add_tasks_args(parser: argparse.ArgumentParser) -> None:
         '-s',
         '--schedule',
         type=str,
-        default='/tmp/celerybeat-schedule',
+        default='/tmp/celerybeat-schedule',  # nosec: hardcoded_tmp_directory
         help='Path to the schedule file',
     )
     beat_parser.set_defaults(func=run_beat)

@@ -87,7 +87,7 @@ class WbAPIClient:
         data = {
             'iat': now - 10,
             'exp': now + 60,
-            'req_hash': sha1((method + related_url).encode('utf-8')).hexdigest(),
+            'req_hash': sha1((method + related_url).encode('utf-8')).hexdigest(),  # nosec: hashlib
         }
         token = jwt.encode(
             data,

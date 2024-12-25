@@ -16,7 +16,7 @@ __all__ = ('task_notify_by_pararam',)
 def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
     try:
         bot.post_private_message_by_user_email(user_email, message)
-    except Exception:
+    except Exception:  # nosec: try_except_pass
         pass
 
 
