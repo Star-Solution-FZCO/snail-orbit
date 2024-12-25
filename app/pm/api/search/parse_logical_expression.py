@@ -97,7 +97,7 @@ class OperatorError(ValueError):
             return {'(', 'expression'}
         if self.previous_token in ('and', 'or', '('):
             return {'(', 'expression'}
-        if self.previous_token == ')':
+        if self.previous_token == ')':  # nosec hardcoded_password_string
             return {'and', 'or', ')'}
         return {'and', 'or', ')', 'expression'}
 

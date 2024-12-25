@@ -49,7 +49,7 @@ def _send_email(
             msg.attach(attachment)
         mail_client.sendmail(CONFIG.SMTP_SENDER, recipients, msg.as_string())
         mail_client.close()
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:  # pylint: disable=broad-exception-caught  # nosec: try_except_pass
         pass
 
 

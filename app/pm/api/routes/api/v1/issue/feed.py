@@ -44,10 +44,14 @@ class IssueFeedRecordOutput(BaseModel):
     def from_obj(cls, obj: m.IssueComment | m.IssueHistoryRecord) -> Self:
         if isinstance(obj, m.IssueComment):
             return cls(
-                type=IssueFeedRecordType.COMMENT, data=IssueCommentOutput.from_obj(obj), time=obj.created_at
+                type=IssueFeedRecordType.COMMENT,
+                data=IssueCommentOutput.from_obj(obj),
+                time=obj.created_at,
             )
         return cls(
-            type=IssueFeedRecordType.HISTORY, data=IssueHistoryOutput.from_obj(obj), time=obj.time
+            type=IssueFeedRecordType.HISTORY,
+            data=IssueHistoryOutput.from_obj(obj),
+            time=obj.time,
         )
 
 
