@@ -15,6 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as AuthenticatedProfileIndexImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated/users/$userId'
 import { Route as AuthenticatedRolesRoleIdImport } from './routes/_authenticated/roles/$roleId'
 import { Route as AuthenticatedProjectsProjectIdImport } from './routes/_authenticated/projects/$projectId'
@@ -155,6 +156,11 @@ const AuthenticatedAgilesIndexLazyRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/agiles/index.lazy').then((d) => d.Route),
   )
+
+const AuthenticatedProfileIndexRoute = AuthenticatedProfileIndexImport.update({
+  path: '/profile/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 const AuthenticatedUsersCreateLazyRoute =
   AuthenticatedUsersCreateLazyImport.update({
@@ -405,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersCreateLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/agiles/': {
       id: '/_authenticated/agiles/'
       path: '/agiles'
@@ -493,6 +506,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedProjectsCreateLazyRoute,
     AuthenticatedRolesCreateLazyRoute,
     AuthenticatedUsersCreateLazyRoute,
+    AuthenticatedProfileIndexRoute,
     AuthenticatedAgilesIndexLazyRoute,
     AuthenticatedCustomFieldsIndexLazyRoute,
     AuthenticatedGroupsIndexLazyRoute,
@@ -535,6 +549,7 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/projects/create",
         "/_authenticated/roles/create",
         "/_authenticated/users/create",
+        "/_authenticated/profile/",
         "/_authenticated/agiles/",
         "/_authenticated/custom-fields/",
         "/_authenticated/groups/",
@@ -609,6 +624,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/users/create": {
       "filePath": "_authenticated/users/create.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/profile/": {
+      "filePath": "_authenticated/profile/index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/agiles/": {

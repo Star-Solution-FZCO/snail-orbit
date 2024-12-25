@@ -3,6 +3,7 @@ export * from "./auth";
 export * from "./custom_fields";
 export * from "./groups";
 export * from "./issues";
+export * from "./profile";
 export * from "./projects";
 export * from "./roles";
 export * from "./users";

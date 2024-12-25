@@ -19,3 +19,15 @@ export type CreateUserT = {
 };
 
 export type UpdateUserT = Partial<CreateUserT>;
+
+export type APITokenT = {
+    name: string;
+    last_digits: string;
+    created_at: string;
+    expires_at: string | null;
+    is_active: boolean;
+};
+
+export type NewApiTokenT = {
+    token: string;
+};
