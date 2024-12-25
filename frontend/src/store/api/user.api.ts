@@ -1,11 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
+    APITokenT,
     BasicUserT,
     CreateUserT,
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
+    NewApiTokenT,
     UpdateUserT,
     UserT,
 } from "types";
@@ -75,6 +77,27 @@ export const userApi = createApi({
                 { type: "Users", id },
                 { type: "Users", id: "LIST" },
             ],
+        }),
+        createAPIToken: build.mutation<
+            ApiResponse<NewApiTokenT>,
+            { name: string; expires_at: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/api_token`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: () => [{ type: "APITokens", id: "LIST" }],
+        }),
+        listAPIToken: build.query<
+            ListResponse<APITokenT>,
+            ListQueryParams | void
+        >({
+            query: (params) => ({
+                url: "settings/api_token/list",
+                params: params ?? undefined,
+            }),
+            providesTags: () => [{ type: "APITokens", id: "LIST" }],
         }),
     }),
 });
