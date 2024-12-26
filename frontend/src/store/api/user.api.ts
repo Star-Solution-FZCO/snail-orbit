@@ -7,6 +7,7 @@ import {
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
+    MFASettingsT,
     NewApiTokenT,
     TOTPDataT,
     UpdateUserT,
@@ -100,16 +101,14 @@ export const userApi = createApi({
             }),
             providesTags: () => [{ type: "APITokens", id: "LIST" }],
         }),
-        getMFASettings: build.query<ApiResponse<{ is_enabled: boolean }>, void>(
-            {
-                query: () => ({
-                    url: "settings/mfa",
-                }),
-                providesTags: ["MFA"],
-            },
-        ),
+        getMFASettings: build.query<ApiResponse<MFASettingsT>, void>({
+            query: () => ({
+                url: "settings/mfa",
+            }),
+            providesTags: ["MFA", "TOTP"],
+        }),
         updateMFASettings: build.mutation<
-            ApiResponse<{ is_enabled: boolean }>,
+            ApiResponse<MFASettingsT>,
             { is_enabled: boolean; mfa_totp_code: string | null }
         >({
             query: (body) => ({
@@ -124,6 +123,18 @@ export const userApi = createApi({
                 url: `settings/mfa/totp`,
                 method: "POST",
             }),
+            invalidatesTags: ["TOTP"],
+        }),
+        deleteOTP: build.mutation<
+            { success: boolean },
+            { mfa_totp_code: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/mfa/totp`,
+                method: "DELETE",
+                body,
+            }),
+            invalidatesTags: ["TOTP"],
         }),
     }),
 });
