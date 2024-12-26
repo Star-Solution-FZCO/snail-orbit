@@ -31,3 +31,12 @@ export type APITokenT = {
 export type NewApiTokenT = {
     token: string;
 };
+
+export type TOTPDataT = {
+    created_at: string;
+    secret: string;
+    link: string;
+    period: number;
+    digits: number;
+    digest: string;
+};

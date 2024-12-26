@@ -4,6 +4,7 @@ type CredentialsT = {
     login: string;
     password: string;
     remember: boolean;
+    mfa_totp_code: string | null;
 };
 
 export const authenticate = async (credentials: CredentialsT) => {

@@ -8,6 +8,7 @@ import {
     ListResponse,
     ListSelectQueryParams,
     NewApiTokenT,
+    TOTPDataT,
     UpdateUserT,
     UserT,
 } from "types";
@@ -98,6 +99,31 @@ export const userApi = createApi({
                 params: params ?? undefined,
             }),
             providesTags: () => [{ type: "APITokens", id: "LIST" }],
+        }),
+        getMFASettings: build.query<ApiResponse<{ is_enabled: boolean }>, void>(
+            {
+                query: () => ({
+                    url: "settings/mfa",
+                }),
+                providesTags: ["MFA"],
+            },
+        ),
+        updateMFASettings: build.mutation<
+            ApiResponse<{ is_enabled: boolean }>,
+            { is_enabled: boolean; mfa_totp_code: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/mfa`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: ["MFA"],
+        }),
+        createOTP: build.mutation<ApiResponse<TOTPDataT>, void>({
+            query: () => ({
+                url: `settings/mfa/totp`,
+                method: "POST",
+            }),
         }),
     }),
 });
