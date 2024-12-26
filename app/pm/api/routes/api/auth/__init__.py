@@ -47,6 +47,16 @@ class AuthException(Exception):
         self.detail = detail
 
 
+def _mfa_check(user: m.User, user_auth: UserAuth) -> bool:
+    if not user.mfa_enabled:
+        return False
+    if not user_auth.mfa_totp_code:
+        raise MFARequiredException()
+    if not user.check_totp(user_auth.mfa_totp_code):
+        raise AuthException('MFA error')
+    return True
+
+
 async def local_auth(
     user_auth: UserAuth,
 ) -> tuple[m.User, bool]:
@@ -62,13 +72,7 @@ async def local_auth(
         raise AuthException('User not found')
     if not user.check_password(user_auth.password):
         raise AuthException('Invalid password')
-    mfa_passed = False
-    if user.mfa_enabled:
-        if not user_auth.mfa_totp_code:
-            raise MFARequiredException()
-        mfa_passed = user.check_totp(user_auth.mfa_totp_code)
-        if not mfa_passed:
-            raise AuthException('MFA error')
+    mfa_passed = _mfa_check(user, user_auth)
     return user, mfa_passed
 
 
@@ -85,7 +89,8 @@ async def dev_auth(
         raise AuthException('User not found')
     if user_auth.password != CONFIG.DEV_PASSWORD:
         raise AuthException('Invalid password')
-    return user, False
+    mfa_passed = _mfa_check(user, user_auth)
+    return user, mfa_passed
 
 
 def get_auth_func() -> Callable[[UserAuth], Coroutine[None, None, tuple[m.User, bool]]]:
