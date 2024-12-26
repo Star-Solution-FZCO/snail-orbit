@@ -104,8 +104,7 @@ const Auth: FC = () => {
                 to: search.redirect || "/",
             });
         } catch (error: any) {
-            const errorMessages = error?.data?.error_messages || [];
-            if (errorMessages.includes("MFA required")) {
+            if (error?.mfa_required) {
                 setTOTPAuthStep(true);
                 return;
             }

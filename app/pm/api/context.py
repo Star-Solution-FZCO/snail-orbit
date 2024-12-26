@@ -11,6 +11,7 @@ from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
+from pm.api.exceptions import MFARequiredException
 from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
 from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
 from pm.permissions import Permissions, PermissionT
@@ -85,7 +86,7 @@ async def user_dependency(
         mfa_passed = (jwt_auth.get_raw_jwt() or {}).get('mfa_passed', False)
         user = await m.User.find_one(m.User.email == user_login)
         if user and user.mfa_enabled and not mfa_passed:
-            raise HTTPException(HTTPStatus.UNAUTHORIZED, 'MFA required')
+            raise MFARequiredException()
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user
