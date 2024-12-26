@@ -13,6 +13,9 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
 import { QRCodeSVG } from "qrcode.react";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +23,9 @@ import { toast } from "react-toastify";
 import { userApi } from "store";
 import { TOTPDataT } from "types";
 import { toastApiError } from "utils";
+
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 interface ITFASetupDialogProps {
     open: boolean;
@@ -188,7 +194,7 @@ const ToggleTFADialog: FC<IToggleTFADialogProps> = ({
     const handleClickConfirm = () => {
         updateMFASettings({
             is_enabled: !enabled,
-            mfa_totp_code: !enabled ? code : null,
+            mfa_totp_code: code,
         })
             .unwrap()
             .then(() => {
@@ -249,7 +255,7 @@ const ToggleTFADialog: FC<IToggleTFADialogProps> = ({
                 <LoadingButton
                     onClick={handleClickConfirm}
                     variant="outlined"
-                    disabled={!enabled && !code}
+                    disabled={!code}
                     loading={isLoading}
                 >
                     {t("tfa.setup.confirm")}
@@ -267,16 +273,29 @@ export const AccountSecurity = () => {
     const [createOTP, { isLoading: createOTPLoading }] =
         userApi.useCreateOTPMutation();
 
+    const [deleteOTP, { isLoading: deleteOTPLoading }] =
+        userApi.useDeleteOTPMutation();
+
     const [TOTPData, setTOTPData] = useState<TOTPDataT | null>(null);
     const [toggleTFADialogOpen, setToggleTFADialogOpen] = useState(false);
 
     const tfaEnabled = mfaSettings?.payload.is_enabled ?? false;
+    const totpCreated = mfaSettings?.payload.totp.created_at ?? null;
 
     const handleClickSetup = () => {
         createOTP()
             .unwrap()
             .then((response) => {
                 setTOTPData(response.payload);
+            })
+            .catch(toastApiError);
+    };
+
+    const handleClickDelete = () => {
+        deleteOTP({ mfa_totp_code: null })
+            .unwrap()
+            .then(() => {
+                toast.success(t("tfa.totp.deleted"));
             })
             .catch(toastApiError);
     };
@@ -307,6 +326,21 @@ export const AccountSecurity = () => {
                         )}
                     </Typography>
                 </Typography>
+
+                <Typography>
+                    {t("tfa.totp.status")}:{" "}
+                    <Typography
+                        component="span"
+                        color={totpCreated ? "success" : "error"}
+                    >
+                        {totpCreated
+                            ? dayjs
+                                  .utc(totpCreated)
+                                  .local()
+                                  .format("DD MMM YYYY HH:mm")
+                            : t("tfa.totp.status.notSet")}
+                    </Typography>
+                </Typography>
             </Stack>
 
             <TFASetupDialog
@@ -322,15 +356,27 @@ export const AccountSecurity = () => {
             />
 
             <Box display="flex" gap={1}>
-                {!tfaEnabled && (
+                {!tfaEnabled && !totpCreated && (
                     <LoadingButton
                         onClick={handleClickSetup}
                         variant="outlined"
                         size="small"
                         color="secondary"
-                        loading={isLoading || createOTPLoading}
+                        loading={isLoading || deleteOTPLoading}
                     >
                         {t("tfa.setup")}
+                    </LoadingButton>
+                )}
+
+                {!tfaEnabled && totpCreated && (
+                    <LoadingButton
+                        onClick={handleClickDelete}
+                        variant="outlined"
+                        size="small"
+                        color="secondary"
+                        loading={isLoading || createOTPLoading}
+                    >
+                        {t("tfa.totp.delete")}
                     </LoadingButton>
                 )}
 

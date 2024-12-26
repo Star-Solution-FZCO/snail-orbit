@@ -40,3 +40,8 @@ export type TOTPDataT = {
     digits: number;
     digest: string;
 };
+
+export type MFASettingsT = {
+    is_enabled: boolean;
+    totp: { created_at: string | null };
+};

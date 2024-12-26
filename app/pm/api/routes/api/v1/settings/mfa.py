@@ -1,3 +1,4 @@
+from typing import Self
 from datetime import datetime
 from http import HTTPStatus
 
@@ -8,7 +9,7 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.exceptions import MFARequiredException
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import SuccessPayloadOutput
+from pm.api.views.output import SuccessPayloadOutput, SuccessOutput
 from pm.config import CONFIG
 
 __all__ = ('router',)
@@ -16,8 +17,26 @@ __all__ = ('router',)
 router = APIRouter(prefix='/mfa', tags=['mfa'])
 
 
+class TOTPStatusOut(BaseModel):
+    created_at: datetime | None
+
+    @classmethod
+    def from_obj(cls, obj: m.User) -> Self:
+        if not obj.totp:
+            return cls(created_at=None)
+        return cls(created_at=obj.totp.created_at)
+
+
 class MFASettingOut(BaseModel):
     is_enabled: bool
+    totp: TOTPStatusOut
+
+    @classmethod
+    def from_obj(cls, obj: m.User) -> Self:
+        return cls(
+            is_enabled=obj.mfa_enabled,
+            totp=TOTPStatusOut.from_obj(obj),
+        )
 
 
 class MFASettingUpdate(BaseModel):
@@ -34,11 +53,15 @@ class TOTPCreateOut(BaseModel):
     digest: str
 
 
+class TOTPDeleteBody(BaseModel):
+    mfa_totp_code: str | None = None
+
+
 @router.get('')
 async def get_two_fa_settings() -> SuccessPayloadOutput[MFASettingOut]:
     user_ctx = current_user()
     return SuccessPayloadOutput(
-        payload=MFASettingOut(is_enabled=user_ctx.user.mfa_enabled)
+        payload=MFASettingOut.from_obj(user_ctx.user)
     )
 
 
@@ -50,14 +73,14 @@ async def update_two_fa_settings(
     if user_ctx.user.mfa_enabled:
         if not body.mfa_totp_code:
             raise MFARequiredException()
-        if not user_ctx.user.verify_mfa(body.mfa_totp_code):
+        if not user_ctx.user.check_totp(body.mfa_totp_code):
             raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid MFA code')
 
     user_ctx.user.mfa_enabled = body.is_enabled
     if user_ctx.user.is_changed:
         await user_ctx.user.save_changes()
     return SuccessPayloadOutput(
-        payload=MFASettingOut(is_enabled=user_ctx.user.mfa_enabled)
+        payload=MFASettingOut.from_obj(user_ctx.user)
     )
 
 
@@ -79,3 +102,20 @@ async def create_otp() -> SuccessPayloadOutput[TOTPCreateOut]:
             digest=settings_obj.digest,
         )
     )
+
+
+@router.delete('/totp')
+async def delete_otp(
+    body: TOTPDeleteBody,
+) -> SuccessOutput:
+    user_ctx = current_user()
+    if not user_ctx.user.totp:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'OTP not found')
+    if user_ctx.user.mfa_enabled:
+        if not body.mfa_totp_code:
+            raise MFARequiredException()
+        if not user_ctx.user.check_totp(body.mfa_totp_code):
+            raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid MFA code')
+    user_ctx.user.totp = None
+    await user_ctx.user.save_changes()
+    return SuccessOutput()
