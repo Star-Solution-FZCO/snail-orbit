@@ -44,10 +44,18 @@ export const mfaAuthenticate = async (code: string) => {
     const formData = new FormData();
     formData.append("mfa_totp_code", code);
 
-    await fetch(url, {
+    const response = await fetch(url, {
         method: "POST",
         body: formData,
         credentials: "include",
-        redirect: "follow",
+        redirect: "manual",
     });
+
+    if (response.status === 302) {
+        window.location.href = response.headers.get("Location") || "/";
+        return;
+    }
+
+    const jsonResponse = await response.json();
+    return response.ok ? jsonResponse : Promise.reject(jsonResponse);
 };
