@@ -14,7 +14,7 @@ import {
     TextField,
 } from "@mui/material";
 import { UserAvatar } from "components";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
 import { BasicUserT, ListSelectQueryParams } from "types";
@@ -39,6 +39,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
         useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [hasMore, setHasMore] = useState(true);
 
     const {
         data,
@@ -62,6 +63,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                 search: value.length > 0 ? value : undefined,
                 offset: 0,
             });
+            setHasMore(true);
         }, 300),
         [],
     );
@@ -71,7 +73,8 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
         if (
             listboxNode.scrollTop + listboxNode.clientHeight >=
                 listboxNode.scrollHeight &&
-            !dataLoading
+            !dataLoading &&
+            hasMore
         ) {
             updateQueryParams({
                 offset: queryParams.offset + queryParams.limit,
@@ -99,6 +102,14 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
     const users = data?.payload?.items || [];
     const dataLoading = usersLoading || usersFetching;
 
+    useEffect(() => {
+        if (data) {
+            const totalItems = data.payload.count || 0;
+            const loadedItems = data.payload.items.length || 0;
+            setHasMore(loadedItems < totalItems);
+        }
+    }, [data]);
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
             <DialogTitle
@@ -122,6 +133,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                     options={users}
                     getOptionLabel={(option) => option.name}
                     onOpen={handleOpenAutocomplete}
+                    onClose={() => setAutocompleteOpen(false)}
                     onChange={(_, value) => setUser(value)}
                     onInputChange={handleSearchInputChange}
                     ListboxProps={{
@@ -152,7 +164,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
-                            <li key={key} {...optionProps}>
+                            <li {...optionProps} key={option.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
                                     <UserAvatar src={option.avatar} />
                                     {option.name}
@@ -161,6 +173,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                         );
                     }}
                     size="small"
+                    clearOnBlur={false}
                 />
             </DialogContent>
 
