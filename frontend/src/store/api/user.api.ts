@@ -11,6 +11,7 @@ import {
     NewApiTokenT,
     TOTPDataT,
     UpdateUserT,
+    UserOrGroupT,
     UserT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
@@ -36,7 +37,7 @@ export const userApi = createApi({
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
         listSelectUser: build.query<
-            ListResponse<BasicUserT>,
+            ListResponse<BasicUserT> & { searchQuery?: string | null },
             ListSelectQueryParams | void
         >({
             query: (params) => ({
@@ -44,13 +45,20 @@ export const userApi = createApi({
                 params: params ?? undefined,
             }),
             serializeQueryArgs: ({ endpointName }) => endpointName,
-            merge: (currentCache, newItems) => {
+            merge: (currentCache, newItems, meta) => {
+                if (meta.arg?.search !== currentCache?.searchQuery) {
+                    currentCache.payload.items = [];
+                }
                 currentCache.payload.items.push(...newItems.payload.items);
                 currentCache.payload.offset = newItems.payload.offset;
                 currentCache.payload.count = newItems.payload.count;
+                currentCache.searchQuery = meta.arg?.search;
             },
             forceRefetch: ({ currentArg, previousArg }) => {
-                return currentArg?.offset !== previousArg?.offset;
+                return (
+                    currentArg?.offset !== previousArg?.offset ||
+                    currentArg?.search !== previousArg?.search
+                );
             },
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
@@ -135,6 +143,32 @@ export const userApi = createApi({
                 body,
             }),
             invalidatesTags: ["TOTP"],
+        }),
+        listSelectUserOrGroup: build.query<
+            ListResponse<UserOrGroupT> & { searchQuery?: string | null },
+            ListSelectQueryParams | void
+        >({
+            query: (params) => ({
+                url: "user-group/select",
+                params: params ?? undefined,
+            }),
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems, meta) => {
+                if (meta.arg?.search !== currentCache?.searchQuery) {
+                    currentCache.payload.items = [];
+                }
+                currentCache.payload.items.push(...newItems.payload.items);
+                currentCache.payload.offset = newItems.payload.offset;
+                currentCache.payload.count = newItems.payload.count;
+                currentCache.searchQuery = meta.arg?.search;
+            },
+            forceRefetch: ({ currentArg, previousArg }) => {
+                return (
+                    currentArg?.offset !== previousArg?.offset ||
+                    currentArg?.search !== previousArg?.search
+                );
+            },
+            providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
     }),
 });
