@@ -329,20 +329,20 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "beanie"
-version = "1.28.0"
+version = "1.27.0"
 description = "Asynchronous Python ODM for MongoDB"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.7"
 files = [
-    {file = "beanie-1.28.0-py3-none-any.whl", hash = "sha256:6dfc4caae2f5ea647d050a9259e222c55cfa6894ca625edf1c44c956548c2b21"},
-    {file = "beanie-1.28.0.tar.gz", hash = "sha256:6b7a221bc3cbf00d463252ed613e54934973917d978329c5cdd2ec629a1c8559"},
+    {file = "beanie-1.27.0-py3-none-any.whl", hash = "sha256:2cc6762bdd59b9040dd004ecbc7d4fd5ddd22e52743915e38d1f0f92f276bcaf"},
+    {file = "beanie-1.27.0.tar.gz", hash = "sha256:a5eee40f1e52214afeb8558c0823d7504856884770c3d56fc3cd5765efb87314"},
 ]
 
 [package.dependencies]
 click = ">=7"
 lazy-model = "0.2.0"
 motor = ">=2.5.0,<4.0.0"
-pydantic = ">=1.10.18,<3.0"
+pydantic = ">=1.10,<3.0"
 toml = "*"
 typing-extensions = ">=4.7"
 
@@ -355,7 +355,7 @@ gssapi = ["motor[gssapi] (>=2.5.0,<4.0.0)"]
 ocsp = ["motor[ocsp] (>=2.5.0,<4.0.0)"]
 queue = ["beanie-batteries-queue (>=0.2)"]
 snappy = ["motor[snappy] (>=2.5.0,<4.0.0)"]
-test = ["asgi-lifespan (>=1.0.1)", "dnspython (>=2.1.0)", "fastapi (>=0.100)", "httpx (>=0.23.0)", "pre-commit (>=3.5.0)", "pydantic-extra-types (>=2)", "pydantic-settings (>=2)", "pydantic[email]", "pyright (>=0)", "pytest (>=8.3.3)", "pytest-asyncio (>=0.24.0)", "pytest-cov (>=5.0.0)"]
+test = ["asgi-lifespan (>=1.0.1)", "dnspython (>=2.1.0)", "fastapi (>=0.100)", "flake8 (>=3)", "httpx (>=0.23.0)", "pre-commit (>=2.3.0)", "pydantic-extra-types (>=2)", "pydantic-settings (>=2)", "pydantic[email]", "pyright (>=0)", "pytest (>=6.0.0)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=2.8.1)"]
 zstd = ["motor[zstd] (>=2.5.0,<4.0.0)"]
 
 [[package]]
@@ -4660,4 +4660,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "ef25367efeffd2621d8afe752c8cca1c78494a70de884455c6ca2db344b39b98"
+content-hash = "57f378d249ecc08dc4c6d27cb263b212e5e30eba010a8c2d8da1574aedb51142"
