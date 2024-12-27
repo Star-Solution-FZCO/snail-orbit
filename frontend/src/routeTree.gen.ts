@@ -15,6 +15,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as LoginMfaImport } from './routes/login_.mfa'
+import { Route as AuthenticatedProfileIndexImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated/users/$userId'
 import { Route as AuthenticatedRolesRoleIdImport } from './routes/_authenticated/roles/$roleId'
 import { Route as AuthenticatedProjectsProjectIdImport } from './routes/_authenticated/projects/$projectId'
@@ -98,6 +100,11 @@ const AuthenticatedIndexLazyRoute = AuthenticatedIndexLazyImport.update({
   import('./routes/_authenticated/index.lazy').then((d) => d.Route),
 )
 
+const LoginMfaRoute = LoginMfaImport.update({
+  path: '/login/mfa',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AuthenticatedUsersIndexLazyRoute =
   AuthenticatedUsersIndexLazyImport.update({
     path: '/users/',
@@ -155,6 +162,11 @@ const AuthenticatedAgilesIndexLazyRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/agiles/index.lazy').then((d) => d.Route),
   )
+
+const AuthenticatedProfileIndexRoute = AuthenticatedProfileIndexImport.update({
+  path: '/profile/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 const AuthenticatedUsersCreateLazyRoute =
   AuthenticatedUsersCreateLazyImport.update({
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/login/mfa': {
+      id: '/login/mfa'
+      path: '/login/mfa'
+      fullPath: '/login/mfa'
+      preLoaderRoute: typeof LoginMfaImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
@@ -405,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersCreateLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileIndexImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/agiles/': {
       id: '/_authenticated/agiles/'
       path: '/agiles'
@@ -493,6 +519,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedProjectsCreateLazyRoute,
     AuthenticatedRolesCreateLazyRoute,
     AuthenticatedUsersCreateLazyRoute,
+    AuthenticatedProfileIndexRoute,
     AuthenticatedAgilesIndexLazyRoute,
     AuthenticatedCustomFieldsIndexLazyRoute,
     AuthenticatedGroupsIndexLazyRoute,
@@ -503,6 +530,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedIssuesDraftDraftIdLazyRoute,
   }),
   LoginRoute,
+  LoginMfaRoute,
 })
 
 /* prettier-ignore-end */
@@ -514,7 +542,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/_authenticated",
-        "/login"
+        "/login",
+        "/login/mfa"
       ]
     },
     "/_authenticated": {
@@ -535,6 +564,7 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/projects/create",
         "/_authenticated/roles/create",
         "/_authenticated/users/create",
+        "/_authenticated/profile/",
         "/_authenticated/agiles/",
         "/_authenticated/custom-fields/",
         "/_authenticated/groups/",
@@ -547,6 +577,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/login/mfa": {
+      "filePath": "login_.mfa.tsx"
     },
     "/_authenticated/": {
       "filePath": "_authenticated/index.lazy.tsx",
@@ -609,6 +642,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/users/create": {
       "filePath": "_authenticated/users/create.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/profile/": {
+      "filePath": "_authenticated/profile/index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/agiles/": {

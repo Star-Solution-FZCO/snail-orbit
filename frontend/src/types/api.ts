@@ -13,6 +13,11 @@ export type QueryErrorT = {
     };
 };
 
+export type MFARequiredErrorT = {
+    mfa_required: boolean;
+    success: boolean;
+};
+
 export type BaseQueryParams = {
     limit: number;
     offset: number;

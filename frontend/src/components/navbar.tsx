@@ -132,11 +132,14 @@ const NavBar = () => {
                     </IconButton>
                 )}
 
-                <Avatar
-                    sx={{ width: 32, height: 32 }}
-                    src={user?.avatar}
-                    variant="rounded"
-                />
+                <Link to="/profile">
+                    <Avatar
+                        sx={{ width: 32, height: 32 }}
+                        src={user?.avatar}
+                        variant="rounded"
+                    />
+                </Link>
+
                 <IconButton onClick={handleLogout} size="small">
                     <LogoutIcon />
                 </IconButton>
