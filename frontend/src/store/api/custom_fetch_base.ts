@@ -8,7 +8,7 @@ import { Mutex } from "async-mutex";
 import { API_URL, apiVersion } from "config";
 import { logout, refreshToken } from "services/auth";
 import { logout as logoutAction } from "store/slices";
-import { QueryErrorT } from "types";
+import { MFARequiredErrorT, QueryErrorT } from "types";
 
 const mutex = new Mutex();
 
@@ -47,6 +47,16 @@ const customBaseQuery: BaseQueryFn<
             response = await baseQuery(args, api, extraOptions);
         }
     }
+
+    if (
+        response.error &&
+        response.error.status === 400 &&
+        (response.error as unknown as MFARequiredErrorT)?.mfa_required
+    ) {
+        await logout();
+        api.dispatch(logoutAction());
+    }
+
     return response;
 };
 

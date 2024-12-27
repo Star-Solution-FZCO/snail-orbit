@@ -1,11 +1,15 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
+    APITokenT,
     BasicUserT,
     CreateUserT,
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
+    MFASettingsT,
+    NewApiTokenT,
+    TOTPDataT,
     UpdateUserT,
     UserT,
 } from "types";
@@ -75,6 +79,62 @@ export const userApi = createApi({
                 { type: "Users", id },
                 { type: "Users", id: "LIST" },
             ],
+        }),
+        createAPIToken: build.mutation<
+            ApiResponse<NewApiTokenT>,
+            { name: string; expires_at: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/api_token`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: () => [{ type: "APITokens", id: "LIST" }],
+        }),
+        listAPIToken: build.query<
+            ListResponse<APITokenT>,
+            ListQueryParams | void
+        >({
+            query: (params) => ({
+                url: "settings/api_token/list",
+                params: params ?? undefined,
+            }),
+            providesTags: () => [{ type: "APITokens", id: "LIST" }],
+        }),
+        getMFASettings: build.query<ApiResponse<MFASettingsT>, void>({
+            query: () => ({
+                url: "settings/mfa",
+            }),
+            providesTags: ["MFA", "TOTP"],
+        }),
+        updateMFASettings: build.mutation<
+            ApiResponse<MFASettingsT>,
+            { is_enabled: boolean; mfa_totp_code: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/mfa`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: ["MFA"],
+        }),
+        createOTP: build.mutation<ApiResponse<TOTPDataT>, void>({
+            query: () => ({
+                url: `settings/mfa/totp`,
+                method: "POST",
+            }),
+            invalidatesTags: ["TOTP"],
+        }),
+        deleteOTP: build.mutation<
+            { success: boolean },
+            { mfa_totp_code: string | null }
+        >({
+            query: (body) => ({
+                url: `settings/mfa/totp`,
+                method: "DELETE",
+                body,
+            }),
+            invalidatesTags: ["TOTP"],
         }),
     }),
 });

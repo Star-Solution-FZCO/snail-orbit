@@ -4,6 +4,7 @@ type CredentialsT = {
     login: string;
     password: string;
     remember: boolean;
+    mfa_totp_code: string | null;
 };
 
 export const authenticate = async (credentials: CredentialsT) => {
@@ -36,4 +37,25 @@ export const logout = async () => {
     await fetch(url, {
         credentials: "include",
     });
+};
+
+export const mfaAuthenticate = async (code: string) => {
+    const url = API_URL + "auth/oidc/mfa";
+    const formData = new FormData();
+    formData.append("mfa_totp_code", code);
+
+    const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        redirect: "manual",
+    });
+
+    if (response.status === 302) {
+        window.location.href = response.headers.get("Location") || "/";
+        return;
+    }
+
+    const jsonResponse = await response.json();
+    return response.ok ? jsonResponse : Promise.reject(jsonResponse);
 };
