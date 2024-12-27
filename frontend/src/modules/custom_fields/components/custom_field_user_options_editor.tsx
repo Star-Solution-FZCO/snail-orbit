@@ -19,15 +19,16 @@ import {
     Typography,
 } from "@mui/material";
 import { UserAvatar } from "components";
-import { mergeUsersAndGroups } from "modules/projects/utils";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi, groupApi, userApi } from "store";
+import { customFieldsApi, userApi } from "store";
 import {
     BasicUserT,
     CustomFieldT,
     ListSelectQueryParams,
     UserOrGroupOptionT,
+    UserOrGroupT,
+    UserT,
 } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 
@@ -73,31 +74,19 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [entity, setEntity] = useState<{
-        id: string;
-        name: string;
-        type: "user" | "group";
-        avatar?: string;
-    } | null>(null);
+    const [entity, setEntity] = useState<UserOrGroupT | null>(null);
 
     const [queryParams, updateQueryParams, resetQueryParams] =
         useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [hasMore, setHasMore] = useState(true);
 
     const {
-        data: users,
-        isLoading: usersLoading,
-        isFetching: usersFetching,
-    } = userApi.useListSelectUserQuery(queryParams, {
-        skip: !autocompleteOpen,
-    });
-
-    const {
-        data: groups,
-        isLoading: groupsLoading,
-        isFetching: groupsFetching,
-    } = groupApi.useListGroupQuery(queryParams, {
+        data,
+        isLoading: dataLoading,
+        isFetching: dataFetching,
+    } = userApi.useListSelectUserOrGroupQuery(queryParams, {
         skip: !autocompleteOpen,
     });
 
@@ -120,6 +109,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                 search: value.length > 0 ? value : undefined,
                 offset: 0,
             });
+            setHasMore(true);
         }, 300),
         [],
     );
@@ -129,7 +119,8 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         if (
             listboxNode.scrollTop + listboxNode.clientHeight >=
                 listboxNode.scrollHeight &&
-            !dataLoading
+            !dataLoading &&
+            hasMore
         ) {
             updateQueryParams({
                 offset: queryParams.offset + queryParams.limit,
@@ -150,7 +141,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
         addEntity({
             id: customFieldId,
             type: entity.type,
-            value: entity.id,
+            value: entity.data.id,
         })
             .unwrap()
             .then(() => {
@@ -160,13 +151,16 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
             .catch(toastApiError);
     };
 
-    const usersAndGroups = mergeUsersAndGroups(
-        users?.payload.items || [],
-        groups?.payload.items || [],
-    );
+    const options = data?.payload?.items || [];
+    const loading = dataLoading || dataFetching;
 
-    const dataLoading =
-        usersLoading || groupsLoading || usersFetching || groupsFetching;
+    useEffect(() => {
+        if (data) {
+            const totalItems = data.payload.count || 0;
+            const loadedItems = data.payload.items.length || 0;
+            setHasMore(loadedItems < totalItems);
+        }
+    }, [data]);
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -189,8 +183,9 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     sx={{ mt: 1 }}
                     value={entity}
                     inputValue={searchQuery}
-                    options={usersAndGroups}
+                    options={options}
                     onOpen={handleOpenAutocomplete}
+                    onClose={() => setAutocompleteOpen(false)}
                     renderInput={(params) => (
                         <TextField
                             {...params}
@@ -201,7 +196,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                                     ...params.InputProps,
                                     endAdornment: (
                                         <>
-                                            {dataLoading ? (
+                                            {loading ? (
                                                 <CircularProgress
                                                     color="inherit"
                                                     size={20}
@@ -215,7 +210,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                             size="small"
                         />
                     )}
-                    getOptionLabel={(option) => option.name}
+                    getOptionLabel={(option) => option.data.name}
                     onChange={(_, value) => setEntity(value)}
                     onInputChange={handleSearchInputChange}
                     ListboxProps={{
@@ -224,14 +219,19 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
-                            <li key={key} {...optionProps}>
+                            <li {...optionProps} key={option.data.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
                                     {option.type === "user" ? (
-                                        <UserAvatar src={option.avatar || ""} />
+                                        <UserAvatar
+                                            src={
+                                                (option.data as UserT).avatar ||
+                                                ""
+                                            }
+                                        />
                                     ) : (
                                         <GroupIcon />
                                     )}
-                                    {option.name}
+                                    {option.data.name}
                                 </Box>
                             </li>
                         );
@@ -239,6 +239,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     groupBy={(option) =>
                         t(`projects.access.target.${option.type}s`)
                     }
+                    clearOnBlur={false}
                 />
             </DialogContent>
 
