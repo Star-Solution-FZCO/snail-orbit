@@ -158,7 +158,7 @@ CONFIG = Dynaconf(
         Validator(
             'OIDC_MFA_PAGE',
             is_type_of=str,
-            default='/login_mfa',
+            default='/login/mfa',
             when=Validator('OIDC_ENABLED', condition=bool),
         ),
         Validator(

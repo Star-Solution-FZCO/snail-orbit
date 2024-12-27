@@ -15,6 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as LoginMfaImport } from './routes/login_.mfa'
 import { Route as AuthenticatedProfileIndexImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated/users/$userId'
 import { Route as AuthenticatedRolesRoleIdImport } from './routes/_authenticated/roles/$roleId'
@@ -98,6 +99,11 @@ const AuthenticatedIndexLazyRoute = AuthenticatedIndexLazyImport.update({
 } as any).lazy(() =>
   import('./routes/_authenticated/index.lazy').then((d) => d.Route),
 )
+
+const LoginMfaRoute = LoginMfaImport.update({
+  path: '/login/mfa',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AuthenticatedUsersIndexLazyRoute =
   AuthenticatedUsersIndexLazyImport.update({
@@ -304,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/login/mfa': {
+      id: '/login/mfa'
+      path: '/login/mfa'
+      fullPath: '/login/mfa'
+      preLoaderRoute: typeof LoginMfaImport
       parentRoute: typeof rootRoute
     }
     '/_authenticated/': {
@@ -517,6 +530,7 @@ export const routeTree = rootRoute.addChildren({
     AuthenticatedIssuesDraftDraftIdLazyRoute,
   }),
   LoginRoute,
+  LoginMfaRoute,
 })
 
 /* prettier-ignore-end */
@@ -528,7 +542,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/_authenticated",
-        "/login"
+        "/login",
+        "/login/mfa"
       ]
     },
     "/_authenticated": {
@@ -562,6 +577,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/login/mfa": {
+      "filePath": "login_.mfa.tsx"
     },
     "/_authenticated/": {
       "filePath": "_authenticated/index.lazy.tsx",
