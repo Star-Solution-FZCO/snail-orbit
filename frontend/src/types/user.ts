@@ -1,3 +1,5 @@
+import { GroupT } from "./group";
+
 export type BasicUserT = {
     id: string;
     name: string;
@@ -44,4 +46,9 @@ export type TOTPDataT = {
 export type MFASettingsT = {
     is_enabled: boolean;
     totp: { created_at: string | null };
+};
+
+export type UserOrGroupT = {
+    type: "user" | "group";
+    data: BasicUserT | GroupT;
 };

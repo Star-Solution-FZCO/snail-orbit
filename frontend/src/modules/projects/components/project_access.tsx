@@ -20,25 +20,23 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { UserAvatar } from "components";
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { groupApi, projectApi, roleApi, userApi } from "store";
+import { projectApi, roleApi, userApi } from "store";
 import {
     BasicUserT,
     ListSelectQueryParams,
     ProjectDetailT,
     ProjectPermissionT,
-    ProjectPermissionTargetT,
     RoleT,
-    TargetTypeT,
+    UserOrGroupT,
 } from "types";
 import {
     noLimitListQueryParams,
     toastApiError,
     useListQueryParams,
 } from "utils";
-import { mergeUsersAndGroups } from "../utils";
 
 interface IPGrantPermissionDialogProps {
     projectId: string;
@@ -53,31 +51,23 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [target, setTarget] = useState<
-        | (ProjectPermissionTargetT & { type: TargetTypeT; avatar?: string })
-        | null
-    >(null);
+    const [target, setTarget] = useState<UserOrGroupT | null>(null);
     const [role, setRole] = useState<RoleT | null>(null);
 
     const [queryParams, updateQueryParams, resetQueryParams] =
         useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [hasMore, setHasMore] = useState(true);
 
     const { data: roles } = roleApi.useListRoleQuery(noLimitListQueryParams);
     const {
-        data: users,
-        isLoading: usersLoading,
-        isFetching: usersFetching,
-    } = userApi.useListSelectUserQuery(queryParams, {
+        data,
+        isLoading: dataLoading,
+        isFetching: dataFetching,
+    } = userApi.useListSelectUserOrGroupQuery(queryParams, {
         skip: !autocompleteOpen,
     });
-
-    const {
-        data: groups,
-        isLoading: groupsLoading,
-        isFetching: groupsFetching,
-    } = groupApi.useListGroupQuery(queryParams, { skip: !autocompleteOpen });
 
     const [grantProjectPermission, { isLoading }] =
         projectApi.useGrantProjectPermissionMutation();
@@ -93,6 +83,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                 search: value.length > 0 ? value : undefined,
                 offset: 0,
             });
+            setHasMore(true);
         }, 300),
         [],
     );
@@ -102,7 +93,8 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
         if (
             listboxNode.scrollTop + listboxNode.clientHeight >=
                 listboxNode.scrollHeight &&
-            !dataLoading
+            !dataLoading &&
+            hasMore
         ) {
             updateQueryParams({
                 offset: queryParams.offset + queryParams.limit,
@@ -121,7 +113,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
         grantProjectPermission({
             id: projectId,
             target_type: target.type,
-            target_id: target.id,
+            target_id: target.data.id,
             role_id: role.id,
         })
             .unwrap()
@@ -134,13 +126,16 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
             .catch(toastApiError);
     };
 
-    const usersAndGroups = mergeUsersAndGroups(
-        users?.payload.items || [],
-        groups?.payload.items || [],
-    );
+    const options = data?.payload?.items || [];
+    const loading = dataLoading || dataFetching;
 
-    const dataLoading =
-        usersLoading || usersFetching || groupsLoading || groupsFetching;
+    useEffect(() => {
+        if (data) {
+            const totalItems = data.payload.count || 0;
+            const loadedItems = data.payload.items.length || 0;
+            setHasMore(loadedItems < totalItems);
+        }
+    }, [data]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -177,9 +172,10 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                 <Autocomplete
                     value={target}
                     inputValue={searchQuery}
-                    options={usersAndGroups}
-                    getOptionLabel={(option) => option.name}
+                    options={options}
+                    getOptionLabel={(option) => option.data.name}
                     onOpen={handleOpenAutocomplete}
+                    onClose={() => setAutocompleteOpen(false)}
                     onChange={(_, value) => setTarget(value)}
                     onInputChange={handleSearchInputChange}
                     ListboxProps={{
@@ -194,7 +190,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                                     ...params.InputProps,
                                     endAdornment: (
                                         <>
-                                            {dataLoading ? (
+                                            {loading ? (
                                                 <CircularProgress
                                                     color="inherit"
                                                     size={20}
@@ -211,14 +207,19 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
-                            <li key={key} {...optionProps}>
+                            <li {...optionProps} key={option.data.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
                                     {option.type === "user" ? (
-                                        <UserAvatar src={option.avatar || ""} />
+                                        <UserAvatar
+                                            src={
+                                                (option.data as BasicUserT)
+                                                    .avatar || ""
+                                            }
+                                        />
                                     ) : (
                                         <GroupIcon />
                                     )}
-                                    {option.name}
+                                    {option.data.name}
                                 </Box>
                             </li>
                         );
@@ -226,6 +227,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     groupBy={(option) =>
                         t(`projects.access.target.${option.type}s`)
                     }
+                    clearOnBlur={false}
                 />
             </DialogContent>
 
