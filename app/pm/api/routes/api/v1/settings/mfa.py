@@ -117,5 +117,6 @@ async def delete_otp(
         if not user_ctx.user.check_totp(body.mfa_totp_code):
             raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid MFA code')
     user_ctx.user.totp = None
+    user_ctx.user.mfa_enabled = False
     await user_ctx.user.save_changes()
     return SuccessOutput()
