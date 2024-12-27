@@ -1,5 +1,6 @@
 export * from "./agile_boards";
 export * from "./auth";
+export * from "./auth_mfa";
 export * from "./custom_fields";
 export * from "./groups";
 export * from "./issues";

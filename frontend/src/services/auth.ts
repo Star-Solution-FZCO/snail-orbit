@@ -38,3 +38,16 @@ export const logout = async () => {
         credentials: "include",
     });
 };
+
+export const mfaAuthenticate = async (code: string) => {
+    const url = API_URL + "auth/oidc/mfa";
+    const formData = new FormData();
+    formData.append("mfa_totp_code", code);
+
+    await fetch(url, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        redirect: "follow",
+    });
+};
