@@ -1,6 +1,6 @@
-from typing import Self
 from datetime import datetime
 from http import HTTPStatus
+from typing import Self
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -9,7 +9,7 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.exceptions import MFARequiredException
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import SuccessPayloadOutput, SuccessOutput
+from pm.api.views.output import SuccessOutput, SuccessPayloadOutput
 from pm.config import CONFIG
 
 __all__ = ('router',)
@@ -60,9 +60,7 @@ class TOTPDeleteBody(BaseModel):
 @router.get('')
 async def get_two_fa_settings() -> SuccessPayloadOutput[MFASettingOut]:
     user_ctx = current_user()
-    return SuccessPayloadOutput(
-        payload=MFASettingOut.from_obj(user_ctx.user)
-    )
+    return SuccessPayloadOutput(payload=MFASettingOut.from_obj(user_ctx.user))
 
 
 @router.put('')
@@ -79,9 +77,7 @@ async def update_two_fa_settings(
     user_ctx.user.mfa_enabled = body.is_enabled
     if user_ctx.user.is_changed:
         await user_ctx.user.save_changes()
-    return SuccessPayloadOutput(
-        payload=MFASettingOut.from_obj(user_ctx.user)
-    )
+    return SuccessPayloadOutput(payload=MFASettingOut.from_obj(user_ctx.user))
 
 
 @router.post('/totp')
