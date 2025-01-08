@@ -1,7 +1,9 @@
 [project]
 name = "snail-orbit"
 description = "Snail Orbit project manager"
-authors = ["StarSoultion Dev Team <dev@starsolution.team>"]
+authors = [
+    { name = "StarSoultion Dev Team", "email" = "dev@starsolution.team>" },
+]
 readme = "README.md"
 dynamic = ["version"]
 
@@ -22,7 +24,7 @@ starlette-context = "*"
 starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
 pydantic = {version = ">=2.0"}
 motor = "*"
-beanie = "1.27.0"
+beanie = ">=1.29.0"
 pyparsing = "*"
 aiofiles = "*"
 python-multipart = "*"
