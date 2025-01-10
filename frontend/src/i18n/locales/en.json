@@ -1,4 +1,7 @@
 {
+  "about.title": "About Snail Orbit",
+  "about.backendVersion": "Backend version",
+  "about.frontendVersion": "Frontend version",
   "agileBoard.card_fields.selectPlaceholder": "Enter field name...",
   "agileBoard.columns.selectPlaceholder": "Search by column name",
   "agileBoard.swimlanes.selectPlaceholder": "Search by column name",
@@ -231,6 +234,7 @@
   "issues.update.success": "Issue updated successfully",
   "mainPage": "Main page",
   "more": "More",
+  "navbar.about": "About",
   "navbar.agileBoards": "Agile Boards",
   "navbar.customFields": "Custom Fields",
   "navbar.groups": "Groups",
