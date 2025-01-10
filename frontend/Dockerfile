@@ -6,7 +6,17 @@ RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
 
+
 FROM nginx:alpine
 WORKDIR /app
-COPY --from=builder /app/build .
+
+RUN apk add --no-cache util-linux moreutils && \
+    rm -rf "/var/cache/apk/*"
+
+COPY --from=builder /app/build /app
+COPY env.template.js /app/env.template.js
 COPY contrib/nginx.conf /etc/nginx/conf.d/default.conf
+COPY contrib/99-setup-env.sh /docker-entrypoint.d/99-setup-env.sh
+
+ARG version="__DEV__"
+RUN echo $version > /app/version.txt
