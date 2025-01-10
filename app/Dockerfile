@@ -38,11 +38,12 @@ RUN mkdir -p /data &&\
 COPY manage.py ${APP_DIR}/
 COPY pm ${APP_DIR}/pm
 
+ARG version="__DEV__"
+RUN echo $version > ${APP_DIR}/version.txt
+
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
 VOLUME ["/data"]
-ARG version="__DEV__"
-ENV APP_VERSION=$version
 ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy", "*"]
 
 
@@ -74,12 +75,13 @@ RUN mkdir -p "${APP_DIR}/etc" &&\
 COPY manage.py ${APP_DIR}/
 COPY pm ${APP_DIR}/pm
 
+ARG version="__DEV__"
+RUN echo $version > ${APP_DIR}/version.txt
+
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
 VOLUME ["/data"]
 VOLUME ["/var/easyocr"]
-ARG version="__DEV__"
-ENV APP_VERSION=$version
 ENTRYPOINT ["python3", "manage.py", "ocr"]
 
 

@@ -1,9 +1,8 @@
-import os
-
 from pydantic import BaseModel
 
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
+from pm.version import APP_VERSION
 
 __all__ = ('router',)
 
@@ -16,5 +15,4 @@ class VersionOutput(BaseModel):
 
 @router.get('')
 async def get_version() -> SuccessPayloadOutput[VersionOutput]:
-    version = os.environ.get('APP_VERSION', '__DEV__')
-    return SuccessPayloadOutput(payload=VersionOutput(version=version))
+    return SuccessPayloadOutput(payload=VersionOutput(version=APP_VERSION))
