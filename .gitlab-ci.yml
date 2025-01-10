@@ -12,6 +12,9 @@ default:
 .template-login-internal-registry: &template-login-internal-registry
   - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
 
+.template-login-global-registry: &template-login-global-registry
+  - echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USER --password-stdin
+
 .template-init-buildx: &template-init-buildx
   - docker buildx create --use
 
@@ -135,3 +138,49 @@ build-dev-ui:
       --build-arg version=$CI_COMMIT_SHORT_SHA frontend
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG == null'
+
+build-release-api:
+  stage: build
+  before_script:
+    - *template-login-internal-registry
+    - *template-login-global-registry
+    - *template-init-buildx
+  script:
+    - docker buildx build --push
+      --platform linux/arm64,linux/amd64
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/api:cache
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache
+      -t $CI_REGISTRY_IMAGE/api:$CI_COMMIT_TAG
+      -t $CI_REGISTRY_IMAGE/api:latest
+      -t $DOCKERHUB_IMAGE_PREFIX-api:$CI_COMMIT_TAG
+      -t $DOCKERHUB_IMAGE_PREFIX-api:latest
+      --build-arg version=$CI_COMMIT_TAG --target api app
+    - docker buildx build --push
+      --platform linux/arm64,linux/amd64
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/api:cache
+      -t $CI_REGISTRY_IMAGE/tasks:$CI_COMMIT_TAG
+      -t $CI_REGISTRY_IMAGE/tasks:latest
+      -t $DOCKERHUB_IMAGE_PREFIX-tasks:$CI_COMMIT_TAG
+      -t $DOCKERHUB_IMAGE_PREFIX-tasks:latest
+      --build-arg version=$CI_COMMIT_TAG --target tasks app
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/'
+
+build-release-ui:
+  stage: build
+  before_script:
+    - *template-login-internal-registry
+    - *template-login-global-registry
+    - *template-init-buildx
+  script:
+    - docker buildx build --push
+      --platform linux/arm64,linux/amd64
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/ui:cache
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/ui:cache
+      -t $CI_REGISTRY_IMAGE/ui:$CI_COMMIT_TAG
+      -t $CI_REGISTRY_IMAGE/ui:latest
+      -t $DOCKERHUB_IMAGE_PREFIX-ui:$CI_COMMIT_TAG
+      -t $DOCKERHUB_IMAGE_PREFIX-ui:latest
+      --build-arg version=$CI_COMMIT_TAG frontend
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/'

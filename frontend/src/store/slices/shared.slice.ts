@@ -26,6 +26,9 @@ export interface SharedState {
     issueLinks: {
         open: boolean;
     };
+    about: {
+        open: boolean;
+    };
 }
 
 const initialState: SharedState = {
@@ -36,6 +39,9 @@ const initialState: SharedState = {
         files: [],
     },
     issueLinks: {
+        open: false,
+    },
+    about: {
         open: false,
     },
 };
@@ -101,6 +107,12 @@ const sharedSlice = createSlice({
         closeIssueLinks(state) {
             state.issueLinks.open = false;
         },
+        openAbout(state) {
+            state.about.open = true;
+        },
+        closeAbout(state) {
+            state.about.open = false;
+        },
     },
 });
 
@@ -114,6 +126,8 @@ export const {
     selectFilePreviewByIndex,
     toggleIssueLinks,
     closeIssueLinks,
+    openAbout,
+    closeAbout,
 } = sharedSlice.actions;
 
 export const sharedReducer = sharedSlice.reducer;

@@ -128,7 +128,10 @@ const Auth: FC = () => {
         <Box height="100vh">
             <Container maxWidth="xs" sx={{ pt: 8 }}>
                 <Box display="flex" flexDirection="column" alignItems="center">
-                    <Avatar sx={{ mb: 2, bgcolor: "#F07167" }}>PM</Avatar>
+                    <Avatar
+                        sx={{ mb: 2, bgcolor: "#F07167" }}
+                        src="/favicon.ico"
+                    />
 
                     <Typography variant="h5">{t("auth.signIn")}</Typography>
 

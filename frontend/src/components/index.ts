@@ -1,3 +1,4 @@
+export * from "./about";
 export * from "./clipboard";
 export * from "./error_fallback";
 export * from "./error_handler";
