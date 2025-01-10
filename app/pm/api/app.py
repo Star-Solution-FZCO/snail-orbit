@@ -9,9 +9,9 @@ from starsol_fastapi_jwt_auth import AuthJWT
 from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pm.config import CONFIG
-from pm.constants import VERSION
+from pm.version import APP_VERSION
 
-app = FastAPI(title='Snail Orbit', version=VERSION, debug=CONFIG.DEBUG)
+app = FastAPI(title='Snail Orbit', version=APP_VERSION, debug=CONFIG.DEBUG)
 
 app.add_middleware(
     CORSMiddleware,

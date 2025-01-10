@@ -11,11 +11,16 @@ import {
     useTheme,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
+import { About, Link } from "components";
 import { FC, PropsWithChildren, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
-import { logout as logoutAction, useAppDispatch, useAppSelector } from "store";
+import {
+    logout as logoutAction,
+    openAbout,
+    useAppDispatch,
+    useAppSelector,
+} from "store";
 
 const useLinks = () => {
     const { t } = useTranslation();
@@ -97,6 +102,11 @@ const NavBar = () => {
         dispatch(logoutAction());
     };
 
+    const handleAbout = () => {
+        handleCloseMenu();
+        dispatch(openAbout());
+    };
+
     return (
         <Box
             display="flex"
@@ -170,7 +180,9 @@ const NavBar = () => {
                 <MenuItem onClick={() => handleClickMenuItem("/users")}>
                     {t("navbar.users")}
                 </MenuItem>
+                <MenuItem onClick={handleAbout}>{t("navbar.about")}</MenuItem>
             </Menu>
+            <About />
         </Box>
     );
 };

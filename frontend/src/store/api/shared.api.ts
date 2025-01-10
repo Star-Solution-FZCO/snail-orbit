@@ -21,5 +21,10 @@ export const sharedApi = createApi({
                 query: (body) => ({ url: "files/", method: "POST", body }),
             },
         ),
+        getVersion: build.query<ApiResponse<{ version: string }>, void>({
+            query: () => ({
+                url: "version",
+            }),
+        }),
     }),
 });
