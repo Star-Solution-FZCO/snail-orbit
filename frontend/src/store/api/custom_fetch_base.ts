@@ -6,16 +6,25 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { Mutex } from "async-mutex";
 import { API_URL, apiVersion } from "config";
+import Cookies from "js-cookie";
 import { logout, refreshToken } from "services/auth";
 import { logout as logoutAction } from "store/slices";
 import { MFARequiredErrorT, QueryErrorT } from "types";
 
 const mutex = new Mutex();
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: (API_URL || "/api/") + apiVersion,
-    credentials: "include",
-});
+const baseQuery = () => {
+    const headers: { [key: string]: string } = {};
+    const csrfAccessToken = Cookies.get("csrf_access_token");
+    if (csrfAccessToken) {
+        headers["X-CSRF-TOKEN"] = csrfAccessToken;
+    }
+    return fetchBaseQuery({
+        baseUrl: (API_URL || "/api/") + apiVersion,
+        credentials: "include",
+        headers,
+    });
+};
 
 const customBaseQuery: BaseQueryFn<
     string | FetchArgs,
@@ -24,7 +33,7 @@ const customBaseQuery: BaseQueryFn<
 > = async (args, api, extraOptions) => {
     await mutex.waitForUnlock();
 
-    let response = await baseQuery(args, api, extraOptions);
+    let response = await baseQuery()(args, api, extraOptions);
 
     if (
         response.error &&
@@ -35,7 +44,7 @@ const customBaseQuery: BaseQueryFn<
             const release = await mutex.acquire();
             try {
                 await refreshToken();
-                response = await baseQuery(args, api, extraOptions);
+                response = await baseQuery()(args, api, extraOptions);
             } catch (_) {
                 await logout();
                 api.dispatch(logoutAction());
@@ -44,7 +53,7 @@ const customBaseQuery: BaseQueryFn<
             }
         } else {
             await mutex.waitForUnlock();
-            response = await baseQuery(args, api, extraOptions);
+            response = await baseQuery()(args, api, extraOptions);
         }
     }
 
