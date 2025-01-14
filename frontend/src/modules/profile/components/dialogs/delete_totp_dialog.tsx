@@ -101,7 +101,7 @@ export const DeleteTOTPDialog: FC<IDeleteTOTPDialogProps> = ({
                 <LoadingButton
                     onClick={handleClickConfirm}
                     variant="outlined"
-                    disabled={!code}
+                    disabled={!code && tfaEnabled}
                     loading={isLoading}
                 >
                     {t("tfa.confirm")}
