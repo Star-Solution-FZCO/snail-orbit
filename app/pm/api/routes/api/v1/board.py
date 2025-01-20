@@ -121,14 +121,11 @@ async def list_boards(
     query: ListParams = Depends(),
 ) -> BaseListOutput[BoardOutput]:
     q = m.Board.find().sort(m.Board.name)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(BoardOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=BoardOutput.from_obj,
     )
 
 

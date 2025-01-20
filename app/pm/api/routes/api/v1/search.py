@@ -114,11 +114,11 @@ async def list_searches(
         ]
     }
     q = m.Search.find(filter_query).sort(m.Search.name)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(SearchOutput.from_obj(obj))
-    return BaseListOutput[SearchOutput].make(
-        count=await q.count(), limit=query.limit, offset=query.offset, items=results
+    return await BaseListOutput.make_from_query(
+        q,
+        limit=query.limit,
+        offset=query.offset,
+        projection_fn=SearchOutput.from_obj,
     )
 
 
