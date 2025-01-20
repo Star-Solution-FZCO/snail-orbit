@@ -1,8 +1,13 @@
-from typing import Any, Generic, Self, TypeVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from beanie import Document
+    from beanie.odm.queries.find import FindMany
 
 __all__ = (
     'BaseOutput',
@@ -37,6 +42,7 @@ class MFARequiredOutput(BaseOutput):
 
 
 T = TypeVar('T')
+DocT = TypeVar('DocT', bound='Document')
 
 
 class BasePayloadOutput(BaseOutput, Generic[T]):
@@ -99,9 +105,26 @@ class BaseListOutput(SuccessPayloadOutput, Generic[T]):
     payload: BaseListPayload[T]
 
     @classmethod
-    def make(cls, items: list[T], count: int, limit: int, offset: int) -> Self:
+    def make(
+        cls, items: list[T], count: int, limit: int, offset: int
+    ) -> 'BaseListOutput[T]':
         return cls(
             payload=BaseListPayload(
                 count=count, limit=limit, offset=offset, items=items
             )
+        )
+
+    @classmethod
+    async def make_from_query(
+        cls,
+        q: 'FindMany[DocT]',
+        limit: int,
+        offset: int,
+        projection_fn: Callable[[DocT], T],
+    ) -> 'BaseListOutput[T]':
+        return cls.make(
+            count=await q.count(),
+            limit=limit,
+            offset=offset,
+            items=[projection_fn(obj) async for obj in q.limit(limit).skip(offset)],
         )
