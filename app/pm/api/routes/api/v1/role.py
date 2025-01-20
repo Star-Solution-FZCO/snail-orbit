@@ -35,14 +35,11 @@ async def list_roles(
     query: ListParams = Depends(),
 ) -> BaseListOutput[RoleOutput]:
     q = m.Role.find().sort(m.Role.name)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            RoleOutput.from_obj(obj)
-            async for obj in q.limit(query.limit).skip(query.offset)
-        ],
+        projection_fn=RoleOutput.from_obj,
     )
 
 

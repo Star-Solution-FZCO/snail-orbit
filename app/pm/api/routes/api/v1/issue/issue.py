@@ -106,14 +106,11 @@ async def list_issues(
         )
         .sort(*sort)
     )
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(IssueOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=IssueOutput.from_obj,
     )
 
 
@@ -200,14 +197,11 @@ async def list_drafts(
     q = m.IssueDraft.find(m.IssueDraft.created_by.id == user_ctx.user.id).sort(
         m.IssueDraft.id
     )
-    results = []
-    async for obj in q.limit(limit).skip(offset):
-        results.append(IssueDraftOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=limit,
         offset=offset,
-        items=results,
+        projection_fn=IssueDraftOutput.from_obj,
     )
 
 
@@ -220,14 +214,11 @@ async def select_draft(
         m.IssueDraft.created_by.id == user_ctx.user.id,
         bo.RegEx(m.IssueDraft.subject, query.search, 'i'),
     ).sort(m.IssueDraft.id)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            IssueDraftOutput.from_obj(obj)
-            async for obj in q.limit(query.limit).skip(query.offset)
-        ],
+        projection_fn=IssueDraftOutput.from_obj,
     )
 
 

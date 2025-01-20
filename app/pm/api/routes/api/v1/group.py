@@ -36,14 +36,11 @@ async def list_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[GroupOutput]:
     q = m.Group.find().sort(m.Group.name)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):  # type: m.Group
-        results.append(GroupOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=GroupOutput.from_obj,
     )
 
 
@@ -111,14 +108,11 @@ async def list_group_members(
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     q = m.User.find(m.User.groups.id == group.id).sort(m.User.name)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(UserOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=UserOutput.from_obj,
     )
 
 
