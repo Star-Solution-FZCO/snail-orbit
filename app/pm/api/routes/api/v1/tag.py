@@ -76,14 +76,11 @@ async def list_tags(
     query: ListParams = Depends(),
 ) -> BaseListOutput[TagOutput]:
     q = m.Tag.find().sort(m.Tag.name)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            TagOutput.from_obj(tag)
-            async for tag in q.skip(query.offset).limit(query.limit)
-        ],
+        projection_fn=TagOutput.from_obj,
     )
 
 

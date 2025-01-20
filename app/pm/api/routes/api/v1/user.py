@@ -67,14 +67,11 @@ async def list_users(
     query: ListParams = Depends(),
 ) -> BaseListOutput[UserFullOutput]:
     q = m.User.find().sort(m.User.id)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(UserFullOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=UserFullOutput.from_obj,
     )
 
 
@@ -88,14 +85,11 @@ async def select_users(
             bo.RegEx(m.User.email, query.search, 'i'),
         )
     ).sort(m.User.name)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            UserOutput.from_obj(obj)
-            async for obj in q.limit(query.limit).skip(query.offset)
-        ],
+        projection_fn=UserOutput.from_obj,
     )
 
 

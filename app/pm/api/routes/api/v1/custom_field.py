@@ -151,14 +151,11 @@ async def list_custom_fields(
     query: ListParams = Depends(),
 ) -> BaseListOutput[CustomFieldOutputT]:
     q = m.CustomField.find(with_children=True).sort(m.CustomField.name)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            output_from_obj(obj)
-            async for obj in q.limit(query.limit).skip(query.offset)
-        ],
+        projection_fn=output_from_obj,
     )
 
 

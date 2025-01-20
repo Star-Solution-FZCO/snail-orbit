@@ -206,14 +206,11 @@ async def list_projects(
     query: ListParams = Depends(),
 ) -> BaseListOutput[ProjectListOutput]:
     q = m.Project.find().sort(m.Project.id)
-    results = []
-    async for obj in q.limit(query.limit).skip(query.offset):
-        results.append(ProjectListOutput.from_obj(obj))
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=results,
+        projection_fn=ProjectListOutput.from_obj,
     )
 
 

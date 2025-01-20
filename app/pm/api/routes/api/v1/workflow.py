@@ -62,14 +62,11 @@ async def list_workflow(
     query: ListParams = Depends(),
 ) -> BaseListOutput[WorkflowOutput]:
     q = m.Workflow.find(with_children=True).sort(m.Workflow.name)
-    return BaseListOutput.make(
-        count=await q.count(),
+    return await BaseListOutput.make_from_query(
+        q,
         limit=query.limit,
         offset=query.offset,
-        items=[
-            output_from_obj(obj)
-            async for obj in q.limit(query.limit).skip(query.offset)
-        ],
+        projection_fn=output_from_obj,
     )
 
 
