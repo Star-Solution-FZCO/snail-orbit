@@ -142,7 +142,7 @@ class MongoQueryTransformer(Transformer):
     def attribute_condition(self, args):
         field, value = args
         if field == 'project':
-            return {'project.name': {'$regex': f'^{value}$', '$options': 'i'}}
+            return {'project.slug': {'$regex': f'^{value}$', '$options': 'i'}}
         if field == 'subject':
             return {'subject': {'$regex': value, '$options': 'i'}}
         if field == 'text':
@@ -414,7 +414,7 @@ async def _get_projects() -> dict[str, list[m.Project]]:
     projects = await m.Project.find().to_list()
     res = {}
     for project in projects:
-        res.setdefault(project.name.lower(), []).append(project)
+        res.setdefault(project.slug.lower(), []).append(project)
     return res
 
 
