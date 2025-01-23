@@ -327,6 +327,15 @@ class Issue(Document):
         )
 
     @classmethod
+    async def remove_field_embedded_links(
+        cls, field_id: PydanticObjectId, flt: dict | None = None
+    ) -> None:
+        q = cls.find({'fields': {'$elemMatch': {'id': field_id}}})
+        if flt:
+            q = q.find(flt)
+        await q.update({'$pull': {'fields': {'id': field_id}}})
+
+    @classmethod
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
@@ -448,6 +457,28 @@ class IssueDraft(Document):
             {'$set': {'attachments.$[a].author': user}},
             array_filters=[{'a.author.id': user.id}],
         )
+
+    @classmethod
+    async def update_field_embedded_links(
+        cls, field: CustomFieldLink | CustomField
+    ) -> None:
+        if isinstance(field, CustomField):
+            field = CustomFieldLink.from_obj(field)
+        await cls.find(
+            cls.fields.id == field.id,
+        ).update(
+            {'$set': {'fields.$[f].name': field.name}},
+            array_filters=[{'f.id': field.id}],
+        )
+
+    @classmethod
+    async def remove_field_embedded_links(
+        cls, field_id: PydanticObjectId, flt: dict | None = None
+    ) -> None:
+        q = cls.find({'fields': {'$elemMatch': {'id': field_id}}})
+        if flt:
+            q = q.find(flt)
+        await q.update({'$pull': {'fields': {'id': field_id}}})
 
     @classmethod
     async def update_field_option_embedded_links(
