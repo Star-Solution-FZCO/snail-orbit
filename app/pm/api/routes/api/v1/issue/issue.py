@@ -364,6 +364,19 @@ async def create_issue_from_draft(
             HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without subject'
         )
     project = await draft.get_project(fetch_links=True)
+
+    _, validation_errors = await validate_custom_fields_values(
+        {},
+        project,
+        draft,
+    )
+    if validation_errors:
+        raise ValidateModelException(
+            payload=IssueDraftOutput.from_obj(draft),
+            error_messages=['Custom field validation error'],
+            error_fields={e.field.name: e.msg for e in validation_errors},
+        )
+
     attachments = {}
     if draft.attachments:
         try:
