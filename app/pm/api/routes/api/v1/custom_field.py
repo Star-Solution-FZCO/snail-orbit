@@ -200,6 +200,7 @@ async def update_custom_field(
         await obj.save_changes()
         await asyncio.gather(
             m.Issue.update_field_embedded_links(obj),
+            m.IssueDraft.update_field_embedded_links(obj),
             m.Board.update_field_embedded_links(obj),
         )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
