@@ -326,6 +326,12 @@ async def remove_field(
         pass
     if project.is_changed:
         await project.save_changes()
+        await m.Issue.remove_field_embedded_links(
+            field_id, flt={'project.id': project_id}
+        )
+        await m.IssueDraft.remove_field_embedded_links(
+            field_id, flt={'project.id': project_id}
+        )
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
 
