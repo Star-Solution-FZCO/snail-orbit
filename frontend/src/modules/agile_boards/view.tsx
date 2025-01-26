@@ -10,17 +10,18 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { Link } from "components";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { formatErrorMessages, toastApiError } from "utils";
+import { formatErrorMessages, Routes, toastApiError } from "utils";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
-import { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
+import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 import { agileBoardToFormValues } from "./utils/agileBoardToFormValues";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
+import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
 const routeApi = getRouteApi("/_authenticated/agiles/$boardId");
 
@@ -53,6 +54,10 @@ const AgileBoardView = () => {
         );
     }
 
+    useEffect(() => {
+        setLastViewBoardId(boardId);
+    }, []);
+
     if (!agileBoard) return null;
 
     const onSubmit = (formData: AgileBoardFormData) => {
@@ -83,7 +88,7 @@ const AgileBoardView = () => {
                     mb={2}
                 >
                     <Breadcrumbs>
-                        <Link to="/agiles" underline="hover">
+                        <Link to={Routes.agileBoards.list()} underline="hover">
                             <Typography fontSize={24} fontWeight="bold">
                                 {t("agileBoards.title")}
                             </Typography>
