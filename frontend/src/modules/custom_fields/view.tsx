@@ -7,11 +7,12 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { ErrorHandler, Link } from "components";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
-import { CustomFieldT, UpdateCustomFieldT } from "types";
+import type { CustomFieldT, UpdateCustomFieldT } from "types";
 import { toastApiError } from "utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
 import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
@@ -109,6 +110,7 @@ const CustomFieldView = () => {
     const customField = data.payload;
 
     const handleSubmit = (formData: UpdateCustomFieldT) => {
+        if (!formData.default_value) formData.default_value = null;
         setFormData(formData);
         setConfirmDialogOpen(true);
     };
