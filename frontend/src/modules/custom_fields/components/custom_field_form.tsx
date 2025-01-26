@@ -13,10 +13,11 @@ import {
     TextField,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { CustomFieldOptionT, customFieldsTypes, CustomFieldT } from "types";
+import type { CustomFieldOptionT, CustomFieldT } from "types";
+import { customFieldsTypes } from "types";
 import * as yup from "yup";
 
 const editableDefaultValueTypes = ["user", "enum", "state"];
@@ -55,7 +56,7 @@ const optionLabelGetter = (option: CustomFieldOptionT) => {
     return option.value.name;
 };
 
-const getDefaultValue = (value: any) => {
+const getDefaultValue = (value: unknown) => {
     return typeof value === "object" && value !== null && "id" in value
         ? value.id
         : value;
@@ -87,7 +88,9 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
             description: defaultValues?.description || null,
             ai_description: defaultValues?.ai_description || null,
             is_nullable: defaultValues?.is_nullable || false,
-            default_value: defaultValues?.default_value || null,
+            default_value: defaultValues?.default_value
+                ? optionValueGetter(defaultValues?.default_value)
+                : null,
         },
         resolver: yupResolver(customFieldSchema),
     });
@@ -163,7 +166,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                                 error={!!errors.type}
                                 size="small"
                             >
-                                <MenuItem>
+                                <MenuItem key="no_value" value="">
                                     {t("customFields.form.noDefaultValue")}
                                 </MenuItem>
                                 {defaultValues?.options?.map((option) => (
