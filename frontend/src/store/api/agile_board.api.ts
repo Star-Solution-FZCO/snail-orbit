@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import {
+import type {
     AgileBoardT,
     AgileSwimLineT,
     ApiResponse,
