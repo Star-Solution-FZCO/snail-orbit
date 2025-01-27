@@ -139,9 +139,7 @@ async def list_boards(
                     '$elemMatch': {
                         'target_type': m.PermissionTargetType.USER,
                         'target.id': user_ctx.user.id,
-                        '$or': [
-                            {'can_view': True},
-                        ],
+                        'can_view': True,
                     }
                 }
             },
@@ -150,9 +148,7 @@ async def list_boards(
                     '$elemMatch': {
                         'target_type': m.PermissionTargetType.GROUP,
                         'target.id': {'$in': user_groups},
-                        '$or': [
-                            {'can_view': True},
-                        ],
+                        'can_view': True,
                     }
                 }
             },
