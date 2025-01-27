@@ -1,13 +1,34 @@
 from typing import Annotated
+from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
-from .project import ProjectLinkField
+from .group import GroupLinkField
+from .project import PermissionTargetType, ProjectLinkField
+from .user import User, UserLinkField
 
-__all__ = ('Board',)
+__all__ = ('Board', 'BoardPermission')
+
+
+class BoardPermission(BaseModel):
+    id: Annotated[UUID, Field(default_factory=uuid4)]
+    target_type: PermissionTargetType
+    target: GroupLinkField | UserLinkField
+    can_edit: bool = False
+    can_view: bool = False
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BoardPermission):
+            return False
+        return (
+            self.target_type == other.target_type
+            and self.target == other.target
+            and self.can_edit == other.can_edit
+            and self.can_view == other.can_view
+        )
 
 
 @audited_model
@@ -30,6 +51,29 @@ class Board(Document):
     card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     ui_settings: dict = Field(default_factory=dict)
+    created_by: UserLinkField
+    permissions: Annotated[list[BoardPermission], Field(default_factory=list)]
+
+    def check_board_permissions(self, user: User) -> tuple[bool, bool]:
+        if self.created_by.id == user.id:
+            return True, True
+
+        user_groups = {gr.id for gr in user.groups}
+        can_view = False
+        can_edit = False
+
+        for perm in self.permissions:
+            if (
+                perm.target_type == PermissionTargetType.USER
+                and perm.target.id == user.id
+            ) or (
+                perm.target_type == PermissionTargetType.GROUP
+                and perm.target.id in user_groups
+            ):
+                can_view = can_view or perm.can_view
+                can_edit = can_edit or perm.can_edit
+
+        return can_view, can_edit
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
