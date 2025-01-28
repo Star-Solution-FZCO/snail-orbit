@@ -175,7 +175,7 @@ CONFIG = Dynaconf(
             'WB_USER_SYNC_LOCAL',
             cast=bool,
             default=False,
-            description='Sync local if they found in WB',
+            description='Sync local users if they found in WB',
             when=Validator('WB_SYNC_ENABLED', condition=bool),
         ),
         Validator(
@@ -183,6 +183,20 @@ CONFIG = Dynaconf(
             cast=bool,
             default=False,
             description='Add missed inactive users',
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_TEAM_SYNC_LOCAL',
+            cast=bool,
+            default=False,
+            description='Sync local groups if they found in WB',
+            when=Validator('WB_SYNC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'WB_TEAM_SYNC_ADD_MISSED_ARCHIVED',
+            cast=bool,
+            default=False,
+            description='Add missed archived groups',
             when=Validator('WB_SYNC_ENABLED', condition=bool),
         ),
         Validator(

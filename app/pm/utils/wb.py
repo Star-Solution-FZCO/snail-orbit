@@ -33,6 +33,23 @@ class WbUser:
         )
 
 
+@dataclass
+class WbTeam:
+    id: int
+    name: str
+    description: str | None
+    is_archived: bool
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        return cls(
+            id=data['id'],
+            name=data['name'],
+            description=data['description'],
+            is_archived=data['is_archived'],
+        )
+
+
 async def http_request(
     url: str,
     params: Iterable[tuple[str, str]] | None = None,
@@ -170,3 +187,18 @@ class WbAPIClient:
         async for person in self.get_people(f'email:"{email}"'):
             return person
         return None
+
+    def get_teams(self, query: str | None = None) -> AsyncIterator[WbTeam]:
+        params = []
+        if query:
+            params.append(('filter', query))
+
+        async def _iter_teams() -> AsyncIterator[WbTeam]:
+            async for team in self.get_objects('/api/v1/team/list', params=params):
+                yield WbTeam.from_json(team)
+
+        return _iter_teams()
+
+    async def get_team_members(self, team_id: int) -> list[WbUser]:
+        members_payload = await self._request(f'/api/v1/team/{team_id}/members')
+        return [WbUser.from_json(u) for u in members_payload.get('items', [])]

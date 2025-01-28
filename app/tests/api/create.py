@@ -268,7 +268,7 @@ async def _create_group(
     assert data['payload']['id']
     assert data == {
         'success': True,
-        'payload': {'id': data['payload']['id'], **group_payload},
+        'payload': {'id': data['payload']['id'], 'origin': 'local', **group_payload},
     }
     return data['payload']['id']
 
