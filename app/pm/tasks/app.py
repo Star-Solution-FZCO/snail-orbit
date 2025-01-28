@@ -17,8 +17,8 @@ celery_app.autodiscover_tasks(
 celery_app.conf.beat_schedule = {}
 
 if CONFIG.WB_SYNC_ENABLED:
-    celery_app.conf.beat_schedule['task-wb-user-sync'] = {
-        'task': 'wb_user_sync',
+    celery_app.conf.beat_schedule['task-wb-sync'] = {
+        'task': 'wb_sync',
         'schedule': crontab(
             minute='*/5',
         ),
