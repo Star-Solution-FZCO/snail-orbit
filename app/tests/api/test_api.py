@@ -512,7 +512,7 @@ async def test_api_v1_group_get(
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
-        'payload': {'id': create_group, **group_payload},
+        'payload': {'id': create_group, 'origin': 'local', **group_payload},
     }
 
 
@@ -552,7 +552,7 @@ async def test_api_v1_group_list(
             'limit': 50,
             'offset': 0,
             'items': [
-                {'id': create_groups[idx], **group_payloads[idx]}
+                {'id': create_groups[idx], 'origin': 'local', **group_payloads[idx]}
                 for idx in range(len(group_payloads))
             ],
         },
@@ -588,7 +588,12 @@ async def test_api_v1_group_update(
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
-        'payload': {'id': create_group, **group_payload, 'name': 'Test group updated'},
+        'payload': {
+            'id': create_group,
+            'origin': 'local',
+            **group_payload,
+            'name': 'Test group updated',
+        },
     }
 
 
