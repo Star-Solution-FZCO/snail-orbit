@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -10,25 +11,54 @@ from .group import GroupLinkField
 from .project import PermissionTargetType, ProjectLinkField
 from .user import User, UserLinkField
 
-__all__ = ('Board', 'BoardPermission')
+__all__ = ('Board', 'BoardPermission', 'BoardPermissionType')
 
 
-class BoardPermission(BaseModel):
+permission_levels = {'view': 1, 'edit': 2, 'admin': 3}
+
+
+def _check_permissions(
+    permissions: list,
+    user: User,
+    required_permission,
+) -> bool:
+    group_ids = {gr.id for gr in user.groups}
+    max_level_value = 0
+    for perm in permissions:
+        if (
+            perm.target_type == PermissionTargetType.USER and perm.target.id == user.id
+        ) or (
+            perm.target_type == PermissionTargetType.GROUP
+            and perm.target.id in group_ids
+        ):
+            current_value = permission_levels.get(required_permission.value, 0)
+            max_level_value = max(max_level_value, current_value)
+    if max_level_value == 0:
+        return False
+    required_value = permission_levels.get(required_permission.value, 0)
+    return max_level_value >= required_value
+
+
+class PermissionTypes(StrEnum):
+    VIEW = 'view'
+    EDIT = 'edit'
+    ADMIN = 'admin'
+
+
+class BoardPermissionType(StrEnum):
+    VIEW = PermissionTypes.VIEW.value
+    EDIT = PermissionTypes.EDIT.value
+    ADMIN = PermissionTypes.ADMIN.value
+
+
+class PermissionRecord(BaseModel):
     id: Annotated[UUID, Field(default_factory=uuid4)]
     target_type: PermissionTargetType
     target: GroupLinkField | UserLinkField
-    can_edit: bool = False
-    can_view: bool = False
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, BoardPermission):
-            return False
-        return (
-            self.target_type == other.target_type
-            and self.target == other.target
-            and self.can_edit == other.can_edit
-            and self.can_view == other.can_view
-        )
+
+class BoardPermission(PermissionRecord):
+    permission_type: BoardPermissionType
 
 
 @audited_model
@@ -54,26 +84,56 @@ class Board(Document):
     created_by: UserLinkField
     permissions: Annotated[list[BoardPermission], Field(default_factory=list)]
 
-    def check_board_permissions(self, user: User) -> tuple[bool, bool]:
-        if self.created_by.id == user.id:
-            return True, True
+    def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
+        return any(p.target.id == target.id for p in self.permissions)
 
-        user_groups = {gr.id for gr in user.groups}
-        can_view = False
-        can_edit = False
+    def has_any_other_admin_target(
+        self, target: UserLinkField | GroupLinkField
+    ) -> bool:
+        return (
+            sum(
+                1
+                for p in self.permissions
+                if p.permission_type == BoardPermissionType.ADMIN
+                and p.target.id != target.id
+            )
+            > 0
+        )
 
-        for perm in self.permissions:
-            if (
-                perm.target_type == PermissionTargetType.USER
-                and perm.target.id == user.id
-            ) or (
-                perm.target_type == PermissionTargetType.GROUP
-                and perm.target.id in user_groups
-            ):
-                can_view = can_view or perm.can_view
-                can_edit = can_edit or perm.can_edit
+    @staticmethod
+    def get_filter_query(user: User) -> dict:
+        permission_type = {'$in': [l.value for l in BoardPermissionType]}
+        return {
+            '$or': [
+                {
+                    'permissions': {
+                        '$elemMatch': {
+                            'target_type': PermissionTargetType.USER,
+                            'target.id': user.id,
+                            'permission_type': permission_type,
+                        }
+                    }
+                },
+                {
+                    'permissions': {
+                        '$elemMatch': {
+                            'target_type': PermissionTargetType.GROUP,
+                            'target.id': {'$in': [g.id for g in user.groups]},
+                            'permission_type': permission_type,
+                        }
+                    }
+                },
+            ]
+        }
 
-        return can_view, can_edit
+    def check_permissions(
+        self, user: User, required_permission: BoardPermissionType
+    ) -> bool:
+        return _check_permissions(
+            permissions=self.permissions,
+            user=user,
+            required_permission=required_permission,
+        )
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None

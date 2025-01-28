@@ -130,30 +130,7 @@ async def list_boards(
     query: ListParams = Depends(),
 ) -> BaseListOutput[BoardOutput]:
     user_ctx = current_user()
-    user_groups = [g.id for g in user_ctx.user.groups]
-    filter_query = {
-        '$or': [
-            {'created_by.id': user_ctx.user.id},
-            {
-                'permissions': {
-                    '$elemMatch': {
-                        'target_type': m.PermissionTargetType.USER,
-                        'target.id': user_ctx.user.id,
-                        'can_view': True,
-                    }
-                }
-            },
-            {
-                'permissions': {
-                    '$elemMatch': {
-                        'target_type': m.PermissionTargetType.GROUP,
-                        'target.id': {'$in': user_groups},
-                        'can_view': True,
-                    }
-                }
-            },
-        ]
-    }
+    filter_query = m.Board.get_filter_query(user=user_ctx.user)
     q = m.Board.find(filter_query).sort(m.Board.name)
     return await BaseListOutput.make_from_query(
         q,
@@ -227,7 +204,13 @@ async def create_board(
         ],
         ui_settings=body.ui_settings,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
-        permissions=[],
+        permissions=[
+            m.BoardPermission(
+                target_type=m.PermissionTargetType.USER,
+                target=m.UserLinkField.from_obj(user_ctx.user),
+                permission_type=m.BoardPermissionType.ADMIN,
+            )
+        ],
     )
     await board.insert()
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
@@ -241,8 +224,7 @@ async def get_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    can_view, _ = board.check_board_permissions(user_ctx.user)
-    if not can_view:
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
 
@@ -256,8 +238,7 @@ async def update_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    _, can_edit = board.check_board_permissions(user_ctx.user)
-    if not can_edit:
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this board')
     data = body.dict(exclude_unset=True)
     for k in ('name', 'description', 'query', 'ui_settings'):
@@ -366,8 +347,7 @@ async def delete_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    _, can_edit = board.check_board_permissions(user_ctx.user)
-    if not can_edit:
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this board')
     await board.delete()
     return ModelIdOutput.make(board_id)
@@ -383,9 +363,7 @@ async def get_board_issues(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-
-    can_view, _ = board.check_board_permissions(user_ctx.user)
-    if not can_view:
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
 
     q = m.Issue.find(
@@ -512,8 +490,7 @@ async def move_issue(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    _, can_edit = board.check_board_permissions(user_ctx.user)
-    if not can_edit:
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.EDIT):
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'No permission to move issues in this board'
         )
@@ -677,16 +654,14 @@ async def select_card_color_field(
 class GrantPermissionBody(BaseModel):
     target_type: m.PermissionTargetType
     target: PydanticObjectId
-    can_edit: bool = False
-    can_view: bool = False
+    permission_type: m.BoardPermissionType
 
 
 class BoardPermissionOutput(BaseModel):
     id: UUID
     target_type: m.PermissionTargetType
     target: GroupOutput | UserOutput
-    can_edit: bool
-    can_view: bool
+    permission_type: m.BoardPermissionType
 
     @classmethod
     def from_obj(cls, obj: m.BoardPermission) -> Self:
@@ -699,8 +674,7 @@ class BoardPermissionOutput(BaseModel):
             id=obj.id,
             target_type=obj.target_type,
             target=target,
-            can_edit=obj.can_edit,
-            can_view=obj.can_view,
+            permission_type=obj.permission_type,
         )
 
 
@@ -709,28 +683,23 @@ async def grant_permission(
     board_id: PydanticObjectId,
     body: GrantPermissionBody,
 ) -> UUIDOutput:
-    user_ctx = current_user()
+    """
+    Grants one permission from set of permission types to a specified target (user or group) for a board.
+    """
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
-    if board.created_by.id != user_ctx.user.id:
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
-            detail=f'You cannot modify permissions for board {board_id}',
+            detail='You cannot modify permissions for this board',
         )
     if body.target_type == m.PermissionTargetType.USER:
         user: m.User | None = await m.User.find_one(m.User.id == body.target)
         if not user:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
-        if user.id == user_ctx.user.id:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail='Cannot grant permissions to self',
-            )
-        permission = m.BoardPermission(
-            target_type=body.target_type,
-            target=m.UserLinkField.from_obj(user),
-        )
+        target = m.UserLinkField.from_obj(user)
     else:
         group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
         if not group:
@@ -740,33 +709,17 @@ async def grant_permission(
                 status_code=HTTPStatus.FORBIDDEN,
                 detail='You cannot grant permissions to groups you are not member of',
             )
-        permission = m.BoardPermission(
-            target_type=body.target_type,
-            target=m.GroupLinkField.from_obj(group),
-        )
-    permission.can_edit = body.can_edit
-    permission.can_view = body.can_view
-    existing_perm = next(
-        (
-            perm
-            for perm in board.permissions
-            if perm.target_type == body.target_type and perm.target.id == body.target
-        ),
-        None,
-    )
-    if existing_perm and (
-        existing_perm.can_view != body.can_view
-        or existing_perm.can_edit != body.can_edit
-    ):
-        raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
-            detail=f'Conflicting permission {existing_perm.id} exists for {body.target_type} {body.target}',
-        )
-    if any(perm == permission for perm in board.permissions):
+        target = m.GroupLinkField.from_obj(group)
+    if board.has_permission_for_target(target):
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
-    board.permissions.append(permission)
+    p = m.BoardPermission(
+        target_type=body.target_type,
+        target=target,
+        permission_type=body.permission_type,
+    )
+    board.permissions.append(p)
     await board.save_changes()
-    return UUIDOutput.make(permission.id)
+    return UUIDOutput.make(p.id)
 
 
 @router.delete('/{board_id}/permission/{permission_id}')
@@ -774,11 +727,11 @@ async def revoke_permission(
     board_id: PydanticObjectId,
     permission_id: UUID,
 ) -> UUIDOutput:
-    user_ctx = current_user()
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
-    if board.created_by.id != user_ctx.user.id:
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this board',
@@ -789,6 +742,11 @@ async def revoke_permission(
         )
     ):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+    if (
+        perm.permission_type == m.BoardPermissionType.ADMIN
+        and not board.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Board must have at least one admin')
     board.permissions.remove(perm)
     await board.save_changes()
     return UUIDOutput.make(perm.id)
@@ -803,10 +761,8 @@ async def get_board_permissions(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if board.created_by.id != user_ctx.user.id:
-        raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'Only board admin can view permissions'
-        )
+    if not board.check_permissions(user_ctx.user, m.BoardPermissionType.ADMIN):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot view board permissions')
     return BaseListOutput.make(
         count=len(board.permissions),
         limit=query.limit,
