@@ -34,16 +34,19 @@ const issueListSettingOptions: Record<
         label: "S",
         showDescription: false,
         showCustomFields: false,
+        showDividers: false,
     },
     medium: {
         label: "M",
         showDescription: false,
         showCustomFields: true,
+        showDividers: true,
     },
     large: {
         label: "L",
         showDescription: true,
         showCustomFields: true,
+        showDividers: true,
     },
 };
 
