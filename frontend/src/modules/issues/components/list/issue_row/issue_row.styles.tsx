@@ -1,4 +1,4 @@
-import { styled } from "@mui/material";
+import { alpha, styled } from "@mui/material";
 import { theme } from "../../../../../theme";
 
 export const IssueRowRoot = styled("div", {
@@ -15,7 +15,7 @@ export const IssueRowRoot = styled("div", {
     },
 
     "&:hover, &:focus": {
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: alpha(theme.palette.background.paper, 0.5),
     },
 }));
 
