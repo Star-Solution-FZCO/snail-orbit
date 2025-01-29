@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "compile": "tsc -b",
-    "build": "tsc -b && vite build",
+    "compile": "tsr generate && tsc -b",
+    "build": "tsr generate && tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prettier": "npx prettier . --write -l",
@@ -64,6 +64,7 @@
     "@storybook/react": "^8.2.9",
     "@storybook/react-vite": "^8.2.9",
     "@storybook/test": "^8.2.9",
+    "@tanstack/router-cli": "^1.98.1",
     "@tanstack/router-devtools": "^1.46.7",
     "@tanstack/router-plugin": "^1.46.6",
     "@types/js-cookie": "^3.0.6",
@@ -84,7 +85,7 @@
     "storybook": "^8.2.9",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.16.0",
-    "vite": "^5.4.9",
+    "vite": "^5.4.14",
     "vite-plugin-unused-code": "^0.1.2",
     "vite-tsconfig-paths": "^4.3.2"
   }
