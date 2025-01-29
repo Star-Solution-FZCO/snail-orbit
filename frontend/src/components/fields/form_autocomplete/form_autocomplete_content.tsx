@@ -1,9 +1,13 @@
 import type { AutocompleteCloseReason, AutocompleteProps } from "@mui/material";
-import { Autocomplete, Box, Checkbox, Stack } from "@mui/material";
-import type { ReactNode, SyntheticEvent } from "react";
+import { Autocomplete, Box, Checkbox, Paper, Stack } from "@mui/material";
+import type { ComponentProps, ReactNode, SyntheticEvent } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { PopperComponent, StyledInput } from "./form_autocomplete.styles";
+import {
+    BottomSlot,
+    PopperComponent,
+    StyledInput,
+} from "./form_autocomplete.styles";
 
 export type FormAutocompleteValueType = {
     label: string;
@@ -19,7 +23,10 @@ export type FormAutocompleteContentProps<
 > = Omit<
     AutocompleteProps<FormAutocompleteValueType, F, G, false>,
     "renderOption" | "renderInput" | "renderTags" | "open"
->;
+> & {
+    inputProps?: ComponentProps<typeof StyledInput>;
+    bottomSlot?: ReactNode;
+};
 
 export const FormAutocompleteContent = <
     F extends boolean | undefined,
@@ -29,6 +36,8 @@ export const FormAutocompleteContent = <
     onClose,
     onChange,
     options,
+    inputProps,
+    bottomSlot,
     ...props
 }: FormAutocompleteContentProps<F, G>) => {
     const { t } = useTranslation();
@@ -108,12 +117,19 @@ export const FormAutocompleteContent = <
             }}
             options={options}
             getOptionLabel={(option) => option.label}
+            PaperComponent={({ children, ...rest }) => (
+                <Paper {...rest}>
+                    {children}
+                    {bottomSlot ? <BottomSlot>{bottomSlot}</BottomSlot> : null}
+                </Paper>
+            )}
             renderInput={(params) => {
                 return (
                     <StyledInput
+                        placeholder={t("autocomplete.filter")}
+                        {...inputProps}
                         ref={params.InputProps.ref}
                         inputProps={params.inputProps}
-                        placeholder={t("autocomplete.filter")}
                         autoFocus
                     />
                 );

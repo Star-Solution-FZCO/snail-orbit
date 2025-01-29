@@ -6,8 +6,8 @@ import { FC, useCallback, useEffect } from "react";
 import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT, UpdateIssueT } from "types";
-import { toastApiError } from "utils";
-import IssueViewComponent from "../components/issue_view";
+import { Routes, toastApiError } from "utils";
+import IssueViewComponent from "../components/issue/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
@@ -53,11 +53,10 @@ const IssueView: FC = () => {
     useEffect(() => {
         if (issue && issue.id_readable && issue.id_readable !== issueId) {
             navigate({
-                to: "/issues/$issueId/$subject",
-                params: {
-                    issueId: issue.id_readable,
-                    subject: slugify(issue.subject),
-                },
+                to: Routes.issues.issue(
+                    issue.id_readable,
+                    slugify(issue.subject),
+                ),
                 replace: true,
             });
         }

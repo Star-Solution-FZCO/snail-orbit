@@ -40,10 +40,19 @@ export const StyledInput = styled(FieldInput)(({ theme }) => ({
     }`,
 }));
 
+export const BottomSlot = styled("div")(({ theme }) => ({
+    width: "100%",
+    borderTop: `1px solid ${
+        theme.palette.mode === "light" ? "#eaecef" : "#30363d"
+    }`,
+    backgroundColor: theme.palette.mode === "light" ? "#fff" : "#1c2128",
+}));
+
 export class PopperComponentProps {}
 
 export function PopperComponent(props: PopperComponentProps) {
-    // @ts-ignore
+    // @ts-expect-error trash unused fields
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { disablePortal, anchorEl, open, ...other } = props;
     return <StyledAutocompletePopper {...other} />;
 }

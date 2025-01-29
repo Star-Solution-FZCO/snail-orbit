@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "store";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
-import IssueView from "../components/issue_view";
+import IssueView from "../components/issue/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/draft/$draftId");
 

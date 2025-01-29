@@ -1,5 +1,6 @@
-import { Box, styled } from "@mui/material";
-import { ComponentProps, forwardRef } from "react";
+import { Box, getContrastRatio, styled, useTheme } from "@mui/material";
+import type { ComponentProps } from "react";
+import { forwardRef } from "react";
 
 export type ColorAdornmentProps = {
     color: string;
@@ -7,8 +8,8 @@ export type ColorAdornmentProps = {
 } & ComponentProps<typeof Box>;
 
 export const ColorAdornmentStyled = styled(Box)<
-    Pick<ColorAdornmentProps, "size">
->(({ theme, size }) => ({
+    Pick<ColorAdornmentProps, "size" | "onClick">
+>(({ theme, size, onClick }) => ({
     width:
         size === "small"
             ? theme.typography.pxToRem(20)
@@ -19,14 +20,28 @@ export const ColorAdornmentStyled = styled(Box)<
             : theme.typography.pxToRem(26),
     flexShrink: 0,
     borderRadius: 3,
+    cursor: onClick ? "pointer" : "inherit",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
 }));
 
 export const ColorAdornment = forwardRef<typeof Box, ColorAdornmentProps>(
     ({ color, sx, ...props }, ref) => {
+        const theme = useTheme();
+
         return (
             <ColorAdornmentStyled
                 {...props}
-                style={{ ...props.style, backgroundColor: color }}
+                style={{
+                    ...props.style,
+                    backgroundColor: color,
+                    color:
+                        getContrastRatio(color, "#fff") >
+                        theme.palette.contrastThreshold
+                            ? "#fff"
+                            : "#111",
+                }}
                 sx={sx}
                 ref={ref}
             />

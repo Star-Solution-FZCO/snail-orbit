@@ -10,16 +10,17 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
-import { FC, useState } from "react";
+import type { FC, ReactNode } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
 import { issueToCreateIssue } from "store/utils/issue";
 import { slugify } from "transliteration";
-import { IssueT } from "types";
-import { toastApiError } from "utils";
+import type { IssueT } from "types";
+import { Routes, toastApiError } from "utils";
 import { DeleteIssueDialog } from "./delete_dialog";
+import { HeadingTagButton } from "./heading_tag_button";
 
 interface IHeadingControlsProps {
     issue: IssueT;
@@ -28,7 +29,6 @@ interface IHeadingControlsProps {
 export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -52,7 +52,7 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
     };
 
     const renderMenuItem = (
-        icon: React.ReactNode,
+        icon: ReactNode,
         label: string,
         onClick: () => void,
         iconColor?: "error",
@@ -78,17 +78,10 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                     <Typography>
                         {t("issues.clone.created")}:{" "}
                         <Link
-                            href={`/issues/${issueId}`}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                navigate({
-                                    to: "/issues/$issueId/$subject",
-                                    params: {
-                                        issueId,
-                                        subject: slugify(issue.subject),
-                                    },
-                                });
-                            }}
+                            href={Routes.issues.issue(
+                                issueId,
+                                slugify(issue.subject),
+                            )}
                         >
                             {issueId}
                         </Link>
@@ -108,6 +101,8 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                     <LinkIcon />
                 </IconButton>
             </Tooltip>
+
+            <HeadingTagButton />
 
             <Tooltip title={t("issues.heading.showMore")}>
                 <IconButton
