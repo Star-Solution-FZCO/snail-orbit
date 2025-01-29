@@ -183,13 +183,16 @@ class Issue(Document):
         return latest_time
 
     @property
+    def resolved_at(self) -> datetime | None:
+        if not (resolved_state := self._find_resolved_state()):
+            return None
+        if not (change := self._get_latest_field_change_record(resolved_state.id)):
+            return self.created_at
+        return change.time
+
+    @property
     def is_resolved(self) -> bool:
-        return any(
-            field.type == CustomFieldTypeT.STATE
-            and field.value
-            and field.value.is_resolved
-            for field in self.fields
-        )
+        return bool(self._find_resolved_state())
 
     @property
     def is_closed(self) -> bool:
@@ -404,6 +407,25 @@ class Issue(Document):
             if latest_comment.created_at > latest_history.time
             else (latest_history, latest_history.time)
         )
+
+    def _get_latest_field_change_record(
+        self, field_id: PydanticObjectId
+    ) -> IssueHistoryRecord | None:
+        for record in sorted(self.history, key=lambda h: h.time, reverse=True):
+            for change in record.changes:
+                if change.field.id == field_id:
+                    return record
+        return None
+
+    def _find_resolved_state(self) -> CustomFieldValue | None:
+        for field in self.fields:
+            if (
+                field.type == CustomFieldTypeT.STATE
+                and field.value
+                and field.value.is_resolved
+            ):
+                return field
+        return None
 
 
 @audited_model

@@ -154,6 +154,8 @@ class IssueOutput(BaseModel):
     created_at: datetime
     updated_by: UserOutput | None
     updated_at: datetime | None
+    is_resolved: bool
+    resolved_at: datetime | None
     interlinks: list[IssueInterlinkOutput]
     tags: list[TagLinkOutput]
 
@@ -175,6 +177,8 @@ class IssueOutput(BaseModel):
             created_at=obj.created_at,
             updated_by=UserOutput.from_obj(obj.updated_by) if obj.updated_by else None,
             updated_at=obj.updated_at,
+            is_resolved=obj.is_resolved,
+            resolved_at=obj.resolved_at,
             interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
             tags=[TagLinkOutput.from_obj(tag) for tag in obj.tags],
         )
