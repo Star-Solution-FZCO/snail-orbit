@@ -29,7 +29,15 @@ __all__ = (
 )
 
 HASHTAG_VALUES = {'#resolved', '#unresolved'}
-RESERVED_FIELDS = {'subject', 'text', 'project'}
+RESERVED_FIELDS = {
+    'subject',
+    'text',
+    'project',
+    'updated_at',
+    'updated_by',
+    'created_at',
+    'created_by',
+}
 
 EXPRESSION_GRAMMAR = """
     start: attribute_condition | hashtag_value
@@ -74,8 +82,8 @@ EXPRESSION_GRAMMAR = """
     _COLON: ":"
     USER_ME: "me"i
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
-    DATE_VALUE: /[0-9]{4}-[0-9]{2}-[0-9]{2}/
-    DATETIME_VALUE: /[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/
+    DATE_VALUE.2: /[0-9]{4}-[0-9]{2}-[0-9]{2}/
+    DATETIME_VALUE.3: /[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/
     NULL_VALUE: "null"i
     INF_PLUS_VALUE: "inf"i
     INF_MINUS_VALUE: "-inf"i
@@ -147,6 +155,10 @@ class MongoQueryTransformer(Transformer):
             return {'subject': {'$regex': value, '$options': 'i'}}
         if field == 'text':
             return {'$text': {'$search': value}}
+        if field in ('updated_at', 'created_at'):
+            return {field: value}
+        if field in ('updated_by', 'created_by'):
+            return {f'{field}.email': value}
         return {
             'fields': {
                 '$elemMatch': {
@@ -425,7 +437,14 @@ def get_field_possible_values(
 ) -> set[str]:
     results = set()
     field_name = field_name.lower()
-    if field_name in ('subject', 'text'):
+    if field_name in (
+        'subject',
+        'text',
+        'updated_at',
+        'created_at',
+        'updated_by',
+        'created_by',
+    ):
         return results
     if field_name == 'project':
         return set(projects.keys())

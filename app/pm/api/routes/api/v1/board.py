@@ -25,6 +25,7 @@ from pm.api.views.params import ListParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
+from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType
 from pm.workflows import WorkflowException
 
@@ -439,6 +440,7 @@ async def move_issue(
     issue_id: PydanticObjectId,
     body: IssueMoveBody,
 ) -> ModelIdOutput:
+    now = utcnow()
     user_ctx = current_user()
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
@@ -494,7 +496,9 @@ async def move_issue(
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             ) from err
-        issue.gen_history_record(user_ctx.user)
+        issue.gen_history_record(user_ctx.user, time=now)
+        issue.updated_at = now
+        issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await issue.replace()
         task_notify_by_pararam.delay(
             'update',
