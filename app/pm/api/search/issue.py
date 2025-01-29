@@ -29,7 +29,15 @@ __all__ = (
 )
 
 HASHTAG_VALUES = {'#resolved', '#unresolved'}
-RESERVED_FIELDS = {'subject', 'text', 'project', 'updated_at', 'created_at'}
+RESERVED_FIELDS = {
+    'subject',
+    'text',
+    'project',
+    'updated_at',
+    'updated_by',
+    'created_at',
+    'created_by',
+}
 
 EXPRESSION_GRAMMAR = """
     start: attribute_condition | hashtag_value
@@ -149,6 +157,8 @@ class MongoQueryTransformer(Transformer):
             return {'$text': {'$search': value}}
         if field in ('updated_at', 'created_at'):
             return {field: value}
+        if field in ('updated_by', 'created_by'):
+            return {f'{field}.email': value}
         return {
             'fields': {
                 '$elemMatch': {
@@ -427,7 +437,14 @@ def get_field_possible_values(
 ) -> set[str]:
     results = set()
     field_name = field_name.lower()
-    if field_name in ('subject', 'text', 'updated_at', 'created_at'):
+    if field_name in (
+        'subject',
+        'text',
+        'updated_at',
+        'created_at',
+        'updated_by',
+        'created_by',
+    ):
         return results
     if field_name == 'project':
         return set(projects.keys())
