@@ -1,60 +1,23 @@
 from enum import StrEnum
 from typing import Annotated
-from uuid import UUID, uuid4
 
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
 from .group import GroupLinkField
+from .permission import PermissionRecord, PermissionTypes, _check_permissions
 from .project import PermissionTargetType, ProjectLinkField
 from .user import User, UserLinkField
 
 __all__ = ('Board', 'BoardPermission', 'BoardPermissionType')
 
 
-permission_levels = {'view': 1, 'edit': 2, 'admin': 3}
-
-
-def _check_permissions(
-    permissions: list,
-    user: User,
-    required_permission,
-) -> bool:
-    group_ids = {gr.id for gr in user.groups}
-    max_level_value = 0
-    for perm in permissions:
-        if (
-            perm.target_type == PermissionTargetType.USER and perm.target.id == user.id
-        ) or (
-            perm.target_type == PermissionTargetType.GROUP
-            and perm.target.id in group_ids
-        ):
-            current_value = permission_levels.get(required_permission.value, 0)
-            max_level_value = max(max_level_value, current_value)
-    if max_level_value == 0:
-        return False
-    required_value = permission_levels.get(required_permission.value, 0)
-    return max_level_value >= required_value
-
-
-class PermissionTypes(StrEnum):
-    VIEW = 'view'
-    EDIT = 'edit'
-    ADMIN = 'admin'
-
-
 class BoardPermissionType(StrEnum):
     VIEW = PermissionTypes.VIEW.value
     EDIT = PermissionTypes.EDIT.value
     ADMIN = PermissionTypes.ADMIN.value
-
-
-class PermissionRecord(BaseModel):
-    id: Annotated[UUID, Field(default_factory=uuid4)]
-    target_type: PermissionTargetType
-    target: GroupLinkField | UserLinkField
 
 
 class BoardPermission(PermissionRecord):
