@@ -603,6 +603,8 @@ async def update_issue(
         ) from err
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
+        obj.updated_at = now
+        obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
         task_notify_by_pararam.delay(
             'update',

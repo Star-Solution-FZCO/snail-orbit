@@ -126,6 +126,8 @@ async def create_comment(
         ],
     )
     issue.comments.append(comment)
+    issue.updated_at = comment.created_at
+    issue.updated_by = comment.author
     await issue.save_changes()
     for a in comment.attachments:
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
@@ -190,6 +192,8 @@ async def update_comment(
         setattr(comment, k, v)
     if issue.is_changed:
         comment.updated_at = now
+        issue.updated_at = comment.created_at
+        issue.updated_by = comment.author
         await issue.save_changes()
         for a_id in extra_attachment_ids:
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
