@@ -165,6 +165,9 @@ class Issue(Document):
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
+    updated_by: UserLinkField | None = None
+    updated_at: datetime | None = None
+
     interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]
 
@@ -173,23 +176,16 @@ class Issue(Document):
         return self.aliases[-1] if self.aliases else str(self.id)
 
     @property
-    def updated_by(self) -> UserLinkField | None:
-        latest_item, _ = self._get_latest_comment_or_history()
-        return latest_item.author if latest_item else None
-
-    @property
-    def updated_at(self) -> datetime | None:
-        _, latest_time = self._get_latest_comment_or_history()
-        return latest_time
+    def resolved_at(self) -> datetime | None:
+        if not (resolved_state := self._find_resolved_state()):
+            return None
+        if not (change := self._get_latest_field_change_record(resolved_state.id)):
+            return self.created_at
+        return change.time
 
     @property
     def is_resolved(self) -> bool:
-        return any(
-            field.type == CustomFieldTypeT.STATE
-            and field.value
-            and field.value.is_resolved
-            for field in self.fields
-        )
+        return bool(self._find_resolved_state())
 
     @property
     def is_closed(self) -> bool:
@@ -302,6 +298,9 @@ class Issue(Document):
         await cls.find(cls.created_by.id == user.id).update(
             {'$set': {'created_by': user}}
         )
+        await cls.find(cls.updated_by.id == user.id).update(
+            {'$set': {'updated_by': user}}
+        )
         await cls.find(cls.history.author.id == user.id).update(
             {'$set': {'history.$[h].author': user}},
             array_filters=[{'h.author.id': user.id}],
@@ -404,6 +403,25 @@ class Issue(Document):
             if latest_comment.created_at > latest_history.time
             else (latest_history, latest_history.time)
         )
+
+    def _get_latest_field_change_record(
+        self, field_id: PydanticObjectId
+    ) -> IssueHistoryRecord | None:
+        for record in sorted(self.history, key=lambda h: h.time, reverse=True):
+            for change in record.changes:
+                if change.field.id == field_id:
+                    return record
+        return None
+
+    def _find_resolved_state(self) -> CustomFieldValue | None:
+        for field in self.fields:
+            if (
+                field.type == CustomFieldTypeT.STATE
+                and field.value
+                and field.value.is_resolved
+            ):
+                return field
+        return None
 
 
 @audited_model
