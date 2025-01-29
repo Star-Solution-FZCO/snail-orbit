@@ -165,22 +165,15 @@ class Issue(Document):
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
+    updated_by: UserLinkField | None = None
+    updated_at: datetime | None = None
+
     interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]
 
     @property
     def id_readable(self) -> str:
         return self.aliases[-1] if self.aliases else str(self.id)
-
-    @property
-    def updated_by(self) -> UserLinkField | None:
-        latest_item, _ = self._get_latest_comment_or_history()
-        return latest_item.author if latest_item else None
-
-    @property
-    def updated_at(self) -> datetime | None:
-        _, latest_time = self._get_latest_comment_or_history()
-        return latest_time
 
     @property
     def resolved_at(self) -> datetime | None:
@@ -304,6 +297,9 @@ class Issue(Document):
         )
         await cls.find(cls.created_by.id == user.id).update(
             {'$set': {'created_by': user}}
+        )
+        await cls.find(cls.updated_by.id == user.id).update(
+            {'$set': {'updated_by': user}}
         )
         await cls.find(cls.history.author.id == user.id).update(
             {'$set': {'history.$[h].author': user}},
