@@ -8,15 +8,15 @@ import {
     DialogContent,
     DialogTitle,
     FormControlLabel,
-    Popover,
     TextField,
 } from "@mui/material";
-import ColorPicker from "@uiw/react-color-compact";
-import { FC, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { StateOptionT } from "types";
+import type { StateOptionT } from "types";
 import * as yup from "yup";
+import { ColorInputField } from "../../../components/color_picker/color_input_field";
 
 const stateOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
@@ -59,20 +59,6 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         },
     });
 
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-    const handleClickColorPicker = (
-        event: React.MouseEvent<HTMLButtonElement>,
-    ) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseColorPicker = () => {
-        setAnchorEl(null);
-    };
-
-    const popoverOpen = Boolean(anchorEl);
-
     useEffect(() => {
         reset(
             defaultValues || {
@@ -110,46 +96,10 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                         name="color"
                         control={control}
                         render={({ field: { value, onChange } }) => (
-                            <FormControlLabel
-                                sx={{
-                                    "&.MuiFormControlLabel-root": {
-                                        m: 0,
-                                    },
-                                }}
-                                control={
-                                    <>
-                                        <Button
-                                            sx={{
-                                                minWidth: "40px",
-                                                height: "40px",
-                                                mr: 1,
-                                                backgroundColor: value,
-                                                "&:hover": {
-                                                    backgroundColor: value,
-                                                },
-                                            }}
-                                            onClick={handleClickColorPicker}
-                                            variant="outlined"
-                                        />
-
-                                        <Popover
-                                            open={popoverOpen}
-                                            anchorEl={anchorEl}
-                                            onClose={handleCloseColorPicker}
-                                            anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "left",
-                                            }}
-                                        >
-                                            <ColorPicker
-                                                color={value || ""}
-                                                onChange={(color) =>
-                                                    onChange(color.hex)
-                                                }
-                                            />
-                                        </Popover>
-                                    </>
-                                }
+                            <ColorInputField
+                                color={value || ""}
+                                onChange={onChange}
+                                size="small"
                                 label={t("customFields.options.color")}
                             />
                         )}

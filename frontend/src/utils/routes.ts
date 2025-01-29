@@ -13,4 +13,14 @@ export const Routes = {
             return `${Routes.agileBoards.index()}/list`;
         },
     },
+    issues: {
+        index() {
+            return `/issues`;
+        },
+        issue(id: string, subject?: string) {
+            let url = `${Routes.issues.index()}/${id}`;
+            if (subject) url += `/${subject}`;
+            return url;
+        },
+    },
 };

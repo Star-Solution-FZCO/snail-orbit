@@ -1,8 +1,8 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
+import type { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
 import dayjs from "dayjs";
-import {
+import type {
     BasicUserT,
     EnumFieldT,
     IssueProjectT,

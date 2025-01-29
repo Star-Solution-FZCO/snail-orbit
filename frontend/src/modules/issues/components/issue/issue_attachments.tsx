@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { sharedApi } from "store";
 import { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
-import { initialSelectedAttachment, useUploadToast } from "../utils";
+import { initialSelectedAttachment, useUploadToast } from "../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 

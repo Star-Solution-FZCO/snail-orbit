@@ -1,15 +1,14 @@
 import { ClickAwayListener } from "@mui/material";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
-import FormAutocompleteContent, {
-    FormAutocompleteContentProps,
-} from "./form_autocomplete_content";
+import type { FormAutocompleteContentProps } from "./form_autocomplete_content";
+import FormAutocompleteContent from "./form_autocomplete_content";
 
-export type FormAutocompleteProps<
+export type FormAutocompletePopoverProps<
     F extends boolean | undefined,
     G extends boolean | undefined,
 > = {
     onClose?: () => unknown;
-    anchorEl: HTMLElement | null;
+    anchorEl?: HTMLElement | null;
     id: string;
     open: boolean;
 } & FormAutocompleteContentProps<F, G>;
@@ -23,7 +22,7 @@ export const FormAutocompletePopover = <
     id,
     open,
     ...props
-}: FormAutocompleteProps<F, G>) => {
+}: FormAutocompletePopoverProps<F, G>) => {
     const handleClose = () => {
         if (onClose) onClose();
     };
