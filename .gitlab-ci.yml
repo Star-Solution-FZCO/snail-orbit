@@ -22,6 +22,10 @@ default:
   changes:
     - "app/**/*"
 
+.ui-changes: &ui-changes
+  changes:
+    - "frontend/**/*"
+
 
 build-test-api:
   stage: build-test-images
@@ -38,6 +42,32 @@ build-test-api:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       <<: *backend-changes
+
+build-test-ui:
+  stage: build-test-images
+  before_script:
+    - *template-login-internal-registry
+    - *template-init-buildx
+  script:
+    - docker buildx build --push
+      --platform linux/amd64
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/ui-test:cache
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/ui-test:cache
+      -t $CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target test frontend
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *ui-changes
+
+test-ui:
+  stage: test
+  image: $CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA
+  script:
+    - cd frontend
+    - yarn build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      <<: *ui-changes
 
 lint-backend:
   stage: lint
@@ -135,7 +165,7 @@ build-dev-ui:
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/ui:cache-dev
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/ui:cache-dev
       -t $CI_REGISTRY_IMAGE/ui:dev
-      --build-arg version=$CI_COMMIT_SHORT_SHA frontend
+      --build-arg version=$CI_COMMIT_SHORT_SHA --target ui frontend
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG == null'
 
@@ -181,6 +211,6 @@ build-release-ui:
       -t $CI_REGISTRY_IMAGE/ui:latest
       -t $DOCKERHUB_IMAGE_PREFIX-ui:$CI_COMMIT_TAG
       -t $DOCKERHUB_IMAGE_PREFIX-ui:latest
-      --build-arg version=$CI_COMMIT_TAG frontend
+      --build-arg version=$CI_COMMIT_TAG --target ui frontend
   rules:
     - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/'

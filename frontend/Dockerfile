@@ -7,7 +7,17 @@ COPY . .
 RUN yarn build
 
 
-FROM nginx:alpine
+FROM --platform=$BUILDPLATFORM node:20-alpine AS test
+COPY package.json .
+COPY yarn.lock .
+RUN yarn install --frozen-lockfile --production=false
+RUN yarn config set -- --modules-folder /node_modules && \
+    rm -rf package.json yarn.lock
+ENV PATH="/node_modules/.bin:$PATH"
+WORKDIR /app
+
+
+FROM nginx:alpine AS ui
 WORKDIR /app
 
 RUN apk add --no-cache util-linux moreutils && \
