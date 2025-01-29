@@ -1,26 +1,29 @@
 from enum import StrEnum
 from typing import Annotated
-from uuid import UUID, uuid4
 
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from ._audit import audited_model
 from .group import GroupLinkField
-from .user import UserLinkField
+from .permission import (
+    PermissionRecord,
+    PermissionTypes,
+    _check_permissions,
+)
+from .user import User, UserLinkField
 
-__all__ = ('Search', 'SearchPermissionType', 'SearchPermission')
+__all__ = ('Search', 'SearchPermission', 'SearchPermissionType')
 
 
 class SearchPermissionType(StrEnum):
-    GROUP = 'group'
-    USER = 'user'
+    VIEW = PermissionTypes.VIEW.value
+    EDIT = PermissionTypes.EDIT.value
+    OWNER = PermissionTypes.OWNER.value
 
 
-class SearchPermission(BaseModel):
-    id: Annotated[UUID, Field(default_factory=uuid4)]
-    target_type: SearchPermissionType
-    target: GroupLinkField | UserLinkField
+class SearchPermission(PermissionRecord):
+    permission_type: SearchPermissionType
 
 
 @audited_model
@@ -33,5 +36,18 @@ class Search(Document):
 
     name: str = Indexed(str)
     query: str
-    owner: UserLinkField
+    description: str | None
+    created_by: UserLinkField
     permissions: Annotated[list[SearchPermission], Field(default_factory=list)]
+
+    def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
+        return any(p.target.id == target.id for p in self.permissions)
+
+    def check_permissions(
+        self, user: User, required_permission: SearchPermissionType
+    ) -> bool:
+        return _check_permissions(
+            permissions=self.permissions,
+            user=user,
+            required_permission=required_permission,
+        )
