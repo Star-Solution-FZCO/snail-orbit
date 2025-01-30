@@ -32,6 +32,19 @@ class Search(Document):
     def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
         return any(p.target.id == target.id for p in self.permissions)
 
+    def has_any_other_admin_target(
+        self, target: UserLinkField | GroupLinkField
+    ) -> bool:
+        return (
+            sum(
+                1
+                for p in self.permissions
+                if p.permission_type == PermissionType.ADMIN
+                and p.target.id != target.id
+            )
+            > 0
+        )
+
     def check_permissions(
         self, user: User, required_permission: PermissionType
     ) -> bool:
