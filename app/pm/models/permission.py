@@ -8,22 +8,22 @@ from .group import GroupLinkField
 from .project import PermissionTargetType
 from .user import User, UserLinkField
 
-__all__ = ('_check_permissions', 'PermissionTypes')
+__all__ = ('_check_permissions', 'PermissionType', 'PermissionRecord')
 
-permission_levels = {'view': 1, 'edit': 2, 'admin': 3, 'owner': 4}
+permission_levels = {'view': 1, 'edit': 2, 'admin': 3}
 
 
-class PermissionTypes(StrEnum):
+class PermissionType(StrEnum):
     VIEW = 'view'
     EDIT = 'edit'
     ADMIN = 'admin'
-    OWNER = 'owner'
 
 
 class PermissionRecord(BaseModel):
     id: Annotated[UUID, Field(default_factory=uuid4)]
     target_type: PermissionTargetType
     target: GroupLinkField | UserLinkField
+    permission_type: PermissionType
 
 
 def _check_permissions(

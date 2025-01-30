@@ -10,7 +10,6 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.search.issue import TransformError, transform_query
 from pm.api.utils.router import APIRouter
-from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
     BaseListOutput,
     ModelIdOutput,
@@ -18,6 +17,7 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
+from pm.api.views.permission import PermissionOutput
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -29,64 +29,47 @@ router = APIRouter(
 )
 
 
-class SearchPermissionOutput(BaseModel):
-    id: UUID
-    target_type: m.PermissionTargetType
-    target: UserOutput | GroupOutput
-    permission_type: m.SearchPermissionType
-
-    @classmethod
-    def from_obj(cls, obj: m.SearchPermission) -> Self:
-        target = (
-            GroupOutput.from_obj(obj.target)
-            if obj.target_type == m.PermissionTargetType.GROUP
-            else UserOutput.from_obj(obj.target)
-        )
-        return cls(
-            id=obj.id,
-            target_type=obj.target_type,
-            target=target,
-            permission_type=obj.permission_type,
-        )
-
-
 class SearchOutput(BaseModel):
     id: PydanticObjectId
     name: str
     query: str
     description: str | None
     created_by: UserOutput
-    permissions: list[SearchPermissionOutput]
+    permissions: list[PermissionOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Search) -> Self:
         user_ctx = current_user()
-        user_group_ids = {g.id for g in user_ctx.user.groups}
-        permissions = []
-        for permission in obj.permissions:
-            if permission.target_type == m.PermissionTargetType.GROUP:
-                if permission.target.id in user_group_ids:
-                    permissions.append(SearchPermissionOutput.from_obj(permission))
-            if (
-                permission.target_type == m.PermissionTargetType.USER
-                and permission.target.id == user_ctx.user.id
-            ):
-                permissions.append(SearchPermissionOutput.from_obj(permission))
-
+        if obj.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+            perms_to_show = obj.permissions
+        else:
+            perms_to_show = []
+            user_group_ids = {g.id for g in user_ctx.user.groups}
+            for perm in obj.permissions:
+                if (
+                    perm.target_type == m.PermissionTargetType.USER
+                    and perm.target.id == user_ctx.user.id
+                ):
+                    perms_to_show.append(perm)
+                if (
+                    perm.target_type == m.PermissionTargetType.GROUP
+                    and perm.target.id in user_group_ids
+                ):
+                    perms_to_show.append(perm)
         return cls(
             id=obj.id,
             name=obj.name,
             query=obj.query,
             description=obj.description,
             created_by=UserOutput.from_obj(obj.created_by),
-            permissions=permissions,
+            permissions=[PermissionOutput.from_obj(p) for p in perms_to_show],
         )
 
 
 class GrantPermissionBody(BaseModel):
     target_type: m.PermissionTargetType
     target: PydanticObjectId
-    permission_type: m.SearchPermissionType
+    permission_type: m.PermissionType
 
 
 class SearchCreate(BaseModel):
@@ -107,10 +90,9 @@ async def list_searches(
 ) -> BaseListOutput[SearchOutput]:
     user_ctx = current_user()
     user_groups = [g.id for g in user_ctx.user.groups]
-    permission_type = {'$in': [l.value for l in m.SearchPermissionType]}
+    permission_type = {'$in': [l.value for l in m.PermissionType]}
     filter_query = {
         '$or': [
-            {'created_by.id': user_ctx.user.id},
             {
                 'permissions': {
                     '$elemMatch': {
@@ -155,14 +137,27 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
         description=body.description,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
         permissions=[
-            m.SearchPermission(
+            m.PermissionRecord(
                 target_type=m.PermissionTargetType.USER,
                 target=m.UserLinkField.from_obj(user_ctx.user),
-                permission_type=m.SearchPermissionType.OWNER,
+                permission_type=m.PermissionType.ADMIN,
             )
         ],
     )
     await search.insert()
+    return SuccessPayloadOutput(payload=SearchOutput.from_obj(search))
+
+
+@router.get('/{search_id}')
+async def get_search(
+    search_id: PydanticObjectId,
+) -> SuccessPayloadOutput[SearchOutput]:
+    search = await m.Search.find_one(m.Search.id == search_id)
+    if not search:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
+    user_ctx = current_user()
+    if not search.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this search')
     return SuccessPayloadOutput(payload=SearchOutput.from_obj(search))
 
 
@@ -172,7 +167,7 @@ async def delete_search(search_id: PydanticObjectId) -> ModelIdOutput:
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
-    if not search.check_permissions(user_ctx.user, m.SearchPermissionType.OWNER):
+    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this search')
     await search.delete()
     return ModelIdOutput.from_obj(search)
@@ -187,7 +182,7 @@ async def update_search(
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
     user_ctx = current_user()
-    if not search.check_permissions(user_ctx.user, m.SearchPermissionType.EDIT):
+    if not search.check_permissions(user_ctx.user, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this search')
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(search, k, v)
@@ -204,7 +199,7 @@ async def grant_permission(
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Search not found')
-    if not search.check_permissions(user_ctx.user, m.SearchPermissionType.OWNER):
+    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this search',
@@ -228,7 +223,7 @@ async def grant_permission(
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT, detail='Permission already granted'
         )
-    permission = m.SearchPermission(
+    permission = m.PermissionRecord(
         target_type=body.target_type,
         target=target,
         permission_type=body.permission_type,
@@ -246,7 +241,7 @@ async def revoke_permission(
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Search not found')
-    if not search.check_permissions(user_ctx.user, m.SearchPermissionType.OWNER):
+    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this search',
