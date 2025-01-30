@@ -207,12 +207,12 @@ async def grant_permission(
     if body.target_type == m.PermissionTargetType.USER:
         user: m.User | None = await m.User.find_one(m.User.id == body.target)
         if not user:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
         target = m.UserLinkField.from_obj(user)
     else:
         group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
         if not group:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
         if group.id not in {g.id for g in user_ctx.user.groups}:
             raise HTTPException(
                 status_code=HTTPStatus.FORBIDDEN,
