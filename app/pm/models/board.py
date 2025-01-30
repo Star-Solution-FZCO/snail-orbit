@@ -1,4 +1,3 @@
-from enum import StrEnum
 from typing import Annotated
 
 from beanie import Document, Indexed, PydanticObjectId
@@ -7,21 +6,11 @@ from pydantic import Field
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
 from .group import GroupLinkField
-from .permission import PermissionRecord, PermissionTypes, _check_permissions
+from .permission import PermissionRecord, PermissionType, _check_permissions
 from .project import PermissionTargetType, ProjectLinkField
 from .user import User, UserLinkField
 
-__all__ = ('Board', 'BoardPermission', 'BoardPermissionType')
-
-
-class BoardPermissionType(StrEnum):
-    VIEW = PermissionTypes.VIEW.value
-    EDIT = PermissionTypes.EDIT.value
-    ADMIN = PermissionTypes.ADMIN.value
-
-
-class BoardPermission(PermissionRecord):
-    permission_type: BoardPermissionType
+__all__ = ('Board',)
 
 
 @audited_model
@@ -45,7 +34,7 @@ class Board(Document):
     card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     ui_settings: dict = Field(default_factory=dict)
     created_by: UserLinkField
-    permissions: Annotated[list[BoardPermission], Field(default_factory=list)]
+    permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
 
     def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
         return any(p.target.id == target.id for p in self.permissions)
@@ -57,7 +46,7 @@ class Board(Document):
             sum(
                 1
                 for p in self.permissions
-                if p.permission_type == BoardPermissionType.ADMIN
+                if p.permission_type == PermissionType.ADMIN
                 and p.target.id != target.id
             )
             > 0
@@ -65,7 +54,7 @@ class Board(Document):
 
     @staticmethod
     def get_filter_query(user: User) -> dict:
-        permission_type = {'$in': [l.value for l in BoardPermissionType]}
+        permission_type = {'$in': [l.value for l in PermissionType]}
         return {
             '$or': [
                 {
@@ -90,7 +79,7 @@ class Board(Document):
         }
 
     def check_permissions(
-        self, user: User, required_permission: BoardPermissionType
+        self, user: User, required_permission: PermissionType
     ) -> bool:
         return _check_permissions(
             permissions=self.permissions,
