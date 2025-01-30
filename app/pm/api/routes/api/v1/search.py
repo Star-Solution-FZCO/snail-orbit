@@ -247,16 +247,20 @@ async def revoke_permission(
             detail='You cannot modify permissions for this search',
         )
     if not (
-        target := next(
+        perm := next(
             (obj for obj in search.permissions if obj.id == permission_id),
             None,
         )
     ):
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT,
+            status_code=HTTPStatus.NOT_FOUND,
             detail='Permission not found',
         )
-    search.permissions.remove(target)
-    if search.is_changed:
-        await search.save_changes()
-    return UUIDOutput.make(target.id)
+    if (
+        perm.permission_type == m.PermissionType.ADMIN
+        and not search.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Search must have at least one admin')
+    search.permissions.remove(perm)
+    await search.save_changes()
+    return UUIDOutput.make(perm.id)
