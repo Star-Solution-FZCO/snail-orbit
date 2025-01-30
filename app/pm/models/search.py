@@ -9,6 +9,7 @@ from .permission import (
     PermissionRecord,
     PermissionType,
     _check_permissions,
+    _filter_permissions,
 )
 from .user import User, UserLinkField
 
@@ -44,6 +45,9 @@ class Search(Document):
             )
             > 0
         )
+
+    def filter_permissions(self, user: User) -> list[PermissionRecord]:
+        return _filter_permissions(self, user)
 
     def check_permissions(
         self, user: User, required_permission: PermissionType

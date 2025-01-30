@@ -1475,11 +1475,19 @@ async def test_api_v1_search_grant_permission_with_user_flow(
     user_id, user_token = create_initial_user
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
-    share_payload = {'target_type': 'user', 'target': user_id, 'permission_type': 'view'}
+    share_payload = {
+        'target_type': 'user',
+        'target': user_id,
+        'permission_type': 'view',
+    }
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json={'target_type': 'user', 'target': '675579dff68118dbf878902c', 'permission_type': 'view'},
+        json={
+            'target_type': 'user',
+            'target': '675579dff68118dbf878902c',
+            'permission_type': 'view',
+        },
     )
     assert response.status_code == 404
     response = test_client.post(
@@ -1566,7 +1574,11 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     user_id, user_token = create_initial_user
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
-    share_payload = {'target_type': 'group', 'target': create_group, 'permission_type': 'view'}
+    share_payload = {
+        'target_type': 'group',
+        'target': create_group,
+        'permission_type': 'view',
+    }
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1577,7 +1589,11 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json={'target_type': 'group', 'target': '675579dff68118dbf878902c', 'permission_type': 'view'},
+        json={
+            'target_type': 'group',
+            'target': '675579dff68118dbf878902c',
+            'permission_type': 'view',
+        },
     )
     assert response.status_code == 404
     response = test_client.post(

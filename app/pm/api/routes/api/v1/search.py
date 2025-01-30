@@ -40,29 +40,16 @@ class SearchOutput(BaseModel):
     @classmethod
     def from_obj(cls, obj: m.Search) -> Self:
         user_ctx = current_user()
-        if obj.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
-            perms_to_show = obj.permissions
-        else:
-            perms_to_show = []
-            user_group_ids = {g.id for g in user_ctx.user.groups}
-            for perm in obj.permissions:
-                if (
-                    perm.target_type == m.PermissionTargetType.USER
-                    and perm.target.id == user_ctx.user.id
-                ):
-                    perms_to_show.append(perm)
-                if (
-                    perm.target_type == m.PermissionTargetType.GROUP
-                    and perm.target.id in user_group_ids
-                ):
-                    perms_to_show.append(perm)
         return cls(
             id=obj.id,
             name=obj.name,
             query=obj.query,
             description=obj.description,
             created_by=UserOutput.from_obj(obj.created_by),
-            permissions=[PermissionOutput.from_obj(p) for p in perms_to_show],
+            permissions=[
+                PermissionOutput.from_obj(p)
+                for p in obj.filter_permissions(user_ctx.user)
+            ],
         )
 
 

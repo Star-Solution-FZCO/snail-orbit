@@ -29,6 +29,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import IssueSearchParams, ListParams
 from pm.api.views.permission import PermissionOutput
+from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
@@ -58,9 +59,12 @@ class BoardOutput(BaseModel):
     card_fields: list[CustomFieldLinkOutput]
     card_colors_fields: list[CustomFieldLinkOutput]
     ui_settings: dict
+    created_by: UserOutput
+    permissions: list[PermissionOutput]
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
+        user_ctx = current_user()
         return cls(
             id=obj.id,
             name=obj.name,
@@ -83,6 +87,11 @@ class BoardOutput(BaseModel):
                 CustomFieldLinkOutput.from_obj(f) for f in obj.card_colors_fields
             ],
             ui_settings=obj.ui_settings,
+            created_by=UserOutput.from_obj(obj.created_by),
+            permissions=[
+                PermissionOutput.from_obj(p)
+                for p in obj.filter_permissions(user_ctx.user)
+            ],
         )
 
 

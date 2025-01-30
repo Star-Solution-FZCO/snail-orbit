@@ -44,3 +44,19 @@ def _check_permissions(
             current_value = permission_levels.get(perm.permission_type.value, 0)
             max_level_value = max(max_level_value, current_value)
     return max_level_value >= required_value
+
+
+def _filter_permissions(obj, user: User) -> list[PermissionRecord]:
+    if obj.check_permissions(user, PermissionType.ADMIN):
+        return obj.permissions
+    perms_to_show = []
+    user_group_ids = {g.id for g in user.groups}
+    for perm in obj.permissions:
+        if perm.target_type == PermissionTargetType.USER and perm.target.id == user.id:
+            perms_to_show.append(perm)
+        if (
+            perm.target_type == PermissionTargetType.GROUP
+            and perm.target.id in user_group_ids
+        ):
+            perms_to_show.append(perm)
+    return perms_to_show

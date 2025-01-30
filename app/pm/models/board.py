@@ -6,7 +6,12 @@ from pydantic import Field
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
 from .group import GroupLinkField
-from .permission import PermissionRecord, PermissionType, _check_permissions
+from .permission import (
+    PermissionRecord,
+    PermissionType,
+    _check_permissions,
+    _filter_permissions,
+)
 from .project import PermissionTargetType, ProjectLinkField
 from .user import User, UserLinkField
 
@@ -51,6 +56,9 @@ class Board(Document):
             )
             > 0
         )
+
+    def filter_permissions(self, user: User) -> list[PermissionRecord]:
+        return _filter_permissions(self, user)
 
     @staticmethod
     def get_filter_query(user: User) -> dict:
