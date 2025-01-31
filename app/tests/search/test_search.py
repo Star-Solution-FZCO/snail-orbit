@@ -22,6 +22,12 @@ def _custom_fields():
             'is_nullable': True,
             'options': ['Low', 'Medium', 'High'],
         },
+        {
+            'name': 'H-State',
+            'type': CustomFieldTypeT.STATE,
+            'is_nullable': True,
+            'options': ['open', 'closed'],
+        },
     ]
 
 
@@ -35,6 +41,7 @@ def _custom_fields():
             '',
             {
                 'state',
+                'h-state',
                 'priority',
                 'project',
                 'subject',
@@ -53,6 +60,7 @@ def _custom_fields():
             ' ',
             {
                 'state',
+                'h-state',
                 'priority',
                 'project',
                 'subject',
@@ -71,6 +79,7 @@ def _custom_fields():
             ' (',
             {
                 'state',
+                'h-state',
                 'priority',
                 'project',
                 'subject',
@@ -90,6 +99,7 @@ def _custom_fields():
             'State: open AND',
             {
                 'state',
+                'h-state',
                 'priority',
                 'project',
                 'subject',
@@ -116,6 +126,7 @@ def _custom_fields():
             '(State: open AND',
             {
                 'state',
+                'h-state',
                 'priority',
                 'project',
                 'subject',
@@ -288,6 +299,48 @@ async def test_suggestions(
                 ],
             },
             id='state open and (priority high or state closed) unresolved',
+        ),
+        pytest.param(
+            'H-State: open OR ( Priority: High and H-State: closed )',
+            {
+                '$or': [
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'name': {'$regex': '^h-state$', '$options': 'i'},
+                                'value.state': 'open',
+                            },
+                        }
+                    },
+                    {
+                        '$and': [
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'name': {
+                                            '$regex': '^priority$',
+                                            '$options': 'i',
+                                        },
+                                        'value.value': 'High',
+                                    },
+                                }
+                            },
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'name': {
+                                            '$regex': '^h-state$',
+                                            '$options': 'i',
+                                        },
+                                        'value.state': 'closed',
+                                    },
+                                }
+                            },
+                        ],
+                    },
+                ],
+            },
+            id='hyphen in field name',
         ),
     ],
 )
