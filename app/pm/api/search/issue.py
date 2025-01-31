@@ -87,7 +87,7 @@ EXPRESSION_GRAMMAR = """
     NULL_VALUE: "null"i
     INF_PLUS_VALUE: "inf"i
     INF_MINUS_VALUE: "-inf"i
-    FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ ]*/
+    FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ -]*/
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?/
     STRING_VALUE: /[^:()" ]+/
     QUOTED_STRING: /"[^"]*"/
