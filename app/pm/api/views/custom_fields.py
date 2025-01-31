@@ -153,6 +153,7 @@ class StateOptionOutput(BaseModel):
 
 class CustomFieldOutputWithStateOptions(CustomFieldOutput):
     options: list[StateOptionOutput]
+    default_value: StateOptionOutput | None
 
     @classmethod
     def from_obj(cls, obj: m.StateCustomField) -> Self:
@@ -164,7 +165,9 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
             type=obj.type,
             is_nullable=obj.is_nullable,
             options=[StateOptionOutput.from_obj(opt) for opt in obj.options],
-            default_value=obj.default_value,
+            default_value=StateOptionOutput.from_obj(obj.default_value)
+            if obj.default_value
+            else None,
         )
 
 
