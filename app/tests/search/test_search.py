@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 import mock
 import pytest
 
@@ -342,6 +344,99 @@ async def test_suggestions(
             },
             id='hyphen in field name',
         ),
+        pytest.param(
+            'created_at: 2024-01-01',
+            {'created_at': date(2024, 1, 1)},
+            id='basic valid date',
+        ),
+        pytest.param(
+            'created_at: 2024-12-31',
+            {'created_at': date(2024, 12, 31)},
+            id='valid end of year',
+        ),
+        pytest.param(
+            'created_at: 2024-02-29',
+            {'created_at': date(2024, 2, 29)},
+            id='valid leap year',
+        ),
+        pytest.param(
+            'created_at: 2024-13-01', 'Failed to parse query', id='invalid month'
+        ),
+        pytest.param(
+            'created_at: 2024-00-01', 'Failed to parse query', id='zero month'
+        ),
+        pytest.param(
+            'created_at: 2024-01-32', 'Failed to parse query', id='invalid day'
+        ),
+        pytest.param('created_at: 2024-01-00', 'Failed to parse query', id='zero day'),
+        pytest.param(
+            'created_at: 2024-01-01T00:00:00',
+            {'created_at': datetime(2024, 1, 1, 0, 0, 0)},
+            id='basic valid datetime',
+        ),
+        pytest.param(
+            'created_at: 2024-12-31T23:59:59',
+            {'created_at': datetime(2024, 12, 31, 23, 59, 59)},
+            id='valid end of year with time',
+        ),
+        pytest.param(
+            'created_at: 2024-02-29T12:30:45',
+            {'created_at': datetime(2024, 2, 29, 12, 30, 45)},
+            id='valid leap year with time',
+        ),
+        pytest.param(
+            'created_at: 2024-01-01T24:00:00',
+            'Failed to parse query',
+            id='invalid hour',
+        ),
+        pytest.param(
+            'created_at: 2024-01-01T12:60:00',
+            'Failed to parse query',
+            id='invalid minute',
+        ),
+        pytest.param(
+            'created_at: 2024-01-01T12:00:60',
+            'Failed to parse query',
+            id='invalid second',
+        ),
+        pytest.param(
+            'created_at: 2024-02-30',
+            'Failed to parse query',
+            id='invalid days in month (30th february)',
+        ),
+        pytest.param(
+            'text: "search query"',
+            {'$text': {'$search': 'search query'}},
+            id='basic text search',
+        ),
+        pytest.param(
+            'text: 12345',
+            {'$text': {'$search': '12345.0'}},
+            id='number in text search',
+        ),
+        pytest.param(
+            'text: search query',
+            'Failed to parse query',
+            id='basic invalid text search',
+        ),
+        pytest.param('text: null', {'text': None}, id='text null search'),
+        pytest.param(
+            'subject: "Issue #123"',
+            {'subject': {'$regex': 'Issue #123', '$options': 'i'}},
+            id='basic subject search',
+        ),
+        pytest.param(
+            'subject: 12345',
+            {'subject': {'$regex': '12345.0', '$options': 'i'}},
+            id='number in subject search',
+        ),
+        pytest.param(
+            'subject: bug report',
+            'Failed to parse query',
+            id='basic invalid subject search',
+        ),
+        pytest.param('subject: null', {'subject': None}, id='subject null search'),
+        pytest.param('project: null', {'project.slug': None}, id='project null search'),
     ],
 )
 async def test_search_transformation(
@@ -351,9 +446,18 @@ async def test_search_transformation(
 ) -> None:
     mock__get_custom_fields.return_value = get_fake_custom_fields(_custom_fields())
 
-    from pm.api.search.issue import transform_query
+    from pm.api.search.issue import TransformError, transform_query
 
-    res = await transform_query(query)
+    if isinstance(expected, str):
+        with pytest.raises(TransformError) as exc_info:
+            await transform_query(query)
+        if expected.startswith('Failed to parse query'):
+            assert str(exc_info.value) == 'Failed to parse query'
+    else:
+        res = await transform_query(query)
+        assert res == expected
+
     if query.strip():
         mock__get_custom_fields.assert_awaited_once()
-    assert res == expected
+    else:
+        mock__get_custom_fields.assert_not_awaited()
