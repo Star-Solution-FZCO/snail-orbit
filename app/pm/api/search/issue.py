@@ -39,6 +39,7 @@ RESERVED_FIELDS = {
     'updated_by',
     'created_at',
     'created_by',
+    'tag',
 }
 
 EXPRESSION_GRAMMAR = """
@@ -165,6 +166,10 @@ class MongoQueryTransformer(Transformer):
             return {'$text': {'$search': str(value)}}
         if field in ('updated_at', 'created_at'):
             return {field: value}
+        if field == 'tag':
+            if value is None:
+                return {'tags': []}
+            return {'tags.name': {'$regex': f'^{value}$', '$options': 'i'}}
         if field in ('updated_by', 'created_by'):
             return {f'{field}.email': value}
         return {
@@ -462,6 +467,7 @@ def get_field_possible_values(
         'created_at',
         'updated_by',
         'created_by',
+        'tag',
     ):
         return results
     if field_name == 'project':
