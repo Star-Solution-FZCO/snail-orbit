@@ -8,6 +8,7 @@ from lark import (
     UnexpectedEOF,
     UnexpectedToken,
 )
+from lark.exceptions import VisitError
 
 import pm.models as m
 from pm.api.search.parse_logical_expression import (
@@ -83,8 +84,8 @@ EXPRESSION_GRAMMAR = """
     _COLON: ":"
     USER_ME: "me"i
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
-    DATE_VALUE.2: /[0-9]{4}-[0-9]{2}-[0-9]{2}/
-    DATETIME_VALUE.3: /[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/
+    DATE_VALUE.2: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])/
+    DATETIME_VALUE.3: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)/
     NULL_VALUE: "null"i
     INF_PLUS_VALUE: "inf"i
     INF_MINUS_VALUE: "-inf"i
@@ -151,11 +152,17 @@ class MongoQueryTransformer(Transformer):
     def attribute_condition(self, args):
         field, value = args
         if field == 'project':
+            if value is None:
+                return {'project.slug': None}
             return {'project.slug': {'$regex': f'^{value}$', '$options': 'i'}}
         if field == 'subject':
-            return {'subject': {'$regex': value, '$options': 'i'}}
+            if value is None:
+                return {'subject': None}
+            return {'subject': {'$regex': str(value), '$options': 'i'}}
         if field == 'text':
-            return {'$text': {'$search': value}}
+            if value is None:
+                return {'text': None}
+            return {'$text': {'$search': str(value)}}
         if field in ('updated_at', 'created_at'):
             return {field: value}
         if field in ('updated_by', 'created_by'):
@@ -273,6 +280,10 @@ async def transform_expression(
         ) from err
     except ValueError as err:
         raise TransformError(str(err)) from err
+    except VisitError as err:
+        if isinstance(err.orig_exc, ValueError) and 'Field' in str(err.orig_exc):
+            raise TransformError(str(err.orig_exc)) from err
+        raise TransformError('Failed to parse query') from err
 
 
 OPERATOR_MAP = {
@@ -323,6 +334,8 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
             position=err.pos,
             expected=err.expected,
         ) from err
+    except UnexpectedEndOfExpression as err:
+        raise TransformError(str(err)) from err
     if not tree:
         return {}
     custom_fields = await _get_custom_fields()
