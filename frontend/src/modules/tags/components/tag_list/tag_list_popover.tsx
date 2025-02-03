@@ -1,9 +1,17 @@
 import { LocalOfferOutlined } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
-import { Button } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import { Button, IconButton } from "@mui/material";
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import { memo, ReactNode, useCallback, useEffect, useMemo } from "react";
+import {
+    memo,
+    ReactNode,
+    SyntheticEvent,
+    useCallback,
+    useEffect,
+    useMemo,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { tagApi } from "store/api/tag.api";
 import { TagT } from "types/tag";
@@ -14,7 +22,7 @@ type TagListPopoverProps = {
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
     onAddNewClick?: () => void;
-    onSelect?: (tag: TagT, type: "tag" | "untag") => void;
+    onSelect?: (tag: TagT, type: "tag" | "untag" | "edit") => void;
 };
 
 type InnerOptionType = {
@@ -33,6 +41,16 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
     });
 
     const [fetchTags, { data, isLoading }] = tagApi.useLazyListTagsQuery();
+
+    const handleEditButtonClick = useCallback(
+        (e: SyntheticEvent, tag: TagT) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSelect?.(tag, "edit");
+            onClose?.();
+        },
+        [onSelect, onClose],
+    );
 
     const options: InnerOptionType[] = useMemo(() => {
         if (!data || !data.payload || !data.payload.items.length) return [];
@@ -53,6 +71,15 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
                         }}
                     />
                 </ColorAdornment>
+            ),
+            rightAdornment: (
+                <IconButton
+                    size="small"
+                    sx={{ p: 0 }}
+                    onClick={(e) => handleEditButtonClick(e, el)}
+                >
+                    <EditIcon />
+                </IconButton>
             ),
         }));
     }, [data]);

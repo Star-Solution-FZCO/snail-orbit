@@ -20,12 +20,15 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
 
     const [createTag, { isLoading: isTagCreateLoading }] =
         tagApi.useCreateTagMutation();
+    const [updateTag, { isLoading: isTagUpdateLoading }] =
+        tagApi.useUpdateTagMutation();
 
     const [tagIssue] = issueApi.useTagIssueMutation();
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [isTagFormDialogOpen, setIsTagFormDialogOpen] =
         useState<boolean>(false);
+    const [editTag, setEditTag] = useState<TagT | null>(null);
 
     const handleAddNewButtonClick = useCallback(() => {
         setAnchorEl(null);
@@ -41,22 +44,38 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
     );
 
     const handleTagSelect = useCallback(
-        (tag: TagT, type: "tag" | "untag") => {
+        (tag: TagT, type: "tag" | "untag" | "edit") => {
             console.log(type);
-            tagIssue({ issueId: issue.id_readable, tag });
+            if (type === "tag") tagIssue({ issueId: issue.id_readable, tag });
+            if (type === "edit") {
+                setEditTag(tag);
+                setIsTagFormDialogOpen(true);
+            }
         },
         [issue.id],
     );
 
-    const handleTagFormSubmit = useCallback((data: TagBaseT) => {
-        createTag(data)
-            .unwrap()
-            .then((resp) => {
-                toast.success(t("createTag.successMessage"));
-                handleTagSelect(resp.payload, "tag");
-                setIsTagFormDialogOpen(false);
-            });
-    }, []);
+    const handleTagFormSubmit = useCallback(
+        (data: TagBaseT) => {
+            if (!editTag)
+                createTag(data)
+                    .unwrap()
+                    .then((resp) => {
+                        toast.success(t("createTag.successMessage"));
+                        handleTagSelect(resp.payload, "tag");
+                        setIsTagFormDialogOpen(false);
+                    });
+            else
+                updateTag({ ...data, id: editTag.id })
+                    .unwrap()
+                    .then(() => {
+                        toast.success(t("updateTag.successMessage"));
+                        setEditTag(null);
+                        setIsTagFormDialogOpen(false);
+                    });
+        },
+        [editTag],
+    );
 
     return (
         <>
@@ -78,7 +97,8 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
                 open={isTagFormDialogOpen}
                 onClose={() => setIsTagFormDialogOpen(false)}
                 onSubmit={handleTagFormSubmit}
-                isLoading={isTagCreateLoading}
+                isLoading={isTagCreateLoading || isTagUpdateLoading}
+                defaultValues={editTag || undefined}
             />
         </>
     );
