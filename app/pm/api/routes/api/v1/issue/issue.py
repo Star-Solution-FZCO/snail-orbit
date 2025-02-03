@@ -12,10 +12,16 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_event, send_task
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import TransformError, get_suggestions, transform_query
+from pm.api.search.issue import (
+    TransformError,
+    get_suggestions,
+    transform_query,
+    transform_text_search,
+)
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.files import resolve_files
@@ -62,8 +68,7 @@ class IssueDraftUpdate(BaseModel):
     attachments: list[UUID] | None = None
 
 
-class IssueListParams(BaseModel):
-    q: str | None = Query(None, description='search query')
+class IssueListParams(IssueSearchParams):
     limit: int = Query(50, le=50, description='limit results')
     offset: int = Query(0, description='offset')
 
@@ -86,8 +91,13 @@ async def list_issues(
     query: IssueListParams = Depends(),
 ) -> BaseListOutput[IssueOutput]:
     user_ctx = current_user()
-    flt = {}
-    sort = (m.Issue.id,)
+    q = m.Issue.find(
+        bo.In(
+            m.Issue.project.id,
+            user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
+        )
+    )
+
     if query.q:
         try:
             flt = await transform_query(query.q, current_user_email=user_ctx.user.email)
@@ -96,16 +106,10 @@ async def list_issues(
                 HTTPStatus.BAD_REQUEST,
                 err.message,
             ) from err
-    q = (
-        m.Issue.find(flt)
-        .find(
-            bo.In(
-                m.Issue.project.id,
-                user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-            )
-        )
-        .sort(*sort)
-    )
+        q = q.find(flt)
+    if query.search:
+        q = q.find(transform_text_search(query.search))
+    q = q.sort(m.Issue.id)
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
