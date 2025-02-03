@@ -2,7 +2,7 @@ from fastapi import Query
 from pydantic import BaseModel, field_validator
 
 __all__ = (
-    'ListFilterParams',
+    'IssueSearchParams',
     'ListParams',
 )
 
@@ -22,5 +22,6 @@ class ListParams(BaseModel):
         return v
 
 
-class ListFilterParams(ListParams):
-    filter: str | None = Query(None, description='filter params')
+class IssueSearchParams(BaseModel):
+    q: str | None = Query(None, description='search query')
+    search: str | None = Query(None, description='context search')

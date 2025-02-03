@@ -24,6 +24,7 @@ from pm.api.search.parse_logical_expression import (
 
 __all__ = (
     'transform_query',
+    'transform_text_search',
     'TransformError',
     'get_suggestions',
 )
@@ -328,6 +329,10 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
     return await transform_tree(
         tree, cached_fields=custom_fields, current_user_email=current_user_email
     )
+
+
+def transform_text_search(search: str) -> dict:
+    return {'$text': {'$search': search}}
 
 
 async def get_suggestions(query: str, current_user_email: str | None = None) -> list:
