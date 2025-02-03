@@ -1,5 +1,5 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { Link } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -8,6 +8,7 @@ import { t } from "i18next";
 import type { FC } from "react";
 import type { IssueT } from "types";
 import { HeadingControls } from "./heading_controls";
+import { IssueTags } from "./issue_tags";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -71,29 +72,27 @@ const IssueHeading: FC<IIssueHeadingProps> = ({
             </Box>
 
             {displayMode === "view" && (
-                <Box display="flex" alignItems="flex-start" gap={1}>
-                    <Typography fontSize={24} fontWeight="bold" flex={1}>
-                        {issue.subject}
-                    </Typography>
+                <Stack>
+                    <Stack flexDirection="row" gap={1}>
+                        <Typography fontSize={24} fontWeight="bold" flex={1}>
+                            {issue.subject}
+                        </Typography>
 
-                    <Box
-                        height="40px"
-                        display="flex"
-                        alignItems="center"
-                        gap={1}
-                    >
-                        <Tooltip
-                            title={t("issues.heading.edit")}
-                            onClick={handleClickEdit}
-                        >
-                            <IconButton size="small">
-                                <EditIcon />
-                            </IconButton>
-                        </Tooltip>
+                        <Stack flexDirection="row" gap={1}>
+                            <Tooltip
+                                title={t("issues.heading.edit")}
+                                onClick={handleClickEdit}
+                            >
+                                <IconButton size="small">
+                                    <EditIcon />
+                                </IconButton>
+                            </Tooltip>
 
-                        <HeadingControls issue={issue} />
-                    </Box>
-                </Box>
+                            <HeadingControls issue={issue} />
+                        </Stack>
+                    </Stack>
+                    <IssueTags issue={issue} />
+                </Stack>
             )}
         </Box>
     );

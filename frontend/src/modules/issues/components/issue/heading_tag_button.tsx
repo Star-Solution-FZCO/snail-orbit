@@ -4,16 +4,24 @@ import type { MouseEventHandler } from "react";
 import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { tagApi } from "store";
-import { TagBaseT } from "types/tag";
+import { issueApi, tagApi } from "store";
+import { IssueT } from "types";
+import { TagBaseT, TagT } from "types/tag";
 import { TagFormDialog } from "../../../tags/components/tag_form_dialog/tag_form_dialog";
 import { TagListPopover } from "../../../tags/components/tag_list/tag_list_popover";
 
-export const HeadingTagButton = memo(() => {
+type HeadingTagButtonProps = {
+    issue: IssueT;
+};
+
+export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
+    const { issue } = props;
     const { t } = useTranslation();
 
     const [createTag, { isLoading: isTagCreateLoading }] =
         tagApi.useCreateTagMutation();
+
+    const [tagIssue] = issueApi.useTagIssueMutation();
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [isTagFormDialogOpen, setIsTagFormDialogOpen] =
@@ -32,11 +40,20 @@ export const HeadingTagButton = memo(() => {
         [],
     );
 
+    const handleTagSelect = useCallback(
+        (tag: TagT, type: "tag" | "untag") => {
+            console.log(type);
+            tagIssue({ issueId: issue.id_readable, tag });
+        },
+        [issue.id],
+    );
+
     const handleTagFormSubmit = useCallback((data: TagBaseT) => {
         createTag(data)
             .unwrap()
-            .then(() => {
+            .then((resp) => {
                 toast.success(t("createTag.successMessage"));
+                handleTagSelect(resp.payload, "tag");
                 setIsTagFormDialogOpen(false);
             });
     }, []);
@@ -54,6 +71,7 @@ export const HeadingTagButton = memo(() => {
                 anchorEl={anchorEl}
                 onClose={() => setAnchorEl(null)}
                 onAddNewClick={handleAddNewButtonClick}
+                onSelect={handleTagSelect}
             />
 
             <TagFormDialog

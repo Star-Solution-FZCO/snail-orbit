@@ -1,6 +1,7 @@
-import { Box, getContrastRatio, styled, useTheme } from "@mui/material";
+import { Box, styled } from "@mui/material";
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
+import { getContrastText } from "../../../theme/contrast-text";
 
 export type ColorAdornmentProps = {
     color: string;
@@ -28,19 +29,13 @@ export const ColorAdornmentStyled = styled(Box)<
 
 export const ColorAdornment = forwardRef<typeof Box, ColorAdornmentProps>(
     ({ color, sx, ...props }, ref) => {
-        const theme = useTheme();
-
         return (
             <ColorAdornmentStyled
                 {...props}
                 style={{
                     ...props.style,
                     backgroundColor: color,
-                    color:
-                        getContrastRatio(color, "#fff") >
-                        theme.palette.contrastThreshold
-                            ? "#fff"
-                            : "#111",
+                    color: getContrastText(color),
                 }}
                 sx={sx}
                 ref={ref}

@@ -13,3 +13,5 @@ export type TagT = {
     id: string;
     created_by: BasicUserT;
 } & TagBaseT;
+
+export type TagShortT = Pick<TagT, "id" | "name" | "color">;
