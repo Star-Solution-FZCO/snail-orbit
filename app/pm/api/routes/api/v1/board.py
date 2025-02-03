@@ -11,7 +11,7 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import TransformError, transform_query
+from pm.api.search.issue import TransformError, transform_query, transform_text_search
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
 from pm.api.views.issue import (
@@ -21,7 +21,7 @@ from pm.api.views.issue import (
     transform_custom_field_value,
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
-from pm.api.views.params import ListParams
+from pm.api.views.params import IssueSearchParams, ListParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
@@ -328,17 +328,45 @@ async def delete_board(
 @router.get('/{board_id}/issues')
 async def get_board_issues(
     board_id: PydanticObjectId,
+    query: IssueSearchParams = Depends(),
 ) -> BaseListOutput[SwimlaneOutput]:
     user_ctx = current_user()
+
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    flt = {}
+
+    q = m.Issue.find(
+        bo.In(
+            m.Issue.project.id,
+            user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
+        )
+    )
+
     if board.query:
         try:
-            flt = await transform_query(board.query)
+            q = q.find(
+                await transform_query(
+                    board.query, current_user_email=user_ctx.user.email
+                )
+            )
         except TransformError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
+
+    if board.projects:
+        q = q.find(bo.In(m.Issue.project.id, [p.id for p in board.projects]))
+
+    if query.q:
+        try:
+            q = q.find(
+                await transform_query(query.q, current_user_email=user_ctx.user.email)
+            )
+        except TransformError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
+
+    if query.search:
+        q = q.find(transform_text_search(query.search))
+
     if board.swimlane_field:
         non_swimlane = None
         if None in board.swimlanes:
@@ -351,19 +379,6 @@ async def get_board_issues(
     else:
         non_swimlane = {col: [] for col in board.columns}
         swimlanes = {}
-
-    q = (
-        m.Issue.find(flt)
-        .find(
-            bo.In(
-                m.Issue.project.id,
-                user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-            )
-        )
-        .sort(m.Issue.id)
-    )
-    if board.projects:
-        q = q.find(bo.In(m.Issue.project.id, [p.id for p in board.projects]))
 
     for issue in await q.to_list():
         if board.swimlane_field and not (
