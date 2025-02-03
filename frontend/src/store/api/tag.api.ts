@@ -3,6 +3,7 @@ import type { ApiResponse, ListResponse } from "../../types";
 import { type ListQueryParams } from "../../types";
 import type { TagBaseT, TagT } from "../../types/tag";
 import customFetchBase from "./custom_fetch_base";
+import { issueApi } from "./issue.api";
 
 const tagTypes = ["Tags"];
 
@@ -32,6 +33,21 @@ export const tagApi = createApi({
         createTag: build.mutation<ApiResponse<TagT>, TagBaseT>({
             query: (body) => ({ url: "tag/", method: "POST", body }),
             invalidatesTags: [{ type: "Tags", id: "LIST" }],
+        }),
+        updateTag: build.mutation<
+            ApiResponse<TagT>,
+            TagBaseT & Pick<TagT, "id">
+        >({
+            query: ({ id, ...body }) => ({
+                url: `tag/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: [{ type: "Tags", id: "LIST" }],
+            async onQueryStarted(_, { dispatch, queryFulfilled }) {
+                await queryFulfilled;
+                dispatch(issueApi.util.invalidateTags(["Issues"]));
+            },
         }),
     }),
 });

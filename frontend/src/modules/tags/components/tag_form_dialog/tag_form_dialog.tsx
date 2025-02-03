@@ -47,8 +47,9 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
     });
 
     useEffect(() => {
-        if (open) reset();
-    }, [open]);
+        if (open)
+            reset(defaultValues ? tagToFormData(defaultValues) : undefined);
+    }, [open, defaultValues]);
 
     const onSubmit: SubmitHandler<TagFormData> = useCallback(
         (data) => {
@@ -69,7 +70,9 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
             }}
         >
             <DialogTitle sx={{ pb: 0 }}>
-                {t("tagFormDialog.title.createTag")}
+                {defaultValues
+                    ? t("tagFormDialog.title.editTag")
+                    : t("tagFormDialog.title.createTag")}
                 {isLoading ? (
                     <CircularProgress sx={{ ml: 1 }} size={14} />
                 ) : undefined}
