@@ -27,7 +27,7 @@ import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { CommentT, SelectedAttachmentT } from "types";
 import { formatSpentTime, toastApiError } from "utils";
-import { initialSelectedAttachment, useUploadToast } from "../utils";
+import { initialSelectedAttachment, useUploadToast } from "../../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 import { HiddenInput } from "./hidden_input";

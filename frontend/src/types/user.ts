@@ -1,4 +1,4 @@
-import { GroupT } from "./group";
+import type { GroupT } from "./group";
 
 export type BasicUserT = {
     id: string;

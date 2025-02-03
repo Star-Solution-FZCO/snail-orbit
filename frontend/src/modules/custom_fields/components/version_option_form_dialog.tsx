@@ -13,10 +13,11 @@ import {
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import { FC, useEffect } from "react";
+import type { FC } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { VersionOptionT } from "types";
+import type { VersionOptionT } from "types";
 import * as yup from "yup";
 
 const versionOptionSchema = yup.object().shape({

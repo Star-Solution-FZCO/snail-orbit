@@ -63,7 +63,7 @@ export const EnumField: FC<EnumFieldProps> = ({
                 <ColorAdornment
                     color={targetValue.color}
                     size="medium"
-                    sx={{ mr: 1, my: "auto" }}
+                    sx={{ my: "auto" }}
                 />
             );
     }, [value, rightAdornment]);

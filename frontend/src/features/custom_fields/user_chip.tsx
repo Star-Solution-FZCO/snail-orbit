@@ -1,14 +1,11 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
-import { BasicUserT } from "types";
+import type { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectChip } from "./select_chip";
-import {
-    UserSelectOptionT,
-    userToSelectOption,
-    userToSelectOptions,
-} from "./utils";
+import type { UserSelectOptionT } from "./utils";
+import { userToSelectOption, userToSelectOptions } from "./utils";
 
 type UserChipProps = {
     value?: BasicUserT | BasicUserT[];
