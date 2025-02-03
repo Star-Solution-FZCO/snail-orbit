@@ -14,7 +14,7 @@ type TagListPopoverProps = {
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
     onAddNewClick?: () => void;
-    onSelect?: (tag: TagT) => void;
+    onSelect?: (tag: TagT, type: "tag" | "untag") => void;
 };
 
 type InnerOptionType = {
@@ -63,7 +63,7 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
 
     const handleChange = useCallback(
         (value: InnerOptionType) => {
-            if (onSelect) onSelect(value.original);
+            if (onSelect) onSelect(value.original, "tag");
         },
         [onSelect],
     );

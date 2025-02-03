@@ -15,6 +15,7 @@ import type {
     UpdateCommentT,
     UpdateIssueT,
 } from "types";
+import type { TagT } from "../../types/tag";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
@@ -312,6 +313,81 @@ export const issueApi = createApi({
                 { type: "IssueComments", id },
                 { type: "IssueHistories", id },
             ],
+        }),
+        tagIssue: build.mutation<
+            ApiResponse<IssueT>,
+            { issueId: string; tag: TagT }
+        >({
+            query: ({ issueId, tag }) => ({
+                url: `issue/${issueId}/tag`,
+                method: "PUT",
+                body: { tag_id: tag.id },
+            }),
+            invalidatesTags: (_result, _error, { issueId }) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", issueId },
+            ],
+            async onQueryStarted(
+                { issueId, tag },
+                { dispatch, queryFulfilled },
+            ) {
+                const patchResult = dispatch(
+                    issueApi.util.updateQueryData(
+                        "getIssue",
+                        issueId,
+                        (data) => {
+                            data.payload.tags = [
+                                ...data.payload.tags,
+                                {
+                                    id: tag.id,
+                                    color: tag.color,
+                                    name: tag.name,
+                                },
+                            ];
+                        },
+                    ),
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
+        }),
+        untagIssue: build.mutation<
+            ApiResponse<IssueT>,
+            { issueId: string; tagId: string }
+        >({
+            query: ({ issueId, tagId }) => ({
+                url: `issue/${issueId}/untag`,
+                method: "PUT",
+                body: { tag_id: tagId },
+            }),
+            invalidatesTags: (_result, _error, { issueId }) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", issueId },
+            ],
+            async onQueryStarted(
+                { issueId, tagId },
+                { dispatch, queryFulfilled },
+            ) {
+                const patchResult = dispatch(
+                    issueApi.util.updateQueryData(
+                        "getIssue",
+                        issueId,
+                        (data) => {
+                            data.payload.tags = data.payload.tags.filter(
+                                (tag) => tag.id !== tagId,
+                            );
+                        },
+                    ),
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
         }),
     }),
 });

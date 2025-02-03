@@ -102,7 +102,7 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                 </IconButton>
             </Tooltip>
 
-            <HeadingTagButton />
+            <HeadingTagButton issue={issue} />
 
             <Tooltip title={t("issues.heading.showMore")}>
                 <IconButton
