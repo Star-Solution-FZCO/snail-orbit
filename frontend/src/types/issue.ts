@@ -6,6 +6,7 @@ import type {
     CustomFieldValueT,
 } from "./custom_fields";
 import type { ProjectT } from "./project";
+import type { TagShortT } from "./tag";
 import type { BasicUserT } from "./user";
 
 // TODO: specify type
@@ -31,6 +32,7 @@ export type IssueT = {
     attachments: AttachmentT[];
     aliases: string[];
     is_subscribed: boolean;
+    tags: TagShortT[];
     created_by: BasicUserT;
     created_at: string;
     updated_by: BasicUserT | null;

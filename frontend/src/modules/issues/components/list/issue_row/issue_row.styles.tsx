@@ -27,11 +27,11 @@ export const IssueRowHeader = styled("div", {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    height: "24px",
 }));
 
 export const IssueRowBody = styled("div", { name: "IssueRow", slot: "body" })(
     () => ({
-        marginBottom: theme.spacing(1),
         overflow: "hidden",
         textOverflow: "ellipsis",
         display: "-webkit-box",
@@ -47,4 +47,5 @@ export const IssueRowFieldsContainer = styled("div", {
     display: "flex",
     flexDirection: "row",
     gap: theme.spacing(1),
+    marginTop: theme.spacing(1),
 }));
