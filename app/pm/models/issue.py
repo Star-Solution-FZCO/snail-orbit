@@ -409,7 +409,7 @@ class Issue(Document):
     ) -> IssueHistoryRecord | None:
         for record in sorted(self.history, key=lambda h: h.time, reverse=True):
             for change in record.changes:
-                if change.field.id == field_id:
+                if isinstance(change.field, CustomFieldLink) and change.field.id == field_id:
                     return record
         return None
 
