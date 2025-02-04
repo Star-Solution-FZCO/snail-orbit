@@ -30,6 +30,31 @@ def _custom_fields():
             'is_nullable': True,
             'options': ['open', 'closed'],
         },
+        {
+            'name': 'Range-F',
+            'type': CustomFieldTypeT.INTEGER,
+            'is_nullable': True,
+        },
+        {
+            'name': 'Date',
+            'type': CustomFieldTypeT.DATE,
+            'is_nullable': True,
+        },
+        {
+            'name': 'Datetime',
+            'type': CustomFieldTypeT.DATETIME,
+            'is_nullable': True,
+        },
+        {
+            'name': 'Test-field with space',
+            'type': CustomFieldTypeT.STRING,
+            'is_nullable': True,
+        },
+        {
+            'name': 'Assignee',
+            'type': CustomFieldTypeT.USER,
+            'is_nullable': True,
+        },
     ]
 
 
@@ -43,7 +68,12 @@ def _custom_fields():
             '',
             {
                 'state',
+                'assignee',
+                'test-field with space',
+                'date',
+                'datetime',
                 'h-state',
+                'range-f',
                 'priority',
                 'project',
                 'subject',
@@ -63,7 +93,12 @@ def _custom_fields():
             ' ',
             {
                 'state',
+                'assignee',
+                'test-field with space',
+                'date',
+                'datetime',
                 'h-state',
+                'range-f',
                 'priority',
                 'project',
                 'subject',
@@ -83,7 +118,12 @@ def _custom_fields():
             ' (',
             {
                 'state',
+                'assignee',
+                'test-field with space',
+                'date',
+                'datetime',
                 'h-state',
+                'range-f',
                 'priority',
                 'project',
                 'subject',
@@ -104,7 +144,12 @@ def _custom_fields():
             'State: open AND',
             {
                 'state',
+                'assignee',
+                'test-field with space',
+                'date',
+                'datetime',
                 'h-state',
+                'range-f',
                 'priority',
                 'project',
                 'subject',
@@ -132,7 +177,12 @@ def _custom_fields():
             '(State: open AND',
             {
                 'state',
+                'assignee',
+                'test-field with space',
+                'date',
+                'datetime',
                 'h-state',
+                'range-f',
                 'priority',
                 'project',
                 'subject',
@@ -351,17 +401,32 @@ async def test_suggestions(
         ),
         pytest.param(
             'created_at: 2024-01-01',
-            {'created_at': date(2024, 1, 1)},
+            {
+                'created_at': {
+                    '$gte': datetime(2024, 1, 1, 0, 0),
+                    '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+                }
+            },
             id='basic valid date',
         ),
         pytest.param(
             'created_at: 2024-12-31',
-            {'created_at': date(2024, 12, 31)},
+            {
+                'created_at': {
+                    '$gte': datetime(2024, 12, 31, 0, 0),
+                    '$lte': datetime(2024, 12, 31, 23, 59, 59, 999999),
+                }
+            },
             id='valid end of year',
         ),
         pytest.param(
             'created_at: 2024-02-29',
-            {'created_at': date(2024, 2, 29)},
+            {
+                'created_at': {
+                    '$gte': datetime(2024, 2, 29, 0, 0),
+                    '$lte': datetime(2024, 2, 29, 23, 59, 59, 999999),
+                }
+            },
             id='valid leap year',
         ),
         pytest.param(
@@ -427,7 +492,7 @@ async def test_suggestions(
         pytest.param('text: null', {'text': None}, id='text null search'),
         pytest.param(
             'subject: "Issue #123"',
-            {'subject': {'$regex': 'Issue #123', '$options': 'i'}},
+            {'subject': {'$regex': 'Issue\\ \\#123', '$options': 'i'}},
             id='basic subject search',
         ),
         pytest.param(
@@ -448,6 +513,275 @@ async def test_suggestions(
             id='tag',
         ),
         pytest.param('tag: null', {'tags': []}, id='tag null search'),
+        pytest.param(
+            'project: $',
+            'Failed to parse query',
+            id='special char $',
+        ),
+        pytest.param(
+            'project: *',
+            'Failed to parse query',
+            id='special char *',
+        ),
+        pytest.param(
+            'project: {',
+            'Failed to parse query',
+            id='special char {',
+        ),
+        pytest.param(
+            'project: }',
+            'Failed to parse query',
+            id='special char }',
+        ),
+        pytest.param(
+            'Unknown: test',
+            'Field Unknown not found!',
+            id='unknown field',
+        ),
+        pytest.param(
+            'Datetime: -inf..2025-02-20T12:00:00',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^datetime$', '$options': 'i'},
+                        'value': {'$lt': datetime(2025, 2, 20, 12, 0)},
+                    }
+                }
+            },
+            id='datetime range -inf..now in custom field',
+        ),
+        pytest.param(
+            'Datetime: 2024-02-20T12:00:00..inf',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^datetime$', '$options': 'i'},
+                        'value': {'$gt': datetime(2024, 2, 20, 12, 0)},
+                    }
+                }
+            },
+            id='datetime range now..inf in custom field',
+        ),
+        pytest.param(
+            'Datetime: 2024-02-20T12:00:00..2025-02-20T12:00:00',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^datetime$', '$options': 'i'},
+                        'value': {
+                            '$gte': datetime(2024, 2, 20, 12, 0),
+                            '$lte': datetime(2025, 2, 20, 12, 0),
+                        },
+                    }
+                }
+            },
+            id='datetime range valid-datetime..valid-datetime in custom field',
+        ),
+        pytest.param(
+            'Date: -inf..2025-02-20',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^date$', '$options': 'i'},
+                        'value': {
+                            '$lt': date(2025, 2, 20),
+                        },
+                    }
+                }
+            },
+            id='date range -inf..now-date in custom field',
+        ),
+        pytest.param(
+            'Date: 2024-02-20..inf',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^date$', '$options': 'i'},
+                        'value': {
+                            '$gt': date(2024, 2, 20),
+                        },
+                    }
+                }
+            },
+            id='date range now-date..inf in custom field',
+        ),
+        pytest.param(
+            'created_at: -inf..inf',
+            'Failed to parse query',
+            id='range -inf..inf',
+        ),
+        pytest.param(
+            'Range-F: 0..1000',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^range-f$', '$options': 'i'},
+                        'value': {'$gte': 0.0, '$lte': 1000.0},
+                    }
+                }
+            },
+            id='number range',
+        ),
+        pytest.param(
+            'Range-F: -inf..1000',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^range-f$', '$options': 'i'},
+                        'value': {'$lt': 1000.0},
+                    }
+                }
+            },
+            id='number range -inf..number',
+        ),
+        pytest.param(
+            'Range-F: -inf..inf',
+            'Failed to parse query',
+            id='number range -inf..inf',
+        ),
+        pytest.param(
+            'Range-F: 0..inf',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^range-f$', '$options': 'i'},
+                        'value': {'$gt': 0.0},
+                    }
+                }
+            },
+            id='number range number..inf',
+        ),
+        pytest.param(
+            'Range-F: 0..inf AND (Date: 2024-12-12..2025-12-12 OR created_at: 2025-02-03..inf)',
+            {
+                '$and': [
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'name': {'$regex': '^range-f$', '$options': 'i'},
+                                'value': {'$gt': 0.0},
+                            }
+                        }
+                    },
+                    {
+                        '$or': [
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'name': {'$regex': '^date$', '$options': 'i'},
+                                        'value': {
+                                            '$gte': date(2024, 12, 12),
+                                            '$lte': date(2025, 12, 12),
+                                        },
+                                    }
+                                }
+                            },
+                            {'created_at': {'$gt': date(2025, 2, 3)}},
+                        ]
+                    },
+                ]
+            },
+            id='range field and date range or created_at range',
+        ),
+        pytest.param(
+            'Test-field with space: "0000"',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^test-field with space$', '$options': 'i'},
+                        'value': '0000',
+                    }
+                }
+            },
+            id="test-f with space: '0000'",
+        ),
+        pytest.param(
+            'project: 7777',
+            {'project.slug': {'$options': 'i', '$regex': '^7777.0$'}},
+            id='project search number',
+        ),
+        pytest.param(
+            'project: "7777"',
+            {'project.slug': {'$options': 'i', '$regex': '^7777$'}},
+            id='project search quoted string',
+        ),
+        pytest.param(
+            '((State: Closed)',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^state$', '$options': 'i'},
+                        'value.state': 'Closed',
+                    }
+                }
+            },
+            id='mismatched brackets more opens',
+        ),
+        pytest.param(
+            'Unknown: Closed))',
+            'Invalid bracket ")" at position 13!',
+            id='unknown field and closed brackets',
+        ),
+        pytest.param(
+            'State: Closed AND',
+            'Unexpected end of expression after "and"!',
+            id='operator at end of expression',
+        ),
+        pytest.param(
+            'State: Closed AND ))',
+            'Invalid bracket ")" at position 18!',
+            id='closed brackets at end of expression',
+        ),
+        pytest.param(
+            'State: Closed AND #unknownhashtag',
+            'Failed to parse query',
+            id='state open and unknown hashtag',
+        ),
+        pytest.param('State: open #', 'Failed to parse query', id='empty hashtag'),
+        pytest.param(
+            'State: 111111.3333 #unresolved',
+            'Failed to parse query',
+            id='invalid direct combination without operator',
+        ),
+        pytest.param(
+            '#resolved',
+            {'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': True}}},
+            id='resolved hashtag',
+        ),
+        pytest.param(
+            '#resolved OR Date: 2024-12-12..inf',
+            {
+                '$or': [
+                    {
+                        'fields': {
+                            '$elemMatch': {'type': 'state', 'value.is_resolved': True}
+                        }
+                    },
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'name': {'$regex': '^date$', '$options': 'i'},
+                                'value': {'$gt': date(2024, 12, 12)},
+                            }
+                        }
+                    },
+                ]
+            },
+            id='resolved hashtag and date range',
+        ),
+        pytest.param('(((((((((((((((', {}, id='Many open brackets'),
+        pytest.param(
+            'Assignee: test1@test1.com',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^assignee$', '$options': 'i'},
+                        'value.email': 'test1@test1.com',
+                    }
+                }
+            },
+            id='Assignee user',
+        ),
     ],
 )
 async def test_search_transformation(
@@ -468,7 +802,14 @@ async def test_search_transformation(
         res = await transform_query(query)
         assert res == expected
 
-    if query.strip():
+    if (
+        query.strip()
+        and not any(
+            err in expected
+            for err in ['Invalid bracket', 'Unexpected end', 'Invalid operator']
+        )
+        and expected != {}
+    ):
         mock__get_custom_fields.assert_awaited_once()
     else:
         mock__get_custom_fields.assert_not_awaited()
