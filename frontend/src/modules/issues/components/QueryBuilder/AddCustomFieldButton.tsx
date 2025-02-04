@@ -35,7 +35,11 @@ export const AddCustomFieldButton: FC<AddCustomFieldButtonProps> = ({
 
     return (
         <>
-            <Button size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
+            <Button
+                size="small"
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                variant="outlined"
+            >
                 <AddIcon />
                 {t("queryBuilder.addCustomFieldButton.add")}
             </Button>
