@@ -1,4 +1,5 @@
-from datetime import date, datetime
+import re
+from datetime import date, datetime, time
 from typing import Any
 
 from lark import (
@@ -89,10 +90,10 @@ EXPRESSION_GRAMMAR = """
     DATETIME_VALUE.3: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)/
     NULL_VALUE: "null"i
     INF_PLUS_VALUE: "inf"i
-    INF_MINUS_VALUE: "-inf"i
+    INF_MINUS_VALUE.1: "-inf"i
     FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ -]*/
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?/
-    STRING_VALUE: /[^:()" ]+/
+    STRING_VALUE: /[^:()" *${}]+/
     QUOTED_STRING: /"[^"]*"/
 
     %import common.WS
@@ -150,8 +151,13 @@ class MongoQueryTransformer(Transformer):
             }
         raise ValueError(f'Unknown hashtag value: {val}')
 
+    def escape_regex(self, value: str) -> str:
+        return re.escape(value)
+
     def attribute_condition(self, args):
         field, value = args
+        if isinstance(value, str) and field in ('project', 'subject', 'tag'):
+            value = self.escape_regex(value)
         if field == 'project':
             if value is None:
                 return {'project.slug': None}
@@ -165,6 +171,10 @@ class MongoQueryTransformer(Transformer):
                 return {'text': None}
             return {'$text': {'$search': str(value)}}
         if field in ('updated_at', 'created_at'):
+            if isinstance(value, date) and not isinstance(value, datetime):
+                start_of_day = datetime.combine(value, time.min)
+                end_of_day = datetime.combine(value, time.max)
+                return {field: {'$gte': start_of_day, '$lte': end_of_day}}
             return {field: value}
         if field == 'tag':
             if value is None:
@@ -208,6 +218,7 @@ class MongoQueryTransformer(Transformer):
         return str(token.value).strip('"')
 
     def number_range(self, args):
+        self._validate_range(args)
         return {'$gte': args[0], '$lte': args[1]}
 
     def number_left_inf_range(self, args):
@@ -217,6 +228,7 @@ class MongoQueryTransformer(Transformer):
         return {'$gt': args[0]}
 
     def date_range(self, args):
+        self._validate_range(args)
         return {'$gte': args[0], '$lte': args[1]}
 
     def date_left_inf_range(self, args):
@@ -226,6 +238,7 @@ class MongoQueryTransformer(Transformer):
         return {'$gt': args[0]}
 
     def datetime_range(self, args):
+        self._validate_range(args)
         return {'$gte': args[0], '$lte': args[1]}
 
     def datetime_left_inf_range(self, args):
@@ -237,8 +250,17 @@ class MongoQueryTransformer(Transformer):
     def FIELD_NAME(self, token):
         return str.strip(token.value)
 
+    def EMAIL(self, token):
+        return str(token.value)
+
     def start(self, args):
         return args[0]
+
+    def _validate_range(self, args):
+        if args[0] > args[1]:
+            raise ValueError(
+                f'Invalid range: start value {args[0]} is greater than end value {args[1]}'
+            )
 
 
 class TransformError(Exception):
