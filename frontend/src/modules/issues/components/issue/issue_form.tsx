@@ -71,8 +71,8 @@ export const IssueForm: FC<IssueFormProps> = ({
     if (mode === "view") {
         return (
             <Box mt={-1}>
-                {text ? (
-                    <MarkdownPreview text={text} />
+                {issue.text ? (
+                    <MarkdownPreview text={issue.text} />
                 ) : (
                     <Box
                         sx={{ cursor: "pointer" }}

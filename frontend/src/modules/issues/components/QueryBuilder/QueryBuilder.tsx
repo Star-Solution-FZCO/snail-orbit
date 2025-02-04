@@ -36,7 +36,7 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
     }, [data]);
 
     return (
-        <Stack direction="column" gap={4} px={1} height="100%">
+        <Stack direction="column" gap={2} px={1} height="100%">
             <Typography fontSize={24} fontWeight="bold">
                 {t("queryBuilder.title")}
             </Typography>
@@ -188,6 +188,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
                     />
                 </Stack>
             ) : null}
+
             <AddCustomFieldButton
                 fields={availableToAddFields}
                 onSelected={handleAddField}

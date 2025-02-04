@@ -116,6 +116,9 @@ const MDEditor: FC<IMDEditorProps> = ({
                         backgroundColor: theme.palette.background.paper,
                     },
                 },
+                "& a": {
+                    color: theme.palette.primary.main,
+                },
             }}
         >
             <CKEditor
@@ -161,8 +164,11 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
         <Box
             sx={(theme) => ({
                 "& .markdown-body": {
-                    backgroundColor: theme.palette.background.default,
+                    backgroundColor: "inherit",
                     color: theme.palette.text.primary,
+                    "& a": {
+                        color: theme.palette.primary.main,
+                    },
                 },
             })}
         >

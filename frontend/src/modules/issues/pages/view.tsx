@@ -1,6 +1,6 @@
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler } from "components";
+import { ErrorHandler, PageTitle } from "components";
 import deepmerge from "deepmerge";
 import { FC, useCallback, useEffect } from "react";
 import { issueApi, useAppDispatch } from "store";
@@ -83,12 +83,18 @@ const IssueView: FC = () => {
                 </Box>
             ) : (
                 issue && (
-                    <IssueViewComponent
-                        issue={issue}
-                        onUpdateIssue={handleSubmit}
-                        onUpdateCache={handleUpdateCache}
-                        loading={isLoading || updateLoading}
-                    />
+                    <>
+                        <PageTitle
+                            title={`${issue.subject} : ${issue.id_readable}`}
+                        />
+
+                        <IssueViewComponent
+                            issue={issue}
+                            onUpdateIssue={handleSubmit}
+                            onUpdateCache={handleUpdateCache}
+                            loading={isLoading || updateLoading}
+                        />
+                    </>
                 )
             )}
         </Container>
