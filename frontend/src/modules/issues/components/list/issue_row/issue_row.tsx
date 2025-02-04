@@ -2,6 +2,7 @@ import { Stack } from "@mui/material";
 import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
 import { memo } from "react";
+import { slugify } from "transliteration";
 import { Routes } from "utils";
 import { IssueTags } from "../../issue/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
@@ -22,19 +23,30 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         flexWrap="nowrap"
                         alignItems="center"
                     >
-                        <IssueLink to={Routes.issues.issue(id_readable)}>
+                        <IssueLink
+                            to={Routes.issues.issue(
+                                id_readable,
+                                slugify(issue.subject),
+                            )}
+                        >
                             {id_readable}
                         </IssueLink>
+
                         <IssueLink
-                            to={Routes.issues.issue(id_readable)}
-                            variant="silent"
+                            to={Routes.issues.issue(
+                                id_readable,
+                                slugify(issue.subject),
+                            )}
                         >
                             {subject}
                         </IssueLink>
+
                         <IssueTags issue={issue} />
                     </Stack>
+
                     <UpdateTime issue={issue} />
                 </IssueRowHeader>
+
                 {showDescription && <IssueRowBody>{text}</IssueRowBody>}
                 {showCustomFields && <IssueRowFields issue={issue} />}
             </IssueRowRoot>

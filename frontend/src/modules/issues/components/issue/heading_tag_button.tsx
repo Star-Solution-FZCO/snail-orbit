@@ -45,7 +45,6 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
 
     const handleTagSelect = useCallback(
         (tag: TagT, type: "tag" | "untag" | "edit") => {
-            console.log(type);
             if (type === "tag") tagIssue({ issueId: issue.id_readable, tag });
             if (type === "edit") {
                 setEditTag(tag);

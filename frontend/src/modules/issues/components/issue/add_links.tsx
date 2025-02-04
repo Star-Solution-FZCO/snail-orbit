@@ -176,6 +176,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
             .unwrap()
             .then(() => {
                 dispatch(closeIssueLinks());
+                updateListQueryParams({ offset: 0, q: "" });
                 setQuery("");
                 setSelectedIssue(null);
                 const message = `${selectedIssue.id_readable} ${t("issues.links.linkedAs")} "${linkType}" ${t("issues.links.to")} ${issueId}`;
@@ -188,6 +189,9 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
 
     const handleClickCancel = () => {
         dispatch(closeIssueLinks());
+        updateListQueryParams({ offset: 0, q: "" });
+        setQuery("");
+        setSelectedIssue(null);
     };
 
     const issues = issuesData?.payload.items || [];

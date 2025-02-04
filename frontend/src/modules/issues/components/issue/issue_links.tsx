@@ -161,7 +161,7 @@ const IssueLinks: FC<IIssueLinksProps> = ({ issueId, links }) => {
                     <Box display="flex" gap={2} overflow="auto" flex={1}>
                         {Object.entries(groupedLinks).map(
                             ([type, linkItems]) => (
-                                <Typography fontWeight="bold">
+                                <Typography key={type} fontWeight="bold">
                                     {t(`issues.links.type.${type}`)}{" "}
                                     <Typography
                                         component="span"

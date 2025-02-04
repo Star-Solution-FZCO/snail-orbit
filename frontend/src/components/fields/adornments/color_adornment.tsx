@@ -35,7 +35,7 @@ export const ColorAdornment = forwardRef<typeof Box, ColorAdornmentProps>(
                 style={{
                     ...props.style,
                     backgroundColor: color,
-                    color: getContrastText(color),
+                    color: getContrastText(color || "transparent"),
                 }}
                 sx={sx}
                 ref={ref}
