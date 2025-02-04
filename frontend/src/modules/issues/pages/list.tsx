@@ -1,8 +1,6 @@
-import { Search } from "@mui/icons-material";
-import AddIcon from "@mui/icons-material/Add";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import {
     Box,
-    Button,
     CircularProgress,
     Divider,
     IconButton,
@@ -13,7 +11,7 @@ import {
     ToggleButtonGroup,
     Typography,
 } from "@mui/material";
-import { Link } from "components";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -50,16 +48,23 @@ const issueListSettingOptions: Record<
     },
 };
 
+const routeApi = getRouteApi("/_authenticated/issues/");
+
 const IssueList: FC = () => {
     const { t } = useTranslation();
-    const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
+    const navigate = useNavigate();
+    const search = routeApi.useSearch();
 
+    const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
     const [selectedIssueViewOption, setSelectedIssueViewOption] =
         useState<string>("medium");
-    const [debouncedSearch, setSearch, search] = useDebouncedState<string>("");
+
+    const [debouncedSearch, setSearch, searchQuery] =
+        useDebouncedState<string>("");
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: perPage,
+        offset: search?.page ? (search.page - 1) * perPage : 0,
         q: debouncedSearch,
     });
 
@@ -69,6 +74,12 @@ const IssueList: FC = () => {
     useEffect(() => {
         updateListQueryParams({ q: debouncedSearch });
     }, [debouncedSearch]);
+
+    useEffect(() => {
+        updateListQueryParams({
+            offset: search?.page ? (search.page - 1) * perPage : 0,
+        });
+    }, [search]);
 
     const rows = data?.payload.items || [];
 
@@ -89,70 +100,49 @@ const IssueList: FC = () => {
                 id="mainContent"
                 minSize={65}
             >
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    gap={1}
-                >
-                    <Box display="flex" alignItems="center" gap={2}>
-                        <Typography fontSize={24} fontWeight="bold">
-                            {t("issues.title")}
-                        </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t("placeholder.search")}
+                        value={searchQuery}
+                        onChange={(e) => setSearch(e.target.value)}
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        {isFetching && (
+                                            <CircularProgress
+                                                size={14}
+                                                color="inherit"
+                                            />
+                                        )}
+                                    </InputAdornment>
+                                ),
+                            },
+                        }}
+                    />
 
-                        {error && (
-                            <Typography color="error" fontSize={16}>
-                                {formatErrorMessages(error) ||
-                                    t("issues.list.fetch.error")}
-                                !
-                            </Typography>
-                        )}
-                    </Box>
-
-                    <Link to="/issues/create">
-                        <Button
-                            startIcon={<AddIcon />}
-                            variant="outlined"
-                            size="small"
-                        >
-                            {t("issues.new")}
-                        </Button>
-                    </Link>
+                    <IconButton
+                        onClick={() => setShowQueryBuilder((prev) => !prev)}
+                        color={showQueryBuilder ? "primary" : "default"}
+                    >
+                        <FilterAltIcon />
+                    </IconButton>
                 </Stack>
 
-                <TextField
-                    fullWidth
-                    size="small"
-                    placeholder={t("placeholder.search")}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    slotProps={{
-                        input: {
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    {isFetching ? (
-                                        <CircularProgress size={14} />
-                                    ) : (
-                                        <IconButton
-                                            onClick={() =>
-                                                setShowQueryBuilder(
-                                                    (prev) => !prev,
-                                                )
-                                            }
-                                        >
-                                            <Search />
-                                        </IconButton>
-                                    )}
-                                </InputAdornment>
-                            ),
-                        },
-                    }}
-                />
+                {error && (
+                    <Typography color="error" fontSize={16}>
+                        {formatErrorMessages(error) ||
+                            t("issues.list.fetch.error")}
+                        !
+                    </Typography>
+                )}
 
                 {isLoading ? (
                     <CircularProgress />
                 ) : (
-                    <Stack direction="column" gap={1}>
+                    <Stack gap={1}>
                         <Stack
                             direction="row"
                             alignItems="center"
@@ -167,6 +157,7 @@ const IssueList: FC = () => {
                                     count: data?.payload.count || 0,
                                 })}
                             </Typography>
+
                             <ToggleButtonGroup
                                 size="small"
                                 exclusive
@@ -188,6 +179,7 @@ const IssueList: FC = () => {
                                 )}
                             </ToggleButtonGroup>
                         </Stack>
+
                         <IssuesList
                             issues={rows}
                             page={
@@ -198,11 +190,16 @@ const IssueList: FC = () => {
                                 (data?.payload.count || 0) /
                                     listQueryParams.limit,
                             )}
-                            onChangePage={(page) =>
+                            onChangePage={(page) => {
                                 updateListQueryParams({
                                     offset: (page - 1) * perPage,
-                                })
-                            }
+                                });
+                                navigate({
+                                    search: {
+                                        page: page > 1 ? page : undefined,
+                                    },
+                                });
+                            }}
                             viewSettings={
                                 issueListSettingOptions[selectedIssueViewOption]
                             }
@@ -210,29 +207,31 @@ const IssueList: FC = () => {
                     </Stack>
                 )}
             </Box>
-            {showQueryBuilder ? (
+
+            {showQueryBuilder && (
                 <>
                     <Box
+                        id="queryBuilderResizer"
                         component={PanelResizeHandle}
-                        paddingLeft={2}
-                        id="queryBuiderResizer"
+                        pl={2}
                     >
                         <Divider orientation="vertical" />
                     </Box>
+
                     <Box
+                        id="queryBuilder"
                         component={Panel}
                         defaultSize={20}
-                        marginRight={-4}
+                        mr={-4}
                         minSize={15}
-                        id="queryBuilder"
                     >
                         <QueryBuilder
                             onChangeQuery={setSearch}
-                            initialQuery={search}
+                            initialQuery={searchQuery}
                         />
-                    </Box>{" "}
+                    </Box>
                 </>
-            ) : null}
+            )}
         </Box>
     );
 };

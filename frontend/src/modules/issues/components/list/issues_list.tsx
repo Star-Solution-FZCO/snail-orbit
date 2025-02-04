@@ -2,7 +2,7 @@ import { Divider, Pagination, Stack } from "@mui/material";
 import type { FC } from "react";
 import { useMemo } from "react";
 import type { IssueT } from "types/issue";
-import { interleave } from "../../../../utils/helpers/interleave";
+import { interleave } from "utils/helpers/interleave";
 import IssueRow from "./issue_row/issue_row";
 import type { IssueRowViewParams } from "./issue_row/issue_row.types";
 
@@ -33,7 +33,8 @@ export const IssuesList: FC<IssuesListProps> = ({
     return (
         <Stack>
             <>{rows}</>
-            {pageCount ? (
+
+            {pageCount > 1 ? (
                 <Pagination
                     size="small"
                     sx={{ mx: "auto", mt: 2 }}

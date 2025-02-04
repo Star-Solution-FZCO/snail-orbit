@@ -19,5 +19,6 @@ export const IssueLink: StyledComponent<IssueLinkProps> = styled(Link, {
 
     "&:hover": {
         color: theme.palette.primary.dark,
+        textDecoration: "underline",
     },
 }));

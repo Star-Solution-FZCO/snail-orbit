@@ -75,8 +75,6 @@ export const SwimlanesForm: FC = () => {
         );
     }, [options, swimlanes]);
 
-    console.log(fields);
-
     return (
         <Stack gap={1}>
             <FormLabel>{t("agileBoards.form.swimlanes")}</FormLabel>

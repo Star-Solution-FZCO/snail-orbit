@@ -32,7 +32,10 @@ const IssueDraft: FC = () => {
         async (formData: UpdateIssueT) => {
             await updateDraft({ ...formData, id: draftId })
                 .unwrap()
-                .catch(toastApiError);
+                .catch((error) => {
+                    toastApiError(error);
+                    return Promise.reject(error);
+                });
         },
         [draftId, refetch],
     );
@@ -50,7 +53,10 @@ const IssueDraft: FC = () => {
             .then((issue) =>
                 navigate({ to: `/issues/${issue.payload.id_readable}` }),
             )
-            .catch(toastApiError);
+            .catch((error) => {
+                toastApiError(error);
+                return Promise.reject(error);
+            });
     }, [draftId, issue, navigate]);
 
     const handleUpdateCache = useCallback(

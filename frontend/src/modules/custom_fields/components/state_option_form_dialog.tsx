@@ -53,7 +53,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
     } = useForm({
         defaultValues: defaultValues || {
             value: "",
-            color: null,
+            color: "#ccc",
             is_resolved: false,
             is_closed: false,
         },
@@ -63,7 +63,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         reset(
             defaultValues || {
                 value: "",
-                color: null,
+                color: "#ccc",
                 is_resolved: false,
                 is_closed: false,
             },
@@ -97,7 +97,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                         control={control}
                         render={({ field: { value, onChange } }) => (
                             <ColorInputField
-                                color={value || ""}
+                                color={value || "#ccc"}
                                 onChange={onChange}
                                 size="small"
                                 label={t("customFields.options.color")}
