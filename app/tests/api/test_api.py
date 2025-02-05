@@ -82,26 +82,7 @@ async def test_api_v1_version_get(test_client: 'TestClient') -> None:
         )
     ],
 )
-async def test_api_v1_project_post(create_project: str, project_payload: dict) -> None:
-    pass
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'project_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test project',
-                'slug': 'test',
-                'description': 'Test project description',
-                'ai_description': 'Test project AI description',
-            },
-            id='project',
-        )
-    ],
-)
-async def test_api_v1_project_get(
+async def test_api_v1_project_crud(
     test_client: 'TestClient',
     create_project: str,
     create_initial_admin: tuple[str, str],
@@ -124,60 +105,6 @@ async def test_api_v1_project_get(
         },
     }
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'project_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test project',
-                'slug': 'test',
-                'description': 'Test project description',
-                'ai_description': 'Test project AI description',
-            },
-            id='project',
-        )
-    ],
-)
-async def test_api_v1_project_delete(
-    test_client: 'TestClient',
-    create_project: str,
-    create_initial_admin: tuple[str, str],
-    project_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.delete(f'/api/v1/project/{create_project}', headers=headers)
-    assert response.status_code == 200
-    assert response.json() == {'success': True, 'payload': {'id': create_project}}
-    response = test_client.get(f'/api/v1/project/{create_project}', headers=headers)
-    assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'project_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test project',
-                'slug': 'test',
-                'description': 'Test project description',
-                'ai_description': 'Test project AI description',
-            },
-            id='project',
-        )
-    ],
-)
-async def test_api_v1_project_put(
-    test_client: 'TestClient',
-    create_project: str,
-    create_initial_admin: tuple[str, str],
-    project_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.put(
         f'/api/v1/project/{create_project}',
         headers=headers,
@@ -197,6 +124,13 @@ async def test_api_v1_project_put(
             'name': 'Test project updated',
         },
     }
+
+    response = test_client.delete(f'/api/v1/project/{create_project}', headers=headers)
+    assert response.status_code == 200
+    assert response.json() == {'success': True, 'payload': {'id': create_project}}
+
+    response = test_client.get(f'/api/v1/project/{create_project}', headers=headers)
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -291,25 +225,7 @@ async def test_api_v1_profile_get(
         )
     ],
 )
-async def test_api_v1_user_post(create_user: str, user_payload: dict) -> None:
-    pass
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'user_payload',
-    [
-        pytest.param(
-            {
-                'email': 'test_user@localhost.localdomain',
-                'name': 'Test User',
-                'is_active': True,
-            },
-            id='user',
-        )
-    ],
-)
-async def test_api_v1_user_get(
+async def test_api_v1_user_crud(
     test_client: 'TestClient',
     create_user: str,
     create_initial_admin: tuple[str, str],
@@ -331,29 +247,6 @@ async def test_api_v1_user_get(
         },
     }
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'user_payload',
-    [
-        pytest.param(
-            {
-                'email': 'test_user@localhost.localdomain',
-                'name': 'Test User',
-                'is_active': True,
-            },
-            id='user',
-        )
-    ],
-)
-async def test_api_v1_user_update(
-    test_client: 'TestClient',
-    create_user: str,
-    create_initial_admin: tuple[str, str],
-    user_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.put(
         f'/api/v1/user/{create_user}',
         headers=headers,
@@ -388,25 +281,7 @@ async def test_api_v1_user_update(
         )
     ],
 )
-async def test_api_v1_role_post(create_role: str, role_payload: dict) -> None:
-    pass
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'role_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test role',
-                'description': 'Test role description',
-                'permissions': ['issue:create', 'issue:read'],
-            },
-            id='role',
-        )
-    ],
-)
-async def test_api_v1_role_get(
+async def test_api_v1_role_crud(
     test_client: 'TestClient',
     create_role: str,
     create_initial_admin: tuple[str, str],
@@ -438,24 +313,6 @@ async def test_api_v1_role_get(
         },
     }
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'role_payload',
-    [
-        pytest.param(
-            {'name': 'Test role', 'description': 'Test role description'}, id='role'
-        )
-    ],
-)
-async def test_api_v1_role_update(
-    test_client: 'TestClient',
-    create_role: str,
-    create_initial_admin: tuple[str, str],
-    role_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.put(
         f'/api/v1/role/{create_role}',
         headers=headers,
@@ -463,56 +320,14 @@ async def test_api_v1_role_update(
     )
     assert response.status_code == 200
     data = response.json()
-    del data['payload']['permissions']
     assert data == {
         'success': True,
-        'payload': {'id': create_role, **role_payload, 'name': 'Test role updated'},
-    }
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'group_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test group',
-                'description': 'Test group description',
-            },
-            id='test group',
-        )
-    ],
-)
-async def test_api_v1_group_post(create_group: str, group_payload: dict) -> None:
-    pass
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'group_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test group',
-                'description': 'Test group description',
-            },
-            id='test group',
-        )
-    ],
-)
-async def test_api_v1_group_get(
-    test_client: 'TestClient',
-    create_group: str,
-    create_initial_admin: tuple[str, str],
-    group_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.get(f'/api/v1/group/{create_group}', headers=headers)
-    assert response.status_code == 200
-    assert response.json() == {
-        'success': True,
-        'payload': {'id': create_group, 'origin': 'local', **group_payload},
+        'payload': {
+            'id': create_role,
+            **role_payload,
+            'permissions': expected_permissions,
+            'name': 'Test role updated',
+        },
     }
 
 
@@ -535,7 +350,7 @@ async def test_api_v1_group_get(
         )
     ],
 )
-async def test_api_v1_group_list(
+async def test_api_v1_group_crud(
     test_client: 'TestClient',
     create_groups: list[str],
     create_initial_admin: tuple[str, str],
@@ -543,6 +358,13 @@ async def test_api_v1_group_list(
 ) -> None:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.get(f'/api/v1/group/{create_groups[0]}', headers=headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {'id': create_groups[0], 'origin': 'local', **group_payloads[0]},
+    }
+
     response = test_client.get('/api/v1/group/list', headers=headers)
     assert response.status_code == 200
     assert response.json() == {
@@ -558,30 +380,8 @@ async def test_api_v1_group_list(
         },
     }
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'group_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test group',
-                'description': 'Test group description',
-            },
-            id='test group',
-        )
-    ],
-)
-async def test_api_v1_group_update(
-    test_client: 'TestClient',
-    create_group: str,
-    create_initial_admin: tuple[str, str],
-    group_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.put(
-        f'/api/v1/group/{create_group}',
+        f'/api/v1/group/{create_groups[0]}',
         headers=headers,
         json={'name': 'Test group updated'},
     )
@@ -589,39 +389,17 @@ async def test_api_v1_group_update(
     assert response.json() == {
         'success': True,
         'payload': {
-            'id': create_group,
+            'id': create_groups[0],
             'origin': 'local',
-            **group_payload,
+            **group_payloads[0],
             'name': 'Test group updated',
         },
     }
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'group_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test group',
-                'description': 'Test group description',
-            },
-            id='test group',
-        )
-    ],
-)
-async def test_api_v1_group_delete(
-    test_client: 'TestClient',
-    create_group: str,
-    create_initial_admin: tuple[str, str],
-    group_payload: dict,
-) -> None:
-    _, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.delete(f'/api/v1/group/{create_group}', headers=headers)
+    response = test_client.delete(f'/api/v1/group/{create_groups[0]}', headers=headers)
     assert response.status_code == 200
-    assert response.json() == {'success': True, 'payload': {'id': create_group}}
-    response = test_client.get(f'/api/v1/group/{create_group}', headers=headers)
+    assert response.json() == {'success': True, 'payload': {'id': create_groups[0]}}
+    response = test_client.get(f'/api/v1/group/{create_groups[0]}', headers=headers)
     assert response.status_code == 404
 
 
