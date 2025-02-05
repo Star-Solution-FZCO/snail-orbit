@@ -21,7 +21,7 @@ from pm.api.views.custom_fields import (
     StateOptionOutput,
     VersionOptionOutput,
 )
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import (
     SelectParams,
@@ -204,6 +204,24 @@ async def update_custom_field(
             m.Board.update_field_embedded_links(obj),
         )
     return SuccessPayloadOutput(payload=output_from_obj(obj))
+
+
+@router.delete('/{custom_field_id}')
+async def delete_custom_field(
+    custom_field_id: PydanticObjectId,
+) -> ModelIdOutput:
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id, with_children=True
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if in_use := await m.Project.find({'custom_fields.$id': custom_field_id}).count():
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Custom field is in use in {in_use} projects. Unlink it first.',
+        )
+    await obj.delete()
+    return ModelIdOutput.make(custom_field_id)
 
 
 @router.post('/{custom_field_id}/option')
