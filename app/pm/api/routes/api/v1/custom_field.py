@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user_context_dependency
@@ -100,7 +100,7 @@ class VersionOptionUpdateBody(BaseModel):
 
 
 class CustomFieldCreateBody(BaseModel):
-    name: str
+    name: str = Field(pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
     type: m.CustomFieldTypeT
     is_nullable: bool
     default_value: Any | None = None
@@ -121,7 +121,7 @@ class CustomFieldCreateBody(BaseModel):
 
 
 class CustomFieldUpdateBody(BaseModel):
-    name: str | None = None
+    name: str | None = Field(default=None, pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
     is_nullable: bool | None = None
     default_value: Any | None = None
     description: str | None = None
