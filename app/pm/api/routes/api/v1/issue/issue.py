@@ -740,6 +740,42 @@ async def link_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
+@router.get('/{issue_id_or_alias}/link/target/select')
+async def select_linkable_issues(
+    issue_id_or_alias: PydanticObjectId | str,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
+    q = m.Issue.find(
+        bo.And(
+            bo.NE(m.Issue.id, obj.id),
+            bo.NotIn(m.Issue.id, [il.issue.id for il in obj.interlinks]),
+            bo.In(
+                m.Issue.project.id,
+                user_ctx.get_projects_with_permission(
+                    PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+                ),
+            ),
+            bo.Or(
+                bo.RegEx(m.Issue.subject, query.search, 'i'),
+                bo.RegEx(m.Issue.aliases, query.search, 'i'),
+            ),
+        )
+    ).sort(m.Issue.id)
+    return await BaseListOutput.make_from_query(
+        q,
+        limit=query.limit,
+        offset=query.offset,
+        projection_fn=IssueOutput.from_obj,
+    )
+
+
 @router.delete('/{issue_id_or_alias}/link/{interlink_id}')
 async def unlink_issue(
     issue_id_or_alias: PydanticObjectId | str,
