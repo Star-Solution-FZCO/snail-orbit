@@ -78,6 +78,10 @@ class IssueInterlinkCreate(BaseModel):
     type: m.IssueInterlinkTypeT
 
 
+class IssueInterlinkUpdate(BaseModel):
+    type: m.IssueInterlinkTypeT
+
+
 class IssueTagCreate(BaseModel):
     tag_id: PydanticObjectId
 
@@ -774,6 +778,52 @@ async def select_linkable_issues(
         offset=query.offset,
         projection_fn=IssueOutput.from_obj,
     )
+
+
+@router.put('/{issue_id_or_alias}/link/{interlink_id}')
+async def update_link(
+    issue_id_or_alias: PydanticObjectId | str,
+    interlink_id: UUID,
+    body: IssueInterlinkUpdate,
+) -> SuccessPayloadOutput[IssueOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+    )
+
+    src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
+    if not src_il:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Interlink not found')
+
+    if src_il.type == body.type:
+        raise HTTPException(HTTPStatus.CONFLICT, 'Interlink type is the same')
+
+    target_obj: m.Issue | None = await m.Issue.find_one(m.Issue.id == src_il.issue.id)
+    if not target_obj:
+        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Target issue not found')
+    target_il = next(
+        (il for il in target_obj.interlinks if il.id == interlink_id), None
+    )
+    if not target_il:
+        raise HTTPException(
+            HTTPStatus.INTERNAL_SERVER_ERROR, 'Target interlink not found'
+        )
+
+    user_ctx.validate_issue_permission(
+        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+    )
+
+    src_il.type = body.type
+    target_il.type = body.type.inverse()
+
+    await obj.replace()
+    await target_obj.replace()
+
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
 @router.delete('/{issue_id_or_alias}/link/{interlink_id}')
