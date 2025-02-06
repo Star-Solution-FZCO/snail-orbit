@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from beanie import Document, Indexed
 
-from pm.workflows import get_on_change_script
+from pm.workflows import get_on_change_script_from_string
 
 from ._audit import audited_model
 
@@ -49,5 +49,6 @@ class OnChangeWorkflow(Workflow):
     type: WorkflowType = WorkflowType.ON_CHANGE
 
     async def run(self, issue: 'Issue') -> None:
-        script = get_on_change_script(self.script)
-        await script.run(issue)
+        script = get_on_change_script_from_string(self.script)
+        if script:
+            await script.run(issue)

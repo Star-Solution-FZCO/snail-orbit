@@ -1,6 +1,11 @@
+import importlib
+import inspect
+import os
+import tempfile
 from abc import ABC, abstractmethod
 from importlib import import_module
-from typing import TYPE_CHECKING
+from importlib.util import module_from_spec
+from typing import TYPE_CHECKING, Optional, Type, Union
 
 if TYPE_CHECKING:
     from pm.models.issue import Issue
@@ -13,6 +18,8 @@ __all__ = (
     'WorkflowException',
     'get_on_change_script',
     'get_scheduled_script',
+    'get_on_change_script_from_string',
+    'get_scheduled_script_from_string',
 )
 
 
@@ -61,3 +68,37 @@ def get_scheduled_script(path: str) -> ScheduledWorkflowScript:
     if not issubclass(cls, ScheduledWorkflowScript):
         raise TypeError(f'Class {cls} must be a subclass of ScheduledWorkflowScript')
     return cls()
+
+
+def get_on_change_script_from_string(script: str) -> OnChangeWorkflowScript | None:
+    return load_workflow_script(script, OnChangeWorkflowScript)
+
+
+def get_scheduled_script_from_string(script: str) -> ScheduledWorkflowScript | None:
+    return load_workflow_script(script, ScheduledWorkflowScript)
+
+
+def load_module_from_string(script: str, module_name: str = 'dynamic_module'):
+    with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as tmp:
+        tmp.write(script)
+    try:
+        spec = importlib.util.spec_from_file_location(module_name, tmp.name)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        os.remove(tmp.name)
+
+
+def load_workflow_script(
+    script: str, base_class: Type
+) -> Optional[Union[OnChangeWorkflowScript, ScheduledWorkflowScript]]:
+    module = load_module_from_string(script)
+    for _, obj in vars(module).items():
+        if (
+            inspect.isclass(obj)
+            and issubclass(obj, base_class)
+            and obj is not base_class
+        ):
+            return obj()
+    return None
