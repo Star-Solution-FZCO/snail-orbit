@@ -20,6 +20,9 @@ __all__ = (
     'CustomFieldOutputWithUserOptions',
     'CustomFieldOutputWithVersionOptions',
     'CustomFieldLinkOutput',
+    'CustomFieldOutputT',
+    'CustomFieldSelectOptionsT',
+    'cf_output_from_obj',
 )
 
 
@@ -204,3 +207,29 @@ class CustomFieldOutputWithVersionOptions(CustomFieldOutput):
             options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
             default_value=obj.default_value,
         )
+
+
+CustomFieldOutputT = (
+    CustomFieldOutput
+    | CustomFieldOutputWithEnumOptions
+    | CustomFieldOutputWithUserOptions
+    | CustomFieldOutputWithStateOptions
+    | CustomFieldOutputWithVersionOptions
+)
+
+
+CustomFieldSelectOptionsT = (
+    EnumOptionOutput | UserOutput | StateOptionOutput | VersionOptionOutput
+)
+
+
+def cf_output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
+    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        return CustomFieldOutputWithEnumOptions.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
+        return CustomFieldOutputWithUserOptions.from_obj(obj)
+    if obj.type == m.CustomFieldTypeT.STATE:
+        return CustomFieldOutputWithStateOptions.from_obj(obj)
+    if obj.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        return CustomFieldOutputWithVersionOptions.from_obj(obj)
+    return CustomFieldOutput.from_obj(obj)

@@ -3,6 +3,7 @@ from typing import Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
+from beanie import operators as bo
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
@@ -13,7 +14,11 @@ from pm.api.context import (
     current_user_context_dependency,
 )
 from pm.api.utils.router import APIRouter
-from pm.api.views.custom_fields import CustomFieldOutput
+from pm.api.views.custom_fields import (
+    CustomFieldOutput,
+    CustomFieldOutputT,
+    cf_output_from_obj,
+)
 from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
@@ -24,6 +29,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import ListParams
 from pm.api.views.role import RoleLinkOutput, RoleOutput
+from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
@@ -276,6 +282,29 @@ async def delete_project(
     await obj.delete()
     await m.Issue.find(m.Issue.project.id == project_id).delete()
     return ModelIdOutput.make(project_id)
+
+
+@router.get('/{project_id}/field/available/select')
+async def get_available_select_fields(
+    project_id: PydanticObjectId,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[CustomFieldOutputT]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    q = m.CustomField.find(
+        bo.NotIn(m.CustomField.id, [field.id for field in project.custom_fields]),
+        with_children=True,
+    ).sort(m.CustomField.name)
+    if query.search:
+        q = q.find(bo.RegEx(m.CustomField.name, query.search, 'i'))
+    return await BaseListOutput.make_from_query(
+        q,
+        limit=query.limit,
+        offset=query.offset,
+        projection_fn=cf_output_from_obj,
+    )
 
 
 @router.post('/{project_id}/field/{field_id}')
