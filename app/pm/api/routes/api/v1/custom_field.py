@@ -12,14 +12,12 @@ import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
-    CustomFieldOutput,
-    CustomFieldOutputWithEnumOptions,
-    CustomFieldOutputWithStateOptions,
-    CustomFieldOutputWithUserOptions,
-    CustomFieldOutputWithVersionOptions,
+    CustomFieldOutputT,
+    CustomFieldSelectOptionsT,
     EnumOptionOutput,
     StateOptionOutput,
     VersionOptionOutput,
+    cf_output_from_obj,
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
@@ -38,17 +36,6 @@ router = APIRouter(
     prefix='/custom_field',
     tags=['custom_field'],
     dependencies=[Depends(current_user_context_dependency)],
-)
-
-CustomFieldOutputT = (
-    CustomFieldOutput
-    | CustomFieldOutputWithEnumOptions
-    | CustomFieldOutputWithUserOptions
-    | CustomFieldOutputWithStateOptions
-    | CustomFieldOutputWithVersionOptions
-)
-CustomFieldSelectOptionsT = (
-    EnumOptionOutput | UserOutput | StateOptionOutput | VersionOptionOutput
 )
 
 
@@ -134,18 +121,6 @@ class CustomFieldUpdateBody(BaseModel):
             setattr(obj, k, v)
 
 
-def output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
-    if obj.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
-        return CustomFieldOutputWithEnumOptions.from_obj(obj)
-    if obj.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
-        return CustomFieldOutputWithUserOptions.from_obj(obj)
-    if obj.type == m.CustomFieldTypeT.STATE:
-        return CustomFieldOutputWithStateOptions.from_obj(obj)
-    if obj.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
-        return CustomFieldOutputWithVersionOptions.from_obj(obj)
-    return CustomFieldOutput.from_obj(obj)
-
-
 @router.get('/list')
 async def list_custom_fields(
     query: ListParams = Depends(),
@@ -155,7 +130,7 @@ async def list_custom_fields(
         q,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=output_from_obj,
+        projection_fn=cf_output_from_obj,
     )
 
 
@@ -168,7 +143,7 @@ async def get_custom_field(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.post('/')
@@ -180,7 +155,7 @@ async def create_custom_field(
     except m.CustomFieldValidationError as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     await obj.insert()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}')
@@ -203,7 +178,7 @@ async def update_custom_field(
             m.IssueDraft.update_field_embedded_links(obj),
             m.Board.update_field_embedded_links(obj),
         )
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}')
@@ -248,7 +223,7 @@ async def add_enum_option(
     )
     if obj.is_changed:
         await obj.save_changes()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/option/{option_id}')
@@ -279,7 +254,7 @@ async def update_enum_option(
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
 
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/option/{option_id}')
@@ -308,7 +283,7 @@ async def remove_enum_option(
     obj.options.remove(opt)
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/user-option')
@@ -352,7 +327,7 @@ async def add_user_option(
     obj.options.append(m.UserOption(id=uuid4(), type=body.type, value=value))
     if obj.is_changed:
         await obj.save_changes()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/user-option/{option_id}')
@@ -373,7 +348,7 @@ async def remove_user_option(
     obj.options.remove(opt)
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/state-option')
@@ -400,7 +375,7 @@ async def add_state_option(
     )
     if obj.is_changed:
         await obj.save_changes()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/state-option/{option_id}')
@@ -429,7 +404,7 @@ async def update_state_option(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/state-option/{option_id}')
@@ -456,7 +431,7 @@ async def remove_state_option(
         obj.default_value = None
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/version-option')
@@ -489,7 +464,7 @@ async def add_version_option(
     )
     if obj.is_changed:
         await obj.save_changes()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/version-option/{option_id}')
@@ -525,7 +500,7 @@ async def update_version_option(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/version-option/{option_id}')
@@ -557,7 +532,7 @@ async def remove_version_option(
         obj.default_value = None
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=output_from_obj(obj))
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
 @router.get('/{custom_field_id}/select')
