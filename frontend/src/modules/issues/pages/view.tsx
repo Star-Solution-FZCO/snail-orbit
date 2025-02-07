@@ -85,7 +85,7 @@ const IssueView: FC = () => {
                 issue && (
                     <>
                         <PageTitle
-                            title={`${issue.subject} : ${issue.id_readable}`}
+                            title={`${issue.id_readable} : ${issue.subject}`}
                         />
 
                         <IssueViewComponent
