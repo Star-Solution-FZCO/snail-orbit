@@ -96,6 +96,7 @@ def transform_custom_field_value(
 
 class CustomFieldValueOut(BaseModel):
     id: PydanticObjectId
+    gid: str
     name: str
     type: m.CustomFieldTypeT
     value: CustomFieldValueOutT = None
@@ -104,6 +105,7 @@ class CustomFieldValueOut(BaseModel):
     def from_obj(cls, obj: m.CustomFieldValue) -> Self:
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             type=obj.type,
             value=transform_custom_field_value(obj.value, obj),

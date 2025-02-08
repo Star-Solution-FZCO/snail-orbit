@@ -163,10 +163,12 @@ class CustomField(Document):
 
     name: str
     type: CustomFieldTypeT
-    is_nullable: bool
-    default_value: Any | None = None
+    gid: str
     description: str | None = None
     ai_description: str | None = None
+    label: str
+    is_nullable: bool = True
+    default_value: Any | None = None
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
@@ -183,6 +185,7 @@ class CustomField(Document):
 
 class CustomFieldLink(BaseModel):
     id: PydanticObjectId
+    gid: str
     name: str
     type: CustomFieldTypeT
 
@@ -190,6 +193,7 @@ class CustomFieldLink(BaseModel):
     def from_obj(cls, obj: CustomField | Self) -> Self:
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             type=obj.type,
         )
