@@ -44,6 +44,7 @@ class EnumOptionOutput(BaseModel):
 
 class CustomFieldOutput(BaseModel):
     id: PydanticObjectId
+    gid: str
     name: str
     type: m.CustomFieldTypeT
     is_nullable: bool
@@ -58,6 +59,7 @@ class CustomFieldOutput(BaseModel):
             default_value = obj.default_value.date() if obj.default_value else None
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             type=obj.type,
             is_nullable=obj.is_nullable,
@@ -69,6 +71,7 @@ class CustomFieldOutput(BaseModel):
 
 class CustomFieldLinkOutput(BaseModel):
     id: PydanticObjectId
+    gid: str
     name: str
     type: m.CustomFieldTypeT
 
@@ -76,6 +79,7 @@ class CustomFieldLinkOutput(BaseModel):
     def from_obj(cls, obj: m.CustomField | m.CustomFieldLink) -> Self:
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             type=obj.type,
         )
@@ -88,6 +92,7 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
     def from_obj(cls, obj: m.CustomField) -> 'CustomFieldOutputWithEnumOptions':
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             description=obj.description,
             ai_description=obj.ai_description,
@@ -114,6 +119,7 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
     ) -> 'CustomFieldOutputWithUserOptions':
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             description=obj.description,
             ai_description=obj.ai_description,
@@ -162,6 +168,7 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
     def from_obj(cls, obj: m.StateCustomField) -> Self:
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             description=obj.description,
             ai_description=obj.ai_description,
@@ -199,6 +206,7 @@ class CustomFieldOutputWithVersionOptions(CustomFieldOutput):
     def from_obj(cls, obj: m.VersionCustomField) -> Self:
         return cls(
             id=obj.id,
+            gid=obj.gid,
             name=obj.name,
             description=obj.description,
             ai_description=obj.ai_description,

@@ -732,8 +732,9 @@ async def test_api_v1_custom_field_get_list_update(
     response = test_client.get(
         f'/api/v1/custom_field/{create_custom_field["id"]}', headers=headers
     )
-    expected_payload = {
+    field_expected_payload = {
         'id': create_custom_field['id'],
+        'gid': create_custom_field['gid'],
         **custom_field_payload,
     }
     if custom_field_payload['type'] in (
@@ -743,7 +744,7 @@ async def test_api_v1_custom_field_get_list_update(
         'version',
         'version_multi',
     ):
-        expected_payload['options'] = [
+        field_expected_payload['options'] = [
             {'uuid': create_custom_field['options'][option['value']], **option}
             for option in custom_field_payload['options']
         ]
@@ -751,11 +752,11 @@ async def test_api_v1_custom_field_get_list_update(
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
-        'payload': expected_payload,
+        'payload': field_expected_payload,
     }
 
     response = test_client.get(
-        '/api/v1/custom_field/list', params=[('limit', 50)], headers=headers
+        '/api/v1/custom_field/group/list', params=[('limit', 50)], headers=headers
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -764,19 +765,35 @@ async def test_api_v1_custom_field_get_list_update(
             'count': 1,
             'limit': 50,
             'offset': 0,
-            'items': [expected_payload],
+            'items': [
+                {
+                    'gid': create_custom_field['gid'],
+                    'name': custom_field_payload['name'],
+                    'type': custom_field_payload['type'],
+                    'description': custom_field_payload['description'],
+                    'ai_description': custom_field_payload['ai_description'],
+                    'fields': [field_expected_payload],
+                }
+            ],
         },
     }
 
     response = test_client.put(
-        f'/api/v1/custom_field/{create_custom_field["id"]}',
+        f'/api/v1/custom_field/group/{create_custom_field["gid"]}',
         headers=headers,
         json={'name': 'Updated name'},
     )
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
-        'payload': {**expected_payload, 'name': 'Updated name'},
+        'payload': {
+            'gid': create_custom_field['gid'],
+            'name': 'Updated name',
+            'type': custom_field_payload['type'],
+            'description': custom_field_payload['description'],
+            'ai_description': custom_field_payload['ai_description'],
+            'fields': [{**field_expected_payload, 'name': 'Updated name'}],
+        },
     }
 
 
@@ -832,7 +849,11 @@ async def test_api_v1_custom_field_project_link(
             'id': create_project,
             **project_payload,
             'custom_fields': [
-                {'id': create_custom_field['id'], **custom_field_payload}
+                {
+                    'id': create_custom_field['id'],
+                    'gid': create_custom_field['gid'],
+                    **custom_field_payload,
+                }
             ],
             'card_fields': [],
             'workflows': [],
@@ -855,7 +876,11 @@ async def test_api_v1_custom_field_project_link(
             'id': create_project,
             **project_payload,
             'custom_fields': [
-                {'id': create_custom_field['id'], **custom_field_payload}
+                {
+                    'id': create_custom_field['id'],
+                    'gid': create_custom_field['gid'],
+                    **custom_field_payload,
+                }
             ],
             'card_fields': [create_custom_field['id']],
             'workflows': [],
@@ -877,7 +902,11 @@ async def test_api_v1_custom_field_project_link(
             'id': create_project,
             **project_payload,
             'custom_fields': [
-                {'id': create_custom_field['id'], **custom_field_payload}
+                {
+                    'id': create_custom_field['id'],
+                    'gid': create_custom_field['gid'],
+                    **custom_field_payload,
+                }
             ],
             'card_fields': [create_custom_field['id']],
             'workflows': [],
