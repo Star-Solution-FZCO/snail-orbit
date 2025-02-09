@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { tagApi } from "store/api/tag.api";
 import { TagT } from "types/tag";
-import { useListQueryParams } from "utils";
+import { noLimitListQueryParams } from "utils";
 
 type TagListPopoverProps = {
     open: boolean;
@@ -36,9 +36,6 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
     const { open, anchorEl, onClose, onAddNewClick, onSelect } = props;
 
     const { t } = useTranslation();
-    const [listQueryParams] = useListQueryParams({
-        limit: 0,
-    });
 
     const [fetchTags, { data, isLoading }] = tagApi.useLazyListTagsQuery();
 
@@ -85,8 +82,8 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
     }, [data]);
 
     useEffect(() => {
-        if (open) fetchTags(listQueryParams);
-    }, [open, listQueryParams]);
+        if (open) fetchTags(noLimitListQueryParams);
+    }, [open]);
 
     const handleChange = useCallback(
         (value: InnerOptionType) => {

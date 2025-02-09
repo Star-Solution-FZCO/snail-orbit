@@ -2,22 +2,22 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
-    Breadcrumbs,
     Container,
     IconButton,
     Stack,
+    TextField,
     Typography,
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { Link } from "components";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { formatErrorMessages, Routes, toastApiError } from "utils";
+import { formatErrorMessages, toastApiError } from "utils";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
+import { AgileBoardSelect } from "./components/agile_board_select";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 import { agileBoardToFormValues } from "./utils/agileBoardToFormValues";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
@@ -74,29 +74,23 @@ const AgileBoardView = () => {
 
     return (
         <Stack direction="column">
-            <Container disableGutters>
-                <DeleteAgileBoardDialog
-                    id={agileBoard.id}
-                    open={deleteDialogOpen}
-                    onClose={() => setDeleteDialogOpen(false)}
-                />
-
+            <Box px={4}>
                 <Stack
                     direction="row"
                     justifyContent="space-between"
                     gap={1}
                     mb={2}
                 >
-                    <Breadcrumbs>
-                        <Link to={Routes.agileBoards.list()} underline="hover">
-                            <Typography fontSize={24} fontWeight="bold">
-                                {t("agileBoards.title")}
-                            </Typography>
-                        </Link>
-                        <Typography fontSize={24} fontWeight="bold">
-                            {agileBoard.name}
-                        </Typography>
-                    </Breadcrumbs>
+                    <AgileBoardSelect
+                        value={agileBoard}
+                        onChange={console.log}
+                    />
+
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t("placeholder.search")}
+                    />
 
                     <Stack direction="row" gap={1}>
                         {settingsOpen && (
@@ -129,10 +123,15 @@ const AgileBoardView = () => {
                         />
                     </Box>
                 ) : null}
-            </Container>
+            </Box>
             <Box sx={{ width: "100%" }}>
                 <AgileBoard boardData={agileBoard} />
             </Box>
+            <DeleteAgileBoardDialog
+                id={agileBoard.id}
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            />
         </Stack>
     );
 };
