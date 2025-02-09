@@ -8,6 +8,7 @@
   "agileBoardForm.tab.card": "Card",
   "agileBoardForm.tab.columnAndSwimLanes": "Columns and SwimLanes",
   "agileBoardForm.tab.main": "Main data",
+  "agileBoardListPopover.placeholder": "Search board by name",
   "agileBoards.create.success": "Agile Board created successfully",
   "agileBoards.create.title": "New board",
   "agileBoards.delete.confirm": "Are you sure you want to delete this board?",
