@@ -1,5 +1,6 @@
 # pylint: disable=import-outside-toplevel
 import argparse
+import asyncio
 from getpass import getpass
 
 __all__ = ('add_user_args',)
@@ -61,6 +62,29 @@ async def gen_api_token(args: argparse.Namespace) -> None:
     print(f'API token: {token}')
 
 
+async def change_user_email(args: argparse.Namespace) -> None:
+    from beanie import PydanticObjectId
+
+    import pm.models as m
+
+    await init_db()
+    user = await m.User.find_one(m.User.id == PydanticObjectId(args.user_id))
+    if not user:
+        print(f'User with id={args.user_id} not found')
+        return
+    user.email = args.new_email
+    await user.save_changes()
+    await asyncio.gather(
+        m.Project.update_user_embedded_links(user),
+        m.Issue.update_user_embedded_links(user),
+        m.IssueDraft.update_user_embedded_links(user),
+        m.UserMultiCustomField.update_user_embedded_links(user),
+        m.UserCustomField.update_user_embedded_links(user),
+        m.Tag.update_user_embedded_links(user),
+    )
+    print(f'User email changed to {args.new_email}')
+
+
 def add_user_args(parser: argparse.ArgumentParser) -> None:
     subparsers = parser.add_subparsers(required=True)
 
@@ -79,3 +103,8 @@ def add_user_args(parser: argparse.ArgumentParser) -> None:
     gen_api_token_parser.add_argument('user_id', type=str)
     gen_api_token_parser.add_argument('name', type=str)
     gen_api_token_parser.set_defaults(func=gen_api_token)
+
+    change_email_parser = subparsers.add_parser('edit', help='Change user email')
+    change_email_parser.add_argument('user_id', type=str)
+    change_email_parser.add_argument('new_email', type=str)
+    change_email_parser.set_defaults(func=change_user_email)
