@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
-import { FC } from "react";
+import type { FC } from "react";
 import { useMountStatus } from "../../utils/useMountStatus";
 import Item from "../item";
-import { SortableItemProps } from "./SortableItem.types";
+import type { SortableItemProps } from "./SortableItem.types";
 
 export const SortableItem: FC<SortableItemProps> = ({
     disabled,

@@ -1,6 +1,6 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { HeaderStyled, HeaderStyledContainer } from "./header.styles";
-import { HeaderProps } from "./header.types";
+import type { HeaderProps } from "./header.types";
 
 export const Header: FC<HeaderProps> = ({ columns }) => {
     return (
