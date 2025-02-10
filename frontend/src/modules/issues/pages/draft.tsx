@@ -1,8 +1,14 @@
+import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler } from "components";
+import {
+    ErrorHandler,
+    Link,
+    NavbarActionButton,
+    useNavbarSettings,
+} from "components";
 import deepmerge from "deepmerge";
-import { FC, useCallback } from "react";
+import { FC, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "store";
@@ -16,6 +22,7 @@ const IssueDraft: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { draftId } = routeApi.useParams();
+    const { setAction } = useNavbarSettings();
 
     const dispatch = useAppDispatch();
 
@@ -77,6 +84,18 @@ const IssueDraft: FC = () => {
         },
         [dispatch, issue],
     );
+
+    useEffect(() => {
+        setAction(
+            <Link to="/issues/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("issues.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
 
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;

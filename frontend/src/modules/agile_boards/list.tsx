@@ -10,7 +10,7 @@ import {
 import { Link, QueryPagination } from "components";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { formatErrorMessages, Routes, useListQueryParams } from "utils";
+import { formatErrorMessages, useListQueryParams } from "utils";
 
 const AgileBoardList = () => {
     const { t } = useTranslation();
@@ -45,7 +45,7 @@ const AgileBoardList = () => {
                     {t("agileBoards.title")}
                 </Typography>
 
-                <Link to={Routes.agileBoards.create()}>
+                <Link to="/agiles/create">
                     <Button
                         startIcon={<AddIcon />}
                         variant="outlined"

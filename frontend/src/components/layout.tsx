@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { Outlet } from "@tanstack/react-router";
-import { NavBar } from "./navbar";
+import { NavBar, NavbarSettingsContextProvider } from "./navbar";
 
 const Layout = () => {
     return (
@@ -8,19 +8,14 @@ const Layout = () => {
             sx={{
                 display: "flex",
                 minHeight: "100vh",
+                flexDirection: "column",
             }}
         >
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flexGrow: 1,
-                }}
-            >
+            <NavbarSettingsContextProvider>
                 <NavBar />
 
                 <Outlet />
-            </Box>
+            </NavbarSettingsContextProvider>
         </Box>
     );
 };

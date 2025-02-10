@@ -1,14 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
-import {
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { QueryPagination } from "components";
+import {
+    NavbarActionButton,
+    QueryPagination,
+    useNavbarSettings,
+} from "components";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
@@ -16,6 +14,7 @@ import { ProjectCard } from "./components/project_card";
 
 const ProjectList = () => {
     const { t } = useTranslation();
+    const { setAction } = useNavbarSettings();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
@@ -25,6 +24,18 @@ const ProjectList = () => {
         error,
     } = projectApi.useListProjectQuery(listQueryParams);
 
+    useEffect(() => {
+        setAction(
+            <Link to="/projects/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("projects.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
+
     return (
         <Container
             sx={{
@@ -32,33 +43,10 @@ const ProjectList = () => {
                 flexDirection: "column",
                 gap: 4,
                 height: "100%",
-                px: 4,
-                pb: 4,
+                p: 4,
             }}
             disableGutters
         >
-            <Stack
-                direction="row"
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                gap={1}
-            >
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("projects.title")}
-                </Typography>
-
-                <Link to="/projects/create">
-                    <Button
-                        startIcon={<AddIcon />}
-                        variant="outlined"
-                        size="small"
-                    >
-                        {t("projects.new")}
-                    </Button>
-                </Link>
-            </Stack>
-
             {error && (
                 <Typography>
                     {formatErrorMessages(error) ||

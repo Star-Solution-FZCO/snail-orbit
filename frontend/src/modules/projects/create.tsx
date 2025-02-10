@@ -1,6 +1,8 @@
-import { Breadcrumbs, Container, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
+import { Link, NavbarActionButton, useNavbarSettings } from "components";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
@@ -11,6 +13,7 @@ import { ProjectForm } from "./components/project_form";
 const ProjectCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { setAction } = useNavbarSettings();
 
     const [createProject, { isLoading }] =
         projectApi.useCreateProjectMutation();
@@ -30,6 +33,18 @@ const ProjectCreate = () => {
             .catch(toastApiError);
     };
 
+    useEffect(() => {
+        setAction(
+            <Link to="/projects/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("projects.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
+
     return (
         <Container
             sx={{
@@ -41,16 +56,9 @@ const ProjectCreate = () => {
             }}
             disableGutters
         >
-            <Breadcrumbs sx={{ mb: 2 }}>
-                <Link to="/roles" underline="hover">
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("projects.title")}
-                    </Typography>
-                </Link>
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("projects.create.title")}
-                </Typography>
-            </Breadcrumbs>
+            <Typography fontSize={24} fontWeight="bold">
+                {t("projects.create.title")}
+            </Typography>
 
             <ProjectForm onSubmit={onSubmit} loading={isLoading} />
         </Container>

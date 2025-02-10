@@ -3,7 +3,6 @@ import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
 import { memo } from "react";
 import { slugify } from "transliteration";
-import { Routes } from "utils";
 import { IssueTags } from "../../issue/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
 import type { IssueRowProps } from "./issue_row.types";
@@ -24,19 +23,21 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         alignItems="center"
                     >
                         <IssueLink
-                            to={Routes.issues.issue(
-                                id_readable,
-                                slugify(issue.subject),
-                            )}
+                            to="/issues/$issueId/$subject"
+                            params={{
+                                issueId: id_readable,
+                                subject: slugify(issue.subject),
+                            }}
                         >
                             {id_readable}
                         </IssueLink>
 
                         <IssueLink
-                            to={Routes.issues.issue(
-                                id_readable,
-                                slugify(issue.subject),
-                            )}
+                            to="/issues/$issueId/$subject"
+                            params={{
+                                issueId: id_readable,
+                                subject: slugify(issue.subject),
+                            }}
                         >
                             {subject}
                         </IssueLink>

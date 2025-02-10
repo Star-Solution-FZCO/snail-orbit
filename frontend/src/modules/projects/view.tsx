@@ -1,9 +1,15 @@
+import AddIcon from "@mui/icons-material/Add";
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, TabPanel } from "components";
-import type { SyntheticEvent } from "react";
-import { useState } from "react";
+import {
+    ErrorHandler,
+    Link,
+    NavbarActionButton,
+    TabPanel,
+    useNavbarSettings,
+} from "components";
+import { SyntheticEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi, useAppSelector } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
@@ -20,6 +26,7 @@ const ProjectView = () => {
     const navigate = useNavigate();
     const { projectId } = routeApi.useParams();
     const search = routeApi.useSearch();
+    const { setAction } = useNavbarSettings();
 
     const tabs = useProjectFormTabs();
 
@@ -28,6 +35,18 @@ const ProjectView = () => {
     const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
+
+    useEffect(() => {
+        setAction(
+            <Link to="/projects/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("projects.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
 
     const handleChangeTab = (_: SyntheticEvent, value: string) => {
         setCurrentTab(value);
