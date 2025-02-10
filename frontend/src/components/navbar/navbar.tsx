@@ -1,18 +1,22 @@
-import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Avatar,
     Box,
-    Button,
     IconButton,
     Menu,
     MenuItem,
     useTheme,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { About, Link } from "components";
-import { FC, PropsWithChildren, useMemo, useState } from "react";
+import { About, Link } from "components/index";
+import {
+    FC,
+    MouseEventHandler,
+    PropsWithChildren,
+    useMemo,
+    useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "services/auth";
 import {
@@ -21,6 +25,7 @@ import {
     useAppDispatch,
     useAppSelector,
 } from "store";
+import { useNavbarSettings } from "./navbar_settings";
 
 const useLinks = () => {
     const { t } = useTranslation();
@@ -74,14 +79,15 @@ const NavBar = () => {
     const dispatch = useAppDispatch();
 
     const user = useAppSelector((state) => state.profile.user);
+    const { action } = useNavbarSettings();
 
     const links = useLinks();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
 
-    const handleClickSettings = (
-        event: React.MouseEvent<HTMLButtonElement>,
+    const handleClickSettings: MouseEventHandler<HTMLButtonElement> = (
+        event,
     ) => {
         setAnchorEl(event.currentTarget);
     };
@@ -123,16 +129,7 @@ const NavBar = () => {
                     </NavBarLink>
                 ))}
 
-                <Link to="/issues/create">
-                    <Button
-                        sx={{ height: "24px", py: 0, textTransform: "none" }}
-                        startIcon={<AddIcon />}
-                        variant="contained"
-                        size="small"
-                    >
-                        {t("issues.new")}
-                    </Button>
-                </Link>
+                {action}
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>

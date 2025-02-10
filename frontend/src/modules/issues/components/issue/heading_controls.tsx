@@ -2,14 +2,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import {
-    IconButton,
-    Link,
-    Menu,
-    MenuItem,
-    Tooltip,
-    Typography,
-} from "@mui/material";
+import { IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,7 +11,8 @@ import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
 import { issueToCreateIssue } from "store/utils/issue";
 import { slugify } from "transliteration";
 import type { IssueT } from "types";
-import { Routes, toastApiError } from "utils";
+import { toastApiError } from "utils";
+import { Link } from "../../../../components";
 import { DeleteIssueDialog } from "./delete_dialog";
 import { HeadingTagButton } from "./heading_tag_button";
 
@@ -78,10 +72,11 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                     <Typography>
                         {t("issues.clone.created")}:{" "}
                         <Link
-                            href={Routes.issues.issue(
+                            to="/issues/$issueId/$subject"
+                            params={{
                                 issueId,
-                                slugify(issue.subject),
-                            )}
+                                subject: slugify(issue.subject),
+                            }}
                         >
                             {issueId}
                         </Link>

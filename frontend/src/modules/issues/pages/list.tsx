@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import {
     Box,
@@ -18,6 +19,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
+import {
+    Link,
+    NavbarActionButton,
+    useNavbarSettings,
+} from "../../../components";
 import { IssueRowViewParams } from "../components/list/issue_row/issue_row.types";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/QueryBuilder/QueryBuilder";
@@ -54,6 +60,7 @@ const IssueList: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const search = routeApi.useSearch();
+    const { setAction } = useNavbarSettings();
 
     const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
     const [selectedIssueViewOption, setSelectedIssueViewOption] =
@@ -80,6 +87,18 @@ const IssueList: FC = () => {
             offset: search?.page ? (search.page - 1) * perPage : 0,
         });
     }, [search]);
+
+    useEffect(() => {
+        setAction(
+            <Link to="/issues/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("issues.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
 
     const rows = data?.payload.items || [];
 

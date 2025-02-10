@@ -1,20 +1,30 @@
+import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, PageTitle } from "components";
+import {
+    ErrorHandler,
+    Link,
+    NavbarActionButton,
+    PageTitle,
+    useNavbarSettings,
+} from "components";
 import deepmerge from "deepmerge";
 import { FC, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT, UpdateIssueT } from "types";
-import { Routes, toastApiError } from "utils";
+import { toastApiError } from "utils";
 import IssueViewComponent from "../components/issue/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
 
 const IssueView: FC = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const { issueId } = routeApi.useParams();
     const dispatch = useAppDispatch();
+    const { setAction } = useNavbarSettings();
 
     const { data, isLoading, error } = issueApi.useGetIssueQuery(issueId);
 
@@ -53,14 +63,27 @@ const IssueView: FC = () => {
     useEffect(() => {
         if (issue && issue.id_readable && issue.id_readable !== issueId) {
             navigate({
-                to: Routes.issues.issue(
-                    issue.id_readable,
-                    slugify(issue.subject),
-                ),
+                to: "/issues/$issueId/$subject",
+                params: {
+                    issueId,
+                    subject: slugify(issue.subject),
+                },
                 replace: true,
             });
         }
     }, [issue]);
+
+    useEffect(() => {
+        setAction(
+            <Link to="/issues/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("issues.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
 
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;

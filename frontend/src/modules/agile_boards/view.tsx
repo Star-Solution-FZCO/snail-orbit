@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
@@ -8,12 +9,14 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { formatErrorMessages, toastApiError } from "utils";
+import { Link, NavbarActionButton, useNavbarSettings } from "../../components";
+import { AgileBoardT } from "../../types";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
@@ -28,6 +31,8 @@ const routeApi = getRouteApi("/_authenticated/agiles/$boardId");
 const AgileBoardView = () => {
     const { t } = useTranslation();
     const { boardId } = routeApi.useParams();
+    const { setAction } = useNavbarSettings();
+    const navigate = useNavigate();
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -43,6 +48,18 @@ const AgileBoardView = () => {
         [agileBoard],
     );
 
+    useEffect(() => {
+        setAction(
+            <Link to="/agiles/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("agileBoards.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
+
     if (error) {
         return (
             <Container sx={{ px: 4, pb: 4 }} disableGutters>
@@ -57,6 +74,13 @@ const AgileBoardView = () => {
     useEffect(() => {
         setLastViewBoardId(boardId);
     }, []);
+
+    const handleBoardSelect = useCallback(
+        (board: AgileBoardT) => {
+            navigate({ to: "/agiles/$boardId", params: { boardId: board.id } });
+        },
+        [navigate],
+    );
 
     if (!agileBoard) return null;
 
@@ -83,7 +107,7 @@ const AgileBoardView = () => {
                 >
                     <AgileBoardSelect
                         value={agileBoard}
-                        onChange={console.log}
+                        onChange={handleBoardSelect}
                     />
 
                     <TextField
