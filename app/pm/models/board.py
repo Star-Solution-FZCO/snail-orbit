@@ -40,6 +40,7 @@ class Board(Document):
     ui_settings: Annotated[dict, Field(default_factory=dict)]
     created_by: UserLinkField
     permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
+    favorite_of: Annotated[list[PydanticObjectId], Field(default_factory=list)]
 
     def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
         return any(p.target.id == target.id for p in self.permissions)
@@ -94,6 +95,9 @@ class Board(Document):
             user=user,
             required_permission=required_permission,
         )
+
+    def is_favorite_of(self, user_id: PydanticObjectId) -> bool:
+        return user_id in self.favorite_of
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
