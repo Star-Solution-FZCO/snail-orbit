@@ -37,7 +37,7 @@ class Board(Document):
     issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
-    ui_settings: dict = Field(default_factory=dict)
+    ui_settings: Annotated[dict, Field(default_factory=dict)]
     created_by: UserLinkField
     permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
 
