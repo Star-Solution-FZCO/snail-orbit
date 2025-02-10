@@ -19,6 +19,7 @@ router = APIRouter(
 
 class Profile(UserOutput):
     is_admin: bool
+    ui_settings: dict
 
     @classmethod
     def from_obj(cls, obj: m.User) -> Self:
@@ -29,10 +30,11 @@ class Profile(UserOutput):
             is_active=obj.is_active,
             _use_external_avatar=obj.use_external_avatar,
             is_admin=obj.is_admin,
+            ui_settings=obj.ui_settings,
         )
 
 
 @router.get('/')
-async def add_token() -> SuccessPayloadOutput[Profile]:
+async def get_profile() -> SuccessPayloadOutput[Profile]:
     user_ctx = current_user()
     return SuccessPayloadOutput(payload=Profile.from_obj(user_ctx.user))
