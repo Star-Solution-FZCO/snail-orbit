@@ -61,6 +61,7 @@ class BoardOutput(BaseModel):
     ui_settings: dict
     created_by: UserOutput
     permissions: list[PermissionOutput]
+    is_favorite: bool
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
@@ -92,6 +93,7 @@ class BoardOutput(BaseModel):
                 PermissionOutput.from_obj(p)
                 for p in obj.filter_permissions(user_ctx.user)
             ],
+            is_favorite=obj.is_favorite_of(user_ctx.user.id),
         )
 
 
@@ -759,6 +761,40 @@ async def get_board_permissions(
             for perm in board.permissions[query.offset : query.offset + query.limit]
         ],
     )
+
+
+@router.post('/{board_id}/favorite')
+async def favorite_board(
+    board_id: PydanticObjectId,
+) -> SuccessPayloadOutput[BoardOutput]:
+    user_ctx = current_user()
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+    if board.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Board already in favorites')
+    board.favorite_of.append(user_ctx.user.id)
+    await board.save_changes()
+    return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
+
+
+@router.post('/{board_id}/unfavorite')
+async def unfavorite_board(
+    board_id: PydanticObjectId,
+) -> SuccessPayloadOutput[BoardOutput]:
+    user_ctx = current_user()
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+    if not board.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Board is not in favorites')
+    board.favorite_of.remove(user_ctx.user.id)
+    await board.save_changes()
+    return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
 
 
 def _intersect_custom_fields(
