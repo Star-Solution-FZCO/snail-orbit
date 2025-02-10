@@ -141,12 +141,26 @@ async def list_boards(
 ) -> BaseListOutput[BoardOutput]:
     user_ctx = current_user()
     filter_query = m.Board.get_filter_query(user=user_ctx.user)
-    q = m.Board.find(filter_query).sort(m.Board.name)
-    return await BaseListOutput.make_from_query(
-        q,
+    q = m.Board.aggregate(
+        [
+            {'$match': filter_query},
+            {
+                '$addFields': {
+                    'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']}
+                }
+            },
+            {'$sort': {'is_favorite': -1, 'name': 1}},
+            {'$skip': query.offset},
+            {'$limit': query.limit},
+        ],
+        projection_model=m.Board,
+    )
+    cnt = await m.Board.find(filter_query).count()
+    return BaseListOutput.make(
+        items=[BoardOutput.from_obj(board) async for board in q],
+        count=cnt,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=BoardOutput.from_obj,
     )
 
 
