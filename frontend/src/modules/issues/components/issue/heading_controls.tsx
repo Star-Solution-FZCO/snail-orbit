@@ -3,6 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
+import { Link } from "components";
 import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +13,6 @@ import { issueToCreateIssue } from "store/utils/issue";
 import { slugify } from "transliteration";
 import type { IssueT } from "types";
 import { toastApiError } from "utils";
-import { Link } from "../../../../components";
 import { DeleteIssueDialog } from "./delete_dialog";
 import { HeadingTagButton } from "./heading_tag_button";
 

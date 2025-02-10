@@ -13,10 +13,10 @@ import type {
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
+    TagT,
     UpdateCommentT,
     UpdateIssueT,
 } from "types";
-import type { TagT } from "../../types/tag";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
