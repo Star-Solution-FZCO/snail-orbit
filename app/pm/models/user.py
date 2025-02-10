@@ -164,6 +164,7 @@ class User(Document):
     groups: Annotated[list[GroupLinkField], Field(default_factory=list)]
     origin: UserOriginType = UserOriginType.LOCAL
     avatar_type: UserAvatarType = UserAvatarType.DEFAULT
+    ui_settings: Annotated[dict, Field(default_factory=dict)]
 
     @property
     def use_external_avatar(self) -> bool:
