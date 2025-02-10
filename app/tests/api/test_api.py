@@ -191,22 +191,49 @@ async def test_api_v1_project_subscription(
 
 
 @pytest.mark.asyncio
-async def test_api_v1_profile_get(
+async def test_api_v1_profile_and_ui_settings(
     test_client: 'TestClient', create_initial_admin: tuple[str, str]
 ) -> None:
     admin_id, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
+
+    expected_profile_payload = {
+        'name': 'Test Admin',
+        'email': 'test_admin@localhost.localdomain',
+        'is_admin': True,
+        'id': admin_id,
+        'is_active': True,
+        'avatar': f'/api/avatar/{gravatar_like_hash("test_admin@localhost.localdomain")}',
+        'ui_settings': {},
+    }
+
+    response = test_client.get('/api/v1/profile', headers=headers)
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': expected_profile_payload,
+    }
+
+    ui_settings_payload = {'ui_settings': {'test_key': 'test_value'}}
+
+    response = test_client.put(
+        '/api/v1/settings/ui_settings',
+        headers=headers,
+        json=ui_settings_payload,
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': ui_settings_payload,
+    }
+
     response = test_client.get('/api/v1/profile', headers=headers)
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
         'payload': {
-            'name': 'Test Admin',
-            'email': 'test_admin@localhost.localdomain',
-            'is_admin': True,
-            'id': admin_id,
-            'is_active': True,
-            'avatar': f'/api/avatar/{gravatar_like_hash("test_admin@localhost.localdomain")}',
+            **expected_profile_payload,
+            **ui_settings_payload,
         },
     }
 
