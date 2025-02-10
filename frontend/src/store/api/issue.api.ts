@@ -12,6 +12,7 @@ import type {
     IssueT,
     ListQueryParams,
     ListResponse,
+    ListSelectQueryParams,
     UpdateCommentT,
     UpdateIssueT,
 } from "types";
@@ -211,6 +212,15 @@ export const issueApi = createApi({
                 method: "POST",
             }),
             invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
+        }),
+        listSelectLinkableIssues: build.query<
+            ListResponse<IssueT>,
+            { id: string; params?: ListSelectQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `issue/${id}/link/target/select`,
+                params,
+            }),
         }),
         linkIssue: build.mutation<
             ApiResponse<IssueT>,

@@ -114,7 +114,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     });
 
     const [fetchIssues, { data: issuesData, isLoading, isFetching }] =
-        issueApi.useLazyListIssuesQuery();
+        issueApi.useLazyListSelectLinkableIssuesQuery();
     const [linkIssue, { isLoading: linkIssueLoading }] =
         issueApi.useLinkIssueMutation();
 
@@ -125,10 +125,12 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     const handleSearch = useCallback(() => {
         const newParams = {
             ...initialQueryParams,
-            q: query,
+            search: query,
         };
         updateListQueryParams(newParams);
-        fetchIssues(newParams).unwrap().catch(toastApiError);
+        fetchIssues({ id: issueId, params: newParams })
+            .unwrap()
+            .catch(toastApiError);
     }, [query]);
 
     const handleKeyDownSearchField = useCallback(
@@ -144,18 +146,24 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
         setQuery("");
         const newParams = {
             ...initialQueryParams,
-            q: undefined,
+            search: undefined,
         };
         updateListQueryParams(newParams);
-        fetchIssues(newParams).unwrap().catch(toastApiError);
+        fetchIssues({ id: issueId, params: newParams })
+            .unwrap()
+            .catch(toastApiError);
     };
 
     const handleChangePagination = (params: Partial<ListQueryParams>) => {
         updateListQueryParams(params);
+        const newParams = {
+            ...listQueryParams,
+            ...params,
+        };
         fetchIssues(
             {
-                ...listQueryParams,
-                ...params,
+                id: issueId,
+                params: newParams,
             },
             true,
         );
@@ -199,12 +207,14 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
 
     useEffect(() => {
         if (open) {
-            fetchIssues(initialQueryParams).unwrap().catch(toastApiError);
+            fetchIssues({ id: issueId, params: initialQueryParams })
+                .unwrap()
+                .catch(toastApiError);
         }
         return () => {
             open && dispatch(closeIssueLinks());
         };
-    }, [open]);
+    }, [open, issueId]);
 
     if (!open) return null;
 
