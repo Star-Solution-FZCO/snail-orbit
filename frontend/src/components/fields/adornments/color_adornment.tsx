@@ -1,7 +1,7 @@
 import { Box, styled } from "@mui/material";
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
-import { getContrastText } from "../../../theme/contrast-text";
+import { getContrastText } from "theme/contrast-text";
 
 export type ColorAdornmentProps = {
     color: string;

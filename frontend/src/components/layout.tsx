@@ -7,17 +7,18 @@ const Layout = () => {
     return (
         <Box
             sx={{
-                display: "flex",
                 minHeight: "100vh",
-                flexDirection: "column",
+                display: "flex",
             }}
         >
             <PageTitle title="Snail Orbit" />
 
             <NavbarSettingsContextProvider>
-                <NavBar />
+                <Box display="flex" flexDirection="column" flex={1}>
+                    <NavBar />
 
-                <Outlet />
+                    <Outlet />
+                </Box>
             </NavbarSettingsContextProvider>
         </Box>
     );
