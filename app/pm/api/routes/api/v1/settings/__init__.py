@@ -5,6 +5,7 @@ from pm.api.utils.router import APIRouter
 
 from .api_token import router as api_token_router
 from .mfa import router as mfa_router
+from .ui_settings import router as ui_settings_router
 
 __all__ = ('router',)
 
@@ -15,3 +16,4 @@ router = APIRouter(
 )
 router.include_router(api_token_router)
 router.include_router(mfa_router)
+router.include_router(ui_settings_router)
