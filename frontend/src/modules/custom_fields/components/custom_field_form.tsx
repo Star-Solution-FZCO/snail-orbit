@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -13,7 +14,7 @@ import {
     TextField,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import type { FC } from "react";
+import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { CustomFieldOptionT, CustomFieldT } from "types";
@@ -65,12 +66,14 @@ const getDefaultValue = (value: unknown) => {
 interface ICustomFieldFormProps {
     defaultValues?: CustomFieldT;
     onSubmit: (formData: CustomFieldFormData) => void;
+    onDelete?: () => void;
     loading?: boolean;
 }
 
 const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     defaultValues,
     onSubmit,
+    onDelete,
     loading,
 }) => {
     const { t } = useTranslation();
@@ -239,6 +242,17 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                         {t("cancel")}
                     </Button>
                 </Link>
+
+                {onDelete && (
+                    <Button
+                        onClick={onDelete}
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                    >
+                        {t("delete")}
+                    </Button>
+                )}
             </Box>
         </Box>
     );

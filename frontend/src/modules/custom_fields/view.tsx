@@ -5,7 +5,7 @@ import {
     Divider,
     Typography,
 } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, Link } from "components";
 import type { FC } from "react";
 import { useState } from "react";
@@ -20,6 +20,7 @@ import { CustomFieldForm } from "./components/custom_field_form";
 import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
 import { CustomFieldUserOptionsEditor } from "./components/custom_field_user_options_editor";
 import { CustomFieldVersionOptionsEditor } from "./components/custom_field_version_options_editor";
+import { DeleteCustomFieldDialog } from "./components/delete_custom_field_dialog";
 
 const routeApi = getRouteApi("/_authenticated/custom-fields/$customFieldId");
 
@@ -85,6 +86,7 @@ const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
 
 const CustomFieldView = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { customFieldId } = routeApi.useParams();
 
     const { data, error } =
@@ -92,8 +94,11 @@ const CustomFieldView = () => {
 
     const [updateCustomField, { isLoading }] =
         customFieldsApi.useUpdateCustomFieldMutation();
+    const [deleteCustomField, { isLoading: isDeleting }] =
+        customFieldsApi.useDeleteCustomFieldMutation();
 
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
 
     if (error) {
@@ -113,6 +118,16 @@ const CustomFieldView = () => {
         if (!formData.default_value) formData.default_value = null;
         setFormData(formData);
         setConfirmDialogOpen(true);
+    };
+
+    const handleDelete = () => {
+        deleteCustomField(customField.id)
+            .unwrap()
+            .then(() => {
+                navigate({ to: "/custom-fields" });
+                toast.success(t("customFields.delete.success"));
+            })
+            .catch(toastApiError);
     };
 
     const handleConfirm = () => {
@@ -144,6 +159,7 @@ const CustomFieldView = () => {
                 <Box flex={1} pt={isNonPrimitiveType(customField) ? "44px" : 0}>
                     <CustomFieldForm
                         onSubmit={handleSubmit}
+                        onDelete={() => setDeleteDialogOpen(true)}
                         defaultValues={customField}
                         loading={isLoading}
                     />
@@ -167,6 +183,12 @@ const CustomFieldView = () => {
                 open={confirmDialogOpen}
                 onSubmit={handleConfirm}
                 onClose={handleCloseConfirmDialog}
+            />
+
+            <DeleteCustomFieldDialog
+                open={deleteDialogOpen}
+                onSubmit={handleDelete}
+                onClose={() => setDeleteDialogOpen(false)}
             />
         </Container>
     );

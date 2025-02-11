@@ -130,6 +130,8 @@
   "customFields.userOrGroup.title": "Users or groups",
   "customFields.users.empty": "No users",
   "customFields.users.title": "Users",
+  "customFields.delete.warning": "Are you sure you want to delete this custom field? This action cannot be undone.",
+  "customFields.delete.success": "Custom Field deleted successfully",
   "delete": "Delete",
   "description": "Description",
   "download": "Download",
