@@ -189,6 +189,7 @@ const CustomFieldView = () => {
                 open={deleteDialogOpen}
                 onSubmit={handleDelete}
                 onClose={() => setDeleteDialogOpen(false)}
+                loading={isDeleting}
             />
         </Container>
     );
