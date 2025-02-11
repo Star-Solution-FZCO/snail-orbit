@@ -13,17 +13,13 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Link, NavbarActionButton, useNavbarSettings } from "components";
 import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
-import {
-    Link,
-    NavbarActionButton,
-    useNavbarSettings,
-} from "../../../components";
 import { IssueRowViewParams } from "../components/list/issue_row/issue_row.types";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/QueryBuilder/QueryBuilder";

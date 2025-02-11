@@ -7,5 +7,6 @@ export * from "./group";
 export * from "./issue";
 export * from "./project";
 export * from "./role";
+export * from "./tag";
 export * from "./user";
 export * from "./workflow";

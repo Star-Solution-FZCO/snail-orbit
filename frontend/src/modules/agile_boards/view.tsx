@@ -10,13 +10,13 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Link, NavbarActionButton, useNavbarSettings } from "components";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
+import { AgileBoardT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
-import { Link, NavbarActionButton, useNavbarSettings } from "../../components";
-import { AgileBoardT } from "../../types";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";

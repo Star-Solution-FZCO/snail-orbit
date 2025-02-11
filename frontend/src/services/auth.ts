@@ -48,14 +48,11 @@ export const mfaAuthenticate = async (code: string) => {
         method: "POST",
         body: formData,
         credentials: "include",
-        redirect: "manual",
+        redirect: "follow",
     });
 
-    if (response.status === 302) {
-        window.location.href = response.headers.get("Location") || "/";
-        return;
+    if (!response.ok) {
+        const jsonResponse = await response.json();
+        return Promise.reject(jsonResponse);
     }
-
-    const jsonResponse = await response.json();
-    return response.ok ? jsonResponse : Promise.reject(jsonResponse);
 };
