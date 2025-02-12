@@ -1,17 +1,21 @@
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LinkIcon from "@mui/icons-material/Link";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
 import {
     Box,
-    Button,
     Collapse,
     Divider,
     IconButton,
+    Menu,
+    MenuItem,
     Link as MuiLink,
     Typography,
 } from "@mui/material";
 import { Link } from "components";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import {
     issueApi,
     toggleIssueLinks,
@@ -19,7 +23,7 @@ import {
     useAppSelector,
 } from "store";
 import { slugify } from "transliteration";
-import { IssueLinkT, IssueLinkTypeT } from "types";
+import { IssueLinkT, IssueLinkTypeT, linkTypes } from "types";
 import { toastApiError } from "utils";
 
 const groupLinksByType = (links: IssueLinkT[]) => {
@@ -36,14 +40,48 @@ const groupLinksByType = (links: IssueLinkT[]) => {
 };
 
 interface IIssueLinkCardProps {
+    issueId: string;
     link: IssueLinkT;
     onRemove: (linkId: string) => void;
 }
 
-const IssueLinkCard: FC<IIssueLinkCardProps> = ({ link, onRemove }) => {
+const IssueLinkCard: FC<IIssueLinkCardProps> = ({
+    issueId,
+    link,
+    onRemove,
+}) => {
     const { t } = useTranslation();
 
-    const { issue, id } = link;
+    const { issue, id, type } = link;
+
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const [updateIssueLink] = issueApi.useUpdateIssueLinkMutation();
+
+    const handleClickChangeLinkType = (
+        event: React.MouseEvent<HTMLButtonElement>,
+    ) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+    };
+
+    const handleClickLinkType = (linkType: IssueLinkTypeT) => {
+        updateIssueLink({
+            id: issueId,
+            interlink_id: id,
+            type: linkType,
+        })
+            .unwrap()
+            .then(() => {
+                handleCloseMenu();
+                toast.success(t("issues.links.changeType.success"));
+            })
+            .catch(toastApiError);
+    };
 
     return (
         <Box
@@ -57,9 +95,6 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({ link, onRemove }) => {
                 borderRadius: 1,
                 "&:hover": {
                     backgroundColor: "action.hover",
-                    "& .remove-btn": {
-                        display: "block",
-                    },
                 },
             }}
         >
@@ -91,19 +126,48 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({ link, onRemove }) => {
                 </Link>
             </Box>
 
-            <Button
-                className="remove-btn"
-                sx={{
-                    display: "none",
-                    height: "32px",
-                }}
-                onClick={() => onRemove(id)}
-                variant="outlined"
-                size="small"
-                color="info"
-            >
-                {t("issues.links.remove")}
-            </Button>
+            <Box display="flex" alignItems="center" gap={1}>
+                <IconButton
+                    onClick={handleClickChangeLinkType}
+                    size="small"
+                    color="info"
+                >
+                    <ChangeCircleIcon />
+                </IconButton>
+
+                <Menu
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleCloseMenu}
+                    anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                    }}
+                    transformOrigin={{
+                        vertical: "top",
+                        horizontal: "right",
+                    }}
+                >
+                    {linkTypes
+                        .filter((linkType) => linkType !== type)
+                        .map((linkType) => (
+                            <MenuItem
+                                value={linkType}
+                                onClick={() => handleClickLinkType(linkType)}
+                            >
+                                {t(`issues.links.type.${linkType}`)}
+                            </MenuItem>
+                        ))}
+                </Menu>
+
+                <IconButton
+                    onClick={() => onRemove(id)}
+                    size="small"
+                    color="error"
+                >
+                    <LinkOffIcon />
+                </IconButton>
+            </Box>
         </Box>
     );
 };
@@ -215,6 +279,7 @@ const IssueLinks: FC<IIssueLinksProps> = ({ issueId, links }) => {
                                 {linkItems.map((link) => (
                                     <IssueLinkCard
                                         key={link.id}
+                                        issueId={issueId}
                                         link={link}
                                         onRemove={handleClickRemoveLink}
                                     />

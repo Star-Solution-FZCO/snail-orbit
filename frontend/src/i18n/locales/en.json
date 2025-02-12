@@ -206,7 +206,7 @@
   "issues.links.add": "Add",
   "issues.links.add.title": "Add links",
   "issues.links.linkedAs": "linked as",
-  "issues.links.remove": "Remove link",
+  "issues.links.changeType.success": "Link type changed successfully",
   "issues.links.search.label": "Find link target",
   "issues.links.search.noResults": "No results",
   "issues.links.search.placeholder": "Type to find matching issues or enter issue ID",
