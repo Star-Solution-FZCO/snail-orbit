@@ -74,7 +74,7 @@ class IssueListParams(IssueSearchParams):
 
 
 class IssueInterlinkCreate(BaseModel):
-    target_issue: PydanticObjectId | str
+    target_issues: list[PydanticObjectId | str]
     type: m.IssueInterlinkTypeT
 
 
@@ -169,9 +169,11 @@ async def create_draft(
     obj = m.IssueDraft(
         subject=body.subject,
         text=body.text,
-        project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug)
-        if project
-        else None,
+        project=(
+            m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug)
+            if project
+            else None
+        ),
         fields=validated_fields,
         attachments=[
             m.IssueAttachment(
@@ -690,7 +692,7 @@ async def unsubscribe_issue(
 
 
 @router.post('/{issue_id_or_alias}/link')
-async def link_issue(
+async def link_issues(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueInterlinkCreate,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -703,44 +705,49 @@ async def link_issue(
         obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
     )
 
-    target_obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(
-        body.target_issue
-    )
-    if not target_obj:
-        raise HTTPException(HTTPStatus.NOT_FOUND, 'Target issue not found')
+    target_issues: list[m.Issue] = await m.Issue.find(
+        bo.Or(
+            bo.In(m.Issue.id, body.target_issues),
+            bo.In(m.Issue.aliases, body.target_issues),
+        )
+    ).to_list()
 
-    user_ctx.validate_issue_permission(
-        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
-    )
+    if not target_issues:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Target issues not found')
 
-    if obj.id == target_obj.id:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Cannot link issue to itself')
-
-    if il := next((il for il in obj.interlinks if il.issue.id == target_obj.id), None):
-        raise HTTPException(
-            HTTPStatus.CONFLICT, f'Issue already linked as {il.link_type}'
+    for target_issue in target_issues:
+        user_ctx.validate_issue_permission(
+            target_issue, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
         )
 
-    il_id = uuid4()
+        if obj.id == target_issue.id:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Cannot link issue to itself')
 
-    obj.interlinks.append(
-        m.IssueInterlink(
-            id=il_id,
-            issue=m.IssueLinkField.from_obj(target_obj),
-            type=body.type,
+        if any(il.issue.id == target_issue.id for il in obj.interlinks):
+            raise HTTPException(
+                HTTPStatus.CONFLICT, f'Issue already linked to {target_issue.id}'
+            )
+
+        il_id = uuid4()
+
+        obj.interlinks.append(
+            m.IssueInterlink(
+                id=il_id,
+                issue=m.IssueLinkField.from_obj(target_issue),
+                type=body.type,
+            )
         )
-    )
-    target_obj.interlinks.append(
-        m.IssueInterlink(
-            id=il_id,
-            issue=m.IssueLinkField.from_obj(obj),
-            type=body.type.inverse(),
+
+        target_issue.interlinks.append(
+            m.IssueInterlink(
+                id=il_id,
+                issue=m.IssueLinkField.from_obj(obj),
+                type=body.type.inverse(),
+            )
         )
-    )
+        await target_issue.replace()
 
     await obj.replace()
-    await target_obj.replace()
-
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 

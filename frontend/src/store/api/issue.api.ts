@@ -224,7 +224,7 @@ export const issueApi = createApi({
         }),
         linkIssue: build.mutation<
             ApiResponse<IssueT>,
-            { id: string; target_issue: string; type: IssueLinkTypeT }
+            { id: string; target_issues: string[]; type: IssueLinkTypeT }
         >({
             query: ({ id, ...body }) => ({
                 url: `issue/${id}/link`,
