@@ -30,6 +30,8 @@ const renderDiff = (oldText: string, newText: string) => {
             sx={{
                 fontSize: "inherit",
                 whiteSpace: "pre-wrap",
+                wordBreak: "break-all",
+
                 "& ins": {
                     textDecoration: "none",
                     backgroundColor: "rgba(54,89,71)",
