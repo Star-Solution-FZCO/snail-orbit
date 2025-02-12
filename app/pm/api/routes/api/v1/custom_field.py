@@ -203,7 +203,7 @@ async def create_custom_field(
     )
     if not existed_field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
-    field_cls = existed_field.type.get_field_class()
+    field_cls = m.get_cf_class(existed_field.type)
 
     obj = field_cls(
         gid=existed_field.gid,
@@ -231,7 +231,7 @@ async def create_custom_field_group(
 ) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
     if await m.CustomField.find(m.CustomField.name == body.name).exists():
         raise HTTPException(HTTPStatus.CONFLICT, 'Custom field group already exists')
-    field_cls = body.type.get_field_class()
+    field_cls = m.get_cf_class(body.type)
     obj = field_cls(
         gid=str(uuid4()),
         name=body.name,
@@ -355,7 +355,7 @@ async def add_enum_option(
     if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.EnumField(
+        m.EnumOption(
             id=str(uuid4()),
             value=body.value,
             color=body.color,
@@ -512,7 +512,7 @@ async def add_state_option(
     if any(opt.state == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.StateField(
+        m.StateOption(
             id=str(uuid4()),
             state=body.value,
             is_resolved=body.is_resolved,
@@ -607,7 +607,7 @@ async def add_version_option(
     if any(opt.version == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.VersionField(
+        m.VersionOption(
             id=str(uuid4()),
             version=body.value,
             release_date=datetime.combine(body.release_date, datetime.min.time())

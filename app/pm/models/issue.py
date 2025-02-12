@@ -16,9 +16,9 @@ from .custom_fields import (
     CustomFieldTypeT,
     CustomFieldValue,
     CustomFieldValueT,
-    EnumField,
-    StateField,
-    VersionField,
+    EnumOption,
+    StateOption,
+    VersionOption,
 )
 from .project import Project, ProjectLinkField
 from .tag import Tag, TagLinkField
@@ -338,7 +338,7 @@ class Issue(Document):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionField | StateField | EnumField,
+        option: VersionOption | StateOption | EnumOption,
     ) -> None:
         if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
             await cls.find(
@@ -580,7 +580,7 @@ class IssueDraft(Document):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionField | StateField | EnumField,
+        option: VersionOption | StateOption | EnumOption,
     ) -> None:
         if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
             await cls.find(
