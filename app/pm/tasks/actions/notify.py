@@ -20,6 +20,10 @@ def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
         pass
 
 
+def sanitize_issue_subject(subject: str) -> str:
+    return subject.replace('[', '\\[').replace(']', '\\]')
+
+
 async def notify_by_pararam(
     action: Literal['create', 'update', 'delete'],
     issue_subject: str,
@@ -31,7 +35,7 @@ async def notify_by_pararam(
         return
     pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
     message = (
-        f'Issue [{issue_id_readable}: {issue_subject}]'
+        f'Issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]'
         f'({urljoin(CONFIG.PUBLIC_BASE_URL, f'/issues/{issue_id_readable}')}) was {action}d.'
     )
     recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
