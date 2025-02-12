@@ -22,7 +22,7 @@ import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi, projectApi } from "store";
+import { projectApi } from "store";
 import type { CustomFieldT, ProjectDetailT } from "types";
 import {
     formatErrorMessages,
@@ -36,13 +36,16 @@ interface ICustomFieldListProps {
 
 const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
     const { t } = useTranslation();
-    const { id: projectId, custom_fields } = project;
+    const { id: projectId } = project;
 
     const {
         data: customFields,
         isLoading: customFieldsLoading,
         error,
-    } = customFieldsApi.useListCustomFieldsQuery(noLimitListQueryParams);
+    } = projectApi.useListProjectAvailableCustomFieldsQuery({
+        id: projectId,
+        ...noLimitListQueryParams,
+    });
 
     const [addProjectCustomField, { isLoading: addProjectCustomFieldLoading }] =
         projectApi.useAddProjectCustomFieldMutation();
@@ -56,14 +59,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
             .catch(toastApiError);
     };
 
-    const filteredFields = useMemo(() => {
-        if (!customFields || !customFields.success || !customFields.payload)
-            return [];
-        const usedFields = new Set(custom_fields.map((field) => field.id));
-        return customFields.payload.items.filter(
-            (field) => !usedFields.has(field.id),
-        );
-    }, [customFields]);
+    const fields = customFields?.payload.items || [];
 
     if (customFieldsLoading)
         return (
@@ -91,7 +87,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
-                    {filteredFields.length} {t("projects.customFields.fields")}
+                    {fields.length} {t("projects.customFields.fields")}
                 </Typography>
 
                 {addProjectCustomFieldLoading && (
@@ -108,7 +104,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
                 flex={1}
                 overflow="auto"
             >
-                {filteredFields.map((field) => (
+                {fields.map((field) => (
                     <Box
                         key={field.id}
                         display="flex"

@@ -85,6 +85,15 @@ export const customFieldsApi = createApi({
                 { type: "CustomFields", id },
             ],
         }),
+        deleteCustomField: build.mutation<ApiResponse<{ id: string }>, string>({
+            query: (id) => ({
+                url: `custom_field/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error) => [
+                { type: "CustomFields", id: "LIST" },
+            ],
+        }),
         createCustomFieldEnumOption: build.mutation<
             ApiResponse<CustomFieldT>,
             { id: string } & CreateEnumOptionT
