@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
     ApiResponse,
     CreateProjectT,
+    CustomFieldT,
     ListQueryParams,
     ListResponse,
     ProjectDetailT,
@@ -94,6 +95,18 @@ export const projectApi = createApi({
                 method: "DELETE",
             }),
             invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
+        listProjectAvailableCustomFields: build.query<
+            ListResponse<CustomFieldT>,
+            { id: string } & ListQueryParams
+        >({
+            query: ({ id, ...params }) => ({
+                url: `project/${id}/field/available/select`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
                 { type: "Projects", id },
             ],
         }),
