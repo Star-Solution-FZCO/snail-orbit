@@ -2,6 +2,7 @@ import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { Box, useTheme } from "@mui/material";
 import {
     Autoformat,
+    AutoLink,
     BlockQuote,
     Bold,
     ClassicEditor,
@@ -33,6 +34,7 @@ import { useCKEditorStyles } from "./utils";
 const plugins = [
     Essentials,
     Autoformat,
+    AutoLink,
     BlockQuote,
     Bold,
     Code,
@@ -118,6 +120,7 @@ const MDEditor: FC<IMDEditorProps> = ({
                 },
                 "& a": {
                     color: theme.palette.primary.main,
+                    wordBreak: "break-word",
                 },
             }}
         >
@@ -166,13 +169,29 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                 "& .markdown-body": {
                     backgroundColor: "inherit",
                     color: theme.palette.text.primary,
+                    wordBreak: "break-all",
                     "& a": {
                         color: theme.palette.primary.main,
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 1,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                     },
                 },
             })}
         >
-            <Markdown className="markdown-body" remarkPlugins={[remarkGfm]}>
+            <Markdown
+                className="markdown-body"
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    a: ({ node, ...props }) => (
+                        <a {...props} target="_blank" rel="noopener noreferrer">
+                            {props.children}
+                        </a>
+                    ),
+                }}
+            >
                 {text}
             </Markdown>
         </Box>
