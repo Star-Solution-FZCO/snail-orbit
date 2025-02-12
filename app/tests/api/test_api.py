@@ -1209,7 +1209,7 @@ async def test_api_v1_issue_link(
             headers=headers,
             json={
                 'type': link_type[0],
-                'target_issue': issues[1]['id'],
+                'target_issues': [issues[1]['id']],
             },
         )
         assert response.status_code == 200
