@@ -251,6 +251,19 @@ export const issueApi = createApi({
                 { type: "IssueHistories", id },
             ],
         }),
+        updateIssueLink: build.mutation<
+            ApiResponse<IssueT>,
+            { id: string; interlink_id: string; type: IssueLinkTypeT }
+        >({
+            query: ({ id, interlink_id, ...body }) => ({
+                url: `issue/${id}/link/${interlink_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Issues", id },
+            ],
+        }),
         getIssueSpentTime: build.query<ApiResponse<IssueSpentTimeT>, string>({
             query: (id) => `issue/${id}/spent_time`,
             providesTags: (_result, _error, id) => [
