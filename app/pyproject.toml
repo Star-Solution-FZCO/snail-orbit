@@ -2,7 +2,7 @@
 name = "snail-orbit"
 description = "Snail Orbit project manager"
 authors = [
-    { name = "StarSoultion Dev Team", "email" = "dev@starsolution.team>" },
+    { name = "StarSoultion Dev Team", "email" = "dev@starsolution.team" },
 ]
 readme = "README.md"
 dynamic = ["version"]
