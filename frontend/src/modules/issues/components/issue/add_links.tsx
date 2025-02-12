@@ -1,12 +1,11 @@
 import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
     Checkbox,
     CircularProgress,
-    Divider,
+    debounce,
     FormControl,
     IconButton,
     InputLabel,
@@ -122,34 +121,35 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
         setLinkType(event.target.value as IssueLinkTypeT);
     };
 
-    const handleSearch = useCallback(() => {
-        const newParams = {
-            ...initialQueryParams,
-            search: query,
-        };
-        updateListQueryParams(newParams);
-        fetchIssues({ id: issueId, params: newParams })
-            .unwrap()
-            .catch(toastApiError);
-    }, [query]);
-
-    const handleKeyDownSearchField = useCallback(
-        (event: React.KeyboardEvent) => {
-            if (event.key === "Enter") {
-                handleSearch();
-            }
-        },
-        [handleSearch],
+    const debouncedSearch = useCallback(
+        debounce((searchValue: string) => {
+            const newParams =
+                searchValue.length > 0
+                    ? {
+                          ...initialQueryParams,
+                          search: searchValue,
+                      }
+                    : initialQueryParams;
+            updateListQueryParams(newParams);
+            fetchIssues({ id: issueId, params: newParams })
+                .unwrap()
+                .catch(toastApiError);
+        }, 300),
+        [],
     );
+
+    const handleSearchTextField = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
+    };
 
     const handleClearSearchField = () => {
         setQuery("");
-        const newParams = {
-            ...initialQueryParams,
-            search: undefined,
-        };
-        updateListQueryParams(newParams);
-        fetchIssues({ id: issueId, params: newParams })
+        updateListQueryParams(initialQueryParams);
+        fetchIssues({ id: issueId, params: initialQueryParams })
             .unwrap()
             .catch(toastApiError);
     };
@@ -270,17 +270,12 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                     label={t("issues.links.search.label")}
                     placeholder={t("issues.links.search.placeholder")}
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={handleKeyDownSearchField}
+                    onChange={handleSearchTextField}
                     size="small"
                     slotProps={{
                         input: {
                             endAdornment: (
-                                <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    mr="-14px"
-                                >
+                                <Box display="flex" alignItems="center">
                                     {(isLoading || isFetching) && (
                                         <CircularProgress
                                             size={20}
@@ -296,15 +291,6 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                                             <CloseIcon />
                                         </IconButton>
                                     )}
-
-                                    <Divider orientation="vertical" flexItem />
-
-                                    <IconButton
-                                        onClick={handleSearch}
-                                        // disabled={!query}
-                                    >
-                                        <SearchIcon />
-                                    </IconButton>
                                 </Box>
                             ),
                         },
