@@ -33,7 +33,7 @@ class EnumOptionOutput(BaseModel):
     is_archived: bool = False
 
     @classmethod
-    def from_obj(cls, obj: m.EnumField) -> Self:
+    def from_obj(cls, obj: m.EnumOption) -> Self:
         return cls(
             uuid=obj.id,
             value=obj.value,
@@ -149,7 +149,7 @@ class StateOptionOutput(BaseModel):
     is_archived: bool = False
 
     @classmethod
-    def from_obj(cls, obj: m.StateField) -> Self:
+    def from_obj(cls, obj: m.StateOption) -> Self:
         return cls(
             uuid=obj.id,
             value=obj.state,
@@ -189,7 +189,7 @@ class VersionOptionOutput(BaseModel):
     is_archived: bool
 
     @classmethod
-    def from_obj(cls, obj: m.VersionField) -> Self:
+    def from_obj(cls, obj: m.VersionOption) -> Self:
         return cls(
             uuid=obj.id,
             value=obj.version,

@@ -33,11 +33,11 @@ CustomFieldValueOutT = (
     | datetime
     | UserOutput
     | list[UserOutput]
-    | m.EnumField
-    | list[m.EnumField]
-    | m.StateField
-    | m.VersionField
-    | list[m.VersionField]
+    | m.EnumOption
+    | list[m.EnumOption]
+    | m.StateOption
+    | m.VersionOption
+    | list[m.VersionOption]
     | PydanticObjectId
     | Any
     | None
