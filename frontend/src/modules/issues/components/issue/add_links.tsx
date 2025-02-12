@@ -106,7 +106,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
 
     const [linkType, setLinkType] = useState<IssueLinkTypeT>("related");
     const [query, setQuery] = useState<string>("");
-    const [selectedIssue, setSelectedIssue] = useState<IssueT | null>(null);
+    const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         ...initialQueryParams,
@@ -170,15 +170,20 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
     };
 
     const handleSelectIssue = (issue: IssueT) => {
-        setSelectedIssue(selectedIssue?.id === issue.id ? null : issue);
+        setSelectedIssues((prev) => {
+            if (prev.includes(issue.id_readable)) {
+                return prev.filter((i) => i !== issue.id_readable);
+            }
+            return [...prev, issue.id_readable];
+        });
     };
 
     const handleClickAddLink = () => {
-        if (!selectedIssue) return;
+        if (selectedIssues.length === 0) return;
 
         linkIssue({
             id: issueId,
-            target_issue: selectedIssue.id,
+            target_issues: selectedIssues,
             type: linkType,
         })
             .unwrap()
@@ -186,8 +191,8 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                 dispatch(closeIssueLinks());
                 updateListQueryParams({ offset: 0, q: "" });
                 setQuery("");
-                setSelectedIssue(null);
-                const message = `${selectedIssue.id_readable} ${t("issues.links.linkedAs")} "${linkType}" ${t("issues.links.to")} ${issueId}`;
+                setSelectedIssues([]);
+                const message = `${selectedIssues.join(", ")} ${t("issues.links.linkedAs")} "${linkType}" ${t("issues.links.to")} ${issueId}`;
                 toast.success(message);
             })
             .catch((error) => {
@@ -199,7 +204,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
         dispatch(closeIssueLinks());
         updateListQueryParams({ offset: 0, q: "" });
         setQuery("");
-        setSelectedIssue(null);
+        setSelectedIssues([]);
     };
 
     const issues = issuesData?.payload.items || [];
@@ -334,7 +339,9 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                                 key={issue.id}
                                 issue={issue}
                                 onSelect={handleSelectIssue}
-                                selected={selectedIssue?.id === issue.id}
+                                selected={selectedIssues.includes(
+                                    issue.id_readable,
+                                )}
                             />
                         ))}
 
@@ -362,7 +369,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                     size="small"
                     variant="outlined"
                     loading={linkIssueLoading}
-                    disabled={!selectedIssue}
+                    disabled={selectedIssues.length === 0}
                 >
                     {t("issues.links.add")}
                 </LoadingButton>
