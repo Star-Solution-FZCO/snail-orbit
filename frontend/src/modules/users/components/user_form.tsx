@@ -22,7 +22,8 @@ const userSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
     is_active: yup.boolean().required("form.validation.required"),
     is_admin: yup.boolean().required("form.validation.required"),
-    send_invite: yup.boolean().required("form.validation.required"),
+    send_email_invite: yup.boolean().required("form.validation.required"),
+    send_pararam_invite: yup.boolean().required("form.validation.required"),
 });
 
 type UserFormData = yup.InferType<typeof userSchema>;
@@ -54,7 +55,8 @@ const UserForm: FC<IUserFormProps> = ({
             name: "",
             is_active: true,
             is_admin: false,
-            send_invite: false,
+            send_email_invite: false,
+            send_pararam_invite: false,
             ...defaultValues,
         },
         resolver: yupResolver(userSchema),
@@ -129,23 +131,46 @@ const UserForm: FC<IUserFormProps> = ({
             />
 
             {!defaultValues && (
-                <Controller
-                    name="send_invite"
-                    control={control}
-                    render={({ field: { value, onChange } }) => (
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={value}
-                                    size="small"
-                                    disableRipple
-                                    onChange={(e) => onChange(e.target.checked)}
-                                />
-                            }
-                            label={t("users.form.sendInvite")}
-                        />
-                    )}
-                />
+                <>
+                    <Controller
+                        name="send_email_invite"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={value}
+                                        size="small"
+                                        disableRipple
+                                        onChange={(e) =>
+                                            onChange(e.target.checked)
+                                        }
+                                    />
+                                }
+                                label={t("users.form.sendEmailInvite")}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name="send_pararam_invite"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={value}
+                                        size="small"
+                                        disableRipple
+                                        onChange={(e) =>
+                                            onChange(e.target.checked)
+                                        }
+                                    />
+                                }
+                                label={t("users.form.sendPararamInvite")}
+                            />
+                        )}
+                    />
+                </>
             )}
 
             <Box display="flex" gap={1}>
