@@ -4,6 +4,7 @@ export * from "./auth_mfa";
 export * from "./custom_fields";
 export * from "./groups";
 export * from "./issues";
+export * from "./password_reset";
 export * from "./profile";
 export * from "./projects";
 export * from "./roles";
