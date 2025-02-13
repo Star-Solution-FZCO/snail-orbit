@@ -30,7 +30,7 @@ class SelectResult(Generic[T]):
 class SelectParams(BaseModel):
     limit: int = Query(10, ge=0, description='limit results')
     offset: int = Query(0, ge=0, description='offset')
-    search: str | None = Query(default='', description='Filter results by value')
+    search: str = Query(default='', description='Filter results by value')
 
 
 def _select(
