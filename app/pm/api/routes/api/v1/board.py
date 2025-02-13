@@ -523,7 +523,10 @@ async def move_issue(
             str(issue.project.id),
         )
         await send_event(
-            Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(issue.id)})
+            Event(
+                type=EventType.ISSUE_UPDATE,
+                data={'issue_id': str(issue.id), 'project_id': str(issue.project.id)},
+            )
         )
     board.move_issue(issue.id, after_issue.id if after_issue else None)
     await board.save_changes()

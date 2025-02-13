@@ -7,9 +7,11 @@ from beanie import PydanticObjectId
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
-import pm.models as m
+from pm.api.utils.query_params import (
+    pydantic_object_id_validator,
+    query_comma_separated_list_param,
+)
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueOutput
 from pm.config import CONFIG
 from pm.utils.events_bus import Event, EventType
 
@@ -21,10 +23,37 @@ __all__ = ('router',)
 router = APIRouter(prefix='/issue')
 
 
+MAP_SENT_EVENT_TYPE = {
+    EventType.ISSUE_CREATE: SentEventType.ISSUE_CREATE,
+    EventType.ISSUE_UPDATE: SentEventType.ISSUE_UPDATE,
+    EventType.ISSUE_DELETE: SentEventType.ISSUE_DELETE,
+}
+
+
+def _check_issue_filters(
+    issue_id: str,
+    project_id: str | None,
+    issue_ids: set[str] | None,
+    project_ids: set[str] | None,
+) -> bool:
+    if not issue_ids and not project_ids:
+        return True
+    if issue_ids and issue_id in issue_ids:
+        return True
+    if project_ids and project_id in project_ids:
+        return True
+    return False
+
+
 @with_ping
-async def issue_event_generator(
-    issue_id: PydanticObjectId,
+async def issues_event_generator(
+    issue_ids: list[PydanticObjectId] | None,
+    project_ids: list[PydanticObjectId] | None,
 ) -> AsyncGenerator[SentEventOutput, Any]:
+    issue_ids_ = {str(issue_id) for issue_id in issue_ids} if issue_ids else None
+    project_ids_ = (
+        {str(project_id) for project_id in project_ids} if project_ids else None
+    )
     client = aioredis.from_url(CONFIG.REDIS_EVENT_BUS_URL).pubsub()
     await client.subscribe('events')
     try:
@@ -32,28 +61,31 @@ async def issue_event_generator(
             if msg['type'] != 'message':
                 continue
             event = Event.from_bus_msg(msg['data'])
-            if event.type not in (EventType.ISSUE_UPDATE, EventType.ISSUE_DELETE):
+            if event.type not in MAP_SENT_EVENT_TYPE:
                 continue
-            if event.data.get('issue_id') != str(issue_id):
+            if not (issue_id := event.data.get('issue_id')):
                 continue
-            if event.type == EventType.ISSUE_UPDATE:
-                issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
-                if not issue:
-                    continue
-                yield SentEventOutput(
-                    type=SentEventType.ISSUE_UPDATE, data=IssueOutput.from_obj(issue)
-                )
+            project_id = event.data.get('project_id')
+            if not _check_issue_filters(issue_id, project_id, issue_ids_, project_ids_):
                 continue
-            if event.type == EventType.ISSUE_DELETE:
-                yield SentEventOutput(type=SentEventType.ISSUE_DELETE)
+            yield SentEventOutput(
+                type=MAP_SENT_EVENT_TYPE[event.type], data={'issue_id': issue_id}
+            )
     finally:
         await client.unsubscribe('events')
         await client.close()
 
 
-@router.get('/{issue_id}')
+@router.get('')
 async def get_issue_events(
-    issue_id: PydanticObjectId,
+    issue_ids: list[PydanticObjectId] | None = query_comma_separated_list_param(
+        'ids', required=False, single_value_validator=pydantic_object_id_validator
+    ),
+    project_ids: list[PydanticObjectId] | None = query_comma_separated_list_param(
+        'project_ids',
+        required=False,
+        single_value_validator=pydantic_object_id_validator,
+    ),
 ) -> StreamingResponse:
     if not CONFIG.REDIS_EVENT_BUS_URL:
         raise HTTPException(
@@ -61,5 +93,5 @@ async def get_issue_events(
             detail='Redis event bus is not configured',
         )
     return StreamingResponse(
-        issue_event_generator(issue_id), media_type='text/event-stream'
+        issues_event_generator(issue_ids, project_ids), media_type='text/event-stream'
     )
