@@ -426,7 +426,12 @@ async def create_issue_from_draft(
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
     await draft.delete()
-    await send_event(Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}))
+    await send_event(
+        Event(
+            type=EventType.ISSUE_CREATE,
+            data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+        )
+    )
     for a in obj.attachments:
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
@@ -516,7 +521,12 @@ async def create_issue(
         ) from err
     obj.aliases.append(await project.get_new_issue_alias())
     await obj.insert()
-    await send_event(Event(type=EventType.ISSUE_CREATE, data={'issue_id': str(obj.id)}))
+    await send_event(
+        Event(
+            type=EventType.ISSUE_CREATE,
+            data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+        )
+    )
     for a in obj.attachments:
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
@@ -624,7 +634,10 @@ async def update_issue(
             str(obj.project.id),
         )
         await send_event(
-            Event(type=EventType.ISSUE_UPDATE, data={'issue_id': str(obj.id)})
+            Event(
+                type=EventType.ISSUE_UPDATE,
+                data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+            )
         )
         for a_id in extra_attachment_ids:
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
@@ -653,7 +666,12 @@ async def delete_issue(
         [str(s) for s in obj.subscribers],
         str(obj.project.id),
     )
-    await send_event(Event(type=EventType.ISSUE_DELETE, data={'issue_id': str(obj.id)}))
+    await send_event(
+        Event(
+            type=EventType.ISSUE_DELETE,
+            data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+        )
+    )
     return ModelIdOutput.from_obj(obj)
 
 
