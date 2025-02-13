@@ -133,22 +133,38 @@ async def _create_user(
 ) -> str:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    with mock.patch('pm.tasks.actions.task_send_email.delay') as mock_email:
+    with (
+        mock.patch('pm.tasks.actions.task_send_email.delay') as mock_email,
+        mock.patch('pm.tasks.actions.task_send_pararam_message.delay') as mock_pararam,
+    ):
         response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
-        mock_email.assert_called_once()
+        if user_payload.get('send_email_invite', False):
+            mock_email.assert_called_once()
+        else:
+            mock_email.assert_not_called()
+        if user_payload.get('send_pararam_invite', False):
+            mock_pararam.assert_called_once()
+        else:
+            mock_pararam.assert_not_called()
+
     assert response.status_code == 200
     data = response.json()
     assert data['payload']['id']
+
+    expected_payload = {
+        **user_payload,
+        'is_admin': user_payload.get('is_admin', False),
+        'avatar_type': 'default',
+        'origin': 'local',
+        'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
+        'id': data['payload']['id'],
+    }
+    expected_payload.pop('send_email_invite', None)
+    expected_payload.pop('send_pararam_invite', None)
+
     assert data == {
         'success': True,
-        'payload': {
-            'id': data['payload']['id'],
-            **user_payload,
-            'is_admin': user_payload.get('is_admin', False),
-            'avatar_type': 'default',
-            'origin': 'local',
-            'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
-        },
+        'payload': expected_payload,
     }
     return data['payload']['id']
 

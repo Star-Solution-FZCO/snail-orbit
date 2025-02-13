@@ -17,7 +17,8 @@ export type CreateUserT = {
     email: string;
     is_admin: boolean;
     is_active: boolean;
-    send_invite: boolean;
+    send_email_invite: boolean;
+    send_pararam_invite: boolean;
 };
 
 export type UpdateUserT = Partial<CreateUserT>;
