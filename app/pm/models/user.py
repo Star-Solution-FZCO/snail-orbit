@@ -1,10 +1,12 @@
 import base64
 import secrets
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated, Any, Self
 
 import bcrypt
+import beanie.operators as bo
 from beanie import Document, Indexed, PydanticObjectId
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, Field
@@ -169,6 +171,13 @@ class User(Document):
     @property
     def use_external_avatar(self) -> bool:
         return self.avatar_type == UserAvatarType.EXTERNAL
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.Or(
+            bo.RegEx(cls.name, search, 'i'),
+            bo.RegEx(cls.email, search, 'i'),
+        )
 
     def check_password(self, password: str) -> bool:
         if not self.password_hash:
