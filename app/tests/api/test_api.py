@@ -247,6 +247,8 @@ async def test_api_v1_profile_and_ui_settings(
                 'email': 'test_user@localhost.localdomain',
                 'name': 'Test User',
                 'is_active': True,
+                'send_email_invite': True,
+                'send_pararam_invite': True,
             },
             id='user',
         )
@@ -261,17 +263,21 @@ async def test_api_v1_user_crud(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.get(f'/api/v1/user/{create_user}', headers=headers)
+    expected_payload = {
+        **user_payload,
+        'is_admin': user_payload.get('is_admin', False),
+        'avatar_type': 'default',
+        'origin': 'local',
+        'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
+        'id': create_user,
+    }
+    expected_payload.pop('send_email_invite', None)
+    expected_payload.pop('send_pararam_invite', None)
+
     assert response.status_code == 200
     assert response.json() == {
         'success': True,
-        'payload': {
-            'id': create_user,
-            **user_payload,
-            'is_admin': False,
-            'avatar_type': 'default',
-            'origin': 'local',
-            'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
-        },
+        'payload': expected_payload,
     }
 
     response = test_client.put(
@@ -283,12 +289,7 @@ async def test_api_v1_user_crud(
     assert response.json() == {
         'success': True,
         'payload': {
-            'id': create_user,
-            **user_payload,
-            'is_admin': False,
-            'avatar_type': 'default',
-            'origin': 'local',
-            'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
+            **expected_payload,
             'name': 'Test User updated',
         },
     }
