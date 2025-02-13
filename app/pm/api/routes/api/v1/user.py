@@ -15,9 +15,9 @@ from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
-from pm.email_templates import render_template
 from pm.services.avatars import generate_default_avatar
-from pm.tasks.actions import task_send_email
+from pm.tasks.actions import task_send_email, task_send_pararam_message
+from pm.templates import TemplateT, render_template
 
 __all__ = ('router',)
 
@@ -52,7 +52,8 @@ class UserCreate(BaseModel):
     name: str
     is_active: bool = True
     is_admin: bool = False
-    send_invite: bool = True
+    send_email_invite: bool = False
+    send_pararam_invite: bool = False
 
 
 class UserUpdate(BaseModel):
@@ -114,19 +115,30 @@ async def create_user(
         is_admin=body.is_admin,
         origin=m.UserOriginType.LOCAL,
     )
-    if body.send_invite:
+    await obj.insert()
+    await generate_default_avatar(obj)
+
+    if body.send_email_invite or body.send_pararam_invite:
         password_token, password_token_obj = obj.gen_new_password_reset_token(
             INVITE_PASSWORD_TOKEN_LIFETIME
         )
         obj.password_reset_token = password_token_obj
-    await obj.insert()
-    await generate_default_avatar(obj)
-    if body.send_invite:
+        await obj.save_changes()
+    if body.send_email_invite:
         task_send_email.delay(
             recipients=[obj.email],
             subject='Snail orbit registration',
             body=render_template(
-                'invite',
+                TemplateT.INVITE_EMAIL,
+                user=obj,
+                register_token=password_token,  # pylint: disable=possibly-used-before-assignment
+            ),
+        )
+    if body.send_pararam_invite:
+        task_send_pararam_message.delay(
+            user_email=obj.email,
+            message=render_template(
+                TemplateT.INVITE_PARARAM,
                 user=obj,
                 register_token=password_token,
             ),

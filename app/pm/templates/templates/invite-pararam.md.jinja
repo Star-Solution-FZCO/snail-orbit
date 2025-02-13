@@ -1,0 +1,5 @@
+Dear {{ user.name }}!
+You were registered in the [Snail Orbit]({{ public_base_url }}) project manager.
+Your login: {{ user.email }}
+To complete the registration, please follow the link below and set a password for your account.
+[Set password]({{ public_base_url }}/password-reset?reset_token={{ register_token }})

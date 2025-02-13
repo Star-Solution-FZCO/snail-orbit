@@ -41,7 +41,7 @@ async def init_db():
 def test_client():
     with (
         mock.patch('pm.services.avatars.generate_default_avatar', mock.AsyncMock()),
-        mock.patch('pm.email_templates.render_template', mock.Mock()),
+        mock.patch('pm.templates.render_template', mock.Mock()),
     ):
         from pm.api.app import app
 
