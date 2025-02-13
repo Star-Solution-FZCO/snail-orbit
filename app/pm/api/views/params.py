@@ -10,7 +10,7 @@ __all__ = (
 class ListParams(BaseModel):
     limit: int = Query(50, ge=0, description='limit results')
     offset: int = Query(0, ge=0, description='offset')
-    search: str | None = Query(default='', description='search')
+    search: str = Query('', description='search')
 
 
 class IssueSearchParams(BaseModel):

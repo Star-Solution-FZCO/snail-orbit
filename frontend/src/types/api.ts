@@ -24,7 +24,7 @@ export type BaseQueryParams = {
 };
 
 export type ListSelectQueryParams = BaseQueryParams & {
-    search?: string | null;
+    search?: string;
 };
 
 export type ListQueryParams = BaseQueryParams & {
