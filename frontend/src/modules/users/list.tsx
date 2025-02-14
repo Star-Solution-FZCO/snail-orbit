@@ -55,6 +55,12 @@ export const UserList = () => {
                 type: "boolean",
                 flex: 1,
             },
+            {
+                field: "mfa_enabled",
+                headerName: t("users.fields.mfa_enabled"),
+                type: "boolean",
+                flex: 1,
+            },
         ],
         [t],
     );

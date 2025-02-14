@@ -157,6 +157,7 @@ async def _create_user(
         'avatar_type': 'default',
         'origin': 'local',
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
+        'mfa_enabled': False,
         'id': data['payload']['id'],
     }
     expected_payload.pop('send_email_invite', None)
