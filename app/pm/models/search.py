@@ -1,26 +1,19 @@
-from enum import StrEnum
 from typing import Annotated
-from uuid import UUID, uuid4
 
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from ._audit import audited_model
 from .group import GroupLinkField
-from .user import UserLinkField
+from .permission import (
+    PermissionRecord,
+    PermissionType,
+    _check_permissions,
+    _filter_permissions,
+)
+from .user import User, UserLinkField
 
-__all__ = ('Search', 'SearchPermissionType', 'SearchPermission')
-
-
-class SearchPermissionType(StrEnum):
-    GROUP = 'group'
-    USER = 'user'
-
-
-class SearchPermission(BaseModel):
-    id: Annotated[UUID, Field(default_factory=uuid4)]
-    target_type: SearchPermissionType
-    target: GroupLinkField | UserLinkField
+__all__ = ('Search',)
 
 
 @audited_model
@@ -33,5 +26,34 @@ class Search(Document):
 
     name: str = Indexed(str)
     query: str
-    owner: UserLinkField
-    permissions: Annotated[list[SearchPermission], Field(default_factory=list)]
+    description: str | None
+    created_by: UserLinkField
+    permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
+
+    def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
+        return any(p.target.id == target.id for p in self.permissions)
+
+    def has_any_other_admin_target(
+        self, target: UserLinkField | GroupLinkField
+    ) -> bool:
+        return (
+            sum(
+                1
+                for p in self.permissions
+                if p.permission_type == PermissionType.ADMIN
+                and p.target.id != target.id
+            )
+            > 0
+        )
+
+    def filter_permissions(self, user: User) -> list[PermissionRecord]:
+        return _filter_permissions(self, user)
+
+    def check_permissions(
+        self, user: User, required_permission: PermissionType
+    ) -> bool:
+        return _check_permissions(
+            permissions=self.permissions,
+            user=user,
+            required_permission=required_permission,
+        )
