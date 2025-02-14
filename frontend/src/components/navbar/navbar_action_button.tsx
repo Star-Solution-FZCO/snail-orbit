@@ -1,5 +1,6 @@
-import { Button, ButtonProps } from "@mui/material";
-import { FC } from "react";
+import type { ButtonProps } from "@mui/material";
+import { Button } from "@mui/material";
+import type { FC } from "react";
 
 type NavbarActionButtonProps = ButtonProps;
 

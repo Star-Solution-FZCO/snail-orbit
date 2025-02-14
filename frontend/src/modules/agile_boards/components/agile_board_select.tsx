@@ -8,10 +8,11 @@ import { AgileBoardListPopover } from "./agile_board_list_popover";
 type AgileBoardSelectProps = {
     value: AgileBoardT;
     onChange: (value: AgileBoardT) => void;
+    onGoToListClick: () => void;
 };
 
 export const AgileBoardSelect: FC<AgileBoardSelectProps> = (props) => {
-    const { value, onChange } = props;
+    const { value, onChange, onGoToListClick } = props;
 
     const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
 
@@ -45,6 +46,7 @@ export const AgileBoardSelect: FC<AgileBoardSelectProps> = (props) => {
                 anchorEl={buttonRef}
                 onClose={() => setButtonRef(null)}
                 onSelect={onChange}
+                onGoToListClick={onGoToListClick}
             />
         </>
     );
