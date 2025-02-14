@@ -3,7 +3,6 @@ from datetime import timedelta
 from http import HTTPStatus
 from typing import Self
 
-import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
@@ -67,7 +66,9 @@ class UserUpdate(BaseModel):
 async def list_users(
     query: ListParams = Depends(),
 ) -> BaseListOutput[UserFullOutput]:
-    q = m.User.find().sort(m.User.id)
+    q = m.User.find().sort(m.User.name)
+    if query.search:
+        q = q.find(m.User.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
@@ -79,13 +80,10 @@ async def list_users(
 @router.get('/select')
 async def select_users(
     query: SelectParams = Depends(),
-):
-    q = m.User.find(
-        bo.Or(
-            bo.RegEx(m.User.name, query.search, 'i'),
-            bo.RegEx(m.User.email, query.search, 'i'),
-        )
-    ).sort(m.User.name)
+) -> BaseListOutput[UserOutput]:
+    q = m.User.find().sort(m.User.name)
+    if query.search:
+        q = q.find(m.User.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

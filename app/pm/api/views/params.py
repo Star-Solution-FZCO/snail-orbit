@@ -1,5 +1,5 @@
 from fastapi import Query
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 __all__ = (
     'IssueSearchParams',
@@ -8,18 +8,9 @@ __all__ = (
 
 
 class ListParams(BaseModel):
-    limit: int = Query(50, le=50, description='limit results')
-    offset: int = Query(0, description='offset')
-    sort_by: str | None = Query(None, max_length=50, description='sort by field')
-    direction: str = Query(
-        'desc', max_length=4, description='sort direction asc or desc'
-    )
-
-    @field_validator('direction')
-    def check_direction(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        if v not in ('desc', 'asc'):
-            raise ValueError('wrong direction')
-        return v
+    limit: int = Query(50, ge=0, description='limit results')
+    offset: int = Query(0, ge=0, description='offset')
+    search: str = Query('', description='search')
 
 
 class IssueSearchParams(BaseModel):

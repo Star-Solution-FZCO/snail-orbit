@@ -24,13 +24,11 @@ export type BaseQueryParams = {
 };
 
 export type ListSelectQueryParams = BaseQueryParams & {
-    search?: string | null;
+    search?: string;
 };
 
 export type ListQueryParams = BaseQueryParams & {
-    sort_by?: string | null;
-    direction?: "asc" | "desc";
-    q?: string;
+    search?: string;
 };
 
 export type ListPayload<T> = {
