@@ -23,20 +23,28 @@ class FakeCustomField(BaseModel):
     is_nullable: bool
 
 
-class FakeEnumField(BaseModel):
+class FakeEnumOption(BaseModel):
     value: str
 
 
-class FakeStateField(BaseModel):
-    state: str
+class FakeStateOption(BaseModel):
+    value: str
+
+
+class FakeVersionOption(BaseModel):
+    value: str
 
 
 class FakeEnumCustomField(FakeCustomField):
-    options: list[FakeEnumField]
+    options: list[FakeEnumOption]
 
 
 class FakeStateCustomField(FakeCustomField):
-    options: list[FakeStateField]
+    options: list[FakeStateOption]
+
+
+class FakeVersionCustomField(FakeCustomField):
+    options: list[FakeVersionOption]
 
 
 def parse_dict_to_field(field: dict) -> FakeCustomField:
@@ -47,14 +55,21 @@ def parse_dict_to_field(field: dict) -> FakeCustomField:
             name=field['name'],
             type=field['type'],
             is_nullable=field['is_nullable'],
-            options=[FakeEnumField(value=option) for option in field['options']],
+            options=[FakeEnumOption(value=option) for option in field['options']],
         )
     if field['type'] == CustomFieldTypeT.STATE:
         return FakeStateCustomField(
             name=field['name'],
             type=field['type'],
             is_nullable=field['is_nullable'],
-            options=[FakeStateField(state=option) for option in field['options']],
+            options=[FakeStateOption(value=option) for option in field['options']],
+        )
+    if field['type'] == CustomFieldTypeT.VERSION:
+        return FakeVersionCustomField(
+            name=field['name'],
+            type=field['type'],
+            is_nullable=field['is_nullable'],
+            options=[FakeVersionOption(value=option) for option in field['options']],
         )
     return FakeCustomField(
         name=field['name'],

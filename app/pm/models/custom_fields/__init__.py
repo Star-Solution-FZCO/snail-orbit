@@ -1,5 +1,5 @@
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from beanie import PydanticObjectId
 
@@ -7,17 +7,29 @@ from pm.models.user import UserLinkField
 
 from ._base import (
     CustomField,
+    CustomFieldCanBeNoneError,
     CustomFieldLink,
     CustomFieldTypeT,
-    CustomFieldCanBeNoneError,
     CustomFieldValidationError,
 )
-from .plain import StringCustomField, IntegerCustomField, FloatCustomField, BooleanCustomField, DateCustomField, DateTimeCustomField
 from .enum_cf import EnumCustomField, EnumMultiCustomField, EnumOption
+from .plain import (
+    BooleanCustomField,
+    DateCustomField,
+    DateTimeCustomField,
+    FloatCustomField,
+    IntegerCustomField,
+    StringCustomField,
+)
 from .state_cf import StateCustomField, StateOption
+from .user_cf import (
+    GroupOption,
+    UserCustomField,
+    UserMultiCustomField,
+    UserOption,
+    UserOptionType,
+)
 from .version_cf import VersionCustomField, VersionMultiCustomField, VersionOption
-from .user_cf import UserCustomField, UserMultiCustomField, UserOption, UserOptionType, GroupOption
-
 
 __all__ = (
     'get_cf_class',
@@ -71,20 +83,20 @@ def get_cf_class(type_: CustomFieldTypeT) -> type['CustomField']:
 
 
 CustomFieldValueT = (
-        bool
-        | int
-        | float
-        | datetime
-        | UserLinkField
-        | list[UserLinkField]
-        | EnumOption
-        | list[EnumOption]
-        | StateOption
-        | VersionOption
-        | list[VersionOption]
-        | PydanticObjectId
-        | Any
-        | None
+    bool
+    | int
+    | float
+    | datetime
+    | UserLinkField
+    | list[UserLinkField]
+    | EnumOption
+    | list[EnumOption]
+    | StateOption
+    | VersionOption
+    | list[VersionOption]
+    | PydanticObjectId
+    | Any
+    | None
 )
 
 
