@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from http import HTTPStatus
 from typing import Annotated, Any
+from uuid import UUID
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -20,8 +21,15 @@ from pm.api.views.issue import (
     ProjectField,
     transform_custom_field_value,
 )
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import (
+    BaseListOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+    UUIDOutput,
+)
 from pm.api.views.params import IssueSearchParams, ListParams
+from pm.api.views.permission import PermissionOutput
+from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
@@ -51,9 +59,13 @@ class BoardOutput(BaseModel):
     card_fields: list[CustomFieldLinkOutput]
     card_colors_fields: list[CustomFieldLinkOutput]
     ui_settings: dict
+    created_by: UserOutput
+    permissions: list[PermissionOutput]
+    is_favorite: bool
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
+        user_ctx = current_user()
         return cls(
             id=obj.id,
             name=obj.name,
@@ -76,6 +88,12 @@ class BoardOutput(BaseModel):
                 CustomFieldLinkOutput.from_obj(f) for f in obj.card_colors_fields
             ],
             ui_settings=obj.ui_settings,
+            created_by=UserOutput.from_obj(obj.created_by),
+            permissions=[
+                PermissionOutput.from_obj(p)
+                for p in obj.filter_permissions(user_ctx.user)
+            ],
+            is_favorite=obj.is_favorite_of(user_ctx.user.id),
         )
 
 
@@ -121,12 +139,28 @@ class SwimlaneOutput(BaseModel):
 async def list_boards(
     query: ListParams = Depends(),
 ) -> BaseListOutput[BoardOutput]:
-    q = m.Board.find().sort(m.Board.name)
-    return await BaseListOutput.make_from_query(
-        q,
+    user_ctx = current_user()
+    filter_query = m.Board.get_filter_query(user=user_ctx.user)
+    q = m.Board.aggregate(
+        [
+            {'$match': filter_query},
+            {
+                '$addFields': {
+                    'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']}
+                }
+            },
+            {'$sort': {'is_favorite': -1, 'name': 1}},
+            {'$skip': query.offset},
+            {'$limit': query.limit},
+        ],
+        projection_model=m.Board,
+    )
+    cnt = await m.Board.find(filter_query).count()
+    return BaseListOutput.make(
+        items=[BoardOutput.from_obj(board) async for board in q],
+        count=cnt,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=BoardOutput.from_obj,
     )
 
 
@@ -134,6 +168,7 @@ async def list_boards(
 async def create_board(
     body: BoardCreate,
 ) -> SuccessPayloadOutput[BoardOutput]:
+    user_ctx = current_user()
     projects = await m.Project.find(
         bo.In(m.Project.id, body.projects),
         fetch_links=True,
@@ -192,6 +227,14 @@ async def create_board(
             m.CustomFieldLink.from_obj(cf) for cf in card_colors_fields
         ],
         ui_settings=body.ui_settings,
+        created_by=m.UserLinkField.from_obj(user_ctx.user),
+        permissions=[
+            m.PermissionRecord(
+                target_type=m.PermissionTargetType.USER,
+                target=m.UserLinkField.from_obj(user_ctx.user),
+                permission_type=m.PermissionType.ADMIN,
+            )
+        ],
     )
     await board.insert()
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
@@ -204,6 +247,9 @@ async def get_board(
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
 
 
@@ -215,6 +261,9 @@ async def update_board(
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this board')
     data = body.dict(exclude_unset=True)
     for k in ('name', 'description', 'query', 'ui_settings'):
         if k in data:
@@ -321,6 +370,9 @@ async def delete_board(
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this board')
     await board.delete()
     return ModelIdOutput.make(board_id)
 
@@ -335,6 +387,8 @@ async def get_board_issues(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
 
     q = m.Issue.find(
         bo.In(
@@ -460,6 +514,10 @@ async def move_issue(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to move issues in this board'
+        )
     issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -618,6 +676,142 @@ async def select_card_color_field(
         offset=0,
         items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
     )
+
+
+class GrantPermissionBody(BaseModel):
+    target_type: m.PermissionTargetType
+    target: PydanticObjectId
+    permission_type: m.PermissionType
+
+
+@router.post('/{board_id}/permission')
+async def grant_permission(
+    board_id: PydanticObjectId,
+    body: GrantPermissionBody,
+) -> UUIDOutput:
+    """
+    Grants one permission from set of permission types to a specified target (user or group) for a board.
+    """
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You cannot modify permissions for this board',
+        )
+    if body.target_type == m.PermissionTargetType.USER:
+        user: m.User | None = await m.User.find_one(m.User.id == body.target)
+        if not user:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+        target = m.UserLinkField.from_obj(user)
+    else:
+        group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
+        if not group:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
+        if group.id not in {g.id for g in user_ctx.user.groups}:
+            raise HTTPException(
+                status_code=HTTPStatus.FORBIDDEN,
+                detail='You cannot grant permissions to groups you are not member of',
+            )
+        target = m.GroupLinkField.from_obj(group)
+    if board.has_permission_for_target(target):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
+    p = m.PermissionRecord(
+        target_type=body.target_type,
+        target=target,
+        permission_type=body.permission_type,
+    )
+    board.permissions.append(p)
+    await board.save_changes()
+    return UUIDOutput.make(p.id)
+
+
+@router.delete('/{board_id}/permission/{permission_id}')
+async def revoke_permission(
+    board_id: PydanticObjectId,
+    permission_id: UUID,
+) -> UUIDOutput:
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You cannot modify permissions for this board',
+        )
+    if not (
+        perm := next(
+            (obj for obj in board.permissions if obj.id == permission_id), None
+        )
+    ):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+    if (
+        perm.permission_type == m.PermissionType.ADMIN
+        and not board.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Board must have at least one admin')
+    board.permissions.remove(perm)
+    await board.save_changes()
+    return UUIDOutput.make(perm.id)
+
+
+@router.get('/{board_id}/permissions')
+async def get_board_permissions(
+    board_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[PermissionOutput]:
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot view board permissions')
+    return BaseListOutput.make(
+        count=len(board.permissions),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            PermissionOutput.from_obj(perm)
+            for perm in board.permissions[query.offset : query.offset + query.limit]
+        ],
+    )
+
+
+@router.post('/{board_id}/favorite')
+async def favorite_board(
+    board_id: PydanticObjectId,
+) -> SuccessPayloadOutput[BoardOutput]:
+    user_ctx = current_user()
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+    if board.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Board already in favorites')
+    board.favorite_of.append(user_ctx.user.id)
+    await board.save_changes()
+    return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
+
+
+@router.post('/{board_id}/unfavorite')
+async def unfavorite_board(
+    board_id: PydanticObjectId,
+) -> SuccessPayloadOutput[BoardOutput]:
+    user_ctx = current_user()
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+    if not board.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Board is not in favorites')
+    board.favorite_of.remove(user_ctx.user.id)
+    await board.save_changes()
+    return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
 
 
 def _intersect_custom_fields(
