@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/agiles/")({
         if (boardId) {
             throw redirect({ to: "/agiles/$boardId", params: { boardId } });
         } else {
-            throw redirect({ to: "/agiles/create" });
+            throw redirect({ to: "/agiles/list" });
         }
     },
 });
