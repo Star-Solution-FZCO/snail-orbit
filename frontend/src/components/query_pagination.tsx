@@ -1,6 +1,7 @@
 import { Pagination as MuiPagination } from "@mui/material";
-import React, { FC } from "react";
-import { ListQueryParams } from "types";
+import type { FC } from "react";
+import React from "react";
+import type { ListQueryParams } from "types";
 
 type IQueryPaginationProps = {
     count: number;
