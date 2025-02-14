@@ -25,6 +25,7 @@ router = APIRouter(
 )
 
 INVITE_PASSWORD_TOKEN_LIFETIME = timedelta(days=7)
+ALLOW_EXTERNAL_USER_UPDATE_FIELDS = {'is_admin'}
 
 
 class UserFullOutput(UserOutput):
@@ -154,7 +155,16 @@ async def update_user(
     obj: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
-    if obj.origin != m.UserOriginType.LOCAL:
+    changes = {
+        k: v
+        for k, v in body.model_dump(exclude_unset=True).items()
+        if getattr(obj, k) != v
+    }
+    if not changes:
+        return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
+    if obj.origin != m.UserOriginType.LOCAL and any(
+        k not in ALLOW_EXTERNAL_USER_UPDATE_FIELDS for k in changes
+    ):
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'Cannot update user with external origin'
         )
