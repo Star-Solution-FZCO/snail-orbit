@@ -31,6 +31,7 @@ class UserFullOutput(UserOutput):
     is_admin: bool
     origin: m.UserOriginType
     avatar_type: m.UserAvatarType
+    mfa_enabled: bool
 
     @classmethod
     def from_obj(cls, obj: m.User) -> Self:
@@ -43,6 +44,7 @@ class UserFullOutput(UserOutput):
             is_admin=obj.is_admin,
             origin=obj.origin,
             avatar_type=obj.avatar_type,
+            mfa_enabled=obj.mfa_enabled,
         )
 
 
