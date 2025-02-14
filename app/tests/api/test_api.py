@@ -269,6 +269,7 @@ async def test_api_v1_user_crud(
         'avatar_type': 'default',
         'origin': 'local',
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
+        'mfa_enabled': False,
         'id': create_user,
     }
     expected_payload.pop('send_email_invite', None)
