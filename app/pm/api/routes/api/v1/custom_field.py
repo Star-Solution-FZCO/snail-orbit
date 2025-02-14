@@ -509,12 +509,12 @@ async def add_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.state == body.value for opt in obj.options):
+    if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
         m.StateOption(
             id=str(uuid4()),
-            state=body.value,
+            value=body.value,
             is_resolved=body.is_resolved,
             is_closed=body.is_closed,
             color=body.color,
@@ -545,7 +545,6 @@ async def update_state_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        k = 'state' if k == 'value' else k
         setattr(opt, k, v)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
@@ -604,12 +603,12 @@ async def add_version_option(
             HTTPStatus.BAD_REQUEST,
             'Custom field is not of type VERSION or VERSION_MULTI',
         )
-    if any(opt.version == body.value for opt in obj.options):
+    if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
         m.VersionOption(
             id=str(uuid4()),
-            version=body.value,
+            value=body.value,
             release_date=datetime.combine(body.release_date, datetime.min.time())
             if body.release_date
             else None,
@@ -646,7 +645,6 @@ async def update_version_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        k = 'version' if k == 'value' else k
         if k == 'release_date':
             v = datetime.combine(v, datetime.min.time()) if v else None
         setattr(opt, k, v)

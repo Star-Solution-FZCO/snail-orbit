@@ -152,7 +152,7 @@ class StateOptionOutput(BaseModel):
     def from_obj(cls, obj: m.StateOption) -> Self:
         return cls(
             uuid=obj.id,
-            value=obj.state,
+            value=obj.value,
             color=obj.color,
             is_resolved=obj.is_resolved,
             is_closed=obj.is_closed,
@@ -192,7 +192,7 @@ class VersionOptionOutput(BaseModel):
     def from_obj(cls, obj: m.VersionOption) -> Self:
         return cls(
             uuid=obj.id,
-            value=obj.version,
+            value=obj.value,
             release_date=obj.release_date.date() if obj.release_date else None,
             is_released=obj.is_released,
             is_archived=obj.is_archived,

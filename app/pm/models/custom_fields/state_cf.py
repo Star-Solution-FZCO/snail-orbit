@@ -12,7 +12,7 @@ __all__ = (
 
 class StateOption(BaseModel):
     id: str
-    state: str
+    value: str
     is_resolved: bool = False
     is_closed: bool = False
     is_archived: bool = False
@@ -21,10 +21,10 @@ class StateOption(BaseModel):
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, StateOption):
             return False
-        return self.state == other.state
+        return self.value == other.value
 
     def __hash__(self) -> int:
-        return hash(self.state)
+        return hash(self.value)
 
 
 class StateCustomField(CustomField):
@@ -37,8 +37,8 @@ class StateCustomField(CustomField):
         if value is None:
             return value
         if isinstance(value, StateOption):
-            value = value.state
-        opts = {opt.state: opt for opt in self.options}
+            value = value.value
+        opts = {opt.value: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'

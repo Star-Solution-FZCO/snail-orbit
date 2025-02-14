@@ -191,4 +191,3 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
                 )
             results.append(users[val])
         return results
-

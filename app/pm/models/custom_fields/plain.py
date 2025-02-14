@@ -1,9 +1,7 @@
 from datetime import date, datetime
 from typing import Any
 
-
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
-
 
 __all__ = (
     'StringCustomField',

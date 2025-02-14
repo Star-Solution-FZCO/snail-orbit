@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from pm.models._audit import audited_model
 
-
 __all__ = (
     'CustomFieldTypeT',
     'CustomField',

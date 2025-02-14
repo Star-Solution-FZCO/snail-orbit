@@ -72,13 +72,13 @@ def _state_filter(obj: m.StateOption, search: str | None) -> bool:
         return False
     if not search:
         return True
-    return bool(re.search(re.escape(search), obj.state, re.IGNORECASE))
+    return bool(re.search(re.escape(search), obj.value, re.IGNORECASE))
 
 
 def state_option_select(
     objs: Sequence[m.StateOption], query: SelectParams
 ) -> SelectResult[m.StateOption]:
-    return _select(objs, query, _state_filter, lambda o: o.state)
+    return _select(objs, query, _state_filter, lambda o: o.value)
 
 
 def _enum_filter(obj: m.EnumOption, search: str | None) -> bool:
@@ -100,10 +100,10 @@ def _version_filter(obj: m.VersionOption, search: str | None) -> bool:
         return False
     if not search:
         return True
-    return bool(re.search(re.escape(search), obj.version, re.IGNORECASE))
+    return bool(re.search(re.escape(search), obj.value, re.IGNORECASE))
 
 
 def version_option_select(
     objs: Sequence[m.VersionOption], query: SelectParams
 ) -> SelectResult[m.VersionOption]:
-    return _select(objs, query, _version_filter, lambda o: o.version)
+    return _select(objs, query, _version_filter, lambda o: o.value)
