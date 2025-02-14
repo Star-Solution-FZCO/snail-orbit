@@ -388,6 +388,7 @@
   "users.fields.active": "Active",
   "users.fields.admin": "Admin",
   "users.fields.email": "Email",
+  "users.fields.mfa_enabled": "MFA",
   "users.fields.name": "Name",
   "users.fields.origin": "Origin",
   "users.form.active": "Active",
