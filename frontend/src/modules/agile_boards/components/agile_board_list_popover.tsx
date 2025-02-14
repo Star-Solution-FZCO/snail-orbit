@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +11,7 @@ type TagListPopoverProps = {
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
     onSelect?: (tag: AgileBoardT) => void;
+    onGoToListClick?: () => void;
 };
 
 type InnerOptionType = {
@@ -19,7 +21,7 @@ type InnerOptionType = {
 };
 
 export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
-    const { open, anchorEl, onClose, onSelect } = props;
+    const { open, anchorEl, onClose, onSelect, onGoToListClick } = props;
 
     const { t } = useTranslation();
 
@@ -46,6 +48,16 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
         [onSelect],
     );
 
+    const bottomSlot = useMemo(() => {
+        if (!onGoToListClick) return null;
+
+        return (
+            <Button fullWidth size="small" onClick={onGoToListClick}>
+                {t("agileBoardListPopover.goToList")}
+            </Button>
+        );
+    }, [onGoToListClick]);
+
     return (
         <>
             <FormAutocompletePopover
@@ -56,6 +68,7 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
                 inputProps={{
                     placeholder: t("agileBoardListPopover.placeholder"),
                 }}
+                bottomSlot={bottomSlot}
                 loading={isLoading}
                 getOptionKey={(option) => (option as InnerOptionType).id}
                 options={options}
