@@ -102,6 +102,24 @@ class LocalStorageClient(BaseStorageClient):
         except Exception as err:
             raise StorageInternalError(file_id, message='Failed to read file') from err
 
+    async def delete_file(
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',  # pylint: disable=unused-argument
+    ) -> None:
+        file_path = self.get_file_path(str(file_id))
+        if not await aio_os.path.exists(file_path):
+            raise StorageFileNotFound(file_id)
+        try:
+            await aio_os.remove(file_path)
+            dir_path = self.get_dir_by_id(str(file_id))
+            if not await aio_os.listdir(dir_path):
+                await aio_os.rmdir(dir_path)
+        except Exception as err:
+            raise StorageInternalError(
+                file_id, message='Failed to delete file'
+            ) from err
+
 
 async def write_file_header(
     file_header: FileHeader, dst: 'AsyncBufferedIOBase'
