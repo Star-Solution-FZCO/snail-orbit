@@ -19,7 +19,13 @@ __all__ = (
     'ProjectLinkField',
     'ProjectPermission',
     'PermissionTargetType',
+    'ProjectAvatarType',
 )
+
+
+class ProjectAvatarType(StrEnum):
+    LOCAL = 'local'
+    DEFAULT = 'default'
 
 
 class PermissionTargetType(StrEnum):
@@ -62,6 +68,7 @@ class Project(Document):
     issue_counter: int = 0
     subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    avatar_type: ProjectAvatarType = ProjectAvatarType.DEFAULT
 
     async def get_new_issue_alias(self) -> str:
         await self.update(

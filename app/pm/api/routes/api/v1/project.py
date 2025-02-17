@@ -5,7 +5,7 @@ from uuid import UUID
 from beanie import PydanticObjectId
 from beanie import operators as bo
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 import pm.models as m
 from pm.api.context import (
@@ -163,6 +163,16 @@ class ProjectOutput(BaseModel):
     card_fields: list[PydanticObjectId]
     workflows: list[WorkflowOutput] = []
     is_subscribed: bool = False
+    avatar_type: m.ProjectAvatarType
+
+    @computed_field
+    @property
+    def avatar(self) -> str:
+        return (
+            f'/api/avatar/project/{self.id}'
+            if self.avatar_type == m.ProjectAvatarType.LOCAL
+            else None
+        )
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> 'ProjectOutput':
@@ -177,6 +187,7 @@ class ProjectOutput(BaseModel):
             card_fields=obj.card_fields,
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
             is_subscribed=current_user().user.id in obj.subscribers,
+            avatar_type=obj.avatar_type,
         )
 
 
