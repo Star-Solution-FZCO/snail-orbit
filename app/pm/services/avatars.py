@@ -15,12 +15,14 @@ __all__ = (
     'local_avatar_url',
     'AVATAR_STORAGE_DIR',
     'generate_default_avatar',
+    'PROJECT_AVATAR_STORAGE_DIR',
 )
 
 
 AVATAR_STORAGE_DIR = 'avatars'
 AVATAR_FORMAT = 'png'
 AVATAR_SIZE = 200
+PROJECT_AVATAR_STORAGE_DIR = 'avatars/projects'
 
 
 def avatar_hash(email: str) -> str:
