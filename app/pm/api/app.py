@@ -1,3 +1,4 @@
+import sentry_sdk
 from beanie import init_beanie
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +11,21 @@ from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pm.config import CONFIG
 from pm.version import APP_VERSION
+
+if CONFIG.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=CONFIG.SENTRY_DSN,
+        release=f'{CONFIG.SENTRY_PROJECT_SLUG}@{APP_VERSION}'
+        if CONFIG.SENTRY_PROJECT_SLUG
+        else None,
+        environment=CONFIG.SENTRY_ENVIRONMENT,
+        ca_certs=CONFIG.SENTRY_CA_CERTS,
+        debug=CONFIG.DEBUG,
+        sample_rate=CONFIG.SENTRY_SAMPLE_RATE,
+        traces_sample_rate=CONFIG.SENTRY_TRACES_SAMPLE_RATE,
+        profiles_sample_rate=CONFIG.SENTRY_PROFILES_SAMPLE_RATE,
+    )
+
 
 app = FastAPI(title='Snail Orbit', version=APP_VERSION, debug=CONFIG.DEBUG)
 
