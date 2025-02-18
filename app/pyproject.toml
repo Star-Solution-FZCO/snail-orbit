@@ -35,11 +35,12 @@ pillow = "*"
 pararamio = {version = ">=2.0.1"}
 lark = "*"
 elasticsearch = {version = "==8.15.1", extras = ["async"]}
-aioboto3 = "*"
+aioboto3 = "==13.3.0"
 croniter = "^5.0.1"
 cryptography = "*"
 starsol-otp = "==1.0.0"
 jinja2 = "*"
+sentry-sdk = {version = "*", extras = ["fastapi", "starlette"]}
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"
@@ -48,7 +49,7 @@ pylint = "*"
 ruff = "*"
 types-aiofiles = "*"
 types-redis = "*"
-types-aioboto3 = {version = "*", extras = ["s3"]}
+types-aioboto3 = {version = "*", extras = ["aioboto3"]}
 faker = "*"
 mock = "*"
 pytest = "*"
