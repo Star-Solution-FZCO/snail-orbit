@@ -1223,7 +1223,7 @@ async def test_api_v1_issue_link(
 
     for link_type in INTERLINK_TYPES:
         response = test_client.post(
-            f'/api/v1/issue/{issues[0]['id']}/link',
+            f'/api/v1/issue/{issues[0]["id"]}/link',
             headers=headers,
             json={
                 'type': link_type[0],

@@ -36,7 +36,7 @@ async def notify_by_pararam(
     pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
     message = (
         f'Issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]'
-        f'({urljoin(CONFIG.PUBLIC_BASE_URL, f'/issues/{issue_id_readable}')}) was {action}d.'
+        f'({urljoin(CONFIG.PUBLIC_BASE_URL, f"/issues/{issue_id_readable}")}) was {action}d.'
     )
     recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
     if project := await m.Project.find_one(
