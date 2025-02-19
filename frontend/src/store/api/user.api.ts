@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import {
+import type {
     ApiResponse,
     APITokenT,
     BasicUserT,
@@ -168,7 +168,7 @@ export const userApi = createApi({
                     currentArg?.search !== previousArg?.search
                 );
             },
-            providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
+            providesTags: () => [{ type: "Users", id: "LIST" }],
         }),
     }),
 });

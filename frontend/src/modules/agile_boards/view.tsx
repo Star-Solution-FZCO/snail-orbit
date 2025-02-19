@@ -173,7 +173,6 @@ const AgileBoardView = () => {
                                     setDeleteDialogOpen((prev) => !prev)
                                 }
                                 color="error"
-                                size="small"
                             >
                                 <DeleteIcon />
                             </IconButton>
@@ -182,7 +181,6 @@ const AgileBoardView = () => {
                         <IconButton
                             onClick={() => setSettingsOpen((prev) => !prev)}
                             color="primary"
-                            size="small"
                         >
                             <SettingsIcon />
                         </IconButton>
