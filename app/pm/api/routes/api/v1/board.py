@@ -514,9 +514,9 @@ async def move_issue(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'No permission to move issues in this board'
+            HTTPStatus.FORBIDDEN, 'No permission to use this board'
         )
     issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
