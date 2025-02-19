@@ -43,8 +43,6 @@ const AgileBoardList = () => {
         return () => setAction(null);
     }, [setAction]);
 
-    console.log(boards);
-
     return (
         <Container
             sx={{
