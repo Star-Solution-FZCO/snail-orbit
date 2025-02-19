@@ -1,3 +1,4 @@
+from functools import cache
 from hashlib import sha256
 
 import pm.models as m
@@ -32,12 +33,14 @@ def avatar_hash(email: str) -> str:
     return sha256(email.strip().lower().encode()).hexdigest()
 
 
+@cache
 def external_avatar_url(email: str) -> str | None:
     if not CONFIG.AVATAR_EXTERNAL_URL:
         return None
     return CONFIG.AVATAR_EXTERNAL_URL.format(email=email, hash=avatar_hash(email))
 
 
+@cache
 def local_avatar_url(email: str) -> str:
     return f'/api/avatar/{avatar_hash(email)}'
 
