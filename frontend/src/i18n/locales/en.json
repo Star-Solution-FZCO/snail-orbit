@@ -37,6 +37,7 @@
   "agileBoards.list.fetch.error": "Failed to fetch agile boards",
   "agileBoards.navbarButton": "Create...",
   "agileBoards.new": "New Board",
+  "agileBoards.returnToList": "Return to list",
   "agileBoards.search.placeholder": "Filter cards on the board",
   "agileBoards.select.label": "Agile Board",
   "agileBoards.title": "Agile Boards",

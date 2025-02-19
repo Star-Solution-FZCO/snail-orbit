@@ -1,4 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
+import deepmerge from "deepmerge";
 import type {
     AgileBoardT,
     AgileSwimLineT,
@@ -108,6 +109,12 @@ export const agileBoardApi = createApi({
                 method: "PUT",
                 body,
             }),
+            invalidatesTags: [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
             async onQueryStarted(
                 { id },
                 { dispatch, queryFulfilled },
@@ -130,6 +137,53 @@ export const agileBoardApi = createApi({
                 }
             },
         }),
+        favoriteBoard: build.mutation<
+            ApiResponse<AgileBoardT>,
+            { boardId: string; favorite: boolean }
+        >({
+            query: ({ boardId, favorite }) => ({
+                url: `board/${boardId}/${favorite ? "favorite" : "unfavorite"}`,
+                method: "POST",
+            }),
+            invalidatesTags: [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
+            async onQueryStarted(
+                { boardId, favorite },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                dispatch(
+                    agileBoardApi.util.updateQueryData(
+                        "getAgileBoard",
+                        boardId,
+                        (draft) =>
+                            deepmerge(draft, {
+                                payload: { is_favorite: favorite },
+                            }),
+                    ),
+                );
+
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        agileBoardApi.util.upsertQueryData(
+                            "getAgileBoard",
+                            boardId,
+                            data,
+                        ),
+                    );
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoards", id: boardId },
+                        ]),
+                    );
+                }
+            },
+        }),
         deleteAgileBoard: build.mutation<ApiResponse<AgileBoardT>, string>({
             query: (id) => ({
                 url: `board/${id}`,
@@ -137,6 +191,10 @@ export const agileBoardApi = createApi({
             }),
             invalidatesTags: (_result, _error, id) => [
                 { type: "AgileBoards", id },
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
             ],
         }),
         getBoardIssues: build.query<

@@ -48,6 +48,7 @@ export type AgileBoardT = {
     card_fields: AgileBoardCardFieldT[];
     card_colors_fields: AgileBoardCardFieldT[];
     ui_settings: UiSettingT;
+    is_favorite: boolean;
 };
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;

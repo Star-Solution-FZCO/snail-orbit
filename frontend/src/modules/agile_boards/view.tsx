@@ -2,6 +2,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
+    Button,
     Container,
     IconButton,
     Menu,
@@ -19,6 +20,7 @@ import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { AgileBoardT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
+import { StarButton } from "../../components/star_button";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
@@ -42,6 +44,8 @@ const AgileBoardView = () => {
     const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
     const [updateAgileBoard] = agileBoardApi.useUpdateAgileBoardMutation();
+
+    const [favoriteAgileBoard] = agileBoardApi.useFavoriteBoardMutation();
 
     const agileBoard = useMemo(() => data?.payload, [data]);
 
@@ -115,18 +119,31 @@ const AgileBoardView = () => {
         navigate({ to: "/agiles/list" });
     }, [navigate]);
 
-    if (!agileBoard) return null;
-
     if (error) {
         return (
-            <Container sx={{ px: 4, pb: 4 }} disableGutters>
+            <Container
+                sx={{
+                    px: 4,
+                    pb: 4,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                }}
+                disableGutters
+            >
                 <Typography fontSize={24} fontWeight="bold">
                     {formatErrorMessages(error) ||
                         t("agileBoards.item.fetch.error")}
                 </Typography>
+                <Button onClick={goToFullListHandler} variant="contained">
+                    {t("agileBoards.returnToList")}
+                </Button>
             </Container>
         );
     }
+
+    if (!agileBoard) return null;
 
     return (
         <Stack direction="column">
@@ -169,6 +186,16 @@ const AgileBoardView = () => {
                         >
                             <SettingsIcon />
                         </IconButton>
+
+                        <StarButton
+                            starred={agileBoard.is_favorite}
+                            onClick={() =>
+                                favoriteAgileBoard({
+                                    boardId: agileBoard.id,
+                                    favorite: !agileBoard.is_favorite,
+                                })
+                            }
+                        />
                     </Stack>
                 </Stack>
 
