@@ -681,6 +681,10 @@ class GrantPermissionBody(BaseModel):
     permission_type: m.PermissionType
 
 
+class UpdatePermissionBody(BaseModel):
+    permission_type: m.PermissionType
+
+
 @router.post('/{board_id}/permission')
 async def grant_permission(
     board_id: PydanticObjectId,
@@ -723,6 +727,39 @@ async def grant_permission(
     board.permissions.append(p)
     await board.save_changes()
     return UUIDOutput.make(p.id)
+
+
+@router.put('/{board_id}/permission/{permission_id}')
+async def change_permission(
+    board_id: PydanticObjectId,
+    permission_id: UUID,
+    body: UpdatePermissionBody,
+) -> UUIDOutput:
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    user_ctx = current_user()
+    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            'You cannot modify permissions for this board',
+        )
+    if not (
+        perm := next(
+            (obj for obj in board.permissions if obj.id == permission_id), None
+        )
+    ):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+    if perm.permission_type == body.permission_type:
+        return UUIDOutput.make(perm.id)
+    if (
+        perm.permission_type == m.PermissionType.ADMIN
+        and not board.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Board must have at least one admin')
+    perm.permission_type = body.permission_type
+    await board.save_changes()
+    return UUIDOutput.make(perm.id)
 
 
 @router.delete('/{board_id}/permission/{permission_id}')
