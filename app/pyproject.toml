@@ -41,6 +41,7 @@ cryptography = "*"
 starsol-otp = "==1.0.0"
 jinja2 = "*"
 sentry-sdk = {version = "*", extras = ["fastapi", "starlette"]}
+pyinstrument = "*"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"
