@@ -1,11 +1,13 @@
+# pylint: disable=wrong-import-position, import-outside-toplevel, ungrouped-imports
+from collections.abc import Awaitable, Callable
+
 import sentry_sdk
 from beanie import init_beanie
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
-from starlette.requests import Request
-from starlette.responses import JSONResponse
 from starsol_fastapi_jwt_auth import AuthJWT
 from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
@@ -29,6 +31,24 @@ if CONFIG.SENTRY_DSN:
 
 app = FastAPI(title='Snail Orbit', version=APP_VERSION, debug=CONFIG.DEBUG)
 
+
+if CONFIG.ENABLE_PROFILING:
+    from pyinstrument import Profiler
+
+    @app.middleware('http')
+    async def profiling_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        profiling = request.query_params.get('profiling', False)
+        if not profiling:
+            return await call_next(request)
+        profiler = Profiler()
+        profiler.start()
+        await call_next(request)
+        profiler.stop()
+        return HTMLResponse(profiler.output_html())
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CONFIG.ORIGINS,
@@ -40,7 +60,6 @@ app.add_middleware(
 
 @app.on_event('startup')
 async def app_init() -> None:
-    # pylint: disable=import-outside-toplevel
     from pm.models import __beanie_models__
 
     client = AsyncIOMotorClient(CONFIG.DB_URI)
@@ -70,13 +89,11 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
     )
 
 
-# pylint: disable=wrong-import-position
 from pm.api.error_handlers import connect_error_handlers  # noqa
 
 connect_error_handlers(app)
 
 
-# pylint: disable=wrong-import-position
 from pm.api.routes import api_router, events_router  # noqa
 
 app.include_router(api_router)
