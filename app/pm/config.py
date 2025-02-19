@@ -80,6 +80,7 @@ CONFIG = Dynaconf(
             'DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)
         ),
         Validator('DEBUG', cast=bool, default=False),
+        Validator('ENABLE_PROFILING', cast=bool, default=False),
         Validator(
             'DB_URI', default='mongodb://pm:pm@localhost:27017/pm?authSource=admin'
         ),
