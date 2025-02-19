@@ -1,12 +1,9 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import {
-    ErrorHandler,
-    Link,
-    NavbarActionButton,
-    useNavbarSettings,
-} from "components";
+import { ErrorHandler, Link } from "components";
+import { NavbarActionButton } from "components/navbar/navbar_action_button";
+import { useNavbarSettings } from "components/navbar/navbar_settings";
 import deepmerge from "deepmerge";
 import { FC, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";

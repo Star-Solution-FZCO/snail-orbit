@@ -1,3 +1,1 @@
-export * from "./navbar";
-export * from "./navbar_action_button";
-export * from "./navbar_settings";
+export { NavBar } from "./navbar";
