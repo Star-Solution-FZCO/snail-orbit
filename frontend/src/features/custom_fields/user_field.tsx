@@ -17,6 +17,8 @@ type UserFieldProps = {
     rightAdornment?: ReactNode;
 };
 
+const emptyArr: UserSelectOptionT[] = [];
+
 export const UserField = ({
     value,
     label,
@@ -36,7 +38,9 @@ export const UserField = ({
     };
 
     const options = useMemo(() => {
-        return userToSelectOptions((data?.payload.items || []) as BasicUserT[]);
+        return userToSelectOptions(
+            (data?.payload.items || emptyArr) as BasicUserT[],
+        );
     }, [data?.payload.items]);
 
     const parsedValue = useMemo(() => {

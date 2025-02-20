@@ -10,12 +10,12 @@ import {
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
+import type { BasicProjectT } from "types";
 import { noLimitListQueryParams } from "utils";
-import { AgileBoardProject } from "../agile_board_form.schema";
 
 export type ProjectSelectProps = {
-    value?: AgileBoardProject[];
-    onChange?: (projects: AgileBoardProject[]) => void;
+    value?: BasicProjectT[];
+    onChange?: (projects: BasicProjectT[]) => void;
     error?: Merge<FieldError, (FieldError | undefined)[]>;
 };
 
@@ -30,7 +30,7 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
 
         const options = useMemo(() => {
             return data?.payload.items || [];
-        }, [data]) as AgileBoardProject[];
+        }, [data]) as BasicProjectT[];
 
         const handleOpen = useCallback(() => {
             setIsOpen(true);
@@ -42,10 +42,7 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
             setIsOpen(false);
         }, [setIsOpen]);
 
-        const handleChange = (
-            _: SyntheticEvent,
-            value: AgileBoardProject[],
-        ) => {
+        const handleChange = (_: SyntheticEvent, value: BasicProjectT[]) => {
             if (onChange) onChange(value);
         };
 

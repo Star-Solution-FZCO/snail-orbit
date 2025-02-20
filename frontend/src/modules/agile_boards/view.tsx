@@ -23,10 +23,8 @@ import { formatErrorMessages, toastApiError } from "utils";
 import { StarButton } from "../../components/star_button";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
-import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { AgileBoardSelect } from "./components/agile_board_select";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
-import { agileBoardToFormValues } from "./utils/agileBoardToFormValues";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
@@ -48,11 +46,6 @@ const AgileBoardView = () => {
     const [favoriteAgileBoard] = agileBoardApi.useFavoriteBoardMutation();
 
     const agileBoard = useMemo(() => data?.payload, [data]);
-
-    const formValues = useMemo(
-        () => (agileBoard ? agileBoardToFormValues(agileBoard) : undefined),
-        [agileBoard],
-    );
 
     useEffect(() => {
         setAction(
@@ -100,7 +93,7 @@ const AgileBoardView = () => {
     );
 
     const onSubmit = useCallback(
-        (formData: AgileBoardFormData) => {
+        (formData: AgileBoardT) => {
             if (!agileBoard) return;
             updateAgileBoard({
                 id: agileBoard.id,
@@ -197,11 +190,11 @@ const AgileBoardView = () => {
                     </Stack>
                 </Stack>
 
-                {settingsOpen && formValues ? (
+                {settingsOpen && agileBoard ? (
                     <Box mb={2}>
                         <AgileBoardForm
                             onSubmit={onSubmit}
-                            defaultValues={formValues}
+                            defaultValues={agileBoard}
                         />
                     </Box>
                 ) : null}

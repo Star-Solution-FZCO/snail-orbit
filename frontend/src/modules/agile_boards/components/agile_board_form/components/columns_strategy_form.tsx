@@ -7,15 +7,15 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardT } from "types";
 
 export const ColumnsStrategyForm: FC = () => {
     const { t } = useTranslation();
 
-    const { control } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardT>();
 
     const strategy = useWatch({ control, name: "ui_settings.columnsStrategy" });
 
