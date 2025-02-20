@@ -102,6 +102,8 @@ async def test_api_v1_project_crud(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -122,6 +124,8 @@ async def test_api_v1_project_crud(
             'is_subscribed': False,
             'is_active': True,
             'name': 'Test project updated',
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -170,6 +174,8 @@ async def test_api_v1_project_subscription(
             'workflows': [],
             'is_subscribed': True,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
     response = test_client.post(
@@ -186,6 +192,8 @@ async def test_api_v1_project_subscription(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -827,6 +835,8 @@ async def test_api_v1_custom_field_project_link(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -848,6 +858,8 @@ async def test_api_v1_custom_field_project_link(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -868,6 +880,8 @@ async def test_api_v1_custom_field_project_link(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -886,6 +900,8 @@ async def test_api_v1_custom_field_project_link(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
 
@@ -1207,7 +1223,7 @@ async def test_api_v1_issue_link(
 
     for link_type in INTERLINK_TYPES:
         response = test_client.post(
-            f'/api/v1/issue/{issues[0]['id']}/link',
+            f'/api/v1/issue/{issues[0]["id"]}/link',
             headers=headers,
             json={
                 'type': link_type[0],

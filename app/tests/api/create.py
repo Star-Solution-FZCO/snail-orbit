@@ -97,6 +97,8 @@ async def _create_project(
             'workflows': [],
             'is_subscribed': False,
             'is_active': True,
+            'avatar_type': 'default',
+            'avatar': None,
         },
     }
     return data['payload']['id']

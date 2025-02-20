@@ -1,6 +1,7 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import { API_URL, apiVersion } from "config";
-import { AttachmentT } from "types";
+import type { AttachmentT } from "types";
 
 type PreviewFile = {
     id: string;
@@ -107,12 +108,6 @@ const sharedSlice = createSlice({
         closeIssueLinks(state) {
             state.issueLinks.open = false;
         },
-        openAbout(state) {
-            state.about.open = true;
-        },
-        closeAbout(state) {
-            state.about.open = false;
-        },
     },
 });
 
@@ -126,8 +121,6 @@ export const {
     selectFilePreviewByIndex,
     toggleIssueLinks,
     closeIssueLinks,
-    openAbout,
-    closeAbout,
 } = sharedSlice.actions;
 
 export const sharedReducer = sharedSlice.reducer;
