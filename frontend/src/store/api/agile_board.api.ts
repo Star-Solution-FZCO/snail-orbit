@@ -1,14 +1,19 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
+import deepmerge from "deepmerge";
 import type {
     AgileBoardT,
     AgileSwimLineT,
     ApiResponse,
+    BoardPermission,
+    ChangePermissionParams,
     ColumnT,
     CreateAgileBoardT,
     CustomFieldT,
+    GrantPermissionParams,
     ListQueryParams,
     ListResponse,
     MoveIssueT,
+    RevokePermissionParams,
     UpdateAgileBoardT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
@@ -108,6 +113,12 @@ export const agileBoardApi = createApi({
                 method: "PUT",
                 body,
             }),
+            invalidatesTags: [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
             async onQueryStarted(
                 { id },
                 { dispatch, queryFulfilled },
@@ -130,6 +141,53 @@ export const agileBoardApi = createApi({
                 }
             },
         }),
+        favoriteBoard: build.mutation<
+            ApiResponse<AgileBoardT>,
+            { boardId: string; favorite: boolean }
+        >({
+            query: ({ boardId, favorite }) => ({
+                url: `board/${boardId}/${favorite ? "favorite" : "unfavorite"}`,
+                method: "POST",
+            }),
+            invalidatesTags: [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
+            async onQueryStarted(
+                { boardId, favorite },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                dispatch(
+                    agileBoardApi.util.updateQueryData(
+                        "getAgileBoard",
+                        boardId,
+                        (draft) =>
+                            deepmerge(draft, {
+                                payload: { is_favorite: favorite },
+                            }),
+                    ),
+                );
+
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        agileBoardApi.util.upsertQueryData(
+                            "getAgileBoard",
+                            boardId,
+                            data,
+                        ),
+                    );
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoards", id: boardId },
+                        ]),
+                    );
+                }
+            },
+        }),
         deleteAgileBoard: build.mutation<ApiResponse<AgileBoardT>, string>({
             query: (id) => ({
                 url: `board/${id}`,
@@ -137,6 +195,10 @@ export const agileBoardApi = createApi({
             }),
             invalidatesTags: (_result, _error, id) => [
                 { type: "AgileBoards", id },
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
             ],
         }),
         getBoardIssues: build.query<
@@ -157,6 +219,122 @@ export const agileBoardApi = createApi({
             invalidatesTags: (_result, _error, { board_id }) => [
                 { type: "AgileBoardIssues", id: board_id },
             ],
+        }),
+        getBoardPermissions: build.query<
+            ListResponse<BoardPermission>,
+            { boardId: string }
+        >({
+            query: ({ boardId }) => `board/${boardId}/permissions`,
+            providesTags: (_result, _error, { boardId }) => [
+                { type: "AgileBoardPermissions", id: boardId },
+            ],
+        }),
+        grantPermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            GrantPermissionParams
+        >({
+            query: ({ board_id, ...params }) => ({
+                url: `board/${board_id}/permission`,
+                method: "POST",
+                body: params,
+            }),
+            invalidatesTags: (_result, _error, { board_id }) => [
+                { type: "AgileBoards", id: board_id },
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
+        }),
+        revokePermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            RevokePermissionParams
+        >({
+            query: ({ board_id, permission_id }) => ({
+                url: `board/${board_id}/permission/${permission_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: () => [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
+            async onQueryStarted(
+                { permission_id, board_id },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                dispatch(
+                    agileBoardApi.util.updateQueryData(
+                        "getAgileBoard",
+                        board_id,
+                        (draft) => {
+                            if (!draft) return;
+                            draft.payload.permissions =
+                                draft.payload.permissions.filter(
+                                    (el) => el.id !== permission_id,
+                                );
+                        },
+                    ),
+                );
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoards", id: board_id },
+                        ]),
+                    );
+                }
+            },
+        }),
+        changePermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            ChangePermissionParams
+        >({
+            query: ({ board_id, permission_id, ...body }) => ({
+                url: `board/${board_id}/permission/${permission_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: () => [
+                {
+                    type: "AgileBoards",
+                    id: "LIST",
+                },
+            ],
+            async onQueryStarted(
+                { permission_id, board_id, permission_type },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                dispatch(
+                    agileBoardApi.util.updateQueryData(
+                        "getAgileBoard",
+                        board_id,
+                        (draft) => {
+                            if (!draft) return;
+                            const targetPermission =
+                                draft.payload.permissions.find(
+                                    (el) => el.id === permission_id,
+                                );
+                            if (targetPermission)
+                                targetPermission.permission_type =
+                                    permission_type;
+                        },
+                    ),
+                );
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoards", id: board_id },
+                        ]),
+                    );
+                }
+            },
         }),
     }),
 });

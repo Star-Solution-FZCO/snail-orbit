@@ -5,7 +5,15 @@ from pydantic import Field
 
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
-from .project import ProjectLinkField
+from .group import GroupLinkField
+from .permission import (
+    PermissionRecord,
+    PermissionType,
+    _check_permissions,
+    _filter_permissions,
+)
+from .project import PermissionTargetType, ProjectLinkField
+from .user import User, UserLinkField
 
 __all__ = ('Board',)
 
@@ -29,7 +37,67 @@ class Board(Document):
     issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
     card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
-    ui_settings: dict = Field(default_factory=dict)
+    ui_settings: Annotated[dict, Field(default_factory=dict)]
+    created_by: UserLinkField
+    permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
+    favorite_of: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+
+    def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
+        return any(p.target.id == target.id for p in self.permissions)
+
+    def has_any_other_admin_target(
+        self, target: UserLinkField | GroupLinkField
+    ) -> bool:
+        return (
+            sum(
+                1
+                for p in self.permissions
+                if p.permission_type == PermissionType.ADMIN
+                and p.target.id != target.id
+            )
+            > 0
+        )
+
+    def filter_permissions(self, user: User) -> list[PermissionRecord]:
+        return _filter_permissions(self, user)
+
+    @staticmethod
+    def get_filter_query(user: User) -> dict:
+        permission_type = {'$in': [l.value for l in PermissionType]}
+        return {
+            '$or': [
+                {
+                    'permissions': {
+                        '$elemMatch': {
+                            'target_type': PermissionTargetType.USER,
+                            'target.id': user.id,
+                            'permission_type': permission_type,
+                        }
+                    }
+                },
+                {
+                    'permissions': {
+                        '$elemMatch': {
+                            'target_type': PermissionTargetType.GROUP,
+                            'target.id': {'$in': [g.id for g in user.groups]},
+                            'permission_type': permission_type,
+                        }
+                    }
+                },
+            ]
+        }
+
+    def check_permissions(
+        self, user: User, required_permission: PermissionType
+    ) -> bool:
+        return _check_permissions(
+            permissions=self.permissions,
+            user=user,
+            required_permission=required_permission,
+        )
+
+    def is_favorite_of(self, user_id: PydanticObjectId) -> bool:
+        return user_id in self.favorite_of
 
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None

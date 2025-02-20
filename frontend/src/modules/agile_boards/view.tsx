@@ -1,10 +1,12 @@
-import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
+    Button,
     Container,
     IconButton,
+    Menu,
+    MenuItem,
     Stack,
     TextField,
     Typography,
@@ -13,18 +15,18 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
+import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { AgileBoardT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
+import { StarButton } from "../../components/star_button";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
-import type { AgileBoardFormData } from "./components/agile_board_form/agile_board_form.schema";
 import { AgileBoardSelect } from "./components/agile_board_select";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
-import { agileBoardToFormValues } from "./utils/agileBoardToFormValues";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
@@ -43,35 +45,43 @@ const AgileBoardView = () => {
 
     const [updateAgileBoard] = agileBoardApi.useUpdateAgileBoardMutation();
 
-    const agileBoard = useMemo(() => data?.payload, [data]);
+    const [favoriteAgileBoard] = agileBoardApi.useFavoriteBoardMutation();
 
-    const formValues = useMemo(
-        () => (agileBoard ? agileBoardToFormValues(agileBoard) : undefined),
-        [agileBoard],
-    );
+    const agileBoard = useMemo(() => data?.payload, [data]);
 
     useEffect(() => {
         setAction(
-            <Link to="/agiles/create">
-                <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("agileBoards.new")}
-                </NavbarActionButton>
-            </Link>,
+            <PopupState popupId="agiles-menu-button" variant="popover">
+                {(popupState) => (
+                    <>
+                        <NavbarActionButton {...bindTrigger(popupState)}>
+                            {t("agileBoards.navbarButton")}
+                        </NavbarActionButton>
+                        <Menu
+                            {...bindMenu(popupState)}
+                            anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "center",
+                            }}
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "center",
+                            }}
+                        >
+                            <Link to="/agiles/create">
+                                <MenuItem>{t("agileBoards.new")}</MenuItem>
+                            </Link>
+                            <Link to="/issues/create">
+                                <MenuItem>{t("issues.new")}</MenuItem>
+                            </Link>
+                        </Menu>
+                    </>
+                )}
+            </PopupState>,
         );
 
         return () => setAction(null);
     }, [setAction]);
-
-    if (error) {
-        return (
-            <Container sx={{ px: 4, pb: 4 }} disableGutters>
-                <Typography fontSize={24} fontWeight="bold">
-                    {formatErrorMessages(error) ||
-                        t("agileBoards.item.fetch.error")}
-                </Typography>
-            </Container>
-        );
-    }
 
     useEffect(() => {
         setLastViewBoardId(boardId);
@@ -84,19 +94,51 @@ const AgileBoardView = () => {
         [navigate],
     );
 
-    if (!agileBoard) return null;
-
-    const onSubmit = (formData: AgileBoardFormData) => {
-        updateAgileBoard({
-            id: agileBoard.id,
-            ...formValuesToCreateForm(formData),
-        })
-            .unwrap()
-            .then(() => {
-                toast.success(t("agileBoards.update.success"));
+    const onSubmit = useCallback(
+        (formData: AgileBoardT) => {
+            if (!agileBoard) return;
+            updateAgileBoard({
+                id: agileBoard.id,
+                ...formValuesToCreateForm(formData),
             })
-            .catch(toastApiError);
-    };
+                .unwrap()
+                .then(() => {
+                    toast.success(t("agileBoards.update.success"));
+                })
+                .catch(toastApiError);
+        },
+        [updateAgileBoard, toast, agileBoard, formValuesToCreateForm],
+    );
+
+    const goToFullListHandler = useCallback(() => {
+        navigate({ to: "/agiles/list" });
+    }, [navigate]);
+
+    if (error) {
+        return (
+            <Container
+                sx={{
+                    px: 4,
+                    pb: 4,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                }}
+                disableGutters
+            >
+                <Typography fontSize={24} fontWeight="bold">
+                    {formatErrorMessages(error) ||
+                        t("agileBoards.item.fetch.error")}
+                </Typography>
+                <Button onClick={goToFullListHandler} variant="contained">
+                    {t("agileBoards.returnToList")}
+                </Button>
+            </Container>
+        );
+    }
+
+    if (!agileBoard) return null;
 
     return (
         <Stack direction="column">
@@ -110,6 +152,7 @@ const AgileBoardView = () => {
                     <AgileBoardSelect
                         value={agileBoard}
                         onChange={handleBoardSelect}
+                        onGoToListClick={goToFullListHandler}
                     />
 
                     <TextField
@@ -125,7 +168,6 @@ const AgileBoardView = () => {
                                     setDeleteDialogOpen((prev) => !prev)
                                 }
                                 color="error"
-                                size="small"
                             >
                                 <DeleteIcon />
                             </IconButton>
@@ -134,18 +176,27 @@ const AgileBoardView = () => {
                         <IconButton
                             onClick={() => setSettingsOpen((prev) => !prev)}
                             color="primary"
-                            size="small"
                         >
                             <SettingsIcon />
                         </IconButton>
+
+                        <StarButton
+                            starred={agileBoard.is_favorite}
+                            onClick={() =>
+                                favoriteAgileBoard({
+                                    boardId: agileBoard.id,
+                                    favorite: !agileBoard.is_favorite,
+                                })
+                            }
+                        />
                     </Stack>
                 </Stack>
 
-                {settingsOpen && formValues ? (
+                {settingsOpen && agileBoard ? (
                     <Box mb={2}>
                         <AgileBoardForm
                             onSubmit={onSubmit}
-                            defaultValues={formValues}
+                            defaultValues={agileBoard}
                         />
                     </Box>
                 ) : null}

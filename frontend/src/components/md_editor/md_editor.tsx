@@ -1,5 +1,6 @@
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { Box, useTheme } from "@mui/material";
+import type { DowncastWriter, EventInfo } from "ckeditor5";
 import {
     Autoformat,
     AutoLink,
@@ -25,7 +26,8 @@ import {
 import "ckeditor5/ckeditor5.css";
 import "github-markdown-css";
 import i18n from "i18n";
-import { FC } from "react";
+import type { FC } from "react";
+import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./md_editor.css";
@@ -85,12 +87,14 @@ const toolbar = {
 };
 
 interface IMDEditorProps {
-    value: string;
-    onChange: (value: string) => void;
+    value?: string;
+    onChange?: (value: string) => unknown;
     placeholder?: string;
     readOnly?: boolean;
     autoHeight?: boolean;
     autoFocus?: boolean;
+    defaultValue?: string;
+    onBlur?: (value: string) => unknown;
 }
 
 const MDEditor: FC<IMDEditorProps> = ({
@@ -100,9 +104,34 @@ const MDEditor: FC<IMDEditorProps> = ({
     readOnly,
     autoHeight,
     autoFocus,
+    defaultValue,
+    onBlur,
 }) => {
+    const isControlled = typeof value !== "undefined";
+    const hasDefaultValue = typeof defaultValue !== "undefined";
+
     const theme = useTheme();
     const editorStyles = useCKEditorStyles();
+    const [innerValue, setInnerValue] = useState<string>(
+        hasDefaultValue ? defaultValue : "",
+    );
+    const editorValue = isControlled ? value : innerValue;
+
+    const handleChange = useCallback(
+        (_: EventInfo, editor: ClassicEditor) => {
+            const res = editor.getData();
+            if (onChange) onChange(res);
+            if (!isControlled) setInnerValue(res);
+        },
+        [isControlled, onChange],
+    );
+
+    const handleBlur = useCallback(
+        (_: EventInfo, editor: ClassicEditor) => {
+            if (onBlur) onBlur(editor.getData());
+        },
+        [onBlur],
+    );
 
     return (
         <Box
@@ -126,17 +155,18 @@ const MDEditor: FC<IMDEditorProps> = ({
         >
             <CKEditor
                 editor={ClassicEditor}
-                data={value}
-                onChange={(_, editor) => {
-                    onChange(editor.getData());
-                }}
-                onReady={(editor: any) => {
-                    editor.editing.view.change((writer: any) => {
-                        writer.setStyle(
-                            "height",
-                            "calc(100% - 40px)",
-                            editor.editing.view.document.getRoot(),
-                        );
+                data={editorValue}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                onReady={(editor: ClassicEditor) => {
+                    editor.editing.view.change((writer: DowncastWriter) => {
+                        const root = editor.editing.view.document.getRoot();
+                        if (root)
+                            writer.setStyle(
+                                "height",
+                                "calc(100% - 40px)",
+                                root,
+                            );
                     });
                     if (autoFocus) {
                         editor.editing.view.focus();

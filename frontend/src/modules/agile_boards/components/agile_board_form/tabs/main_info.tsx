@@ -1,15 +1,15 @@
 import { Stack, TextField } from "@mui/material";
 import { MDEditor } from "components";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardT } from "types";
 import { ProjectSelect } from "../components/project_select";
 
 export const MainInfo: FC = () => {
     const { t } = useTranslation();
 
-    const { control } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardT>();
 
     return (
         <Stack direction="column" gap={2}>
@@ -34,8 +34,8 @@ export const MainInfo: FC = () => {
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <MDEditor
-                        value={value || ""}
-                        onChange={onChange}
+                        defaultValue={value || ""}
+                        onBlur={onChange}
                         placeholder={t("agileBoards.form.description")}
                     />
                 )}

@@ -17,20 +17,20 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import type { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardT } from "types";
 
 export const CardColorsFieldsForm: FC = () => {
     const { t } = useTranslation();
 
     const [selectInput, setSelectInput] = useState<string>("");
-    const { control } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardT>();
 
     const colorFields = useWatch({
         control,
         name: "card_colors_fields",
     });
 
-    const { fields, append, remove } = useFieldArray<AgileBoardFormData>({
+    const { fields, append, remove } = useFieldArray<AgileBoardT>({
         control,
         name: "card_colors_fields",
     });

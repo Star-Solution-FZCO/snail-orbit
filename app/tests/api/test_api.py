@@ -1447,7 +1447,7 @@ async def test_api_v1_search_create_test_body_params(
         assert data['success']
         assert data['payload']['name'] == search_payload['name']
         assert data['payload']['query'] == search_payload['query']
-        assert data['payload']['permissions'] == []
+        assert len(data['payload']['permissions']) == 1
 
 
 @pytest.mark.parametrize(
@@ -1481,7 +1481,7 @@ async def test_api_v1_search_create_test_body_params(
     ],
 )
 @pytest.mark.asyncio
-async def test_api_v1_search_create_permission_with_user_flow(
+async def test_api_v1_search_grant_permission_with_user_flow(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
     create_search: str,
@@ -1493,19 +1493,27 @@ async def test_api_v1_search_create_permission_with_user_flow(
     user_id, user_token = create_initial_user
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
-    share_payload = [{'target_type': 'user', 'target': user_id}]
+    share_payload = {
+        'target_type': 'user',
+        'target': user_id,
+        'permission_type': 'view',
+    }
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json=[{'target_type': 'user', 'target': '675579dff68118dbf878902c'}],
+        json={
+            'target_type': 'user',
+            'target': '675579dff68118dbf878902c',
+            'permission_type': 'view',
+        },
     )
     assert response.status_code == 404
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json=[{'target_type': 'user', 'target': admin_id}],
+        json={'target_type': 'user', 'target': admin_id, 'permission_type': 'view'},
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1514,9 +1522,6 @@ async def test_api_v1_search_create_permission_with_user_flow(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert len(data['payload']['permissions']) == 1
-    assert data['payload']['permissions'][0]['target_type'] == 'user'
-    assert data['payload']['permissions'][0]['target']['id'] == user_id
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1574,7 +1579,7 @@ async def test_api_v1_search_create_permission_with_user_flow(
     ],
 )
 @pytest.mark.asyncio
-async def test_api_v1_search_create_and_delete_permission_with_group_flow(
+async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
     create_search: str,
@@ -1587,7 +1592,11 @@ async def test_api_v1_search_create_and_delete_permission_with_group_flow(
     user_id, user_token = create_initial_user
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
-    share_payload = [{'target_type': 'group', 'target': create_group}]
+    share_payload = {
+        'target_type': 'group',
+        'target': create_group,
+        'permission_type': 'view',
+    }
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1598,7 +1607,11 @@ async def test_api_v1_search_create_and_delete_permission_with_group_flow(
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json=[{'target_type': 'group', 'target': '675579dff68118dbf878902c'}],
+        json={
+            'target_type': 'group',
+            'target': '675579dff68118dbf878902c',
+            'permission_type': 'view',
+        },
     )
     assert response.status_code == 404
     response = test_client.post(
@@ -1609,10 +1622,7 @@ async def test_api_v1_search_create_and_delete_permission_with_group_flow(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert len(data['payload']['permissions']) == 1
-    id = data['payload']['permissions'][0]['id']
-    assert data['payload']['permissions'][0]['target_type'] == 'group'
-    assert data['payload']['permissions'][0]['target']['id'] == create_group
+    id = data['payload']['id']
     response = test_client.get(
         f'/api/v1/search/list',
         headers=user_headers,
@@ -1649,7 +1659,7 @@ async def test_api_v1_search_create_and_delete_permission_with_group_flow(
         f'/api/v1/search/{create_search}/permission/{id}',
         headers=admin_headers,
     )
-    assert response.status_code == 409
+    assert response.status_code == 404
     response = test_client.get(
         f'/api/v1/search/list',
         headers=user_headers,
@@ -1715,74 +1725,3 @@ async def test_api_v1_search_delete(
     data = response.json()
     assert data['success']
     assert data['payload']['id'] == create_search
-
-
-@pytest.mark.parametrize(
-    'group_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test Group',
-                'description': 'Test group for search sharing',
-            },
-            id='share_group',
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    'search_payload',
-    [
-        pytest.param(
-            {
-                'name': 'Test Search Share',
-                'query': 'Test field: "test query"',
-            },
-            id='share_search',
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    'custom_field_payloads',
-    [
-        pytest.param(
-            [
-                {
-                    'name': 'Test field',
-                    'type': 'string',
-                    'is_nullable': True,
-                    'description': 'Custom field description',
-                    'ai_description': None,
-                    'default_value': None,
-                },
-            ],
-            id='custom_fields',
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_api_v1_search_create_permission_test_exceptions(
-    test_client: 'TestClient',
-    create_initial_admin: tuple[str, str],
-    create_search: str,
-    create_group: str,
-    search_payload: dict,
-    create_custom_fields: list[dict],
-    create_initial_user,
-) -> None:
-    admin_id, admin_token = create_initial_admin
-    user_id, user_token = create_initial_user
-    admin_headers = {'Authorization': f'Bearer {admin_token}'}
-    user_headers = {'Authorization': f'Bearer {user_token}'}
-    share_payload = [{'target_type': 'group', 'target': create_group}]
-    response = test_client.post(
-        f'/api/v1/search/675579dff68118dbf878902c/permission',
-        headers=admin_headers,
-        json=share_payload,
-    )
-    assert response.status_code == 404
-    response = test_client.post(
-        f'/api/v1/search/{create_search}/permission',
-        headers=user_headers,
-        json=share_payload,
-    )
-    assert response.status_code == 403
