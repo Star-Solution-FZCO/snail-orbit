@@ -7,12 +7,9 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import {
-    Link,
-    NavbarActionButton,
-    QueryPagination,
-    useNavbarSettings,
-} from "components";
+import { Link, QueryPagination } from "components";
+import { NavbarActionButton } from "components/navbar/navbar_action_button";
+import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
