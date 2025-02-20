@@ -1,8 +1,7 @@
 import { Divider, Pagination, Stack } from "@mui/material";
 import type { FC } from "react";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import type { IssueT } from "types/issue";
-import { interleave } from "utils/helpers/interleave";
 import IssueRow from "./issue_row/issue_row";
 import type { IssueRowViewParams } from "./issue_row/issue_row.types";
 
@@ -22,11 +21,14 @@ export const IssuesList: FC<IssuesListProps> = ({
     viewSettings,
 }) => {
     const rows = useMemo(() => {
-        const res = issues.map((issue) => (
-            <IssueRow key={issue.id} issue={issue} {...viewSettings} />
+        const res = issues.map((issue, index) => (
+            <React.Fragment key={issue.id}>
+                <IssueRow issue={issue} {...viewSettings} />
+                {viewSettings?.showDividers && index !== issues.length - 1 && (
+                    <Divider />
+                )}
+            </React.Fragment>
         ));
-
-        if (viewSettings?.showDividers) return interleave(res, <Divider />);
         return res;
     }, [issues, viewSettings]);
 

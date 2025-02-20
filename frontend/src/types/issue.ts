@@ -31,12 +31,14 @@ export type IssueT = {
     fields: Record<string, CustomFieldT>;
     attachments: AttachmentT[];
     aliases: string[];
+    is_resolved: boolean;
     is_subscribed: boolean;
     tags: TagShortT[];
     created_by: BasicUserT;
     created_at: string;
     updated_by: BasicUserT | null;
     updated_at: string | null;
+    resolved_at: string | null;
     interlinks: IssueLinkT[];
 };
 
