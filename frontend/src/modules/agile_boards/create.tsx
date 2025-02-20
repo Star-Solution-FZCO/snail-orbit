@@ -1,7 +1,9 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link, NavbarActionButton, useNavbarSettings } from "components";
+import { Link } from "components";
+import { NavbarActionButton } from "components/navbar/navbar_action_button";
+import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
