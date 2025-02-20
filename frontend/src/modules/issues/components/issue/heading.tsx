@@ -41,10 +41,33 @@ const IssueHeading: FC<IIssueHeadingProps> = ({
 
     return (
         <Box display="flex" flexDirection="column" gap={2}>
-            <Box display="flex" alignItems="center" gap={2} fontSize={14}>
-                <Link>{issue.id_readable}</Link>
+            <Box
+                display="flex"
+                alignItems="center"
+                fontSize={14}
+                flexWrap="wrap"
+            >
+                <Link
+                    mr={1}
+                    sx={(theme) => ({
+                        color: issue.is_resolved
+                            ? theme.palette.text.disabled
+                            : theme.palette.primary.main,
+                        textDecoration: issue.is_resolved
+                            ? "line-through"
+                            : "none",
+                        "&:hover": {
+                            color: theme.palette.primary.main,
+                            textDecoration: issue.is_resolved
+                                ? "line-through underline"
+                                : "underline",
+                        },
+                    })}
+                >
+                    {issue.id_readable}
+                </Link>
 
-                <Typography color="text.secondary" fontSize="inherit">
+                <Typography color="text.secondary" fontSize="inherit" mr={1}>
                     {t("createdBy")}{" "}
                     <Typography
                         component="span"
@@ -57,7 +80,11 @@ const IssueHeading: FC<IIssueHeadingProps> = ({
                 </Typography>
 
                 {issue.updated_by && issue.updated_at && (
-                    <Typography color="text.secondary" fontSize="inherit">
+                    <Typography
+                        color="text.secondary"
+                        fontSize="inherit"
+                        mr={1}
+                    >
                         {t("updatedBy")}{" "}
                         <Typography
                             component="span"
@@ -69,16 +96,36 @@ const IssueHeading: FC<IIssueHeadingProps> = ({
                         {renderTimestamp(issue.updated_at)}
                     </Typography>
                 )}
+
+                {issue.resolved_at && (
+                    <Typography color="text.secondary" fontSize="inherit">
+                        {t("resolved")} {renderTimestamp(issue.resolved_at)}
+                    </Typography>
+                )}
             </Box>
 
             {displayMode === "view" && (
                 <Stack>
                     <Stack flexDirection="row" gap={1}>
-                        <Typography fontSize={24} fontWeight="bold" flex={1}>
+                        <Typography
+                            sx={{
+                                wordBreak: "break-word",
+                                color: issue.is_resolved
+                                    ? "text.disabled"
+                                    : "inherit",
+                            }}
+                            fontSize={24}
+                            fontWeight="bold"
+                            flex={1}
+                        >
                             {issue.subject}
                         </Typography>
 
-                        <Stack flexDirection="row" gap={1}>
+                        <Stack
+                            flexDirection="row"
+                            alignItems="flex-start"
+                            gap={1}
+                        >
                             <Tooltip
                                 title={t("issues.heading.edit")}
                                 onClick={handleClickEdit}

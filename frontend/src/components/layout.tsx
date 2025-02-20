@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { Outlet } from "@tanstack/react-router";
-import { NavBar, NavbarSettingsContextProvider } from "./navbar";
+import { NavBar } from "./navbar";
+import { NavbarSettingsContextProvider } from "./navbar/navbar_settings";
 import { PageTitle } from "./page_title";
 
 const Layout = () => {

@@ -32,7 +32,7 @@ class OIDCParams:
 
     def decode_token(self, token: str, client_id: str) -> dict[str, str]:
         for pub_key in self.public_keys:
-            pub_key_pem = f'-----BEGIN CERTIFICATE-----\n{pub_key['x5c'][0]}\n-----END CERTIFICATE-----'.encode()
+            pub_key_pem = f'-----BEGIN CERTIFICATE-----\n{pub_key["x5c"][0]}\n-----END CERTIFICATE-----'.encode()
             cert = load_pem_x509_certificate(pub_key_pem)
             try:
                 return jwt.decode(

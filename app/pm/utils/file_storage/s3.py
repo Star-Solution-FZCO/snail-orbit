@@ -5,7 +5,7 @@ from urllib.parse import quote, unquote
 
 import aioboto3
 
-from ._base import BaseStorageClient, FileHeader, FileIDT
+from ._base import BaseStorageClient, FileHeader, FileIDT, StorageFileNotFound
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
@@ -136,9 +136,27 @@ class S3StorageClient(BaseStorageClient):
     ) -> FileHeader:
         filepath = opj(folder, str(file_id))
         async with self._get_client_ctx() as client:
-            head = await client.head_object(Bucket=self.__bucket, Key=filepath)
-            return FileHeader(
-                size=head['ContentLength'],
-                name=decode_filename_disposition(head['ContentDisposition']),
-                content_type=head['ContentType'],
+            try:
+                head = await client.head_object(Bucket=self.__bucket, Key=filepath)
+                return FileHeader(
+                    size=head['ContentLength'],
+                    name=decode_filename_disposition(head['ContentDisposition']),
+                    content_type=head['ContentType'],
+                )
+            except Exception as err:
+                if getattr(err, 'response', {}).get('Error', {}).get('Code') == '404':
+                    raise StorageFileNotFound(file_id) from err
+                raise
+
+    async def delete_file(
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
+    ) -> None:
+        filepath = opj(folder, str(file_id))
+        await self.get_file_info(file_id, folder)
+        async with self._get_client_ctx() as client:
+            await client.delete_object(
+                Bucket=self.__bucket,
+                Key=filepath,
             )

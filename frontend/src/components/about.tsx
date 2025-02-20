@@ -6,25 +6,26 @@ import {
     DialogTitle,
     Typography,
 } from "@mui/material";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { appVersion } from "config";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { closeAbout, sharedApi, useAppDispatch, useAppSelector } from "store";
+import { sharedApi } from "store";
 
-const About = () => {
+type AboutProps = {
+    open: boolean;
+    onClose: () => void;
+};
+
+const About = memo((props: AboutProps) => {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
-
-    const { open } = useAppSelector((state) => state.shared.about);
+    const { open, onClose } = props;
 
     const { data: backendVersionData, isLoading: backendVersionIsLoading } =
-        sharedApi.useGetVersionQuery();
-
-    const handleClose = () => {
-        dispatch(closeAbout());
-    };
+        sharedApi.useGetVersionQuery(!open ? skipToken : undefined);
 
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={onClose}>
             <DialogTitle>
                 <Typography>{t("about.title")}</Typography>
             </DialogTitle>
@@ -45,6 +46,8 @@ const About = () => {
             </DialogContent>
         </Dialog>
     );
-};
+});
+
+About.displayName = "About";
 
 export { About };

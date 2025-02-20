@@ -1,14 +1,14 @@
 from http import HTTPStatus
 from uuid import UUID, uuid4
 
-from fastapi import File, UploadFile
+from fastapi import File, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
 from pm.services.files import get_storage_client
-from pm.utils.file_storage import FileHeader
+from pm.utils.file_storage import FileHeader, StorageFileNotFound
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = ('router',)
@@ -52,7 +52,10 @@ async def get_attachment(file_id: UUID) -> RedirectResponse:
 async def download_attachment(file_id: UUID) -> StreamingResponse:
     file_id = str(file_id)
     client = get_storage_client()
-    file_header = await client.get_file_info(file_id)
+    try:
+        file_header = await client.get_file_info(file_id)
+    except StorageFileNotFound as err:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
         content=client.get_file_stream(file_id),  # type: ignore
         media_type=file_header.content_type,

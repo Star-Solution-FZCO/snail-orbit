@@ -24,10 +24,10 @@ class SentEventType(StrEnum):
 
 class SentEventOutput(BaseModel):
     type: SentEventType
-    data: BaseModel | dict | None = None
+    data: dict | None = None
 
     def to_msg(self) -> str:
-        return f'data: {self.model_dump_json(exclude_unset=True, serialize_as_any=True)}\n\n'
+        return f'data: {self.model_dump_json(exclude_unset=True)}\n\n'
 
 
 P = ParamSpec('P')
