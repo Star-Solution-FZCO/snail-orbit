@@ -1,23 +1,18 @@
-import { yupResolver } from "@hookform/resolvers/yup";
 import { TabContext } from "@mui/lab";
 import { Box, debounce, Tab, Tabs } from "@mui/material";
 import { TabPanel } from "components";
 import { FC, useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useSchema } from "utils/hooks/use-schema";
-import {
-    AgileBoardFormData,
-    getAgileBoardSchema,
-} from "./agile_board_form.schema";
+import { AgileBoardT } from "../../../../types";
 import { Access } from "./tabs/access";
 import { Card } from "./tabs/card";
 import { ColumnSwimlanes } from "./tabs/column_swimlanes";
 import { MainInfo } from "./tabs/main_info";
 
 interface IAgileBoardFormProps {
-    defaultValues?: AgileBoardFormData;
-    onSubmit: (formData: AgileBoardFormData) => void;
+    defaultValues?: AgileBoardT;
+    onSubmit: (formData: AgileBoardT) => void;
 }
 
 const enum tabs {
@@ -32,12 +27,10 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     onSubmit,
 }) => {
     const { t } = useTranslation();
-    const agileBoardSchema = useSchema(getAgileBoardSchema);
     const [currentTab, setTab] = useState<tabs>(tabs.main);
 
-    const form = useForm<AgileBoardFormData>({
+    const form = useForm<AgileBoardT>({
         defaultValues,
-        resolver: yupResolver(agileBoardSchema),
     });
 
     const {

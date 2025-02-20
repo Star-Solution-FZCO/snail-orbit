@@ -5,8 +5,10 @@ import type {
     StateFieldT,
     VersionFieldT,
 } from "./custom_fields";
+import type { GroupT } from "./group";
 import type { IssueT } from "./issue";
 import type { BasicProjectT } from "./project";
+import type { BasicUserT } from "./user";
 
 export type ColumnT = BasicCustomFieldT;
 
@@ -49,6 +51,7 @@ export type AgileBoardT = {
     card_colors_fields: AgileBoardCardFieldT[];
     ui_settings: UiSettingT;
     is_favorite: boolean;
+    permissions: BoardPermission[];
 };
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
@@ -69,6 +72,39 @@ export type AgileColumnT = {
 export type AgileSwimLineT = {
     field_value: AgileFieldValueT | null;
     columns: AgileColumnT[];
+};
+
+export const boardPermissionTargets = ["group", "user"] as const;
+
+export type BoardPermissionTargetT = (typeof boardPermissionTargets)[number];
+
+export const boardPermissionTypes = ["view", "edit", "admin"] as const;
+
+export type BoardPermissionTypeT = (typeof boardPermissionTypes)[number];
+
+export type BoardPermission = {
+    id: string;
+    target_type: BoardPermissionTargetT;
+    permission_type: BoardPermissionTypeT;
+    target: BasicUserT | GroupT;
+};
+
+export type GrantPermissionParams = {
+    board_id: string;
+    target_type: BoardPermissionTargetT;
+    target: string;
+    permission_type: BoardPermissionTypeT;
+};
+
+export type RevokePermissionParams = {
+    board_id: string;
+    permission_id: string;
+};
+
+export type ChangePermissionParams = {
+    board_id: string;
+    permission_id: string;
+    permission_type: BoardPermissionTypeT;
 };
 
 export type MoveIssueT = {

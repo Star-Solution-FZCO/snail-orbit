@@ -1,5 +1,5 @@
-import { CreateAgileBoardT } from "types";
-import { CreateAgileBoardFormData } from "./create_agile_board_form.schema";
+import type { CreateAgileBoardT } from "types";
+import type { CreateAgileBoardFormData } from "./create_agile_board_form.schema";
 
 export const formValuesToApiData = (
     form: CreateAgileBoardFormData,

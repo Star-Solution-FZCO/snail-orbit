@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MouseEventHandler, useState } from "react";
 
@@ -85,6 +85,9 @@ const options = [
         color: "#7057ff",
         description: "Very god",
         value: "some value",
+        rightAdornment: (
+            <Box sx={{ width: 20, height: 20, backgroundColor: "red" }}></Box>
+        ),
     },
     {
         label: "Project two",

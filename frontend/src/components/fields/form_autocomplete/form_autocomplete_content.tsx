@@ -134,6 +134,14 @@ export const FormAutocompleteContent = <
                     />
                 );
             }}
+            renderGroup={({ group, key, children }) => (
+                <li key={key}>
+                    <Box sx={{ textAlign: "right", px: 2 }}>{group}</Box>
+                    <Box component="ul" sx={{ p: 0 }}>
+                        {children}
+                    </Box>
+                </li>
+            )}
             {...props}
         />
     );

@@ -31,11 +31,13 @@ export const enumToSelectOption = (
     original: option,
 });
 
+const enumToSelectOptionsEmptyArr: SelectOptionTypeWithOriginal[] = [];
+
 export const enumToSelectOptions = (
     options: EnumFieldT[] | undefined,
 ): SelectOptionTypeWithOriginal[] => {
-    if (!options) return [];
-    if (!options.length) return [];
+    if (!options) return enumToSelectOptionsEmptyArr;
+    if (!options.length) return enumToSelectOptionsEmptyArr;
 
     return options.map(enumToSelectOption);
 };

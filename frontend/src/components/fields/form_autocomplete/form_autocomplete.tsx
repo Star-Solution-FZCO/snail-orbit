@@ -8,7 +8,7 @@ export type FormAutocompletePopoverProps<
     G extends boolean | undefined,
 > = {
     onClose?: () => unknown;
-    anchorEl?: HTMLElement | null;
+    anchorEl?: Element | null;
     id: string;
     open: boolean;
 } & FormAutocompleteContentProps<F, G>;

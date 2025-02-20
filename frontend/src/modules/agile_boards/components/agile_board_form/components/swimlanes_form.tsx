@@ -18,13 +18,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import type {
+    AgileBoardT,
     BasicUserT,
     EnumOptionT,
     StateOptionT,
     VersionOptionT,
 } from "types";
 import { useListQueryParams } from "utils";
-import type { AgileBoardFormData } from "../agile_board_form.schema";
+import { getFieldValue } from "../../../utils/normalizeFieldValue";
 
 const getOptionValue = (
     option: EnumOptionT | StateOptionT | BasicUserT | VersionOptionT,
@@ -40,7 +41,7 @@ export const SwimlanesForm: FC = () => {
         limit: 0,
     });
 
-    const { control } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardT>();
 
     const field = useWatch({
         name: "swimlane_field",
@@ -52,7 +53,7 @@ export const SwimlanesForm: FC = () => {
         name: "swimlanes",
     });
 
-    const { fields, append, remove } = useFieldArray<AgileBoardFormData>({
+    const { fields, append, remove } = useFieldArray<AgileBoardT>({
         control,
         name: "swimlanes",
     });
@@ -69,7 +70,8 @@ export const SwimlanesForm: FC = () => {
             options?.payload?.items.filter(
                 (option) =>
                     !swimlanes.some(
-                        ({ value }) => value === getOptionValue(option),
+                        (swimlane) =>
+                            getFieldValue(swimlane) === getOptionValue(option),
                     ),
             ) || []
         );
@@ -103,7 +105,7 @@ export const SwimlanesForm: FC = () => {
                                 size="small"
                                 fullWidth
                                 disabled
-                                value={value.value}
+                                value={getFieldValue(value)}
                                 onChange={(e) =>
                                     onChange({ name: e.target.value })
                                 }
