@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { userApi } from "store";
 import { AccountSecurity } from "./components/account_security";
 import { APITokenList } from "./components/api_tokens";
+import { Workspace } from "./components/workspace";
 import { tabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/profile/");
@@ -59,6 +60,10 @@ export const ProfileView = () => {
 
                     <TabPanel value="security">
                         <AccountSecurity />
+                    </TabPanel>
+
+                    <TabPanel value="workspace">
+                        <Workspace />
                     </TabPanel>
                 </TabContext>
             </Box>
