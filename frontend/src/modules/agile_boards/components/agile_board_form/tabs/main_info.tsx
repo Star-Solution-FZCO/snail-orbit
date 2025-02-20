@@ -3,13 +3,13 @@ import { MDEditor } from "components";
 import type { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { AgileBoardFormData } from "../agile_board_form.schema";
+import type { AgileBoardT } from "types";
 import { ProjectSelect } from "../components/project_select";
 
 export const MainInfo: FC = () => {
     const { t } = useTranslation();
 
-    const { control } = useFormContext<AgileBoardFormData>();
+    const { control } = useFormContext<AgileBoardT>();
 
     return (
         <Stack direction="column" gap={2}>

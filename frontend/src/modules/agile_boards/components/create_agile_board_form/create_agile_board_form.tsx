@@ -1,32 +1,30 @@
-import { yupResolver } from "@hookform/resolvers/yup";
 import { Box, Button, Stack, TextField } from "@mui/material";
 import { Link, MDEditor } from "components";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useSchema } from "utils/hooks/use-schema";
 import { ColumnFieldSelect } from "../agile_board_form/components/column_field_select";
 import { ProjectSelect } from "../agile_board_form/components/project_select";
-import {
-    CreateAgileBoardFormData,
-    getCreateAgileBoardSchema,
-} from "./create_agile_board_form.schema";
+import type { FormValues } from "./create_agile_board_form.types";
 
 export type CreateAgileBoardFormProps = {
-    onSubmit: (formData: CreateAgileBoardFormData) => void;
-    defaultValues?: CreateAgileBoardFormData;
+    onSubmit: (formData: FormValues) => void;
+};
+
+const defaultValues: FormValues = {
+    name: "",
+    column_field: undefined,
+    description: "",
+    projects: [],
 };
 
 export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
-    defaultValues,
     onSubmit,
 }) => {
     const { t } = useTranslation();
-    const createAgileBoardSchema = useSchema(getCreateAgileBoardSchema);
 
-    const form = useForm<CreateAgileBoardFormData>({
-        defaultValues: defaultValues,
-        resolver: yupResolver(createAgileBoardSchema),
+    const form = useForm<FormValues>({
+        defaultValues,
     });
 
     const { handleSubmit, control } = form;
