@@ -320,6 +320,7 @@
   "queryBuilder.addCustomFieldButton.add": "Add Field",
   "queryBuilder.noData": "No data",
   "queryBuilder.title": "Query builder",
+  "resolved": "Resolved",
   "roles.create.success": "Role created successfully",
   "roles.create.title": "New role",
   "roles.empty": "No roles",
