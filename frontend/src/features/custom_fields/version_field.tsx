@@ -20,6 +20,8 @@ type VersionFieldProps = {
     rightAdornment?: ReactNode;
 };
 
+const emptyArr: VersionOptionT[] = [];
+
 export const VersionField: FC<VersionFieldProps> = ({
     value,
     onChange,
@@ -36,7 +38,7 @@ export const VersionField: FC<VersionFieldProps> = ({
     };
 
     const options = useMemo(() => {
-        const items = (data?.payload.items || []) as VersionOptionT[];
+        const items = (data?.payload.items || emptyArr) as VersionOptionT[];
         return items.map(versionOptionToSelectOption);
     }, [data?.payload.items]);
 

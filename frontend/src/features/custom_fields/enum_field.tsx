@@ -68,10 +68,12 @@ export const EnumField: FC<EnumFieldProps> = ({
             );
     }, [value, rightAdornment]);
 
+    const options = useMemo(() => enumToSelectOptions(items), [items]);
+
     return (
         <SelectField
             loading={isLoading}
-            options={enumToSelectOptions(items)}
+            options={options}
             value={parsedValue}
             rightAdornment={adornment}
             onChange={handleChange}

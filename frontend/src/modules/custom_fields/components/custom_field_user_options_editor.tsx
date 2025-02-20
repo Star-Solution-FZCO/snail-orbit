@@ -19,10 +19,11 @@ import {
     Typography,
 } from "@mui/material";
 import { UserAvatar } from "components";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi, userApi } from "store";
-import {
+import type {
     BasicUserT,
     CustomFieldT,
     ListSelectQueryParams,

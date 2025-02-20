@@ -3,6 +3,7 @@ from .board import *
 from .custom_fields import *
 from .group import *
 from .issue import *
+from .permission import *
 from .project import *
 from .role import *
 from .search import *

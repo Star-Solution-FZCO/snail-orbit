@@ -62,6 +62,10 @@ export const SelectField = <
         return value;
     }, [options, value]);
 
+    useEffect(() => {
+        console.log("options", label, options);
+    }, [options, label]);
+
     const cardValue = useMemo(() => {
         if (customCardValue) return customCardValue;
 

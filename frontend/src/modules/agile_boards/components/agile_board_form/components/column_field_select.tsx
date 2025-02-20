@@ -3,11 +3,11 @@ import { FC, SyntheticEvent, useCallback, useMemo, useState } from "react";
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { AgileBoardColumnField } from "../agile_board_form.schema";
+import { BasicCustomFieldT } from "types";
 
 interface IColumnFieldSelectProps {
-    value?: AgileBoardColumnField;
-    onChange: (value: AgileBoardColumnField) => void;
+    value?: BasicCustomFieldT;
+    onChange: (value: BasicCustomFieldT) => void;
     error?: Merge<FieldError, any>;
     projectId: string[];
 }
@@ -28,7 +28,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
     const options = useMemo(() => {
         if (!data) return [];
         return data.payload.items;
-    }, [data]) as AgileBoardColumnField[];
+    }, [data]) as BasicCustomFieldT[];
 
     const handleOpen = useCallback(() => {
         setIsOpen(true);
@@ -42,7 +42,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
 
     const handleChange = (
         _: SyntheticEvent,
-        value: AgileBoardColumnField | null,
+        value: BasicCustomFieldT | null,
     ) => {
         if (value && onChange) onChange(value);
     };

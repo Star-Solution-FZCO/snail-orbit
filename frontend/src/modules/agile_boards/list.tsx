@@ -1,19 +1,24 @@
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
-    Button,
     CircularProgress,
     Container,
     Stack,
+    TextField,
     Typography,
 } from "@mui/material";
 import { Link, QueryPagination } from "components";
+import { NavbarActionButton } from "components/navbar/navbar_action_button";
+import { useNavbarSettings } from "components/navbar/navbar_settings";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
+import { BoardsList } from "./components/list/boards_list";
 
 const AgileBoardList = () => {
     const { t } = useTranslation();
+    const { setAction } = useNavbarSettings();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
@@ -23,12 +28,24 @@ const AgileBoardList = () => {
         error,
     } = agileBoardApi.useListAgileBoardQuery(listQueryParams);
 
+    useEffect(() => {
+        setAction(
+            <Link to="/agiles/create">
+                <NavbarActionButton startIcon={<AddIcon />}>
+                    {t("agileBoards.new")}
+                </NavbarActionButton>
+            </Link>,
+        );
+
+        return () => setAction(null);
+    }, [setAction]);
+
     return (
         <Container
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 4,
+                gap: 1,
                 height: "100%",
                 px: 4,
                 pb: 4,
@@ -41,19 +58,11 @@ const AgileBoardList = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("agileBoards.title")}
-                </Typography>
-
-                <Link to="/agiles/create">
-                    <Button
-                        startIcon={<AddIcon />}
-                        variant="outlined"
-                        size="small"
-                    >
-                        {t("agileBoards.new")}
-                    </Button>
-                </Link>
+                <TextField
+                    fullWidth
+                    size="small"
+                    placeholder={t("placeholder.search")}
+                />
             </Stack>
 
             {error && (
@@ -69,27 +78,13 @@ const AgileBoardList = () => {
                 </Box>
             ) : (
                 <>
-                    <Box
-                        display="flex"
-                        flexDirection="column"
-                        alignItems="flex-start"
-                        gap={2}
-                        flex={1}
-                    >
-                        {boards?.payload?.items?.length === 0 && (
-                            <Typography>{t("agileBoards.empty")}</Typography>
-                        )}
+                    {boards?.payload?.items?.length === 0 && (
+                        <Typography>{t("agileBoards.empty")}</Typography>
+                    )}
 
-                        {boards?.payload?.items?.map((board) => (
-                            <Link
-                                key={board.id}
-                                to={`/agiles/${board.id}`}
-                                fontWeight="bold"
-                            >
-                                {board.name}
-                            </Link>
-                        ))}
-                    </Box>
+                    {boards?.payload.items ? (
+                        <BoardsList boards={boards?.payload.items} />
+                    ) : null}
 
                     <QueryPagination
                         count={boards?.payload?.count || 0}

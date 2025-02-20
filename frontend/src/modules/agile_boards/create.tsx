@@ -10,8 +10,8 @@ import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { toastApiError } from "utils";
 import { CreateAgileBoardForm } from "./components/create_agile_board_form/create_agile_board_form";
-import type { CreateAgileBoardFormData } from "./components/create_agile_board_form/create_agile_board_form.schema";
-import { formValuesToApiData } from "./components/create_agile_board_form/formValuesToApiData";
+import { FormValues } from "./components/create_agile_board_form/create_agile_board_form.types";
+import { form_values_to_api_data } from "./components/create_agile_board_form/form_values_to_api_data";
 
 const AgileBoardCreate = () => {
     const { t } = useTranslation();
@@ -20,8 +20,8 @@ const AgileBoardCreate = () => {
 
     const [createAgileBoard] = agileBoardApi.useCreateAgileBoardMutation();
 
-    const onSubmit = (formData: CreateAgileBoardFormData) => {
-        createAgileBoard(formValuesToApiData(formData))
+    const onSubmit = (formData: FormValues) => {
+        createAgileBoard(form_values_to_api_data(formData))
             .unwrap()
             .then((response) => {
                 toast.success(t("agileBoards.create.success"));
