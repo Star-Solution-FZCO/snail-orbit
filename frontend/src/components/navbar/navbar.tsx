@@ -1,30 +1,11 @@
-import LogoutIcon from "@mui/icons-material/Logout";
-import SettingsIcon from "@mui/icons-material/Settings";
-import {
-    Avatar,
-    Box,
-    IconButton,
-    Menu,
-    MenuItem,
-    useTheme,
-} from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
-import { About, Link } from "components/index";
-import {
-    FC,
-    MouseEventHandler,
-    PropsWithChildren,
-    useMemo,
-    useState,
-} from "react";
+import { Box, useTheme } from "@mui/material";
+import { Link } from "components/index";
+import type { FC, PropsWithChildren } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { logout } from "services/auth";
-import {
-    logout as logoutAction,
-    openAbout,
-    useAppDispatch,
-    useAppSelector,
-} from "store";
+import { useAppSelector } from "store";
+import { AdminSettingsButton } from "./components/admin_settings_button";
+import { UserMenuButton } from "./components/user_menu_button";
 import { useNavbarSettings } from "./navbar_settings";
 
 const useLinks = () => {
@@ -75,43 +56,11 @@ const NavBarLink: FC<INavBarLinkProps & PropsWithChildren> = ({
 
 const NavBar = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
 
     const user = useAppSelector((state) => state.profile.user);
     const { action } = useNavbarSettings();
 
     const links = useLinks();
-
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const menuOpen = Boolean(anchorEl);
-
-    const handleClickSettings: MouseEventHandler<HTMLButtonElement> = (
-        event,
-    ) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseMenu = () => {
-        setAnchorEl(null);
-    };
-
-    const handleClickMenuItem = (path: string) => {
-        navigate({
-            to: path,
-        });
-        handleCloseMenu();
-    };
-
-    const handleLogout = async () => {
-        logout();
-        dispatch(logoutAction());
-    };
-
-    const handleAbout = () => {
-        handleCloseMenu();
-        dispatch(openAbout());
-    };
 
     return (
         <Box
@@ -133,53 +82,10 @@ const NavBar = () => {
             </Box>
 
             <Box display="flex" alignItems="center" gap={2}>
-                {user?.is_admin && (
-                    <IconButton onClick={handleClickSettings} size="small">
-                        <SettingsIcon />
-                    </IconButton>
-                )}
+                {user?.is_admin && <AdminSettingsButton />}
 
-                <Link to="/profile">
-                    <Avatar
-                        sx={{ width: 32, height: 32 }}
-                        src={user?.avatar}
-                        variant="rounded"
-                    />
-                </Link>
-
-                <IconButton onClick={handleLogout} size="small">
-                    <LogoutIcon />
-                </IconButton>
+                <UserMenuButton />
             </Box>
-
-            <Menu
-                anchorEl={anchorEl}
-                open={menuOpen}
-                onClose={handleCloseMenu}
-                anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                }}
-                transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                }}
-            >
-                <MenuItem onClick={() => handleClickMenuItem("/custom-fields")}>
-                    {t("navbar.customFields")}
-                </MenuItem>
-                <MenuItem onClick={() => handleClickMenuItem("/groups")}>
-                    {t("navbar.groups")}
-                </MenuItem>
-                <MenuItem onClick={() => handleClickMenuItem("/roles")}>
-                    {t("navbar.roles")}
-                </MenuItem>
-                <MenuItem onClick={() => handleClickMenuItem("/users")}>
-                    {t("navbar.users")}
-                </MenuItem>
-                <MenuItem onClick={handleAbout}>{t("navbar.about")}</MenuItem>
-            </Menu>
-            <About />
         </Box>
     );
 };

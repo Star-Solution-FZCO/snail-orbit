@@ -13,7 +13,9 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { Link, NavbarActionButton, useNavbarSettings } from "components";
+import { Link } from "components";
+import { NavbarActionButton } from "components/navbar/navbar_action_button";
+import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { FC, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
