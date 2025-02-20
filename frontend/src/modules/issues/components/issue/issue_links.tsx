@@ -111,6 +111,7 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
                         issueId: issue.id_readable,
                         subject: slugify(issue.subject),
                     }}
+                    underline="hover"
                 >
                     {issue.id_readable}
                 </Link>
@@ -121,6 +122,7 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
                         issueId: issue.id_readable,
                         subject: slugify(issue.subject),
                     }}
+                    underline="hover"
                 >
                     {issue.subject}
                 </Link>
@@ -152,6 +154,7 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
                         .filter((linkType) => linkType !== type)
                         .map((linkType) => (
                             <MenuItem
+                                key={linkType}
                                 value={linkType}
                                 onClick={() => handleClickLinkType(linkType)}
                             >

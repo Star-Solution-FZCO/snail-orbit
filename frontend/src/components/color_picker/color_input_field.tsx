@@ -1,5 +1,5 @@
 import type { TextFieldProps } from "@mui/material";
-import { TextField } from "@mui/material";
+import { InputAdornment, TextField } from "@mui/material";
 import { memo } from "react";
 import { ColorPickerAdornment } from "./color_picker_adornment";
 
@@ -19,12 +19,14 @@ export const ColorInputField = memo((props: ColorInputFieldProps) => {
                 size={size}
                 slotProps={{
                     input: {
-                        endAdornment: (
-                            <ColorPickerAdornment
-                                color={color}
-                                onChange={onChange}
-                                size={size}
-                            />
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <ColorPickerAdornment
+                                    color={color}
+                                    onChange={onChange}
+                                    size={size}
+                                />
+                            </InputAdornment>
                         ),
                     },
                 }}
