@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { ApiResponse } from "types";
+import type { ApiResponse } from "types";
 import customFetchBase from "./custom_fetch_base";
 
 export const sharedApi = createApi({
