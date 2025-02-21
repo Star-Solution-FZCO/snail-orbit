@@ -1,7 +1,6 @@
 import GroupIcon from "@mui/icons-material/Group";
 import { skipToken } from "@reduxjs/toolkit/query";
-import type { ReactNode, SyntheticEvent } from "react";
-import { useCallback, useMemo } from "react";
+import { ReactNode, SyntheticEvent, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AvatarAdornment } from "../components/fields/adornments/avatar_adornment";
 import type { FormAutocompletePopoverProps } from "../components/fields/form_autocomplete/form_autocomplete";
@@ -11,6 +10,7 @@ import { groupApi, userApi } from "../store";
 import type { GroupT } from "../types";
 import { type BasicUserT } from "../types";
 import { useListQueryParams } from "../utils";
+import useDebouncedState from "../utils/hooks/use-debounced-state";
 
 type UserGroupSelectPopoverProps<
     F extends boolean | undefined,
@@ -69,14 +69,18 @@ export const UserGroupSelectPopover = <
 ) => {
     const { t } = useTranslation();
     const { open, anchorEl, multiple, onClose, onChange, value } = props;
+    const [debouncedInputValue, setInputValue, inputValue] =
+        useDebouncedState<string>("");
 
-    const [listParams] = useListQueryParams({ limit: 15 }); // up to 15 groups means up to 30 elements
+    const [listParams] = useListQueryParams({
+        limit: 50,
+    }); // up to 50 groups means up to 100 elements
 
     const { data: groupsData } = groupApi.useListGroupQuery(
-        open ? listParams : skipToken,
+        open ? { ...listParams, search: debouncedInputValue } : skipToken,
     );
     const { data: usersData } = userApi.useListUserQuery(
-        open ? listParams : skipToken,
+        open ? { ...listParams, search: debouncedInputValue } : skipToken,
     );
 
     const options: OptionType[] = useMemo(
@@ -120,6 +124,8 @@ export const UserGroupSelectPopover = <
             multiple={multiple}
             options={options}
             onClose={onClose}
+            inputValue={inputValue}
+            onInputChange={(_, value) => setInputValue(value)}
             groupBy={(option) =>
                 (option as OptionType).type === "group"
                     ? t("userGroupSelectPopover.group")
@@ -133,6 +139,9 @@ export const UserGroupSelectPopover = <
             onChange={handleChange}
             getOptionKey={(option) => (option as OptionType).id}
             isOptionEqualToValue={(option, value) => option.id === value.id}
+            filterOptions={(options) => options}
+            disableCloseOnSelect
+            clearOnBlur={false}
         />
     );
 };

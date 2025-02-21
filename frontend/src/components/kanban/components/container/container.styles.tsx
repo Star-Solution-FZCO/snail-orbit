@@ -1,9 +1,5 @@
 import { styled } from "@mui/material";
 
-// TODO: Move to theme and sync with custom fields
-const backgroundColor = "#1c2128";
-const activeBackgroundColor = "#192030";
-
 export type StyledContainerProps = {
     scrollable?: boolean;
     placeholder?: boolean;
@@ -29,7 +25,7 @@ export const StyledContainer = styled("div", {
             duration: theme.transitions.duration.standard,
             easing: theme.transitions.easing.easeInOut,
         }),
-        backgroundColor: backgroundColor,
+        backgroundColor: theme.palette.background.board,
         fontSize: theme.typography.fontSize,
         borderRight: "1px solid",
         borderColor: theme.palette.grey["700"],
@@ -42,7 +38,7 @@ export const StyledContainer = styled("div", {
 
         ...(hover
             ? {
-                  backgroundColor: activeBackgroundColor,
+                  backgroundColor: theme.palette.background.boardFocused,
               }
             : {}),
 
@@ -104,7 +100,7 @@ export const HeaderStyled = styled("div", { label: "kanbanContainerHeader" })(
         padding: theme.spacing(1),
         alignItems: "center",
         justifyContent: "flex-start",
-        backgroundColor: backgroundColor,
+        backgroundColor: theme.palette.background.board,
         borderTopLeftRadius: "5px",
         borderTopRightRadius: "5px",
     }),
