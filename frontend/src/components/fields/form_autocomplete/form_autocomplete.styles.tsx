@@ -9,7 +9,7 @@ export const StyledAutocompletePopper = styled("div")(({ theme }) => ({
         fontSize: 13,
     },
     [`& .${autocompleteClasses.listbox}`]: {
-        backgroundColor: theme.palette.mode === "light" ? "#fff" : "#1c2128",
+        backgroundColor: theme.palette.background.board,
         padding: 0,
         [`& .${autocompleteClasses.option}`]: {
             minHeight: "auto",
@@ -45,7 +45,7 @@ export const BottomSlot = styled("div")(({ theme }) => ({
     borderTop: `1px solid ${
         theme.palette.mode === "light" ? "#eaecef" : "#30363d"
     }`,
-    backgroundColor: theme.palette.mode === "light" ? "#fff" : "#1c2128",
+    backgroundColor: theme.palette.background.board,
 }));
 
 export class PopperComponentProps {}

@@ -12,7 +12,7 @@ export const FieldPopper = styled(Popper)(({ theme }) => ({
     zIndex: theme.zIndex.modal,
     fontSize: 13,
     color: theme.palette.mode === "light" ? "#24292e" : "#c9d1d9",
-    backgroundColor: theme.palette.mode === "light" ? "#fff" : "#1c2128",
+    backgroundColor: theme.palette.background.board,
 }));
 
 export const defaultModifiers = {
