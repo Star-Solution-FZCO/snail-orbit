@@ -1,5 +1,7 @@
-from typing import Annotated
+from collections.abc import Mapping
+from typing import Annotated, Any
 
+import beanie.operators as bo
 from beanie import Document, Indexed
 from pydantic import Field
 
@@ -29,6 +31,10 @@ class Search(Document):
     description: str | None
     created_by: UserLinkField
     permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.RegEx(cls.name, search, 'i')
 
     def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
         return any(p.target.id == target.id for p in self.permissions)

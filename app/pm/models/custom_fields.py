@@ -1,8 +1,10 @@
+from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Annotated, Any, Self
 from uuid import UUID
 
+import beanie.operators as bo
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
@@ -165,6 +167,10 @@ class CustomField(Document):
     default_value: Any | None = None
     description: str | None = None
     ai_description: str | None = None
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.RegEx(cls.name, search, 'i')
 
     def validate_value(self, value: Any) -> Any:
         if value is None and not self.is_nullable:
