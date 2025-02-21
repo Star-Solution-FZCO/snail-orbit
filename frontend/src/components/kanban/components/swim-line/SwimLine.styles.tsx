@@ -1,8 +1,4 @@
-// TODO: Move to theme and sync with custom fields
 import { styled } from "@mui/material";
-
-const backgroundColor = "#1c2128";
-const activeBackgroundColor = "#192030";
 
 export type StyledSwimLineProps = {
     scrollable?: boolean;
@@ -26,7 +22,7 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
             duration: theme.transitions.duration.standard,
             easing: theme.transitions.easing.easeInOut,
         }),
-        backgroundColor: backgroundColor,
+        backgroundColor: theme.palette.background.board,
         fontSize: theme.typography.fontSize,
 
         borderBottom: "1px solid",
@@ -34,7 +30,7 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
 
         ...(hover
             ? {
-                  backgroundColor: activeBackgroundColor,
+                  backgroundColor: theme.palette.background.boardFocused,
               }
             : {}),
 
@@ -94,5 +90,5 @@ export const HeaderStyled = styled("div")(({ theme }) => ({
     padding: theme.spacing(1),
     alignItems: "center",
     justifyContent: "flex-start",
-    backgroundColor: backgroundColor,
+    backgroundColor: theme.palette.background.board,
 }));
