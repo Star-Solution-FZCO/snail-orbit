@@ -92,7 +92,7 @@ EXPRESSION_GRAMMAR = """
     INF_PLUS_VALUE: "inf"i
     INF_MINUS_VALUE.1: "-inf"i
     FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ -]*/
-    NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?/
+    NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?(?!\\.(?!\\.)|\\d|[a-zA-Z]|-)/
     STRING_VALUE: /[^:()" *${}]+/
     QUOTED_STRING: /"[^"]*"/
 
@@ -110,15 +110,26 @@ class MongoQueryTransformer(Transformer):
     def __fields_by_name(self, field_name: str) -> list[m.CustomField]:
         return self.__cached_fields.get(field_name.lower(), [])
 
+    def _transform_boolean_field_value(self, field: m.CustomField, value: Any) -> dict:
+        if value is None:
+            return {'value': None}
+        if isinstance(value, str) and value.lower() in ['true', 'false']:
+            return {'value': value.lower() == 'true'}
+        raise ValueError(f'Field {field.name} must be either True or False')
+
     def __transform_single_field_value(self, field: m.CustomField, value: Any) -> dict:
+        if field.type == m.CustomFieldTypeT.BOOLEAN:
+            return self._transform_boolean_field_value(field, value)
         if field.type == m.CustomFieldTypeT.STATE:
-            return {'value.state': value}
+            return {'value.state': str(value) if value is not None else None}
         if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
             return {'value.email': value}
         if field.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
-            return {'value.value': value}
+            return {'value.value': str(value) if value is not None else None}
         if field.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
-            return {'value.version': value}
+            return {'value.version': str(value) if value is not None else None}
+        if field.type == m.CustomFieldTypeT.STRING:
+            return {'value': str(value) if value is not None else None}
         return {'value': value}
 
     def __transform_field_value(self, field_name: str, value: Any) -> dict:
