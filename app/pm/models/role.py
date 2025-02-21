@@ -1,5 +1,7 @@
-from typing import Annotated, Self
+from collections.abc import Mapping
+from typing import Annotated, Any, Self
 
+import beanie.operators as bo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Field
 
@@ -45,3 +47,7 @@ class Role(Document):
     name: Annotated[str, Indexed(str)]
     description: str | None = None
     permissions: Annotated[list[Permissions], Field(default_factory=list)]
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.RegEx(cls.name, search, 'i')

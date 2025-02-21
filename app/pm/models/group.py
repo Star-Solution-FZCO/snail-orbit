@@ -1,6 +1,8 @@
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Self
+from typing import Any, Self
 
+import beanie.operators as bo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel
 
@@ -49,3 +51,7 @@ class Group(Document):
     description: str | None = None
     origin: GroupOriginType = GroupOriginType.LOCAL
     external_id: str | None = None
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.RegEx(cls.name, search, 'i')

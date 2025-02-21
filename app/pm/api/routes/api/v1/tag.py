@@ -76,6 +76,8 @@ async def list_tags(
     query: ListParams = Depends(),
 ) -> BaseListOutput[TagOutput]:
     q = m.Tag.find().sort(m.Tag.name)
+    if query.search:
+        q = q.find(m.Tag.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

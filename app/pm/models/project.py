@@ -1,7 +1,9 @@
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated, Any, Self
 from uuid import UUID, uuid4
 
+import beanie.operators as bo
 from beanie import Document, Indexed, Link, PydanticObjectId, Update
 from pydantic import BaseModel, Field
 
@@ -69,6 +71,13 @@ class Project(Document):
     subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     avatar_type: ProjectAvatarType = ProjectAvatarType.DEFAULT
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.Or(
+            bo.RegEx(cls.name, search, 'i'),
+            bo.RegEx(cls.slug, search, 'i'),
+        )
 
     async def get_new_issue_alias(self) -> str:
         await self.update(
