@@ -1,15 +1,12 @@
 import { styled } from "@mui/material";
 
-// TODO: Move to theme and sync with custom fields
-const backgroundColor = "#1c2128";
-
 export const HeaderStyled = styled("div", { label: "kanbanHeader" })(
     ({ theme }) => ({
         display: "flex",
         padding: theme.spacing(1),
         alignItems: "center",
         justifyContent: "flex-start",
-        backgroundColor: backgroundColor,
+        backgroundColor: theme.palette.background.board,
         flexGrow: 1,
         borderRight: "1px solid",
         borderColor: "inherit",
