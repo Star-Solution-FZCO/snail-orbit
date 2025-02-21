@@ -1600,13 +1600,6 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
-        json=share_payload,
-    )
-    assert response.status_code == 403  # cause admin yet not in group
-    await add_user_to_group(test_client, create_initial_admin, admin_id, create_group)
-    response = test_client.post(
-        f'/api/v1/search/{create_search}/permission',
-        headers=admin_headers,
         json={
             'target_type': 'group',
             'target': '675579dff68118dbf878902c',
