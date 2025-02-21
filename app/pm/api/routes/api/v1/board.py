@@ -712,11 +712,6 @@ async def grant_permission(
         group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
         if not group:
             raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-        if group.id not in {g.id for g in user_ctx.user.groups}:
-            raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN,
-                detail='You cannot grant permissions to groups you are not member of',
-            )
         target = m.GroupLinkField.from_obj(group)
     if board.has_permission_for_target(target):
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
