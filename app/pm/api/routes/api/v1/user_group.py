@@ -1,6 +1,5 @@
 from enum import StrEnum
 
-import beanie.operators as bo
 from fastapi import Depends
 from pydantic import BaseModel
 
@@ -38,13 +37,12 @@ class UserGroupOutput(BaseModel):
 async def select_users_and_groups(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[UserGroupOutput]:
-    q_user = m.User.find(
-        bo.Or(
-            bo.RegEx(m.User.name, query.search, 'i'),
-            bo.RegEx(m.User.email, query.search, 'i'),
-        )
-    ).sort(m.User.name)
-    q_group = m.Group.find(bo.RegEx(m.Group.name, query.search, 'i')).sort(m.Group.name)
+    q_user = m.User.find().sort(m.User.name)
+    q_group = m.Group.find().sort(m.Group.name)
+
+    if query.search:
+        q_user = q_user.find(m.User.search_query(query.search))
+        q_group = q_group.find(m.Group.search_query(query.search))
 
     combined = [
         UserGroupOutput(type=UserGroupType.USER, data=UserOutput.from_obj(obj))

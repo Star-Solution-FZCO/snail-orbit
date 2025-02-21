@@ -126,6 +126,8 @@ async def list_custom_fields(
     query: ListParams = Depends(),
 ) -> BaseListOutput[CustomFieldOutputT]:
     q = m.CustomField.find(with_children=True).sort(m.CustomField.name)
+    if query.search:
+        q = q.find(m.CustomField.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

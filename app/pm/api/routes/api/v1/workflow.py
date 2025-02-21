@@ -78,6 +78,8 @@ async def list_workflow(
     query: ListParams = Depends(),
 ) -> BaseListOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
     q = m.Workflow.find(with_children=True).sort(m.Workflow.name)
+    if query.search:
+        q = q.find(m.Workflow.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

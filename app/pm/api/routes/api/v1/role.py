@@ -35,6 +35,8 @@ async def list_roles(
     query: ListParams = Depends(),
 ) -> BaseListOutput[RoleOutput]:
     q = m.Role.find().sort(m.Role.name)
+    if query.search:
+        q = q.find(m.Role.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
