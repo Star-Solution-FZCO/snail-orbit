@@ -223,6 +223,8 @@ async def list_projects(
     query: ListParams = Depends(),
 ) -> BaseListOutput[ProjectListOutput]:
     q = m.Project.find().sort(m.Project.id)
+    if query.search:
+        q = q.find(m.Project.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

@@ -1,5 +1,7 @@
-from typing import Self
+from collections.abc import Mapping
+from typing import Any, Self
 
+import beanie.operators as bo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel
 
@@ -54,6 +56,10 @@ class Tag(Document):
     untag_on_resolve: bool = False
     untag_on_close: bool = False
     created_by: UserLinkField
+
+    @classmethod
+    def search_query(cls, search: str) -> Mapping[str, Any] | bool:
+        return bo.RegEx(cls.name, search, 'i')
 
     @classmethod
     async def update_user_embedded_links(

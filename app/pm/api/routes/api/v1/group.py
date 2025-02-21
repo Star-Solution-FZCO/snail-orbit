@@ -52,6 +52,8 @@ async def list_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[GroupFullOutput]:
     q = m.Group.find().sort(m.Group.name)
+    if query.search:
+        q = q.find(m.Group.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,

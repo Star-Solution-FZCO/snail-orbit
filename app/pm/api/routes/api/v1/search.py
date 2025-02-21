@@ -101,6 +101,8 @@ async def list_searches(
         ]
     }
     q = m.Search.find(filter_query).sort(m.Search.name)
+    if query.search:
+        q = q.find(m.Search.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
