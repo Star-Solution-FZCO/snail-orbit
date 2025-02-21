@@ -409,8 +409,7 @@ async def move_field(
                 f'Field {body.after_id} not found in project fields',
             ) from err
     project.custom_fields.insert(after_field_idx + 1, field)
-    if project.is_changed:
-        await project.save_changes()
+    await project.replace()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
 
