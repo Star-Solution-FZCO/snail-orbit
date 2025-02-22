@@ -426,6 +426,81 @@ class Issue(Document):
                 return field
         return None
 
+    @staticmethod
+    def get_ro_projection_model() -> type[BaseModel]:
+        return IssueRoProjectionModel
+
+
+class IssueRoProjectionModel(BaseModel):
+    id: Annotated[PydanticObjectId, Field(alias='_id')]
+    subject: str
+    text: str | None = None
+    aliases: Annotated[list[str], Field(default_factory=list)]
+
+    project: ProjectLinkField
+    comments: Annotated[list[IssueComment], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
+
+    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
+    history: Annotated[list[IssueHistoryRecord], Field(default_factory=list)]
+    subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+
+    created_by: UserLinkField
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+    updated_by: UserLinkField | None = None
+    updated_at: datetime | None = None
+
+    interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
+    tags: Annotated[list[TagLinkField], Field(default_factory=list)]
+
+    @property
+    def id_readable(self) -> str:
+        return self.aliases[-1] if self.aliases else str(self.id)
+
+    @property
+    def resolved_at(self) -> datetime | None:
+        if not (resolved_state := self._find_resolved_state()):
+            return None
+        if not (change := self._get_latest_field_change_record(resolved_state.id)):
+            return self.created_at
+        return change.time
+
+    @property
+    def is_resolved(self) -> bool:
+        return bool(self._find_resolved_state())
+
+    @property
+    def is_closed(self) -> bool:
+        return any(
+            field.type == CustomFieldTypeT.STATE
+            and field.value
+            and field.value.is_closed
+            for field in self.fields
+        )
+
+    def _get_latest_field_change_record(
+        self, field_id: PydanticObjectId
+    ) -> IssueHistoryRecord | None:
+        for record in sorted(self.history, key=lambda h: h.time, reverse=True):
+            for change in record.changes:
+                if (
+                    isinstance(change.field, CustomFieldLink)
+                    and change.field.id == field_id
+                ):
+                    return record
+        return None
+
+    def _find_resolved_state(self) -> CustomFieldValue | None:
+        for field in self.fields:
+            if (
+                field.type == CustomFieldTypeT.STATE
+                and field.value
+                and field.value.is_resolved
+            ):
+                return field
+        return None
+
 
 @audited_model
 class IssueDraft(Document):
