@@ -113,7 +113,7 @@ async def list_issues(
         q = q.find(flt)
     if query.search:
         q = q.find(transform_text_search(query.search))
-    q = q.sort(m.Issue.id)
+    q = q.sort(m.Issue.id).project(m.Issue.get_ro_projection_model())
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
