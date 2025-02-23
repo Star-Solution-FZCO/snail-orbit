@@ -278,11 +278,6 @@ async def update_custom_field(
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.save_changes()
-        # await asyncio.gather(
-        #     m.Issue.update_field_embedded_links(obj),
-        #     m.IssueDraft.update_field_embedded_links(obj),
-        #     m.Board.update_field_embedded_links(obj),
-        # )
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
