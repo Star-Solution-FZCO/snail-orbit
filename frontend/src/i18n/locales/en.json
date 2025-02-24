@@ -418,6 +418,7 @@
   "users.list.fetch.error": "Failed to fetch users",
   "users.new": "New User",
   "users.title": "Users",
+  "users.search.placeholder": "Search users",
   "users.update.success": "User updated successfully",
   "usersWithCount_one": "{{count}} user",
   "usersWithCount_other": "{{count}} users"
