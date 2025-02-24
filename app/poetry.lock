@@ -3559,6 +3559,21 @@ pyjwt = "*"
 asymmetric = ["cryptography (>=2.6)"]
 
 [[package]]
+name = "starsol-mongo-migrate"
+version = "0.1.0"
+description = "MongoDB migration tool"
+optional = false
+python-versions = "<4.0,>=3.11"
+groups = ["main"]
+files = [
+    {file = "starsol_mongo_migrate-0.1.0-py3-none-any.whl", hash = "sha256:e39d602bca9b0d7a5139b6cb00351dcc0cc751e0125f3d824eb42bac50f14f7f"},
+    {file = "starsol_mongo_migrate-0.1.0.tar.gz", hash = "sha256:4916b0408fe43b045f45378b28b1d28de79991d456140cfd6c178655f30a7c81"},
+]
+
+[package.dependencies]
+pymongo = "*"
+
+[[package]]
 name = "starsol-otp"
 version = "1.0.0"
 description = "OTP library"
@@ -5009,4 +5024,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "49f1241ca190475bc5df8bdadc7b44364fa17a6bc17bc73b343795d92fb2c83d"
+content-hash = "bc4c957d4db5afa24966c6334ccea093b77cfe92edd9ffe5b760fe5e9b5c1f71"
