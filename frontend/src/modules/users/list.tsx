@@ -13,7 +13,7 @@ import {
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, UserAvatar } from "components";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "store";
 import { ListQueryParams, UserT } from "types";
