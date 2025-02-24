@@ -1,21 +1,37 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    debounce,
+    IconButton,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, UserAvatar } from "components";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "store";
-import { UserT } from "types";
+import { ListQueryParams, UserT } from "types";
 import { useListQueryParams } from "utils";
+
+const initialQueryParams = {
+    limit: 50,
+    offset: 0,
+};
 
 export const UserList = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [listQueryParams, updateListQueryParams] = useListQueryParams({
-        limit: 50,
-    });
+    const [query, setQuery] = useState<string>("");
+
+    const [listQueryParams, updateListQueryParams, resetQueryParams] =
+        useListQueryParams<ListQueryParams>(initialQueryParams);
 
     const { data, isLoading, isFetching, error } =
         userApi.useListUserQuery(listQueryParams);
@@ -74,6 +90,28 @@ export const UserList = () => {
         });
     };
 
+    const debouncedSearch = useCallback(
+        debounce((searchValue: string) => {
+            updateListQueryParams({
+                search: searchValue,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleSearchTextField = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
+    };
+
+    const handleClearSearchField = () => {
+        setQuery("");
+        resetQueryParams();
+    };
+
     const paginationModel = {
         page: listQueryParams.offset / listQueryParams.limit,
         pageSize: listQueryParams.limit,
@@ -86,6 +124,7 @@ export const UserList = () => {
         updateListQueryParams({
             limit: model.pageSize,
             offset: model.page * model.pageSize,
+            search: query,
         });
     };
 
@@ -105,6 +144,37 @@ export const UserList = () => {
             pb={4}
             height={1}
         >
+            <TextField
+                placeholder={t("users.search.placeholder")}
+                value={query}
+                onChange={handleSearchTextField}
+                size="small"
+                slotProps={{
+                    input: {
+                        endAdornment: (
+                            <Box display="flex" alignItems="center">
+                                {(isLoading || isFetching) && (
+                                    <CircularProgress
+                                        size={20}
+                                        color="inherit"
+                                        sx={{ mr: 1 }}
+                                    />
+                                )}
+
+                                {query && (
+                                    <IconButton
+                                        onClick={handleClearSearchField}
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                )}
+                            </Box>
+                        ),
+                    },
+                }}
+                fullWidth
+            />
+
             <Stack
                 direction="row"
                 display="flex"
