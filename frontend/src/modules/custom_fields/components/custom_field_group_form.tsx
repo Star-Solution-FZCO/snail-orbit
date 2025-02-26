@@ -1,0 +1,210 @@
+import { yupResolver } from "@hookform/resolvers/yup";
+import { LoadingButton } from "@mui/lab";
+import {
+    Box,
+    Button,
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    FormHelperText,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+} from "@mui/material";
+import { Link } from "@tanstack/react-router";
+import { type FC } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import type { CustomFieldGroupT } from "types";
+import { customFieldsTypes } from "types";
+import * as yup from "yup";
+
+const customFieldGroupSchema = yup.object().shape({
+    name: yup.string().required("form.validation.required"),
+    type: yup
+        .string()
+        .oneOf(customFieldsTypes)
+        .required("form.validation.required"),
+    description: yup.string().nullable().default(null),
+    ai_description: yup.string().nullable().default(null),
+    label: yup.string().default("default"),
+    is_nullable: yup.boolean().required("form.validation.required"),
+    default_value: yup.mixed(),
+    // .required("form.validation.required")
+    // .nullable()
+    // .default(null),
+});
+
+type CustomFieldGroupFormData = yup.InferType<typeof customFieldGroupSchema>;
+
+interface ICustomFieldGroupFormProps {
+    defaultValues?: CustomFieldGroupT;
+    onSubmit: (formData: CustomFieldGroupFormData) => void;
+    // onDelete?: () => void;
+    loading?: boolean;
+}
+
+const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
+    defaultValues,
+    onSubmit,
+    // onDelete,
+    loading,
+}) => {
+    const { t } = useTranslation();
+
+    const {
+        control,
+        register,
+        handleSubmit,
+        formState: { errors, isDirty },
+    } = useForm({
+        defaultValues: {
+            name: defaultValues?.name || "",
+            type: defaultValues?.type || "string",
+            description: defaultValues?.description || null,
+            ai_description: defaultValues?.ai_description || null,
+            label: defaultValues?.label || "default",
+            is_nullable: defaultValues?.is_nullable || false,
+            default_value: defaultValues?.default_value,
+        },
+        resolver: yupResolver(customFieldGroupSchema),
+    });
+
+    return (
+        <Box
+            component="form"
+            display="flex"
+            flexDirection="column"
+            gap={1}
+            onSubmit={handleSubmit(onSubmit)}
+            maxWidth="sm"
+        >
+            <TextField
+                {...register("name")}
+                label={t("customFields.form.name")}
+                error={!!errors.name}
+                helperText={t(errors.name?.message || "")}
+                variant="outlined"
+                size="small"
+                fullWidth
+            />
+
+            <Controller
+                name="type"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                    <FormControl size="small">
+                        <InputLabel id="type" error={!!errors.type}>
+                            {t("customFields.form.type")}
+                        </InputLabel>
+                        <Select
+                            value={value}
+                            labelId="type"
+                            label={t("customFields.form.type")}
+                            onChange={onChange}
+                            error={!!errors.type}
+                            disabled={!!defaultValues}
+                            size="small"
+                        >
+                            {customFieldsTypes.map((type) => (
+                                <MenuItem key={type} value={type}>
+                                    {t(`customFields.types.${type}`)}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        {!!errors.type && (
+                            <FormHelperText error>
+                                {t(errors.type?.message || "")}
+                            </FormHelperText>
+                        )}
+                    </FormControl>
+                )}
+            />
+
+            <TextField
+                {...register("description")}
+                label={t("description")}
+                error={!!errors.description}
+                helperText={t(errors.description?.message || "")}
+                variant="outlined"
+                size="small"
+                multiline
+                rows={6}
+                fullWidth
+            />
+
+            <TextField
+                {...register("ai_description")}
+                label={t("customFields.form.aiDescription")}
+                error={!!errors.ai_description}
+                helperText={t(errors.ai_description?.message || "")}
+                variant="outlined"
+                size="small"
+                multiline
+                rows={6}
+                fullWidth
+            />
+
+            <TextField
+                {...register("label")}
+                label={t("customFields.form.label")}
+                error={!!errors.label}
+                helperText={t(errors.label?.message || "")}
+                variant="outlined"
+                size="small"
+                disabled={!!defaultValues}
+                fullWidth
+            />
+
+            {/* TODO: add default value input component */}
+
+            <Controller
+                name="is_nullable"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                    <FormControlLabel
+                        label={t("customFields.form.nullable")}
+                        control={
+                            <Checkbox
+                                checked={value}
+                                onChange={(_, checked) => onChange(checked)}
+                                size="small"
+                            />
+                        }
+                    />
+                )}
+            />
+
+            <Box display="flex" gap={1}>
+                <LoadingButton
+                    type="submit"
+                    variant="outlined"
+                    loading={loading}
+                    disabled={!isDirty}
+                >
+                    {t("save")}
+                </LoadingButton>
+
+                <Link to="..">
+                    <Button variant="outlined" color="error">
+                        {t("cancel")}
+                    </Button>
+                </Link>
+
+                {/* {onDelete && (
+                    <Button
+                        onClick={onDelete}
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                    >
+                        {t("delete")}
+                    </Button>
+                )} */}
+            </Box>
+        </Box>
+    );
+};
+
+export { CustomFieldGroupForm };

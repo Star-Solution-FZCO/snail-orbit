@@ -8,10 +8,10 @@ export const fieldToFieldValue = (field?: CustomFieldT): FieldValueT => {
     else if (field.type === "enum") return field.value?.value;
     else if (field.type === "enum_multi")
         return field.value?.map((el) => el.value);
-    else if (field.type === "state") return field.value?.state;
-    else if (field.type === "version") return field.value?.version;
+    else if (field.type === "state") return field.value?.value;
+    else if (field.type === "version") return field.value?.value;
     else if (field.type === "version_multi")
-        return field.value?.map((el) => el.version);
+        return field.value?.map((el) => el.value);
     else return field.value;
 };
 

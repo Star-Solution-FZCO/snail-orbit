@@ -49,7 +49,9 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
         const res: Items = {};
         for (const swimlane of data.payload.items) {
             const normalizedSwimLane = swimlane.field_value
-                ? normalizeFieldValue(swimlane.field_value)
+                ? (normalizeFieldValue(swimlane.field_value) as {
+                      value: string | null | undefined;
+                  })
                 : undefined;
             const swimlaneKey = fieldValueToSwimlaneKey(
                 normalizedSwimLane?.value,
@@ -57,7 +59,9 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
             res[swimlaneKey] = {};
             for (const column of swimlane.columns) {
                 const normalizedColumn = column.field_value
-                    ? normalizeFieldValue(column.field_value)
+                    ? (normalizeFieldValue(column.field_value) as {
+                          value: string | null | undefined;
+                      })
                     : undefined;
                 const columnKey = fieldValueToColumnKey(
                     normalizedSwimLane?.value,
@@ -91,7 +95,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
             data?.payload.items?.length
                 ? data.payload.items[0].columns.map((el) =>
                       el.field_value
-                          ? normalizeFieldValue(el.field_value).value
+                          ? String(normalizeFieldValue(el.field_value).value)
                           : "",
                   )
                 : [],

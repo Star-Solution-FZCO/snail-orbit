@@ -182,7 +182,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                         field.value
                                             ? {
                                                   ...field.value,
-                                                  value: field.value.state,
+                                                  value: field.value.value,
                                               }
                                             : undefined
                                     }
@@ -209,13 +209,12 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                             (field.type === "version"
                                                 ? {
                                                       ...field.value,
-                                                      value: field.value
-                                                          .version,
+                                                      value: field.value.value,
                                                   }
                                                 : field.type === "version_multi"
                                                   ? field.value.map((el) => ({
                                                         ...el,
-                                                        value: el.version,
+                                                        value: el.value,
                                                     }))
                                                   : undefined)) ||
                                         undefined
