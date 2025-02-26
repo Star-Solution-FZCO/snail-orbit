@@ -57,10 +57,10 @@ const renderDiff = (oldText: string, newText: string) => {
 
 const renderVersion = (version: VersionFieldT) => {
     return version.release_date
-        ? `${version.version} (${dayjs(version.release_date).format(
+        ? `${version.value} (${dayjs(version.release_date).format(
               "DD MMM YYYY",
           )})`
-        : version.version;
+        : version.value;
 };
 
 const renderValue = (
@@ -96,10 +96,10 @@ const renderValue = (
             return value as string;
 
         case "date":
-            return dayjs(value).format("DD MMM YYYY");
+            return dayjs(value as string).format("DD MMM YYYY");
 
         case "datetime":
-            return dayjs(value).format("DD MMM YYYY HH:mm");
+            return dayjs(value as string).format("DD MMM YYYY HH:mm");
 
         case "user":
             return (value as BasicUserT).name;
@@ -122,7 +122,7 @@ const renderValue = (
             return (value as VersionFieldT[]).map(renderVersion).join(", ");
 
         case "state":
-            return (value as StateFieldT).state;
+            return (value as StateFieldT).value;
 
         default:
             return String(value);

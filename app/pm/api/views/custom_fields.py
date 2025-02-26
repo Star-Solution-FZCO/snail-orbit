@@ -49,6 +49,7 @@ class CustomFieldOutput(BaseModel):
     type: m.CustomFieldTypeT
     is_nullable: bool
     default_value: m.CustomFieldValueT
+    label: str
     description: str | None = None
     ai_description: str | None = None
 
@@ -64,6 +65,7 @@ class CustomFieldOutput(BaseModel):
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=default_value,
+            label=obj.label,
             description=obj.description,
             ai_description=obj.ai_description,
         )
@@ -99,6 +101,7 @@ class CustomFieldOutputWithEnumOptions(CustomFieldOutput):
             type=obj.type,
             is_nullable=obj.is_nullable,
             default_value=obj.default_value,
+            label=obj.label,
             options=[EnumOptionOutput.from_obj(opt) for opt in obj.options],
         )
 
@@ -136,6 +139,7 @@ class CustomFieldOutputWithUserOptions(CustomFieldOutput):
                 for opt in obj.options
             ],
             default_value=obj.default_value,
+            label=obj.label,
             users=[UserOutput.from_obj(u) for u in obj.users],
         )
 
@@ -178,6 +182,7 @@ class CustomFieldOutputWithStateOptions(CustomFieldOutput):
             default_value=StateOptionOutput.from_obj(obj.default_value)
             if obj.default_value
             else None,
+            label=obj.label,
         )
 
 
@@ -214,6 +219,7 @@ class CustomFieldOutputWithVersionOptions(CustomFieldOutput):
             is_nullable=obj.is_nullable,
             options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
             default_value=obj.default_value,
+            label=obj.label,
         )
 
 

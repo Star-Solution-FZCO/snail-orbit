@@ -12,14 +12,14 @@ import {
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
-interface IConfirmChangesDialogProps {
+interface IDeleteCustomFieldGroupDialogProps {
     open: boolean;
     onSubmit: () => void;
     onClose: () => void;
     loading?: boolean;
 }
 
-const DeleteCustomFieldDialog: FC<IConfirmChangesDialogProps> = ({
+const DeleteCustomFieldGroupDialog: FC<IDeleteCustomFieldGroupDialogProps> = ({
     open,
     onSubmit,
     onClose,
@@ -69,4 +69,4 @@ const DeleteCustomFieldDialog: FC<IConfirmChangesDialogProps> = ({
     );
 };
 
-export { DeleteCustomFieldDialog };
+export { DeleteCustomFieldGroupDialog };

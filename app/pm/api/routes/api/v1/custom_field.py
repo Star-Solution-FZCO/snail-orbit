@@ -100,7 +100,6 @@ class CustomFieldGroupCreateBody(BaseModel):
 
     label: str = 'default'
     is_nullable: bool = True
-    default_value: Any | None = None
 
 
 class CustomFieldUpdateBody(BaseModel):
@@ -128,6 +127,9 @@ class CustomFieldGroupOutput(BaseModel):
     description: str | None = None
     ai_description: str | None = None
     fields: list[CustomFieldOutputT]
+    is_nullable: bool
+    default_value: Any | None
+    label: str
 
 
 @router.get('/group/list')
@@ -148,6 +150,9 @@ async def list_custom_field_groups(
                 description=field.description,
                 ai_description=field.ai_description,
                 fields=[],
+                is_nullable=field.is_nullable,
+                default_value=field.default_value,
+                label=field.label,
             )
         results[field.gid].fields.append(cf_output_from_obj(field))
 
@@ -176,6 +181,9 @@ async def get_custom_field_group(
             description=objs[0].description,
             ai_description=objs[0].ai_description,
             fields=[cf_output_from_obj(obj) for obj in objs],
+            is_nullable=objs[0].is_nullable,
+            default_value=objs[0].default_value,
+            label=objs[0].label,
         )
     )
 
@@ -242,12 +250,6 @@ async def create_custom_field_group(
         label=body.label,
     )
 
-    if body.default_value is not None:
-        try:
-            obj.default_value = obj.validate_value(body.default_value)
-        except m.CustomFieldValidationError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-
     await obj.insert()
     return SuccessPayloadOutput(
         payload=CustomFieldGroupOutput(
@@ -257,6 +259,9 @@ async def create_custom_field_group(
             description=obj.description,
             ai_description=obj.ai_description,
             fields=[cf_output_from_obj(obj)],
+            is_nullable=obj.is_nullable,
+            default_value=obj.default_value,
+            label=obj.label,
         )
     )
 
@@ -310,6 +315,9 @@ async def update_custom_field_group(
             type=fields[0].type,
             description=fields[0].description,
             ai_description=fields[0].ai_description,
+            label=fields[0].label,
+            is_nullable=fields[0].is_nullable,
+            default_value=fields[0].default_value,
             fields=[cf_output_from_obj(obj) for obj in fields],
         )
     )

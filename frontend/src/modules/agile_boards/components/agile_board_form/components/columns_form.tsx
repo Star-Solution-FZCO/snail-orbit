@@ -160,6 +160,7 @@ export const ColumnsForm: FC = () => {
                                 "color" in option
                                     ? option.color || undefined
                                     : undefined,
+                            is_archived: false,
                         });
                 }}
                 disableCloseOnSelect

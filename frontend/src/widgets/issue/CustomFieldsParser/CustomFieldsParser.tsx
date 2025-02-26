@@ -209,7 +209,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                         field.value
                                             ? {
                                                   ...field.value,
-                                                  value: field.value.state,
+                                                  value: field.value.value,
                                               }
                                             : undefined
                                     }

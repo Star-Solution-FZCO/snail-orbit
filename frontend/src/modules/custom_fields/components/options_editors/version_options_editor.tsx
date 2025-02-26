@@ -1,45 +1,71 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { Box, CircularProgress, IconButton, Typography } from "@mui/material";
+import {
+    Box,
+    Checkbox,
+    CircularProgress,
+    FormControlLabel,
+    IconButton,
+    Typography,
+} from "@mui/material";
+import dayjs from "dayjs";
+import { t } from "i18next";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import {
-    CreateEnumOptionT,
+    CreateVersionOptionT,
     CustomFieldT,
-    EnumOptionT,
-    UpdateEnumOptionT,
+    UpdateVersionOptionT,
+    VersionOptionT,
 } from "types";
 import { toastApiError } from "utils";
-import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
-import { EnumOptionFormDialog } from "./enum_option_form_dialog";
+import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
+import { VersionOptionFormDialog } from "../form_dialogs/version_option_form_dialog";
 
-interface ICustomFieldEnumOptionProps {
-    option: EnumOptionT;
-    onEdit: (option: EnumOptionT) => void;
-    onDelete: (option: EnumOptionT) => void;
+interface ICustomFieldVersionOptionProps {
+    option: VersionOptionT;
+    onEdit: (option: VersionOptionT) => void;
+    onDelete: (option: VersionOptionT) => void;
 }
 
-const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
+const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
     option,
     onEdit,
     onDelete,
 }) => {
+    const releaseDate = option.release_date
+        ? `(${dayjs(option.release_date).format("DD MMM YYYY")})`
+        : null;
+
     return (
         <Box display="flex" alignItems="center" gap={1}>
-            <Box
-                sx={{
-                    width: "40px",
-                    height: "40px",
-                    backgroundColor: option.color,
-                    border: 1,
-                    borderColor: "divider",
-                    borderRadius: 0.5,
-                }}
+            <Typography flex={1}>
+                {option.value} {releaseDate}
+            </Typography>
+
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={option.is_released}
+                        size="small"
+                        disableRipple
+                    />
+                }
+                label={t("customFields.options.version.released")}
             />
 
-            <Typography flex={1}>{option.value}</Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={option.is_archived}
+                        size="small"
+                        disableRipple
+                    />
+                }
+                label={t("customFields.options.version.archived")}
+            />
 
             <IconButton onClick={() => onEdit(option)} size="small">
                 <EditIcon />
@@ -56,27 +82,27 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
     );
 };
 
-interface ICustomFieldEnumOptionsEditorProps {
+interface ICustomFieldVersionOptionsEditorProps {
     customField: CustomFieldT;
 }
 
-const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
-    customField,
-}) => {
+const CustomFieldVersionOptionsEditor: FC<
+    ICustomFieldVersionOptionsEditorProps
+> = ({ customField }) => {
     const { t } = useTranslation();
 
     const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedOption, setSelectedOption] = useState<EnumOptionT | null>(
+    const [selectedOption, setSelectedOption] = useState<VersionOptionT | null>(
         null,
     );
 
     const [createOption, { isLoading: createLoading }] =
-        customFieldsApi.useCreateCustomFieldEnumOptionMutation();
+        customFieldsApi.useCreateCustomFieldVersionOptionMutation();
     const [updateOption, { isLoading: updateLoading }] =
-        customFieldsApi.useUpdateCustomFieldEnumOptionMutation();
+        customFieldsApi.useUpdateCustomFieldVersionOptionMutation();
     const [deleteOption, { isLoading: deleteLoading }] =
-        customFieldsApi.useDeleteCustomFieldEnumOptionMutation();
+        customFieldsApi.useDeleteCustomFieldVersionOptionMutation();
 
     const handleClickAddOption = () => {
         setFormDialogOpen(true);
@@ -87,18 +113,18 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
         setSelectedOption(null);
     };
 
-    const handleClickEditOption = (option: EnumOptionT) => {
+    const handleClickEditOption = (option: VersionOptionT) => {
         setSelectedOption(option);
         setFormDialogOpen(true);
     };
 
     const handleSaveOption = (
-        formData: CreateEnumOptionT | UpdateEnumOptionT,
+        formData: CreateVersionOptionT | UpdateVersionOptionT,
     ) => {
         if (!selectedOption) {
             createOption({
                 id: customField.id,
-                ...(formData as CreateEnumOptionT),
+                ...(formData as CreateVersionOptionT),
             })
                 .unwrap()
                 .then(() => setFormDialogOpen(false))
@@ -109,7 +135,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
 
         updateOption({
             id: customField.id,
-            ...(formData as UpdateEnumOptionT),
+            ...(formData as UpdateVersionOptionT),
             option_id: selectedOption.uuid,
         })
             .unwrap()
@@ -120,7 +146,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
             .catch(toastApiError);
     };
 
-    const handleClickDeleteOption = (option: EnumOptionT) => {
+    const handleClickDeleteOption = (option: VersionOptionT) => {
         setSelectedOption(option);
         setDeleteDialogOpen(true);
     };
@@ -165,34 +191,30 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
             )}
 
             {options.map((option) => (
-                <CustomFieldEnumOption
+                <CustomFieldVersionOption
                     key={option.uuid}
-                    option={option as EnumOptionT}
+                    option={option as VersionOptionT}
                     onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
 
-            {formDialogOpen && (
-                <EnumOptionFormDialog
-                    open={formDialogOpen}
-                    onClose={handleCloseFormDialog}
-                    onSubmit={handleSaveOption}
-                    defaultValues={selectedOption}
-                    loading={createLoading || updateLoading}
-                />
-            )}
+            <VersionOptionFormDialog
+                open={formDialogOpen}
+                onClose={handleCloseFormDialog}
+                onSubmit={handleSaveOption}
+                defaultValues={selectedOption}
+                loading={createLoading || updateLoading}
+            />
 
-            {deleteDialogOpen && (
-                <DeleteCustomFieldOptionDialog
-                    open={deleteDialogOpen}
-                    onClose={() => setDeleteDialogOpen(false)}
-                    onDelete={deleteSelectedOption}
-                    loading={deleteLoading}
-                />
-            )}
+            <DeleteCustomFieldOptionDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onDelete={deleteSelectedOption}
+                loading={deleteLoading}
+            />
         </Box>
     );
 };
 
-export { CustomFieldEnumOptionsEditor };
+export { CustomFieldVersionOptionsEditor };

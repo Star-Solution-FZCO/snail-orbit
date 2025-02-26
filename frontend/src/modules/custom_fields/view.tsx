@@ -12,27 +12,43 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
-import type { CustomFieldT, UpdateCustomFieldT } from "types";
+import type {
+    CustomFieldGroupT,
+    CustomFieldT,
+    UpdateCustomFieldT,
+} from "types";
 import { toastApiError } from "utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
-import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
 import { CustomFieldForm } from "./components/custom_field_form";
-import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
-import { CustomFieldUserOptionsEditor } from "./components/custom_field_user_options_editor";
-import { CustomFieldVersionOptionsEditor } from "./components/custom_field_version_options_editor";
-import { DeleteCustomFieldDialog } from "./components/delete_custom_field_dialog";
+import { DeleteCustomFieldGroupDialog } from "./components/delete_custom_field_group_dialog";
+import { FieldTypeEditor } from "./components/options_editors/field_type_editor";
+import { isComplexCustomFieldType } from "./components/utils";
 
-const routeApi = getRouteApi("/_authenticated/custom-fields/$customFieldId");
+const routeApi = getRouteApi(
+    "/_authenticated/custom-fields/$customFieldGroupId/fields/$customFieldId",
+);
 
-const HeaderBreadcrumbs: FC<{ customField: CustomFieldT; title: string }> = ({
-    customField,
-    title,
-}) => {
+const HeaderBreadcrumbs: FC<{
+    customFieldGroup: CustomFieldGroupT;
+    customField: CustomFieldT;
+    title: string;
+}> = ({ customFieldGroup, customField, title }) => {
     return (
         <Breadcrumbs sx={{ mb: 2 }}>
             <Link to="/custom-fields" underline="hover">
                 <Typography fontSize={24} fontWeight="bold">
                     {title}
+                </Typography>
+            </Link>
+            <Link
+                to="/custom-fields/$customFieldGroupId"
+                params={{
+                    customFieldGroupId: customFieldGroup.gid,
+                }}
+                underline="hover"
+            >
+                <Typography fontSize={24} fontWeight="bold">
+                    {customFieldGroup.name}
                 </Typography>
             </Link>
             <Typography fontSize={24} fontWeight="bold">
@@ -42,54 +58,14 @@ const HeaderBreadcrumbs: FC<{ customField: CustomFieldT; title: string }> = ({
     );
 };
 
-const isNonPrimitiveType = (customField: CustomFieldT) => {
-    return (
-        [
-            "enum",
-            "enum_multi",
-            "user",
-            "user_multi",
-            "version",
-            "version_multi",
-        ].includes(customField.type) || customField.type === "state"
-    );
-};
-
-const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
-    customField,
-}) => {
-    const isEnumType = ["enum", "enum_multi"].includes(customField.type);
-    const isUserType = ["user", "user_multi"].includes(customField.type);
-    const isVersionType = ["version", "version_multi"].includes(
-        customField.type,
-    );
-    const isStateType = customField.type === "state";
-
-    if (isEnumType) {
-        return <CustomFieldEnumOptionsEditor customField={customField} />;
-    }
-
-    if (isUserType) {
-        return <CustomFieldUserOptionsEditor customField={customField} />;
-    }
-
-    if (isVersionType) {
-        return <CustomFieldVersionOptionsEditor customField={customField} />;
-    }
-
-    if (isStateType) {
-        return <CustomFieldStateOptionsEditor customField={customField} />;
-    }
-
-    return null;
-};
-
-const CustomFieldView = () => {
+export const CustomFieldView = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { customFieldId } = routeApi.useParams();
+    const { customFieldGroupId, customFieldId } = routeApi.useParams();
 
-    const { data, error } =
+    const { data: cfgData, error: cfgError } =
+        customFieldsApi.useGetCustomFieldGroupQuery(customFieldGroupId);
+    const { data: cfData, error: cfError } =
         customFieldsApi.useGetCustomFieldQuery(customFieldId);
 
     const [updateCustomField, { isLoading }] =
@@ -101,18 +77,19 @@ const CustomFieldView = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
 
-    if (error) {
+    if (cfgError || cfError) {
         return (
             <ErrorHandler
-                error={error}
+                error={cfgError || cfError}
                 message="customFields.item.fetch.error"
             />
         );
     }
 
-    if (!data) return null;
+    if (!cfgData || !cfData) return null;
 
-    const customField = data.payload;
+    const customFieldGroup = cfgData.payload;
+    const customField = cfData.payload;
 
     const handleSubmit = (formData: UpdateCustomFieldT) => {
         if (!formData.default_value) formData.default_value = null;
@@ -121,10 +98,15 @@ const CustomFieldView = () => {
     };
 
     const handleDelete = () => {
-        deleteCustomField(customField.id)
+        deleteCustomField({ gid: customFieldGroup.gid, id: customField.id })
             .unwrap()
             .then(() => {
-                navigate({ to: "/custom-fields" });
+                navigate({
+                    to: "/custom-fields/$customFieldGroupId",
+                    params: {
+                        customFieldGroupId: customFieldGroup.gid,
+                    },
+                });
                 toast.success(t("customFields.delete.success"));
             })
             .catch(toastApiError);
@@ -133,7 +115,11 @@ const CustomFieldView = () => {
     const handleConfirm = () => {
         if (!formData) return;
 
-        updateCustomField({ id: customField.id, ...formData })
+        updateCustomField({
+            gid: customFieldGroup.gid,
+            id: customField.id,
+            ...formData,
+        })
             .unwrap()
             .then(() => {
                 toast.success(t("customFields.update.success"));
@@ -151,12 +137,16 @@ const CustomFieldView = () => {
     return (
         <Container sx={{ px: 4, pb: 4 }} disableGutters>
             <HeaderBreadcrumbs
+                customFieldGroup={customFieldGroup}
                 customField={customField}
                 title={t("customFields.title")}
             />
 
             <Box display="flex" gap={2}>
-                <Box flex={1} pt={isNonPrimitiveType(customField) ? "44px" : 0}>
+                <Box
+                    flex={1}
+                    pt={isComplexCustomFieldType(customField.type) ? "44px" : 0}
+                >
                     <CustomFieldForm
                         onSubmit={handleSubmit}
                         onDelete={() => setDeleteDialogOpen(true)}
@@ -165,13 +155,14 @@ const CustomFieldView = () => {
                     />
                 </Box>
 
-                {isNonPrimitiveType(customField) && (
+                {isComplexCustomFieldType(customField.type) && (
                     <>
                         <Divider
-                            orientation="vertical"
                             sx={{ mt: "44px" }}
+                            orientation="vertical"
                             flexItem
                         />
+
                         <Box flex={1}>
                             <FieldTypeEditor customField={customField} />
                         </Box>
@@ -185,7 +176,7 @@ const CustomFieldView = () => {
                 onClose={handleCloseConfirmDialog}
             />
 
-            <DeleteCustomFieldDialog
+            <DeleteCustomFieldGroupDialog
                 open={deleteDialogOpen}
                 onSubmit={handleDelete}
                 onClose={() => setDeleteDialogOpen(false)}
@@ -194,5 +185,3 @@ const CustomFieldView = () => {
         </Container>
     );
 };
-
-export { CustomFieldView };

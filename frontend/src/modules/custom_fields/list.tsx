@@ -6,7 +6,7 @@ import { ErrorHandler } from "components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { CustomFieldT } from "types";
+import { CustomFieldGroupT } from "types";
 import { useListQueryParams } from "utils";
 
 const CustomFieldList = () => {
@@ -18,9 +18,9 @@ const CustomFieldList = () => {
     });
 
     const { data, isLoading, isFetching, error } =
-        customFieldsApi.useListCustomFieldsQuery(listQueryParams);
+        customFieldsApi.useListCustomFieldGroupsQuery(listQueryParams);
 
-    const columns: GridColDef<CustomFieldT>[] = useMemo(
+    const columns: GridColDef<CustomFieldGroupT>[] = useMemo(
         () => [
             {
                 field: "name",
@@ -38,15 +38,21 @@ const CustomFieldList = () => {
                 type: "boolean",
                 flex: 1,
             },
+            {
+                field: "fields",
+                headerName: t("customFields.fields"),
+                flex: 1,
+                valueGetter: (_, row) => row.fields.length,
+            },
         ],
         [t],
     );
 
     const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
         navigate({
-            to: "/custom-fields/$customFieldId",
+            to: "/custom-fields/$customFieldGroupId",
             params: {
-                customFieldId: row.id,
+                customFieldGroupId: row.gid,
             },
         });
     };
@@ -120,6 +126,7 @@ const CustomFieldList = () => {
                 columns={columns}
                 rows={rows}
                 rowCount={rowCount}
+                getRowId={(row) => row.gid}
                 onRowClick={handleClickRow}
                 paginationModel={paginationModel}
                 onPaginationModelChange={handlePaginationModelChange}
