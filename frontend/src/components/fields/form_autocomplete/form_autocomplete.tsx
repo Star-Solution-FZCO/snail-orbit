@@ -4,25 +4,27 @@ import type { FormAutocompleteContentProps } from "./form_autocomplete_content";
 import FormAutocompleteContent from "./form_autocomplete_content";
 
 export type FormAutocompletePopoverProps<
-    F extends boolean | undefined,
-    G extends boolean | undefined,
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
 > = {
     onClose?: () => unknown;
     anchorEl?: Element | null;
     id: string;
     open: boolean;
-} & FormAutocompleteContentProps<F, G>;
+} & FormAutocompleteContentProps<Value, Multiple, DisableClearable>;
 
 export const FormAutocompletePopover = <
-    F extends boolean | undefined,
-    G extends boolean | undefined,
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
 >({
     onClose,
     anchorEl,
     id,
     open,
     ...props
-}: FormAutocompletePopoverProps<F, G>) => {
+}: FormAutocompletePopoverProps<Value, Multiple, DisableClearable>) => {
     const handleClose = () => {
         if (onClose) onClose();
     };
@@ -37,7 +39,7 @@ export const FormAutocompletePopover = <
         >
             <ClickAwayListener onClickAway={handleClose}>
                 <div>
-                    <FormAutocompleteContent<F, G>
+                    <FormAutocompleteContent<Value, Multiple, DisableClearable>
                         onClose={handleClose}
                         {...props}
                     />

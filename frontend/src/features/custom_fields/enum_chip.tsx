@@ -1,12 +1,11 @@
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import type { FC } from "react";
+import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import type { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectChip } from "./select_chip";
-import type { SelectOptionTypeWithOriginal } from "./utils";
-import { enumToSelectOption, enumToSelectOptions } from "./utils";
+import { cardLabelGetter, getEnumColorAdornment } from "./utils";
 
 type EnumChipProps = {
     value?: EnumFieldT | EnumFieldT[];
@@ -38,18 +37,12 @@ export const EnumChip: FC<EnumChipProps> = ({
         return (data?.payload.items || []) as EnumFieldT[];
     }, [data?.payload.items]);
 
-    const parsedValue = useMemo(() => {
-        if (!value) return value;
-        return Array.isArray(value)
-            ? enumToSelectOptions(value)
-            : enumToSelectOption(value);
-    }, [value]);
-
     const handleChange = (
-        value: SelectOptionTypeWithOriginal | SelectOptionTypeWithOriginal[],
+        _: SyntheticEvent<Element, Event>,
+        value: EnumFieldT | EnumFieldT[] | null,
     ) => {
-        if (Array.isArray(value)) onChange(value.map((el) => el.original));
-        else onChange(value.original);
+        if (!value) return;
+        onChange(value);
     };
 
     const adornment = useMemo(() => {
@@ -62,14 +55,20 @@ export const EnumChip: FC<EnumChipProps> = ({
     return (
         <SelectChip
             loading={isLoading}
-            options={enumToSelectOptions(items)}
-            value={parsedValue}
+            options={items}
+            value={value}
             leftAdornment={adornment}
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
             id={enumFieldId}
             multiple={multiple}
+            getOptionRightAdornment={getEnumColorAdornment}
+            isOptionEqualToValue={(a, b) => a.value === b.value}
+            getOptionLabel={(el) => el.value}
+            getCardLabelString={(value) =>
+                cardLabelGetter(value, (el) => el.value)
+            }
         />
     );
 };

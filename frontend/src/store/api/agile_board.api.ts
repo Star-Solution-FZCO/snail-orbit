@@ -4,7 +4,6 @@ import type {
     AgileBoardT,
     AgileSwimLineT,
     ApiResponse,
-    BoardPermission,
     ChangePermissionParams,
     ColumnT,
     CreateAgileBoardT,
@@ -14,6 +13,7 @@ import type {
     ListResponse,
     MoveIssueT,
     RevokePermissionParams,
+    RolePermissionT,
     UpdateAgileBoardT,
 } from "types";
 import customFetchBase from "./custom_fetch_base";
@@ -221,7 +221,7 @@ export const agileBoardApi = createApi({
             ],
         }),
         getBoardPermissions: build.query<
-            ListResponse<BoardPermission>,
+            ListResponse<RolePermissionT>,
             { boardId: string }
         >({
             query: ({ boardId }) => `board/${boardId}/permissions`,
