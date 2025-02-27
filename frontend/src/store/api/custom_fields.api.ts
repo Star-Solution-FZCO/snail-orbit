@@ -92,18 +92,6 @@ export const customFieldsApi = createApi({
                 { type: "CustomFieldGroups", id: gid },
             ],
         }),
-        // deleteCustomFieldGroup: build.mutation<
-        //     ApiResponse<{ id: string }>,
-        //     string
-        // >({
-        //     query: (gid) => ({
-        //         url: `custom_field/group/${gid}`,
-        //         method: "DELETE",
-        //     }),
-        //     invalidatesTags: (_result, _error) => [
-        //         { type: "CustomFieldGroups", id: "LIST" },
-        //     ],
-        // }),
         // custom fields
         listCustomFields: build.query<
             ListResponse<CustomFieldT>,
@@ -159,7 +147,7 @@ export const customFieldsApi = createApi({
                 id: string;
             } & UpdateCustomFieldT
         >({
-            query: ({ id, ...body }) => ({
+            query: ({ gid, id, ...body }) => ({
                 url: `custom_field/${id}`,
                 method: "PUT",
                 body,

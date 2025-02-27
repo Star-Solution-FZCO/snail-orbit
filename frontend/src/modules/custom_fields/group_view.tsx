@@ -42,7 +42,6 @@ const HeaderBreadcrumbs: FC<{
 
 const CustomFieldGroupView = () => {
     const { t } = useTranslation();
-    // const navigate = useNavigate();
     const { customFieldGroupId } = routeApi.useParams();
 
     const { data, error } =
@@ -50,11 +49,8 @@ const CustomFieldGroupView = () => {
 
     const [updateCustomFieldGroup, { isLoading }] =
         customFieldsApi.useUpdateCustomFieldGroupMutation();
-    // const [deleteCustomFieldGroup, { isLoading: isDeleting }] =
-    //     customFieldsApi.useDeleteCustomFieldGroupMutation();
 
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-    // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
 
     if (error) {
@@ -75,16 +71,6 @@ const CustomFieldGroupView = () => {
         setFormData(formData);
         setConfirmDialogOpen(true);
     };
-
-    // const handleDelete = () => {
-    //     deleteCustomFieldGroup(customFieldGroup.gid)
-    //         .unwrap()
-    //         .then(() => {
-    //             navigate({ to: "/custom-fields" });
-    //             toast.success(t("customFields.delete.success"));
-    //         })
-    //         .catch(toastApiError);
-    // };
 
     const handleConfirm = () => {
         if (!formData) return;
@@ -115,7 +101,6 @@ const CustomFieldGroupView = () => {
                 <Box flex={1} pt="44px">
                     <CustomFieldGroupForm
                         onSubmit={handleSubmit}
-                        // onDelete={() => setDeleteDialogOpen(true)}
                         defaultValues={customFieldGroup}
                         loading={isLoading}
                     />
@@ -136,13 +121,6 @@ const CustomFieldGroupView = () => {
                 onSubmit={handleConfirm}
                 onClose={handleCloseConfirmDialog}
             />
-
-            {/* <DeleteCustomFieldGroupDialog
-                open={deleteDialogOpen}
-                onSubmit={handleDelete}
-                onClose={() => setDeleteDialogOpen(false)}
-                loading={isDeleting}
-            /> */}
         </Container>
     );
 };

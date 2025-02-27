@@ -163,6 +163,7 @@ export type CreateCustomFieldT = {
 
 export type CustomFieldT = CustomFieldBaseT & {
     id: string;
+    gid: string;
     default_value: CustomFieldValueT;
     options?: CustomFieldOptionT[];
 } & CustomFieldTypeValuePair;

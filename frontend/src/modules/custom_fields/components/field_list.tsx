@@ -46,7 +46,7 @@ export const FieldList: FC<{ gid: string; fields: CustomFieldT[] }> = ({
                         to={`/custom-fields/${gid}/fields/${field.id}`}
                         underline="hover"
                     >
-                        {field.name}
+                        {field.label}
                     </Link>
                 ))}
             </Stack>

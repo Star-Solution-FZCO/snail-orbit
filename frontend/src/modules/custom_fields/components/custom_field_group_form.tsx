@@ -41,14 +41,12 @@ type CustomFieldGroupFormData = yup.InferType<typeof customFieldGroupSchema>;
 interface ICustomFieldGroupFormProps {
     defaultValues?: CustomFieldGroupT;
     onSubmit: (formData: CustomFieldGroupFormData) => void;
-    // onDelete?: () => void;
     loading?: boolean;
 }
 
 const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
     defaultValues,
     onSubmit,
-    // onDelete,
     loading,
 }) => {
     const { t } = useTranslation();
@@ -146,18 +144,18 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
                 fullWidth
             />
 
-            <TextField
-                {...register("label")}
-                label={t("customFields.form.label")}
-                error={!!errors.label}
-                helperText={t(errors.label?.message || "")}
-                variant="outlined"
-                size="small"
-                disabled={!!defaultValues}
-                fullWidth
-            />
-
-            {/* TODO: add default value input component */}
+            {!defaultValues && (
+                <TextField
+                    {...register("label")}
+                    label={t("customFields.form.label")}
+                    error={!!errors.label}
+                    helperText={t(errors.label?.message || "")}
+                    variant="outlined"
+                    size="small"
+                    disabled={!!defaultValues}
+                    fullWidth
+                />
+            )}
 
             <Controller
                 name="is_nullable"

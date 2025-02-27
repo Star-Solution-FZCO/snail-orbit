@@ -49,7 +49,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
     } = useForm({ defaultValues: defaultValues || { value: "", color: null } });
 
     useEffect(() => {
-        reset(defaultValues || { value: "", color: null });
+        reset(defaultValues || { value: "", color: "#ccc" });
     }, [open, defaultValues, reset]);
 
     return (

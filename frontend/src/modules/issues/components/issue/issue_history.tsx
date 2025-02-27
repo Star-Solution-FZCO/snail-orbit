@@ -13,9 +13,9 @@ import {
     BasicUserT,
     CustomFieldValueT,
     EnumFieldT,
+    FieldBaseT,
     FieldValueChangeT,
     IssueHistoryT,
-    StateFieldT,
     VersionFieldT,
 } from "types";
 
@@ -108,7 +108,8 @@ const renderValue = (
             return (value as BasicUserT[]).map((user) => user.name).join(", ");
 
         case "enum":
-            return (value as EnumFieldT).value;
+        case "state":
+            return (value as FieldBaseT).value;
 
         case "enum_multi":
             return (value as EnumFieldT[])
@@ -120,9 +121,6 @@ const renderValue = (
 
         case "version_multi":
             return (value as VersionFieldT[]).map(renderVersion).join(", ");
-
-        case "state":
-            return (value as StateFieldT).value;
 
         default:
             return String(value);

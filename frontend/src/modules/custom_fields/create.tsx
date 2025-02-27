@@ -28,9 +28,15 @@ const CustomFieldCreate = () => {
     const onSubmit = (formData: CreateCustomFieldT) => {
         if (!data) return;
 
+        const customFieldGroup = data.payload;
+        const isNumber = ["integer", "float"].includes(customFieldGroup.type);
+
         createCustomField({
-            gid: data.payload.gid,
             ...formData,
+            gid: customFieldGroup.gid,
+            default_value: isNumber
+                ? Number(formData.default_value)
+                : formData.default_value,
         })
             .unwrap()
             .then(() => {
@@ -40,7 +46,7 @@ const CustomFieldCreate = () => {
                         customFieldGroupId,
                     },
                 });
-                toast.success(t("customFields.fields.create.success"));
+                toast.success(t("customFields.create.success"));
             })
             .catch(toastApiError);
     };
@@ -86,7 +92,11 @@ const CustomFieldCreate = () => {
                 </Typography>
             </Breadcrumbs>
 
-            <CustomFieldForm onSubmit={onSubmit} loading={isLoading} />
+            <CustomFieldForm
+                onSubmit={onSubmit}
+                type={customFieldGroup.type}
+                loading={isLoading}
+            />
         </Container>
     );
 };

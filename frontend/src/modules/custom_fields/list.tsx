@@ -1,21 +1,37 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+    Box,
+    Button,
+    debounce,
+    IconButton,
+    InputAdornment,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
-import { CustomFieldGroupT } from "types";
+import { CustomFieldGroupT, ListQueryParams } from "types";
 import { useListQueryParams } from "utils";
+
+const initialQueryParams = {
+    limit: 50,
+    offset: 0,
+};
 
 const CustomFieldList = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [listQueryParams, updateListQueryParams] = useListQueryParams({
-        limit: 50,
-    });
+    const [query, setQuery] = useState<string>("");
+
+    const [listQueryParams, updateListQueryParams, resetQueryParams] =
+        useListQueryParams<ListQueryParams>(initialQueryParams);
 
     const { data, isLoading, isFetching, error } =
         customFieldsApi.useListCustomFieldGroupsQuery(listQueryParams);
@@ -57,6 +73,28 @@ const CustomFieldList = () => {
         });
     };
 
+    const debouncedSearch = useCallback(
+        debounce((searchValue: string) => {
+            updateListQueryParams({
+                search: searchValue,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleSearchTextField = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
+    };
+
+    const handleClearSearchField = () => {
+        setQuery("");
+        resetQueryParams();
+    };
+
     const paginationModel = {
         page: listQueryParams.offset / listQueryParams.limit,
         pageSize: listQueryParams.limit,
@@ -69,6 +107,7 @@ const CustomFieldList = () => {
         updateListQueryParams({
             limit: model.pageSize,
             offset: model.page * model.pageSize,
+            search: query,
         });
     };
 
@@ -116,6 +155,29 @@ const CustomFieldList = () => {
                     </Button>
                 </Link>
             </Stack>
+
+            <TextField
+                placeholder={t("customFields.search.placeholder")}
+                value={query}
+                onChange={handleSearchTextField}
+                size="small"
+                slotProps={{
+                    input: {
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                {query && (
+                                    <IconButton
+                                        onClick={handleClearSearchField}
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                )}
+                            </InputAdornment>
+                        ),
+                    },
+                }}
+                fullWidth
+            />
 
             <DataGrid
                 sx={{

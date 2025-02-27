@@ -79,6 +79,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
 
     const [queryParams, updateQueryParams, resetQueryParams] =
         useListQueryParams<ListSelectQueryParams>({ limit: 20, offset: 0 });
+
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [hasMore, setHasMore] = useState(true);
@@ -148,11 +149,14 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
             .then(() => {
                 onClose();
                 setEntity(null);
+                setSearchQuery("");
+                resetQueryParams();
             })
             .catch(toastApiError);
     };
 
-    const options = data?.payload?.items || [];
+    const options =
+        data?.payload?.items?.filter((item) => item.type !== "group") || [];
     const loading = dataLoading || dataFetching;
 
     useEffect(() => {
@@ -172,7 +176,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     alignItems: "center",
                 }}
             >
-                {t("customFields.userOrGroup.add.title")}
+                {t("customFields.user.add.title")}
 
                 <IconButton onClick={handleClose} size="small">
                     <CloseIcon />
@@ -190,8 +194,8 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label={t("projects.access.userOrGroup")}
-                            placeholder={t("projects.access.selectUserOrGroup")}
+                            label={t("customFields.users.title")}
+                            placeholder={t("customFields.users.select")}
                             slotProps={{
                                 input: {
                                     ...params.InputProps,
@@ -369,7 +373,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
-                    {t("customFields.userOrGroup.title")}
+                    {t("customFields.users.title")}
                 </Typography>
 
                 <IconButton onClick={handleClickAddUserOrGroup} size="small">
@@ -378,7 +382,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             </Box>
 
             {users.length === 0 && (
-                <Typography>{t("customFields.userOrGroup.empty")}</Typography>
+                <Typography>{t("customFields.users.empty")}</Typography>
             )}
 
             {users.map((user) => (

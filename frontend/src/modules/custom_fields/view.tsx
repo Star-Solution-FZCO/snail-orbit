@@ -102,10 +102,7 @@ export const CustomFieldView = () => {
             .unwrap()
             .then(() => {
                 navigate({
-                    to: "/custom-fields/$customFieldGroupId",
-                    params: {
-                        customFieldGroupId: customFieldGroup.gid,
-                    },
+                    to: "/custom-fields",
                 });
                 toast.success(t("customFields.delete.success"));
             })
@@ -115,10 +112,15 @@ export const CustomFieldView = () => {
     const handleConfirm = () => {
         if (!formData) return;
 
+        const isNumber = ["integer", "float"].includes(customFieldGroup.type);
+
         updateCustomField({
+            ...formData,
             gid: customFieldGroup.gid,
             id: customField.id,
-            ...formData,
+            default_value: isNumber
+                ? Number(formData.default_value)
+                : formData.default_value,
         })
             .unwrap()
             .then(() => {
@@ -151,6 +153,7 @@ export const CustomFieldView = () => {
                         onSubmit={handleSubmit}
                         onDelete={() => setDeleteDialogOpen(true)}
                         defaultValues={customField}
+                        type={customFieldGroup.type}
                         loading={isLoading}
                     />
                 </Box>

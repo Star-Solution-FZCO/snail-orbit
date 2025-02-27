@@ -36,8 +36,8 @@ class EnumCustomField(CustomField):
         if value is None:
             return value
         if isinstance(value, EnumOption):
-            value = value.id
-        opts = {opt.id: opt for opt in self.options}
+            value = value.value
+        opts = {opt.value: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
                 field=self, value=value, msg='option not found'

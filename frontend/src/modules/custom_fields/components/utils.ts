@@ -1,11 +1,4 @@
-import {
-    BasicUserT,
-    CustomFieldTypeT,
-    CustomFieldValueT,
-    EnumFieldT,
-    StateFieldT,
-    VersionFieldT,
-} from "types";
+import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "types";
 
 const complexCustomFieldTypes = new Set<CustomFieldTypeT>([
     "date",
@@ -28,13 +21,16 @@ const primitiveTypes = new Set(["string", "number", "boolean"]);
 export const isPrimitive = (value: CustomFieldValueT): boolean =>
     primitiveTypes.has(typeof value);
 
-export const complexValueGetter = (
-    cfValue: EnumFieldT | StateFieldT | BasicUserT | VersionFieldT,
-): string => {
-    if ("id" in cfValue) {
-        return cfValue.id;
+export const complexValueGetter = (cfValue: CustomFieldValueT): string => {
+    if (typeof cfValue === "object") {
+        if ("value" in cfValue) {
+            return cfValue.value;
+        }
+        if ("id" in cfValue) {
+            return cfValue.id;
+        }
     }
-    return cfValue.value;
+    return cfValue as string;
 };
 
 export const defaultValueGetter = (
@@ -52,4 +48,12 @@ export const defaultValueGetter = (
         return complexValueGetter(cfValue);
     }
     return null;
+};
+
+export const getOptionLabel = (option: CustomFieldOptionT) => {
+    return typeof option.value === "string" ? option.value : option.value.name;
+};
+
+export const getOptionValue = (option: CustomFieldOptionT) => {
+    return typeof option.value === "string" ? option.value : option.value.id;
 };
