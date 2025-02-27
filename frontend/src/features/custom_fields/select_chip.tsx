@@ -1,96 +1,81 @@
 import { AutocompleteValue, Tooltip } from "@mui/material";
 import { FieldChip } from "components/fields/field_chip/field_chip";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
-import { ReactNode, SyntheticEvent, useEffect, useMemo, useState } from "react";
-
-export type SelectChipOptionType = FormAutocompleteValueType & { id: string };
-
-type SelectChipReturnType<
-    T extends boolean | undefined,
-    K extends SelectChipOptionType,
-> = T extends true ? K[] : K;
-
-type ValueType<T extends boolean | undefined> = AutocompleteValue<
-    SelectChipOptionType,
-    T,
-    boolean | undefined,
-    false
->;
+import {
+    FormAutocompletePopover,
+    FormAutocompletePopoverProps,
+} from "components/fields/form_autocomplete/form_autocomplete";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 
 type SelectChipProps<
-    T extends boolean | undefined,
-    K extends SelectChipOptionType,
-> = {
-    id: string;
-    options: SelectChipOptionType[];
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
+> = Omit<
+    FormAutocompletePopoverProps<Value, Multiple, DisableClearable>,
+    "open"
+> & {
     label: string;
-    value?: ValueType<T>;
     chipValue?: string;
-    onChange: (value: SelectChipReturnType<T, K>) => void;
     onOpened?: () => unknown;
     loading?: boolean;
-    multiple?: T;
     leftAdornment?: ReactNode;
     rightAdornment?: ReactNode;
+    getCardLabelString?: (
+        el: AutocompleteValue<Value, Multiple, DisableClearable, false>,
+    ) => string | string[] | null | undefined;
 };
 
 export const SelectChip = <
-    T extends boolean | undefined,
-    K extends SelectChipOptionType,
->({
-    id,
-    options,
-    label,
-    value,
-    chipValue: customChipValue,
-    onChange,
-    onOpened,
-    loading,
-    multiple,
-    leftAdornment,
-    rightAdornment,
-}: SelectChipProps<T, K>) => {
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
+>(
+    props: SelectChipProps<Value, Multiple, DisableClearable>,
+) => {
+    const {
+        id,
+        options,
+        label,
+        value,
+        chipValue: customChipValue,
+        onChange,
+        onOpened,
+        loading,
+        multiple,
+        leftAdornment,
+        rightAdornment,
+        getCardLabelString,
+        isOptionEqualToValue,
+        onClick,
+        ...rest
+    } = props;
+
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-    const initialValue = useMemo(() => {
-        if (multiple && !value) return [] as unknown as ValueType<T>;
-
-        if (!value) return undefined;
-
-        return value;
-    }, [options, value]);
 
     const cardValue = useMemo(() => {
         if (customChipValue) return customChipValue;
+        if (!value || !getCardLabelString) return "?";
+        const labelStrings = getCardLabelString(value);
 
-        if (!value) return "?";
-
-        if (!Array.isArray(value)) return value.label;
+        if (!Array.isArray(labelStrings)) return labelStrings;
         else {
-            if (!value.length) return "?";
+            if (!labelStrings.length) return "?";
             return (
-                value[0].label +
-                (value.length > 1 ? `+${value.length - 1}` : "")
+                labelStrings[0] +
+                (labelStrings.length > 1 ? `+${labelStrings.length - 1}` : "")
             );
         }
     }, [multiple, value, customChipValue]);
 
     const tooltipValue = useMemo(() => {
         if (customChipValue) return customChipValue;
+        if (!value || !getCardLabelString) return "?";
+        const labelStrings = getCardLabelString(value);
+        if (!labelStrings) return "?";
 
-        if (!value) return "?";
-
-        if (!Array.isArray(value)) return value.label;
-        else return value.map((el) => el.label).join(", ");
+        if (!Array.isArray(labelStrings)) return labelStrings;
+        else return labelStrings.join(", ");
     }, [multiple, value, customChipValue]);
-
-    const handleChange = (
-        _: SyntheticEvent,
-        value: FormAutocompleteValueType | FormAutocompleteValueType[] | null,
-    ) => {
-        onChange(value as SelectChipReturnType<T, K>);
-    };
 
     useEffect(() => {
         if (anchorEl) onOpened?.();
@@ -116,13 +101,14 @@ export const SelectChip = <
                 id={id}
                 anchorEl={anchorEl}
                 options={options}
-                value={initialValue}
+                value={value}
                 onClose={() => setAnchorEl(null)}
-                onChange={handleChange}
+                onChange={onChange}
                 open={!!anchorEl}
                 multiple={multiple}
                 loading={loading}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
+                isOptionEqualToValue={isOptionEqualToValue}
+                {...rest}
             />
         </>
     );

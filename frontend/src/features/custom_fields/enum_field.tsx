@@ -1,12 +1,11 @@
 import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import type { FC, ReactNode } from "react";
+import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import type { EnumFieldT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import type { SelectOptionTypeWithOriginal } from "./utils";
-import { enumToSelectOption, enumToSelectOptions } from "./utils";
+import { cardLabelGetter, getEnumColorAdornment } from "./utils";
 
 type EnumFieldProps = {
     value?: EnumFieldT | EnumFieldT[];
@@ -40,18 +39,12 @@ export const EnumField: FC<EnumFieldProps> = ({
         return (data?.payload.items || []) as EnumFieldT[];
     }, [data?.payload.items]);
 
-    const parsedValue = useMemo(() => {
-        if (!value) return value;
-        return Array.isArray(value)
-            ? enumToSelectOptions(value)
-            : enumToSelectOption(value);
-    }, [value]);
-
     const handleChange = (
-        value: SelectOptionTypeWithOriginal | SelectOptionTypeWithOriginal[],
+        _: SyntheticEvent,
+        value: EnumFieldT | EnumFieldT[] | null,
     ) => {
-        if (Array.isArray(value)) onChange(value.map((el) => el.original));
-        else onChange(value.original);
+        if (!value) return undefined;
+        onChange?.(value);
     };
 
     const adornment = useMemo(() => {
@@ -68,19 +61,24 @@ export const EnumField: FC<EnumFieldProps> = ({
             );
     }, [value, rightAdornment]);
 
-    const options = useMemo(() => enumToSelectOptions(items), [items]);
-
     return (
         <SelectField
             loading={isLoading}
-            options={options}
-            value={parsedValue}
+            options={items}
+            value={value}
             rightAdornment={adornment}
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
             id={enumFieldId}
             multiple={multiple}
+            getOptionRightAdornment={getEnumColorAdornment}
+            getOptionLabel={(el) => el.value}
+            getOptionKey={(el) => el.value}
+            isOptionEqualToValue={(a, b) => a.value === b.value}
+            getCardLabelString={(value) =>
+                cardLabelGetter(value, (el) => el.value)
+            }
         />
     );
 };

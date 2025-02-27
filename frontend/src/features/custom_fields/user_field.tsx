@@ -1,12 +1,11 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
-import type { ReactNode } from "react";
+import type { ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import type { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import type { UserSelectOptionT } from "./utils";
-import { userToSelectOption, userToSelectOptions } from "./utils";
+import { cardLabelGetter, getUserAvatarAdornment } from "./utils";
 
 type UserFieldProps = {
     value?: BasicUserT | BasicUserT[];
@@ -16,8 +15,6 @@ type UserFieldProps = {
     id: string;
     rightAdornment?: ReactNode;
 };
-
-const emptyArr: UserSelectOptionT[] = [];
 
 export const UserField = ({
     value,
@@ -38,20 +35,15 @@ export const UserField = ({
     };
 
     const options = useMemo(() => {
-        return userToSelectOptions(
-            (data?.payload.items || emptyArr) as BasicUserT[],
-        );
+        return (data?.payload.items || []) as BasicUserT[];
     }, [data?.payload.items]);
 
-    const parsedValue = useMemo(() => {
+    const handleChange = (
+        _: SyntheticEvent,
+        value: BasicUserT | BasicUserT[] | null,
+    ) => {
         if (!value) return undefined;
-        if (Array.isArray(value)) return userToSelectOptions(value);
-        else return userToSelectOption(value);
-    }, [value]);
-
-    const handleChange = (value: UserSelectOptionT | UserSelectOptionT[]) => {
-        if (Array.isArray(value)) onChange(value.map((el) => el.original));
-        else onChange(value.original);
+        onChange(value);
     };
 
     const adornment = useMemo(() => {
@@ -72,13 +64,21 @@ export const UserField = ({
         <SelectField
             loading={isLoading}
             options={options}
-            value={parsedValue}
+            value={value}
             label={label}
             rightAdornment={adornment}
             onChange={handleChange}
             onOpened={handleOpened}
             multiple={multiple}
             id={id}
+            getOptionRightAdornment={getUserAvatarAdornment}
+            getOptionLabel={(el) => el.name}
+            getOptionDescription={(el) => el.email}
+            getOptionKey={(el) => el.id}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            getCardLabelString={(value) =>
+                cardLabelGetter(value, (el) => el.name)
+            }
         />
     );
 };

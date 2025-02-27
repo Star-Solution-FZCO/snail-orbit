@@ -26,7 +26,7 @@ export const permissionKeys = [
 
 export type PermissionKeyT = (typeof permissionKeys)[number];
 
-export type PermissionT = {
+export type RolePermissionT = {
     key: PermissionKeyT;
     label: string;
     granted: boolean;
@@ -34,7 +34,7 @@ export type PermissionT = {
 
 export type PermissionGroupT = {
     label: string;
-    permissions: PermissionT[];
+    permissions: RolePermissionT[];
 };
 
 export type RoleT = {
