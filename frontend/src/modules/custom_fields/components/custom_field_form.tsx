@@ -8,20 +8,21 @@ import {
     FormControlLabel,
     TextField,
 } from "@mui/material";
-import { Link } from "@tanstack/react-router";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldT } from "types";
+import type { CustomFieldT, CustomFieldTypeT } from "types";
 import * as yup from "yup";
+import { DefaultValueInput } from "./default_value_input";
 
 const customFieldSchema = yup.object().shape({
     label: yup.string().required("form.validation.required"),
     is_nullable: yup.boolean().required("form.validation.required"),
-    default_value: yup.mixed(),
-    // .required("form.validation.required")
-    // .nullable()
-    // .default(null),
+    default_value: yup
+        .mixed()
+        .required("form.validation.required")
+        .nullable()
+        .default(null),
 });
 
 type CustomFieldFormData = yup.InferType<typeof customFieldSchema>;
@@ -30,6 +31,7 @@ interface ICustomFieldFormProps {
     defaultValues?: CustomFieldT;
     onSubmit: (formData: CustomFieldFormData) => void;
     onDelete?: () => void;
+    type: CustomFieldTypeT;
     loading?: boolean;
 }
 
@@ -37,6 +39,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     defaultValues,
     onSubmit,
     onDelete,
+    type,
     loading,
 }) => {
     const { t } = useTranslation();
@@ -74,7 +77,20 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 fullWidth
             />
 
-            {/* TODO: add default value input component */}
+            <Controller
+                name="default_value"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                    <DefaultValueInput
+                        value={value}
+                        options={defaultValues?.options}
+                        type={type}
+                        onChange={onChange}
+                        error={!!errors?.default_value}
+                        errorMessage={errors.default_value?.message as string}
+                    />
+                )}
+            />
 
             <Controller
                 name="is_nullable"
@@ -102,12 +118,6 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 >
                     {t("save")}
                 </LoadingButton>
-
-                <Link to="..">
-                    <Button variant="outlined" color="error">
-                        {t("cancel")}
-                    </Button>
-                </Link>
 
                 {onDelete && (
                     <Button

@@ -44,7 +44,6 @@ export const MFAView: FC = () => {
                 to: "/",
             });
         } catch (error: any) {
-            console.log(error);
             toastApiError(error);
         } finally {
             setLoading(false);
