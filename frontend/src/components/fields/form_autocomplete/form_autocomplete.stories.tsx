@@ -1,9 +1,15 @@
-import { Box, Button } from "@mui/material";
+import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MouseEventHandler, useState } from "react";
 
 import { FormAutocompletePopover } from "./form_autocomplete";
-import { FormAutocompleteValueType } from "./form_autocomplete_content";
+
+type OptionType = {
+    label: string;
+    color: string;
+    description?: string;
+    value?: string;
+};
 
 const meta = {
     title: "Components/Field/Form/Autocomplete Popover",
@@ -19,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 export const MultiSelect: Story = {
     render: () => {
         const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-        const [value, setValue] = useState<FormAutocompleteValueType[]>([]);
+        const [value, setValue] = useState<OptionType[]>([]);
 
         const handleClick: MouseEventHandler<HTMLButtonElement> = (e) => {
             setAnchorEl(e.currentTarget);
@@ -79,15 +85,12 @@ export const SingleSelect: Story = {
     },
 };
 
-const options = [
+const options: OptionType[] = [
     {
         label: "Project One",
         color: "#7057ff",
         description: "Very god",
         value: "some value",
-        rightAdornment: (
-            <Box sx={{ width: 20, height: 20, backgroundColor: "red" }}></Box>
-        ),
     },
     {
         label: "Project two",
