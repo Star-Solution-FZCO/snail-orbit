@@ -16,11 +16,13 @@ import { AgileCard } from "./agile_card";
 
 export type AgileBoardProps = {
     boardData: AgileBoardT;
+    query?: string;
 };
 
-export const AgileBoard: FC<AgileBoardProps> = ({ boardData }) => {
+export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
     const { data, refetch, isFetching } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
+        q: query,
     });
 
     const [moveIssue] = agileBoardApi.useMoveIssueMutation();

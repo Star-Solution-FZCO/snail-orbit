@@ -74,8 +74,9 @@ const IssueList: FC = () => {
     const [selectedIssueViewOption, setSelectedIssueViewOption] =
         useState<string>("medium");
 
-    const [debouncedSearch, setSearch, searchQuery] =
-        useDebouncedState<string>("");
+    const [debouncedSearch, setSearch, searchQuery] = useDebouncedState<string>(
+        search?.query || "",
+    );
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: perPage,
@@ -88,6 +89,12 @@ const IssueList: FC = () => {
 
     useEffect(() => {
         updateListQueryParams({ q: debouncedSearch });
+        navigate({
+            search: (prev) => ({
+                ...prev,
+                query: debouncedSearch || undefined,
+            }),
+        });
     }, [debouncedSearch]);
 
     useEffect(() => {
@@ -115,7 +122,7 @@ const IssueList: FC = () => {
     ) => {
         if (!value) return;
         const query = Array.isArray(value) ? value[0].query : value.query;
-        navigate({ search: (prev) => ({ ...prev, query }) });
+        setSearch(query);
     };
 
     const rows = data?.payload.items || [];

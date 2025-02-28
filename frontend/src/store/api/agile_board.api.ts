@@ -203,9 +203,13 @@ export const agileBoardApi = createApi({
         }),
         getBoardIssues: build.query<
             ListResponse<AgileSwimLineT>,
-            { boardId: string }
+            { boardId: string; q?: string }
         >({
-            query: ({ boardId }) => `board/${boardId}/issues`,
+            query: ({ boardId, ...params }) => ({
+                url: `board/${boardId}/issues`,
+                method: "GET",
+                params,
+            }),
             providesTags: (_result, _error, { boardId }) => [
                 { type: "AgileBoardIssues", id: boardId },
             ],
