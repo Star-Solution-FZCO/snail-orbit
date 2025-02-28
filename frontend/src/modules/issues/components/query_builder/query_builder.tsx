@@ -12,6 +12,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +20,7 @@ import { customFieldsApi, issueApi } from "store";
 import { fieldToFieldValue } from "store/utils/issue";
 import type { CustomFieldT } from "types";
 import { CustomFieldsParser } from "widgets/issue/CustomFieldsParser/CustomFieldsParser";
-import { AddCustomFieldButton } from "./AddCustomFieldButton";
+import { AddCustomFieldButton } from "./add_custom_field_button";
 
 type QueryBuilderProps = {
     onChangeQuery?: (queryString: string) => void;
@@ -75,6 +76,12 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
     initialQuery,
     availableFields,
 }) => {
+    const stackRef = useRef<HTMLDivElement>(null);
+
+    const [newField, setNewField] = useState<CustomFieldT | undefined>(
+        undefined,
+    );
+
     const [buildQuery] = issueApi.useLazyFilterBuildQueryStringQuery();
     const [parseQuery] = issueApi.useLazyFilterParseQueryStringQuery();
 
@@ -118,6 +125,21 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
         if (initialQuery) syncQuery(initialQuery);
     }, []);
 
+    useEffect(() => {
+        if (newField && selectedFields[newField.name] && stackRef.current) {
+            const element = stackRef.current.querySelector(
+                `[data-field-card-id="${newField.id}"]`,
+            );
+            setNewField(undefined);
+            if (
+                element &&
+                "click" in element &&
+                typeof element.click === "function"
+            )
+                element.click();
+        }
+    }, [selectedFields, newField]);
+
     const availableToAddFields = useMemo(() => {
         if (!availableFields) return [];
         return availableFields.filter(
@@ -141,6 +163,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
     const handleAddField = useCallback(
         (field: CustomFieldT) => {
             setSelectedFields((prev) => ({ ...prev, [field.name]: field }));
+            setNewField(field);
         },
         [setSelectedFields],
     );
@@ -171,7 +194,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
     return (
         <>
             {Object.keys(selectedFields).length ? (
-                <Stack direction="column" gap={0} mx={-1}>
+                <Stack direction="column" gap={0} mx={-1} ref={stackRef}>
                     <CustomFieldsParser
                         availableFields={Object.values(selectedFields)}
                         activeFields={selectedFields}

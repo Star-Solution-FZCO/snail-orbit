@@ -36,6 +36,7 @@ export const DateField = forwardRef(
                     rightAdornment={rightAdornment}
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
+                    data-field-card-id={id}
                 />
                 <FormDatePopover
                     ref={ref}

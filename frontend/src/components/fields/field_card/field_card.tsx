@@ -1,5 +1,6 @@
-import { Stack, SxProps, Typography } from "@mui/material";
-import { FC, MouseEventHandler, ReactNode } from "react";
+import type { SxProps } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
+import type { FC, HTMLAttributes, MouseEventHandler, ReactNode } from "react";
 import { FieldCardWrapper } from "./field_card.styles";
 
 export type FieldCardProps = {
@@ -11,7 +12,7 @@ export type FieldCardProps = {
     variant?: "standard" | "error";
     leftAdornment?: ReactNode;
     rightAdornment?: ReactNode;
-};
+} & HTMLAttributes<HTMLDivElement>;
 
 export const FieldCard: FC<FieldCardProps> = ({
     value,
@@ -21,9 +22,10 @@ export const FieldCard: FC<FieldCardProps> = ({
     variant = "standard",
     rightAdornment,
     leftAdornment,
+    ...rest
 }) => {
     return (
-        <FieldCardWrapper onClick={onClick} variant={variant}>
+        <FieldCardWrapper onClick={onClick} variant={variant} {...rest}>
             {leftAdornment}
             <Stack
                 direction={orientation === "horizontal" ? "row" : "column"}

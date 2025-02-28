@@ -1,32 +1,29 @@
-import type { FC, ReactNode } from "react";
+import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "store";
 import type { VersionFieldT, VersionOptionT } from "types";
 import { noLimitListQueryParams } from "utils";
 import { SelectField } from "./select_field";
-import type { VersionSelectOptionT } from "./utils";
 import {
-    versionFieldToSelectOption,
-    versionFieldToSelectOptions,
-    versionOptionToSelectOption,
+    cardLabelGetter,
+    getVersionFieldLabel,
+    versionOptionToField,
 } from "./utils";
 
 type VersionFieldProps = {
     value?: VersionFieldT | VersionFieldT[];
     onChange: (value: VersionFieldT | VersionFieldT[]) => void;
     label: string;
-    fieldId: string;
+    id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
 };
-
-const emptyArr: VersionOptionT[] = [];
 
 export const VersionField: FC<VersionFieldProps> = ({
     value,
     onChange,
     label,
-    fieldId,
+    id,
     multiple,
     rightAdornment,
 }) => {
@@ -34,39 +31,40 @@ export const VersionField: FC<VersionFieldProps> = ({
         customFieldsApi.useLazyListSelectOptionsQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id: fieldId, ...noLimitListQueryParams });
+        fetchOptions({ id: id, ...noLimitListQueryParams });
     };
 
     const options = useMemo(() => {
-        const items = (data?.payload.items || emptyArr) as VersionOptionT[];
-        return items.map(versionOptionToSelectOption);
+        return ((data?.payload.items || []) as VersionOptionT[]).map(
+            versionOptionToField,
+        );
     }, [data?.payload.items]);
 
-    const parsedValue = useMemo(() => {
-        if (!value) return value;
-        return Array.isArray(value)
-            ? versionFieldToSelectOptions(value)
-            : versionFieldToSelectOption(value);
-    }, [value]);
-
     const handleChange = (
-        value: VersionSelectOptionT | VersionSelectOptionT[],
+        _: SyntheticEvent,
+        value: VersionFieldT | VersionFieldT[] | null,
     ) => {
-        if (Array.isArray(value)) onChange(value.map((el) => el.original));
-        else onChange(value.original);
+        if (!value) return undefined;
+        onChange(value);
     };
 
     return (
         <SelectField
             loading={isLoading}
             options={options}
-            value={parsedValue}
+            value={value}
             rightAdornment={rightAdornment}
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
-            id={fieldId}
+            id={id}
             multiple={multiple}
+            getOptionKey={(el) => el.id}
+            getOptionLabel={getVersionFieldLabel}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            getCardLabelString={(el) =>
+                cardLabelGetter(el, getVersionFieldLabel)
+            }
         />
     );
 };

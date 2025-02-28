@@ -59,13 +59,6 @@ export type IssueHistoryT = {
 
 export type IssueActivityTypeT = "comment" | "spent_time" | "history";
 
-export type IssueActivityT = {
-    id: string;
-    type: IssueActivityTypeT;
-    time: string;
-    data: CommentT | IssueSpentTimeRecordT | IssueHistoryT;
-};
-
 export type IssueLinkFieldT = Pick<
     IssueT,
     "id" | "aliases" | "subject" | "id_readable"

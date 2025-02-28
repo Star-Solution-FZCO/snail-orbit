@@ -11,6 +11,7 @@ import {
     userApi,
     workflowApi,
 } from "./api";
+import { searchApi } from "./api/search.api";
 import { profileReducer, sharedReducer } from "./slices";
 
 export const store = configureStore({
@@ -28,6 +29,7 @@ export const store = configureStore({
         [workflowApi.reducerPath]: workflowApi.reducer,
         [sharedApi.reducerPath]: sharedApi.reducer,
         [tagApi.reducerPath]: tagApi.reducer,
+        [searchApi.reducerPath]: searchApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -41,6 +43,7 @@ export const store = configureStore({
             workflowApi.middleware,
             sharedApi.middleware,
             tagApi.middleware,
+            searchApi.middleware,
         ]),
 });
 

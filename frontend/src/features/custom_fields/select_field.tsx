@@ -1,86 +1,65 @@
 import { AutocompleteValue } from "@mui/material";
 import FieldCard from "components/fields/field_card/field_card";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import { FormAutocompleteValueType } from "components/fields/form_autocomplete/form_autocomplete_content";
-import { ReactNode, SyntheticEvent, useEffect, useMemo, useState } from "react";
-import { SelectOptionType } from "./utils";
-
-type SelectFieldReturnType<
-    T extends boolean | undefined,
-    K extends SelectOptionType,
-> = T extends true ? K[] : K;
-
-type ValueType<T extends boolean | undefined> = AutocompleteValue<
-    SelectOptionType,
-    T,
-    boolean | undefined,
-    false
->;
+import {
+    FormAutocompletePopover,
+    FormAutocompletePopoverProps,
+} from "components/fields/form_autocomplete/form_autocomplete";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 
 type SelectFieldProps<
-    T extends boolean | undefined,
-    K extends SelectOptionType,
-> = {
-    id: string;
-    options: SelectOptionType[];
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
+> = Omit<
+    FormAutocompletePopoverProps<Value, Multiple, DisableClearable>,
+    "open"
+> & {
     label: string;
-    value?: ValueType<T>;
     cardValue?: string;
-    onChange: (value: SelectFieldReturnType<T, K>) => void;
     onOpened?: () => unknown;
     loading?: boolean;
-    multiple?: T;
     variant?: "standard" | "error";
     leftAdornment?: ReactNode;
     rightAdornment?: ReactNode;
+    getCardLabelString?: (
+        el: AutocompleteValue<Value, Multiple, DisableClearable, false>,
+    ) => string | string[] | undefined | null;
 };
 
 export const SelectField = <
-    T extends boolean | undefined,
-    K extends SelectOptionType,
->({
-    id,
-    options,
-    label,
-    value,
-    cardValue: customCardValue,
-    onChange,
-    onOpened,
-    loading,
-    multiple,
-    variant = "standard",
-    leftAdornment,
-    rightAdornment,
-}: SelectFieldProps<T, K>) => {
+    Value,
+    Multiple extends boolean | undefined,
+    DisableClearable extends boolean | undefined,
+>(
+    props: SelectFieldProps<Value, Multiple, DisableClearable>,
+) => {
+    const {
+        id,
+        options,
+        label,
+        value,
+        cardValue: customCardValue,
+        onChange,
+        onOpened,
+        multiple,
+        variant = "standard",
+        leftAdornment,
+        rightAdornment,
+        getCardLabelString,
+        ...rest
+    } = props;
+
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-    const initialValue = useMemo(() => {
-        if (multiple && !value) return [] as unknown as ValueType<T>;
-
-        if (!value) return undefined;
-
-        return value;
-    }, [options, value]);
-
-    useEffect(() => {
-        console.log("options", label, options);
-    }, [options, label]);
 
     const cardValue = useMemo(() => {
         if (customCardValue) return customCardValue;
+        if (!value || !getCardLabelString) return "?";
 
-        if (!value) return undefined;
+        const labelStrings = getCardLabelString(value);
 
-        if (!Array.isArray(value)) return value.label;
-        else return value.map((el) => el.label).join(", ");
+        if (!Array.isArray(labelStrings)) return labelStrings;
+        else return labelStrings.join(", ");
     }, [multiple, value, customCardValue]);
-
-    const handleChange = (
-        _: SyntheticEvent,
-        value: FormAutocompleteValueType | FormAutocompleteValueType[] | null,
-    ) => {
-        onChange(value as SelectFieldReturnType<T, K>);
-    };
 
     useEffect(() => {
         if (anchorEl) onOpened?.();
@@ -96,19 +75,19 @@ export const SelectField = <
                 orientation="vertical"
                 leftAdornment={leftAdornment}
                 rightAdornment={rightAdornment}
+                data-field-card-id={id}
             />
 
             <FormAutocompletePopover
                 id={id}
                 anchorEl={anchorEl}
                 options={options}
-                value={initialValue}
+                value={value}
                 onClose={() => setAnchorEl(null)}
-                onChange={handleChange}
+                onChange={onChange}
                 open={!!anchorEl}
                 multiple={multiple}
-                loading={loading}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
+                {...rest}
             />
         </>
     );

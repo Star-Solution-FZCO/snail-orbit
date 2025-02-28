@@ -5,6 +5,7 @@ export * from "./comment";
 export * from "./custom_fields";
 export * from "./group";
 export * from "./issue";
+export * from "./permission";
 export * from "./project";
 export * from "./role";
 export * from "./tag";

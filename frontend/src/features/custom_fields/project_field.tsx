@@ -1,10 +1,9 @@
-import type { FC } from "react";
+import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { projectApi } from "store";
 import type { IssueProjectT } from "types";
 import { SelectField } from "./select_field";
-import type { ProjectSelectOptionT } from "./utils";
-import { projectToSelectOption, projectToSelectOptions } from "./utils";
+import { cardLabelGetter } from "./utils";
 
 type ProjectFieldProps = {
     value?: IssueProjectT;
@@ -24,19 +23,16 @@ export const ProjectField: FC<ProjectFieldProps> = ({
     const [trigger, { data, isLoading }] = projectApi.useLazyListProjectQuery();
 
     const options = useMemo(() => {
-        return projectToSelectOptions(data?.payload.items);
-    }, [data]);
-
-    const parsedValue = useMemo(() => {
-        if (!value) return undefined;
-        return projectToSelectOption(value);
-    }, [value]);
+        return (data?.payload.items || []) as IssueProjectT[];
+    }, [data?.payload.items]);
 
     const handleChange = (
-        option: ProjectSelectOptionT | ProjectSelectOptionT[],
+        _: SyntheticEvent,
+        option: IssueProjectT | IssueProjectT[] | null,
     ) => {
-        if (Array.isArray(option)) onChange(option[0].original);
-        else onChange(option.original);
+        if (!option) return undefined;
+        if (Array.isArray(option)) onChange(option[0]);
+        else onChange(option);
     };
 
     return (
@@ -44,13 +40,20 @@ export const ProjectField: FC<ProjectFieldProps> = ({
             id="projects"
             label={label}
             options={options}
-            value={parsedValue}
+            value={value}
             cardValue={value?.name || "?"}
             onChange={handleChange}
             rightAdornment={rightAdornment}
             onOpened={trigger}
             loading={isLoading}
             variant={error ? "error" : "standard"}
+            getOptionLabel={(el) => el.name}
+            getOptionDescription={(el) => el.slug}
+            getOptionKey={(el) => el.id}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            getCardLabelString={(value) =>
+                cardLabelGetter(value, (el) => el.name)
+            }
         />
     );
 };

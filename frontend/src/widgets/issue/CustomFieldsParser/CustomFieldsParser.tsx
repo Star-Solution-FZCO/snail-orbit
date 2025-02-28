@@ -67,7 +67,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                         updateCache(fieldData.name, value);
                                     }}
                                     multiple={fieldData.type === "enum_multi"}
-                                    enumFieldId={fieldData.id}
+                                    id={fieldData.id}
                                     rightAdornment={rightAdornmentRenderer?.(
                                         fieldData,
                                     )}
@@ -234,7 +234,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                                   },
                                         );
                                     }}
-                                    enumFieldId={fieldData.id}
+                                    id={fieldData.id}
                                     rightAdornment={rightAdornmentRenderer?.(
                                         fieldData,
                                     )}
@@ -265,7 +265,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                     multiple={
                                         fieldData.type === "version_multi"
                                     }
-                                    fieldId={fieldData.id}
+                                    id={fieldData.id}
                                     rightAdornment={rightAdornmentRenderer?.(
                                         fieldData,
                                     )}

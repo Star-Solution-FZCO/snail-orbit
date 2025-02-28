@@ -1,11 +1,10 @@
 import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
-import { useMemo } from "react";
+import { type SyntheticEvent, useMemo } from "react";
 import { customFieldsApi } from "store";
 import type { BasicUserT } from "types";
 import { useListQueryParams } from "utils";
 import { SelectChip } from "./select_chip";
-import type { UserSelectOptionT } from "./utils";
-import { userToSelectOption, userToSelectOptions } from "./utils";
+import { cardLabelGetter, getUserAvatarAdornment } from "./utils";
 
 type UserChipProps = {
     value?: BasicUserT | BasicUserT[];
@@ -33,18 +32,15 @@ export const UserChip = ({
     };
 
     const options = useMemo(() => {
-        return userToSelectOptions((data?.payload.items || []) as BasicUserT[]);
+        return (data?.payload.items || []) as BasicUserT[];
     }, [data?.payload.items]);
 
-    const parsedValue = useMemo(() => {
+    const handleChange = (
+        _: SyntheticEvent<Element, Event>,
+        value: BasicUserT | BasicUserT[] | null,
+    ) => {
         if (!value) return undefined;
-        if (Array.isArray(value)) return userToSelectOptions(value);
-        else return userToSelectOption(value);
-    }, [value]);
-
-    const handleChange = (value: UserSelectOptionT | UserSelectOptionT[]) => {
-        if (Array.isArray(value)) onChange(value.map((el) => el.original));
-        else onChange(value.original);
+        onChange(value);
     };
 
     const adornment = useMemo(() => {
@@ -65,13 +61,20 @@ export const UserChip = ({
         <SelectChip
             loading={isLoading}
             options={options}
-            value={parsedValue}
+            value={value}
             label={label}
             leftAdornment={adornment}
             onChange={handleChange}
             onOpened={handleOpened}
             multiple={multiple}
             id={id}
+            getOptionRightAdornment={getUserAvatarAdornment}
+            getOptionLabel={(el) => el.name}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            getOptionDescription={(el) => el.email}
+            getCardLabelString={(value) =>
+                cardLabelGetter(value, (el) => el.name)
+            }
         />
     );
 };

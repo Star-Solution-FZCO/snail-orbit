@@ -54,7 +54,7 @@ export const VerticalLong: Story = {
     },
 };
 
-export const Multiple: Story = {
+export const MultipleCards: Story = {
     render: () => (
         <>
             {[1, 2, 3, 4, 5].map((el) => (
