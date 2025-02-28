@@ -1,10 +1,12 @@
 import { ListAlt } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
     Button,
     Container,
+    Divider,
     IconButton,
     InputAdornment,
     Menu,
@@ -32,6 +34,7 @@ import {
     useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import { AgileBoardT } from "types";
@@ -40,6 +43,7 @@ import { StarButton } from "../../components/star_button";
 import { SearchSelectPopover } from "../../features/search_select/search_select_popover";
 import { SearchT } from "../../types/search";
 import useDebouncedState from "../../utils/hooks/use-debounced-state";
+import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import { AgileBoardSelect } from "./components/agile_board_select";
@@ -63,6 +67,7 @@ const AgileBoardView = () => {
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
     const [debouncedSearch, setSearch, searchQuery] = useDebouncedState<string>(
         search?.query || "",
     );
@@ -189,31 +194,43 @@ const AgileBoardView = () => {
     if (!agileBoard) return null;
 
     return (
-        <Stack direction="column">
-            <Box px={4}>
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    gap={1}
-                    mb={2}
-                >
-                    <AgileBoardSelect
-                        value={agileBoard}
-                        onChange={handleBoardSelect}
-                        onGoToListClick={goToFullListHandler}
-                    />
+        <Box
+            component={PanelGroup}
+            direction="horizontal"
+            autoSaveId="agileBoardView"
+            id="agileBoardView"
+        >
+            <Stack
+                direction="column"
+                height="100%"
+                minSize={65}
+                component={Panel}
+                order={5}
+                id="mainContent"
+            >
+                <Box px={4}>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        gap={1}
+                        mb={2}
+                    >
+                        <AgileBoardSelect
+                            value={agileBoard}
+                            onChange={handleBoardSelect}
+                            onGoToListClick={goToFullListHandler}
+                        />
 
-                    <TextField
-                        fullWidth
-                        value={searchQuery}
-                        onChange={(e) => setSearch(e.currentTarget.value)}
-                        size="small"
-                        placeholder={t("agileBoard.search.placeholder")}
-                        slotProps={{
-                            input: {
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <>
+                        <TextField
+                            fullWidth
+                            value={searchQuery}
+                            onChange={(e) => setSearch(e.currentTarget.value)}
+                            size="small"
+                            placeholder={t("agileBoard.search.placeholder")}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
                                             <Tooltip
                                                 title={t(
                                                     "searchListIcon.tooltip",
@@ -242,62 +259,111 @@ const AgileBoardView = () => {
                                                     handleSavedSearchSelect
                                                 }
                                             />
-                                        </>
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
-                    />
-
-                    <Stack direction="row" gap={1}>
-                        {settingsOpen && (
-                            <IconButton
-                                onClick={() =>
-                                    setDeleteDialogOpen((prev) => !prev)
-                                }
-                                color="error"
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        )}
-
-                        <IconButton
-                            onClick={() => setSettingsOpen((prev) => !prev)}
-                            color="primary"
-                        >
-                            <SettingsIcon />
-                        </IconButton>
-
-                        <StarButton
-                            starred={agileBoard.is_favorite}
-                            onClick={() =>
-                                favoriteAgileBoard({
-                                    boardId: agileBoard.id,
-                                    favorite: !agileBoard.is_favorite,
-                                })
-                            }
+                                            <Tooltip
+                                                title={t(
+                                                    "queryBuilderIcon.tooltip",
+                                                )}
+                                            >
+                                                <IconButton
+                                                    onClick={() =>
+                                                        setShowQueryBuilder(
+                                                            (prev) => !prev,
+                                                        )
+                                                    }
+                                                    size="small"
+                                                    color={
+                                                        showQueryBuilder
+                                                            ? "primary"
+                                                            : "default"
+                                                    }
+                                                >
+                                                    <FilterAltIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
                         />
-                    </Stack>
-                </Stack>
 
-                {settingsOpen && agileBoard ? (
-                    <Box mb={2}>
-                        <AgileBoardForm
-                            onSubmit={onSubmit}
-                            defaultValues={agileBoard}
+                        <Stack direction="row" gap={1}>
+                            {settingsOpen && (
+                                <IconButton
+                                    onClick={() =>
+                                        setDeleteDialogOpen((prev) => !prev)
+                                    }
+                                    color="error"
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            )}
+
+                            <IconButton
+                                onClick={() => setSettingsOpen((prev) => !prev)}
+                                color="primary"
+                            >
+                                <SettingsIcon />
+                            </IconButton>
+
+                            <StarButton
+                                starred={agileBoard.is_favorite}
+                                onClick={() =>
+                                    favoriteAgileBoard({
+                                        boardId: agileBoard.id,
+                                        favorite: !agileBoard.is_favorite,
+                                    })
+                                }
+                            />
+                        </Stack>
+                    </Stack>
+
+                    {settingsOpen && agileBoard ? (
+                        <Box mb={2}>
+                            <AgileBoardForm
+                                onSubmit={onSubmit}
+                                defaultValues={agileBoard}
+                            />
+                        </Box>
+                    ) : null}
+                </Box>
+                <Box sx={{ width: "100%" }}>
+                    <AgileBoard
+                        boardData={agileBoard}
+                        query={debouncedSearch}
+                    />
+                </Box>
+                <DeleteAgileBoardDialog
+                    id={agileBoard.id}
+                    open={deleteDialogOpen}
+                    onClose={() => setDeleteDialogOpen(false)}
+                />
+            </Stack>
+
+            {showQueryBuilder && (
+                <>
+                    <Box
+                        id="queryBuilderResizer"
+                        component={PanelResizeHandle}
+                        order={9}
+                    >
+                        <Divider orientation="vertical" />
+                    </Box>
+
+                    <Box
+                        id="queryBuilder"
+                        order={10}
+                        component={Panel}
+                        defaultSize={20}
+                        minSize={15}
+                    >
+                        <QueryBuilder
+                            onChangeQuery={setSearch}
+                            initialQuery={searchQuery}
                         />
                     </Box>
-                ) : null}
-            </Box>
-            <Box sx={{ width: "100%" }}>
-                <AgileBoard boardData={agileBoard} query={debouncedSearch} />
-            </Box>
-            <DeleteAgileBoardDialog
-                id={agileBoard.id}
-                open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
-            />
-        </Stack>
+                </>
+            )}
+        </Box>
     );
 };
 
