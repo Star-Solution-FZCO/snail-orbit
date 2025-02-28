@@ -1,6 +1,7 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import GroupIcon from "@mui/icons-material/Group";
 import {
+    AutocompleteChangeReason,
     Avatar,
     Box,
     Button,
@@ -16,18 +17,23 @@ import {
     TableHead,
     TableRow,
 } from "@mui/material";
-import type { OptionType } from "features/user_group_select_popover";
-import { UserGroupSelectPopover } from "features/user_group_select_popover";
+import { UserGroupSelectPopover } from "features/user_group_select/user_group_select_popover";
 import PopupState, {
     bindMenu,
     bindPopover,
     bindTrigger,
 } from "material-ui-popup-state";
-import { FC, useCallback, useMemo } from "react";
+import { FC, SyntheticEvent, useCallback, useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { AgileBoardT, boardPermissionTypes, BoardPermissionTypeT } from "types";
+import {
+    AgileBoardT,
+    type BasicUserT,
+    type GroupT,
+    permissionTypes,
+    PermissionTypeT,
+} from "types";
 
 export const Access: FC = () => {
     const { t } = useTranslation();
@@ -42,7 +48,7 @@ export const Access: FC = () => {
     const permissions = useWatch({ control, name: "permissions" });
 
     const getPermissionTypeLabel = useCallback(
-        (label: BoardPermissionTypeT) => {
+        (label: PermissionTypeT) => {
             switch (label) {
                 case "view":
                     return t("boardPermissionType.view");
@@ -56,25 +62,31 @@ export const Access: FC = () => {
     );
 
     const handleUserSelectChange = useCallback(
-        (values: OptionType[], reason: "selectOption" | "removeOption") => {
+        (
+            _: SyntheticEvent,
+            value: (BasicUserT | GroupT)[] | (BasicUserT | GroupT) | null,
+            reason: AutocompleteChangeReason,
+        ) => {
+            if (!value) return;
             const permissions = getValues("permissions");
+            const tempValue = Array.isArray(value) ? value : [value];
 
             if (reason === "selectOption") {
                 const activePermissions = new Set(
                     permissions.map((el) => el.target.id),
                 );
-                const selectedValue = values.find(
+                const selectedValue = tempValue.find(
                     (el) => !activePermissions.has(el.id),
                 );
                 if (!selectedValue) return;
                 grantPermission({
                     board_id: boardId,
-                    target_type: selectedValue.type,
+                    target_type: "email" in selectedValue ? "user" : "group",
                     target: selectedValue.id,
                     permission_type: "view",
                 });
             } else {
-                const activeValues = new Set(values.map((el) => el.value.id));
+                const activeValues = new Set(tempValue.map((el) => el.id));
                 const deletedPermission = permissions.find(
                     (el) => !activeValues.has(el.target.id),
                 );
@@ -89,7 +101,7 @@ export const Access: FC = () => {
     );
 
     const handleChangePermission = useCallback(
-        (permissionId: string, type: BoardPermissionTypeT) => {
+        (permissionId: string, type: PermissionTypeT) => {
             return () =>
                 changePermission({
                     board_id: boardId,
@@ -198,7 +210,7 @@ export const Access: FC = () => {
                                                     )}
                                                 </Button>
                                                 <Menu {...bindMenu(popupState)}>
-                                                    {boardPermissionTypes.map(
+                                                    {permissionTypes.map(
                                                         (type) => (
                                                             <MenuItem
                                                                 selected={

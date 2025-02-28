@@ -18,6 +18,7 @@ export const IssueTags = memo((props: IssueTagsProps) => {
         <Stack direction="row" gap={1}>
             {tags.map(({ name, color, id }) => (
                 <Tag
+                    key={id}
                     color={color}
                     label={name}
                     onDelete={() =>
