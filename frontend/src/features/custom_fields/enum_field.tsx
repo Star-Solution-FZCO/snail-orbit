@@ -11,7 +11,7 @@ type EnumFieldProps = {
     value?: EnumFieldT | EnumFieldT[];
     onChange: (value: EnumFieldT | EnumFieldT[]) => void;
     label: string;
-    enumFieldId: string;
+    id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
 };
@@ -20,7 +20,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     value,
     onChange,
     label,
-    enumFieldId,
+    id,
     multiple,
     rightAdornment,
 }) => {
@@ -32,7 +32,7 @@ export const EnumField: FC<EnumFieldProps> = ({
         customFieldsApi.useLazyListSelectOptionsQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id: enumFieldId, ...listQueryParams });
+        fetchOptions({ id: id, ...listQueryParams });
     };
 
     const items = useMemo(() => {
@@ -70,7 +70,7 @@ export const EnumField: FC<EnumFieldProps> = ({
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
-            id={enumFieldId}
+            id={id}
             multiple={multiple}
             getOptionRightAdornment={getEnumColorAdornment}
             getOptionLabel={(el) => el.value}

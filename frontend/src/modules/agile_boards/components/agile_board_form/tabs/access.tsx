@@ -64,9 +64,10 @@ export const Access: FC = () => {
     const handleUserSelectChange = useCallback(
         (
             _: SyntheticEvent,
-            value: (BasicUserT | GroupT)[] | (BasicUserT | GroupT),
+            value: (BasicUserT | GroupT)[] | (BasicUserT | GroupT) | null,
             reason: AutocompleteChangeReason,
         ) => {
+            if (!value) return;
             const permissions = getValues("permissions");
             const tempValue = Array.isArray(value) ? value : [value];
 

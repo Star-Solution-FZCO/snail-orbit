@@ -1,13 +1,14 @@
-import { AutocompleteChangeReason } from "@mui/material";
+import type { AutocompleteChangeReason } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { SyntheticEvent, useCallback, useMemo } from "react";
+import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
+import type { SyntheticEvent } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { FormAutocompletePopover } from "../../components/fields/form_autocomplete/form_autocomplete";
-import { groupApi, userApi } from "../../store";
-import type { GroupT } from "../../types";
-import { type BasicUserT } from "../../types";
-import { useListQueryParams } from "../../utils";
-import useDebouncedState from "../../utils/hooks/use-debounced-state";
+import { groupApi, userApi } from "store";
+import type { GroupT } from "types";
+import { type BasicUserT } from "types";
+import { useListQueryParams } from "utils";
+import useDebouncedState from "utils/hooks/use-debounced-state";
 import { getRightAdornment, isUser } from "./utils";
 
 type ValueType = BasicUserT | GroupT;
@@ -16,7 +17,7 @@ type UserGroupSelectPopoverProps = {
     value?: ValueType | ValueType[];
     onChange?: (
         event: SyntheticEvent,
-        value: ValueType | ValueType[],
+        value: ValueType | ValueType[] | null,
         reason: AutocompleteChangeReason,
     ) => void;
     open: boolean;
@@ -50,19 +51,8 @@ export const UserGroupSelectPopover = (props: UserGroupSelectPopoverProps) => {
         [groupsData, usersData],
     );
 
-    const handleChange = useCallback(
-        (
-            event: SyntheticEvent,
-            value: ValueType[] | ValueType | null,
-            reason: AutocompleteChangeReason,
-        ) => {
-            if (value) onChange?.(event, value, reason);
-        },
-        [],
-    );
-
     return (
-        <FormAutocompletePopover<ValueType, typeof multiple, false>
+        <FormAutocompletePopover
             id="user-group-select-popover"
             open={open}
             anchorEl={anchorEl}
@@ -80,7 +70,7 @@ export const UserGroupSelectPopover = (props: UserGroupSelectPopoverProps) => {
                 placeholder: t("userGroupSelectPopover.placeholder"),
             }}
             value={value}
-            onChange={handleChange}
+            onChange={onChange}
             getOptionKey={(option) => option.id}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             filterOptions={(options) => options}
