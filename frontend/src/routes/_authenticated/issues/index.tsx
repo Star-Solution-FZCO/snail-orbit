@@ -3,6 +3,7 @@ import { IssueList } from "modules";
 
 type IssueListSearch = {
     page?: number;
+    query?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/issues/")({
