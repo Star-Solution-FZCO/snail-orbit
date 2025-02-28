@@ -14,7 +14,7 @@ type VersionFieldProps = {
     value?: VersionFieldT | VersionFieldT[];
     onChange: (value: VersionFieldT | VersionFieldT[]) => void;
     label: string;
-    fieldId: string;
+    id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
 };
@@ -23,7 +23,7 @@ export const VersionField: FC<VersionFieldProps> = ({
     value,
     onChange,
     label,
-    fieldId,
+    id,
     multiple,
     rightAdornment,
 }) => {
@@ -31,7 +31,7 @@ export const VersionField: FC<VersionFieldProps> = ({
         customFieldsApi.useLazyListSelectOptionsQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id: fieldId, ...noLimitListQueryParams });
+        fetchOptions({ id: id, ...noLimitListQueryParams });
     };
 
     const options = useMemo(() => {
@@ -57,7 +57,7 @@ export const VersionField: FC<VersionFieldProps> = ({
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
-            id={fieldId}
+            id={id}
             multiple={multiple}
             getOptionKey={(el) => el.id}
             getOptionLabel={getVersionFieldLabel}

@@ -21,12 +21,6 @@ type TagListPopoverProps = {
     onGoToListClick?: () => void;
 };
 
-type InnerOptionType = {
-    label: string;
-    id: string;
-    original: AgileBoardT;
-};
-
 export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
     const { open, anchorEl, onClose, onSelect, onGoToListClick } = props;
     const [params] = useListQueryParams();
@@ -49,30 +43,31 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
         [],
     );
 
-    const options: InnerOptionType[] = useMemo(() => {
+    const options: AgileBoardT[] = useMemo(() => {
         if (!data || !data.payload || !data.payload.items.length) return [];
-        return data.payload.items.map((el) => ({
-            label: el.name,
-            id: el.id,
-            original: el,
-            rightAdornment: (
-                <StarButton
-                    color="warning"
-                    size="small"
-                    starred={el.is_favorite}
-                    onClick={handleStarClick(el.id, !el.is_favorite)}
-                />
-            ),
-        }));
+        return data.payload.items;
     }, [data]);
+
+    const rightAdornment = useCallback(
+        (el: AgileBoardT) => (
+            <StarButton
+                color="warning"
+                size="small"
+                starred={el.is_favorite}
+                onClick={handleStarClick(el.id, !el.is_favorite)}
+            />
+        ),
+        [handleStarClick],
+    );
 
     useEffect(() => {
         if (open) fetchTags(params);
     }, [open, params]);
 
     const handleChange = useCallback(
-        (value: InnerOptionType) => {
-            if (onSelect) onSelect(value.original);
+        (value: AgileBoardT | AgileBoardT[] | null) => {
+            if (onSelect && value)
+                onSelect(Array.isArray(value) ? value[0] : value);
         },
         [onSelect],
     );
@@ -99,9 +94,12 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
                 }}
                 bottomSlot={bottomSlot}
                 loading={isLoading}
-                getOptionKey={(option) => (option as InnerOptionType).id}
+                getOptionKey={(option) => option.id}
                 options={options}
-                onChange={(_, value) => handleChange(value as InnerOptionType)}
+                onChange={(_, value) => handleChange(value)}
+                getOptionLabel={(el) => el.name}
+                getOptionRightAdornment={rightAdornment}
+                getOptionDescription={(el) => el.description}
             />
         </>
     );

@@ -75,6 +75,7 @@ export const SelectField = <
                 orientation="vertical"
                 leftAdornment={leftAdornment}
                 rightAdornment={rightAdornment}
+                data-field-card-id={id}
             />
 
             <FormAutocompletePopover
