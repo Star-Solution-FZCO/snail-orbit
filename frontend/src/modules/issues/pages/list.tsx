@@ -1,33 +1,24 @@
-import { ListAlt } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import {
     Box,
     CircularProgress,
     Divider,
-    IconButton,
-    InputAdornment,
     Stack,
-    TextField,
     ToggleButton,
     ToggleButtonGroup,
-    Tooltip,
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
-import { SearchSelectPopover } from "features/search_select/search_select_popover";
-import { bindPopover, bindTrigger } from "material-ui-popup-state";
-import { usePopupState } from "material-ui-popup-state/hooks";
-import { FC, SyntheticEvent, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
-import { SearchT } from "types/search";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
+import { SearchField } from "../components/issue/search_field";
 import { IssueRowViewParams } from "../components/list/issue_row/issue_row.types";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/query_builder/query_builder";
@@ -64,10 +55,6 @@ const IssueList: FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const search = routeApi.useSearch();
-    const searchSelectPopoverState = usePopupState({
-        variant: "popover",
-        popupId: "search-select",
-    });
     const { setAction } = useNavbarSettings();
 
     const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
@@ -116,14 +103,17 @@ const IssueList: FC = () => {
         return () => setAction(null);
     }, [setAction]);
 
-    const handleSavedSearchSelect = (
-        _: SyntheticEvent,
-        value: SearchT | SearchT[] | null,
-    ) => {
-        if (!value) return;
-        const query = Array.isArray(value) ? value[0].query : value.query;
-        setSearch(query);
-    };
+    const handleChangePage = useCallback((page: number) => {
+        updateListQueryParams({
+            offset: (page - 1) * perPage,
+        });
+        navigate({
+            search: (prev: { page?: number; query?: string }) => ({
+                ...prev,
+                page: page > 1 ? page : undefined,
+            }),
+        });
+    }, []);
 
     const rows = data?.payload.items || [];
 
@@ -146,82 +136,15 @@ const IssueList: FC = () => {
                     id="mainContent"
                     minSize={65}
                 >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField
-                            fullWidth
-                            size="small"
-                            placeholder={t("placeholder.search")}
-                            value={searchQuery}
-                            onChange={(e) => setSearch(e.target.value)}
-                            slotProps={{
-                                input: {
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            {isFetching && (
-                                                <CircularProgress
-                                                    size={14}
-                                                    color="inherit"
-                                                />
-                                            )}
-                                            <>
-                                                <Tooltip
-                                                    title={t(
-                                                        "searchListIcon.tooltip",
-                                                    )}
-                                                >
-                                                    <IconButton
-                                                        size="small"
-                                                        color={
-                                                            searchSelectPopoverState.isOpen
-                                                                ? "primary"
-                                                                : "default"
-                                                        }
-                                                        {...bindTrigger(
-                                                            searchSelectPopoverState,
-                                                        )}
-                                                    >
-                                                        <ListAlt />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <SearchSelectPopover
-                                                    {...bindPopover(
-                                                        searchSelectPopoverState,
-                                                    )}
-                                                    initialQueryString={
-                                                        searchQuery
-                                                    }
-                                                    onChange={
-                                                        handleSavedSearchSelect
-                                                    }
-                                                />
-                                            </>
-                                            <Tooltip
-                                                title={t(
-                                                    "queryBuilderIcon.tooltip",
-                                                )}
-                                            >
-                                                <IconButton
-                                                    onClick={() =>
-                                                        setShowQueryBuilder(
-                                                            (prev) => !prev,
-                                                        )
-                                                    }
-                                                    size="small"
-                                                    color={
-                                                        showQueryBuilder
-                                                            ? "primary"
-                                                            : "default"
-                                                    }
-                                                >
-                                                    <FilterAltIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </InputAdornment>
-                                    ),
-                                },
-                            }}
-                        />
-                    </Stack>
+                    <SearchField
+                        value={searchQuery}
+                        onChange={setSearch}
+                        queryBuilderActive={showQueryBuilder}
+                        onQueryBuilderClick={() =>
+                            setShowQueryBuilder((prev) => !prev)
+                        }
+                        loading={isFetching}
+                    />
 
                     {error && (
                         <Typography color="error" fontSize={16}>
@@ -286,16 +209,7 @@ const IssueList: FC = () => {
                                     (data?.payload.count || 0) /
                                         listQueryParams.limit,
                                 )}
-                                onChangePage={(page) => {
-                                    updateListQueryParams({
-                                        offset: (page - 1) * perPage,
-                                    });
-                                    navigate({
-                                        search: {
-                                            page: page > 1 ? page : undefined,
-                                        },
-                                    });
-                                }}
+                                onChangePage={handleChangePage}
                                 viewSettings={
                                     issueListSettingOptions[
                                         selectedIssueViewOption
