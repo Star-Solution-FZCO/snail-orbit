@@ -21,10 +21,11 @@ import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { SearchSelectPopover } from "features/search_select/search_select_popover";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import { FC, useEffect, useState } from "react";
+import { FC, SyntheticEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
+import { SearchT } from "types/search";
 import { formatErrorMessages, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
 import { IssueRowViewParams } from "../components/list/issue_row/issue_row.types";
@@ -93,6 +94,7 @@ const IssueList: FC = () => {
         updateListQueryParams({
             offset: search?.page ? (search.page - 1) * perPage : 0,
         });
+        setSearch(search?.query || "");
     }, [search]);
 
     useEffect(() => {
@@ -106,6 +108,15 @@ const IssueList: FC = () => {
 
         return () => setAction(null);
     }, [setAction]);
+
+    const handleSavedSearchSelect = (
+        _: SyntheticEvent,
+        value: SearchT | SearchT[] | null,
+    ) => {
+        if (!value) return;
+        const query = Array.isArray(value) ? value[0].query : value.query;
+        navigate({ search: (prev) => ({ ...prev, query }) });
+    };
 
     const rows = data?.payload.items || [];
 
@@ -172,7 +183,9 @@ const IssueList: FC = () => {
                                                     initialQueryString={
                                                         searchQuery
                                                     }
-                                                    onChange={console.log}
+                                                    onChange={
+                                                        handleSavedSearchSelect
+                                                    }
                                                 />
                                             </>
                                             <Tooltip
