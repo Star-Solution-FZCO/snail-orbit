@@ -100,6 +100,7 @@ class CustomFieldGroupCreateBody(BaseModel):
 
     label: str = 'default'
     is_nullable: bool = True
+    default_value: Any | None = None
 
 
 class CustomFieldUpdateBody(BaseModel):
@@ -239,6 +240,7 @@ async def create_custom_field_group(
         ai_description=body.ai_description,
         is_nullable=body.is_nullable,
         label=body.label,
+        default_value=body.default_value,
     )
 
     await obj.insert()
