@@ -1,8 +1,6 @@
 import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "types";
 
 const complexCustomFieldTypes = new Set<CustomFieldTypeT>([
-    "date",
-    "datetime",
     "enum",
     "enum_multi",
     "user",
