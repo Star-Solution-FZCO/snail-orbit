@@ -86,7 +86,7 @@ const AgileBoardView = () => {
 
     useEffect(() => {
         navigate({
-            search: (prev) => ({
+            search: (prev: { page?: number; query?: string }) => ({
                 ...prev,
                 query: debouncedSearch || undefined,
             }),

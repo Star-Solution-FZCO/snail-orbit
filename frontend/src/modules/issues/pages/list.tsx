@@ -90,7 +90,7 @@ const IssueList: FC = () => {
     useEffect(() => {
         updateListQueryParams({ q: debouncedSearch });
         navigate({
-            search: (prev) => ({
+            search: (prev: { page?: number; query?: string }) => ({
                 ...prev,
                 query: debouncedSearch || undefined,
             }),
