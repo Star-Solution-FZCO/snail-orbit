@@ -52,7 +52,7 @@ const HeaderBreadcrumbs: FC<{
                 </Typography>
             </Link>
             <Typography fontSize={24} fontWeight="bold">
-                {customField.name}
+                {customField.label}
             </Typography>
         </Breadcrumbs>
     );

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
-import type { CustomFieldGroupT, UpdateCustomFieldT } from "types";
+import type { CustomFieldGroupT, UpdateCustomFieldGroupT } from "types";
 import { toastApiError } from "utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
 import { CustomFieldGroupForm } from "./components/custom_field_group_form";
@@ -51,7 +51,9 @@ const CustomFieldGroupView = () => {
         customFieldsApi.useUpdateCustomFieldGroupMutation();
 
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-    const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
+    const [formData, setFormData] = useState<UpdateCustomFieldGroupT | null>(
+        null,
+    );
 
     if (error) {
         return (
@@ -66,8 +68,7 @@ const CustomFieldGroupView = () => {
 
     const customFieldGroup = data.payload;
 
-    const handleSubmit = (formData: UpdateCustomFieldT) => {
-        if (!formData.default_value) formData.default_value = null;
+    const handleSubmit = (formData: UpdateCustomFieldGroupT) => {
         setFormData(formData);
         setConfirmDialogOpen(true);
     };

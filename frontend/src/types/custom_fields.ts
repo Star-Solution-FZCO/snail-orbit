@@ -173,13 +173,27 @@ export type UpdateCustomFieldT = Partial<
 >;
 
 // field group
-export type CreateCustomFieldGroupT = CustomFieldBaseT;
+export type CreateCustomFieldGroupT = {
+    name: string;
+    description: string | null;
+    ai_description: string | null;
+    type: CustomFieldTypeT;
+    is_nullable: boolean;
+    label: string;
+    default_value: CustomFieldValueT;
+};
 
 export type CustomFieldGroupT = {
     gid: string;
-    default_value: CustomFieldValueT;
+    name: string;
+    description: string | null;
+    ai_description: string | null;
+    type: CustomFieldTypeT;
+    is_nullable?: boolean;
+    label?: string;
+    default_value?: CustomFieldValueT;
     fields: CustomFieldT[];
-} & CustomFieldBaseT;
+};
 
 export type UpdateCustomFieldGroupT = Partial<{
     name: string | null;
