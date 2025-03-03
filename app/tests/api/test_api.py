@@ -1,4 +1,5 @@
 import uuid
+from http import HTTPStatus
 from typing import TYPE_CHECKING
 
 import mock
@@ -26,6 +27,8 @@ from .custom_fields import (
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
+
+UNKNOWN_ID = '675579dff68118dbf878902c'
 
 INTERLINK_TYPES = (
     ('related', 'related'),
@@ -1498,16 +1501,19 @@ async def test_api_v1_search_grant_permission_with_user_flow(
         'target': user_id,
         'permission_type': 'view',
     }
+
+    # Share search with unknown user
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
         json={
             'target_type': 'user',
-            'target': '675579dff68118dbf878902c',
+            'target': UNKNOWN_ID,
             'permission_type': 'view',
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1597,16 +1603,19 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
         'target': create_group,
         'permission_type': 'view',
     }
+
+    # Share with unknown group
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
         json={
             'target_type': 'group',
-            'target': '675579dff68118dbf878902c',
+            'target': UNKNOWN_ID,
             'permission_type': 'view',
         },
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
     response = test_client.post(
         f'/api/v1/search/{create_search}/permission',
         headers=admin_headers,
@@ -1708,9 +1717,7 @@ async def test_api_v1_search_delete(
         f'/api/v1/search/{create_search}', headers=user_headers
     )
     assert response.status_code == 403
-    response = test_client.delete(
-        f'/api/v1/search/675579dff68118dbf878902c', headers=admin_headers
-    )
+    response = test_client.delete(f'/api/v1/search/{UNKNOWN_ID}', headers=admin_headers)
     assert response.status_code == 404
     response = test_client.delete(
         f'/api/v1/search/{create_search}', headers=admin_headers
