@@ -1,10 +1,10 @@
 from http import HTTPStatus
-from typing import Self
+from typing import Annotated, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
@@ -63,12 +63,14 @@ class SearchCreate(BaseModel):
     name: str
     query: str
     description: str | None = None
+    permissions: Annotated[list[GrantPermissionBody], Field(default_factory=list)]
 
 
-class SearchUpdate(SearchCreate):
+class SearchUpdate(BaseModel):
     name: str | None = None
     query: str | None = None
     description: str | None = None
+    permissions: list[GrantPermissionBody] | None = None
 
 
 @router.get('/list')
@@ -120,18 +122,32 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
         raise HTTPException(HTTPStatus.BAD_REQUEST, err.message)  # pylint: disable=raise-missing-from
     except Exception as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
+    permissions = [
+        m.PermissionRecord(
+            target_type=m.PermissionTargetType.USER,
+            target=m.UserLinkField.from_obj(user_ctx.user),
+            permission_type=m.PermissionType.ADMIN,
+        )
+    ]
+    if len(body.permissions) != len({perm.target for perm in body.permissions}):
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
+    for perm in body.permissions:
+        if perm.target == user_ctx.user.id:
+            continue
+        target = await resolve_grant_permission_target(perm)
+        permissions.append(
+            m.PermissionRecord(
+                target_type=perm.target_type,
+                target=target,
+                permission_type=perm.permission_type,
+            )
+        )
     search = m.Search(
         name=body.name,
         query=body.query,
         description=body.description,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
-        permissions=[
-            m.PermissionRecord(
-                target_type=m.PermissionTargetType.USER,
-                target=m.UserLinkField.from_obj(user_ctx.user),
-                permission_type=m.PermissionType.ADMIN,
-            )
-        ],
+        permissions=permissions,
     )
     await search.insert()
     return SuccessPayloadOutput(payload=SearchOutput.from_obj(search))
@@ -167,13 +183,33 @@ async def update_search(
     search_id: PydanticObjectId,
     body: SearchUpdate,
 ) -> SuccessPayloadOutput[SearchOutput]:
-    search = await m.Search.find_one(m.Search.id == search_id)
+    search: m.Search | None = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
     user_ctx = current_user()
     if not search.check_permissions(user_ctx.user, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this search')
-    for k, v in body.model_dump(exclude_unset=True).items():
+    if body.permissions:
+        if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN, 'You cannot modify permissions for this search'
+            )
+        if len(body.permissions) != len({perm.target for perm in body.permissions}):
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
+        permissions = [
+            m.PermissionRecord(
+                target_type=perm.target_type,
+                target=await resolve_grant_permission_target(perm),
+                permission_type=perm.permission_type,
+            )
+            for perm in body.permissions
+        ]
+        if all(perm.permission_type != m.PermissionType.ADMIN for perm in permissions):
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST, 'Search must have at least one admin'
+            )
+        search.permissions = permissions
+    for k, v in body.model_dump(exclude_unset=True, exclude={'permissions'}).items():
         setattr(search, k, v)
     if search.is_changed:
         await search.save_changes()
@@ -193,16 +229,7 @@ async def grant_permission(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this search',
         )
-    if body.target_type == m.PermissionTargetType.USER:
-        user: m.User | None = await m.User.find_one(m.User.id == body.target)
-        if not user:
-            raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
-        target = m.UserLinkField.from_obj(user)
-    else:
-        group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
-        if not group:
-            raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-        target = m.GroupLinkField.from_obj(group)
+    target = await resolve_grant_permission_target(body)
     if search.has_permission_for_target(target):
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT, detail='Permission already granted'
@@ -244,7 +271,23 @@ async def revoke_permission(
         perm.permission_type == m.PermissionType.ADMIN
         and not search.has_any_other_admin_target(perm.target)
     ):
-        raise HTTPException(HTTPStatus.FORBIDDEN, 'Search must have at least one admin')
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Search must have at least one admin'
+        )
     search.permissions.remove(perm)
     await search.save_changes()
     return UUIDOutput.make(perm.id)
+
+
+async def resolve_grant_permission_target(
+    body: GrantPermissionBody,
+) -> m.UserLinkField | m.GroupLinkField:
+    if body.target_type == m.PermissionTargetType.USER:
+        user: m.User | None = await m.User.find_one(m.User.id == body.target)
+        if not user:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
+        return m.UserLinkField.from_obj(user)
+    group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
+    if not group:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
+    return m.GroupLinkField.from_obj(group)
