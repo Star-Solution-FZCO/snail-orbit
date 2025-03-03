@@ -2,6 +2,7 @@ import re
 from datetime import date, datetime, time
 from typing import Any
 
+from dateutil.relativedelta import relativedelta
 from lark import (
     Lark,
     Transformer,
@@ -23,6 +24,7 @@ from pm.api.search.parse_logical_expression import (
     check_brackets,
     parse_logical_expression,
 )
+from pm.utils.dateutils import utcnow
 
 __all__ = (
     'transform_query',
@@ -57,6 +59,7 @@ EXPRESSION_GRAMMAR = """
                     | NUMBER_VALUE
                     | DATE_VALUE
                     | DATETIME_VALUE
+                    | relative_dt
                     | user_value
                     | STRING_VALUE
                     | QUOTED_STRING
@@ -69,6 +72,9 @@ EXPRESSION_GRAMMAR = """
                     | datetime_range
                     | datetime_left_inf_range
                     | datetime_right_inf_range
+                    | relative_dt_range
+                    | relative_dt_left_inf_range
+                    | relative_dt_right_inf_range
 
 
     number_range: NUMBER_VALUE _RANGE_DELIMITER NUMBER_VALUE
@@ -81,8 +87,16 @@ EXPRESSION_GRAMMAR = """
     datetime_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER DATETIME_VALUE
     datetime_right_inf_range: DATETIME_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
     user_value: USER_ME | EMAIL
+    
+    relative_dt: dt_period_with_offset | dt_period
+    dt_period_with_offset: (NOW_VALUE | TODAY_VALUE) (dt_offset)*
+    dt_period: DATETIME_PERIOD_PREFIX DATETIME_PERIOD_UNIT
+    dt_offset: SIGN DATETIME_OFFSET_VALUE
+    relative_dt_range: relative_dt _RANGE_DELIMITER relative_dt
+    relative_dt_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER relative_dt
+    relative_dt_right_inf_range: relative_dt _RANGE_DELIMITER INF_PLUS_VALUE
 
-    _RANGE_DELIMITER: ".."
+    _RANGE_DELIMITER.10: ".."
     _COLON: ":"
     USER_ME: "me"i
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
@@ -95,7 +109,12 @@ EXPRESSION_GRAMMAR = """
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?(?!\\.(?!\\.)|\\d|[a-zA-Z]|-)/
     STRING_VALUE: /[^:()" *${}]+/
     QUOTED_STRING: /"[^"]*"/
-
+    SIGN: ("+" | "-")
+    NOW_VALUE.9: "now"i
+    TODAY_VALUE.9: "today"i
+    DATETIME_PERIOD_PREFIX: "this"i
+    DATETIME_PERIOD_UNIT: "week"i | "month"i | "year"i
+    DATETIME_OFFSET_VALUE: /[0-9]+(\\.[5])?(?:h|d)(?![a-zA-Z0-9])/
     %import common.WS
     %ignore WS
 """
@@ -184,7 +203,12 @@ class MongoQueryTransformer(Transformer):
         if field in ('updated_at', 'created_at'):
             if isinstance(value, date) and not isinstance(value, datetime):
                 start_of_day = datetime.combine(value, time.min)
-                end_of_day = datetime.combine(value, time.max)
+                now = utcnow()
+                end_of_day_max = datetime.combine(value, time.max)
+                if value <= now.date():
+                    end_of_day = min(end_of_day_max, now)
+                else:
+                    end_of_day = end_of_day_max
                 return {field: {'$gte': start_of_day, '$lte': end_of_day}}
             return {field: value}
         if field == 'tag':
@@ -201,6 +225,94 @@ class MongoQueryTransformer(Transformer):
                 }
             }
         }
+
+    def dt_period_with_offset(self, args):
+        dt_type = args[0]
+        dt = utcnow()
+        offsets = args[1:] if len(args) > 1 else []
+        if offsets:
+            for offset in offsets:
+                amount, unit = offset
+                dt = self._apply_dt_offset(dt, amount, unit)
+        if dt_type == 'today':
+            return {
+                '$gte': datetime.combine(dt.date(), time.min),
+                '$lte': datetime.combine(dt.date(), time.max),
+            }
+        if dt_type == 'now':
+            return {
+                '$gte': datetime.combine(
+                    dt.date(),
+                    time(dt.hour, dt.minute, time.min.second, time.min.microsecond),
+                ),
+                '$lte': datetime.combine(
+                    dt.date(),
+                    time(dt.hour, dt.minute, time.max.second, time.max.microsecond),
+                ),
+            }
+        raise ValueError(f'Unsupported period: {dt_type}')
+
+    def relative_dt(self, args):
+        return args[0]
+
+    def _transform_dt_unit(self, now, unit):
+        if unit == 'week':
+            start = now - relativedelta(days=now.weekday())
+            end = start + relativedelta(days=6)
+        elif unit == 'month':
+            start = now.replace(day=1)
+            end = (start + relativedelta(months=1)) - relativedelta(days=1)
+        elif unit == 'year':
+            start = now.replace(month=1, day=1)
+            end = now.replace(month=12, day=31)
+        else:
+            raise ValueError(f'Unknown period unit: {unit}')
+        start = datetime.combine(start.date(), time.min)
+        end = datetime.combine(end.date(), time.max)
+        return {'$gte': start, '$lte': end}
+
+    def _apply_dt_offset(self, dtobj, number, unit):
+        if unit == 'h':
+            return dtobj + relativedelta(hours=number)
+        if unit == 'd':
+            return dtobj + relativedelta(days=number)
+        raise ValueError(f'Unknown offset unit: {unit}')
+
+    def dt_period(self, args):
+        prefix = args[0]
+        now = utcnow()
+        if prefix == 'this':
+            return self._transform_dt_unit(now, args[1])
+        raise ValueError(f'Unknown period prefix: {prefix}')
+
+    def dt_offset(self, args):
+        amount, unit = args[1]
+        if args[0].value == '-':
+            amount = -amount
+        return amount, unit
+
+    def relative_dt_range(self, args):
+        left_dt_range = args[0]
+        right_dt_range = args[1]
+        self._validate_range([left_dt_range['$gte'], right_dt_range['$lte']])
+        return {'$gte': left_dt_range['$gte'], '$lte': right_dt_range['$lte']}
+
+    def relative_dt_left_inf_range(self, args):
+        dt_range = args[1]
+        return {'$lt': dt_range['$lte']}
+
+    def relative_dt_right_inf_range(self, args):
+        dt_range = args[0]
+        return {'$gt': dt_range['$gte']}
+
+    def DATETIME_OFFSET_VALUE(self, token):
+        return float(token[:-1]), token[-1]
+
+    def TODAY_VALUE(self, token):
+        return token.value
+
+    def NOW_VALUE(self, token):
+        return token.value
 
     def attribute_values(self, args):
         return args[0]
@@ -270,7 +382,7 @@ class MongoQueryTransformer(Transformer):
     def _validate_range(self, args):
         if args[0] > args[1]:
             raise ValueError(
-                f'Invalid range: start value {args[0]} is greater than end value {args[1]}'
+                'Field has invalid range: start value is greater than end value'
             )
 
 
@@ -442,6 +554,18 @@ async def get_suggestions(query: str, current_user_email: str | None = None) -> 
         if 'NULL_VALUE' in err.expected:
             field_name = last_expression_token.expression.split(':')[0].strip()
             return list(get_field_possible_values(field_name, custom_fields, projects))
+        if 'DATETIME_PERIOD_UNIT' in err.expected:
+            field_name, val = map(
+                str.strip, last_expression_token.expression.split(':', maxsplit=1)
+            )
+            possible_values = get_field_possible_values(
+                field_name, custom_fields, projects
+            )
+            return [
+                val_[len(val) :].strip()
+                for val_ in possible_values
+                if val_.startswith(val)
+            ]
         return []
     if last_expression_token.expression not in HASHTAG_VALUES:
         field_name, val = map(
@@ -486,6 +610,9 @@ async def _get_projects() -> dict[str, list[m.Project]]:
     return res
 
 
+RELATIVE_DATETIME_VALUES = {'now', 'today', 'this week', 'this month', 'this year'}
+
+
 def get_field_possible_values(
     field_name: str,
     fields: dict[str, list[m.CustomField]],
@@ -502,6 +629,8 @@ def get_field_possible_values(
         'created_by',
         'tag',
     ):
+        if field_name in ('updated_at', 'created_at'):
+            results.update(RELATIVE_DATETIME_VALUES)
         return results
     if field_name == 'project':
         return set(projects.keys())
@@ -521,5 +650,8 @@ def get_field_possible_values(
             continue
         if field.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
             results.update([version.version for version in field.versions])
+            continue
+        if field.type in (m.CustomFieldTypeT.DATE, m.CustomFieldTypeT.DATETIME):
+            results.update(RELATIVE_DATETIME_VALUES)
             continue
     return results
