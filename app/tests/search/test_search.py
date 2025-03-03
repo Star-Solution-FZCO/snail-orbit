@@ -81,6 +81,8 @@ def _custom_fields():
     ]
 
 
+FIXED_NOW = datetime(2024, 2, 20, 12, 12, 1, 518243)
+
 TEST_VERSION_FIELD_PYTEST_PARAMS = [
     pytest.param(
         f'Version: {version}',
@@ -350,6 +352,16 @@ TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
             id='created_at field with value 2024-02-29 and valid leap year in date',
         ),
         pytest.param(
+            'created_at: 2024-02-20',
+            {
+                'created_at': {
+                    '$gte': datetime(2024, 2, 20, 0, 0),
+                    '$lte': datetime(2024, 2, 20, 12, 12, 1, 518243),
+                }
+            },
+            id='created_at field with value today date (2024-02-20)',
+        ),
+        pytest.param(
             'created_at: 2024-01-01T00:00:00',
             {'created_at': datetime(2024, 1, 1, 0, 0, 0)},
             id='created_at field with value 2024-01-01T00:00:00 and valid datetime',
@@ -536,6 +548,645 @@ TEST_STATE_FIELD_PYTEST_PARAMS = [
     )
     for value in [1.1, '1.1', 'null', '1-v', 'v-20']
 ]
+TEST_RELATIVE_DT_PYTEST_PARAMS = [
+    pytest.param(
+        'Datetime: now',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "now" value',
+    ),
+    pytest.param(
+        'Datetime: today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "today" value',
+    ),
+    pytest.param(
+        'Datetime: this week',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "this week" value',
+    ),
+    pytest.param(
+        'Datetime: this month',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 1, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 29, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "this month" value for February 2024',
+    ),
+    pytest.param(
+        'Datetime: this year',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 1, 1, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 12, 31, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "this year" value',
+    ),
+    pytest.param(
+        'Datetime: now +1h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 13, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 13, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "now +1h" value',
+    ),
+    pytest.param(
+        'Datetime: today -1d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 19, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "today -1d" value',
+    ),
+    pytest.param(
+        'Datetime: today..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 20, 0, 0, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "today..inf" value',
+    ),
+    pytest.param(
+        'Datetime: now..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 20, 12, 12, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with "now..inf" value',
+    ),
+    pytest.param(
+        'Datetime: now..now +2h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 14, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with range "now..now +2h"',
+    ),
+    pytest.param(
+        'Datetime: today -1d..today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with range "today -1d..today"',
+    ),
+    pytest.param(
+        'Datetime: -inf..today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$lt': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with range "-inf..today"',
+    ),
+    pytest.param(
+        'Datetime: this week..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 19, 0, 0, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with range "this week..inf"',
+    ),
+    pytest.param(
+        'Datetime: this week -14d',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with value "this week -14d"',
+    ),
+    pytest.param(
+        'Datetime: this week -14d..inf',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with value "this week -14d..inf"',
+    ),
+    pytest.param(
+        'Datetime: today -1d -14h +2h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 00, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 19, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with value "today -1d -14h"',
+    ),
+    pytest.param(
+        'Datetime: now +3d +6h..now +20d -2h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 23, 18, 12, 0, 0),
+                        '$lte': datetime(2024, 3, 11, 10, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with complex range offset "now +3d +6h..now +20d -2h"',
+    ),
+    pytest.param(
+        'Datetime: now + 3.5d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 24, 0, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 24, 0, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with decimal offset value "now +3.5d"',
+    ),
+    pytest.param(
+        'Datetime: now + 1.3h',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with decimal offset value "now + 1.3h"',
+    ),
+    pytest.param(
+        'Datetime: now + 1.7d',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with decimal offset value "now + 1.7d"',
+    ),
+    pytest.param(
+        'Datetime: today - 1.5d..now',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with range "today - 1.5d..now"',
+    ),
+    pytest.param(
+        'Datetime: now + 0h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with zero hours offset "now + 0h"',
+    ),
+    pytest.param(
+        'Datetime: today + 0d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^datetime$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in datetime field with zero days offset "today + 0d"',
+    ),
+    pytest.param(
+        'Datetime: now + 1h2',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with incorrect format "now + 1h2"',
+    ),
+    pytest.param(
+        'Datetime: today + 1hx',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with incorrect format "today + 1hx"',
+    ),
+    pytest.param(
+        'Datetime: today - 1.5d..now + 2h3',
+        'Failed to parse query',
+        id='invalid relative search in datetime field with incorrect format in range end "now + 2h3"',
+    ),
+    pytest.param(
+        'Datetime: now + 5d..now + 2d',
+        'Field has invalid range: start value is greater than end value',
+        id='invalid relative search in datetime field with range where left > right "now + 5d..now + 2d"',
+    ),
+    pytest.param(
+        'Date: today + 1d..today',
+        'Field has invalid range: start value is greater than end value',
+        id='invalid relative search in date field with range where left > right "today + 1d..today"',
+    ),
+    pytest.param(
+        'Date: now + 3d4',
+        'Failed to parse query',
+        id='invalid relative search in date field with incorrect format "now + 3d4"',
+    ),
+    pytest.param(
+        'Date: today + 2dx',
+        'Failed to parse query',
+        id='invalid relative search in date field with incorrect format "today + 2dx"',
+    ),
+    pytest.param(
+        'Date: now + 0h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with zero hours offset "now + 0h"',
+    ),
+    pytest.param(
+        'Date: today + 0d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with zero days offset "today + 0d"',
+    ),
+    pytest.param(
+        'Date: today - 1.5d..now',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with range "today - 1.5d..now"',
+    ),
+    pytest.param(
+        'Date: now + 3.5d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 24, 0, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 24, 0, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with decimal offset value "now +3.5d"',
+    ),
+    pytest.param(
+        'Date: now + 1.4h',
+        'Failed to parse query',
+        id='invalid relative search in date field with decimal offset value "now + 1.4h"',
+    ),
+    pytest.param(
+        'Date: now + 1.1d',
+        'Failed to parse query',
+        id='invalid relative search in date field with decimal offset value "now + 1.1d"',
+    ),
+    pytest.param(
+        'Date: now',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 12, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "now" value',
+    ),
+    pytest.param(
+        'Date: today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "today" value',
+    ),
+    pytest.param(
+        'Date: this week',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 19, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "this week" value',
+    ),
+    pytest.param(
+        'Date: this month',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 1, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 29, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "this month" value for February 2024',
+    ),
+    pytest.param(
+        'Date: this year',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 1, 1, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 12, 31, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "this year" value',
+    ),
+    pytest.param(
+        'Date: now +2h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 14, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 14, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "now +2h" value',
+    ),
+    pytest.param(
+        'Date: today -2d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 18, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 18, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "today -2d" value',
+    ),
+    pytest.param(
+        'Date: today..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 20, 0, 0, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "today..inf" value',
+    ),
+    pytest.param(
+        'Date: now..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 20, 12, 12, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with "now..inf" value',
+    ),
+    pytest.param(
+        'Date: now..now +4h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 16, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with range "now..now +4h"',
+    ),
+    pytest.param(
+        'Date: today -3d..today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 17, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with range "today -3d..today"',
+    ),
+    pytest.param(
+        'Date: -inf..today',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$lt': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with range "-inf..today"',
+    ),
+    pytest.param(
+        'Date: this week..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gt': datetime(2024, 2, 19, 0, 0, 0, 0),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with range "this week..inf"',
+    ),
+    pytest.param(
+        'Date: this week -10d',
+        'Failed to parse query',
+        id='invalid relative search in date field with value "this week -10d"',
+    ),
+    pytest.param(
+        'Date: this week -10d..inf',
+        'Failed to parse query',
+        id='invalid relative search in date field with value "this week -10d..inf"',
+    ),
+    pytest.param(
+        'Date: today -2d -8h +3h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 18, 0, 0, 0, 0),
+                        '$lte': datetime(2024, 2, 18, 23, 59, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with value "today -2d -8h +3h"',
+    ),
+    pytest.param(
+        'Date: now +5d +3h..now +15d -4h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^date$', '$options': 'i'},
+                    'value': {
+                        '$gte': datetime(2024, 2, 25, 15, 12, 0, 0),
+                        '$lte': datetime(2024, 3, 6, 8, 12, 59, 999999),
+                    },
+                }
+            }
+        },
+        id='relative search in date field with complex range offset "now +5d +3h..now +15d -4h"',
+    ),
+]
 
 
 @mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
@@ -713,6 +1364,61 @@ TEST_STATE_FIELD_PYTEST_PARAMS = [
         pytest.param('#', {'unresolved', 'resolved'}, id='hash'),
         pytest.param('#u', {'nresolved'}, id='partial hash'),
         pytest.param('#unresolved', {'AND', 'OR'}, id='hash unresolved'),
+        pytest.param(
+            'Datetime: this',
+            {'week', 'month', 'year'},
+            id='datetime field with "this" prefix',
+        ),
+        pytest.param(
+            'Date: this ',
+            {'week', 'month', 'year'},
+            id='date field with "this" prefix',
+        ),
+        pytest.param(
+            'Datetime: now',
+            {'AND', 'OR'},
+            id='complete relative datetime with now',
+        ),
+        pytest.param(
+            'Datetime: today',
+            {'AND', 'OR'},
+            id='complete relative datetime with today',
+        ),
+        pytest.param(
+            'Datetime: t',
+            {'oday', 'his month', 'his week', 'his year'},
+            id='partial relative datetime with t (for today/this)',
+        ),
+        pytest.param(
+            'Datetime: n',
+            {'ow', 'ull'},
+            id='partial relative datetime with n (for now/null)',
+        ),
+        pytest.param(
+            'Date: this w',
+            {'eek'},
+            id='partial datetime period unit after this (week)',
+        ),
+        pytest.param(
+            'Date: this m',
+            {'onth'},
+            id='partial datetime period unit after this (month)',
+        ),
+        pytest.param(
+            'Date: this y',
+            {'ear'},
+            id='partial datetime period unit after this (year)',
+        ),
+        pytest.param(
+            'Datetime: this week',
+            {'AND', 'OR'},
+            id='complete datetime period expression',
+        ),
+        pytest.param(
+            'Date: this month',
+            {'AND', 'OR'},
+            id='complete date period expression',
+        ),
     ],
 )
 async def test_suggestions(
@@ -734,6 +1440,7 @@ async def test_suggestions(
 
 
 @mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
+@mock.patch('pm.api.search.issue.utcnow', new_callable=mock.Mock)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query, expected',
@@ -1020,14 +1727,17 @@ async def test_suggestions(
         *TEST_STRING_FIELD_PYTEST_PARAMS,
         *TEST_ENUM_FIELD_PYTEST_PARAMS,
         *TEST_STATE_FIELD_PYTEST_PARAMS,
+        *TEST_RELATIVE_DT_PYTEST_PARAMS,
     ],
 )
 async def test_search_transformation(
+    mock_utcnow: mock.Mock,
     mock__get_custom_fields: mock.AsyncMock,
     query: str,
     expected: dict,
 ) -> None:
     mock__get_custom_fields.return_value = get_fake_custom_fields(_custom_fields())
+    mock_utcnow.return_value = FIXED_NOW
 
     from pm.api.search.issue import TransformError, transform_query
 
