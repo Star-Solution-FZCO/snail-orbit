@@ -44,7 +44,7 @@ RUN echo $version > ${APP_DIR}/version.txt
 USER ${APP_NAME}
 VOLUME ["${APP_DIR}/etc"]
 VOLUME ["/data"]
-ENTRYPOINT ["python3", "manage.py", "api", "--host", "0.0.0.0", "--trusted-proxy", "*"]
+ENTRYPOINT ["python3", "manage.py", "api", "server", "--host", "0.0.0.0", "--trusted-proxy", "*"]
 
 
 FROM api AS tasks
