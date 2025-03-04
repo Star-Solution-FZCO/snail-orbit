@@ -32,7 +32,7 @@ const customFieldGroupSchema = yup.object().shape({
     ai_description: yup.string().nullable().default(null),
     label: yup.string().default("default"),
     is_nullable: yup.boolean().default(true),
-    default_value: yup.mixed().default(null),
+    default_value: yup.mixed().nullable().default(null),
 });
 
 type CustomFieldGroupFormData = yup.InferType<typeof customFieldGroupSchema>;
@@ -64,7 +64,7 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
             ai_description: defaultValues?.ai_description || null,
             label: defaultValues?.label || "default",
             is_nullable: defaultValues?.is_nullable || false,
-            default_value: defaultValues?.default_value || null,
+            default_value: defaultValues?.default_value,
         },
         resolver: yupResolver(customFieldGroupSchema),
     });

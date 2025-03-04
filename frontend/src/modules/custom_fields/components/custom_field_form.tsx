@@ -31,6 +31,7 @@ interface ICustomFieldFormProps {
     defaultValues?: CustomFieldT;
     onSubmit: (formData: CustomFieldFormData) => void;
     onDelete?: () => void;
+    onCancel?: () => void;
     type: CustomFieldTypeT;
     loading?: boolean;
 }
@@ -39,6 +40,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     defaultValues,
     onSubmit,
     onDelete,
+    onCancel,
     type,
     loading,
 }) => {
@@ -118,6 +120,12 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 >
                     {t("save")}
                 </LoadingButton>
+
+                {onCancel && (
+                    <Button onClick={onCancel} variant="outlined" color="error">
+                        {t("cancel")}
+                    </Button>
+                )}
 
                 {onDelete && (
                     <Button
