@@ -1,14 +1,43 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { Link } from "components";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomFieldT } from "types";
 
-export const FieldList: FC<{ gid: string; fields: CustomFieldT[] }> = ({
-    gid,
-    fields,
-}) => {
+const FieldItem: FC<{
+    field: CustomFieldT;
+    onClick: (fieldId: string) => void;
+    selected: boolean;
+}> = ({ field, onClick, selected }) => {
+    return (
+        <Box
+            key={field.id}
+            sx={(theme) => ({
+                cursor: "pointer",
+                width: 1,
+                px: 1,
+                py: 0.5,
+                backgroundColor: selected ? "action.hover" : "transparent",
+                boxShadow: selected
+                    ? `inset 2px 0 ${theme.palette.primary.main}`
+                    : "none",
+                "&:hover": {
+                    backgroundColor: "action.hover",
+                },
+            })}
+            onClick={() => onClick(field.id)}
+        >
+            {field.label}
+        </Box>
+    );
+};
+
+export const FieldList: FC<{
+    fields: CustomFieldT[];
+    selectedFieldId: string | null;
+    onFieldClick: (customFieldId: string) => void;
+    onClickAdd: () => void;
+}> = ({ fields, selectedFieldId, onFieldClick, onClickAdd }) => {
     const { t } = useTranslation();
 
     return (
@@ -23,31 +52,24 @@ export const FieldList: FC<{ gid: string; fields: CustomFieldT[] }> = ({
                     {t("customFields.fields")}
                 </Typography>
 
-                <Link
-                    to="/custom-fields/$customFieldGroupId/fields/add"
-                    params={{
-                        customFieldGroupId: gid,
-                    }}
+                <Button
+                    onClick={onClickAdd}
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddIcon />}
                 >
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<AddIcon />}
-                    >
-                        {t("customFields.fields.add")}
-                    </Button>
-                </Link>
+                    {t("customFields.fields.add")}
+                </Button>
             </Box>
 
             <Stack spacing={1} alignItems="flex-start">
                 {fields.map((field) => (
-                    <Link
+                    <FieldItem
                         key={field.id}
-                        to={`/custom-fields/${gid}/fields/${field.id}`}
-                        underline="hover"
-                    >
-                        {field.label}
-                    </Link>
+                        field={field}
+                        onClick={onFieldClick}
+                        selected={selectedFieldId === field.id}
+                    />
                 ))}
             </Stack>
         </Stack>

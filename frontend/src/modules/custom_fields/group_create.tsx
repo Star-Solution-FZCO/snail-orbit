@@ -20,9 +20,12 @@ const CustomFieldGroupCreate = () => {
     const onSubmit = (formData: CreateCustomFieldGroupT) => {
         createCustomFieldGroup(formData)
             .unwrap()
-            .then(() => {
+            .then((res) => {
                 navigate({
-                    to: "/custom-fields",
+                    to: "/custom-fields/$customFieldGroupId",
+                    params: {
+                        customFieldGroupId: res.payload.gid,
+                    },
                 });
                 toast.success(t("customFields.create.success"));
             })

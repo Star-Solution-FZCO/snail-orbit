@@ -88,6 +88,7 @@
   "createdBy": "Created by",
   "createTag.successMessage": "createTag.successMessage",
   "customFields.create.success": "Custom Field created successfully",
+  "customFields.field": "Field",
   "customFields.fields": "Fields",
   "customFields.search.placeholder": "Search by name",
   "customFields.fields.add": "Add Field",
