@@ -55,6 +55,7 @@ async def __create_custom_field_group(
                 {
                     'id': data['payload']['fields'][0]['id'],
                     'gid': data['payload']['gid'],
+                    'label': 'default',
                     **custom_field_payload,
                     **options_payload,
                 }
@@ -111,6 +112,7 @@ async def _create_custom_field_enum(
             'payload': {
                 'id': field_data['id'],
                 'gid': field_data['gid'],
+                'label': 'default',
                 **custom_field_payload,
             },
         }, f'{data_=}'
@@ -162,6 +164,7 @@ async def _create_custom_field_state(
             'payload': {
                 'id': field_data['id'],
                 'gid': field_data['gid'],
+                'label': 'default',
                 **custom_field_payload,
             },
         }, f'{data_=}'
@@ -213,6 +216,7 @@ async def _create_custom_field_version(
             'payload': {
                 'id': field_data['id'],
                 'gid': field_data['gid'],
+                'label': 'default',
                 **custom_field_payload,
             },
         }, f'{data_=}'
