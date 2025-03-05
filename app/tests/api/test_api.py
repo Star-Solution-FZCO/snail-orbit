@@ -735,6 +735,7 @@ async def test_api_v1_custom_field_get_list_update(
     field_expected_payload = {
         'id': create_custom_field['id'],
         'gid': create_custom_field['gid'],
+        'label': 'default',
         **custom_field_payload,
     }
     if custom_field_payload['type'] in (
@@ -852,6 +853,7 @@ async def test_api_v1_custom_field_project_link(
                 {
                     'id': create_custom_field['id'],
                     'gid': create_custom_field['gid'],
+                    'label': 'default',
                     **custom_field_payload,
                 }
             ],
@@ -879,6 +881,7 @@ async def test_api_v1_custom_field_project_link(
                 {
                     'id': create_custom_field['id'],
                     'gid': create_custom_field['gid'],
+                    'label': 'default',
                     **custom_field_payload,
                 }
             ],
@@ -905,6 +908,7 @@ async def test_api_v1_custom_field_project_link(
                 {
                     'id': create_custom_field['id'],
                     'gid': create_custom_field['gid'],
+                    'label': 'default',
                     **custom_field_payload,
                 }
             ],
