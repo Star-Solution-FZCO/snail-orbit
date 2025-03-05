@@ -240,8 +240,9 @@ async def create_custom_field_group(
         ai_description=body.ai_description,
         is_nullable=body.is_nullable,
         label=body.label,
-        default_value=body.default_value,
     )
+    if body.default_value is not None:
+        obj.default_value = obj.validate_value(body.default_value)
 
     await obj.insert()
     return SuccessPayloadOutput(
