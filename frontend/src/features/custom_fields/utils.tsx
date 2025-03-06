@@ -40,7 +40,6 @@ export const versionOptionToField = (
     value: option.value,
     id: option.uuid,
     release_date: option.release_date,
-    version: option.value,
     is_archived: option.is_archived,
     is_released: option.is_released,
 });
@@ -58,4 +57,4 @@ export const cardLabelGetter = <T,>(
 };
 
 export const getVersionFieldLabel = (option: VersionFieldT) =>
-    formatVersion(option.version, option.release_date);
+    formatVersion(option.value, option.release_date);

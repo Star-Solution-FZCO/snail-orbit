@@ -36,6 +36,7 @@ RUN mkdir -p /data &&\
     chown ${APP_NAME}:${APP_NAME} /data
 
 COPY manage.py ${APP_DIR}/
+COPY migrations ${APP_DIR}/migrations
 COPY pm ${APP_DIR}/pm
 
 ARG version="__DEV__"

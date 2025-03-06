@@ -1,7 +1,7 @@
 import asyncio
 from datetime import date, datetime
 from http import HTTPStatus
-from typing import Any, Type
+from typing import Any
 from uuid import UUID, uuid4
 
 from beanie import PydanticObjectId
@@ -87,56 +87,101 @@ class VersionOptionUpdateBody(BaseModel):
 
 
 class CustomFieldCreateBody(BaseModel):
-    name: str = Field(pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
-    type: m.CustomFieldTypeT
+    label: str
     is_nullable: bool
     default_value: Any | None = None
+
+
+class CustomFieldGroupCreateBody(BaseModel):
+    name: str = Field(pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
+    type: m.CustomFieldTypeT
     description: str | None = None
     ai_description: str | None = None
 
-    def create_obj(self, cls: Type[m.CustomField]) -> m.CustomField:
-        obj = cls(
-            name=self.name,
-            type=self.type,
-            is_nullable=self.is_nullable,
-            description=self.description,
-            ai_description=self.ai_description,
-        )
-        if self.default_value is not None:
-            obj.default_value = obj.validate_value(self.default_value)
-        return obj
+    label: str = 'default'
+    is_nullable: bool = True
+    default_value: Any | None = None
 
 
 class CustomFieldUpdateBody(BaseModel):
-    name: str | None = Field(default=None, pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
     is_nullable: bool | None = None
     default_value: Any | None = None
-    description: str | None = None
-    ai_description: str | None = None
+    label: str | None = None
 
     def update_obj(self, obj: m.CustomField) -> None:
-        for k, v in self.dict(exclude_unset=True).items():
+        for k, v in self.model_dump(exclude_unset=True).items():
             if k == 'default_value':
                 v = obj.validate_value(v) if v is not None else None
             setattr(obj, k, v)
 
 
-@router.get('/list')
-async def list_custom_fields(
+class CustomFieldGroupUpdateBody(BaseModel):
+    name: str | None = Field(default=None, pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
+    description: str | None = None
+    ai_description: str | None = None
+
+
+class CustomFieldGroupOutput(BaseModel):
+    gid: str
+    name: str
+    type: m.CustomFieldTypeT
+    description: str | None = None
+    ai_description: str | None = None
+    fields: list[CustomFieldOutputT]
+
+
+@router.get('/group/list')
+async def list_custom_field_groups(
     query: ListParams = Depends(),
-) -> BaseListOutput[CustomFieldOutputT]:
+) -> BaseListOutput[CustomFieldGroupOutput]:
     q = m.CustomField.find(with_children=True).sort(m.CustomField.name)
     if query.search:
         q = q.find(m.CustomField.search_query(query.search))
-    return await BaseListOutput.make_from_query(
-        q,
+    fields = await q.to_list()
+    results = {}
+    for field in fields:
+        if field.gid not in results:
+            results[field.gid] = CustomFieldGroupOutput(
+                gid=field.gid,
+                name=field.name,
+                type=field.type,
+                description=field.description,
+                ai_description=field.ai_description,
+                fields=[],
+            )
+        results[field.gid].fields.append(cf_output_from_obj(field))
+
+    return BaseListOutput.make(
+        count=len(results),
         limit=query.limit,
         offset=query.offset,
-        projection_fn=cf_output_from_obj,
+        items=list(results.values())[query.offset : query.offset + query.limit],
+    )
+
+
+@router.get('/group/{custom_field_gid}')
+async def get_custom_field_group(
+    custom_field_gid: str,
+) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+    objs = await m.CustomField.find(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    ).to_list()
+    if not objs:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
+    return SuccessPayloadOutput(
+        payload=CustomFieldGroupOutput(
+            gid=custom_field_gid,
+            name=objs[0].name,
+            type=objs[0].type,
+            description=objs[0].description,
+            ai_description=objs[0].ai_description,
+            fields=[cf_output_from_obj(obj) for obj in objs],
+        )
     )
 
 
 @router.get('/{custom_field_id}')
+@router.get('/group/{custom_field_gid}/field/{custom_field_id}')
 async def get_custom_field(
     custom_field_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
@@ -148,21 +193,75 @@ async def get_custom_field(
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
-@router.post('/')
+@router.post('/group/{custom_field_gid}/field')
 async def create_custom_field(
+    custom_field_gid: str,
     body: CustomFieldCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
-    try:
-        obj = body.create_obj(body.type.get_field_class())
-    except m.CustomFieldValidationError as err:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
+    existed_field = await m.CustomField.find_one(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    )
+    if not existed_field:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
+    field_cls = m.get_cf_class(existed_field.type)
+
+    obj = field_cls(
+        gid=existed_field.gid,
+        name=existed_field.name,
+        type=existed_field.type,
+        description=existed_field.description,
+        ai_description=existed_field.ai_description,
+        is_nullable=body.is_nullable,
+        label=body.label,
+    )
+
+    if body.default_value is not None:
+        try:
+            obj.default_value = obj.validate_value(body.default_value)
+        except m.CustomFieldValidationError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
+
     await obj.insert()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
+@router.post('/group')
+async def create_custom_field_group(
+    body: CustomFieldGroupCreateBody,
+) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+    if await m.CustomField.find(m.CustomField.name == body.name).exists():
+        raise HTTPException(HTTPStatus.CONFLICT, 'Custom field group already exists')
+    field_cls = m.get_cf_class(body.type)
+    obj = field_cls(
+        gid=str(uuid4()),
+        name=body.name,
+        type=body.type,
+        description=body.description,
+        ai_description=body.ai_description,
+        is_nullable=body.is_nullable,
+        label=body.label,
+    )
+    if body.default_value is not None:
+        obj.default_value = obj.validate_value(body.default_value)
+
+    await obj.insert()
+    return SuccessPayloadOutput(
+        payload=CustomFieldGroupOutput(
+            gid=obj.gid,
+            name=obj.name,
+            type=obj.type,
+            description=obj.description,
+            ai_description=obj.ai_description,
+            fields=[cf_output_from_obj(obj)],
+        )
+    )
+
+
 @router.put('/{custom_field_id}')
+@router.put('/group/{custom_field_gid}/field/{custom_field_id}')
 async def update_custom_field(
-    custom_field_id: PydanticObjectId, body: CustomFieldUpdateBody
+    custom_field_id: PydanticObjectId,
+    body: CustomFieldUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputT]:
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
@@ -175,15 +274,45 @@ async def update_custom_field(
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.save_changes()
-        await asyncio.gather(
-            m.Issue.update_field_embedded_links(obj),
-            m.IssueDraft.update_field_embedded_links(obj),
-            m.Board.update_field_embedded_links(obj),
-        )
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
+@router.put('/group/{custom_field_gid}')
+async def update_custom_field_group(
+    custom_field_gid: str,
+    body: CustomFieldGroupUpdateBody,
+) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+    fields = await m.CustomField.find(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    ).to_list()
+    if not fields:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
+    name_changed = body.name and body.name != fields[0].name
+    for field in fields:
+        for k, v in body.model_dump(exclude_unset=True).items():
+            setattr(field, k, v)
+        await field.save_changes()
+    if name_changed:
+        for field in fields:
+            await asyncio.gather(
+                m.Issue.update_field_embedded_links(field),
+                m.IssueDraft.update_field_embedded_links(field),
+                m.Board.update_field_embedded_links(field),
+            )
+    return SuccessPayloadOutput(
+        payload=CustomFieldGroupOutput(
+            gid=custom_field_gid,
+            name=fields[0].name,
+            type=fields[0].type,
+            description=fields[0].description,
+            ai_description=fields[0].ai_description,
+            fields=[cf_output_from_obj(obj) for obj in fields],
+        )
+    )
+
+
 @router.delete('/{custom_field_id}')
+@router.delete('/group/{custom_field_gid}/field/{custom_field_id}')
 async def delete_custom_field(
     custom_field_id: PydanticObjectId,
 ) -> ModelIdOutput:
@@ -202,6 +331,7 @@ async def delete_custom_field(
 
 
 @router.post('/{custom_field_id}/option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/option')
 async def add_enum_option(
     custom_field_id: PydanticObjectId,
     body: EnumOptionCreateBody,
@@ -216,7 +346,7 @@ async def add_enum_option(
     if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.EnumField(
+        m.EnumOption(
             id=str(uuid4()),
             value=body.value,
             color=body.color,
@@ -229,6 +359,7 @@ async def add_enum_option(
 
 
 @router.put('/{custom_field_id}/option/{option_id}')
+@router.put('/group/{custom_field_gid}/field/{custom_field_id}/option/{option_id}')
 async def update_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -260,6 +391,7 @@ async def update_enum_option(
 
 
 @router.delete('/{custom_field_id}/option/{option_id}')
+@router.delete('/group/{custom_field_gid}/field/{custom_field_id}/option/{option_id}')
 async def remove_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -289,6 +421,7 @@ async def remove_enum_option(
 
 
 @router.post('/{custom_field_id}/user-option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/user-option')
 async def add_user_option(
     custom_field_id: PydanticObjectId,
     body: UserOptionCreateBody,
@@ -333,6 +466,9 @@ async def add_user_option(
 
 
 @router.delete('/{custom_field_id}/user-option/{option_id}')
+@router.delete(
+    '/group/{custom_field_gid}/field/{custom_field_id}/user-option/{option_id}'
+)
 async def remove_user_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -354,6 +490,7 @@ async def remove_user_option(
 
 
 @router.post('/{custom_field_id}/state-option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/state-option')
 async def add_state_option(
     custom_field_id: PydanticObjectId,
     body: StateOptionCreateBody,
@@ -363,12 +500,12 @@ async def add_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    if any(opt.state == body.value for opt in obj.options):
+    if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.StateField(
+        m.StateOption(
             id=str(uuid4()),
-            state=body.value,
+            value=body.value,
             is_resolved=body.is_resolved,
             is_closed=body.is_closed,
             color=body.color,
@@ -381,6 +518,9 @@ async def add_state_option(
 
 
 @router.put('/{custom_field_id}/state-option/{option_id}')
+@router.put(
+    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}'
+)
 async def update_state_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -396,7 +536,6 @@ async def update_state_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        k = 'state' if k == 'value' else k
         setattr(opt, k, v)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
@@ -410,6 +549,9 @@ async def update_state_option(
 
 
 @router.delete('/{custom_field_id}/state-option/{option_id}')
+@router.delete(
+    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}'
+)
 async def remove_state_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -437,6 +579,7 @@ async def remove_state_option(
 
 
 @router.post('/{custom_field_id}/version-option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/version-option')
 async def add_version_option(
     custom_field_id: PydanticObjectId,
     body: VersionOptionCreateBody,
@@ -451,12 +594,12 @@ async def add_version_option(
             HTTPStatus.BAD_REQUEST,
             'Custom field is not of type VERSION or VERSION_MULTI',
         )
-    if any(opt.version == body.value for opt in obj.options):
+    if any(opt.value == body.value for opt in obj.options):
         raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
     obj.options.append(
-        m.VersionField(
+        m.VersionOption(
             id=str(uuid4()),
-            version=body.value,
+            value=body.value,
             release_date=datetime.combine(body.release_date, datetime.min.time())
             if body.release_date
             else None,
@@ -470,6 +613,9 @@ async def add_version_option(
 
 
 @router.put('/{custom_field_id}/version-option/{option_id}')
+@router.put(
+    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}'
+)
 async def update_version_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -490,7 +636,6 @@ async def update_version_option(
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
-        k = 'version' if k == 'value' else k
         if k == 'release_date':
             v = datetime.combine(v, datetime.min.time()) if v else None
         setattr(opt, k, v)
@@ -506,6 +651,9 @@ async def update_version_option(
 
 
 @router.delete('/{custom_field_id}/version-option/{option_id}')
+@router.delete(
+    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}'
+)
 async def remove_version_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
@@ -538,6 +686,7 @@ async def remove_version_option(
 
 
 @router.get('/{custom_field_id}/select')
+@router.get('/group/{custom_field_gid}/field/{custom_field_id}/select')
 async def select_options(
     custom_field_id: PydanticObjectId,
     query: SelectParams = Depends(),

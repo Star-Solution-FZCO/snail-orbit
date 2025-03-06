@@ -1,105 +1,72 @@
-import {
-    Box,
-    Breadcrumbs,
-    Container,
-    Divider,
-    Typography,
-} from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Box, Breadcrumbs, Divider, Stack, Typography } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import { ErrorHandler, Link } from "components";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
-import type { CustomFieldT, UpdateCustomFieldT } from "types";
+import type { CustomFieldGroupT, UpdateCustomFieldGroupT } from "types";
 import { toastApiError } from "utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
-import { CustomFieldEnumOptionsEditor } from "./components/custom_field_enum_options_editor";
-import { CustomFieldForm } from "./components/custom_field_form";
-import { CustomFieldStateOptionsEditor } from "./components/custom_field_state_options_editor";
-import { CustomFieldUserOptionsEditor } from "./components/custom_field_user_options_editor";
-import { CustomFieldVersionOptionsEditor } from "./components/custom_field_version_options_editor";
-import { DeleteCustomFieldDialog } from "./components/delete_custom_field_dialog";
+import { CustomFieldEditView } from "./components/custom_field_edit_view";
+import { CustomFieldGroupForm } from "./components/custom_field_group_form";
+import { FieldList } from "./components/field_list";
+import { CreateCustomFieldFormDialog } from "./components/form_dialogs/add_custom_field_form_dialog";
 
-const routeApi = getRouteApi("/_authenticated/custom-fields/$customFieldId");
+const routeApi = getRouteApi(
+    "/_authenticated/custom-fields/$customFieldGroupId",
+);
 
-const HeaderBreadcrumbs: FC<{ customField: CustomFieldT; title: string }> = ({
-    customField,
-    title,
-}) => {
+const HeaderBreadcrumbs: FC<{
+    customFieldGroup: CustomFieldGroupT;
+    title: string;
+}> = ({ customFieldGroup, title }) => {
     return (
-        <Breadcrumbs sx={{ mb: 2 }}>
+        <Breadcrumbs>
             <Link to="/custom-fields" underline="hover">
                 <Typography fontSize={24} fontWeight="bold">
                     {title}
                 </Typography>
             </Link>
             <Typography fontSize={24} fontWeight="bold">
-                {customField.name}
+                {customFieldGroup.name}
             </Typography>
         </Breadcrumbs>
     );
 };
 
-const isNonPrimitiveType = (customField: CustomFieldT) => {
-    return (
-        [
-            "enum",
-            "enum_multi",
-            "user",
-            "user_multi",
-            "version",
-            "version_multi",
-        ].includes(customField.type) || customField.type === "state"
-    );
-};
-
-const FieldTypeEditor: FC<{ customField: CustomFieldT }> = ({
-    customField,
-}) => {
-    const isEnumType = ["enum", "enum_multi"].includes(customField.type);
-    const isUserType = ["user", "user_multi"].includes(customField.type);
-    const isVersionType = ["version", "version_multi"].includes(
-        customField.type,
-    );
-    const isStateType = customField.type === "state";
-
-    if (isEnumType) {
-        return <CustomFieldEnumOptionsEditor customField={customField} />;
-    }
-
-    if (isUserType) {
-        return <CustomFieldUserOptionsEditor customField={customField} />;
-    }
-
-    if (isVersionType) {
-        return <CustomFieldVersionOptionsEditor customField={customField} />;
-    }
-
-    if (isStateType) {
-        return <CustomFieldStateOptionsEditor customField={customField} />;
-    }
-
-    return null;
-};
-
-const CustomFieldView = () => {
+export const CustomFieldGroupView = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const { customFieldId } = routeApi.useParams();
+    const { customFieldGroupId } = routeApi.useParams();
 
     const { data, error } =
-        customFieldsApi.useGetCustomFieldQuery(customFieldId);
+        customFieldsApi.useGetCustomFieldGroupQuery(customFieldGroupId);
 
-    const [updateCustomField, { isLoading }] =
-        customFieldsApi.useUpdateCustomFieldMutation();
-    const [deleteCustomField, { isLoading: isDeleting }] =
-        customFieldsApi.useDeleteCustomFieldMutation();
+    const [updateCustomFieldGroup, { isLoading }] =
+        customFieldsApi.useUpdateCustomFieldGroupMutation();
 
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
+    const [addFieldDialogOpen, setAddFieldDialogOpen] = useState(false);
+    const [formData, setFormData] = useState<UpdateCustomFieldGroupT | null>(
+        null,
+    );
+    const [selectedCustomFieldId, setSelectedCustomFieldId] = useState<
+        string | null
+    >(null);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setSelectedCustomFieldId(null);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
 
     if (error) {
         return (
@@ -112,28 +79,17 @@ const CustomFieldView = () => {
 
     if (!data) return null;
 
-    const customField = data.payload;
+    const customFieldGroup = data.payload;
 
-    const handleSubmit = (formData: UpdateCustomFieldT) => {
-        if (!formData.default_value) formData.default_value = null;
+    const handleSubmit = (formData: UpdateCustomFieldGroupT) => {
         setFormData(formData);
         setConfirmDialogOpen(true);
-    };
-
-    const handleDelete = () => {
-        deleteCustomField(customField.id)
-            .unwrap()
-            .then(() => {
-                navigate({ to: "/custom-fields" });
-                toast.success(t("customFields.delete.success"));
-            })
-            .catch(toastApiError);
     };
 
     const handleConfirm = () => {
         if (!formData) return;
 
-        updateCustomField({ id: customField.id, ...formData })
+        updateCustomFieldGroup({ gid: customFieldGroup.gid, ...formData })
             .unwrap()
             .then(() => {
                 toast.success(t("customFields.update.success"));
@@ -148,35 +104,50 @@ const CustomFieldView = () => {
         setFormData(null);
     };
 
+    const handleClickCustomField = (customFieldId: string) => {
+        setSelectedCustomFieldId(
+            selectedCustomFieldId === customFieldId ? null : customFieldId,
+        );
+    };
+
     return (
-        <Container sx={{ px: 4, pb: 4 }} disableGutters>
+        <Stack px={4} pb={4} gap={2} height={1}>
             <HeaderBreadcrumbs
-                customField={customField}
+                customFieldGroup={customFieldGroup}
                 title={t("customFields.title")}
             />
 
             <Box display="flex" gap={2}>
-                <Box flex={1} pt={isNonPrimitiveType(customField) ? "44px" : 0}>
-                    <CustomFieldForm
+                <Box flex={1}>
+                    <CustomFieldGroupForm
                         onSubmit={handleSubmit}
-                        onDelete={() => setDeleteDialogOpen(true)}
-                        defaultValues={customField}
+                        defaultValues={customFieldGroup}
                         loading={isLoading}
                     />
                 </Box>
 
-                {isNonPrimitiveType(customField) && (
-                    <>
-                        <Divider
-                            orientation="vertical"
-                            sx={{ mt: "44px" }}
-                            flexItem
+                <Divider orientation="vertical" flexItem />
+
+                <Box flex={1}>
+                    <FieldList
+                        fields={customFieldGroup.fields}
+                        selectedFieldId={selectedCustomFieldId}
+                        onFieldClick={handleClickCustomField}
+                        onClickAdd={() => setAddFieldDialogOpen(true)}
+                    />
+                </Box>
+
+                <Divider orientation="vertical" flexItem />
+
+                <Box flex={2}>
+                    {selectedCustomFieldId && (
+                        <CustomFieldEditView
+                            customFieldGroup={customFieldGroup}
+                            customFieldId={selectedCustomFieldId}
+                            onDelete={() => setSelectedCustomFieldId(null)}
                         />
-                        <Box flex={1}>
-                            <FieldTypeEditor customField={customField} />
-                        </Box>
-                    </>
-                )}
+                    )}
+                </Box>
             </Box>
 
             <ConfirmChangesDialog
@@ -185,14 +156,11 @@ const CustomFieldView = () => {
                 onClose={handleCloseConfirmDialog}
             />
 
-            <DeleteCustomFieldDialog
-                open={deleteDialogOpen}
-                onSubmit={handleDelete}
-                onClose={() => setDeleteDialogOpen(false)}
-                loading={isDeleting}
+            <CreateCustomFieldFormDialog
+                open={addFieldDialogOpen}
+                customFieldGroup={customFieldGroup}
+                onClose={() => setAddFieldDialogOpen(false)}
             />
-        </Container>
+        </Stack>
     );
 };
-
-export { CustomFieldView };

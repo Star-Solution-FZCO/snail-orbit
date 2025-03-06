@@ -4,25 +4,28 @@ import { Link, NotFound } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi, useAppSelector } from "store";
-import { CreateCustomFieldT } from "types";
+import { CreateCustomFieldGroupT } from "types";
 import { toastApiError } from "utils";
-import { CustomFieldForm } from "./components/custom_field_form";
+import { CustomFieldGroupForm } from "./components/custom_field_group_form";
 
-const CustomFieldCreate = () => {
+const CustomFieldGroupCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
     const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
-    const [createCustomField, { isLoading }] =
-        customFieldsApi.useCreateCustomFieldMutation();
+    const [createCustomFieldGroup, { isLoading }] =
+        customFieldsApi.useCreateCustomFieldGroupMutation();
 
-    const onSubmit = (formData: CreateCustomFieldT) => {
-        createCustomField(formData)
+    const onSubmit = (formData: CreateCustomFieldGroupT) => {
+        createCustomFieldGroup(formData)
             .unwrap()
-            .then(() => {
+            .then((res) => {
                 navigate({
-                    to: "/custom-fields",
+                    to: "/custom-fields/$customFieldGroupId",
+                    params: {
+                        customFieldGroupId: res.payload.gid,
+                    },
                 });
                 toast.success(t("customFields.create.success"));
             })
@@ -46,9 +49,9 @@ const CustomFieldCreate = () => {
                 </Typography>
             </Breadcrumbs>
 
-            <CustomFieldForm onSubmit={onSubmit} loading={isLoading} />
+            <CustomFieldGroupForm onSubmit={onSubmit} loading={isLoading} />
         </Container>
     );
 };
 
-export { CustomFieldCreate };
+export { CustomFieldGroupCreate };

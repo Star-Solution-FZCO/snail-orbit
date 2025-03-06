@@ -96,7 +96,8 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                         (field.type === "string" ||
                                             field.type === "integer" ||
                                             field.type === "float") &&
-                                        field.value !== null
+                                        field.value !== null &&
+                                        field.value !== undefined
                                             ? field.value.toString()
                                             : undefined
                                     }
@@ -209,7 +210,7 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                         field.value
                                             ? {
                                                   ...field.value,
-                                                  value: field.value.state,
+                                                  value: field.value.value,
                                               }
                                             : undefined
                                     }
