@@ -1566,9 +1566,20 @@ async def test_suggestions(
                         ],
                     },
                     {
-                        'fields': {
-                            '$elemMatch': {'type': 'state', 'value.is_resolved': False}
-                        }
+                        '$or': [
+                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'type': 'state',
+                                        '$or': [
+                                            {'value': None},
+                                            {'value.is_resolved': False},
+                                        ],
+                                    }
+                                }
+                            },
+                        ]
                     },
                 ],
             },
@@ -1693,7 +1704,19 @@ async def test_suggestions(
         ),
         pytest.param(
             '#resolved',
-            {'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': True}}},
+            {
+                '$nor': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
+            },
             id='resolved hashtag',
         ),
         pytest.param(
@@ -1701,9 +1724,20 @@ async def test_suggestions(
             {
                 '$or': [
                     {
-                        'fields': {
-                            '$elemMatch': {'type': 'state', 'value.is_resolved': True}
-                        }
+                        '$nor': [
+                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'type': 'state',
+                                        '$or': [
+                                            {'value': None},
+                                            {'value.is_resolved': False},
+                                        ],
+                                    }
+                                }
+                            },
+                        ]
                     },
                     {
                         'fields': {

@@ -175,11 +175,31 @@ class MongoQueryTransformer(Transformer):
         val = args[0].value
         if val == '#resolved':
             return {
-                'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': True}}
+                '$nor': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
             }
         if val == '#unresolved':
             return {
-                'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': False}}
+                '$or': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
             }
         raise ValueError(f'Unknown hashtag value: {val}')
 
