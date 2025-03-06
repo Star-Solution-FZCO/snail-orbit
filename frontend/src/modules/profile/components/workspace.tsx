@@ -11,8 +11,6 @@ import {
 export const Workspace = () => {
     const { mode, setMode } = useColorScheme();
 
-    console.log(mode);
-
     return (
         <Stack spacing={2} height={1}>
             <FormControl>

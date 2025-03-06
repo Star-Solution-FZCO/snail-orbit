@@ -16,9 +16,9 @@ from .custom_fields import (
     CustomFieldTypeT,
     CustomFieldValue,
     CustomFieldValueT,
-    EnumField,
-    StateField,
-    VersionField,
+    EnumOption,
+    StateOption,
+    VersionOption,
 )
 from .project import Project, ProjectLinkField
 from .tag import Tag, TagLinkField
@@ -177,24 +177,27 @@ class Issue(Document):
 
     @property
     def resolved_at(self) -> datetime | None:
-        if not (resolved_state := self._find_resolved_state()):
+        if not (resolved_state_ids := self._find_resolved_states()):
             return None
-        if not (change := self._get_latest_field_change_record(resolved_state.id)):
+        if not (change := self._get_latest_field_change_record(resolved_state_ids)):
+            return self.created_at
+        return change.time
+
+    @property
+    def closed_at(self) -> datetime | None:
+        if not (closed_state_ids := self._find_closed_states()):
+            return None
+        if not (change := self._get_latest_field_change_record(closed_state_ids)):
             return self.created_at
         return change.time
 
     @property
     def is_resolved(self) -> bool:
-        return bool(self._find_resolved_state())
+        return bool(self._find_resolved_states())
 
     @property
     def is_closed(self) -> bool:
-        return any(
-            field.type == CustomFieldTypeT.STATE
-            and field.value
-            and field.value.is_closed
-            for field in self.fields
-        )
+        return bool(self._find_closed_states())
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -338,7 +341,7 @@ class Issue(Document):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionField | StateField | EnumField,
+        option: VersionOption | StateOption | EnumOption,
     ) -> None:
         if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
             await cls.find(
@@ -405,26 +408,47 @@ class Issue(Document):
         )
 
     def _get_latest_field_change_record(
-        self, field_id: PydanticObjectId
+        self,
+        field_id: PydanticObjectId | set[PydanticObjectId],
     ) -> IssueHistoryRecord | None:
+        if isinstance(field_id, PydanticObjectId):
+            field_ids = {field_id}
+        else:
+            field_ids = field_id
         for record in sorted(self.history, key=lambda h: h.time, reverse=True):
             for change in record.changes:
                 if (
                     isinstance(change.field, CustomFieldLink)
-                    and change.field.id == field_id
+                    and change.field.id in field_ids
                 ):
                     return record
         return None
 
-    def _find_resolved_state(self) -> CustomFieldValue | None:
+    def _find_resolved_states(self) -> set[PydanticObjectId] | None:
+        state_fields = set()
+
         for field in self.fields:
-            if (
-                field.type == CustomFieldTypeT.STATE
-                and field.value
-                and field.value.is_resolved
-            ):
-                return field
-        return None
+            if field.type != CustomFieldTypeT.STATE:
+                continue
+            if field.value and field.value.is_resolved:
+                state_fields.add(field.id)
+                continue
+            return None
+
+        return state_fields
+
+    def _find_closed_states(self) -> set[PydanticObjectId] | None:
+        state_fields = set()
+
+        for field in self.fields:
+            if field.type != CustomFieldTypeT.STATE:
+                continue
+            if field.value and field.value.is_closed:
+                state_fields.add(field.id)
+                continue
+            return None
+
+        return state_fields
 
     @staticmethod
     def get_ro_projection_model() -> type[BaseModel]:
@@ -460,46 +484,70 @@ class IssueRoProjectionModel(BaseModel):
 
     @property
     def resolved_at(self) -> datetime | None:
-        if not (resolved_state := self._find_resolved_state()):
+        if not (resolved_state_ids := self._find_resolved_states()):
             return None
-        if not (change := self._get_latest_field_change_record(resolved_state.id)):
+        if not (change := self._get_latest_field_change_record(resolved_state_ids)):
+            return self.created_at
+        return change.time
+
+    @property
+    def closed_at(self) -> datetime | None:
+        if not (closed_state_ids := self._find_closed_states()):
+            return None
+        if not (change := self._get_latest_field_change_record(closed_state_ids)):
             return self.created_at
         return change.time
 
     @property
     def is_resolved(self) -> bool:
-        return bool(self._find_resolved_state())
+        return bool(self._find_resolved_states())
 
     @property
     def is_closed(self) -> bool:
-        return any(
-            field.type == CustomFieldTypeT.STATE
-            and field.value
-            and field.value.is_closed
-            for field in self.fields
-        )
+        return bool(self._find_closed_states())
 
     def _get_latest_field_change_record(
-        self, field_id: PydanticObjectId
+        self,
+        field_id: PydanticObjectId | set[PydanticObjectId],
     ) -> IssueHistoryRecord | None:
+        if isinstance(field_id, PydanticObjectId):
+            field_ids = {field_id}
+        else:
+            field_ids = field_id
         for record in sorted(self.history, key=lambda h: h.time, reverse=True):
             for change in record.changes:
                 if (
                     isinstance(change.field, CustomFieldLink)
-                    and change.field.id == field_id
+                    and change.field.id in field_ids
                 ):
                     return record
         return None
 
-    def _find_resolved_state(self) -> CustomFieldValue | None:
+    def _find_resolved_states(self) -> set[PydanticObjectId] | None:
+        state_fields = set()
+
         for field in self.fields:
-            if (
-                field.type == CustomFieldTypeT.STATE
-                and field.value
-                and field.value.is_resolved
-            ):
-                return field
-        return None
+            if field.type != CustomFieldTypeT.STATE:
+                continue
+            if field.value and field.value.is_resolved:
+                state_fields.add(field.id)
+                continue
+            return None
+
+        return state_fields
+
+    def _find_closed_states(self) -> set[PydanticObjectId] | None:
+        state_fields = set()
+
+        for field in self.fields:
+            if field.type != CustomFieldTypeT.STATE:
+                continue
+            if field.value and field.value.is_closed:
+                state_fields.add(field.id)
+                continue
+            return None
+
+        return state_fields
 
 
 @audited_model
@@ -580,7 +628,7 @@ class IssueDraft(Document):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionField | StateField | EnumField,
+        option: VersionOption | StateOption | EnumOption,
     ) -> None:
         if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
             await cls.find(

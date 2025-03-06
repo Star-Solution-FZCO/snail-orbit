@@ -90,7 +90,7 @@ TEST_VERSION_FIELD_PYTEST_PARAMS = [
             'fields': {
                 '$elemMatch': {
                     'name': {'$regex': '^version$', '$options': 'i'},
-                    'value.version': version,
+                    'value.value': version,
                 }
             }
         },
@@ -116,7 +116,7 @@ TEST_VERSION_FIELD_PYTEST_PARAMS = [
             'fields': {
                 '$elemMatch': {
                     'name': {'$regex': '^version$', '$options': 'i'},
-                    'value.version': None,
+                    'value.value': None,
                 }
             }
         },
@@ -540,7 +540,7 @@ TEST_STATE_FIELD_PYTEST_PARAMS = [
             'fields': {
                 '$elemMatch': {
                     'name': {'$regex': '^state$', '$options': 'i'},
-                    'value.state': f'{value}' if value != 'null' else None,
+                    'value.value': f'{value}' if value != 'null' else None,
                 }
             }
         },
@@ -1208,6 +1208,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
                 'h-state',
                 'integer',
                 'priority',
+                'version',
                 'project',
                 'subject',
                 'tag',
@@ -1235,6 +1236,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
                 'h-state',
                 'integer',
                 'priority',
+                'version',
                 'project',
                 'subject',
                 'tag',
@@ -1262,6 +1264,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
                 'h-state',
                 'integer',
                 'priority',
+                'version',
                 'project',
                 'subject',
                 'tag',
@@ -1290,6 +1293,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
                 'h-state',
                 'integer',
                 'priority',
+                'version',
                 'project',
                 'subject',
                 'tag',
@@ -1325,6 +1329,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
                 'h-state',
                 'integer',
                 'priority',
+                'version',
                 'project',
                 'subject',
                 'tag',
@@ -1453,11 +1458,22 @@ async def test_suggestions(
                 'fields': {
                     '$elemMatch': {
                         'name': {'$regex': '^state$', '$options': 'i'},
-                        'value.state': 'open',
+                        'value.value': 'open',
                     }
                 }
             },
             id='state open',
+        ),
+        pytest.param(
+            'Version: "1.0.0"',
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'name': {'$regex': '^version$', '$options': 'i'},
+                        'value.value': '1.0.0',
+                    }
+                }
+            },
         ),
         pytest.param(
             'State: open AND Priority: High',
@@ -1467,7 +1483,7 @@ async def test_suggestions(
                         'fields': {
                             '$elemMatch': {
                                 'name': {'$regex': '^state$', '$options': 'i'},
-                                'value.state': 'open',
+                                'value.value': 'open',
                             },
                         }
                     },
@@ -1491,7 +1507,7 @@ async def test_suggestions(
                         'fields': {
                             '$elemMatch': {
                                 'name': {'$regex': '^state$', '$options': 'i'},
-                                'value.state': 'open',
+                                'value.value': 'open',
                             },
                         }
                     },
@@ -1517,7 +1533,7 @@ async def test_suggestions(
                                 'fields': {
                                     '$elemMatch': {
                                         'name': {'$regex': '^state$', '$options': 'i'},
-                                        'value.state': 'open',
+                                        'value.value': 'open',
                                     },
                                 }
                             },
@@ -1541,7 +1557,7 @@ async def test_suggestions(
                                                     '$regex': '^state$',
                                                     '$options': 'i',
                                                 },
-                                                'value.state': 'closed',
+                                                'value.value': 'closed',
                                             }
                                         }
                                     },
@@ -1550,9 +1566,20 @@ async def test_suggestions(
                         ],
                     },
                     {
-                        'fields': {
-                            '$elemMatch': {'type': 'state', 'value.is_resolved': False}
-                        }
+                        '$or': [
+                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'type': 'state',
+                                        '$or': [
+                                            {'value': None},
+                                            {'value.is_resolved': False},
+                                        ],
+                                    }
+                                }
+                            },
+                        ]
                     },
                 ],
             },
@@ -1566,7 +1593,7 @@ async def test_suggestions(
                         'fields': {
                             '$elemMatch': {
                                 'name': {'$regex': '^h-state$', '$options': 'i'},
-                                'value.state': 'open',
+                                'value.value': 'open',
                             },
                         }
                     },
@@ -1590,7 +1617,7 @@ async def test_suggestions(
                                             '$regex': '^h-state$',
                                             '$options': 'i',
                                         },
-                                        'value.state': 'closed',
+                                        'value.value': 'closed',
                                     },
                                 }
                             },
@@ -1643,7 +1670,7 @@ async def test_suggestions(
                 'fields': {
                     '$elemMatch': {
                         'name': {'$regex': '^state$', '$options': 'i'},
-                        'value.state': 'Closed',
+                        'value.value': 'Closed',
                     }
                 }
             },
@@ -1677,7 +1704,19 @@ async def test_suggestions(
         ),
         pytest.param(
             '#resolved',
-            {'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': True}}},
+            {
+                '$nor': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
+            },
             id='resolved hashtag',
         ),
         pytest.param(
@@ -1685,9 +1724,20 @@ async def test_suggestions(
             {
                 '$or': [
                     {
-                        'fields': {
-                            '$elemMatch': {'type': 'state', 'value.is_resolved': True}
-                        }
+                        '$nor': [
+                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                            {
+                                'fields': {
+                                    '$elemMatch': {
+                                        'type': 'state',
+                                        '$or': [
+                                            {'value': None},
+                                            {'value.is_resolved': False},
+                                        ],
+                                    }
+                                }
+                            },
+                        ]
                     },
                     {
                         'fields': {

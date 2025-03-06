@@ -1,17 +1,20 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import {
+import type {
     ApiResponse,
     BasicUserT,
+    CreateCustomFieldGroupT,
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateStateOptionT,
     CreateVersionOptionT,
+    CustomFieldGroupT,
     CustomFieldT,
     EnumOptionT,
     ListQueryParams,
     ListResponse,
     StateOptionT,
     TargetTypeT,
+    UpdateCustomFieldGroupT,
     UpdateCustomFieldT,
     UpdateEnumOptionT,
     UpdateStateOptionT,
@@ -20,13 +23,76 @@ import {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["CustomFields"];
+const tagTypes = ["CustomFieldGroups", "CustomFields"];
 
 export const customFieldsApi = createApi({
     reducerPath: "customFieldsApi",
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
+        // groups
+        listCustomFieldGroups: build.query<
+            ListResponse<CustomFieldGroupT>,
+            ListQueryParams | void
+        >({
+            query: (params) => ({
+                url: "custom_field/group/list",
+                params: params ?? undefined,
+            }),
+            providesTags: (result) => {
+                let tags = [{ type: "CustomFieldGroups", id: "LIST" }];
+                if (result) {
+                    tags = tags.concat(
+                        result.payload.items.map((cfg) => ({
+                            type: "CustomFieldGroups",
+                            id: cfg.gid,
+                        })),
+                    );
+                }
+                return tags;
+            },
+        }),
+        getCustomFieldGroup: build.query<
+            ApiResponse<CustomFieldGroupT>,
+            string
+        >({
+            query: (gid) => `custom_field/group/${gid}`,
+            providesTags: (_result, _error, gid) => [
+                { type: "CustomFieldGroups", id: gid },
+            ],
+        }),
+        createCustomFieldGroup: build.mutation<
+            ApiResponse<CustomFieldGroupT>,
+            CreateCustomFieldGroupT
+        >({
+            query: (body) => ({
+                url: "custom_field/group",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: [
+                {
+                    type: "CustomFieldGroups",
+                    id: "LIST",
+                },
+            ],
+        }),
+        updateCustomFieldGroup: build.mutation<
+            ApiResponse<CustomFieldGroupT>,
+            {
+                gid: string;
+            } & UpdateCustomFieldGroupT
+        >({
+            query: ({ gid, ...body }) => ({
+                url: `custom_field/group/${gid}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { gid }) => [
+                { type: "CustomFieldGroups", id: gid },
+            ],
+        }),
+        // custom fields
         listCustomFields: build.query<
             ListResponse<CustomFieldT>,
             ListQueryParams | void
@@ -39,9 +105,9 @@ export const customFieldsApi = createApi({
                 let tags = [{ type: "CustomFields", id: "LIST" }];
                 if (result) {
                     tags = tags.concat(
-                        result.payload.items.map((project) => ({
+                        result.payload.items.map((cf) => ({
                             type: "CustomFields",
-                            id: project.id,
+                            id: cf.id,
                         })),
                     );
                 }
@@ -56,44 +122,55 @@ export const customFieldsApi = createApi({
         }),
         createCustomField: build.mutation<
             ApiResponse<CustomFieldT>,
-            CreateCustomFieldT
+            { gid: string } & CreateCustomFieldT
         >({
-            query: (body) => ({
-                url: "custom_field/",
+            query: ({ gid, ...body }) => ({
+                url: `custom_field/group/${gid}/field`,
                 method: "POST",
                 body,
             }),
-            invalidatesTags: [
+            invalidatesTags: (_result, _error, { gid }) => [
                 {
                     type: "CustomFields",
                     id: "LIST",
+                },
+                {
+                    type: "CustomFieldGroups",
+                    id: gid,
                 },
             ],
         }),
         updateCustomField: build.mutation<
             ApiResponse<CustomFieldT>,
             {
+                gid: string;
                 id: string;
             } & UpdateCustomFieldT
         >({
-            query: ({ id, ...body }) => ({
+            query: ({ gid, id, ...body }) => ({
                 url: `custom_field/${id}`,
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
+            invalidatesTags: (_result, _error, { id, gid }) => [
                 { type: "CustomFields", id },
+                { type: "CustomFieldGroups", id: gid },
             ],
         }),
-        deleteCustomField: build.mutation<ApiResponse<{ id: string }>, string>({
-            query: (id) => ({
+        deleteCustomField: build.mutation<
+            ApiResponse<{ id: string }>,
+            { gid: string; id: string }
+        >({
+            query: ({ id }) => ({
                 url: `custom_field/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: (_result, _error) => [
+            invalidatesTags: (_result, _error, { gid }) => [
                 { type: "CustomFields", id: "LIST" },
+                { type: "CustomFieldGroups", id: gid },
             ],
         }),
+        // options
         createCustomFieldEnumOption: build.mutation<
             ApiResponse<CustomFieldT>,
             { id: string } & CreateEnumOptionT

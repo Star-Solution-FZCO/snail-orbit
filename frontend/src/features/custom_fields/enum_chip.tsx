@@ -34,7 +34,7 @@ export const EnumChip: FC<EnumChipProps> = ({
     };
 
     const items = useMemo(() => {
-        return (data?.payload.items || []) as EnumFieldT[];
+        return (data?.payload.items || []) as unknown as EnumFieldT[];
     }, [data?.payload.items]);
 
     const handleChange = (

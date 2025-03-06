@@ -24,28 +24,57 @@ CUSTOM_FIELDS_PLAIN_TYPES = (
 )
 
 
-async def _create_custom_field_plain(
+async def __create_custom_field_group(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
     custom_field_payload: dict,
+    has_options: bool = False,
 ) -> dict:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    if custom_field_payload['type'] not in CUSTOM_FIELDS_PLAIN_TYPES:
-        pytest.xfail('Unsupported custom field type')
     response = test_client.post(
-        '/api/v1/custom_field',
+        '/api/v1/custom_field/group',
         headers=headers,
         json=custom_field_payload,
     )
     assert response.status_code == 200
     data = response.json()
-    assert data['payload']['id']
+    assert data['payload']['gid']
+    assert len(data['payload']['fields']) == 1
+    assert data['payload']['fields'][0]['id']
+    options_payload = {'options': []} if has_options else {}
     assert data == {
         'success': True,
-        'payload': {'id': data['payload']['id'], **custom_field_payload},
+        'payload': {
+            'gid': data['payload']['gid'],
+            'name': custom_field_payload['name'],
+            'description': custom_field_payload['description'],
+            'type': custom_field_payload['type'],
+            'ai_description': custom_field_payload['ai_description'],
+            'fields': [
+                {
+                    'id': data['payload']['fields'][0]['id'],
+                    'gid': data['payload']['gid'],
+                    'label': 'default',
+                    **custom_field_payload,
+                    **options_payload,
+                }
+            ],
+        },
     }, f'{data=}'
-    return {'id': data['payload']['id']}
+    return {'id': data['payload']['fields'][0]['id'], 'gid': data['payload']['gid']}
+
+
+async def _create_custom_field_plain(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    custom_field_payload: dict,
+) -> dict:
+    if custom_field_payload['type'] not in CUSTOM_FIELDS_PLAIN_TYPES:
+        pytest.xfail('Unsupported custom field type')
+    return await __create_custom_field_group(
+        test_client, create_initial_admin, custom_field_payload
+    )
 
 
 async def _create_custom_field_enum(
@@ -60,32 +89,32 @@ async def _create_custom_field_enum(
         pytest.xfail('Unsupported custom field type')
     if options := custom_field_payload.get('options', []):
         del custom_field_payload['options']
-    response = test_client.post(
-        '/api/v1/custom_field',
-        headers=headers,
-        json=custom_field_payload,
+
+    field_data = await __create_custom_field_group(
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
+        has_options=True,
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data['payload']['id']
-    assert data == {
-        'success': True,
-        'payload': {'id': data['payload']['id'], **custom_field_payload, 'options': []},
-    }, f'{data=}'
 
     async def _add_option(opt: dict) -> tuple[str, str]:
         resp_ = test_client.post(
-            f'/api/v1/custom_field/{data["payload"]["id"]}/option',
+            f'/api/v1/custom_field/{field_data["id"]}/option',
             headers=headers,
             json=opt,
         )
         assert resp_.status_code == 200
         data_ = resp_.json()
-        assert data_['payload']['id'] == data['payload']['id']
+        assert data_['payload']['id'] == field_data['id']
         opts_ = data_['payload'].pop('options')
         assert data_ == {
             'success': True,
-            'payload': {'id': data['payload']['id'], **custom_field_payload},
+            'payload': {
+                'id': field_data['id'],
+                'gid': field_data['gid'],
+                'label': 'default',
+                **custom_field_payload,
+            },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
         assert opt_, f'{opts_=}'
@@ -97,7 +126,7 @@ async def _create_custom_field_enum(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
-    return {'id': data['payload']['id'], 'options': option_ids}
+    return {**field_data, 'options': option_ids}
 
 
 async def _create_custom_field_state(
@@ -112,32 +141,32 @@ async def _create_custom_field_state(
         pytest.xfail('Unsupported custom field type')
     if options := custom_field_payload.get('options', []):
         del custom_field_payload['options']
-    response = test_client.post(
-        '/api/v1/custom_field',
-        headers=headers,
-        json=custom_field_payload,
+
+    field_data = await __create_custom_field_group(
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
+        has_options=True,
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data['payload']['id']
-    assert data == {
-        'success': True,
-        'payload': {'id': data['payload']['id'], **custom_field_payload, 'options': []},
-    }, f'{data=}'
 
     async def _add_option(opt: dict) -> tuple[str, str]:
         resp_ = test_client.post(
-            f'/api/v1/custom_field/{data["payload"]["id"]}/state-option',
+            f'/api/v1/custom_field/{field_data["id"]}/state-option',
             headers=headers,
             json=opt,
         )
         assert resp_.status_code == 200
         data_ = resp_.json()
-        assert data_['payload']['id'] == data['payload']['id']
+        assert data_['payload']['id'] == field_data['id']
         opts_ = data_['payload'].pop('options')
         assert data_ == {
             'success': True,
-            'payload': {'id': data['payload']['id'], **custom_field_payload},
+            'payload': {
+                'id': field_data['id'],
+                'gid': field_data['gid'],
+                'label': 'default',
+                **custom_field_payload,
+            },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
         assert opt_, f'{opts_=}'
@@ -149,7 +178,7 @@ async def _create_custom_field_state(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
-    return {'id': data['payload']['id'], 'options': option_ids}
+    return {**field_data, 'options': option_ids}
 
 
 async def _create_custom_field_version(
@@ -164,32 +193,32 @@ async def _create_custom_field_version(
         pytest.xfail('Unsupported custom field type')
     if options := custom_field_payload.get('options', []):
         del custom_field_payload['options']
-    response = test_client.post(
-        '/api/v1/custom_field',
-        headers=headers,
-        json=custom_field_payload,
+
+    field_data = await __create_custom_field_group(
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
+        has_options=True,
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data['payload']['id']
-    assert data == {
-        'success': True,
-        'payload': {'id': data['payload']['id'], **custom_field_payload, 'options': []},
-    }, f'{data=}'
 
     async def _add_option(opt: dict) -> tuple[str, str]:
         resp_ = test_client.post(
-            f'/api/v1/custom_field/{data["payload"]["id"]}/version-option',
+            f'/api/v1/custom_field/{field_data["id"]}/version-option',
             headers=headers,
             json=opt,
         )
         assert resp_.status_code == 200, f'{resp_=}'
         data_ = resp_.json()
-        assert data_['payload']['id'] == data['payload']['id']
+        assert data_['payload']['id'] == field_data['id']
         opts_ = data_['payload'].pop('options')
         assert data_ == {
             'success': True,
-            'payload': {'id': data['payload']['id'], **custom_field_payload},
+            'payload': {
+                'id': field_data['id'],
+                'gid': field_data['gid'],
+                'label': 'default',
+                **custom_field_payload,
+            },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
         assert opt_, f'{opts_=}'
@@ -201,7 +230,7 @@ async def _create_custom_field_version(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
-    return {'id': data['payload']['id'], 'options': option_ids}
+    return {**field_data, 'options': option_ids}
 
 
 async def _create_custom_field(

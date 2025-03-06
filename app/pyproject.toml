@@ -42,6 +42,7 @@ starsol-otp = "==1.0.0"
 jinja2 = "*"
 sentry-sdk = {version = "*", extras = ["fastapi", "starlette"]}
 pyinstrument = "*"
+starsol-mongo-migrate = "==0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"

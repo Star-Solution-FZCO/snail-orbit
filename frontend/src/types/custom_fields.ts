@@ -1,6 +1,7 @@
 import type { GroupT } from "./group";
 import type { BasicUserT } from "./user";
 
+// types
 export const customFieldsTypes = [
     "string",
     "integer",
@@ -19,35 +20,29 @@ export const customFieldsTypes = [
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
 
+// options
+// enum
 export type CreateEnumOptionT = {
     value: string;
     color: string | null;
 };
 
-export type EnumOptionT = {
+export type EnumOptionT = CreateEnumOptionT & {
     uuid: string;
-} & CreateEnumOptionT;
+};
 
-export type EnumFieldT = Pick<CreateEnumOptionT, "value"> &
-    Partial<Pick<CreateEnumOptionT, "color">>;
-
-export type UpdateEnumOptionT = {
+export type UpdateEnumOptionT = Partial<CreateEnumOptionT> & {
     option_id: string;
-} & Partial<CreateEnumOptionT>;
+};
 
+// user, group
 export type UserOrGroupOptionT = {
     uuid: string;
     type: "user" | "group";
     value: BasicUserT | GroupT;
 };
 
-export type StateFieldT = {
-    state: string;
-    is_resolved: boolean;
-    is_closed: boolean;
-    color: string;
-};
-
+// state
 export type CreateStateOptionT = {
     value: string;
     color: string | null;
@@ -55,14 +50,15 @@ export type CreateStateOptionT = {
     is_closed: boolean;
 };
 
-export type StateOptionT = {
+export type StateOptionT = CreateStateOptionT & {
     uuid: string;
-} & CreateStateOptionT;
+};
 
-export type UpdateStateOptionT = {
+export type UpdateStateOptionT = Partial<CreateStateOptionT> & {
     option_id: string;
-} & Partial<Omit<CreateStateOptionT, "value"> & { state: string }>;
+};
 
+// version
 export type CreateVersionOptionT = {
     value: string;
     release_date: string | null;
@@ -70,31 +66,13 @@ export type CreateVersionOptionT = {
     is_archived: boolean;
 };
 
-export type VersionOptionT = {
+export type VersionOptionT = CreateVersionOptionT & {
     uuid: string;
-} & CreateVersionOptionT;
-
-export type UpdateVersionOptionT = {
-    option_id: string;
-} & Partial<CreateVersionOptionT>;
-
-export type VersionFieldT = Omit<VersionOptionT, "uuid"> & {
-    id: string;
-    version: string;
 };
 
-export type CustomFieldValueT =
-    | boolean
-    | number
-    | BasicUserT
-    | BasicUserT[]
-    | CustomFieldT
-    | StateFieldT
-    | EnumFieldT
-    | EnumFieldT[]
-    | string
-    | any
-    | null;
+export type UpdateVersionOptionT = Partial<CreateVersionOptionT> & {
+    option_id: string;
+};
 
 export type CustomFieldOptionT =
     | EnumOptionT
@@ -102,14 +80,48 @@ export type CustomFieldOptionT =
     | UserOrGroupOptionT
     | VersionOptionT;
 
-export type CreateCustomFieldT = {
-    name: string;
-    description: string | null;
-    ai_description: string | null;
-    type: CustomFieldTypeT;
-    is_nullable: boolean;
-    default_value: CustomFieldValueT;
+// fields
+export type FieldBaseT = {
+    value: string;
+    is_archived: boolean;
 };
+
+export type EnumFieldT = FieldBaseT & {
+    color?: string | null;
+};
+export type StateFieldT = FieldBaseT & {
+    is_resolved: boolean;
+    is_closed: boolean;
+    color: string;
+};
+
+export type VersionFieldT = FieldBaseT & {
+    id: string; // TODO: remove this field
+    release_date: string | null;
+    is_released: boolean;
+    is_archived: boolean;
+};
+
+export type BasicCustomFieldT = {
+    id: string;
+    name: string;
+    type: CustomFieldTypeT;
+};
+
+// TODO: remove 'any' & specify this type
+export type CustomFieldValueT =
+    | boolean
+    | number
+    | string
+    | null
+    | BasicUserT
+    | BasicUserT[]
+    | EnumFieldT
+    | EnumFieldT[]
+    | StateFieldT
+    | VersionFieldT
+    | VersionFieldT[]
+    | any;
 
 type CustomFieldTypeMap = {
     string: string;
@@ -134,15 +146,57 @@ type CustomFieldTypeValuePair = {
     };
 }[keyof CustomFieldTypeMap];
 
-export type CustomFieldT = CreateCustomFieldT & {
+export type CustomFieldBaseT = {
+    name: string;
+    description: string | null;
+    ai_description: string | null;
+    type: CustomFieldTypeT;
+    is_nullable: boolean;
+    label: string;
+};
+
+export type CreateCustomFieldT = {
+    label: string;
+    default_value?: CustomFieldValueT;
+    is_nullable: boolean;
+};
+
+export type CustomFieldT = CustomFieldBaseT & {
     id: string;
+    gid: string;
+    default_value: CustomFieldValueT;
     options?: CustomFieldOptionT[];
 } & CustomFieldTypeValuePair;
 
-export type UpdateCustomFieldT = Partial<CreateCustomFieldT>;
+export type UpdateCustomFieldT = Partial<
+    CreateCustomFieldT & { default_value: CustomFieldValueT }
+>;
 
-export type BasicCustomFieldT = {
-    id: string;
+// field group
+export type CreateCustomFieldGroupT = {
     name: string;
+    description: string | null;
+    ai_description: string | null;
     type: CustomFieldTypeT;
+    is_nullable: boolean;
+    label: string;
+    default_value: CustomFieldValueT;
 };
+
+export type CustomFieldGroupT = {
+    gid: string;
+    name: string;
+    description: string | null;
+    ai_description: string | null;
+    type: CustomFieldTypeT;
+    is_nullable?: boolean;
+    label?: string;
+    default_value?: CustomFieldValueT;
+    fields: CustomFieldT[];
+};
+
+export type UpdateCustomFieldGroupT = Partial<{
+    name: string | null;
+    description: string | null;
+    ai_description: string | null;
+}>;

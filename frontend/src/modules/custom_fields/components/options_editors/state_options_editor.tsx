@@ -9,62 +9,66 @@ import {
     IconButton,
     Typography,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { t } from "i18next";
 import { FC, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "store";
 import {
-    CreateVersionOptionT,
+    CreateStateOptionT,
     CustomFieldT,
-    UpdateVersionOptionT,
-    VersionOptionT,
+    StateOptionT,
+    UpdateStateOptionT,
 } from "types";
 import { toastApiError } from "utils";
-import { DeleteCustomFieldOptionDialog } from "./delete_option_dialog";
-import { VersionOptionFormDialog } from "./version_option_form_dialog";
+import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
+import { StateOptionFormDialog } from "../form_dialogs/state_option_form_dialog";
 
-interface ICustomFieldVersionOptionProps {
-    option: VersionOptionT;
-    onEdit: (option: VersionOptionT) => void;
-    onDelete: (option: VersionOptionT) => void;
+interface ICustomFieldStateOptionProps {
+    option: StateOptionT;
+    onEdit: (option: StateOptionT) => void;
+    onDelete: (option: StateOptionT) => void;
 }
 
-const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
+const CustomFieldStateOption: FC<ICustomFieldStateOptionProps> = ({
     option,
     onEdit,
     onDelete,
 }) => {
-    const releaseDate = option.release_date
-        ? `(${dayjs(option.release_date).format("DD MMM YYYY")})`
-        : null;
-
     return (
         <Box display="flex" alignItems="center" gap={1}>
-            <Typography flex={1}>
-                {option.value} {releaseDate}
-            </Typography>
+            <Box
+                sx={{
+                    width: "32px",
+                    height: "32px",
+                    backgroundColor: option.color,
+                    border: 1,
+                    borderColor: "divider",
+                    borderRadius: 0.5,
+                }}
+            />
+
+            <Typography flex={1}>{option.value}</Typography>
 
             <FormControlLabel
                 control={
                     <Checkbox
-                        checked={option.is_released}
+                        checked={option.is_resolved}
                         size="small"
                         disableRipple
                     />
                 }
-                label={t("customFields.options.version.released")}
+                label={t("customFields.options.state.resolved")}
             />
 
             <FormControlLabel
                 control={
                     <Checkbox
-                        checked={option.is_archived}
+                        checked={option.is_closed}
                         size="small"
                         disableRipple
                     />
                 }
-                label={t("customFields.options.version.archived")}
+                label={t("customFields.options.state.closed")}
             />
 
             <IconButton onClick={() => onEdit(option)} size="small">
@@ -82,29 +86,30 @@ const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
     );
 };
 
-interface ICustomFieldVersionOptionsEditorProps {
+interface ICustomFieldStateOptionsEditorProps {
     customField: CustomFieldT;
 }
 
-const CustomFieldVersionOptionsEditor: FC<
-    ICustomFieldVersionOptionsEditorProps
+const CustomFieldStateOptionsEditor: FC<
+    ICustomFieldStateOptionsEditorProps
 > = ({ customField }) => {
     const { t } = useTranslation();
 
     const [formDialogOpen, setFormDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedOption, setSelectedOption] = useState<VersionOptionT | null>(
+    const [selectedOption, setSelectedOption] = useState<StateOptionT | null>(
         null,
     );
 
     const [createOption, { isLoading: createLoading }] =
-        customFieldsApi.useCreateCustomFieldVersionOptionMutation();
+        customFieldsApi.useCreateCustomFieldStateOptionMutation();
     const [updateOption, { isLoading: updateLoading }] =
-        customFieldsApi.useUpdateCustomFieldVersionOptionMutation();
+        customFieldsApi.useUpdateCustomFieldStateOptionMutation();
     const [deleteOption, { isLoading: deleteLoading }] =
-        customFieldsApi.useDeleteCustomFieldVersionOptionMutation();
+        customFieldsApi.useDeleteCustomFieldStateOptionMutation();
 
     const handleClickAddOption = () => {
+        setSelectedOption(null);
         setFormDialogOpen(true);
     };
 
@@ -113,18 +118,18 @@ const CustomFieldVersionOptionsEditor: FC<
         setSelectedOption(null);
     };
 
-    const handleClickEditOption = (option: VersionOptionT) => {
+    const handleClickEditOption = (option: StateOptionT) => {
         setSelectedOption(option);
         setFormDialogOpen(true);
     };
 
     const handleSaveOption = (
-        formData: CreateVersionOptionT | UpdateVersionOptionT,
+        formData: CreateStateOptionT | UpdateStateOptionT,
     ) => {
         if (!selectedOption) {
             createOption({
                 id: customField.id,
-                ...(formData as CreateVersionOptionT),
+                ...(formData as CreateStateOptionT),
             })
                 .unwrap()
                 .then(() => setFormDialogOpen(false))
@@ -135,7 +140,7 @@ const CustomFieldVersionOptionsEditor: FC<
 
         updateOption({
             id: customField.id,
-            ...(formData as UpdateVersionOptionT),
+            ...(formData as UpdateStateOptionT),
             option_id: selectedOption.uuid,
         })
             .unwrap()
@@ -146,7 +151,7 @@ const CustomFieldVersionOptionsEditor: FC<
             .catch(toastApiError);
     };
 
-    const handleClickDeleteOption = (option: VersionOptionT) => {
+    const handleClickDeleteOption = (option: StateOptionT) => {
         setSelectedOption(option);
         setDeleteDialogOpen(true);
     };
@@ -191,15 +196,15 @@ const CustomFieldVersionOptionsEditor: FC<
             )}
 
             {options.map((option) => (
-                <CustomFieldVersionOption
+                <CustomFieldStateOption
                     key={option.uuid}
-                    option={option as VersionOptionT}
+                    option={option as StateOptionT}
                     onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
                 />
             ))}
 
-            <VersionOptionFormDialog
+            <StateOptionFormDialog
                 open={formDialogOpen}
                 onClose={handleCloseFormDialog}
                 onSubmit={handleSaveOption}
@@ -217,4 +222,4 @@ const CustomFieldVersionOptionsEditor: FC<
     );
 };
 
-export { CustomFieldVersionOptionsEditor };
+export { CustomFieldStateOptionsEditor };

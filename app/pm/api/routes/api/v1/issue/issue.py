@@ -981,6 +981,7 @@ async def validate_custom_fields_values(
         results.append(
             m.CustomFieldValue(
                 id=f.id,
+                gid=f.gid,
                 name=f.name,
                 type=f.type,
                 value=val_,

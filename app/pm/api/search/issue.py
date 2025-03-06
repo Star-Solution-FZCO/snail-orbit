@@ -139,14 +139,16 @@ class MongoQueryTransformer(Transformer):
     def __transform_single_field_value(self, field: m.CustomField, value: Any) -> dict:
         if field.type == m.CustomFieldTypeT.BOOLEAN:
             return self._transform_boolean_field_value(field, value)
-        if field.type == m.CustomFieldTypeT.STATE:
-            return {'value.state': str(value) if value is not None else None}
         if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
             return {'value.email': value}
-        if field.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        if field.type in (
+            m.CustomFieldTypeT.STATE,
+            m.CustomFieldTypeT.ENUM,
+            m.CustomFieldTypeT.ENUM_MULTI,
+            m.CustomFieldTypeT.VERSION,
+            m.CustomFieldTypeT.VERSION_MULTI,
+        ):
             return {'value.value': str(value) if value is not None else None}
-        if field.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
-            return {'value.version': str(value) if value is not None else None}
         if field.type == m.CustomFieldTypeT.STRING:
             return {'value': str(value) if value is not None else None}
         return {'value': value}
@@ -173,11 +175,31 @@ class MongoQueryTransformer(Transformer):
         val = args[0].value
         if val == '#resolved':
             return {
-                'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': True}}
+                '$nor': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
             }
         if val == '#unresolved':
             return {
-                'fields': {'$elemMatch': {'type': 'state', 'value.is_resolved': False}}
+                '$or': [
+                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                    {
+                        'fields': {
+                            '$elemMatch': {
+                                'type': 'state',
+                                '$or': [{'value': None}, {'value.is_resolved': False}],
+                            }
+                        }
+                    },
+                ]
             }
         raise ValueError(f'Unknown hashtag value: {val}')
 
@@ -639,17 +661,17 @@ def get_field_possible_values(
     for field in fields[field_name]:
         if field.is_nullable:
             results.add('null')
-        if field.type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        if field.type in (
+            m.CustomFieldTypeT.STATE,
+            m.CustomFieldTypeT.ENUM,
+            m.CustomFieldTypeT.ENUM_MULTI,
+            m.CustomFieldTypeT.VERSION,
+            m.CustomFieldTypeT.VERSION_MULTI,
+        ):
             results.update([option.value for option in field.options])
-            continue
-        if field.type == m.CustomFieldTypeT.STATE:
-            results.update([option.state for option in field.options])
             continue
         if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
             results.update([user.email for user in field.users])
-            continue
-        if field.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
-            results.update([version.version for version in field.versions])
             continue
         if field.type in (m.CustomFieldTypeT.DATE, m.CustomFieldTypeT.DATETIME):
             results.update(RELATIVE_DATETIME_VALUES)

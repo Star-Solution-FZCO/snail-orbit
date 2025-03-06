@@ -123,11 +123,14 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
                             </IconButton>
 
                             <Link
-                                to={`/custom-fields/${field.id}`}
+                                to="/custom-fields/$customFieldGroupId"
+                                params={{
+                                    customFieldGroupId: field.gid,
+                                }}
                                 flex={1}
                                 fontWeight="bold"
                             >
-                                {field.name}
+                                {field.name} ({field.label})
                             </Link>
                         </Box>
 
@@ -251,13 +254,21 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 flex: 1,
                 renderCell: ({ row }) => (
                     <Link
-                        to={`/custom-fields/${row.id}`}
+                        to="/custom-fields/$customFieldGroupId"
+                        params={{
+                            customFieldGroupId: row.gid,
+                        }}
                         flex={1}
                         fontWeight="bold"
                     >
                         {row.name}
                     </Link>
                 ),
+            },
+            {
+                field: "label",
+                headerName: t("customFields.fields.label"),
+                flex: 1,
             },
             {
                 field: "type",

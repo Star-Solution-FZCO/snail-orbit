@@ -1,8 +1,8 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CustomFieldCreate } from "modules";
+import { CustomFieldGroupCreate } from "modules";
 
 export const Route = createLazyFileRoute(
     "/_authenticated/custom-fields/create",
 )({
-    component: CustomFieldCreate,
+    component: CustomFieldGroupCreate,
 });
