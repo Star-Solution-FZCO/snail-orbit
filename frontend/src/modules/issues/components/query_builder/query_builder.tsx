@@ -30,10 +30,10 @@ type QueryBuilderProps = {
 export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
     const { t } = useTranslation();
 
-    const { data, isLoading } = customFieldsApi.useListCustomFieldsQuery();
+    const { data, isLoading } = customFieldsApi.useListCustomFieldGroupsQuery();
 
     const availableFields = useMemo(() => {
-        return data?.payload.items;
+        return data?.payload.items.flatMap((el) => el.fields);
     }, [data]);
 
     return (

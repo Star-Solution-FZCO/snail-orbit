@@ -77,7 +77,8 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                         (field.type === "string" ||
                                             field.type === "integer" ||
                                             field.type === "float") &&
-                                        field.value !== null
+                                        field.value !== null &&
+                                        field.value !== undefined
                                             ? field.value.toString()
                                             : undefined
                                     }
