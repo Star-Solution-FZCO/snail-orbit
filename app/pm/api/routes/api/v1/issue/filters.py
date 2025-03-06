@@ -57,8 +57,10 @@ class IssueFilterBody(BaseModel):
                     detail=f'User with id {user_id} not found',
                 )
             val = user.email
-        except InvalidId:
+        except (InvalidId, TypeError):
             val = self.value
+        if isinstance(val, str) and ' ' in val:
+            val = f'"{val}"'
         return f'{self.field}: {val}'
 
 
