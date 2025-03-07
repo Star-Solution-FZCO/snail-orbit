@@ -1,4 +1,4 @@
-import type { IssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 
 export type IssuesListProps = {
     issues: IssueT[];
@@ -8,4 +8,5 @@ export type IssuesListProps = {
     onChangePage?: (page: number) => void;
     onChangePerPage?: (perPage: number) => void;
     totalCount?: number;
+    onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
 };

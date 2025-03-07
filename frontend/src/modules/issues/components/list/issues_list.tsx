@@ -26,6 +26,7 @@ export const IssuesList: FC<IssuesListProps> = ({
     totalCount,
     perPage,
     onChangePerPage,
+    onUpdateIssue,
 }) => {
     const { t } = useTranslation();
 
@@ -98,7 +99,11 @@ export const IssuesList: FC<IssuesListProps> = ({
             <Stack>
                 {issues.map((issue, index) => (
                     <React.Fragment key={issue.id}>
-                        <IssueRow issue={issue} {...viewSettings} />
+                        <IssueRow
+                            issue={issue}
+                            onUpdateIssue={onUpdateIssue}
+                            {...viewSettings}
+                        />
                         {viewSettings?.showDividers &&
                             index !== issues.length - 1 && <Divider />}
                     </React.Fragment>

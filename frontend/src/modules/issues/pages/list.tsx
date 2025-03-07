@@ -41,6 +41,8 @@ const IssueList: FC = () => {
         q: listQueryParams.q,
     });
 
+    const [updateIssue] = issueApi.useUpdateIssueMutation();
+
     useEffect(() => {
         updateListQueryParams({ q: debouncedSearch });
     }, [debouncedSearch]);
@@ -131,8 +133,9 @@ const IssueList: FC = () => {
                             totalCount={data?.payload.count}
                             perPage={listQueryParams.perPage}
                             onChangePerPage={(perPage) =>
-                                updateListQueryParams({ perPage })
+                                updateListQueryParams({ perPage, page: 1 })
                             }
+                            onUpdateIssue={updateIssue}
                         />
                     )}
                 </Box>
