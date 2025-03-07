@@ -29,6 +29,7 @@ export type ListSelectQueryParams = BaseQueryParams & {
 
 export type ListQueryParams = BaseQueryParams & {
     search?: string;
+    q?: string;
 };
 
 export type ListPayload<T> = {

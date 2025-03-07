@@ -4,6 +4,7 @@ import { IssueList } from "modules";
 type IssueListSearch = {
     page?: number;
     query?: string;
+    perPage?: number;
 };
 
 export const Route = createFileRoute("/_authenticated/issues/")({
