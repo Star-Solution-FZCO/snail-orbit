@@ -1,4 +1,4 @@
-import { ListAlt } from "@mui/icons-material";
+import { GridView, ListAlt } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -47,6 +47,7 @@ import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import { AgileBoardSelect } from "./components/agile_board_select";
+import { BoardViewList } from "./components/board_view_list";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
@@ -71,6 +72,7 @@ const AgileBoardView = () => {
     const [debouncedSearch, setSearch, searchQuery] = useDebouncedState<string>(
         search?.query || "",
     );
+    const [mode, setMode] = useState<"board" | "list">("board");
 
     const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
@@ -305,6 +307,16 @@ const AgileBoardView = () => {
                                 <SettingsIcon />
                             </IconButton>
 
+                            <IconButton
+                                onClick={() =>
+                                    setMode((prev) =>
+                                        prev === "board" ? "list" : "board",
+                                    )
+                                }
+                            >
+                                <GridView />
+                            </IconButton>
+
                             <StarButton
                                 starred={agileBoard.is_favorite}
                                 onClick={() =>
@@ -327,10 +339,19 @@ const AgileBoardView = () => {
                     ) : null}
                 </Box>
                 <Box sx={{ width: "100%" }}>
-                    <AgileBoard
-                        boardData={agileBoard}
-                        query={debouncedSearch}
-                    />
+                    {mode === "board" ? (
+                        <AgileBoard
+                            boardData={agileBoard}
+                            query={debouncedSearch}
+                        />
+                    ) : (
+                        <Box px={4}>
+                            <BoardViewList
+                                boardData={agileBoard}
+                                query={debouncedSearch}
+                            />
+                        </Box>
+                    )}
                 </Box>
                 <DeleteAgileBoardDialog
                     id={agileBoard.id}

@@ -1,4 +1,4 @@
-import type { IssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 
 export type IssueRowViewParams = {
     showCustomFields?: boolean;
@@ -8,4 +8,5 @@ export type IssueRowViewParams = {
 
 export type IssueRowProps = {
     issue: IssueT;
+    onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
 } & IssueRowViewParams;
