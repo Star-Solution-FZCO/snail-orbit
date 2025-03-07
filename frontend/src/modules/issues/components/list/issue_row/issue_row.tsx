@@ -10,7 +10,7 @@ import { IssueRowFields } from "./issue_row_fields";
 import { UpdateTime } from "./update_time";
 
 export const IssueRow: FC<IssueRowProps> = memo(
-    ({ issue, showCustomFields, showDescription }) => {
+    ({ issue, showCustomFields, showDescription, onUpdateIssue }) => {
         const { subject, id_readable, text } = issue;
 
         return (
@@ -49,7 +49,12 @@ export const IssueRow: FC<IssueRowProps> = memo(
                 </IssueRowHeader>
 
                 {showDescription && <IssueRowBody>{text}</IssueRowBody>}
-                {showCustomFields && <IssueRowFields issue={issue} />}
+                {showCustomFields && (
+                    <IssueRowFields
+                        onUpdateIssue={onUpdateIssue}
+                        issue={issue}
+                    />
+                )}
             </IssueRowRoot>
         );
     },
