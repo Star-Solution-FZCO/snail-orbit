@@ -1,9 +1,11 @@
 # pylint: disable=wrong-import-position, import-outside-toplevel, ungrouped-imports
 from collections.abc import Awaitable, Callable
+from http import HTTPMethod, HTTPStatus
 
 import sentry_sdk
 from beanie import init_beanie
 from fastapi import FastAPI, Request, Response
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,6 +13,7 @@ from pydantic import BaseModel
 from starsol_fastapi_jwt_auth import AuthJWT
 from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
+from pm.api.views.output import ErrorOutput
 from pm.config import CONFIG
 from pm.version import APP_VERSION
 
@@ -56,6 +59,22 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+if CONFIG.RO_MODE:
+    RO_METHODS = {HTTPMethod.GET, HTTPMethod.HEAD, HTTPMethod.OPTIONS}
+
+    @app.middleware('http')
+    async def ro_mode_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if request.method in RO_METHODS:
+            return await call_next(request)
+        return JSONResponse(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            content=jsonable_encoder(
+                ErrorOutput(error_messages=['Server is in the read-only mode'])
+            ),
+        )
 
 
 @app.on_event('startup')
