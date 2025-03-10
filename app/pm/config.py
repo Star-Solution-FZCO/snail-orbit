@@ -76,6 +76,7 @@ CONFIG = Dynaconf(
     load_dotenv=True,
     validators=[
         Validator('DEV_MODE', cast=bool, default=False),
+        Validator('RO_MODE', cast=bool, default=False),
         Validator(
             'DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)
         ),
