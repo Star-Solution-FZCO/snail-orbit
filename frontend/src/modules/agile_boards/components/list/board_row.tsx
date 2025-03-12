@@ -30,9 +30,7 @@ export const BoardRow: FC<BoardRowProps> = ({ board }) => {
                 onClick={handleClickFavorite}
             />
             <Box sx={{ py: 1 }}>
-                <IssueLink to="/agiles/$boardId" params={{ boardId: board.id }}>
-                    {board.name}
-                </IssueLink>
+                <IssueLink to={`/agiles/${board.id}`}>{board.name}</IssueLink>
                 <Box sx={{ fontSize: 14 }}>{board.description}</Box>
             </Box>
         </Stack>

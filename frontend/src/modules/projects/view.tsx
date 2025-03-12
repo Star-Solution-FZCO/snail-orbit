@@ -46,6 +46,7 @@ const ProjectView = () => {
 
     const handleChangeTab = (_: SyntheticEvent, value: string) => {
         setCurrentTab(value);
+        // @ts-ignore
         navigate({ search: { tab: value } });
     };
 

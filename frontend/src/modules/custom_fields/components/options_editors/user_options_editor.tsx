@@ -155,8 +155,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
             .catch(toastApiError);
     };
 
-    const options =
-        data?.payload?.items?.filter((item) => item.type !== "group") || [];
+    const options = data?.payload?.items || [];
     const loading = dataLoading || dataFetching;
 
     useEffect(() => {
@@ -176,7 +175,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     alignItems: "center",
                 }}
             >
-                {t("customFields.user.add.title")}
+                {t("customFields.userOrGroup.add.title")}
 
                 <IconButton onClick={handleClose} size="small">
                     <CloseIcon />
@@ -194,8 +193,8 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label={t("customFields.users.title")}
-                            placeholder={t("customFields.users.select")}
+                            label={t("customFields.userOrGroup.title")}
+                            placeholder={t("customFields.userOrGroup.select")}
                             slotProps={{
                                 input: {
                                     ...params.InputProps,
@@ -373,7 +372,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
-                    {t("customFields.users.title")}
+                    {t("customFields.usersAndGroups.title")}
                 </Typography>
 
                 <IconButton onClick={handleClickAddUserOrGroup} size="small">
@@ -382,7 +381,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             </Box>
 
             {users.length === 0 && (
-                <Typography>{t("customFields.users.empty")}</Typography>
+                <Typography>{t("customFields.userOrGroup.empty")}</Typography>
             )}
 
             {users.map((user) => (
