@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 from http import HTTPStatus
 from typing import Annotated, Any
 from uuid import UUID, uuid4
@@ -440,6 +441,7 @@ async def create_issue_from_draft(
         obj.id_readable,
         [str(s) for s in obj.subscribers],
         str(project.id),
+        author=user_ctx.user.email,
     )
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
@@ -535,6 +537,7 @@ async def create_issue(
         obj.id_readable,
         [str(s) for s in obj.subscribers],
         str(project.id),
+        author=user_ctx.user.email,
     )
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
@@ -632,6 +635,7 @@ async def update_issue(
             obj.id_readable,
             [str(s) for s in obj.subscribers],
             str(obj.project.id),
+            author=user_ctx.user.email,
         )
         await send_event(
             Event(
@@ -665,6 +669,7 @@ async def delete_issue(
         obj.id_readable,
         [str(s) for s in obj.subscribers],
         str(obj.project.id),
+        author=user_ctx.user.email,
     )
     await send_event(
         Event(
