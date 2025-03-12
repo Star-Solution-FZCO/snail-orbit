@@ -81,7 +81,8 @@ const RoleList = () => {
                         {roles?.payload?.items?.map((role) => (
                             <Link
                                 key={role.id}
-                                to={`/roles/${role.id}`}
+                                to="/roles/$roleId"
+                                params={{ roleId: role.id }}
                                 fontWeight="bold"
                             >
                                 {role.name}

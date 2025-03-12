@@ -6,6 +6,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import { t } from "i18next";
 import type { FC } from "react";
+import { slugify } from "transliteration";
 import type { IssueT } from "types";
 import { HeadingControls } from "./heading_controls";
 import { IssueTags } from "./issue_tags";
@@ -49,6 +50,11 @@ const IssueHeading: FC<IIssueHeadingProps> = ({
             >
                 <Link
                     mr={1}
+                    to="/issues/$issueId/$subject"
+                    params={{
+                        issueId: issue.id,
+                        subject: slugify(issue.subject),
+                    }}
                     sx={(theme) => ({
                         color: issue.is_resolved
                             ? theme.palette.text.disabled
