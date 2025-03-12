@@ -5,20 +5,24 @@ import { Link } from "./link";
 
 type IssueLinkProps = {
     variant?: "default" | "silent";
+    lineThrough?: boolean;
+    resolved?: boolean;
 } & Omit<ComponentProps<typeof Link>, "variant">;
 
 // @ts-expect-error Complex problem with ESM modules
 export const IssueLink: StyledComponent<IssueLinkProps> = styled(Link, {
     name: "IssueLink",
-})<IssueLinkProps>(({ theme, variant }) => ({
-    color:
-        variant === "silent"
-            ? theme.palette.text.primary
-            : theme.palette.primary.main,
-    textDecoration: "none",
+})<IssueLinkProps>(({ theme, variant, lineThrough, resolved }) => ({
+    color: resolved
+        ? theme.palette.text.disabled
+        : variant === "silent"
+          ? theme.palette.text.primary
+          : theme.palette.primary.main,
+
+    textDecoration: lineThrough ? "line-through" : "none",
 
     "&:hover": {
-        color: theme.palette.primary.dark,
-        textDecoration: "underline",
+        color: theme.palette.primary.main,
+        textDecoration: lineThrough ? "line-through underline" : "underline",
     },
 }));

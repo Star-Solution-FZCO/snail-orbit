@@ -40,9 +40,9 @@ const App = () => {
                     <ToastContainer
                         position="bottom-right"
                         theme={theme.palette.mode}
+                        transition={Slide}
                         closeOnClick
                         stacked
-                        transition={Slide}
                     />
 
                     <RouterProvider router={router} />

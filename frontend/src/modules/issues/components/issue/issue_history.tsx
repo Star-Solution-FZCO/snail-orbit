@@ -30,7 +30,7 @@ const renderDiff = (oldText: string, newText: string) => {
             sx={{
                 fontSize: "inherit",
                 whiteSpace: "pre-wrap",
-                wordBreak: "break-all",
+                wordBreak: "break-word",
 
                 "& ins": {
                     textDecoration: "none",
