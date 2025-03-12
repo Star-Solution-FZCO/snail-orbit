@@ -2,8 +2,15 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
-import { Link } from "components";
+import {
+    IconButton,
+    Link,
+    Menu,
+    MenuItem,
+    Tooltip,
+    Typography,
+} from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,6 +30,7 @@ interface IHeadingControlsProps {
 export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -72,11 +80,17 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                     <Typography>
                         {t("issues.clone.created")}:{" "}
                         <Link
-                            to="/issues/$issueId/$subject"
-                            params={{
-                                issueId,
-                                subject: slugify(issue.subject),
-                            }}
+                            onClick={() =>
+                                navigate({
+                                    to: "/issues/$issueId/$subject",
+                                    params: {
+                                        issueId,
+                                        subject: slugify(
+                                            response.payload.subject,
+                                        ),
+                                    },
+                                })
+                            }
                         >
                             {issueId}
                         </Link>

@@ -139,6 +139,7 @@ const MDEditor: FC<IMDEditorProps> = ({
                 ...editorStyles,
                 "& .ck-editor__editable": {
                     minHeight: autoHeight ? "auto" : "300px",
+                    wordBreak: "break-word",
                 },
                 "& .ck-source-editing-area": {
                     minHeight: autoHeight ? "auto" : "300px",
@@ -149,7 +150,6 @@ const MDEditor: FC<IMDEditorProps> = ({
                 },
                 "& a": {
                     color: theme.palette.primary.main,
-                    wordBreak: "break-word",
                 },
             }}
         >
@@ -176,6 +176,7 @@ const MDEditor: FC<IMDEditorProps> = ({
                     }
                 }}
                 config={{
+                    licenseKey: "GPL",
                     plugins,
                     toolbar,
                     placeholder,
@@ -199,7 +200,7 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                 "& .markdown-body": {
                     backgroundColor: "inherit",
                     color: theme.palette.text.primary,
-                    wordBreak: "break-all",
+                    wordBreak: "break-word",
                     "& a": {
                         color: theme.palette.primary.main,
                         display: "-webkit-box",
