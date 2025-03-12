@@ -23,6 +23,7 @@ const GroupView = () => {
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
+        // @ts-ignore
         navigate({ search: { tab: value } });
     };
 

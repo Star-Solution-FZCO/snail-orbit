@@ -88,6 +88,7 @@ const AgileBoardView = () => {
 
     useEffect(() => {
         navigate({
+            // @ts-ignore
             search: (prev: { page?: number; query?: string }) => ({
                 ...prev,
                 query: debouncedSearch || undefined,
