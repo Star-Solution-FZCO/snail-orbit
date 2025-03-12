@@ -53,7 +53,11 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                     {project.name.slice(0, 3).toUpperCase()}
                 </Avatar>
 
-                <Link to={`/projects/${project.id}`} fontWeight="bold">
+                <Link
+                    to="/projects/$projectId"
+                    params={{ projectId: project.id }}
+                    fontWeight="bold"
+                >
                     {project.name}
                 </Link>
             </Box>
