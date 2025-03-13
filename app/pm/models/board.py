@@ -1,3 +1,4 @@
+from itertools import chain
 from typing import Annotated
 
 from beanie import Document, Indexed, PydanticObjectId
@@ -13,7 +14,7 @@ from .permission import (
     _filter_permissions,
 )
 from .project import PermissionTargetType, ProjectLinkField
-from .user import User, UserLinkField
+from .user import UserLinkField
 
 __all__ = ('Board',)
 
@@ -58,19 +59,22 @@ class Board(Document):
             > 0
         )
 
-    def filter_permissions(self, user: User) -> list[PermissionRecord]:
-        return _filter_permissions(self, user)
+    def filter_permissions(self, user_ctx) -> list[PermissionRecord]:
+        return _filter_permissions(self, user_ctx)
 
     @staticmethod
-    def get_filter_query(user: User) -> dict:
+    def get_filter_query(user_ctx) -> dict:
         permission_type = {'$in': [l.value for l in PermissionType]}
+        user_groups = [
+            g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
+        ]
         return {
             '$or': [
                 {
                     'permissions': {
                         '$elemMatch': {
                             'target_type': PermissionTargetType.USER,
-                            'target.id': user.id,
+                            'target.id': user_ctx.user.id,
                             'permission_type': permission_type,
                         }
                     }
@@ -79,7 +83,7 @@ class Board(Document):
                     'permissions': {
                         '$elemMatch': {
                             'target_type': PermissionTargetType.GROUP,
-                            'target.id': {'$in': [g.id for g in user.groups]},
+                            'target.id': {'$in': user_groups},
                             'permission_type': permission_type,
                         }
                     }
@@ -87,12 +91,10 @@ class Board(Document):
             ]
         }
 
-    def check_permissions(
-        self, user: User, required_permission: PermissionType
-    ) -> bool:
+    def check_permissions(self, user_ctx, required_permission: PermissionType) -> bool:
         return _check_permissions(
             permissions=self.permissions,
-            user=user,
+            user_ctx=user_ctx,
             required_permission=required_permission,
         )
 
@@ -135,4 +137,41 @@ class Board(Document):
         await cls.find(cls.card_colors_fields.id == field.id).update(
             {'$set': {'card_colors_fields.$[f]': field}},
             array_filters=[{'f.id': field.id}],
+        )
+
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: 'Group',
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group.id,
+        ).update(
+            {'$set': {'permissions.$[p].target': GroupLinkField.from_obj(group)}},
+            array_filters=[
+                {
+                    'p.target.id': group.id,
+                    'p.target_type': PermissionTargetType.GROUP.value,
+                }
+            ],
+        )
+
+    @classmethod
+    async def remove_group_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group_id,
+        ).update(
+            {
+                '$pull': {
+                    'permissions': {
+                        'target_type': PermissionTargetType.GROUP.value,
+                        'target.id': group_id,
+                    }
+                }
+            },
         )

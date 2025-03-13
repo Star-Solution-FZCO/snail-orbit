@@ -90,8 +90,7 @@ class BoardOutput(BaseModel):
             ui_settings=obj.ui_settings,
             created_by=UserOutput.from_obj(obj.created_by),
             permissions=[
-                PermissionOutput.from_obj(p)
-                for p in obj.filter_permissions(user_ctx.user)
+                PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
             ],
             is_favorite=obj.is_favorite_of(user_ctx.user.id),
         )
@@ -140,7 +139,7 @@ async def list_boards(
     query: ListParams = Depends(),
 ) -> BaseListOutput[BoardOutput]:
     user_ctx = current_user()
-    filter_query = m.Board.get_filter_query(user=user_ctx.user)
+    filter_query = m.Board.get_filter_query(user_ctx=user_ctx)
     q = m.Board.aggregate(
         [
             {'$match': filter_query},
@@ -248,7 +247,7 @@ async def get_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
 
@@ -262,7 +261,7 @@ async def update_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+    if not board.check_permissions(user_ctx, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this board')
     data = body.dict(exclude_unset=True)
     for k in ('name', 'description', 'query', 'ui_settings'):
@@ -371,7 +370,7 @@ async def delete_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+    if not board.check_permissions(user_ctx, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this board')
     await board.delete()
     return ModelIdOutput.make(board_id)
@@ -387,7 +386,7 @@ async def get_board_issues(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
 
     q = m.Issue.find(
@@ -514,7 +513,7 @@ async def move_issue(
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to use this board')
     issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
@@ -698,7 +697,7 @@ async def grant_permission(
     if not board:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not board.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this board',
@@ -735,7 +734,7 @@ async def change_permission(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not board.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(
             HTTPStatus.FORBIDDEN,
             'You cannot modify permissions for this board',
@@ -767,7 +766,7 @@ async def revoke_permission(
     if not board:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not board.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this board',
@@ -797,7 +796,7 @@ async def get_board_permissions(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not board.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot view board permissions')
     return BaseListOutput.make(
         count=len(board.permissions),
@@ -818,7 +817,7 @@ async def favorite_board(
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
     if board.is_favorite_of(user_ctx.user.id):
         raise HTTPException(HTTPStatus.CONFLICT, 'Board already in favorites')
@@ -835,7 +834,7 @@ async def unfavorite_board(
     board = await m.Board.find_one(m.Board.id == board_id)
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
-    if not board.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
     if not board.is_favorite_of(user_ctx.user.id):
         raise HTTPException(HTTPStatus.CONFLICT, 'Board is not in favorites')
