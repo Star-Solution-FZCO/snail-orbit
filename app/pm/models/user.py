@@ -16,7 +16,7 @@ from pm.config import DB_ENCRYPTION_KEY
 from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
-from .group import GroupLinkField
+from .group import Group, GroupLinkField
 
 __all__ = (
     'APIToken',
@@ -265,3 +265,24 @@ class User(Document):
         if not self.totp:
             return False
         return self.totp.check_code(code)
+
+    @classmethod
+    async def remove_group_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find({'groups.id': group_id}).update_many(
+            {'$pull': {'groups': {'id': group_id}}}
+        )
+
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: Group,
+    ) -> None:
+        await cls.find(
+            cls.groups.id == group.id,
+        ).update_many(
+            {'$set': {'groups.$[g]': GroupLinkField.from_obj(group).model_dump()}},
+            array_filters=[{'g.id': group.id}],
+        )

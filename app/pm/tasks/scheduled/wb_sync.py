@@ -23,13 +23,17 @@ async def wb_user_sync() -> None:
         if user.email not in users:
             if not user.active and not CONFIG.WB_USER_SYNC_ADD_MISSED_INACTIVE:
                 continue
-            await m.User.insert_one(
+            obj = await m.User.insert_one(
                 m.User(
                     email=user.email,
                     name=user.english_name,
                     is_active=user.active,
                     origin=m.UserOriginType.WB,
                 )
+            )
+            await asyncio.gather(
+                m.UserMultiCustomField.add_option_predefined_scope(obj),
+                m.UserCustomField.add_option_predefined_scope(obj),
             )
             continue
         if (

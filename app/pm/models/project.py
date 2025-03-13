@@ -85,9 +85,13 @@ class Project(Document):
         )
         return f'{self.slug}-{self.issue_counter}'
 
-    def get_user_permissions(self, user: User) -> set[Permissions]:
+    def get_user_permissions(
+        self, user: User, predefined_groups: list['m.Group']
+    ) -> set[Permissions]:
         results = set()
-        user_groups = {gr.id for gr in user.groups}
+        user_groups = {gr.id for gr in user.groups}.union(
+            {gr.id for gr in predefined_groups}
+        )
         for perm in self.permissions:
             if (
                 perm.target_type == PermissionTargetType.USER

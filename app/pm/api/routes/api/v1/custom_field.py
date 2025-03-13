@@ -449,7 +449,10 @@ async def add_user_option(
         gr: m.Group | None = await m.Group.find_one(m.Group.id == body.value)
         if not gr:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
-        users = await m.User.find(m.User.groups.id == gr.id).to_list()
+        if gr.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
+            users = await m.User.find().to_list()
+        else:
+            users = await m.User.find(m.User.groups.id == gr.id).to_list()
         value = m.GroupOption(
             group=m.GroupLinkField.from_obj(gr),
             users=[m.UserLinkField.from_obj(user) for user in users],

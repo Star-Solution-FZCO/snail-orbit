@@ -2,18 +2,19 @@ from collections.abc import Mapping
 from typing import Annotated, Any
 
 import beanie.operators as bo
-from beanie import Document, Indexed
+from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
 from ._audit import audited_model
 from .group import GroupLinkField
 from .permission import (
     PermissionRecord,
+    PermissionTargetType,
     PermissionType,
     _check_permissions,
     _filter_permissions,
 )
-from .user import User, UserLinkField
+from .user import UserLinkField
 
 __all__ = ('Search',)
 
@@ -52,14 +53,49 @@ class Search(Document):
             > 0
         )
 
-    def filter_permissions(self, user: User) -> list[PermissionRecord]:
-        return _filter_permissions(self, user)
+    def filter_permissions(self, user_ctx) -> list[PermissionRecord]:
+        return _filter_permissions(self, user_ctx)
 
-    def check_permissions(
-        self, user: User, required_permission: PermissionType
-    ) -> bool:
+    def check_permissions(self, user_ctx, required_permission: PermissionType) -> bool:
         return _check_permissions(
             permissions=self.permissions,
-            user=user,
+            user_ctx=user_ctx,
             required_permission=required_permission,
+        )
+
+    @classmethod
+    async def remove_group_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group_id,
+        ).update(
+            {
+                '$pull': {
+                    'permissions': {
+                        'target_type': PermissionTargetType.GROUP.value,
+                        'target.id': group_id,
+                    }
+                }
+            },
+        )
+
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: 'Group',
+    ) -> None:
+        await cls.find(
+            cls.permissions.target_type == PermissionTargetType.GROUP,
+            cls.permissions.target.id == group.id,
+        ).update(
+            {'$set': {'permissions.$[p].target': GroupLinkField.from_obj(group)}},
+            array_filters=[
+                {
+                    'p.target.id': group.id,
+                    'p.target_type': PermissionTargetType.GROUP.value,
+                }
+            ],
         )
