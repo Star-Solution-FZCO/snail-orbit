@@ -19,7 +19,7 @@ async def init_db() -> None:
 
 
 async def create_user(args: argparse.Namespace) -> None:
-    from pm.models import User
+    from pm.models import User, UserCustomField, UserMultiCustomField
     from pm.services.avatars import generate_default_avatar
 
     await init_db()
@@ -32,6 +32,10 @@ async def create_user(args: argparse.Namespace) -> None:
     user.password_hash = User.hash_password(password)
     await user.insert()
     await generate_default_avatar(user)
+    await asyncio.gather(
+        UserMultiCustomField.add_option_predefined_scope(user),
+        UserCustomField.add_option_predefined_scope(user),
+    )
     print(f'User {args.email} created successfully, id={user.id}')
 
 

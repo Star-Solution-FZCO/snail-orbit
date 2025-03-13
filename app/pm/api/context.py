@@ -1,9 +1,10 @@
 from collections.abc import AsyncGenerator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha1
 from http import HTTPStatus
 from typing import cast
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -30,6 +31,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 class UserContext:
     user: m.User
     permissions: dict[PydanticObjectId, set[Permissions]]
+    predefined_groups: list = field(default_factory=list)
 
     def has_permission(
         self, project_id: PydanticObjectId, permission: PermissionT
@@ -92,12 +94,25 @@ async def user_dependency(
     return user
 
 
+async def resolve_predefined_groups() -> list['m.Group']:
+    predefined_groups = await m.Group.find(
+        bo.NE(m.Group.predefined_scope, None)
+    ).to_list()
+    output = []
+    for group in predefined_groups:
+        if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
+            output.append(m.GroupLinkField.from_obj(group))
+    return output
+
+
 async def current_user_context_dependency(
     user: 'm.User' = Depends(user_dependency),
 ) -> AsyncGenerator:
+    predefined_groups = await resolve_predefined_groups()
     ctx = UserContext(
         user=user,
-        permissions=await resolve_user_permissions(user),
+        permissions=await resolve_user_permissions(user, predefined_groups),
+        predefined_groups=predefined_groups,
     )
     data = {'current_user': ctx}
     with request_cycle_context(data):
@@ -120,10 +135,10 @@ async def admin_context_dependency(
 
 
 async def resolve_user_permissions(
-    user: m.User,
+    user: m.User, predefined_groups: list['m.Group']
 ) -> dict[PydanticObjectId, set[Permissions]]:
     projects = await m.Project.find_all().to_list()
-    return {pr.id: pr.get_user_permissions(user) for pr in projects}
+    return {pr.id: pr.get_user_permissions(user, predefined_groups) for pr in projects}
 
 
 async def get_user_from_service_token(token: str, request: Request) -> m.User | None:

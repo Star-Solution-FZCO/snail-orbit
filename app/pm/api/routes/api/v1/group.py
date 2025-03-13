@@ -40,6 +40,7 @@ class GroupFullOutput(BaseModel):
 class GroupCreate(BaseModel):
     name: str
     description: str | None = None
+    predefined_scope: m.PredefinedGroupScope | None = None
 
 
 class GroupUpdate(BaseModel):
@@ -76,7 +77,11 @@ async def get_group(
 async def create_group(
     body: GroupCreate,
 ) -> SuccessPayloadOutput[GroupFullOutput]:
-    obj = m.Group(name=body.name, description=body.description)
+    obj = m.Group(
+        name=body.name,
+        description=body.description,
+        predefined_scope=body.predefined_scope,
+    )
     await obj.insert()
     return SuccessPayloadOutput(payload=GroupFullOutput.from_obj(obj))
 
@@ -99,6 +104,9 @@ async def update_group(
             m.Project.update_group_embedded_links(obj),
             m.UserCustomField.update_group_embedded_links(obj),
             m.UserMultiCustomField.update_group_embedded_links(obj),
+            m.User.update_group_embedded_links(obj),
+            m.Board.update_group_embedded_links(obj),
+            m.Search.update_group_embedded_links(obj),
         )
     return SuccessPayloadOutput(payload=GroupFullOutput.from_obj(obj))
 
@@ -115,6 +123,9 @@ async def delete_group(
         m.Project.remove_group_embedded_links(group_id),
         m.UserCustomField.remove_group_embedded_links(group_id),
         m.UserMultiCustomField.remove_group_embedded_links(group_id),
+        m.User.remove_group_embedded_links(group_id),
+        m.Board.remove_group_embedded_links(group_id),
+        m.Search.remove_group_embedded_links(group_id),
     )
     return ModelIdOutput.make(group_id)
 
@@ -127,7 +138,10 @@ async def list_group_members(
     group = await m.Group.find_one(m.Group.id == group_id)
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    q = m.User.find(m.User.groups.id == group.id).sort(m.User.name)
+    if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
+        q = m.User.find().sort(m.User.name)
+    else:
+        q = m.User.find(m.User.groups.id == group.id).sort(m.User.name)
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
@@ -146,6 +160,8 @@ async def add_group_member(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     if group.origin != m.GroupOriginType.LOCAL:
         raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot add member to external group')
+    if group.predefined_scope:
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot add member to group')
     user: m.User | None = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
@@ -172,6 +188,8 @@ async def remove_group_member(
         raise HTTPException(
             HTTPStatus.FORBIDDEN, 'Cannot remove member from external group'
         )
+    if group.predefined_scope:
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot remove member from group')
     user = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')

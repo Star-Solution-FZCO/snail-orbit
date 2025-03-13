@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from itertools import chain
 from typing import Annotated, Self
 from uuid import UUID
 
@@ -47,8 +48,7 @@ class SearchOutput(BaseModel):
             description=obj.description,
             created_by=UserOutput.from_obj(obj.created_by),
             permissions=[
-                PermissionOutput.from_obj(p)
-                for p in obj.filter_permissions(user_ctx.user)
+                PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
             ],
         )
 
@@ -78,7 +78,9 @@ async def list_searches(
     query: ListParams = Depends(),
 ) -> BaseListOutput[SearchOutput]:
     user_ctx = current_user()
-    user_groups = [g.id for g in user_ctx.user.groups]
+    user_groups = [
+        g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
+    ]
     permission_type = {'$in': [l.value for l in m.PermissionType]}
     filter_query = {
         '$or': [
@@ -161,7 +163,7 @@ async def get_search(
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
     user_ctx = current_user()
-    if not search.check_permissions(user_ctx.user, m.PermissionType.VIEW):
+    if not search.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this search')
     return SuccessPayloadOutput(payload=SearchOutput.from_obj(search))
 
@@ -172,7 +174,7 @@ async def delete_search(search_id: PydanticObjectId) -> ModelIdOutput:
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
-    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not search.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this search')
     await search.delete()
     return ModelIdOutput.from_obj(search)
@@ -187,10 +189,10 @@ async def update_search(
     if not search:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Search not found')
     user_ctx = current_user()
-    if not search.check_permissions(user_ctx.user, m.PermissionType.EDIT):
+    if not search.check_permissions(user_ctx, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this search')
     if body.permissions:
-        if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+        if not search.check_permissions(user_ctx, m.PermissionType.ADMIN):
             raise HTTPException(
                 HTTPStatus.FORBIDDEN, 'You cannot modify permissions for this search'
             )
@@ -224,7 +226,7 @@ async def grant_permission(
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Search not found')
-    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not search.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this search',
@@ -252,7 +254,7 @@ async def revoke_permission(
     search = await m.Search.find_one(m.Search.id == search_id)
     if not search:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Search not found')
-    if not search.check_permissions(user_ctx.user, m.PermissionType.ADMIN):
+    if not search.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You cannot modify permissions for this search',
