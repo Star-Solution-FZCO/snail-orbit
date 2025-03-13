@@ -576,6 +576,7 @@ async def move_issue(
             issue.id_readable,
             [str(s) for s in issue.subscribers],
             str(issue.project.id),
+            author=user_ctx.user.email,
         )
         await send_event(
             Event(
