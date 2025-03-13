@@ -5,7 +5,7 @@ from uuid import UUID
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field
 
-from pm.models.group import Group, GroupLinkField
+from pm.models.group import Group, GroupLinkField, PredefinedGroupScope
 from pm.models.user import User, UserLinkField
 
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
@@ -130,6 +130,28 @@ class UserCustomFieldMixin:
             {'$pull': {'options.$[o].value.users': {'id': user.id}}},
             array_filters=[
                 {'o.value.users.id': user.id, 'o.type': UserOptionType.GROUP},
+            ],
+        )
+
+    @classmethod
+    async def add_option_predefined_scope(cls, user: User) -> None:
+        await cls.find(
+            {
+                'options': {
+                    '$elemMatch': {
+                        'type': UserOptionType.GROUP,
+                        'value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
+                        'value.users.id': {'$ne': user.id},
+                    }
+                }
+            }
+        ).update(
+            {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
+            array_filters=[
+                {
+                    'o.value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
+                    'o.type': UserOptionType.GROUP,
+                }
             ],
         )
 

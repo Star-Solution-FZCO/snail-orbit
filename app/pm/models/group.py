@@ -12,6 +12,7 @@ __all__ = (
     'Group',
     'GroupLinkField',
     'GroupOriginType',
+    'PredefinedGroupScope',
 )
 
 
@@ -20,10 +21,15 @@ class GroupOriginType(StrEnum):
     WB = 'wb'
 
 
+class PredefinedGroupScope(StrEnum):
+    ALL_USERS = 'all_users'
+
+
 class GroupLinkField(BaseModel):
     id: PydanticObjectId
     name: str
     description: str | None
+    predefined_scope: PredefinedGroupScope | None = None
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GroupLinkField):
@@ -36,6 +42,7 @@ class GroupLinkField(BaseModel):
             id=obj.id,
             name=obj.name,
             description=obj.description,
+            predefined_scope=obj.predefined_scope,
         )
 
 
@@ -51,6 +58,7 @@ class Group(Document):
     description: str | None = None
     origin: GroupOriginType = GroupOriginType.LOCAL
     external_id: str | None = None
+    predefined_scope: PredefinedGroupScope | None = None
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
