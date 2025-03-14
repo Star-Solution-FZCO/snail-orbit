@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { customFieldsApi, issueApi } from "store";
 import { fieldToFieldValue } from "store/utils/issue";
 import type { CustomFieldT } from "types";
-import { CustomFieldsParser } from "widgets/issue/CustomFieldsParser/CustomFieldsParser";
+import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddCustomFieldButton } from "./add_custom_field_button";
 
 type QueryBuilderProps = {

@@ -9,7 +9,7 @@ import UserChip from "features/custom_fields/user_chip";
 import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
 import type { FieldValueT } from "types";
-import type { CustomFieldsChipParserProps } from "./CustomFieldChipParser.types";
+import type { CustomFieldsChipParserProps } from "./custom_field_chip_parser.types";
 
 dayjs.extend(utc);
 

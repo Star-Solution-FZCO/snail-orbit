@@ -11,6 +11,7 @@ import { issueApi, useAppDispatch } from "store";
 import { slugify } from "transliteration";
 import { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
+import { IssueModal } from "../components/issue/issue_modal";
 import IssueViewComponent from "../components/issue/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/$issueId");
@@ -115,6 +116,15 @@ const IssueView: FC = () => {
                         />
                     </>
                 )
+            )}
+
+            {issue && (
+                <IssueModal
+                    open
+                    issue={issue}
+                    onUpdateIssue={handleSubmit}
+                    onUpdateCache={handleUpdateCache}
+                />
             )}
         </Container>
     );
