@@ -9,7 +9,7 @@ import { VersionField } from "features/custom_fields/version_field";
 import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
 import type { CustomFieldValueT, FieldValueT } from "types";
-import type { CustomFieldsParserProps } from "./CustomFieldsParser.types";
+import type { CustomFieldsParserProps } from "./custom_fields_parser.types";
 import { getUserFieldValue } from "./utils";
 
 dayjs.extend(utc);

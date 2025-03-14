@@ -13,7 +13,7 @@ import {
     UiSettingT,
     UpdateIssueT,
 } from "types";
-import { CustomFieldsChipParser } from "widgets/issue/CustomFieldChipParser/CustomFieldChipParser";
+import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 
 export type IssueCardProps = {
     issue: IssueT;
