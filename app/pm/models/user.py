@@ -25,6 +25,8 @@ __all__ = (
     'UserOriginType',
     'UserAvatarType',
     'TOTPSettings',
+    'EncryptionKey',
+    'EncryptionKeyAlgorithmT',
 )
 
 
@@ -146,6 +148,21 @@ class TOTPSettings(BaseModel):
         return self._get_verifier().url(name, issuer=issuer)
 
 
+class EncryptionKeyAlgorithmT(StrEnum):
+    RSA = 'RSA'
+    ED25519 = 'ED25519'
+
+
+class EncryptionKey(BaseModel):
+    name: str
+    public_key: str
+    fingerprint: str
+    algorithm: EncryptionKeyAlgorithmT
+    is_active: bool = True
+    created_on: str | None = None
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+
 @audited_model
 class User(Document):
     class Settings:
@@ -167,6 +184,7 @@ class User(Document):
     origin: UserOriginType = UserOriginType.LOCAL
     avatar_type: UserAvatarType = UserAvatarType.DEFAULT
     ui_settings: Annotated[dict, Field(default_factory=dict)]
+    encryption_keys: Annotated[list[EncryptionKey], Field(default_factory=list)]
 
     @property
     def use_external_avatar(self) -> bool:
