@@ -16,7 +16,7 @@ import { FC, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { formatSpentTime, toastApiError } from "utils";
-import { useUploadToast } from "../../utils";
+import { useUploadToast } from "../../../utils";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
 

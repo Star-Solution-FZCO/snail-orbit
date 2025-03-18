@@ -8,15 +8,15 @@ import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import type { IssueT, UpdateIssueT } from "types";
 import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
-import { AddLinks } from "./add_links";
-import { FieldContainer } from "./field_container";
-import { IssueActivities } from "./issue_activities";
-import { IssueAttachments } from "./issue_attachments";
-import { IssueForm } from "./issue_form";
-import { IssueHeading } from "./issue_heading";
-import { IssueLinks } from "./issue_links";
-import { IssueMeta } from "./issue_meta";
-import { IssueTags } from "./issue_tags";
+import { AddLinks } from "./components/add_links";
+import { FieldContainer } from "./components/field_container";
+import { IssueActivities } from "./components/issue_activities";
+import { IssueAttachments } from "./components/issue_attachments";
+import { IssueForm } from "./components/issue_form";
+import { IssueHeading } from "./components/issue_heading";
+import { IssueLinks } from "./components/issue_links";
+import { IssueMeta } from "./components/issue_meta";
+import { IssueTags } from "./components/issue_tags";
 
 type IssueFormProps = {
     issue: IssueT;
