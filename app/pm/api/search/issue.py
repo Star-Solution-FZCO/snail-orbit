@@ -503,7 +503,7 @@ async def _transform_tree_and_extract_context(
     except TransformError as exc:
         orig_exc = getattr(exc, 'orig_exc', None)
         if orig_exc and isinstance(orig_exc, UnexpectedToken):
-            if any(keyword in ('_COLON',) for keyword in exc.expected):
+            if any(keyword in ('_COLON', 'FIELD_NAME') for keyword in exc.expected):
                 return transform_text_search(node.expression)
             if exc.position > 0 and node.expression[exc.position - 1].isspace():
                 whitespace_start = exc.position - 1
