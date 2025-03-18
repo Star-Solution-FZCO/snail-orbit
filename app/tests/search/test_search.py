@@ -2053,6 +2053,11 @@ SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         id='plain search context with quoted string',
     ),
     pytest.param(
+        'テキストです',
+        {'$text': {'$search': 'テキストです'}},
+        id='plain search context　(non-ascii)',
+    ),
+    pytest.param(
         'subject: bug report',
         {
             '$and': [
@@ -2061,6 +2066,40 @@ SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
             ]
         },
         id='basic invalid subject search',
+    ),
+    pytest.param(
+        'State: open AND report',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'open',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'report'}},
+            ]
+        },
+        id='search left over after valid field with and operator',
+    ),
+    pytest.param(
+        'State: Closed AND #unknownhashtag',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'Closed',
+                        }
+                    }
+                },
+                {'$text': {'$search': '#unknownhashtag'}},
+            ]
+        },
+        id='state open and unknown hashtag',
     ),
     pytest.param(
         'State: open #',
@@ -2699,11 +2738,6 @@ async def test_suggestions(
             'State: Closed AND ))',
             'Invalid bracket ")" at position 18',
             id='closed brackets at end of expression',
-        ),
-        pytest.param(
-            'State: Closed AND #unknownhashtag',
-            'Failed to parse query',
-            id='state open and unknown hashtag',
         ),
         pytest.param(
             '#resolved',
