@@ -10,7 +10,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
 import { formatErrorMessages, usePaginationParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
-import { SearchField } from "../components/issue/search_field";
+import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/query_builder/query_builder";
 

@@ -10,7 +10,7 @@ import {
     IconButton,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi } from "store";

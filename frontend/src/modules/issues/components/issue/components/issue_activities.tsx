@@ -24,6 +24,7 @@ import { formatSpentTime, toastApiError, useListQueryParams } from "utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
 import { IssueHistory } from "./issue_history";
+
 const ActivityTypeButton = styled(Button, {
     shouldForwardProp: (name) => name !== "enabled",
 })<{ enabled?: boolean }>(({ theme, enabled }) => ({

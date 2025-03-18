@@ -3,7 +3,7 @@ import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
 import { memo } from "react";
 import { slugify } from "transliteration";
-import { IssueTags } from "../../issue/issue_tags";
+import { IssueTags } from "../../issue/components/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
 import type { IssueRowProps } from "./issue_row.types";
 import { IssueRowFields } from "./issue_row_fields";
