@@ -36,6 +36,11 @@ def _custom_fields():
             'is_nullable': True,
         },
         {
+            'name': 'Float',
+            'type': CustomFieldTypeT.FLOAT,
+            'is_nullable': True,
+        },
+        {
             'name': 'Date',
             'type': CustomFieldTypeT.DATE,
             'is_nullable': True,
@@ -299,11 +304,6 @@ TEST_SUBJECT_RESERVED_FIELD_PYTEST_PARAMS = [
         {'subject': {'$regex': 'Issue\\ \\#123', '$options': 'i'}},
         id='basic subject search',
     ),
-    pytest.param(
-        'subject: bug report',
-        'Failed to parse query',
-        id='basic invalid subject search',
-    ),
     pytest.param('subject: null', {'subject': None}, id='subject null search'),
 ]
 TEST_TEXT_RESERVED_FIELD_PYTEST_PARAMS = [
@@ -312,12 +312,12 @@ TEST_TEXT_RESERVED_FIELD_PYTEST_PARAMS = [
         {'$text': {'$search': 'search query'}},
         id='basic text search',
     ),
-    pytest.param(
-        'text: search query',
-        'Failed to parse query',
-        id='basic invalid text search',
-    ),
     pytest.param('text: null', {'text': None}, id='text null search'),
+    pytest.param(
+        'text: search AND text: search',
+        'Failed to parse query',
+        id='invalid text search > 1 text field',
+    ),
 ]
 TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
     [
@@ -390,7 +390,6 @@ TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
             ('2024-01-01T12:60:00', 'invalid minute of datetime'),
             ('2024-01-01T24:00:00', 'invalid hour of datetime'),
             ('2024/01/01', 'forward slashes'),
-            ('2024-01-01 12:00:00', 'space instead of T'),
             ('2024-01-01T12', 'datetime field without minutes and seconds'),
         ]
     ]
@@ -739,16 +738,6 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
             }
         },
         id='relative search in datetime field with range "this week..inf"',
-    ),
-    pytest.param(
-        'Datetime: this week -14d',
-        'Failed to parse query',
-        id='invalid relative search in datetime field with value "this week -14d"',
-    ),
-    pytest.param(
-        'Datetime: this week -14d..inf',
-        'Failed to parse query',
-        id='invalid relative search in datetime field with value "this week -14d..inf"',
     ),
     pytest.param(
         'Datetime: today -1d -14h +2h',
@@ -1147,16 +1136,6 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         id='relative search in date field with range "this week..inf"',
     ),
     pytest.param(
-        'Date: this week -10d',
-        'Failed to parse query',
-        id='invalid relative search in date field with value "this week -10d"',
-    ),
-    pytest.param(
-        'Date: this week -10d..inf',
-        'Failed to parse query',
-        id='invalid relative search in date field with value "this week -10d..inf"',
-    ),
-    pytest.param(
         'Date: today -2d -8h +3h',
         {
             'fields': {
@@ -1187,6 +1166,1031 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         id='relative search in date field with complex range offset "now +5d +3h..now +15d -4h"',
     ),
 ]
+TEST_USER_FIELD_PYTEST_PARAMS = [
+    pytest.param(
+        'Assignee: valid@example.com',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': 'valid@example.com',
+                }
+            }
+        },
+        id='user field with value valid@example.com',
+    ),
+    pytest.param(
+        'Assignee: user.name+tag@sub.example.co.uk.ex.ex',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': 'user.name+tag@sub.example.co.uk.ex.ex',
+                }
+            }
+        },
+        id='user field with value user.name+tag@sub.example.co.uk.ex.ex',
+    ),
+    pytest.param(
+        'Assignee: first.last@example.ex',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': 'first.last@example.ex',
+                }
+            }
+        },
+        id='user field with value first.last@example.ex',
+    ),
+    pytest.param(
+        'Assignee: example@example-company.domen',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': 'example@example-company.domen',
+                }
+            }
+        },
+        id='user field with value example@example-company.domen',
+    ),
+    pytest.param(
+        'Assignee: invalid-email.com',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': 'invalid-email.com',
+                }
+            }
+        },
+        id='invalid email missing @',
+    ),
+    pytest.param(
+        'Assignee: @missinglocal.com',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': '@missinglocal.com',
+                }
+            }
+        },
+        id='invalid email missing local part',
+    ),
+]
+SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
+    pytest.param(
+        'Assignee: real@email.com test1 test2',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'real@email.com',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'test1 test2'}},
+            ]
+        },
+        id='user field with valid value real@email.com and search context test1 test2',
+    ),
+    pytest.param(
+        'Assignee: @missinglocal.com test',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': '@missinglocal.com',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'test'}},
+            ]
+        },
+        id='user field with invalid value @missinglocal.com and search context test',
+    ),
+    pytest.param(
+        'String: hello world additional search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'hello',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'world additional search context'}},
+            ]
+        },
+        id='string field with value "hello" and search context',
+    ),
+    pytest.param(
+        'String: "quoted value" remaining text',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'quoted value',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'remaining text'}},
+            ]
+        },
+        id='string field with quoted value and search context',
+    ),
+    pytest.param(
+        'Integer: 123 find this issue',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': 123.0,
+                        }
+                    }
+                },
+                {'$text': {'$search': 'find this issue'}},
+            ]
+        },
+        id='integer field with value 123 and search context',
+    ),
+    pytest.param(
+        'Integer: 0..100 priority issues',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': {'$gte': 0.0, '$lte': 100.0},
+                        }
+                    }
+                },
+                {'$text': {'$search': 'priority issues'}},
+            ]
+        },
+        id='integer field with range 0..100 and search context',
+    ),
+    pytest.param(
+        'Integer: 123.456 calculation results',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': 123.456,
+                        }
+                    }
+                },
+                {'$text': {'$search': 'calculation results'}},
+            ]
+        },
+        id='float field with value 123.456 and search context',
+    ),
+    pytest.param(
+        'Float: 123.456calculation results',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^float$', '$options': 'i'},
+                            'value': '123.456calculation',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'results'}},
+            ]
+        },
+        id='float field with value 123.456calculation and search context',
+    ),
+    pytest.param(
+        'Feature: true needs testing',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^feature$', '$options': 'i'},
+                            'value': True,
+                        }
+                    }
+                },
+                {'$text': {'$search': 'needs testing'}},
+            ]
+        },
+        id='boolean field with value true and search context',
+    ),
+    pytest.param(
+        'Feature: false deprecated functionality',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^feature$', '$options': 'i'},
+                            'value': False,
+                        }
+                    }
+                },
+                {'$text': {'$search': 'deprecated functionality'}},
+            ]
+        },
+        id='boolean field with value false and search context',
+    ),
+    pytest.param(
+        'Date: 2024-02-20 notes',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': date(2024, 2, 20),
+                        }
+                    }
+                },
+                {'$text': {'$search': 'notes'}},
+            ]
+        },
+        id='date field with value 2024-02-20 and search context',
+    ),
+    pytest.param(
+        'Date: today dev',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                                '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': 'dev'}},
+            ]
+        },
+        id='date field with relative value "today" and search context',
+    ),
+    pytest.param(
+        'Datetime: 2024-02-20T14:30:00 release notes',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': datetime(2024, 2, 20, 14, 30, 0),
+                        }
+                    }
+                },
+                {'$text': {'$search': 'release notes'}},
+            ]
+        },
+        id='datetime field with value 2024-02-20T14:30:00 and search context',
+    ),
+    pytest.param(
+        'Datetime: this week -14d',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 19, 0, 0),
+                                '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': '-14d'}},
+            ]
+        },
+        id='datetime field with value "this week -14d" and search context',
+    ),
+    pytest.param(
+        'Datetime: this week -14d..inf',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 19, 0, 0),
+                                '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': '-14d..inf'}},
+            ]
+        },
+        id='datetime field with value "this week -14d..inf" and search context',
+    ),
+    pytest.param(
+        'Datetime: now..now +2h upcoming issues',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 20, 12, 12, 0, 0),
+                                '$lte': datetime(2024, 2, 20, 14, 12, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': 'upcoming issues'}},
+            ]
+        },
+        id='datetime field with relative range "now..now +2h" and search context',
+    ),
+    pytest.param(
+        'Priority: High urgent issues',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'High',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'urgent issues'}},
+            ]
+        },
+        id='enum field with value High and search context',
+    ),
+    pytest.param(
+        'Priority: null unassigned',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': None,
+                        }
+                    }
+                },
+                {'$text': {'$search': 'unassigned'}},
+            ]
+        },
+        id='enum field with null value and search context',
+    ),
+    pytest.param(
+        'State: open active tickets',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'open',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'active tickets'}},
+            ]
+        },
+        id='state field with value open and search context',
+    ),
+    pytest.param(
+        'H-State: closed archived items',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^h-state$', '$options': 'i'},
+                            'value.value': 'closed',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'archived items'}},
+            ]
+        },
+        id='hyphenated state field with value closed and search context',
+    ),
+    pytest.param(
+        'Version: 2.0 release notes',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': '2.0',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'release notes'}},
+            ]
+        },
+        id='version field with value 2.0 and search context',
+    ),
+    pytest.param(
+        'Version: latest documentation updates',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': 'latest',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'documentation updates'}},
+            ]
+        },
+        id='version field with value "latest" and search context',
+    ),
+    pytest.param(
+        'project: TEST frontend issues',
+        {
+            '$and': [
+                {'project.slug': {'$regex': '^TEST$', '$options': 'i'}},
+                {'$text': {'$search': 'frontend issues'}},
+            ]
+        },
+        id='project field with value TEST and search context',
+    ),
+    pytest.param(
+        'subject: "Error in login" test',
+        {
+            '$and': [
+                {'subject': {'$regex': 'Error\\ in\\ login', '$options': 'i'}},
+                {'$text': {'$search': 'test'}},
+            ]
+        },
+        id='subject field with quoted string and search context',
+    ),
+    pytest.param(
+        'text: "database connection" retry',
+        {'$text': {'$search': 'database connection retry'}},
+        id='text field with quoted search term and search context',
+    ),
+    pytest.param(
+        'text: important issue text',
+        {'$text': {'$search': 'important issue text'}},
+        id='text field with unquoted search string and search context',
+    ),
+    pytest.param(
+        'text: "" issue text',
+        {'$text': {'$search': ' issue text'}},
+        id='text field with quoted empty search string and search context',
+    ),
+    pytest.param(
+        'tag: bugfix bugfix tasks',
+        {
+            '$and': [
+                {'tags.name': {'$regex': '^bugfix$', '$options': 'i'}},
+                {'$text': {'$search': 'bugfix tasks'}},
+            ]
+        },
+        id='tag field with value bugfix and search context',
+    ),
+    pytest.param(
+        '#unresolved high priority',
+        {
+            '$and': [
+                {
+                    '$or': [
+                        {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                        {
+                            'fields': {
+                                '$elemMatch': {
+                                    'type': 'state',
+                                    '$or': [
+                                        {'value': None},
+                                        {'value.is_resolved': False},
+                                    ],
+                                }
+                            }
+                        },
+                    ]
+                },
+                {'$text': {'$search': 'high priority'}},
+            ]
+        },
+        id='unresolved hashtag with search context',
+    ),
+    pytest.param(
+        '#resolved needs verification',
+        {
+            '$and': [
+                {
+                    '$nor': [
+                        {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
+                        {
+                            'fields': {
+                                '$elemMatch': {
+                                    'type': 'state',
+                                    '$or': [
+                                        {'value': None},
+                                        {'value.is_resolved': False},
+                                    ],
+                                }
+                            }
+                        },
+                    ]
+                },
+                {'$text': {'$search': 'needs verification'}},
+            ]
+        },
+        id='resolved hashtag with search context',
+    ),
+    pytest.param(
+        'String: 2024-13-40 search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': '2024-13-40',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='string field with invalid date format treated as string and search context',
+    ),
+    pytest.param(
+        'String: 0..100-10d search context',  # cause of 100-10d
+        'Failed to parse query',
+        id='string field with invalid range pattern and search context',
+    ),
+    pytest.param(
+        'Integer: 123..abc search context',
+        'Failed to parse query',
+        id='integer field with invalid range end causing parse error and search context',
+    ),
+    pytest.param(
+        'Integer: 200..100 search context',
+        'Field has invalid range: start value is greater than end value',
+        id='integer field with reversed range (start > end) causing validation error and search context',
+    ),
+    pytest.param(
+        'Integer: 123.abc search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': '123.abc',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='integer field with invalid decimal format treated as string and search context',
+    ),
+    pytest.param(
+        'Feature: 1 search context',
+        'Field Feature must be either True or False',
+        id='boolean field with numeric value causing validation error and search context',
+    ),
+    pytest.param(
+        'Date: 2024-02-30 search context',  # valid format but semantically is invalid when in datetime.date(v)
+        'Failed to parse query',
+        id='date field with invalid day (Feb 30) and search context',
+    ),
+    pytest.param(
+        'Date: 2024-13-01 search context',  # parsed as string cause of date grammar format
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': '2024-13-01',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='date field with invalid month (13) treated as string and search context',
+    ),
+    pytest.param(
+        'Date: this week -10d',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 19, 0, 0),
+                                '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': '-10d'}},
+            ]
+        },
+        id='date field with value "this week -10d" and search context',
+    ),
+    pytest.param(
+        'Date: this week -10d..inf',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 19, 0, 0),
+                                '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': '-10d..inf'}},
+            ]
+        },
+        id='date field with value "this week -10d..inf" and search context',
+    ),
+    pytest.param(
+        'Date: 2024/02/20 search context',
+        'Failed to parse query',
+        id='date field with incorrect separator (/) treated as number value 2024 and (/02/20) and search context',
+    ),
+    pytest.param(
+        'Date: 2024-02-20..2024-01-20 search context',
+        'Field has invalid range: start value is greater than end value',
+        id='date field with reversed range causing validation error and search context',
+    ),
+    pytest.param(
+        'Datetime: 2024-02-20T25:00:00 search context',
+        'Failed to parse query',
+        id='datetime field with invalid hour (25) treated as error',
+    ),
+    pytest.param(
+        'Datetime: 2024-02-20 12:00:00 search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': date(2024, 2, 20),
+                        }
+                    }
+                },
+                {'$text': {'$search': '12:00:00 search context'}},
+            ]
+        },
+        id='datetime field with space instead of T treated as date and search context',
+    ),
+    pytest.param(
+        'Datetime: now + 1.3h search context',
+        'Failed to parse query',
+        id='datetime field with invalid decimal hour offset and search context',
+    ),
+    pytest.param(
+        'Datetime: now + 2hx search context',
+        'Failed to parse query',
+        id='datetime field with invalid format for hour offset and search context',
+    ),
+    pytest.param(
+        'Datetime: this week -14d search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^datetime$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 19, 0, 0),
+                                '$lte': datetime(2024, 2, 25, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': '-14d search context'}},
+            ]
+        },
+        id='datetime field with invalid period offset combination and search context',
+    ),
+    pytest.param(
+        'Datetime: now + 5d..now + 2d search context',
+        'Field has invalid range: start value is greater than end value',
+        id='datetime field with reversed relative range and search context',
+    ),
+    pytest.param(
+        'Priority: NonExistent search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'NonExistent',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='enum field with non-existent option treated as valid string value and search context',
+    ),
+    pytest.param(
+        'Priority: High..Low search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'High..Low',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='enum field with range pattern treated as plain string and search context',
+    ),
+    pytest.param(
+        'Version: 1.1..1.1.1 search context',
+        'Failed to parse query',
+        id='version field with invalid range format and search context',
+    ),
+    pytest.param(
+        'Version: 3.0.alpha search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': '3.0.alpha',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='version field with non-existent version format treated as valid string and search context',
+    ),
+    pytest.param(
+        'project: $ search context',
+        'Failed to parse query',
+        id='project field with special char causing parse error and search context',
+    ),
+    pytest.param(
+        'created_at: 2024/01/01 search context',
+        'Failed to parse query',
+        id='created_at field with incorrect separator (/) treated as number value 2024 and (/02/20) and search context',
+    ),
+    pytest.param(
+        'created_at: 2024-01-01T25:00:00 search context',
+        'Failed to parse query',
+        id='created_at field with invalid hour treated as string and search context',
+    ),
+    pytest.param(
+        'Integer: "123" search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': '123',
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='integer field with quoted number and search context',
+    ),
+    pytest.param(
+        'Date: today +0d search context',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^date$', '$options': 'i'},
+                            'value': {
+                                '$gte': datetime(2024, 2, 20, 0, 0, 0, 0),
+                                '$lte': datetime(2024, 2, 20, 23, 59, 59, 999999),
+                            },
+                        }
+                    }
+                },
+                {'$text': {'$search': 'search context'}},
+            ]
+        },
+        id='date field with zero day offset and search context',
+    ),
+    pytest.param(
+        'Version: latest "search context"',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': 'latest',
+                        }
+                    }
+                },
+                {'$text': {'$search': '"search context"'}},  # sq quoted
+            ]
+        },
+        id='version field with valid value and quoted search context',
+    ),
+    pytest.param(
+        'Version: latest                             ',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$options': 'i', '$regex': '^version$'},
+                    'value.value': 'latest',
+                }
+            }
+        },
+        id='version field with valid value and many spaces in search context',
+    ),
+    pytest.param(
+        'just a string',
+        {'$text': {'$search': 'just a string'}},
+        id='plain search context',
+    ),
+    pytest.param(
+        'random string "quoted"',
+        {'$text': {'$search': 'random string "quoted"'}},
+        id='plain search context with quoted string',
+    ),
+    pytest.param(
+        'subject: bug report',
+        {
+            '$and': [
+                {'subject': {'$regex': 'bug', '$options': 'i'}},
+                {'$text': {'$search': 'report'}},
+            ]
+        },
+        id='basic invalid subject search',
+    ),
+    pytest.param(
+        'State: open #',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'open',
+                        }
+                    }
+                },
+                {'$text': {'$search': '#'}},
+            ]
+        },
+        id='empty hashtag',
+    ),
+    pytest.param(
+        'State: 111111.3333 #unresolved',
+        {
+            '$and': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': '111111.3333',
+                        }
+                    }
+                },
+                {'$text': {'$search': '#unresolved'}},
+            ]
+        },
+        id='invalid direct combination without operator',
+    ),
+]
+COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
+    pytest.param(
+        'text: one two three and Assignee: admin@admin.com',
+        {
+            '$and': [
+                {'$text': {'$search': 'one two three'}},
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'admin@admin.com',
+                        }
+                    }
+                },
+            ]
+        },
+        id='text field with search context and assignee field',
+    ),
+    pytest.param(
+        # more than one text search implicit and explicit
+        'text: one two three and Assignee: admin@admin.com another',
+        'Failed to parse query',
+        id='text field with search context and assignee field with search context',
+    ),
+    pytest.param(
+        '(Priority: High note high priority or Priority: Medium note medium priority) and (Version: 0.1.2-dev dev version note or Version: latest latest version note)',
+        {
+            '$and': [
+                {
+                    '$and': [
+                        {
+                            '$or': [
+                                {
+                                    'fields': {
+                                        '$elemMatch': {
+                                            'name': {
+                                                '$regex': '^priority$',
+                                                '$options': 'i',
+                                            },
+                                            'value.value': 'High',
+                                        }
+                                    }
+                                },
+                                {
+                                    'fields': {
+                                        '$elemMatch': {
+                                            'name': {
+                                                '$regex': '^priority$',
+                                                '$options': 'i',
+                                            },
+                                            'value.value': 'Medium',
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                        {
+                            '$or': [
+                                {
+                                    'fields': {
+                                        '$elemMatch': {
+                                            'name': {
+                                                '$regex': '^version$',
+                                                '$options': 'i',
+                                            },
+                                            'value.value': '0.1.2-dev',
+                                        }
+                                    }
+                                },
+                                {
+                                    'fields': {
+                                        '$elemMatch': {
+                                            'name': {
+                                                '$regex': '^version$',
+                                                '$options': 'i',
+                                            },
+                                            'value.value': 'latest',
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                    ]
+                },
+                {
+                    '$text': {
+                        '$search': 'note high priority note medium priority dev version note latest version note'
+                    }
+                },
+            ]
+        },
+        id='complex query with multiple conditions and search context',
+    ),
+]
 
 
 @mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
@@ -1198,6 +2202,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         pytest.param(
             '',
             {
+                'float',
                 'feature',
                 'version',
                 'state',
@@ -1226,6 +2231,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         pytest.param(
             ' ',
             {
+                'float',
                 'feature',
                 'version',
                 'state',
@@ -1254,6 +2260,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         pytest.param(
             ' (',
             {
+                'float',
                 'feature',
                 'version',
                 'state',
@@ -1283,6 +2290,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         pytest.param(
             'State: open AND',
             {
+                'float',
                 'feature',
                 'version',
                 'state',
@@ -1319,6 +2327,7 @@ TEST_RELATIVE_DT_PYTEST_PARAMS = [
         pytest.param(
             '(State: open AND',
             {
+                'float',
                 'feature',
                 'version',
                 'state',
@@ -1696,12 +2705,6 @@ async def test_suggestions(
             'Failed to parse query',
             id='state open and unknown hashtag',
         ),
-        pytest.param('State: open #', 'Failed to parse query', id='empty hashtag'),
-        pytest.param(
-            'State: 111111.3333 #unresolved',
-            'Failed to parse query',
-            id='invalid direct combination without operator',
-        ),
         pytest.param(
             '#resolved',
             {
@@ -1752,18 +2755,6 @@ async def test_suggestions(
             id='resolved hashtag and date range',
         ),
         pytest.param('(((((((((((((((', {}, id='Many open brackets'),
-        pytest.param(
-            'Assignee: test1@test1.com',
-            {
-                'fields': {
-                    '$elemMatch': {
-                        'name': {'$regex': '^assignee$', '$options': 'i'},
-                        'value.email': 'test1@test1.com',
-                    }
-                }
-            },
-            id='Assignee user',
-        ),
         *TEST_VERSION_FIELD_PYTEST_PARAMS,
         *TEST_BOOLEAN_FIELD_PYTEST_PARAMS,
         *TEST_INTEGER_FIELD_PYTEST_PARAMS,
@@ -1778,6 +2769,9 @@ async def test_suggestions(
         *TEST_ENUM_FIELD_PYTEST_PARAMS,
         *TEST_STATE_FIELD_PYTEST_PARAMS,
         *TEST_RELATIVE_DT_PYTEST_PARAMS,
+        *TEST_USER_FIELD_PYTEST_PARAMS,
+        *SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,
+        *COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,
     ],
 )
 async def test_search_transformation(

@@ -1,3 +1,4 @@
+import re
 from http import HTTPStatus
 from typing import Any
 
@@ -20,6 +21,8 @@ __all__ = ('router',)
 
 
 router = APIRouter(prefix='/filters')
+
+VALUE_PATTERN = re.compile(r'("[^"]*"|\S+)')
 
 
 class IssueFilterBody(BaseModel):
@@ -104,7 +107,9 @@ async def parse_search_query(
             continue
         field_name, field_val = expr.split(':', 1)
         field_name = field_name.strip().lower()
-        field_val = field_val.strip().strip('"')
+        field_val = field_val.strip()
+        if match := VALUE_PATTERN.match(field_val):
+            field_val = match.group(1).strip('"')
         if field_name in ('subject', 'text'):
             filters.append(IssueFilterOutput(field=field_name, value=field_val))
             continue
