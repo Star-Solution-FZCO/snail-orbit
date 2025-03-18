@@ -99,7 +99,7 @@ EXPRESSION_GRAMMAR = """
     _RANGE_DELIMITER.10: ".."
     _COLON: ":"
     USER_ME: "me"i
-    EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/
+    EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/
     DATE_VALUE.2: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])/
     DATETIME_VALUE.3: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)/
     NULL_VALUE: "null"i
@@ -412,17 +412,23 @@ class TransformError(Exception):
     message: str
     expected: set[str]
     position: int | None
+    orig_exc: Exception | None
 
     def __init__(
         self,
         message: str,
         position: int | None = None,
         expected: set[str] | None = None,
+        orig_exc: Exception | None = None,
     ):
         self.message = message
         self.expected = expected or set()
         self.position = position
+        self.orig_exc = orig_exc
         super().__init__(message)
+
+
+parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False, cache=True)
 
 
 async def transform_expression(
@@ -430,7 +436,6 @@ async def transform_expression(
     cached_fields: dict[str, list[m.CustomField]],
     current_user_email: str | None = None,
 ) -> dict:
-    parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False)
     try:
         tree = parser.parse(expression)
         transformer = MongoQueryTransformer(
@@ -440,7 +445,10 @@ async def transform_expression(
         return transformer.transform(tree)
     except UnexpectedToken as err:
         raise TransformError(
-            'Failed to parse query', position=err.pos_in_stream, expected=err.expected
+            'Failed to parse query',
+            position=err.pos_in_stream,
+            expected=err.expected,
+            orig_exc=err,
         ) from err
     except UnexpectedCharacters as err:
         raise TransformError(
@@ -464,16 +472,85 @@ OPERATOR_MAP = {
 }
 
 
+def _check_mongo_text_exp_exceeded(query: dict) -> bool:
+    count = 0
+    stack = [query]
+    while stack:
+        current = stack.pop()
+        if '$text' in current:
+            count += 1
+            if count > 1:
+                return True
+        for _, value in current.items():
+            if isinstance(value, dict):
+                stack.append(value)
+            elif isinstance(value, list):
+                stack.extend(item for item in value if isinstance(item, dict))
+    return count > 1
+
+
+async def _transform_tree_and_extract_context(
+    node: Node,
+    cached_fields: dict[str, list[m.CustomField]],
+    current_user_email: str | None = None,
+) -> dict:
+    try:
+        return await transform_expression(
+            node.expression,
+            cached_fields=cached_fields,
+            current_user_email=current_user_email,
+        )
+    except TransformError as exc:
+        orig_exc = getattr(exc, 'orig_exc', None)
+        if orig_exc and isinstance(orig_exc, UnexpectedToken):
+            if any(keyword in ('_COLON',) for keyword in exc.expected):
+                return transform_text_search(node.expression)
+            if exc.position > 0 and node.expression[exc.position - 1].isspace():
+                whitespace_start = exc.position - 1
+                while (
+                    whitespace_start > 0
+                    and node.expression[whitespace_start - 1].isspace()
+                ):
+                    whitespace_start -= 1
+                orig_node_exp = node.expression[:whitespace_start].strip()
+                context_part = node.expression[whitespace_start:].strip()
+                result = await transform_expression(
+                    orig_node_exp,
+                    cached_fields=cached_fields,
+                    current_user_email=current_user_email,
+                )
+                if context_part:
+                    text_field_query = result.get('$text', {}).get('$search')
+                    if text_field_query is not None:
+                        result['$text']['$search'] += ' ' + context_part
+                    else:
+                        result['__context_search'] = context_part
+                return result
+            raise
+        raise
+
+
+async def _merge_nodes_with_context(
+    left: dict, right: dict, operator: LogicalOperatorT
+) -> dict:
+    ctx = []
+    for query in (left, right):
+        if '__context_search' in query:
+            ctx.append(query.pop('__context_search'))
+    result = {OPERATOR_MAP[operator]: [left, right]}
+    if ctx:
+        result['__context_search'] = ' '.join(ctx)
+    return result
+
+
 async def transform_tree(
     node: Node,
     cached_fields: dict[str, list[m.CustomField]],
     current_user_email: str | None = None,
 ) -> dict:
     if isinstance(node, ExpressionNode):
-        return await transform_expression(
-            node.expression,
-            cached_fields=cached_fields,
-            current_user_email=current_user_email,
+        return await _transform_tree_and_extract_context(
+            node, cached_fields, current_user_email
         )
     if isinstance(node, OperatorNode):
         left = await transform_tree(
@@ -486,7 +563,7 @@ async def transform_tree(
             cached_fields=cached_fields,
             current_user_email=current_user_email,
         )
-        return {OPERATOR_MAP[node.operator]: [left, right]}
+        return await _merge_nodes_with_context(left, right, node.operator)
 
 
 async def transform_query(query: str, current_user_email: str | None = None) -> dict:
@@ -511,9 +588,15 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
     if not tree:
         return {}
     custom_fields = await _get_custom_fields()
-    return await transform_tree(
+    result = await transform_tree(
         tree, cached_fields=custom_fields, current_user_email=current_user_email
     )
+    if result and '__context_search' in result:
+        ctx = result.pop('__context_search')
+        result = {'$and': [result, transform_text_search(ctx)]}
+    if _check_mongo_text_exp_exceeded(result):
+        raise TransformError('Failed to parse query')
+    return result
 
 
 def transform_text_search(search: str) -> dict:
