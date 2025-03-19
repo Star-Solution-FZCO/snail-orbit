@@ -13,6 +13,7 @@ export const IssueCardStyled = styled(Box, {
     position: "relative",
     borderRadius: "inherit",
     paddingLeft: colors && colors.length ? theme.spacing(0.75) : 0,
+    width: "100%",
 
     "&:after":
         colors && colors.length

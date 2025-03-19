@@ -1,5 +1,5 @@
-import { Box } from "@mui/material";
-import { ComponentProps } from "react";
+import type { Box } from "@mui/material";
+import type { ComponentProps } from "react";
 
 export type IssueCardProps = {
     colors?: string[];

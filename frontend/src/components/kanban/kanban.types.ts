@@ -1,13 +1,13 @@
-import {
+import type {
     CancelDrop,
     KeyboardCoordinateGetter,
     Modifiers,
     UniqueIdentifier,
 } from "@dnd-kit/core";
-import { CSSProperties } from "react";
-import { ContainerProps } from "./components/container";
-import { ItemProps } from "./components/item";
-import { SwimLineProps } from "./components/swim-line";
+import type { CSSProperties } from "react";
+import type { ContainerProps } from "./components/container";
+import type { ItemProps } from "./components/item";
+import type { SwimLineProps } from "./components/swim-line";
 
 export type Items = Record<
     UniqueIdentifier,

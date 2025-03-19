@@ -34,7 +34,8 @@ type IssueModalProps = {
     onSaveIssue?: () => Promise<void>;
     loading?: boolean;
     isDraft?: boolean;
-} & Pick<DialogProps, "open" | "onClose">;
+    onClose?: () => void;
+} & Pick<DialogProps, "open">;
 
 export const IssueModal: FC<IssueModalProps> = (props) => {
     const {
@@ -139,7 +140,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                         })}
                         justifyContent="flex-end"
                     >
-                        <IconButton size="small">
+                        <IconButton size="small" onClick={onClose}>
                             <Close fontSize="small" />
                         </IconButton>
                     </Stack>

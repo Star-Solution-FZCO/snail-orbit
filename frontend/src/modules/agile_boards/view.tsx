@@ -9,22 +9,13 @@ import {
     Divider,
     IconButton,
     InputAdornment,
-    Menu,
-    MenuItem,
     Stack,
     TextField,
     Tooltip,
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
-import PopupState, {
-    bindMenu,
-    bindPopover,
-    bindTrigger,
-} from "material-ui-popup-state";
+import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import {
     SyntheticEvent,
@@ -37,18 +28,20 @@ import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { AgileBoardT } from "types";
+import { AgileBoardT, IssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
 import { StarButton } from "../../components/star_button";
 import { SearchSelectPopover } from "../../features/search_select/search_select_popover";
 import { SearchT } from "../../types/search";
 import useDebouncedState from "../../utils/hooks/use-debounced-state";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
+import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import { AgileBoardSelect } from "./components/agile_board_select";
 import { BoardViewList } from "./components/board_view_list";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
+import { useViewNavbarSettings } from "./hooks/use-view-navbar-settings";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
@@ -57,9 +50,11 @@ const routeApi = getRouteApi("/_authenticated/agiles/$boardId");
 const AgileBoardView = () => {
     const { t } = useTranslation();
     const { boardId } = routeApi.useParams();
+    const { openIssueModal } = useIssueModalView();
     const search = routeApi.useSearch();
-    const { setAction } = useNavbarSettings();
     const navigate = useNavigate();
+
+    useViewNavbarSettings();
 
     const searchSelectPopoverState = usePopupState({
         variant: "popover",
@@ -95,40 +90,6 @@ const AgileBoardView = () => {
             }),
         });
     }, [debouncedSearch]);
-
-    useEffect(() => {
-        setAction(
-            <PopupState popupId="agiles-menu-button" variant="popover">
-                {(popupState) => (
-                    <>
-                        <NavbarActionButton {...bindTrigger(popupState)}>
-                            {t("agileBoards.navbarButton")}
-                        </NavbarActionButton>
-                        <Menu
-                            {...bindMenu(popupState)}
-                            anchorOrigin={{
-                                vertical: "bottom",
-                                horizontal: "center",
-                            }}
-                            transformOrigin={{
-                                vertical: "top",
-                                horizontal: "center",
-                            }}
-                        >
-                            <Link to="/agiles/create">
-                                <MenuItem>{t("agileBoards.new")}</MenuItem>
-                            </Link>
-                            <Link to="/issues/create">
-                                <MenuItem>{t("issues.new")}</MenuItem>
-                            </Link>
-                        </Menu>
-                    </>
-                )}
-            </PopupState>,
-        );
-
-        return () => setAction(null);
-    }, [setAction]);
 
     useEffect(() => {
         setLastViewBoardId(boardId);
@@ -169,6 +130,11 @@ const AgileBoardView = () => {
         const query = Array.isArray(value) ? value[0].query : value.query;
         setSearch(query);
     };
+
+    const handleCardDoubleClick = useCallback(
+        (issue: IssueT) => openIssueModal(issue.id),
+        [openIssueModal],
+    );
 
     if (error) {
         return (
@@ -344,6 +310,7 @@ const AgileBoardView = () => {
                         <AgileBoard
                             boardData={agileBoard}
                             query={debouncedSearch}
+                            onCardDoubleClick={handleCardDoubleClick}
                         />
                     ) : (
                         <Box px={4}>
