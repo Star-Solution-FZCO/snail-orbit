@@ -15,8 +15,8 @@ const theme = createTheme({
         light: {
             palette: {
                 background: {
-                    board: "#fff",
-                    boardFocused: "#a4a7c6",
+                    board: "#f6f8fa",
+                    boardFocused: "#efeff3",
                 },
             },
         },
