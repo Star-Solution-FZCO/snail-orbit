@@ -6,9 +6,9 @@ import utc from "dayjs/plugin/utc";
 import { diffWords } from "diff";
 import i18n from "i18n";
 import { t } from "i18next";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import {
+import type {
     BasicCustomFieldT,
     BasicUserT,
     CustomFieldValueT,

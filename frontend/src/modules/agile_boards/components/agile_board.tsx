@@ -17,9 +17,14 @@ import { AgileCard } from "./agile_card";
 export type AgileBoardProps = {
     boardData: AgileBoardT;
     query?: string;
+    onCardDoubleClick?: (issue: IssueT) => void;
 };
 
-export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
+export const AgileBoard: FC<AgileBoardProps> = ({
+    boardData,
+    query,
+    onCardDoubleClick,
+}) => {
     const { data, refetch, isFetching } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
         q: query,
@@ -142,6 +147,9 @@ export const AgileBoard: FC<AgileBoardProps> = ({ boardData, query }) => {
                                 cardFields={boardData.card_fields}
                                 onUpdateIssue={handleUpdateIssue}
                                 cardColorFields={boardData.card_colors_fields}
+                                onDoubleClick={() =>
+                                    onCardDoubleClick?.(itemsMap[id])
+                                }
                             />
                         ) : null // TODO: Move and preserve issue data inside kanban
                 }
