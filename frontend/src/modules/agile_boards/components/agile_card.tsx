@@ -5,8 +5,9 @@ import {
     IssueCardHeader,
 } from "components/agile/issue_card/issue_card.styles";
 import { IssueLink } from "components/issue_link";
-import { ComponentProps, FC, memo, useCallback, useMemo } from "react";
-import {
+import type { ComponentProps, FC } from "react";
+import { memo, useCallback, useMemo } from "react";
+import type {
     AgileBoardCardFieldT,
     FieldValueT,
     IssueT,
@@ -68,7 +69,10 @@ export const AgileCard: FC<IssueCardProps> = memo(
             >
                 <IssueCardBody>
                     <IssueCardHeader>
-                        <IssueLink to={`/issues/${id_readable}`}>
+                        <IssueLink
+                            to="/issues/$issueId"
+                            params={{ issueId: id_readable }}
+                        >
                             {id_readable}
                         </IssueLink>
                         <span>{subject}</span>
