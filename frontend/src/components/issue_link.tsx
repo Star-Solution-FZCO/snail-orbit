@@ -1,7 +1,8 @@
 import type { StyledComponent } from "@emotion/styled";
-import { styled } from "@mui/material";
+import { Link, styled } from "@mui/material";
+import { createLink } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
-import { Link } from "./link";
+import { forwardRef } from "react";
 
 type IssueLinkProps = {
     variant?: "default" | "silent";
@@ -9,8 +10,8 @@ type IssueLinkProps = {
     resolved?: boolean;
 } & Omit<ComponentProps<typeof Link>, "variant">;
 
-// @ts-expect-error Complex problem with ESM modules
-export const IssueLink: StyledComponent<IssueLinkProps> = styled(Link, {
+// @ts-expect-error Type mismatch meh
+const IssueLinkComp: StyledComponent<IssueLinkProps> = styled(Link, {
     name: "IssueLink",
 })<IssueLinkProps>(({ theme, variant, lineThrough, resolved }) => ({
     color: resolved
@@ -26,3 +27,11 @@ export const IssueLink: StyledComponent<IssueLinkProps> = styled(Link, {
         textDecoration: lineThrough ? "line-through underline" : "underline",
     },
 }));
+
+const IssueLink = createLink(
+    forwardRef<HTMLAnchorElement, IssueLinkProps>((props, ref) => (
+        <IssueLinkComp {...props} ref={ref} />
+    )),
+);
+
+export { IssueLink };
