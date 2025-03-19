@@ -13,7 +13,7 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC, SyntheticEvent } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { SearchT } from "../../../../types/search";
+import type { SearchT } from "types/search";
 
 type SearchFieldProps = {
     value: string;

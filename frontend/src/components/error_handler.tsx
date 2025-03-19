@@ -1,5 +1,5 @@
 import { Container, Typography } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { formatErrorMessages } from "utils";
 import { NotFound } from "./not_found";

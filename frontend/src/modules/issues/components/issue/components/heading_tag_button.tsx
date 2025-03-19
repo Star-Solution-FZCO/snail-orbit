@@ -7,8 +7,8 @@ import { toast } from "react-toastify";
 import { issueApi, tagApi } from "store";
 import { IssueT } from "types";
 import { TagBaseT, TagT } from "types/tag";
-import { TagFormDialog } from "../../../tags/components/tag_form_dialog/tag_form_dialog";
-import { TagListPopover } from "../../../tags/components/tag_list/tag_list_popover";
+import { TagFormDialog } from "../../../../tags/components/tag_form_dialog/tag_form_dialog";
+import { TagListPopover } from "../../../../tags/components/tag_list/tag_list_popover";
 
 type HeadingTagButtonProps = {
     issue: IssueT;

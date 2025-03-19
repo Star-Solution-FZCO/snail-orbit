@@ -7,14 +7,16 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import type { IssueT, UpdateIssueT } from "types";
-import { CustomFieldsParser } from "widgets/issue/CustomFieldsParser/CustomFieldsParser";
-import { AddLinks } from "./add_links";
-import { FieldContainer } from "./field_container";
-import { IssueHeading } from "./heading";
-import { IssueActivities } from "./issue_activities";
-import { IssueAttachments } from "./issue_attachments";
-import { IssueForm } from "./issue_form";
-import { IssueLinks } from "./issue_links";
+import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
+import { AddLinks } from "./components/add_links";
+import { FieldContainer } from "./components/field_container";
+import { IssueActivities } from "./components/issue_activities";
+import { IssueAttachments } from "./components/issue_attachments";
+import { IssueForm } from "./components/issue_form";
+import { IssueHeading } from "./components/issue_heading";
+import { IssueLinks } from "./components/issue_links";
+import { IssueMeta } from "./components/issue_meta";
+import { IssueTags } from "./components/issue_tags";
 
 type IssueFormProps = {
     issue: IssueT;
@@ -43,17 +45,28 @@ export const IssueView: FC<IssueFormProps> = ({
         isDraft ? "edit" : "view",
     );
 
+    const handleChangeDisplayMode = () =>
+        setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
+
     const issueId = issue.id_readable;
 
     return (
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
                 {!isDraft && (
-                    <IssueHeading
-                        issue={issue}
-                        displayMode={displayMode}
-                        onChangeDisplayMode={setDisplayMode}
-                    />
+                    <Box display="flex" flexDirection="column" gap={2}>
+                        <IssueMeta issue={issue} />
+
+                        {displayMode === "view" && (
+                            <Stack>
+                                <IssueHeading
+                                    issue={issue}
+                                    onEditClick={handleChangeDisplayMode}
+                                />
+                                <IssueTags issue={issue} />
+                            </Stack>
+                        )}
+                    </Box>
                 )}
 
                 <IssueForm
