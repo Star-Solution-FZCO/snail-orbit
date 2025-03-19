@@ -23,7 +23,11 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         alignItems="center"
                     >
                         <IssueLink
-                            to={`/issues/${id_readable}/${slugify(issue.subject)}`}
+                            to="/issues/$issueId/$subject"
+                            params={{
+                                issueId: id_readable,
+                                subject: slugify(issue.subject),
+                            }}
                             lineThrough={issue.is_resolved}
                             resolved={issue.is_resolved}
                         >
@@ -31,7 +35,11 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         </IssueLink>
 
                         <IssueLink
-                            to={`/issues/${id_readable}/${slugify(issue.subject)}`}
+                            to="/issues/$issueId/$subject"
+                            params={{
+                                issueId: id_readable,
+                                subject: slugify(issue.subject),
+                            }}
                             resolved={issue.is_resolved}
                         >
                             {subject}
