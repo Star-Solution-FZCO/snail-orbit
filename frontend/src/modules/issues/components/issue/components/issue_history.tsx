@@ -27,20 +27,31 @@ const renderDiff = (oldText: string, newText: string) => {
 
     return (
         <Box
-            sx={{
-                fontSize: "inherit",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
+            sx={[
+                {
+                    fontSize: "inherit",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
 
-                "& ins": {
-                    textDecoration: "none",
-                    backgroundColor: "rgba(54,89,71)",
+                    "& ins": {
+                        textDecoration: "none",
+                        backgroundColor: "rgba(62,110,70,0.7)",
+                    },
+                    "& del": {
+                        textDecoration: "none",
+                        backgroundColor: "rgba(172,70,56,0.7)",
+                    },
                 },
-                "& del": {
-                    textDecoration: "none",
-                    backgroundColor: "rgba(143, 82, 71)",
-                },
-            }}
+                (theme) =>
+                    theme.applyStyles("light", {
+                        "& ins": {
+                            backgroundColor: "rgba(109,220,101,0.7)",
+                        },
+                        "& del": {
+                            backgroundColor: "rgba(228,83,70,0.7)",
+                        },
+                    }),
+            ]}
         >
             {diff.map((part, index) => {
                 if (part.added) {
