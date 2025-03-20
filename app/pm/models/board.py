@@ -13,7 +13,7 @@ from .permission import (
     _check_permissions,
     _filter_permissions,
 )
-from .project import PermissionTargetType, ProjectLinkField
+from .project import PermissionTargetType, Project, ProjectLinkField
 from .user import UserLinkField
 
 __all__ = ('Board',)
@@ -174,4 +174,16 @@ class Board(Document):
                     }
                 }
             },
+        )
+
+    @classmethod
+    async def update_project_embedded_links(
+        cls,
+        project: Project,
+    ) -> None:
+        await cls.find(
+            cls.projects.id == project.id,
+        ).update(
+            {'$set': {'projects.$[p]': ProjectLinkField.from_obj(project)}},
+            array_filters=[{'p.id': project.id}],
         )
