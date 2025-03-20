@@ -229,8 +229,10 @@ async def create_custom_field(
 async def create_custom_field_group(
     body: CustomFieldGroupCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
-    if await m.CustomField.find(m.CustomField.name == body.name).exists():
-        raise HTTPException(HTTPStatus.CONFLICT, 'Custom field group already exists')
+    if await m.CustomField.find(
+        m.CustomField.name == body.name, with_children=True
+    ).exists():
+        raise HTTPException(HTTPStatus.CONFLICT, 'Custom field already exists')
     field_cls = m.get_cf_class(body.type)
     obj = field_cls(
         gid=str(uuid4()),
