@@ -1,3 +1,4 @@
+import asyncio
 from http import HTTPStatus
 from typing import Self
 from uuid import UUID
@@ -280,7 +281,12 @@ async def update_project(
     body.update_obj(obj)
     if obj.is_changed:
         await obj.save_changes()
-        await m.Issue.update_project_embedded_links(obj)
+        await asyncio.gather(
+            m.Issue.update_project_embedded_links(obj),
+            m.IssueDraft.update_project_embedded_links(obj),
+            m.Board.update_project_embedded_links(obj),
+        )
+
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
