@@ -69,7 +69,9 @@ class UserUpdate(BaseModel):
 async def list_users(
     query: ListParams = Depends(),
 ) -> BaseListOutput[UserFullOutput]:
-    q = m.User.find().sort(m.User.name)
+    q = m.User.find()
+    query.apply_filter(q, m.User)
+    query.apply_sort(q, m.User, (m.User.name,))
     if query.search:
         q = q.find(m.User.search_query(query.search))
     return await BaseListOutput.make_from_query(
