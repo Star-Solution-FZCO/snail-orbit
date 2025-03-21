@@ -49,16 +49,15 @@ const CustomFieldList = () => {
                 flex: 1,
             },
             {
-                field: "is_nullable",
-                headerName: t("customFields.fields.nullable"),
-                type: "boolean",
-                flex: 1,
-            },
-            {
                 field: "fields",
                 headerName: t("customFields.fields"),
                 flex: 1,
                 valueGetter: (_, row) => row.fields.length,
+            },
+            {
+                field: "description",
+                headerName: t("customFields.fields.description"),
+                flex: 1,
             },
         ],
         [t],

@@ -97,6 +97,7 @@
   "customFields.field": "Field",
   "customFields.fields": "Fields",
   "customFields.fields.add": "Add Field",
+  "customFields.fields.description": "Description",
   "customFields.fields.label": "Fields",
   "customFields.fields.name": "Name",
   "customFields.fields.nullable": "Nullable",
