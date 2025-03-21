@@ -29,6 +29,7 @@ export type ListSelectQueryParams = BaseQueryParams & {
 
 export type ListQueryParams = BaseQueryParams & {
     search?: string;
+    sort_by?: string;
     q?: string;
 };
 
