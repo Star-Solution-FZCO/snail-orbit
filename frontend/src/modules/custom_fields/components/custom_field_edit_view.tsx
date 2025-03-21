@@ -99,7 +99,7 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
         <Box display="flex" gap={2}>
             <Box flex={1} display="flex" flexDirection="column" gap={1}>
                 <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
-                    {t("customFields.field")}: {customField.name} (
+                    {t("customFields.bundle")}: {customField.name} (
                     {customField.label})
                 </Typography>
 
