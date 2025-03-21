@@ -5,6 +5,7 @@ import { Link } from "components";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "store";
 import type { ProjectT } from "types";
 import { useProjectFormTabs } from "../utils";
 
@@ -15,7 +16,9 @@ interface IProjectCardProps {
 const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+
     const tabs = useProjectFormTabs();
+    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
@@ -36,6 +39,10 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
             search: { tab },
         });
     };
+
+    const visibleTabs = tabs.filter((tab) => {
+        return !tab.adminOnly || isAdmin;
+    });
 
     return (
         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -66,8 +73,20 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                 <MoreHorizIcon />
             </IconButton>
 
-            <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleClose}>
-                {tabs.map((tab) => (
+            <Menu
+                anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                }}
+                transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                }}
+                anchorEl={anchorEl}
+                open={menuOpen}
+                onClose={handleClose}
+            >
+                {visibleTabs.map((tab) => (
                     <MenuItem
                         key={tab.value}
                         onClick={() => handleClickLink(tab.value)}

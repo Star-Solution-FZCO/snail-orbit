@@ -51,11 +51,11 @@ export const UserMenuButton = memo(() => {
             <Menu
                 anchorOrigin={{
                     vertical: "bottom",
-                    horizontal: "center",
+                    horizontal: "right",
                 }}
                 transformOrigin={{
                     vertical: "top",
-                    horizontal: "center",
+                    horizontal: "right",
                 }}
                 {...bindMenu(popupState)}
             >

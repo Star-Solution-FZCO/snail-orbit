@@ -49,7 +49,7 @@ export const FieldList: FC<{
                 gap={1}
             >
                 <Typography fontSize={20} fontWeight="bold" lineHeight={1.8}>
-                    {t("customFields.fields")}
+                    {t("customFields.bundles")}
                 </Typography>
 
                 <Button
@@ -58,7 +58,7 @@ export const FieldList: FC<{
                     size="small"
                     startIcon={<AddIcon />}
                 >
-                    {t("customFields.fields.add")}
+                    {t("customFields.bundles.add")}
                 </Button>
             </Box>
 
