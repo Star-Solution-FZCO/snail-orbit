@@ -16,11 +16,8 @@ const ProjectList = () => {
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const {
-        data: projects,
-        isLoading,
-        error,
-    } = projectApi.useListProjectQuery(listQueryParams);
+    const { data, isLoading, error } =
+        projectApi.useListProjectQuery(listQueryParams);
 
     useEffect(() => {
         setAction(
@@ -33,6 +30,9 @@ const ProjectList = () => {
 
         return () => setAction(null);
     }, [setAction]);
+
+    const projects = data?.payload?.items || [];
+    const count = data?.payload?.count || 0;
 
     return (
         <Container
@@ -65,17 +65,17 @@ const ProjectList = () => {
                         flex={1}
                         overflow="auto"
                     >
-                        {projects?.payload?.items.length === 0 && (
+                        {projects.length === 0 && (
                             <Typography>{t("projects.no_projects")}</Typography>
                         )}
 
-                        {projects?.payload?.items?.map((project) => (
+                        {projects.map((project) => (
                             <ProjectCard key={project.id} project={project} />
                         ))}
                     </Box>
 
                     <QueryPagination
-                        count={projects?.payload?.count || 0}
+                        count={count}
                         queryParams={listQueryParams}
                         updateQueryParams={updateListQueryParams}
                     />
