@@ -10,7 +10,12 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
+import {
+    DataGrid,
+    GridColDef,
+    GridEventListener,
+    GridSortModel,
+} from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, UserAvatar } from "components";
 import { useCallback, useMemo, useState } from "react";
@@ -22,6 +27,7 @@ import { useListQueryParams } from "utils";
 const initialQueryParams = {
     limit: 50,
     offset: 0,
+    sort_by: "name",
 };
 
 export const UserList = () => {
@@ -128,6 +134,15 @@ export const UserList = () => {
         });
     };
 
+    const handleChangeSortModel = (model: GridSortModel) => {
+        updateListQueryParams({
+            sort_by:
+                model.length > 0
+                    ? `${model[0].sort === "asc" ? "" : "-"}${model[0].field}`
+                    : undefined,
+        });
+    };
+
     const rows = data?.payload.items || [];
     const rowCount = data?.payload.count || 0;
 
@@ -210,10 +225,17 @@ export const UserList = () => {
                         columns={columns}
                         rows={rows}
                         rowCount={rowCount}
+                        initialState={{
+                            sorting: {
+                                sortModel: [{ field: "name", sort: "asc" }],
+                            },
+                        }}
                         onRowClick={handleClickRow}
                         paginationModel={paginationModel}
                         onPaginationModelChange={handlePaginationModelChange}
+                        onSortModelChange={handleChangeSortModel}
                         loading={isLoading || isFetching}
+                        sortingMode="server"
                         paginationMode="server"
                         density="compact"
                     />
