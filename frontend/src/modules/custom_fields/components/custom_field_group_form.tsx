@@ -62,9 +62,8 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
             type: defaultValues?.type || "string",
             description: defaultValues?.description || null,
             ai_description: defaultValues?.ai_description || null,
-            label: defaultValues?.label || "default",
-            is_nullable: defaultValues?.is_nullable || false,
-            default_value: defaultValues?.default_value,
+            label: "default",
+            is_nullable: false,
         },
         resolver: yupResolver(customFieldGroupSchema),
     });

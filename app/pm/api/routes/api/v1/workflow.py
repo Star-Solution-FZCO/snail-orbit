@@ -27,6 +27,7 @@ class WorkflowOutput(BaseModel):
     name: str
     description: str | None
     type: m.WorkflowType
+    script: str
 
     @classmethod
     def from_obj(cls, obj: m.Workflow) -> Self:
@@ -35,6 +36,7 @@ class WorkflowOutput(BaseModel):
             name=obj.name,
             description=obj.description,
             type=obj.type,
+            script=obj.script,
         )
 
 
@@ -48,6 +50,7 @@ class ScheduledWorkflowOutput(WorkflowOutput):
             name=obj.name,
             description=obj.description,
             type=obj.type,
+            script=obj.script,
             schedule=obj.schedule,
         )
 
@@ -77,7 +80,9 @@ def output_from_obj(obj: m.Workflow) -> WorkflowOutput:
 async def list_workflow(
     query: ListParams = Depends(),
 ) -> BaseListOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
-    q = m.Workflow.find(with_children=True).sort(m.Workflow.name)
+    q = m.Workflow.find(with_children=True)
+    query.apply_filter(q, m.Workflow)
+    query.apply_sort(q, m.Workflow, (m.Workflow.name,))
     if query.search:
         q = q.find(m.Workflow.search_query(query.search))
     return await BaseListOutput.make_from_query(
@@ -134,7 +139,7 @@ async def update_workflow(
     obj = await m.Workflow.get(workflow_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
-    update_data = body.dict(exclude_unset=True)
+    update_data = body.model_dump(exclude_unset=True)
     for k, v in update_data.items():
         setattr(obj, k, v)
         if isinstance(obj, m.ScheduledWorkflow) and 'schedule' in update_data:

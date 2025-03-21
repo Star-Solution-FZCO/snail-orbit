@@ -13,3 +13,4 @@ export * from "./query_pagination";
 export * from "./spent_time_field";
 export * from "./tab_panel";
 export * from "./user_avatar";
+export * from "./workflows";
