@@ -11,20 +11,31 @@ type UpdateTimeProps = {
 
 export const UpdateTime: FC<UpdateTimeProps> = memo(({ issue }) => {
     const { t } = useTranslation();
+    const today = dayjs().startOf("day");
 
     const [formatedTime, formatedToltip] = useMemo(() => {
         if (!issue.updated_at) return ["-", "-"];
 
         const dayjsTime = dayjs(issue.updated_at);
 
+        let format = "DD MMM YYYY HH:mm";
+
+        if (dayjsTime.year() === today.year()) {
+            if (dayjsTime.isSame(today, "day")) {
+                format = "HH:mm";
+            } else {
+                format = "DD MMM HH:mm";
+            }
+        }
+
         return [
-            dayjs(dayjsTime).format("HH:mm"),
+            dayjs(dayjsTime).format(format),
             t("issueRow.updateTime.tooltip", {
                 time: dayjsTime.format("LLLL"),
                 user: issue.updated_by?.name || "-",
             }),
         ];
-    }, [issue, t]);
+    }, [issue, t, today]);
 
     return (
         <Tooltip title={formatedToltip}>

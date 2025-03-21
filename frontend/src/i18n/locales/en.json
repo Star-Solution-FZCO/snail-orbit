@@ -196,7 +196,7 @@
   "issueList.totalCount_other": "{{count}} issues",
   "issueListPage.issueCount_one": "{{count}} issue",
   "issueListPage.issueCount_other": "{{count}} issues",
-  "issueRow.updateTime.tooltip": "Issue at {{time}} by {{user}}",
+  "issueRow.updateTime.tooltip": "Updated at {{time}} by {{user}}",
   "issues.activities.loadMore": "Load more",
   "issues.attachments.delete.confirmation": "Are you sure you want to delete attachment",
   "issues.attachments.delete.title": "Delete attachment",
