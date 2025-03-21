@@ -189,9 +189,6 @@ export type CustomFieldGroupT = {
     description: string | null;
     ai_description: string | null;
     type: CustomFieldTypeT;
-    is_nullable?: boolean;
-    label?: string;
-    default_value?: CustomFieldValueT;
     fields: CustomFieldT[];
 };
 
