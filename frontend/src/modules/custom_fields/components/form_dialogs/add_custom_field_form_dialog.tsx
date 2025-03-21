@@ -54,7 +54,7 @@ export const CreateCustomFieldFormDialog: FC<
                 justifyContent="space-between"
                 gap={1}
             >
-                {t("customFields.fields.add")}
+                {t("customFields.bundles.add")}
 
                 <IconButton onClick={onClose} size="small">
                     <CloseIcon />
