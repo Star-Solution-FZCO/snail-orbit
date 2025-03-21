@@ -50,6 +50,9 @@ export const AdminSettingsButton = memo(() => {
                 <MenuItem onClick={() => handleClickMenuItem("/users")}>
                     {t("navbar.users")}
                 </MenuItem>
+                <MenuItem onClick={() => handleClickMenuItem("/workflows")}>
+                    {t("navbar.workflows")}
+                </MenuItem>
             </Menu>
         </>
     );

@@ -1,8 +1,6 @@
-import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
-import ScheduleIcon from "@mui/icons-material/Schedule";
 import { LoadingButton } from "@mui/lab";
 import {
     Box,
@@ -19,7 +17,8 @@ import {
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import type { FC, JSX } from "react";
+import { workflowTypeMap } from "components";
+import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -31,20 +30,6 @@ import {
     noLimitListQueryParams,
     toastApiError,
 } from "utils";
-
-const workflowTypeMap: Record<
-    WorkflowTypeT,
-    { translation: string; icon: JSX.Element }
-> = {
-    on_change: {
-        translation: "projects.workflows.types.on_change",
-        icon: <ChangeCircleIcon />,
-    },
-    scheduled: {
-        translation: "projects.workflows.types.scheduled",
-        icon: <ScheduleIcon />,
-    },
-};
 
 interface IWorkflowListProps {
     projectId: string;
@@ -265,7 +250,7 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
             },
             {
                 field: "name",
-                headerName: t("projects.workflows.fields.name"),
+                headerName: t("workflows.fields.name"),
                 flex: 1,
             },
             {
@@ -275,7 +260,7 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
             },
             {
                 field: "type",
-                headerName: t("projects.workflows.fields.type"),
+                headerName: t("workflows.fields.type"),
                 renderCell: ({ value }) => (
                     <Box
                         display="flex"
