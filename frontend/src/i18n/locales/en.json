@@ -453,6 +453,7 @@
   "workflows.fields.name": "Name",
   "workflows.fields.type": "Type",
   "workflows.form.name": "Name",
+  "workflows.form.schedule": "Schedule",
   "workflows.form.script": "Script",
   "workflows.form.type": "Type",
   "workflows.item.fetch.error": "Failed to fetch workflow",
@@ -461,5 +462,6 @@
   "workflows.search.placeholder": "Search workflows",
   "workflows.title": "Workflows",
   "workflows.types.on_change": "On change",
-  "workflows.types.scheduled": "Scheduled"
+  "workflows.types.scheduled": "Scheduled",
+  "workflows.update.success": "Workflow updated successfully"
 }
