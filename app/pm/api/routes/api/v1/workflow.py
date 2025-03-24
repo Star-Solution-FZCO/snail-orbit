@@ -127,7 +127,9 @@ async def create_workflow(
             )
         obj = m.ScheduledWorkflow(**body.model_dump(exclude_unset=True))
     else:
-        obj = m.OnChangeWorkflow(**body.model_dump(exclude_unset=True))
+        obj = m.OnChangeWorkflow(
+            **body.model_dump(exclude_unset=True, exclude={'schedule'})
+        )
     await obj.insert()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
@@ -140,14 +142,16 @@ async def update_workflow(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
     update_data = body.model_dump(exclude_unset=True)
-    for k, v in update_data.items():
-        setattr(obj, k, v)
-        if isinstance(obj, m.ScheduledWorkflow) and 'schedule' in update_data:
-            if not croniter.is_valid(body.schedule):
+    if 'schedule' in update_data:
+        if isinstance(obj, m.ScheduledWorkflow):
+            if not body.schedule or not croniter.is_valid(body.schedule):
                 raise HTTPException(
                     HTTPStatus.BAD_REQUEST, 'Schedule should be valid cron expression'
                 )
             obj.schedule = body.schedule
+        del update_data['schedule']
+    for k, v in update_data.items():
+        setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
