@@ -8,7 +8,7 @@ import {
     FormControlLabel,
     TextField,
 } from "@mui/material";
-import { type FC } from "react";
+import { useEffect, type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { CustomFieldT, CustomFieldTypeT } from "types";
@@ -51,6 +51,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         register,
         handleSubmit,
         formState: { errors, isDirty },
+        reset,
     } = useForm({
         defaultValues: {
             label: defaultValues?.label || "",
@@ -59,6 +60,14 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
         },
         resolver: yupResolver(customFieldSchema),
     });
+
+    useEffect(() => {
+        reset({
+            label: defaultValues?.label || "",
+            is_nullable: defaultValues?.is_nullable || false,
+            default_value: defaultValues?.default_value,
+        });
+    }, [defaultValues, reset]);
 
     return (
         <Box
