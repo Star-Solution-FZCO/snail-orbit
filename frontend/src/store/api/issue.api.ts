@@ -304,9 +304,9 @@ export const issueApi = createApi({
                 params,
             }),
             serializeQueryArgs: ({ endpointName, queryArgs }) => {
-                return `${endpointName}:${queryArgs.id}`;
+                return `${endpointName}:${queryArgs.id}:${queryArgs.params?.sort_by ?? "time"}`;
             },
-            merge: (currentCache, newItems) => {
+            merge: (currentCache, newItems, { arg }) => {
                 const existingIds = new Set(
                     currentCache.payload.items.map((item) => item.data.id),
                 );
@@ -319,18 +319,21 @@ export const issueApi = createApi({
                     ...currentCache.payload.items,
                     ...uniqueItems,
                 ];
-                currentCache.payload.items.sort(
-                    (a, b) =>
-                        new Date(b.time).getTime() - new Date(a.time).getTime(),
+
+                const reverse = arg?.params?.sort_by === "-time";
+                currentCache.payload.items.sort((a, b) =>
+                    reverse
+                        ? new Date(b.time).getTime() -
+                          new Date(a.time).getTime()
+                        : new Date(a.time).getTime() -
+                          new Date(b.time).getTime(),
                 );
                 currentCache.payload.offset = newItems.payload.offset;
                 currentCache.payload.count = newItems.payload.count;
             },
-            forceRefetch: ({ currentArg, previousArg }) => {
-                return (
-                    currentArg?.params?.offset !== previousArg?.params?.offset
-                );
-            },
+            forceRefetch: ({ currentArg, previousArg }) =>
+                currentArg?.params?.offset !== previousArg?.params?.offset ||
+                currentArg?.params?.sort_by !== previousArg?.params?.sort_by,
             providesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
                 { type: "IssueHistories", id },
@@ -347,7 +350,7 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { issueId }) => [
                 { type: "Issues", id: "LIST" },
-                { type: "Issues", issueId },
+                { type: "Issues", id: issueId },
             ],
             async onQueryStarted(
                 { issueId, tag },

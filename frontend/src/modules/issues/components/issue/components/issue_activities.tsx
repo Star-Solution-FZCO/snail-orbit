@@ -11,6 +11,9 @@ import {
     DialogContent,
     DialogTitle,
     IconButton,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
     styled,
     Tooltip,
     Typography,
@@ -118,7 +121,13 @@ interface IIssueActivitiesProps {
 }
 
 const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
-    const [listQueryParams, updateListQueryParams] = useListQueryParams();
+    const [listQueryParams, updateListQueryParams] = useListQueryParams({
+        sort_by: "time",
+    });
+
+    const [sortOrder, setSortOrder] = useState<"oldestFirst" | "newestFirst">(
+        "oldestFirst",
+    );
 
     const { data, isLoading: feedLoading } = issueApi.useListIssueFeedQuery({
         id: issueId,
@@ -154,6 +163,19 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                 : [...prevActivities, type],
         );
     };
+
+    const handleChangedSortOrder = useCallback(
+        (event: SelectChangeEvent) => {
+            const value = event.target.value as "oldestFirst" | "newestFirst";
+
+            setSortOrder(value);
+            updateListQueryParams({
+                sort_by: value === "oldestFirst" ? "time" : "-time",
+                offset: 0,
+            });
+        },
+        [updateListQueryParams],
+    );
 
     const handleClickLoadMore = useCallback(() => {
         updateListQueryParams({
@@ -209,6 +231,20 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
                         {formatSpentTime(totalSpentTime)}
                     </Typography>
                 )}
+
+                <Select
+                    value={sortOrder}
+                    onChange={handleChangedSortOrder}
+                    variant="standard"
+                    size="small"
+                >
+                    <MenuItem value="oldestFirst">
+                        {t("issues.activities.oldestFirst")}
+                    </MenuItem>
+                    <MenuItem value="newestFirst">
+                        {t("issues.activities.newestFirst")}
+                    </MenuItem>
+                </Select>
             </Box>
 
             <Box pl={1} my={2}>
