@@ -17,23 +17,18 @@ import {
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import {
-    SyntheticEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
+import type { SyntheticEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
-import { AgileBoardT, IssueT } from "types";
+import type { AgileBoardT, IssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
 import { StarButton } from "../../components/star_button";
-import { SearchSelectPopover } from "../../features/search_select/search_select_popover";
-import { SearchT } from "../../types/search";
+import type { SearchT } from "../../types/search";
 import useDebouncedState from "../../utils/hooks/use-debounced-state";
+import { SearchSelectPopover } from "../../widgets/search_select/search_select_popover";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";
@@ -83,7 +78,7 @@ const AgileBoardView = () => {
 
     useEffect(() => {
         navigate({
-            // @ts-ignore
+            // @ts-expect-error some TS bullshit, fix later
             search: (prev: { page?: number; query?: string }) => ({
                 ...prev,
                 query: debouncedSearch || undefined,

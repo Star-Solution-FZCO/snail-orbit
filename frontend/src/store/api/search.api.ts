@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { ApiResponse, ListQueryParams, ListResponse } from "types";
-import type { CreateSearchT, SearchT } from "types/search";
+import type { CreateSearchT, SearchT, UpdateSearchT } from "types/search";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Search"];
@@ -36,7 +36,7 @@ export const searchApi = createApi({
             }),
             invalidatesTags: [{ type: "Search", id: "LIST" }],
         }),
-        updateSearch: build.mutation<ApiResponse<SearchT>, CreateSearchT>({
+        updateSearch: build.mutation<ApiResponse<SearchT>, UpdateSearchT>({
             query: ({ id, ...body }) => ({
                 url: `search/${id}`,
                 method: "PUT",
