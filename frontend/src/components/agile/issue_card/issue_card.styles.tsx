@@ -14,6 +14,7 @@ export const IssueCardStyled = styled(Box, {
     borderRadius: "inherit",
     paddingLeft: colors && colors.length ? theme.spacing(0.75) : 0,
     width: "100%",
+    overflow: "hidden",
 
     "&:after":
         colors && colors.length
@@ -49,6 +50,11 @@ export const IssueCardHeader = styled(Box, {
     display: "flex",
     flexDirection: "row",
     gap: theme.spacing(1),
+
+    "& span": {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+    },
 }));
 
 export const IssueCardBottom = styled(Box, {

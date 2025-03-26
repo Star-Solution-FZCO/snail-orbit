@@ -92,6 +92,10 @@ export const StyledContainerList = styled("ul", {
     padding: theme.spacing(1),
     margin: 0,
     width: "100%",
+
+    "& div, & li": {
+        minWidth: 0,
+    },
 }));
 
 export const HeaderStyled = styled("div", { label: "kanbanContainerHeader" })(
