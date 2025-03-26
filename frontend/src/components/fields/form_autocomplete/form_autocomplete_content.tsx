@@ -80,6 +80,7 @@ export const FormAutocompleteContent = <
                                 direction="row"
                                 justifyContent="space-between"
                                 sx={{ width: 1 }}
+                                alignItems="center"
                             >
                                 <Stack direction="row" gap={0.5}>
                                     {multiple ? (

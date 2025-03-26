@@ -1,10 +1,27 @@
-import type { PermissionT } from "./permission";
+import type {
+    PermissionT,
+    PermissionTargetT,
+    PermissionTypeT,
+} from "./permission";
 import type { BasicUserT } from "./user";
 
-export type CreateSearchT = Pick<
+export type SearchFormValuesT = Pick<
     SearchT,
-    "name" | "query" | "description" | "id"
+    "name" | "query" | "description" | "id" | "permissions"
 >;
+
+type CreatePermissionT = {
+    target_type: PermissionTargetT;
+    permission_type: PermissionTypeT;
+    target: string;
+};
+
+export type UpdateSearchT = Partial<Omit<SearchFormValuesT, "permissions">> & {
+    permissions?: CreatePermissionT[];
+};
+
+export type CreateSearchT = UpdateSearchT &
+    Required<Pick<UpdateSearchT, "name" | "query">>;
 
 export type SearchT = {
     id: string;
