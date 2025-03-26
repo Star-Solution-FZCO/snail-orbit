@@ -7,13 +7,13 @@ import {
     TextField,
     Tooltip,
 } from "@mui/material";
-import { SearchSelectPopover } from "features/search_select/search_select_popover";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC, SyntheticEvent } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { SearchT } from "types/search";
+import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
 
 type SearchFieldProps = {
     value: string;
