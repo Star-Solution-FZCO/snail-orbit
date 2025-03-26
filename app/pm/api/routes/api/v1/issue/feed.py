@@ -24,6 +24,9 @@ router = APIRouter(
 )
 
 
+ALLOWED_SORT_FIELDS = {'time'}
+
+
 class IssueFeedRecordType(StrEnum):
     COMMENT = 'comment'
     HISTORY = 'history'
@@ -72,7 +75,16 @@ async def list_issue_feed(
     if user_ctx.has_permission(issue.project.id, Permissions.ISSUE_READ):
         records.extend([IssueFeedRecordOutput.from_obj(h) for h in issue.history])
 
-    records = sorted(records, key=lambda r: r.time, reverse=True)
+    sort_by = query.sort_by
+
+    if sort_by:
+        reverse = sort_by.startswith('-')
+        sort_field = sort_by.lstrip('-')
+
+        if sort_field in ALLOWED_SORT_FIELDS:
+            records.sort(key=lambda r: getattr(r, sort_field), reverse=reverse)
+    else:
+        records.sort(key=lambda r: r.time, reverse=False)
 
     return BaseListOutput.make(
         count=len(records),
