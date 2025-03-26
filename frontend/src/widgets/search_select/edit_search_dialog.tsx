@@ -1,18 +1,18 @@
-import { LoadingButton } from "@mui/lab";
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    Stack,
-    TextField,
-} from "@mui/material";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
+import { Button, Dialog, DialogActions, Stack, Tab, Tabs } from "@mui/material";
+import { useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { CreateSearchT } from "types/search";
+import type { SearchFormValuesT } from "types/search";
+import Access from "./tabs/access";
+import Main from "./tabs/main";
 
-export type EditSearchDialogValues = CreateSearchT;
+const enum tabs {
+    main = "main",
+    access = "access",
+}
+
+export type EditSearchDialogValues = SearchFormValuesT;
 
 type EditSearchDialogProps = {
     open: boolean;
@@ -25,16 +25,22 @@ type EditSearchDialogProps = {
 
 export const EditSearchDialog = (props: EditSearchDialogProps) => {
     const { open, onClose, loading, defaultValues, onSubmit, onDelete } = props;
+    const [currentTab, setTab] = useState<tabs>(tabs.main);
 
     const { t } = useTranslation();
 
-    const { register, handleSubmit, reset } = useForm<EditSearchDialogValues>({
+    const form = useForm<EditSearchDialogValues>({
         defaultValues,
     });
 
+    const { reset, handleSubmit } = form;
+
     useEffect(() => {
-        reset(defaultValues);
-    }, [defaultValues]);
+        if (open) {
+            reset(defaultValues);
+            setTab(tabs.main);
+        }
+    }, [defaultValues, reset, open]);
 
     return (
         <Dialog
@@ -46,29 +52,29 @@ export const EditSearchDialog = (props: EditSearchDialogProps) => {
             onSubmit={handleSubmit(onSubmit)}
             disableRestoreFocus
         >
-            <DialogContent>
-                <Stack direction="column" gap={2}>
-                    <TextField
-                        {...register("name")}
-                        fullWidth
-                        size="small"
-                        label={t("editSearchDialog.label.name")}
-                        autoFocus
-                    />
-                    <TextField
-                        {...register("description")}
-                        fullWidth
-                        size="small"
-                        label={t("editSearchDialog.label.description")}
-                    />
-                    <TextField
-                        {...register("query")}
-                        fullWidth
-                        size="small"
-                        label={t("editSearchDialog.label.query")}
-                    />
-                </Stack>
-            </DialogContent>
+            <FormProvider {...form}>
+                <TabContext value={currentTab}>
+                    <Tabs
+                        value={currentTab}
+                        onChange={(_, value) => setTab(value)}
+                    >
+                        <Tab
+                            label={t("editSearchDialog.tab.main")}
+                            value={tabs.main}
+                        />
+                        <Tab
+                            label={t("editSearchDialog.tab.access")}
+                            value={tabs.access}
+                        />
+                    </Tabs>
+                    <TabPanel value={tabs.main}>
+                        <Main />
+                    </TabPanel>
+                    <TabPanel value={tabs.access} sx={{ padding: 1 }}>
+                        <Access />
+                    </TabPanel>
+                </TabContext>
+            </FormProvider>
             <DialogActions
                 sx={{
                     width: "100%",
@@ -97,7 +103,7 @@ export const EditSearchDialog = (props: EditSearchDialogProps) => {
                         loading={loading}
                         disabled={loading}
                     >
-                        {t("create")}
+                        {t("save")}
                     </LoadingButton>
                 </Stack>
             </DialogActions>

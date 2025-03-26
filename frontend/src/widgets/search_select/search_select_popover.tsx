@@ -1,15 +1,19 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { AutocompleteChangeReason, Button, IconButton } from "@mui/material";
+import type { AutocompleteChangeReason } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import React, { SyntheticEvent, useCallback, useMemo, useState } from "react";
+import type { SyntheticEvent } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { searchApi } from "store/api/search.api";
-import type { CreateSearchT, SearchT } from "types/search";
+import type { SearchFormValuesT, SearchT } from "types/search";
 import { toastApiError, useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
-import { EditSearchDialog, EditSearchDialogValues } from "./edit_search_dialog";
+import type { EditSearchDialogValues } from "./edit_search_dialog";
+import { EditSearchDialog } from "./edit_search_dialog";
+import { formValuesToCreateValues } from "./search_select.utils";
 
 type SearchSelectPopoverProps = {
     value?: SearchT | SearchT[];
@@ -38,7 +42,7 @@ export const SearchSelectPopover = (props: SearchSelectPopoverProps) => {
     } = props;
 
     const [editSearchValue, setEditSearchValue] = useState<
-        (CreateSearchT & { id?: string }) | null
+        (SearchFormValuesT & { id?: string }) | null
     >(null);
 
     const [debouncedInputValue, setInputValue, inputValue] =
@@ -71,6 +75,7 @@ export const SearchSelectPopover = (props: SearchSelectPopoverProps) => {
             description: "",
             name: initialQueryString || "",
             query: initialQueryString || "",
+            permissions: [],
         });
     }, [initialQueryString]);
 
@@ -84,7 +89,7 @@ export const SearchSelectPopover = (props: SearchSelectPopoverProps) => {
 
     const handleSubmit = useCallback((value: EditSearchDialogValues) => {
         if (!value.id)
-            createSearch(value)
+            createSearch(formValuesToCreateValues(value))
                 .unwrap()
                 .then(() => {
                     toast.success(t("searchSelectPopover.createSuccessfully"));
@@ -92,7 +97,7 @@ export const SearchSelectPopover = (props: SearchSelectPopoverProps) => {
                 })
                 .catch(toastApiError);
         else
-            updateSearch(value)
+            updateSearch(formValuesToCreateValues(value))
                 .unwrap()
                 .then(() => {
                     toast.success(t("searchSelectPopover.updateSuccessfully"));
@@ -141,7 +146,7 @@ export const SearchSelectPopover = (props: SearchSelectPopoverProps) => {
                         size="small"
                         onClick={(e) => handleEditClick(e, el)}
                     >
-                        <EditIcon fontSize="inherit" />
+                        <EditIcon fontSize="small" />
                     </IconButton>
                 )}
             />
