@@ -73,7 +73,7 @@ const AgileBoardView = () => {
 
     useEffect(() => {
         setSearch(search?.query || "");
-    }, [search]);
+    }, [search, setSearch]);
 
     useEffect(() => {
         navigate({
@@ -83,7 +83,7 @@ const AgileBoardView = () => {
                 query: debouncedSearch || undefined,
             }),
         });
-    }, [debouncedSearch]);
+    }, [debouncedSearch, navigate]);
 
     useEffect(() => {
         setLastViewBoardId(boardId);
@@ -167,6 +167,7 @@ const AgileBoardView = () => {
                 component={Panel}
                 order={5}
                 id="mainContent"
+                maxWidth="100dvw"
             >
                 <Box px={4}>
                     <Stack

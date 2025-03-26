@@ -1,11 +1,12 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import deepmerge from "deepmerge";
-import { FC, useCallback, useEffect } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect } from "react";
 import { issueApi, useAppDispatch } from "store";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { IssueModal } from "../../components/issue/issue_modal";
-import { ModalViewIssueProps } from "./modal_view.types";
+import type { ModalViewIssueProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
 
 export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
