@@ -1,4 +1,5 @@
 import { useTheme } from "@mui/material";
+import { Editor } from "ckeditor5";
 
 const useCKEditorStyles = () => {
     const theme = useTheme();
@@ -100,4 +101,44 @@ const useCKEditorStyles = () => {
     };
 };
 
-export { useCKEditorStyles };
+const syncSourceEditing = (
+    editor: Editor,
+    onChange: ((value: string) => unknown) | undefined,
+    isControlled: boolean,
+    setInnerValue: (value: string) => void,
+) => {
+    const sourceEditingPlugin = editor.plugins.get("SourceEditing");
+
+    if (sourceEditingPlugin) {
+        let textarea: HTMLTextAreaElement | null = null;
+
+        const handleInput = (e: Event) => {
+            const value = (e.target as HTMLTextAreaElement).value;
+
+            onChange?.(value);
+            !isControlled && setInnerValue(value);
+        };
+
+        sourceEditingPlugin.on("change:isSourceEditingMode", () => {
+            const isSourceMode = sourceEditingPlugin.isSourceEditingMode;
+
+            if (textarea) {
+                textarea.removeEventListener("input", handleInput);
+                textarea = null;
+            }
+
+            if (isSourceMode) {
+                setTimeout(() => {
+                    textarea = document.querySelector<HTMLTextAreaElement>(
+                        ".ck-source-editing-area textarea",
+                    );
+                    if (textarea) {
+                        textarea.addEventListener("input", handleInput);
+                    }
+                }, 50);
+            }
+        });
+    }
+};
+
+export { syncSourceEditing, useCKEditorStyles };
