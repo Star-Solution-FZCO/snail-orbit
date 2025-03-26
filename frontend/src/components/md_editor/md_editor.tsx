@@ -211,14 +211,6 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                     backgroundColor: "inherit",
                     color: theme.palette.text.primary,
                     wordBreak: "break-word",
-                    "& a": {
-                        color: theme.palette.primary.main,
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 1,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                    },
                 },
             })}
         >
@@ -226,11 +218,25 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                 className="markdown-body"
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    a: ({ node, ...props }) => (
-                        <a {...props} target="_blank" rel="noopener noreferrer">
-                            {props.children}
-                        </a>
-                    ),
+                    a: ({ node, ...props }) => {
+                        const maxLength = 50;
+
+                        const children =
+                            typeof props.children === "string" &&
+                            props.children.length > maxLength
+                                ? props.children.slice(0, maxLength) + "..."
+                                : props.children;
+
+                        return (
+                            <a
+                                {...props}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {children}
+                            </a>
+                        );
+                    },
                 }}
             >
                 {text}
