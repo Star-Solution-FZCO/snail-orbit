@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -99,7 +98,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleSubmit(onSubmit)}
                     variant="outlined"
                     size="small"
@@ -107,7 +106,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                     disabled={!isDirty}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -11,10 +10,11 @@ import {
     TextField,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { WorkflowT, workflowTypes } from "types";
+import type { WorkflowT } from "types";
+import { workflowTypes } from "types";
 import * as yup from "yup";
 
 const workflowSchema = yup.object().shape({
@@ -151,7 +151,7 @@ const WorkflowForm: FC<IWorkflowFormProps> = ({
             />
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     size="small"
@@ -159,7 +159,7 @@ const WorkflowForm: FC<IWorkflowFormProps> = ({
                     loading={loading}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 {!hideCancel && (
                     <Link to="..">

@@ -70,7 +70,9 @@ export const FormAutocompleteContent = <
                     }
                     onChange?.(event, newValue, reason);
                 }}
-                PopperComponent={PopperComponent}
+                slots={{
+                    popper: PopperComponent,
+                }}
                 renderTags={() => null}
                 renderOption={(props, option, { selected }) => {
                     const { key, ...optionProps } = props;

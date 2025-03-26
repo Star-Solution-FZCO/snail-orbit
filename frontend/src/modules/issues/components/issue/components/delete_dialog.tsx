@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Button,
     Dialog,
@@ -73,13 +72,13 @@ const DeleteIssueDialog: FC<IDeleteIssueDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickDelete}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("delete")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

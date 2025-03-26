@@ -1,4 +1,4 @@
-import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
+import { TabContext, TabPanel } from "@mui/lab";
 import { Button, Dialog, DialogActions, Stack, Tab, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -97,14 +97,14 @@ export const EditSearchDialog = (props: EditSearchDialogProps) => {
                     <Button type="button" variant="text" onClick={onClose}>
                         {t("cancel")}
                     </Button>
-                    <LoadingButton
+                    <Button
                         type="submit"
                         variant="contained"
                         loading={loading}
                         disabled={loading}
                     >
                         {t("save")}
-                    </LoadingButton>
+                    </Button>
                 </Stack>
             </DialogActions>
         </Dialog>

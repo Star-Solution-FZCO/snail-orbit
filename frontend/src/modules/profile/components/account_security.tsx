@@ -1,6 +1,5 @@
 import KeyIcon from "@mui/icons-material/Key";
 import LockIcon from "@mui/icons-material/Lock";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -8,7 +7,7 @@ import utc from "dayjs/plugin/utc";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "store";
-import { TOTPDataT } from "types";
+import type { TOTPDataT } from "types";
 import { toastApiError } from "utils";
 import { DeleteTOTPDialog } from "./dialogs/delete_totp_dialog";
 import { TFASetupDialog } from "./dialogs/tfa_setup_dialog";
@@ -107,7 +106,7 @@ export const AccountSecurity = () => {
             />
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     onClick={totpCreated ? handleClickDelete : handleClickSetup}
                     variant="outlined"
                     size="small"
@@ -120,7 +119,7 @@ export const AccountSecurity = () => {
                             ? "tfa.totp.delete.title"
                             : "tfa.setup.title",
                     )}
-                </LoadingButton>
+                </Button>
 
                 {totpCreated && (
                     <Button

@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Button,
     Dialog,
@@ -10,7 +9,7 @@ import {
     IconButton,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
@@ -74,13 +73,13 @@ const DeleteAgileBoardDialog: FC<IDeleteAgileBoardDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickDelete}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("delete")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

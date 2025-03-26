@@ -1,6 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -14,11 +13,12 @@ import {
     Typography,
 } from "@mui/material";
 import { QRCodeSVG } from "qrcode.react";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { userApi } from "store";
-import { TOTPDataT } from "types";
+import type { TOTPDataT } from "types";
 import { toastApiError } from "utils";
 
 interface ITFASetupDialogProps {
@@ -151,14 +151,14 @@ export const TFASetupDialog: FC<ITFASetupDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickConfirm}
                     variant="outlined"
                     disabled={!code}
                     loading={isLoading}
                 >
                     {t("tfa.confirm")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

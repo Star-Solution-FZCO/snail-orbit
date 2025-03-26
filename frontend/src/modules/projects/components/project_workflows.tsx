@@ -1,7 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -201,13 +200,13 @@ const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickDetach}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("projects.workflows.detach.title")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );
