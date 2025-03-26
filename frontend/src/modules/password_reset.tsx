@@ -1,6 +1,12 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
-import { Avatar, Box, Container, TextField, Typography } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Container,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,7 +55,7 @@ const PasswordReset = () => {
                 toast.success(t("passwordReset.success"));
                 navigate({ to: "/" });
             })
-            .catch((error: any) => {
+            .catch((error: unknown) => {
                 toastApiError(error);
             })
             .finally(() => {
@@ -97,7 +103,7 @@ const PasswordReset = () => {
                             fullWidth
                         />
 
-                        <LoadingButton
+                        <Button
                             type="submit"
                             variant="outlined"
                             size="small"
@@ -106,7 +112,7 @@ const PasswordReset = () => {
                             fullWidth
                         >
                             {t("passwordReset.form.submit")}
-                        </LoadingButton>
+                        </Button>
                     </Box>
                 </Box>
             </Container>

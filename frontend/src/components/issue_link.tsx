@@ -13,6 +13,8 @@ type IssueLinkProps = {
 // @ts-expect-error Type mismatch meh
 const IssueLinkComp: StyledComponent<IssueLinkProps> = styled(Link, {
     name: "IssueLink",
+    shouldForwardProp: (name) =>
+        !["lineThrough", "resolved", "variant"].includes(name.toString()),
 })<IssueLinkProps>(({ theme, variant, lineThrough, resolved }) => ({
     color: resolved
         ? theme.palette.text.disabled

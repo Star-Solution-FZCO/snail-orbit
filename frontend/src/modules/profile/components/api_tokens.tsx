@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -11,17 +10,20 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Clipboard } from "components";
-import dayjs, { Dayjs } from "dayjs";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "store";
-import { APITokenT } from "types";
+import type { APITokenT } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 
 dayjs.extend(relativeTime);
@@ -122,14 +124,14 @@ const AddAPITokenDialog: FC<IAddAPITokenDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickCreate}
                     variant="outlined"
                     disabled={!name}
                     loading={isLoading}
                 >
                     {t("create")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

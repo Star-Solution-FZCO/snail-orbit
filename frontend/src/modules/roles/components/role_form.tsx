@@ -1,12 +1,11 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { RoleT } from "types";
+import type { RoleT } from "types";
 import * as yup from "yup";
 
 const roleSchema = yup.object().shape({
@@ -75,14 +74,14 @@ const RoleForm: FC<IRoleFormProps> = ({
             </Box>
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     size="small"
                     loading={loading}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 {!hideCancel && (
                     <Link to="..">

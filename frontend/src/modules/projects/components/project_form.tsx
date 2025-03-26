@@ -1,12 +1,12 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
-import { FC, useEffect } from "react";
+import type { FC } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ProjectT } from "types";
+import type { ProjectT } from "types";
 import * as yup from "yup";
 import { generateSlug } from "../utils";
 
@@ -55,7 +55,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
             const slug = generateSlug(name);
             setValue("slug", slug);
         }
-    }, [name]);
+    }, [defaultValues, name, setValue]);
 
     return (
         <Box
@@ -69,8 +69,8 @@ const ProjectForm: FC<IProjectFormProps> = ({
             <TextField
                 {...register("name")}
                 label={t("projects.form.name")}
-                InputProps={{
-                    readOnly,
+                slotProps={{
+                    input: { readOnly },
                 }}
                 error={!!errors.name}
                 helperText={t(errors.name?.message || "")}
@@ -82,11 +82,9 @@ const ProjectForm: FC<IProjectFormProps> = ({
             <TextField
                 {...register("slug")}
                 label={t("projects.form.slug")}
-                InputLabelProps={{
-                    shrink: !!slug,
-                }}
-                InputProps={{
-                    readOnly,
+                slotProps={{
+                    input: { readOnly },
+                    inputLabel: { shrink: !!slug },
                 }}
                 error={!!errors.slug}
                 helperText={t(errors.slug?.message || "")}
@@ -111,7 +109,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
             </Box>
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     size="small"
@@ -119,7 +117,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
                     disabled={readOnly}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 {!hideCancel && (
                     <Link to="..">

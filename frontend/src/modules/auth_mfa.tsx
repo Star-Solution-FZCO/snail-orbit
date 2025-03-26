@@ -1,8 +1,16 @@
-import { LoadingButton } from "@mui/lab";
-import { Avatar, Box, Container, TextField, Typography } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Container,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { FC, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import type { FC } from "react";
+import { useState } from "react";
+import type { SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { mfaAuthenticate } from "services/auth";
 import { setUser, useAppDispatch, userApi } from "store";
@@ -79,7 +87,7 @@ export const MFAView: FC = () => {
                             fullWidth
                         />
 
-                        <LoadingButton
+                        <Button
                             sx={{ mt: 2 }}
                             type="submit"
                             variant="contained"
@@ -87,7 +95,7 @@ export const MFAView: FC = () => {
                             fullWidth
                         >
                             {t("submit")}
-                        </LoadingButton>
+                        </Button>
                     </Box>
                 </Box>
             </Container>

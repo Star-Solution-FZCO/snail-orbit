@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Button,
     Dialog,
@@ -9,7 +8,7 @@ import {
     DialogTitle,
     IconButton,
 } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 interface IDeleteCustomFieldGroupDialogProps {
@@ -57,13 +56,9 @@ const DeleteCustomFieldGroupDialog: FC<IDeleteCustomFieldGroupDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
-                    onClick={onSubmit}
-                    variant="outlined"
-                    loading={loading}
-                >
+                <Button onClick={onSubmit} variant="outlined" loading={loading}>
                     {t("delete")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );
