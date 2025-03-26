@@ -1,5 +1,5 @@
 import { CKEditor } from "@ckeditor/ckeditor5-react";
-import { Box, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import type { DowncastWriter, EventInfo } from "ckeditor5";
 import {
     Autoformat,
@@ -11,6 +11,7 @@ import {
     CodeBlock,
     Essentials,
     Heading,
+    HorizontalLine,
     Italic,
     Link,
     List,
@@ -31,7 +32,7 @@ import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./md_editor.css";
-import { useCKEditorStyles } from "./utils";
+import { syncSourceEditing, useCKEditorStyles } from "./utils";
 
 const plugins = [
     Essentials,
@@ -53,6 +54,7 @@ const plugins = [
     TableToolbar,
     TextTransformation,
     TodoList,
+    HorizontalLine,
 ];
 
 const toolbar = {
@@ -69,6 +71,7 @@ const toolbar = {
         "blockQuote",
         "code",
         "link",
+        "horizontalLine",
         "|",
         "bulletedList",
         "numberedList",
@@ -110,11 +113,11 @@ const MDEditor: FC<IMDEditorProps> = ({
     const isControlled = typeof value !== "undefined";
     const hasDefaultValue = typeof defaultValue !== "undefined";
 
-    const theme = useTheme();
     const editorStyles = useCKEditorStyles();
     const [innerValue, setInnerValue] = useState<string>(
         hasDefaultValue ? defaultValue : "",
     );
+
     const editorValue = isControlled ? value : innerValue;
 
     const handleChange = useCallback(
@@ -135,7 +138,7 @@ const MDEditor: FC<IMDEditorProps> = ({
 
     return (
         <Box
-            sx={{
+            sx={(theme) => ({
                 ...editorStyles,
                 "& .ck-editor__editable": {
                     minHeight: autoHeight ? "auto" : "300px",
@@ -151,7 +154,7 @@ const MDEditor: FC<IMDEditorProps> = ({
                 "& a": {
                     color: theme.palette.primary.main,
                 },
-            }}
+            })}
         >
             <CKEditor
                 editor={ClassicEditor}
@@ -174,6 +177,13 @@ const MDEditor: FC<IMDEditorProps> = ({
                     if (readOnly) {
                         editor.enableReadOnlyMode("");
                     }
+
+                    syncSourceEditing(
+                        editor,
+                        onChange,
+                        isControlled,
+                        setInnerValue,
+                    );
                 }}
                 config={{
                     licenseKey: "GPL",
