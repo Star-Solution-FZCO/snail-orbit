@@ -434,6 +434,8 @@ async def create_issue_from_draft(
         )
     )
     for a in obj.attachments:
+        if a.encryption:
+            continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
         'create',
@@ -530,6 +532,8 @@ async def create_issue(
         )
     )
     for a in obj.attachments:
+        if a.encryption:
+            continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     task_notify_by_pararam.delay(
         'create',
@@ -643,8 +647,10 @@ async def update_issue(
                 data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
             )
         )
-        for a_id in extra_attachment_ids:
-            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
+        for a in obj.attachments:
+            if a.id not in extra_attachment_ids or a.encryption:
+                continue
+            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
         await m.Issue.update_issue_embedded_links(obj)
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
