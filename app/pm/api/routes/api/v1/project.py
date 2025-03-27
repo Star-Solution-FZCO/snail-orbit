@@ -55,6 +55,18 @@ class ProjectListOutput(CrudOutput[m.Project]):
     slug: str
     description: str | None
     is_active: bool
+    is_subscribed: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.Project) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            slug=obj.slug,
+            description=obj.description,
+            is_active=obj.is_active,
+            is_subscribed=current_user().user.id in obj.subscribers,
+        )
 
 
 class ProjectPermissionOutput(BaseModel):

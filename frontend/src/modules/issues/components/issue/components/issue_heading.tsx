@@ -1,9 +1,11 @@
 import EditIcon from "@mui/icons-material/Edit";
-import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
+
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
 import type { IssueT } from "types";
 import { HeadingControls } from "./heading_controls";
+import { IssueSubscribeButton } from "./issue_subscribe_button";
 
 type IssueHeadingProps = {
     issue: IssueT;
@@ -14,7 +16,11 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
     const { issue, onEditClick } = props;
 
     return (
-        <Stack flexDirection="row" gap={1}>
+        <Stack flexDirection="row" gap={1} position="relative">
+            <Box position="absolute" top={8} left={-28}>
+                <IssueSubscribeButton issue={issue} />
+            </Box>
+
             <Typography
                 sx={{
                     wordBreak: "break-word",

@@ -414,5 +414,25 @@ export const issueApi = createApi({
                 }
             },
         }),
+        subscribeIssue: build.mutation<ApiResponse<IssueT>, string>({
+            query: (id) => ({
+                url: `issue/${id}/subscribe`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
+            ],
+        }),
+        unsubscribeIssue: build.mutation<ApiResponse<IssueT>, string>({
+            query: (id) => ({
+                url: `issue/${id}/unsubscribe`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Issues", id: "LIST" },
+                { type: "Issues", id },
+            ],
+        }),
     }),
 });
