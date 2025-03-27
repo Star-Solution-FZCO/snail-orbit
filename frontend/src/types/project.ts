@@ -19,6 +19,7 @@ export type ProjectT = CreateProjectT & {
     id: string;
     description: string | null;
     is_active: boolean;
+    is_subscribed: boolean;
 };
 
 export type ProjectDetailT = ProjectT & {
