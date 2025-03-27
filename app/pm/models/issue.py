@@ -10,6 +10,7 @@ from pydantic import BaseModel, Extra, Field
 from pm.utils.dateutils import utcnow
 
 from ._audit import audited_model
+from ._encryption import EncryptionKeyAlgorithmT
 from .custom_fields import (
     CustomField,
     CustomFieldLink,
@@ -34,6 +35,8 @@ __all__ = (
     'IssueInterlinkTypeT',
     'IssueInterlink',
     'IssueLinkField',
+    'EncryptionKeyMeta',
+    'EncryptionMeta',
 )
 
 
@@ -93,6 +96,18 @@ class IssueInterlink(BaseModel):
     issue: IssueLinkField
 
 
+class EncryptionKeyMeta(BaseModel):
+    pub_key_fingerprint: str
+    user_id: PydanticObjectId
+    key: str
+    algorithm: EncryptionKeyAlgorithmT
+
+
+class EncryptionMeta(BaseModel):
+    ephemeral_public_key: str
+    encryption_keys: list[EncryptionKeyMeta]
+
+
 class IssueAttachment(BaseModel):
     id: UUID
     name: str
@@ -101,6 +116,7 @@ class IssueAttachment(BaseModel):
     author: UserLinkField
     created_at: datetime
     ocr_text: str | None = None
+    encryption: EncryptionMeta | None = None
 
 
 class IssueComment(BaseModel):
@@ -112,6 +128,7 @@ class IssueComment(BaseModel):
     attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     is_hidden: bool = False
     spent_time: int = 0
+    encryption: EncryptionMeta | None = None
 
 
 class IssueFieldChange(BaseModel):

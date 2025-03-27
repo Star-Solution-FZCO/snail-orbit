@@ -1,4 +1,5 @@
 from ._audit import *
+from ._encryption import *
 from .board import *
 from .custom_fields import *
 from .group import *
