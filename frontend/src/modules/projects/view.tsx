@@ -2,7 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link, TabPanel } from "components";
+import { ErrorHandler, Link, SubscribeButton, TabPanel } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { SyntheticEvent, useEffect, useState } from "react";
@@ -32,6 +32,20 @@ const ProjectView = () => {
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
 
+    const [subscribe] = projectApi.useSubscribeProjectMutation();
+    const [unsubscribe] = projectApi.useUnsubscribeProjectMutation();
+
+    const handleToggleSubscribeButton = () => {
+        const mutation = project.is_subscribed ? unsubscribe : subscribe;
+        mutation(project.id);
+    };
+
+    const handleChangeTab = (_: SyntheticEvent, value: string) => {
+        setCurrentTab(value);
+        // @ts-ignore
+        navigate({ search: { tab: value } });
+    };
+
     useEffect(() => {
         setAction(
             <Link to="/projects/create">
@@ -44,11 +58,9 @@ const ProjectView = () => {
         return () => setAction(null);
     }, [setAction]);
 
-    const handleChangeTab = (_: SyntheticEvent, value: string) => {
-        setCurrentTab(value);
-        // @ts-ignore
-        navigate({ search: { tab: value } });
-    };
+    useEffect(() => {
+        setCurrentTab(search?.tab || "general");
+    }, [search?.tab]);
 
     if (error) {
         return (
@@ -73,10 +85,16 @@ const ProjectView = () => {
             gap={2}
             flex={1}
         >
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" gap={2}>
                 <Typography fontSize={24} fontWeight="bold">
                     {project.name}
                 </Typography>
+
+                <SubscribeButton
+                    isSubscribed={project.is_subscribed}
+                    onToggle={handleToggleSubscribeButton}
+                    type="project"
+                />
             </Box>
 
             <Box display="flex" flexDirection="column" flex={1}>

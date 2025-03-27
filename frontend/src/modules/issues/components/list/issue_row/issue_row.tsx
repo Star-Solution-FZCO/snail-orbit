@@ -3,6 +3,7 @@ import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
 import { memo } from "react";
 import { slugify } from "transliteration";
+import { IssueSubscribeButton } from "../../issue/components/issue_subscribe_button";
 import { IssueTags } from "../../issue/components/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
 import type { IssueRowProps } from "./issue_row.types";
@@ -22,6 +23,8 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         flexWrap="nowrap"
                         alignItems="center"
                     >
+                        <IssueSubscribeButton issue={issue} />
+
                         <IssueLink
                             to="/issues/$issueId/$subject"
                             params={{

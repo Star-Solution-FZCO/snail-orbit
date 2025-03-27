@@ -176,5 +176,27 @@ export const projectApi = createApi({
                 { type: "ProjectPermissions", id },
             ],
         }),
+        subscribeProject: build.mutation<ApiResponse<ProjectDetailT>, string>({
+            query: (id) => ({
+                url: `project/${id}/subscribe`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
+        unsubscribeProject: build.mutation<ApiResponse<ProjectDetailT>, string>(
+            {
+                query: (id) => ({
+                    url: `project/${id}/unsubscribe`,
+                    method: "POST",
+                }),
+                invalidatesTags: (_result, _error, id) => [
+                    { type: "Projects", id: "LIST" },
+                    { type: "Projects", id },
+                ],
+            },
+        ),
     }),
 });
