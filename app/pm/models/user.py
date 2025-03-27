@@ -16,6 +16,7 @@ from pm.config import DB_ENCRYPTION_KEY
 from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
+from ._encryption import EncryptionKeyAlgorithmT
 from .group import Group, GroupLinkField
 
 __all__ = (
@@ -25,6 +26,7 @@ __all__ = (
     'UserOriginType',
     'UserAvatarType',
     'TOTPSettings',
+    'EncryptionKey',
 )
 
 
@@ -146,6 +148,16 @@ class TOTPSettings(BaseModel):
         return self._get_verifier().url(name, issuer=issuer)
 
 
+class EncryptionKey(BaseModel):
+    name: str
+    public_key: str
+    fingerprint: str
+    algorithm: EncryptionKeyAlgorithmT
+    is_active: bool = True
+    created_on: str | None = None
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+
 @audited_model
 class User(Document):
     class Settings:
@@ -167,6 +179,7 @@ class User(Document):
     origin: UserOriginType = UserOriginType.LOCAL
     avatar_type: UserAvatarType = UserAvatarType.DEFAULT
     ui_settings: Annotated[dict, Field(default_factory=dict)]
+    encryption_keys: Annotated[list[EncryptionKey], Field(default_factory=list)]
 
     @property
     def use_external_avatar(self) -> bool:

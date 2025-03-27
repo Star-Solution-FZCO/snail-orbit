@@ -66,6 +66,7 @@ class IssueAttachmentOut(BaseModel):
     author: UserOutput
     created_at: datetime
     ocr_text: str | None
+    encryption: m.EncryptionMeta | None
 
     @classmethod
     def from_obj(cls, obj: m.IssueAttachment) -> Self:
@@ -77,6 +78,7 @@ class IssueAttachmentOut(BaseModel):
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             ocr_text=obj.ocr_text,
+            encryption=obj.encryption,
         )
 
 
@@ -241,6 +243,7 @@ class IssueCommentOutput(BaseModel):
     attachments: list[IssueAttachmentOut]
     is_hidden: bool
     spent_time: int
+    encryption: m.EncryptionMeta | None
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
@@ -255,6 +258,7 @@ class IssueCommentOutput(BaseModel):
             else [],
             is_hidden=obj.is_hidden,
             spent_time=obj.spent_time,
+            encryption=obj.encryption,
         )
 
 
