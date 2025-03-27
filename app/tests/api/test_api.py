@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
@@ -43,6 +44,12 @@ INTERLINK_TYPES = (
     ('clones', 'cloned_by'),
     ('cloned_by', 'clones'),
 )
+
+
+def _format_dt_to_response(dt: datetime) -> str:
+    if dt.microsecond:
+        return dt.isoformat(timespec='milliseconds') + '000'
+    return dt.isoformat()
 
 
 @pytest_asyncio.fixture
@@ -247,6 +254,75 @@ async def test_api_v1_profile_and_ui_settings(
             **ui_settings_payload,
         },
     }
+
+
+@pytest.mark.asyncio
+async def test_api_v1_settings(
+    test_client: 'TestClient', create_initial_admin: tuple[str, str]
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    fingerprint = 'ffffffff'
+    encryption_key_payload = {
+        'name': 'test',
+        'public_key': 'A' * 64,
+        'fingerprint': fingerprint,
+        'algorithm': 'ED25519',
+        'is_active': True,
+        'created_on': 'test machine',
+    }
+
+    response = test_client.post(
+        '/api/v1/settings/encryption_key', headers=headers, json=encryption_key_payload
+    )
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data['payload']['created_at']
+    created_at = datetime.fromisoformat(response_data['payload'].pop('created_at'))
+    assert response_data == {
+        'success': True,
+        'payload': encryption_key_payload,
+    }
+
+    response = test_client.get(
+        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            **encryption_key_payload,
+            'created_at': _format_dt_to_response(created_at),
+        },
+    }
+
+    response = test_client.put(
+        f'/api/v1/settings/encryption_key/{fingerprint}',
+        headers=headers,
+        json={'name': 'test updated', 'is_active': False},
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        'success': True,
+        'payload': {
+            **encryption_key_payload,
+            'created_at': _format_dt_to_response(created_at),
+            'name': 'test updated',
+            'is_active': False,
+        },
+    }
+
+    response = test_client.delete(
+        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json() == {'success': True}
+
+    response = test_client.get(
+        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+    )
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
