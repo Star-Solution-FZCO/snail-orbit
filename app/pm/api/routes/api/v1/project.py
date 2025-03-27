@@ -20,7 +20,6 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputT,
     cf_output_from_obj,
 )
-from pm.api.views.factories.crud import CrudCreateBody, CrudOutput, CrudUpdateBody
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
     BaseListOutput,
@@ -43,19 +42,40 @@ router = APIRouter(
 )
 
 
-class WorkflowOutput(CrudOutput[m.Workflow]):
+class WorkflowOutput(BaseModel):
     id: PydanticObjectId
     name: str
     description: str | None
     type: m.WorkflowType
 
+    @classmethod
+    def from_obj(cls, obj: m.Workflow) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            description=obj.description,
+            type=obj.type,
+        )
 
-class ProjectListOutput(CrudOutput[m.Project]):
+
+class ProjectListItemOutput(BaseModel):
+    id: PydanticObjectId
     name: str
     slug: str
     description: str | None
+    ai_description: str | None
     is_active: bool
     is_subscribed: bool
+    avatar_type: m.ProjectAvatarType
+
+    @computed_field
+    @property
+    def avatar(self) -> str:
+        return (
+            f'/api/avatar/project/{self.id}'
+            if self.avatar_type == m.ProjectAvatarType.LOCAL
+            else None
+        )
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> Self:
@@ -64,8 +84,10 @@ class ProjectListOutput(CrudOutput[m.Project]):
             name=obj.name,
             slug=obj.slug,
             description=obj.description,
+            ai_description=obj.ai_description,
             is_active=obj.is_active,
             is_subscribed=current_user().user.id in obj.subscribers,
+            avatar_type=obj.avatar_type,
         )
 
 
@@ -204,7 +226,7 @@ class ProjectOutput(BaseModel):
         )
 
 
-class ProjectCreate(CrudCreateBody[m.Project]):
+class ProjectCreate(BaseModel):
     name: str
     slug: str
     description: str | None = None
@@ -212,7 +234,7 @@ class ProjectCreate(CrudCreateBody[m.Project]):
     is_active: bool = True
 
 
-class ProjectUpdate(CrudUpdateBody[m.Project]):
+class ProjectUpdate(BaseModel):
     name: str | None = None
     slug: str | None = None
     description: str | None = None
@@ -234,7 +256,7 @@ class FieldMoveBody(BaseModel):
 @router.get('/list')
 async def list_projects(
     query: ListParams = Depends(),
-) -> BaseListOutput[ProjectListOutput]:
+) -> BaseListOutput[ProjectListItemOutput]:
     q = m.Project.find().sort(m.Project.id)
     if query.search:
         q = q.find(m.Project.search_query(query.search))
@@ -242,7 +264,7 @@ async def list_projects(
         q,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=ProjectListOutput.from_obj,
+        projection_fn=ProjectListItemOutput.from_obj,
     )
 
 
@@ -261,7 +283,13 @@ async def create_project(
     body: ProjectCreate,
     _=Depends(admin_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    obj = body.create_obj(m.Project)
+    obj = m.Project(
+        name=body.name,
+        slug=body.slug,
+        description=body.description,
+        ai_description=body.ai_description,
+        is_active=body.is_active,
+    )
     await obj.insert()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
@@ -290,7 +318,8 @@ async def update_project(
                 HTTPStatus.BAD_REQUEST,
                 f'Custom field id={unknown_card_field} not found in project fields',
             )
-    body.update_obj(obj)
+    for k, v in body.model_dump(exclude_unset=True).items():
+        setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
         await asyncio.gather(
