@@ -31,12 +31,14 @@ class IssueCommentCreate(BaseModel):
     text: str | None = None
     attachments: Annotated[list[UUID], Field(default_factory=list)]
     spent_time: int = 0
+    encryption: m.EncryptionMeta | None = None
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
     attachments: list[UUID] | None = None
     spent_time: int | None = None
+    encryption: m.EncryptionMeta | None = None
 
 
 @router.get('/list')
@@ -130,6 +132,8 @@ async def create_comment(
     issue.updated_by = comment.author
     await issue.save_changes()
     for a in comment.attachments:
+        if a.encryption:
+            continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
@@ -195,8 +199,10 @@ async def update_comment(
         issue.updated_at = comment.created_at
         issue.updated_by = comment.author
         await issue.save_changes()
-        for a_id in extra_attachment_ids:
-            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a_id)}))
+        for a in comment.attachments:
+            if a.id not in extra_attachment_ids or a.encryption:
+                continue
+            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
