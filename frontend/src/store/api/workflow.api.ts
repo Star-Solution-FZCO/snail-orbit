@@ -12,7 +12,7 @@ import customFetchBase from "./custom_fetch_base";
 const tagTypes = ["Workflows"];
 
 export const workflowApi = createApi({
-    reducerPath: "worklowApi",
+    reducerPath: "workflowApi",
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({

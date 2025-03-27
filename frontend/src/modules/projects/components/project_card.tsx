@@ -1,11 +1,11 @@
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { Avatar, Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
+import { Link, SubscribeButton } from "components";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppSelector } from "store";
+import { projectApi, useAppSelector } from "store";
 import type { ProjectT } from "types";
 import { useProjectFormTabs } from "../utils";
 
@@ -20,8 +20,16 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const tabs = useProjectFormTabs();
     const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
+    const [subscribe] = projectApi.useSubscribeProjectMutation();
+    const [unsubscribe] = projectApi.useUnsubscribeProjectMutation();
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
+
+    const handleToggleSubscribeButton = () => {
+        const mutation = project.is_subscribed ? unsubscribe : subscribe;
+        mutation(project.id);
+    };
 
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -47,13 +55,19 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     return (
         <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box display="flex" alignItems="center">
+                <SubscribeButton
+                    isSubscribed={project.is_subscribed}
+                    onToggle={handleToggleSubscribeButton}
+                    type="project"
+                />
+
                 <Avatar
                     sx={{
                         width: 40,
                         height: 40,
                         fontSize: 16,
                         fontWeight: "bold",
-                        mr: 2,
+                        mx: 2,
                     }}
                     variant="rounded"
                 >
