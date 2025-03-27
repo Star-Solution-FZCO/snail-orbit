@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -157,7 +156,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleSubmit(onSubmit)}
                     variant="outlined"
                     size="small"
@@ -165,7 +164,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                     disabled={!isDirty}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

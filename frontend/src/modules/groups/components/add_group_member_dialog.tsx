@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
     Box,
@@ -14,10 +13,11 @@ import {
     TextField,
 } from "@mui/material";
 import { UserAvatar } from "components";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi, userApi } from "store";
-import { BasicUserT, ListSelectQueryParams } from "types";
+import type { BasicUserT, ListSelectQueryParams } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 
 interface AddGroupMemberDialogProps {
@@ -162,7 +162,7 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                         />
                     )}
                     renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
+                        const { key: _, ...optionProps } = props;
                         return (
                             <li {...optionProps} key={option.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
@@ -187,14 +187,14 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickAdd}
                     variant="outlined"
                     disabled={!user}
                     loading={isLoading}
                 >
                     {t("groups.members.add")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

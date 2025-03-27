@@ -30,31 +30,31 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     const { t } = useTranslation();
     const [currentTab, setTab] = useState<tabs>(tabs.main);
 
-    const form = useForm<AgileBoardT>({
-        defaultValues,
-    });
+    const form = useForm<AgileBoardT>();
 
     const {
         handleSubmit,
-        formState: { isDirty },
+        formState: { dirtyFields },
         control,
         reset,
     } = form;
 
     useEffect(() => {
         reset(defaultValues);
-    }, [defaultValues]);
+    }, [defaultValues, reset]);
 
     const fieldValues = useWatch({ control });
 
     const debouncedSubmit = useMemo(
         () => debounce(handleSubmit(onSubmit), 400),
-        [onSubmit, handleSubmit],
+        [handleSubmit, onSubmit],
     );
 
     useEffect(() => {
-        if (isDirty) debouncedSubmit();
-    }, [fieldValues, isDirty]);
+        if (Object.keys(dirtyFields).length) {
+            debouncedSubmit();
+        }
+    }, [debouncedSubmit, dirtyFields, fieldValues]);
 
     return (
         <FormProvider {...form}>

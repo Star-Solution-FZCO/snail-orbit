@@ -21,7 +21,6 @@ import type { SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { toast } from "react-toastify";
 import { agileBoardApi } from "store";
 import type { AgileBoardT, IssueT } from "types";
 import { formatErrorMessages, toastApiError } from "utils";
@@ -74,7 +73,7 @@ const AgileBoardView = () => {
 
     useEffect(() => {
         setSearch(search?.query || "");
-    }, [search]);
+    }, [search, setSearch]);
 
     useEffect(() => {
         navigate({
@@ -84,7 +83,7 @@ const AgileBoardView = () => {
                 query: debouncedSearch || undefined,
             }),
         });
-    }, [debouncedSearch]);
+    }, [debouncedSearch, navigate]);
 
     useEffect(() => {
         setLastViewBoardId(boardId);
@@ -99,18 +98,15 @@ const AgileBoardView = () => {
 
     const onSubmit = useCallback(
         (formData: AgileBoardT) => {
-            if (!agileBoard) return;
+            if (!agileBoard?.id) return;
             updateAgileBoard({
                 id: agileBoard.id,
                 ...formValuesToCreateForm(formData),
             })
                 .unwrap()
-                .then(() => {
-                    toast.success(t("agileBoards.update.success"));
-                })
                 .catch(toastApiError);
         },
-        [updateAgileBoard, toast, agileBoard, formValuesToCreateForm],
+        [updateAgileBoard, agileBoard?.id],
     );
 
     const goToFullListHandler = useCallback(() => {
@@ -171,6 +167,7 @@ const AgileBoardView = () => {
                 component={Panel}
                 order={5}
                 id="mainContent"
+                maxWidth="100dvw"
             >
                 <Box px={4}>
                     <Stack

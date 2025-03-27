@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
     Button,
     Dialog,
@@ -12,7 +11,8 @@ import {
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { userApi } from "store";
@@ -98,14 +98,14 @@ export const DeleteTOTPDialog: FC<IDeleteTOTPDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickConfirm}
                     variant="outlined"
                     disabled={!code && tfaEnabled}
                     loading={isLoading}
                 >
                     {t("tfa.confirm")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

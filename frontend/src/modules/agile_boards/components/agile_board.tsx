@@ -1,8 +1,9 @@
 import { Kanban as KanbanComp } from "components/kanban/kanban";
-import { Items, KanbanProps } from "components/kanban/kanban.types";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { Items, KanbanProps } from "components/kanban/kanban.types";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { agileBoardApi, issueApi } from "store";
-import { AgileBoardT, IssueT, UpdateIssueT } from "types";
+import type { AgileBoardT, IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import {
     columnKeyToFieldValue,
@@ -40,7 +41,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({
                 .then(refetch)
                 .catch(toastApiError);
         },
-        [],
+        [refetch, updateIssue],
     );
 
     const [items, setItems] = useState<Items | null>(null);
@@ -109,7 +110,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({
 
     useEffect(() => {
         refetch();
-    }, [boardData]);
+    }, [boardData, refetch]);
 
     const columns = useCalcColumns({
         boardColumns: headers.length,

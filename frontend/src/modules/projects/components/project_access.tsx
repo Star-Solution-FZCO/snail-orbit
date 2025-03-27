@@ -2,7 +2,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import GroupIcon from "@mui/icons-material/Group";
-import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
     Box,
@@ -18,13 +17,15 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { UserAvatar } from "components";
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi, roleApi, userApi } from "store";
-import {
+import type {
     BasicUserT,
     ListSelectQueryParams,
     ProjectDetailT,
@@ -178,8 +179,10 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     onClose={() => setAutocompleteOpen(false)}
                     onChange={(_, value) => setTarget(value)}
                     onInputChange={handleSearchInputChange}
-                    ListboxProps={{
-                        onScroll: handleScroll,
+                    slotProps={{
+                        listbox: {
+                            onScroll: handleScroll,
+                        },
                     }}
                     renderInput={(params) => (
                         <TextField
@@ -205,7 +208,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                         />
                     )}
                     renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
+                        const { key: _, ...optionProps } = props;
                         return (
                             <li {...optionProps} key={option.data.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
@@ -241,14 +244,14 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickGrant}
                     variant="outlined"
                     disabled={!target || !role}
                     loading={isLoading}
                 >
                     {t("projects.access.grant")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );
@@ -261,12 +264,9 @@ interface IRevokeProjectPermissionDialogProps {
     onClose: () => void;
 }
 
-const RevokProjectPermissionDialog: FC<IRevokeProjectPermissionDialogProps> = ({
-    open,
-    project,
-    permission,
-    onClose,
-}) => {
+const RevokeProjectPermissionDialog: FC<
+    IRevokeProjectPermissionDialogProps
+> = ({ open, project, permission, onClose }) => {
     const { t } = useTranslation();
 
     const [revokeProjectPermission, { isLoading }] =
@@ -322,13 +322,13 @@ const RevokProjectPermissionDialog: FC<IRevokeProjectPermissionDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickRevoke}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("projects.access.permissions.revoke")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );
@@ -472,7 +472,7 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
                 onClose={() => setGrantPermissionDialogOpen(false)}
             />
 
-            <RevokProjectPermissionDialog
+            <RevokeProjectPermissionDialog
                 open={revokePermissionDialogOpen}
                 project={project}
                 permission={selectedPermission}

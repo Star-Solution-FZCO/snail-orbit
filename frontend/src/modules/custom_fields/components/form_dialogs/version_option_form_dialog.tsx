@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -176,7 +175,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleSubmit(onSubmit)}
                     variant="outlined"
                     size="small"
@@ -184,7 +183,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                     disabled={!isDirty}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

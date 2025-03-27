@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -8,10 +7,10 @@ import {
     TextField,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { FC } from "react";
+import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { UserT } from "types";
+import type { UserT } from "types";
 import * as yup from "yup";
 
 const userSchema = yup.object().shape({
@@ -174,7 +173,7 @@ const UserForm: FC<IUserFormProps> = ({
             )}
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     size="small"
@@ -182,7 +181,7 @@ const UserForm: FC<IUserFormProps> = ({
                     loading={loading}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 {!hideCancel && (
                     <Link to="..">

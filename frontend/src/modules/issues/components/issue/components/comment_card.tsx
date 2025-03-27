@@ -2,15 +2,8 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
-import { LoadingButton } from "@mui/lab";
-import {
-    Box,
-    Button,
-    SxProps,
-    Theme,
-    Tooltip,
-    Typography,
-} from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
+import { Box, Button, Tooltip, Typography } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
 import {
     MarkdownPreview,
@@ -21,11 +14,12 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, sharedApi, useAppSelector } from "store";
-import { CommentT, SelectedAttachmentT } from "types";
+import type { CommentT, SelectedAttachmentT } from "types";
 import { formatSpentTime, toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../../../utils";
 import { AttachmentCard } from "./attachment_cards";
@@ -169,8 +163,13 @@ const CommentCard: FC<ICommentCardProps> = ({
             const response = await mutation.unwrap();
 
             return response.payload.id;
-        } catch (error: any) {
-            if (error.name !== "AbortError") {
+        } catch (error: unknown) {
+            if (
+                error &&
+                typeof error === "object" &&
+                "name" in error &&
+                error.name !== "AbortError"
+            ) {
                 toastApiError(error);
                 updateToast(
                     file.name,
@@ -374,7 +373,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                     />
 
                     <Box display="flex" gap={1}>
-                        <LoadingButton
+                        <Button
                             onClick={handleClickSave}
                             variant="outlined"
                             size="small"
@@ -382,7 +381,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                             loading={isLoading}
                         >
                             {t("save")}
-                        </LoadingButton>
+                        </Button>
 
                         <Button
                             component="label"

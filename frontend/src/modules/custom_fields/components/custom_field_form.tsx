@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -121,14 +120,14 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
             />
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     loading={loading}
                     disabled={!isDirty}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 {onCancel && (
                     <Button onClick={onCancel} variant="outlined" color="error">

@@ -1,6 +1,5 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -12,7 +11,8 @@ import {
     TextField,
 } from "@mui/material";
 import { MDEditor, SpentTimeField, UserAvatar } from "components";
-import { FC, useCallback, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, sharedApi, useAppSelector } from "store";
 import { formatSpentTime, toastApiError } from "utils";
@@ -208,7 +208,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                         />
 
                         <Box display="flex" gap={1}>
-                            <LoadingButton
+                            <Button
                                 onClick={handleClickAddComment}
                                 variant="outlined"
                                 size="small"
@@ -216,7 +216,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                                 loading={isLoading}
                             >
                                 {t("issues.comments.add")}
-                            </LoadingButton>
+                            </Button>
 
                             <Button
                                 component="label"

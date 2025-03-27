@@ -76,7 +76,7 @@ export const ItemStyled = styled("div")<ItemStyledProps>(
         boxSizing: "border-box",
         listStyle: "none",
         transformOrigin: "50% 50%",
-        "-webkit-tap-highlight-color": "transparent",
+        WebkitTapHighlightColor: "transparent",
         color: theme.palette.text.primary,
         fontWeight: theme.typography.fontWeightRegular,
         fontSize: theme.typography.fontSize,

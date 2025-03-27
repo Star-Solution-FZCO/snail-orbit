@@ -19,5 +19,12 @@ module.exports = {
             "warn",
             { prefer: "type-imports" },
         ],
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                varsIgnorePattern: "^_",
+                argsIgnorePattern: "^_",
+            },
+        ],
     },
 };
