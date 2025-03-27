@@ -1,10 +1,10 @@
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, debounce, TextField, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { MarkdownPreview, MDEditor } from "components";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 import { HeadingControls } from "./heading_controls";
 
 export type IssueFormProps = {
@@ -109,7 +109,7 @@ export const IssueForm: FC<IssueFormProps> = ({
             />
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     onClick={handleClickSave}
                     variant="outlined"
                     size="small"
@@ -117,7 +117,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                     disabled={loading || !subject}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 <Button
                     onClick={handleClickCancel}

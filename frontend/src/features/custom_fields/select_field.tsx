@@ -1,10 +1,9 @@
-import { AutocompleteValue } from "@mui/material";
+import type { AutocompleteValue } from "@mui/material";
 import FieldCard from "components/fields/field_card/field_card";
-import {
-    FormAutocompletePopover,
-    FormAutocompletePopoverProps,
-} from "components/fields/form_autocomplete/form_autocomplete";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import type { FormAutocompletePopoverProps } from "components/fields/form_autocomplete/form_autocomplete";
+import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type SelectFieldProps<
     Value,
@@ -49,6 +48,7 @@ export const SelectField = <
         ...rest
     } = props;
 
+    const openedRef = useRef<boolean>(false);
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const cardValue = useMemo(() => {
@@ -59,11 +59,16 @@ export const SelectField = <
 
         if (!Array.isArray(labelStrings)) return labelStrings;
         else return labelStrings.join(", ");
-    }, [multiple, value, customCardValue]);
+    }, [customCardValue, value, getCardLabelString]);
 
     useEffect(() => {
-        if (anchorEl) onOpened?.();
-    }, [anchorEl]);
+        if (!anchorEl) {
+            openedRef.current = false;
+        } else if (!openedRef.current) {
+            openedRef.current = true;
+            onOpened?.();
+        }
+    }, [anchorEl, onOpened]);
 
     return (
         <>

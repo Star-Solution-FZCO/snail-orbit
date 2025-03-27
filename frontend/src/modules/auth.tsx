@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import {
     Avatar,
     Box,
@@ -11,11 +10,12 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi, Navigate, useNavigate } from "@tanstack/react-router";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
+import type { SubmitHandler } from "react-hook-form";
 import {
     Controller,
     FormProvider,
-    SubmitHandler,
     useForm,
     useFormContext,
 } from "react-hook-form";
@@ -103,8 +103,8 @@ const Auth: FC = () => {
             navigate({
                 to: search.redirect || "/",
             });
-        } catch (error: any) {
-            if (error?.mfa_required) {
+        } catch (error: unknown) {
+            if (error && typeof error === "object" && "mfa_required" in error) {
                 setTOTPAuthStep(true);
                 return;
             }
@@ -193,7 +193,7 @@ const Auth: FC = () => {
                             </Box>
                         </FormProvider>
 
-                        <LoadingButton
+                        <Button
                             sx={{ mt: 2 }}
                             type="submit"
                             variant="contained"
@@ -201,7 +201,7 @@ const Auth: FC = () => {
                             fullWidth
                         >
                             {t("auth.signIn")}
-                        </LoadingButton>
+                        </Button>
 
                         {!TOTPAuthStep && (
                             <Button

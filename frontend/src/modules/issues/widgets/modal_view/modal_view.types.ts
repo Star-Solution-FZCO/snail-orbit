@@ -11,3 +11,8 @@ export type ModalViewDraftProps = ModalViewCommonProps;
 export type IssueModalViewProps = ModalViewCommonProps & {
     isDraft?: boolean;
 };
+
+export type IssueModalViewContextType = {
+    openIssueModal: (id: string, isDraft?: boolean) => void;
+    createAndOpenIssueModal: () => void;
+};

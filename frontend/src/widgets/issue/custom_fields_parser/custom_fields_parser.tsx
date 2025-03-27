@@ -10,7 +10,7 @@ import type { FC } from "react";
 import { fieldsToFieldValueMap } from "store/utils/issue";
 import type { CustomFieldValueT, FieldValueT } from "types";
 import type { CustomFieldsParserProps } from "./custom_fields_parser.types";
-import { getUserFieldValue } from "./utils";
+import { getUserFieldValue, getVersionFieldValue } from "./utils";
 
 dayjs.extend(utc);
 
@@ -247,10 +247,8 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                                     key={fieldData.id}
                                     label={fieldData.name}
                                     value={
-                                        field &&
-                                        (field.type === "version" ||
-                                            field.type === "version_multi")
-                                            ? field.value
+                                        field
+                                            ? getVersionFieldValue(field)
                                             : undefined
                                     }
                                     onChange={(value) => {

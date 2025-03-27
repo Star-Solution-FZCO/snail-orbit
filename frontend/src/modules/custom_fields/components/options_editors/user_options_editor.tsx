@@ -2,7 +2,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import GroupIcon from "@mui/icons-material/Group";
-import { LoadingButton } from "@mui/lab";
 import {
     Autocomplete,
     Box,
@@ -252,14 +251,14 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickAdd}
                     loading={isLoading}
                     disabled={!entity}
                     variant="outlined"
                 >
                     {t("customFields.userOrGroup.add")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );
@@ -310,13 +309,9 @@ const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
-                    onClick={onDelete}
-                    variant="outlined"
-                    loading={loading}
-                >
+                <Button onClick={onDelete} variant="outlined" loading={loading}>
                     {t("delete")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

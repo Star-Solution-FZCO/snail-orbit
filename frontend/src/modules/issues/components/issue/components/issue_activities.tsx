@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import HistoryIcon from "@mui/icons-material/History";
-import { LoadingButton } from "@mui/lab";
+import type { SelectChangeEvent } from "@mui/material";
 import {
     Box,
     Button,
@@ -13,7 +13,6 @@ import {
     IconButton,
     MenuItem,
     Select,
-    SelectChangeEvent,
     styled,
     Tooltip,
     Typography,
@@ -104,13 +103,13 @@ const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
                 >
                     {t("cancel")}
                 </Button>
-                <LoadingButton
+                <Button
                     onClick={handleClickDelete}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("delete")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

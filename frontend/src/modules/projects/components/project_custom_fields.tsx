@@ -1,7 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -201,13 +200,13 @@ const RemoveProjectCustomFieldDialog: FC<
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickRemove}
                     variant="outlined"
                     loading={isLoading}
                 >
                     {t("projects.customFields.remove.title")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

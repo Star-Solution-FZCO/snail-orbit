@@ -1,4 +1,4 @@
-import { CircularProgress, Dialog } from "@mui/material";
+import { CircularProgress, Dialog, DialogContent } from "@mui/material";
 import type { FC } from "react";
 
 type ModalViewLoaderProps = {
@@ -11,6 +11,8 @@ export const ModalViewLoader: FC<ModalViewLoaderProps> = ({
     open,
 }) => (
     <Dialog open={open} onClose={onClose}>
-        <CircularProgress />
+        <DialogContent>
+            <CircularProgress />
+        </DialogContent>
     </Dialog>
 );

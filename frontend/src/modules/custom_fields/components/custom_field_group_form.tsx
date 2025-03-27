@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { LoadingButton } from "@mui/lab";
 import {
     Box,
     Button,
@@ -198,14 +197,14 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
             )}
 
             <Box display="flex" gap={1}>
-                <LoadingButton
+                <Button
                     type="submit"
                     variant="outlined"
                     loading={loading}
                     disabled={!isDirty}
                 >
                     {t("save")}
-                </LoadingButton>
+                </Button>
 
                 <Link to="..">
                     <Button variant="outlined" color="error">

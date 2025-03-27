@@ -1,5 +1,4 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 import {
     Button,
     Dialog,
@@ -11,7 +10,8 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { userApi } from "store";
@@ -101,14 +101,14 @@ export const ToggleTFADialog: FC<IToggleTFADialogProps> = ({
                     {t("cancel")}
                 </Button>
 
-                <LoadingButton
+                <Button
                     onClick={handleClickConfirm}
                     variant="outlined"
                     disabled={!code}
                     loading={isLoading}
                 >
                     {t("tfa.confirm")}
-                </LoadingButton>
+                </Button>
             </DialogActions>
         </Dialog>
     );

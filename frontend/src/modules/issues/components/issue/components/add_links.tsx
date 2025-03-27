@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
+import type { SelectChangeEvent } from "@mui/material";
 import {
     Box,
     Button,
@@ -11,13 +11,13 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    SelectChangeEvent,
     Skeleton,
     TextField,
     Typography,
 } from "@mui/material";
 import { Link, QueryPagination } from "components";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
@@ -27,7 +27,8 @@ import {
     useAppSelector,
 } from "store";
 import { slugify } from "transliteration";
-import { IssueLinkTypeT, IssueT, linkTypes, ListQueryParams } from "types";
+import type { IssueLinkTypeT, IssueT, ListQueryParams } from "types";
+import { linkTypes } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 
 interface IIssueCardProps {
@@ -350,7 +351,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                 py={1}
                 px={2}
             >
-                <LoadingButton
+                <Button
                     onClick={handleClickAddLink}
                     size="small"
                     variant="outlined"
@@ -358,7 +359,7 @@ const AddLinks: FC<IAddLinksProps> = ({ issueId }) => {
                     disabled={selectedIssues.length === 0}
                 >
                     {t("issues.links.add")}
-                </LoadingButton>
+                </Button>
 
                 <Button
                     onClick={handleClickCancel}

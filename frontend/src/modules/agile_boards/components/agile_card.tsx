@@ -42,7 +42,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
         const handleUpdateIssue = useCallback(
             (fields: Record<string, FieldValueT>) =>
                 onUpdateIssue(id_readable, { fields }),
-            [id_readable],
+            [id_readable, onUpdateIssue],
         );
 
         const colors = useMemo(() => {
