@@ -1,2 +1,8 @@
 [extend]
 useDefault = true
+
+[allowlist]
+paths = [
+    "Pipfile.lock",
+]
+
