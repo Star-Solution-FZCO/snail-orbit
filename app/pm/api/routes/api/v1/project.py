@@ -257,7 +257,15 @@ class FieldMoveBody(BaseModel):
 async def list_projects(
     query: ListParams = Depends(),
 ) -> BaseListOutput[ProjectListItemOutput]:
+    user_ctx = current_user()
     q = m.Project.find().sort(m.Project.id)
+    if not user_ctx.user.is_admin:
+        q = q.find(
+            bo.In(
+                m.Project.id,
+                user_ctx.get_projects_with_permission(Permissions.PROJECT_READ),
+            )
+        )
     if query.search:
         q = q.find(m.Project.search_query(query.search))
     return await BaseListOutput.make_from_query(
