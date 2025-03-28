@@ -2,11 +2,13 @@ from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from typing import Any
 
+import beanie.operators as bo
 import redis.asyncio as aioredis
 from beanie import PydanticObjectId
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
+import pm.models as m
 from pm.api.utils.query_params import (
     pydantic_object_id_validator,
     query_comma_separated_list_param,
@@ -86,12 +88,27 @@ async def get_issue_events(
         required=False,
         single_value_validator=pydantic_object_id_validator,
     ),
+    boards_ids: list[PydanticObjectId] | None = query_comma_separated_list_param(
+        'boards_ids',
+        required=False,
+        single_value_validator=pydantic_object_id_validator,
+    ),
 ) -> StreamingResponse:
     if not CONFIG.REDIS_EVENT_BUS_URL:
         raise HTTPException(
             status_code=HTTPStatus.NOT_IMPLEMENTED,
             detail='Redis event bus is not configured',
         )
+    if boards_ids:
+        boards = await m.Board.find(bo.In(m.Board.id, set(boards_ids))).to_list()
+        issue_ids = issue_ids or []
+        project_ids = project_ids or []
+        for board in boards:
+            if not board.projects:
+                issue_ids = None
+                project_ids = None
+                break
+            project_ids.extend([pr.id for pr in board.projects])
     return StreamingResponse(
         issues_event_generator(issue_ids, project_ids), media_type='text/event-stream'
     )
