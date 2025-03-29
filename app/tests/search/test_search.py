@@ -6,80 +6,53 @@ import pytest
 from ._mock import get_fake_custom_fields
 
 
-def _custom_fields():
+def _custom_fields() -> list[dict]:
     from pm.models import CustomFieldTypeT
 
     return [
         {
             'name': 'State',
             'type': CustomFieldTypeT.STATE,
-            'is_nullable': True,
-            'options': ['open', 'closed', 'new', '1', '2', '3'],
         },
         {
             'name': 'Priority',
             'type': CustomFieldTypeT.ENUM,
-            'is_nullable': True,
-            'options': ['Low', 'Medium', 'High', '1', '2', '3'],
         },
         {
             'name': 'H-State',
             'type': CustomFieldTypeT.STATE,
-            'is_nullable': True,
-            'options': ['open', 'closed'],
         },
         {
             'name': 'Integer',
             'type': CustomFieldTypeT.INTEGER,
-            'is_nullable': True,
         },
         {
             'name': 'Float',
             'type': CustomFieldTypeT.FLOAT,
-            'is_nullable': True,
         },
         {
             'name': 'Date',
             'type': CustomFieldTypeT.DATE,
-            'is_nullable': True,
         },
         {
             'name': 'Datetime',
             'type': CustomFieldTypeT.DATETIME,
-            'is_nullable': True,
         },
         {
             'name': 'String',
             'type': CustomFieldTypeT.STRING,
-            'is_nullable': True,
         },
         {
             'name': 'Assignee',
             'type': CustomFieldTypeT.USER,
-            'is_nullable': True,
         },
         {
             'name': 'Version',
             'type': CustomFieldTypeT.VERSION,
-            'is_nullable': True,
-            'options': [
-                'latest',
-                'beta',
-                '1.1-alpha',
-                '2.0-rc',
-                '1.1-dev',
-                'v1.2.3',
-                '2.0-beta.1',
-                '1.0',
-                '1.1.1.1.1',
-                '2.0',
-                '1.1',
-            ],
         },
         {
             'name': 'Feature',
             'type': CustomFieldTypeT.BOOLEAN,
-            'is_nullable': True,
         },
     ]
 

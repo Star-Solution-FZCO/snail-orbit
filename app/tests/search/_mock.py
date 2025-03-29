@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from pydantic import BaseModel
 
@@ -14,61 +15,16 @@ __all__ = (
 class FakeCustomField(BaseModel):
     name: str
     type: 'CustomFieldTypeT'
-    is_nullable: bool
-
-
-class FakeEnumOption(BaseModel):
-    value: str
-
-
-class FakeStateOption(BaseModel):
-    value: str
-
-
-class FakeVersionOption(BaseModel):
-    value: str
-
-
-class FakeEnumCustomField(FakeCustomField):
-    options: list[FakeEnumOption]
-
-
-class FakeStateCustomField(FakeCustomField):
-    options: list[FakeStateOption]
-
-
-class FakeVersionCustomField(FakeCustomField):
-    options: list[FakeVersionOption]
+    gid: str
 
 
 def parse_dict_to_field(field: dict) -> FakeCustomField:
     from pm.models import CustomFieldTypeT
 
-    if field['type'] == CustomFieldTypeT.ENUM:
-        return FakeEnumCustomField(
-            name=field['name'],
-            type=field['type'],
-            is_nullable=field['is_nullable'],
-            options=[FakeEnumOption(value=option) for option in field['options']],
-        )
-    if field['type'] == CustomFieldTypeT.STATE:
-        return FakeStateCustomField(
-            name=field['name'],
-            type=field['type'],
-            is_nullable=field['is_nullable'],
-            options=[FakeStateOption(value=option) for option in field['options']],
-        )
-    if field['type'] == CustomFieldTypeT.VERSION:
-        return FakeVersionCustomField(
-            name=field['name'],
-            type=field['type'],
-            is_nullable=field['is_nullable'],
-            options=[FakeVersionOption(value=option) for option in field['options']],
-        )
     return FakeCustomField(
         name=field['name'],
-        type=field['type'],
-        is_nullable=field['is_nullable'],
+        type=CustomFieldTypeT(field['type']),
+        gid=field.get('gid', str(uuid4())),
     )
 
 
