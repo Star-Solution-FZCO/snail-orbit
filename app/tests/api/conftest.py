@@ -26,6 +26,7 @@ def fs_session():
 async def init_db():
     import pm.models as m
     from pm.config import CONFIG
+    from pm.utils.document import init_read_only_projection_models
 
     client = AsyncIOMotorClient(
         CONFIG.DB_URI,
@@ -33,6 +34,7 @@ async def init_db():
     client.get_io_loop = asyncio.get_event_loop
     db = client.get_default_database()
     await init_beanie(db, document_models=m.__beanie_models__)
+    init_read_only_projection_models(m.__beanie_models__)
     yield
     await client.drop_database(db)
 

@@ -15,6 +15,7 @@ from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pm.api.views.output import ErrorOutput
 from pm.config import CONFIG
+from pm.utils.document import init_read_only_projection_models
 from pm.version import APP_VERSION
 
 if CONFIG.SENTRY_DSN:
@@ -84,6 +85,7 @@ async def app_init() -> None:
     client = AsyncIOMotorClient(CONFIG.DB_URI)
     db = client.get_default_database()
     await init_beanie(db, document_models=__beanie_models__)
+    init_read_only_projection_models(__beanie_models__)
 
 
 @AuthJWT.load_config
