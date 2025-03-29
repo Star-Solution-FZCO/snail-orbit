@@ -30,7 +30,8 @@ __all__ = (
     'transform_query',
     'transform_text_search',
     'TransformError',
-    'get_suggestions',
+    'HASHTAG_VALUES',
+    'RESERVED_FIELDS',
 )
 
 HASHTAG_VALUES = {'#resolved', '#unresolved'}
@@ -603,100 +604,6 @@ def transform_text_search(search: str) -> dict:
     return {'$text': {'$search': search}}
 
 
-async def get_suggestions(query: str, current_user_email: str | None = None) -> list:
-    custom_fields = await _get_custom_fields()
-    projects = await _get_projects()
-    missing_closing_brackets = False
-    try:
-        check_brackets(query)
-    except BracketError as err:
-        if err.value:
-            raise TransformError(
-                f'Invalid bracket "{err.value}" at position {err.pos}',
-                position=err.pos,
-            ) from err
-        missing_closing_brackets = True
-    try:
-        tree = parse_logical_expression(query)
-    except OperatorError as err:
-        if err.pos != len(query) - 1:
-            raise TransformError(
-                f'Invalid operator "{err.operator}" at position {err.pos}',
-                position=err.pos,
-                expected=err.expected,
-            ) from err
-        return list(_transform_expected(err.expected, custom_fields))
-    except UnexpectedEndOfExpression as err:
-        return list(_transform_expected(err.expected, custom_fields))
-    if not tree:
-        return ['(', *custom_fields.keys(), *HASHTAG_VALUES, *RESERVED_FIELDS]
-    last_expression_token = tree.get_last_token()
-    if not isinstance(last_expression_token, ExpressionNode):
-        return []
-
-    try:
-        await transform_expression(
-            last_expression_token.expression,
-            cached_fields=custom_fields,
-            current_user_email=current_user_email,
-        )
-    except TransformError as err:
-        if last_expression_token.expression.startswith('#'):
-            return [
-                hash_val[len(last_expression_token.expression) :]
-                for hash_val in HASHTAG_VALUES
-                if hash_val.startswith(last_expression_token.expression)
-            ]
-        if '_COLON' in err.expected:
-            suggestions = set()
-            for field in custom_fields:
-                if field == last_expression_token.expression.lower():
-                    suggestions.add(':')
-                    continue
-                if field.startswith(last_expression_token.expression.lower()):
-                    suggestions.add(field[len(last_expression_token.expression) - 1 :])
-            return list(suggestions)
-        if 'NULL_VALUE' in err.expected:
-            field_name = last_expression_token.expression.split(':')[0].strip()
-            return list(get_field_possible_values(field_name, custom_fields, projects))
-        if 'DATETIME_PERIOD_UNIT' in err.expected:
-            field_name, val = map(
-                str.strip, last_expression_token.expression.split(':', maxsplit=1)
-            )
-            possible_values = get_field_possible_values(
-                field_name, custom_fields, projects
-            )
-            return [
-                val_[len(val) :].strip()
-                for val_ in possible_values
-                if val_.startswith(val)
-            ]
-        return []
-    if last_expression_token.expression not in HASHTAG_VALUES:
-        field_name, val = map(
-            str.strip, last_expression_token.expression.split(':', maxsplit=1)
-        )
-        possible_values = get_field_possible_values(field_name, custom_fields, projects)
-        if not possible_values or val in possible_values:
-            return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
-        return [val_[len(val) :] for val_ in possible_values if val_.startswith(val)]
-    return ['AND', 'OR'] + ([')'] if missing_closing_brackets else [])
-
-
-def _transform_expected(
-    expected: set[str], custom_fields: dict[str, list[m.CustomField]]
-) -> set[str]:
-    res = set()
-    for exp in expected:
-        if exp == 'expression':
-            res.update(custom_fields.keys())
-            res.update(RESERVED_FIELDS)
-            res.update(HASHTAG_VALUES)
-            continue
-        res.add(exp.upper())
-    return res
-
-
 # todo: store in redis cache with ttl
 async def _get_custom_fields() -> dict[str, list[m.CustomField]]:
     fields = await m.CustomField.find(with_children=True).to_list()
@@ -704,59 +611,3 @@ async def _get_custom_fields() -> dict[str, list[m.CustomField]]:
     for field in fields:
         res.setdefault(field.name.lower(), []).append(field)
     return res
-
-
-# todo: store in redis cache with ttl
-async def _get_projects() -> dict[str, list[m.Project]]:
-    projects = await m.Project.find().to_list()
-    res = {}
-    for project in projects:
-        res.setdefault(project.slug.lower(), []).append(project)
-    return res
-
-
-RELATIVE_DATETIME_VALUES = {'now', 'today', 'this week', 'this month', 'this year'}
-
-
-def get_field_possible_values(
-    field_name: str,
-    fields: dict[str, list[m.CustomField]],
-    projects: dict[str, list[m.Project]],
-) -> set[str]:
-    results = set()
-    field_name = field_name.lower()
-    if field_name in (
-        'subject',
-        'text',
-        'updated_at',
-        'created_at',
-        'updated_by',
-        'created_by',
-        'tag',
-    ):
-        if field_name in ('updated_at', 'created_at'):
-            results.update(RELATIVE_DATETIME_VALUES)
-        return results
-    if field_name == 'project':
-        return set(projects.keys())
-    if field_name not in fields:
-        return results
-    for field in fields[field_name]:
-        if field.is_nullable:
-            results.add('null')
-        if field.type in (
-            m.CustomFieldTypeT.STATE,
-            m.CustomFieldTypeT.ENUM,
-            m.CustomFieldTypeT.ENUM_MULTI,
-            m.CustomFieldTypeT.VERSION,
-            m.CustomFieldTypeT.VERSION_MULTI,
-        ):
-            results.update([option.value for option in field.options])
-            continue
-        if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
-            results.update([user.email for user in field.users])
-            continue
-        if field.type in (m.CustomFieldTypeT.DATE, m.CustomFieldTypeT.DATETIME):
-            results.update(RELATIVE_DATETIME_VALUES)
-            continue
-    return results
