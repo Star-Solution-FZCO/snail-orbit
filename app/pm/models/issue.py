@@ -8,6 +8,7 @@ from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
 from pm.utils.dateutils import utcnow
+from pm.utils.document import DocumentWithReadOnlyProjection
 
 from ._audit import audited_model
 from ._encryption import EncryptionKeyAlgorithmT
@@ -146,7 +147,7 @@ class IssueHistoryRecord(BaseModel):
 
 
 @audited_model
-class Issue(Document):
+class Issue(DocumentWithReadOnlyProjection):
     class Settings:
         name = 'issues'
         use_revision = True
@@ -423,105 +424,6 @@ class Issue(Document):
             if latest_comment.created_at > latest_history.time
             else (latest_history, latest_history.time)
         )
-
-    def _get_latest_field_change_record(
-        self,
-        field_id: PydanticObjectId | set[PydanticObjectId],
-    ) -> IssueHistoryRecord | None:
-        if isinstance(field_id, PydanticObjectId):
-            field_ids = {field_id}
-        else:
-            field_ids = field_id
-        for record in sorted(self.history, key=lambda h: h.time, reverse=True):
-            for change in record.changes:
-                if (
-                    isinstance(change.field, CustomFieldLink)
-                    and change.field.id in field_ids
-                ):
-                    return record
-        return None
-
-    def _find_resolved_states(self) -> set[PydanticObjectId] | None:
-        state_fields = set()
-
-        for field in self.fields:
-            if field.type != CustomFieldTypeT.STATE:
-                continue
-            if field.value and field.value.is_resolved:
-                state_fields.add(field.id)
-                continue
-            return None
-
-        return state_fields
-
-    def _find_closed_states(self) -> set[PydanticObjectId] | None:
-        state_fields = set()
-
-        for field in self.fields:
-            if field.type != CustomFieldTypeT.STATE:
-                continue
-            if field.value and field.value.is_closed:
-                state_fields.add(field.id)
-                continue
-            return None
-
-        return state_fields
-
-    @staticmethod
-    def get_ro_projection_model() -> type[BaseModel]:
-        return IssueRoProjectionModel
-
-
-class IssueRoProjectionModel(BaseModel):
-    id: Annotated[PydanticObjectId, Field(alias='_id')]
-    subject: str
-    text: str | None = None
-    aliases: Annotated[list[str], Field(default_factory=list)]
-
-    project: ProjectLinkField
-    comments: Annotated[list[IssueComment], Field(default_factory=list)]
-    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
-
-    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
-    history: Annotated[list[IssueHistoryRecord], Field(default_factory=list)]
-    subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
-
-    created_by: UserLinkField
-    created_at: Annotated[datetime, Field(default_factory=utcnow)]
-
-    updated_by: UserLinkField | None = None
-    updated_at: datetime | None = None
-
-    interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
-    tags: Annotated[list[TagLinkField], Field(default_factory=list)]
-
-    @property
-    def id_readable(self) -> str:
-        return self.aliases[-1] if self.aliases else str(self.id)
-
-    @property
-    def resolved_at(self) -> datetime | None:
-        if not (resolved_state_ids := self._find_resolved_states()):
-            return None
-        if not (change := self._get_latest_field_change_record(resolved_state_ids)):
-            return self.created_at
-        return change.time
-
-    @property
-    def closed_at(self) -> datetime | None:
-        if not (closed_state_ids := self._find_closed_states()):
-            return None
-        if not (change := self._get_latest_field_change_record(closed_state_ids)):
-            return self.created_at
-        return change.time
-
-    @property
-    def is_resolved(self) -> bool:
-        return bool(self._find_resolved_states())
-
-    @property
-    def is_closed(self) -> bool:
-        return bool(self._find_closed_states())
 
     def _get_latest_field_change_record(
         self,

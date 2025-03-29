@@ -1250,6 +1250,13 @@ async def test_api_v1_issue(
     assert data['success']
     assert data['payload']['id'] == issue_id
 
+    response = test_client.get('/api/v1/issue/list', headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['count'] == 1
+    assert data['payload']['items'][0]['id'] == issue_id
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
