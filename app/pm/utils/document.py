@@ -12,8 +12,8 @@ __all__ = (
 
 
 class DocumentWithReadOnlyProjection(Document):
-    __ro_projection_model: ClassVar[type[Self]]
-    __ro_projection_model_initialized: ClassVar[bool] = False
+    __ro_projection_model__: ClassVar[type[Self]]
+    __is_ro_projection_model_initialized__: ClassVar[bool] = False
 
     def __init_subclass__(
         cls, is_ro_projection_model: bool = False, **kwargs: Unpack[ConfigDict]
@@ -32,21 +32,24 @@ class DocumentWithReadOnlyProjection(Document):
 
     @classmethod
     def init_ro_projection_model(cls) -> None:
-        if cls.__ro_projection_model_initialized:
+        # pylint: disable=protected-access
+        if cls.__is_ro_projection_model_initialized__:
             return
-        cls.__ro_projection_model_initialized = True
+        cls.__is_ro_projection_model_initialized__ = True
 
         if not cls._document_settings:
             return
 
-        cls._document_settings = cls._document_settings.model_copy()
-        cls._document_settings.state_management_save_previous = False
-        cls._document_settings.use_revision = False
-        cls._document_settings.use_state_management = False
+        cls.__ro_projection_model__._document_settings = (
+            cls._document_settings.model_copy()
+        )
+        cls.__ro_projection_model__._document_settings.state_management_save_previous = False
+        cls.__ro_projection_model__._document_settings.use_revision = False
+        cls.__ro_projection_model__._document_settings.use_state_management = False
 
     @classmethod
     def get_ro_projection_model(cls) -> type[Self]:
-        if not cls.__ro_projection_model_initialized:
+        if not cls.__is_ro_projection_model_initialized__:
             raise RuntimeError(
                 f'{cls.__name__}: read-only projection model is not initialized'
             )
