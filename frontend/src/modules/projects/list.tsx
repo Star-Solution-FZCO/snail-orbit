@@ -29,7 +29,7 @@ const ProjectList = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     const projects = data?.payload?.items || [];
     const count = data?.payload?.count || 0;

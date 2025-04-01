@@ -1,17 +1,12 @@
 import { Button } from "@mui/material";
 import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import {
-    memo,
-    MouseEventHandler,
-    useCallback,
-    useEffect,
-    useMemo,
-} from "react";
+import type { MouseEventHandler } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "store";
-import { AgileBoardT } from "types";
+import type { AgileBoardT } from "types";
 import { useListQueryParams } from "utils";
-import { StarButton } from "../../../components/star_button";
+import { StarButton } from "../../../components";
 
 type TagListPopoverProps = {
     open: boolean;
@@ -51,7 +46,6 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
     const rightAdornment = useCallback(
         (el: AgileBoardT) => (
             <StarButton
-                color="warning"
                 size="small"
                 starred={el.is_favorite}
                 onClick={handleStarClick(el.id, !el.is_favorite)}

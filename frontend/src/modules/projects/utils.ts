@@ -1,11 +1,5 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-    BasicUserT,
-    GroupT,
-    ProjectPermissionTargetT,
-    TargetTypeT,
-} from "types";
 
 export const enum ProjectFormTabKey {
     GENERAL = "general",
@@ -47,30 +41,6 @@ export const useProjectFormTabs = () => {
             },
         ],
         [t, i18n.language],
-    );
-};
-
-export const mergeUsersAndGroups = (
-    users: BasicUserT[],
-    groups: GroupT[],
-): Array<ProjectPermissionTargetT & { type: TargetTypeT; avatar?: string }> => {
-    const merged = [
-        ...users.map((user) => ({
-            id: user.id,
-            name: user.name,
-            avatar: user.avatar,
-            type: "user" as TargetTypeT,
-        })),
-        ...groups.map((group) => ({
-            id: group.id,
-            name: group.name,
-            type: "group" as TargetTypeT,
-        })),
-    ];
-
-    return merged.filter(
-        (value, index, self) =>
-            self.findIndex((v) => v.id === value.id) === index,
     );
 };
 

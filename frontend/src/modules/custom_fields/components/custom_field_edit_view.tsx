@@ -1,10 +1,11 @@
 import { Box, Divider, Typography } from "@mui/material";
 import { ErrorHandler } from "components";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "store";
-import { CustomFieldGroupT, UpdateCustomFieldT } from "types";
+import type { CustomFieldGroupT, UpdateCustomFieldT } from "types";
 import { toastApiError } from "utils";
 import { ConfirmChangesDialog } from "./confirm_changes_dialog";
 import { CustomFieldForm } from "./custom_field_form";

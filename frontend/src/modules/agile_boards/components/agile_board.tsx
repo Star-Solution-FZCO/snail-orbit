@@ -134,33 +134,31 @@ export const AgileBoard: FC<AgileBoardProps> = ({
     if (!items) return null;
 
     return (
-        <div>
-            <KanbanComp
-                headers={headers}
-                items={items}
-                columns={columns}
-                renderItemContent={
-                    ({ id }) =>
-                        itemsMap[id] ? (
-                            <AgileCard
-                                issue={itemsMap[id]}
-                                cardSetting={boardData.ui_settings}
-                                cardFields={boardData.card_fields}
-                                onUpdateIssue={handleUpdateIssue}
-                                cardColorFields={boardData.card_colors_fields}
-                                onDoubleClick={() =>
-                                    onCardDoubleClick?.(itemsMap[id])
-                                }
-                            />
-                        ) : null // TODO: Move and preserve issue data inside kanban
-                }
-                swimLineProps={(swimlaneId) => ({
-                    hideHandle: true,
-                    label: swimlaneId.toString(),
-                })}
-                containerProps={{ hideHandle: true, label: "" }}
-                onCardMoved={handleCardMoved}
-            />
-        </div>
+        <KanbanComp
+            headers={headers}
+            items={items}
+            columns={columns}
+            renderItemContent={
+                ({ id }) =>
+                    itemsMap[id] ? (
+                        <AgileCard
+                            issue={itemsMap[id]}
+                            cardSetting={boardData.ui_settings}
+                            cardFields={boardData.card_fields}
+                            onUpdateIssue={handleUpdateIssue}
+                            cardColorFields={boardData.card_colors_fields}
+                            onDoubleClick={() =>
+                                onCardDoubleClick?.(itemsMap[id])
+                            }
+                        />
+                    ) : null // TODO: Move and preserve issue data inside kanban
+            }
+            swimLineProps={(swimlaneId) => ({
+                hideHandle: true,
+                label: swimlaneId.toString(),
+            })}
+            containerProps={{ hideHandle: true, label: "" }}
+            onCardMoved={handleCardMoved}
+        />
     );
 };

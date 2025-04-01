@@ -1,8 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { CustomFieldT } from "types";
+import type { CustomFieldT } from "types";
 
 const FieldItem: FC<{
     field: CustomFieldT;

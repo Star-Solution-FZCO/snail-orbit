@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
-import { CreateProjectT } from "types";
+import type { CreateProjectT } from "types";
 import { toastApiError } from "utils";
 import { ProjectForm } from "./components/project_form";
 

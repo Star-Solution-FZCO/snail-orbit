@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/material";
+import { StarButton } from "components";
 import { IssueLink } from "components/issue_link";
-import { StarButton } from "components/star_button";
 import type { FC } from "react";
 import { useCallback } from "react";
 import { agileBoardApi } from "store";
@@ -15,7 +15,7 @@ export const BoardRow: FC<BoardRowProps> = ({ board }) => {
 
     const handleClickFavorite = useCallback(() => {
         favoriteBoard({ boardId: board.id, favorite: !board.is_favorite });
-    }, [board.id, board.is_favorite]);
+    }, [board.id, board.is_favorite, favoriteBoard]);
 
     return (
         <Stack

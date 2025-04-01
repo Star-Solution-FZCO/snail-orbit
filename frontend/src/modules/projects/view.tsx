@@ -1,49 +1,46 @@
 import AddIcon from "@mui/icons-material/Add";
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link, SubscribeButton, TabPanel } from "components";
+import { ErrorHandler, Link, TabPanel } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
-import { SyntheticEvent, useEffect, useState } from "react";
+import type { FC, SyntheticEvent } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi, useAppSelector } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
 import { ProjectListView } from "./components/project_list_view";
+import { ProjectSubscribeButton } from "./components/project_subscribe_button";
 import { ProjectWorkflows } from "./components/project_workflows";
 import { ProjectFormTabKey, useProjectFormTabs } from "./utils";
 
-const routeApi = getRouteApi("/_authenticated/projects/$projectId");
+type ProjectViewProps = {
+    tab?: ProjectFormTabKey;
+    onTabChange?: (tab: ProjectFormTabKey) => void;
+    projectId: string;
+};
 
-const ProjectView = () => {
+const ProjectView: FC<ProjectViewProps> = (props) => {
+    const { tab, onTabChange, projectId } = props;
+
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const { projectId } = routeApi.useParams();
-    const search = routeApi.useSearch();
     const { setAction } = useNavbarSettings();
 
     const tabs = useProjectFormTabs();
 
     const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
 
-    const [currentTab, setCurrentTab] = useState(search?.tab || "general");
+    const [currentTab, setCurrentTab] = useState(
+        tab || ProjectFormTabKey.GENERAL,
+    );
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
 
-    const [subscribe] = projectApi.useSubscribeProjectMutation();
-    const [unsubscribe] = projectApi.useUnsubscribeProjectMutation();
-
-    const handleToggleSubscribeButton = () => {
-        const mutation = project.is_subscribed ? unsubscribe : subscribe;
-        mutation(project.id);
-    };
-
-    const handleChangeTab = (_: SyntheticEvent, value: string) => {
+    const handleChangeTab = (_: SyntheticEvent, value: ProjectFormTabKey) => {
         setCurrentTab(value);
-        // @ts-ignore
-        navigate({ search: { tab: value } });
+        onTabChange?.(value);
     };
 
     useEffect(() => {
@@ -56,11 +53,11 @@ const ProjectView = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     useEffect(() => {
-        setCurrentTab(search?.tab || "general");
-    }, [search?.tab]);
+        setCurrentTab(tab || ProjectFormTabKey.GENERAL);
+    }, [tab]);
 
     if (error) {
         return (
@@ -90,11 +87,7 @@ const ProjectView = () => {
                     {project.name}
                 </Typography>
 
-                <SubscribeButton
-                    isSubscribed={project.is_subscribed}
-                    onToggle={handleToggleSubscribeButton}
-                    type="project"
-                />
+                <ProjectSubscribeButton project={project} />
             </Box>
 
             <Box display="flex" flexDirection="column" flex={1}>

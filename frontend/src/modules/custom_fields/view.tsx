@@ -118,6 +118,7 @@ export const CustomFieldGroupView = () => {
             />
 
             <Box display="flex" gap={2}>
+                z
                 <Box flex={1}>
                     <CustomFieldGroupForm
                         onSubmit={handleSubmit}
@@ -125,9 +126,7 @@ export const CustomFieldGroupView = () => {
                         loading={isLoading}
                     />
                 </Box>
-
                 <Divider orientation="vertical" flexItem />
-
                 <Box flex={1}>
                     <FieldList
                         fields={customFieldGroup.fields}
@@ -136,9 +135,7 @@ export const CustomFieldGroupView = () => {
                         onClickAdd={() => setAddFieldDialogOpen(true)}
                     />
                 </Box>
-
                 <Divider orientation="vertical" flexItem />
-
                 <Box flex={2}>
                     {selectedCustomFieldId && (
                         <CustomFieldEditView

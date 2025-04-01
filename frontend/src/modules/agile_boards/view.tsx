@@ -23,11 +23,11 @@ import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { agileBoardApi } from "store";
 import type { AgileBoardT, IssueT } from "types";
+import type { SearchT } from "types/search";
 import { formatErrorMessages, toastApiError } from "utils";
-import { StarButton } from "../../components/star_button";
-import type { SearchT } from "../../types/search";
-import useDebouncedState from "../../utils/hooks/use-debounced-state";
-import { SearchSelectPopover } from "../../widgets/search_select/search_select_popover";
+import useDebouncedState from "utils/hooks/use-debounced-state";
+import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
+import { StarButton } from "../../components";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";
@@ -159,6 +159,7 @@ const AgileBoardView = () => {
             direction="horizontal"
             autoSaveId="agileBoardView"
             id="agileBoardView"
+            style={{ overflow: "visible" }}
         >
             <Stack
                 direction="column"
@@ -168,6 +169,8 @@ const AgileBoardView = () => {
                 order={5}
                 id="mainContent"
                 maxWidth="100dvw"
+                overflow="auto"
+                style={{ overflow: "visible" }}
             >
                 <Box px={4}>
                     <Stack
@@ -284,6 +287,7 @@ const AgileBoardView = () => {
                                         favorite: !agileBoard.is_favorite,
                                     })
                                 }
+                                disableRipple={false}
                             />
                         </Stack>
                     </Stack>

@@ -11,7 +11,7 @@ export * from "./not_found";
 export * from "./page_title";
 export * from "./query_pagination";
 export * from "./spent_time_field";
-export * from "./subscribe_button";
+export * from "./star_button";
 export * from "./tab_panel";
 export * from "./user_avatar";
 export * from "./workflows";
