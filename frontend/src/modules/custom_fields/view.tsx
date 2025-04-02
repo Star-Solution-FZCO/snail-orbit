@@ -1,5 +1,4 @@
 import { Box, Breadcrumbs, Divider, Stack, Typography } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
 import { ErrorHandler, Link } from "components";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
@@ -13,10 +12,11 @@ import { CustomFieldEditView } from "./components/custom_field_edit_view";
 import { CustomFieldGroupForm } from "./components/custom_field_group_form";
 import { FieldList } from "./components/field_list";
 import { CreateCustomFieldFormDialog } from "./components/form_dialogs/add_custom_field_form_dialog";
+import {useNavigate} from "@tanstack/react-router";
 
-const routeApi = getRouteApi(
-    "/_authenticated/custom-fields/$customFieldGroupId",
-);
+type CustomFieldGroupViewProps = {
+    customFieldGroupId: string;
+}
 
 const HeaderBreadcrumbs: FC<{
     customFieldGroup: CustomFieldGroupT;
@@ -36,9 +36,11 @@ const HeaderBreadcrumbs: FC<{
     );
 };
 
-export const CustomFieldGroupView = () => {
+export const CustomFieldGroupView: FC<CustomFieldGroupViewProps> = (props) => {
+    const { customFieldGroupId } = props;
+
     const { t } = useTranslation();
-    const { customFieldGroupId } = routeApi.useParams();
+    const navigate = useNavigate()
 
     const { data, error } =
         customFieldsApi.useGetCustomFieldGroupQuery(customFieldGroupId);
@@ -110,6 +112,13 @@ export const CustomFieldGroupView = () => {
         );
     };
 
+    const handleAfterDelete = async () => {
+        setSelectedCustomFieldId(null)
+        if (customFieldGroup.fields.length === 1) {
+            await navigate({ to: '..' })
+        }
+    }
+
     return (
         <Stack px={4} pb={4} gap={2} height={1}>
             <HeaderBreadcrumbs
@@ -118,7 +127,6 @@ export const CustomFieldGroupView = () => {
             />
 
             <Box display="flex" gap={2}>
-                z
                 <Box flex={1}>
                     <CustomFieldGroupForm
                         onSubmit={handleSubmit}
@@ -141,7 +149,7 @@ export const CustomFieldGroupView = () => {
                         <CustomFieldEditView
                             customFieldGroup={customFieldGroup}
                             customFieldId={selectedCustomFieldId}
-                            onDelete={() => setSelectedCustomFieldId(null)}
+                            onDelete={handleAfterDelete}
                         />
                     )}
                 </Box>
