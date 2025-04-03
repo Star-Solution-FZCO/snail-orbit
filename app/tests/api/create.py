@@ -99,6 +99,8 @@ async def _create_project(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
     return data['payload']['id']

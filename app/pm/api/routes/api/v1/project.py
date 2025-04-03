@@ -1,12 +1,12 @@
 import asyncio
 from http import HTTPStatus
-from typing import Self
+from typing import Annotated, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
 from beanie import operators as bo
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
 
 import pm.models as m
 from pm.api.context import (
@@ -19,6 +19,11 @@ from pm.api.views.custom_fields import (
     CustomFieldOutput,
     CustomFieldOutputT,
     cf_output_from_obj,
+)
+from pm.api.views.encryption_key import (
+    EncryptionKeyCreate,
+    EncryptionKeyOut,
+    EncryptionMetaOut,
 )
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
@@ -67,6 +72,7 @@ class ProjectListItemOutput(BaseModel):
     is_active: bool
     is_subscribed: bool
     avatar_type: m.ProjectAvatarType
+    is_encrypted: bool
 
     @computed_field
     @property
@@ -88,6 +94,7 @@ class ProjectListItemOutput(BaseModel):
             is_active=obj.is_active,
             is_subscribed=current_user().user.id in obj.subscribers,
             avatar_type=obj.avatar_type,
+            is_encrypted=bool(obj.encryption_settings),
         )
 
 
@@ -187,6 +194,26 @@ class ProjectResolvedPermissionOutput(BaseModel):
         )
 
 
+class EncryptionSettingsOutput(BaseModel):
+    encryption_keys: list[EncryptionKeyOut]
+    users: list[UserOutput]
+    encrypt_attachments: bool
+    encrypt_comments: bool
+    encrypt_description: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.ProjectEncryptionSettings) -> Self:
+        return cls(
+            encryption_keys=[
+                EncryptionKeyOut.from_obj(key) for key in obj.encryption_keys
+            ],
+            users=[UserOutput.from_obj(user) for user in obj.users],
+            encrypt_attachments=obj.encrypt_attachments,
+            encrypt_comments=obj.encrypt_comments,
+            encrypt_description=obj.encrypt_description,
+        )
+
+
 class ProjectOutput(BaseModel):
     id: PydanticObjectId
     name: str
@@ -196,9 +223,15 @@ class ProjectOutput(BaseModel):
     is_active: bool
     custom_fields: list[CustomFieldOutput]
     card_fields: list[PydanticObjectId]
-    workflows: list[WorkflowOutput] = []
+    workflows: list[WorkflowOutput]
     is_subscribed: bool = False
     avatar_type: m.ProjectAvatarType
+    encryption_settings: EncryptionSettingsOutput | None
+
+    @computed_field
+    @property
+    def is_encrypted(self) -> bool:
+        return bool(self.encryption_settings)
 
     @computed_field
     @property
@@ -223,7 +256,19 @@ class ProjectOutput(BaseModel):
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
             is_subscribed=current_user().user.id in obj.subscribers,
             avatar_type=obj.avatar_type,
+            encryption_settings=(
+                EncryptionSettingsOutput.from_obj(obj.encryption_settings)
+                if obj.encryption_settings
+                else None
+            ),
         )
+
+
+class EncryptionSettingsCreate(BaseModel):
+    key: EncryptionKeyCreate
+    users: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    encrypt_comments: bool = True
+    encrypt_description: bool = True
 
 
 class ProjectCreate(BaseModel):
@@ -232,6 +277,11 @@ class ProjectCreate(BaseModel):
     description: str | None = None
     ai_description: str | None = None
     is_active: bool = True
+    encryption_settings: EncryptionSettingsCreate | None = None
+
+
+class EncryptionSettingsUpdate(BaseModel):
+    users: list[PydanticObjectId]
 
 
 class ProjectUpdate(BaseModel):
@@ -241,6 +291,7 @@ class ProjectUpdate(BaseModel):
     ai_description: str | None = None
     is_active: bool | None = None
     card_fields: list[PydanticObjectId] | None = None
+    encryption_settings: EncryptionSettingsUpdate | None = None
 
 
 class GrantPermissionBody(BaseModel):
@@ -298,6 +349,38 @@ async def create_project(
         ai_description=body.ai_description,
         is_active=body.is_active,
     )
+    if body.encryption_settings:
+        if not body.encryption_settings.key.is_active:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                'Key must active when creating a project',
+            )
+        users = []
+        if body.encryption_settings.users:
+            users = await m.User.find(
+                bo.In(m.User.id, body.encryption_settings.users)
+            ).to_list()
+            if len(users) != len(body.encryption_settings.users):
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    'Some users not found',
+                )
+        obj.encryption_settings = m.ProjectEncryptionSettings(
+            encryption_keys=[
+                m.EncryptionKey(
+                    name=body.encryption_settings.key.name,
+                    public_key=body.encryption_settings.key.public_key,
+                    fingerprint=body.encryption_settings.key.fingerprint,
+                    algorithm=body.encryption_settings.key.algorithm,
+                    is_active=True,
+                    created_on=body.encryption_settings.key.created_on,
+                ),
+            ],
+            users=[m.UserLinkField.from_obj(user) for user in users],
+            encrypt_attachments=True,
+            encrypt_comments=body.encryption_settings.encrypt_comments,
+            encrypt_description=body.encryption_settings.encrypt_description,
+        )
     await obj.insert()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
@@ -311,7 +394,8 @@ async def update_project(
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
-    if 'card_fields' in body.model_dump(exclude_unset=True):
+    data = body.model_dump(exclude_unset=True)
+    if 'card_fields' in data:
         project_field_ids = {field.id for field in obj.custom_fields}
         unknown_card_field = next(
             (
@@ -326,7 +410,23 @@ async def update_project(
                 HTTPStatus.BAD_REQUEST,
                 f'Custom field id={unknown_card_field} not found in project fields',
             )
-    for k, v in body.model_dump(exclude_unset=True).items():
+    if 'encryption_settings' in data:
+        if data['encryption_settings']:
+            users = []
+            if data['encryption_settings'].users:
+                users = await m.User.find(
+                    bo.In(m.User.id, data['encryption_settings'].users)
+                ).to_list()
+                if len(users) != len(data['encryption_settings'].users):
+                    raise HTTPException(
+                        HTTPStatus.BAD_REQUEST,
+                        'Some users not found',
+                    )
+            obj.encryption_settings.users = [
+                m.UserLinkField.from_obj(user) for user in users
+            ]
+        del data['encryption_settings']
+    for k, v in data.items():
         setattr(obj, k, v)
     if obj.is_changed:
         await obj.save_changes()
@@ -648,3 +748,49 @@ async def unsubscribe_project(
         project.subscribers.remove(user_ctx.user.id)
         await project.replace()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.get('/{project_id}/encryption_key/list')
+async def get_encryption_keys(
+    project_id: PydanticObjectId,
+) -> BaseListOutput[EncryptionMetaOut]:
+    project = await m.Project.find_one(m.Project.id == project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    if not project.encryption_settings:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Project encryption settings not found'
+        )
+    items = [
+        EncryptionMetaOut(
+            fingerprint=key.fingerprint,
+            public_key=key.public_key,
+            algorithm=key.algorithm,
+            target_type=m.EncryptionTargetTypeT.PROJECT,
+            target_id=project.id,
+        )
+        for key in project.encryption_settings.encryption_keys
+        if key.is_active
+    ]
+    if project.encryption_settings.users:
+        users = await m.User.find(
+            bo.In(m.User.id, [user.id for user in project.encryption_settings.users])
+        ).to_list()
+        for user in users:
+            items.extend(
+                EncryptionMetaOut(
+                    fingerprint=key.fingerprint,
+                    public_key=key.public_key,
+                    algorithm=key.algorithm,
+                    target_type=m.EncryptionTargetTypeT.USER,
+                    target_id=user.id,
+                )
+                for key in user.encryption_keys
+                if key.is_active
+            )
+    return BaseListOutput.make(
+        count=len(items),
+        limit=len(items),
+        offset=0,
+        items=items,
+    )

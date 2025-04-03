@@ -1,55 +1,21 @@
-from datetime import datetime
 from http import HTTPStatus
-from typing import Self
 
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
+from pm.api.views.encryption_key import (
+    EncryptionKeyCreate,
+    EncryptionKeyOut,
+    EncryptionKeyUpdate,
+)
 from pm.api.views.output import BaseListOutput, SuccessOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 
 router = APIRouter(prefix='/encryption_key', tags=['encryption_key'])
-
-
-class EncryptionKeyOut(BaseModel):
-    name: str
-    public_key: str
-    fingerprint: str
-    algorithm: m.EncryptionKeyAlgorithmT
-    is_active: bool
-    created_on: str | None
-    created_at: datetime
-
-    @classmethod
-    def from_obj(cls, obj: m.EncryptionKey) -> Self:
-        return cls(
-            name=obj.name,
-            public_key=obj.public_key,
-            fingerprint=obj.fingerprint,
-            algorithm=obj.algorithm,
-            is_active=obj.is_active,
-            created_on=obj.created_on,
-            created_at=obj.created_at,
-        )
-
-
-class EncryptionKeyCreate(BaseModel):
-    name: str
-    public_key: str
-    fingerprint: str
-    algorithm: m.EncryptionKeyAlgorithmT
-    is_active: bool = True
-    created_on: str | None = None
-
-
-class EncryptionKeyUpdate(BaseModel):
-    name: str | None = None
-    is_active: bool | None = None
 
 
 @router.get('/list')
@@ -107,6 +73,7 @@ async def add_key(
         public_key=body.public_key,
         fingerprint=body.fingerprint,
         algorithm=body.algorithm,
+        is_active=body.is_active,
         created_on=body.created_on,
     )
     user_ctx.user.encryption_keys.append(obj)

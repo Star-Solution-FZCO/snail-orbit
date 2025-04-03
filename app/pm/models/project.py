@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from pm.permissions import Permissions
 
 from ._audit import audited_model
+from ._encryption import EncryptionKey
 from .custom_fields import CustomField
 from .group import Group, GroupLinkField
 from .role import Role, RoleLinkField
@@ -22,6 +23,7 @@ __all__ = (
     'ProjectPermission',
     'PermissionTargetType',
     'ProjectAvatarType',
+    'ProjectEncryptionSettings',
 )
 
 
@@ -51,6 +53,14 @@ class ProjectPermission(BaseModel):
         )
 
 
+class ProjectEncryptionSettings(BaseModel):
+    encryption_keys: list[EncryptionKey]
+    users: Annotated[list[UserLinkField], Field(default_factory=list)]
+    encrypt_attachments: bool
+    encrypt_comments: bool
+    encrypt_description: bool
+
+
 @audited_model
 class Project(Document):
     class Settings:
@@ -71,6 +81,7 @@ class Project(Document):
     subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     avatar_type: ProjectAvatarType = ProjectAvatarType.DEFAULT
+    encryption_settings: ProjectEncryptionSettings | None = None
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
@@ -173,6 +184,12 @@ class Project(Document):
                 {'p.target.id': user.id, 'p.target_type': PermissionTargetType.USER}
             ],
         )
+        await cls.find(
+            cls.encryption_settings.users.id == user.id,
+        ).update(
+            {'$set': {'encryption_settings.users.$[u]': UserLinkField.from_obj(user)}},
+            array_filters=[{'u.id': user.id}],
+        )
 
     @classmethod
     async def remove_user_embedded_links(
@@ -188,6 +205,17 @@ class Project(Document):
                     'permissions': {
                         'target_type': PermissionTargetType.USER,
                         'target.id': user_id,
+                    }
+                }
+            },
+        )
+        await cls.find(
+            cls.encryption_settings.users.id == user_id,
+        ).update(
+            {
+                '$pull': {
+                    'encryption_settings.users': {
+                        'id': user_id,
                     }
                 }
             },

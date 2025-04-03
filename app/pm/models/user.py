@@ -16,7 +16,7 @@ from pm.config import DB_ENCRYPTION_KEY
 from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
-from ._encryption import EncryptionKeyAlgorithmT
+from ._encryption import EncryptionKey
 from .group import Group, GroupLinkField
 
 __all__ = (
@@ -26,7 +26,6 @@ __all__ = (
     'UserOriginType',
     'UserAvatarType',
     'TOTPSettings',
-    'EncryptionKey',
 )
 
 
@@ -146,16 +145,6 @@ class TOTPSettings(BaseModel):
 
     def get_url(self, name: str, issuer: str) -> str:
         return self._get_verifier().url(name, issuer=issuer)
-
-
-class EncryptionKey(BaseModel):
-    name: str
-    public_key: str
-    fingerprint: str
-    algorithm: EncryptionKeyAlgorithmT
-    is_active: bool = True
-    created_on: str | None = None
-    created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
 
 @audited_model

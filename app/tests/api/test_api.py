@@ -114,6 +114,8 @@ async def test_api_v1_project_crud(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -136,6 +138,8 @@ async def test_api_v1_project_crud(
             'name': 'Test project updated',
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -186,6 +190,8 @@ async def test_api_v1_project_subscription(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
     response = test_client.post(
@@ -204,6 +210,8 @@ async def test_api_v1_project_subscription(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -939,6 +947,8 @@ async def test_api_v1_custom_field_project_link(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -967,6 +977,8 @@ async def test_api_v1_custom_field_project_link(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -994,6 +1006,8 @@ async def test_api_v1_custom_field_project_link(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 
@@ -1014,6 +1028,8 @@ async def test_api_v1_custom_field_project_link(
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,
+            'encryption_settings': None,
+            'is_encrypted': False,
         },
     }
 

@@ -31,14 +31,14 @@ class IssueCommentCreate(BaseModel):
     text: str | None = None
     attachments: Annotated[list[UUID], Field(default_factory=list)]
     spent_time: int = 0
-    encryption: m.EncryptionMeta | None = None
+    encryption: m.EncryptionKeyMeta | None = None
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
     attachments: list[UUID] | None = None
     spent_time: int | None = None
-    encryption: m.EncryptionMeta | None = None
+    encryption: m.EncryptionKeyMeta | None = None
 
 
 @router.get('/list')

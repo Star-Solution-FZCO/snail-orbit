@@ -11,7 +11,7 @@ from pm.utils.dateutils import utcnow
 from pm.utils.document import DocumentWithReadOnlyProjection
 
 from ._audit import audited_model
-from ._encryption import EncryptionKeyAlgorithmT
+from ._encryption import EncryptionKeyMeta
 from .custom_fields import (
     CustomField,
     CustomFieldLink,
@@ -37,7 +37,6 @@ __all__ = (
     'IssueInterlink',
     'IssueLinkField',
     'EncryptionKeyMeta',
-    'EncryptionMeta',
 )
 
 
@@ -95,13 +94,6 @@ class IssueInterlink(BaseModel):
     id: UUID
     type: IssueInterlinkTypeT
     issue: IssueLinkField
-
-
-class EncryptionKeyMeta(BaseModel):
-    pub_key_fingerprint: str
-    user_id: PydanticObjectId
-    key: str
-    algorithm: EncryptionKeyAlgorithmT
 
 
 class EncryptionMeta(BaseModel):
