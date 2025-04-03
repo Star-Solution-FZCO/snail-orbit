@@ -1,24 +1,27 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, Link, PageTitle } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
 import deepmerge from "deepmerge";
-import { FC, useCallback, useEffect } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, useAppDispatch } from "store";
+import { useEventSubscriptionAutoReFetch } from "store/api/events.api";
 import { slugify } from "transliteration";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import IssueViewComponent from "../components/issue/issue_view";
 
-const routeApi = getRouteApi("/_authenticated/issues/$issueId");
+type IssueViewProps = {
+    issueId: string;
+};
 
-const IssueView: FC = () => {
+const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { issueId } = routeApi.useParams();
     const dispatch = useAppDispatch();
     const { setAction } = useNavbarSettings();
 
@@ -33,10 +36,12 @@ const IssueView: FC = () => {
                 .unwrap()
                 .catch(toastApiError);
         },
-        [issueId],
+        [issueId, updateIssue],
     );
 
     const issue = data?.payload;
+
+    useEventSubscriptionAutoReFetch({ ids: [issue?.id || ""] });
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {

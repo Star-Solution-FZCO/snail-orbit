@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { logout, refreshToken } from "services/auth";
 import { logout as logoutAction } from "store/slices";
 import type { MFARequiredErrorT, QueryErrorT } from "types";
+import { serializeParams } from "utils/helpers/serialize-params";
 
 const mutex = new Mutex();
 
@@ -23,25 +24,7 @@ const baseQuery = () => {
         baseUrl: (API_URL || "/api/") + apiVersion,
         credentials: "include",
         headers,
-        paramsSerializer: (params) => {
-            let res = "";
-            for (const key in params) {
-                if (Array.isArray(params[key])) {
-                    for (const val of params[key]) {
-                        if (res != "") {
-                            res += "&";
-                        }
-                        res += key + "=" + encodeURIComponent(val);
-                    }
-                } else {
-                    if (res != "") {
-                        res += "&";
-                    }
-                    res += key + "=" + encodeURIComponent(params[key]);
-                }
-            }
-            return res;
-        },
+        paramsSerializer: serializeParams,
     });
 };
 

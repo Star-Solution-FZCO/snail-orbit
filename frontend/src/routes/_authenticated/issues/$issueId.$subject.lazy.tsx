@@ -4,5 +4,11 @@ import { IssueView } from "modules";
 export const Route = createLazyFileRoute(
     "/_authenticated/issues/$issueId/$subject",
 )({
-    component: IssueView,
+    component: Component,
 });
+
+function Component() {
+    const { issueId } = Route.useParams();
+
+    return <IssueView issueId={issueId} />;
+}

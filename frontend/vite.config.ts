@@ -29,6 +29,17 @@ export default defineConfig({
                     });
                 },
             },
+            "/events": {
+                target: "http://127.0.0.1:9090",
+                changeOrigin: true,
+                // for local oauth
+                configure: (proxy) => {
+                    proxy.on("proxyReq", (proxyReq) => {
+                        proxyReq.setHeader("Host", "localhost:3000");
+                        proxyReq.setHeader("X-Forwarded-Proto", "https");
+                    });
+                },
+            },
         },
     },
     build: {
