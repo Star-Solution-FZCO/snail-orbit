@@ -8,6 +8,7 @@ import { issueApi } from "./issue.api";
 type UseEventsSubscriptionParams = {
     ids?: string[];
     project_ids?: string[];
+    boards_ids?: string[];
     onMessage?: (message: EventType) => void;
 };
 
@@ -16,9 +17,10 @@ export const useEventsSubscription = (params: UseEventsSubscriptionParams) => {
         const innerParams = {
             ids: params?.ids?.filter(Boolean) || [],
             project_ids: params?.project_ids?.filter(Boolean) || [],
+            boards_ids: params?.boards_ids?.filter(Boolean) || [],
         };
         return `issue?${serializeParams(innerParams)}`;
-    }, [params.ids, params.project_ids]);
+    }, [params?.boards_ids, params?.ids, params?.project_ids]);
 
     return useSseRequest({ url, onMessage: params.onMessage });
 };

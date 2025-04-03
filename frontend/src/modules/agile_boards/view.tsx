@@ -14,10 +14,10 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { StarButton } from "components";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import type { SyntheticEvent } from "react";
+import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -27,7 +27,7 @@ import type { SearchT } from "types/search";
 import { formatErrorMessages, toastApiError } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
-import { StarButton } from "../../components";
+import { useEventSubscriptionAutoReFetch } from "../../store/api/events.api";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";
@@ -39,16 +39,21 @@ import { useViewNavbarSettings } from "./hooks/use-view-navbar-settings";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
-const routeApi = getRouteApi("/_authenticated/agiles/$boardId");
+type AgileBoardViewProps = {
+    boardId: string;
+    query?: string;
+    onQueryChange?: (query: string) => void;
+    onGoToList?: () => void;
+    onBoardSelect?: (board: AgileBoardT) => void;
+};
 
-const AgileBoardView = () => {
+const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
+    const { boardId, query, onQueryChange, onGoToList, onBoardSelect } = props;
     const { t } = useTranslation();
-    const { boardId } = routeApi.useParams();
     const { openIssueModal } = useIssueModalView();
-    const search = routeApi.useSearch();
-    const navigate = useNavigate();
 
     useViewNavbarSettings();
+    useEventSubscriptionAutoReFetch({ boards_ids: [boardId] });
 
     const searchSelectPopoverState = usePopupState({
         variant: "popover",
@@ -59,7 +64,7 @@ const AgileBoardView = () => {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
     const [debouncedSearch, setSearch, searchQuery] = useDebouncedState<string>(
-        search?.query || "",
+        query || "",
     );
     const [mode, setMode] = useState<"board" | "list">("board");
 
@@ -72,18 +77,12 @@ const AgileBoardView = () => {
     const agileBoard = useMemo(() => data?.payload, [data]);
 
     useEffect(() => {
-        setSearch(search?.query || "");
-    }, [search, setSearch]);
+        setSearch(query || "");
+    }, [query, setSearch]);
 
     useEffect(() => {
-        navigate({
-            // @ts-expect-error some TS bullshit, fix later
-            search: (prev: { page?: number; query?: string }) => ({
-                ...prev,
-                query: debouncedSearch || undefined,
-            }),
-        });
-    }, [debouncedSearch, navigate]);
+        onQueryChange?.(debouncedSearch);
+    }, [debouncedSearch, onQueryChange]);
 
     useEffect(() => {
         setLastViewBoardId(boardId);
@@ -91,9 +90,9 @@ const AgileBoardView = () => {
 
     const handleBoardSelect = useCallback(
         (board: AgileBoardT) => {
-            navigate({ to: "/agiles/$boardId", params: { boardId: board.id } });
+            onBoardSelect?.(board);
         },
-        [navigate],
+        [onBoardSelect],
     );
 
     const onSubmit = useCallback(
@@ -110,8 +109,8 @@ const AgileBoardView = () => {
     );
 
     const goToFullListHandler = useCallback(() => {
-        navigate({ to: "/agiles/list" });
-    }, [navigate]);
+        onGoToList?.();
+    }, [onGoToList]);
 
     const handleSavedSearchSelect = (
         _: SyntheticEvent,
