@@ -3,6 +3,7 @@ import type { EventType } from "types/events";
 import { serializeParams } from "utils/helpers/serialize-params";
 import { useSseRequest } from "utils/hooks/use-sse-request";
 import { useAppDispatch } from "../hooks";
+import { agileBoardApi } from "./agile_board.api";
 import { issueApi } from "./issue.api";
 
 type UseEventsSubscriptionParams = {
@@ -34,6 +35,11 @@ export const useEventSubscriptionAutoReFetch = (
             if (message.type === "issue_update") {
                 dispatch(
                     issueApi.util.invalidateTags(["Issues", "IssueHistories"]),
+                );
+                dispatch(
+                    agileBoardApi.util.invalidateTags([
+                        { type: "AgileBoardIssue", id: message.data.issue_id },
+                    ]),
                 );
             }
         },

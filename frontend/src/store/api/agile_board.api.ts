@@ -18,7 +18,13 @@ import type {
 } from "types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["AgileBoards"];
+const tagTypes = ["AgileBoards", "AgileBoardIssue", "AgileBoardIssues"];
+
+const swimLinesToTags = (swimLines: AgileSwimLineT[]) =>
+    swimLines
+        .flatMap((el) => el.columns)
+        .flatMap((el) => el.issues)
+        .map((el) => ({ type: "AgileBoardIssue", id: el.id }));
 
 export const agileBoardApi = createApi({
     reducerPath: "agileBoardApi",
@@ -210,8 +216,9 @@ export const agileBoardApi = createApi({
                 method: "GET",
                 params,
             }),
-            providesTags: (_result, _error, { boardId }) => [
+            providesTags: (result, _error, { boardId }) => [
                 { type: "AgileBoardIssues", id: boardId },
+                ...(result ? swimLinesToTags(result.payload.items) : []),
             ],
         }),
         moveIssue: build.mutation<ApiResponse<{ id: string }>, MoveIssueT>({
