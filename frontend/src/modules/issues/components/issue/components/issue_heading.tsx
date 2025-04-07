@@ -10,16 +10,26 @@ import { IssueSubscribeButton } from "./issue_subscribe_button";
 type IssueHeadingProps = {
     issue: IssueT;
     onEditClick?: () => unknown;
+    hideSubscribeButton?: boolean;
 };
 
 export const IssueHeading: FC<IssueHeadingProps> = (props) => {
-    const { issue, onEditClick } = props;
+    const { issue, onEditClick, hideSubscribeButton } = props;
 
     return (
         <Stack flexDirection="row" gap={1} position="relative">
-            <Box position="absolute" top={8} left={-28}>
-                <IssueSubscribeButton issue={issue} />
-            </Box>
+            {!hideSubscribeButton && (
+                <Box
+                    position="absolute"
+                    top={0}
+                    left={-28}
+                    height="36px"
+                    display="flex"
+                    alignItems="center"
+                >
+                    <IssueSubscribeButton issue={issue} />
+                </Box>
+            )}
 
             <Typography
                 sx={{

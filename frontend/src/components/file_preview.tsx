@@ -14,6 +14,7 @@ import {
     selectFilePreviewByIndex,
     setFiles,
     setNextFilePreview,
+    setPreviousFilePreview,
     useAppDispatch,
     useAppSelector,
 } from "store";
@@ -76,7 +77,7 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
         e: React.MouseEvent<HTMLButtonElement>,
     ) => {
         e.stopPropagation();
-        dispatch(setNextFilePreview());
+        dispatch(setPreviousFilePreview());
     };
 
     const handleClickThumbnail = (index: number) => {
@@ -95,6 +96,26 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
             dispatch(clearFiles());
         };
     }, [issue.attachments, commentsData?.payload]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowLeft") {
+                dispatch(setPreviousFilePreview());
+            } else if (e.key === "ArrowRight") {
+                dispatch(setNextFilePreview());
+            } else if (e.key === "Escape") {
+                dispatch(closeFilePreview());
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [open, dispatch]);
 
     const showNavigationControls = files.length > 1;
 

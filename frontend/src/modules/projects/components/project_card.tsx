@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "store";
 import type { ProjectT } from "types";
-import {ProjectFormTabKey, useProjectFormTabs} from "../utils";
+import { ProjectFormTabKey, useProjectFormTabs } from "../utils";
 import { ProjectSubscribeButton } from "./project_subscribe_button";
 
 interface IProjectCardProps {

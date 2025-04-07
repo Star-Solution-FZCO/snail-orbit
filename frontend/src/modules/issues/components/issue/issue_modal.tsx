@@ -25,6 +25,7 @@ import { IssueForm } from "./components/issue_form";
 import { IssueHeading } from "./components/issue_heading";
 import { IssueLinks } from "./components/issue_links";
 import { IssueMeta } from "./components/issue_meta";
+import { IssueSubscribeButton } from "./components/issue_subscribe_button";
 import { IssueTags } from "./components/issue_tags";
 
 type IssueModalProps = {
@@ -84,6 +85,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                                     <IssueHeading
                                         issue={issue}
                                         onEditClick={handleChangeDisplayMode}
+                                        hideSubscribeButton
                                     />
                                     <IssueTags issue={issue} />
                                 </Stack>
@@ -137,14 +139,19 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                         sx={(theme) => ({
                             backgroundColor: theme.palette.background.paper,
                             p: 1,
+                            pl: 1.5,
                         })}
-                        justifyContent="flex-end"
+                        justifyContent="space-between"
                     >
+                        <IssueSubscribeButton issue={issue} />
+
                         <IconButton size="small" onClick={onClose}>
                             <Close fontSize="small" />
                         </IconButton>
                     </Stack>
+
                     <Divider />
+
                     <FieldOffside>
                         <ProjectField
                             label={t("issues.form.project.label")}

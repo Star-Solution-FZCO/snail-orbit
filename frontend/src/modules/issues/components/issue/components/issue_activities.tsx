@@ -224,26 +224,35 @@ const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
 
                 <Box flex={1} />
 
-                {totalSpentTime > 0 && (
-                    <Typography fontSize={14} fontWeight="bold">
-                        {t("issues.spentTime.total")}:{" "}
-                        {formatSpentTime(totalSpentTime)}
-                    </Typography>
-                )}
+                <Box display="flex" alignItems="center" gap={1}>
+                    {totalSpentTime > 0 && (
+                        <Typography fontSize={14} fontWeight="bold">
+                            {t("issues.spentTime.total")}:{" "}
+                            {formatSpentTime(totalSpentTime)}
+                        </Typography>
+                    )}
 
-                <Select
-                    value={sortOrder}
-                    onChange={handleChangedSortOrder}
-                    variant="standard"
-                    size="small"
-                >
-                    <MenuItem value="oldestFirst">
-                        {t("issues.activities.oldestFirst")}
-                    </MenuItem>
-                    <MenuItem value="newestFirst">
-                        {t("issues.activities.newestFirst")}
-                    </MenuItem>
-                </Select>
+                    <Select
+                        sx={(theme) => ({
+                            "& .MuiSelect-select": {
+                                p: theme.spacing(0.5),
+                                fontSize: 14,
+                                fontWeight: "bold",
+                            },
+                        })}
+                        value={sortOrder}
+                        onChange={handleChangedSortOrder}
+                        variant="standard"
+                        size="small"
+                    >
+                        <MenuItem value="oldestFirst">
+                            {t("issues.activities.oldestFirst")}
+                        </MenuItem>
+                        <MenuItem value="newestFirst">
+                            {t("issues.activities.newestFirst")}
+                        </MenuItem>
+                    </Select>
+                </Box>
             </Box>
 
             <Box pl={1} my={2}>
