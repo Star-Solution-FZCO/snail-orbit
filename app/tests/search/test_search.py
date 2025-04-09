@@ -3,58 +3,25 @@ from datetime import date, datetime
 import mock
 import pytest
 
-from ._mock import get_fake_custom_fields
 
-
-def _custom_fields() -> list[dict]:
+def _custom_fields() -> dict:
     from pm.models import CustomFieldTypeT
 
-    return [
-        {
-            'name': 'State',
-            'type': CustomFieldTypeT.STATE,
-        },
-        {
-            'name': 'Priority',
-            'type': CustomFieldTypeT.ENUM,
-        },
-        {
-            'name': 'H-State',
-            'type': CustomFieldTypeT.STATE,
-        },
-        {
-            'name': 'Integer',
-            'type': CustomFieldTypeT.INTEGER,
-        },
-        {
-            'name': 'Float',
-            'type': CustomFieldTypeT.FLOAT,
-        },
-        {
-            'name': 'Date',
-            'type': CustomFieldTypeT.DATE,
-        },
-        {
-            'name': 'Datetime',
-            'type': CustomFieldTypeT.DATETIME,
-        },
-        {
-            'name': 'String',
-            'type': CustomFieldTypeT.STRING,
-        },
-        {
-            'name': 'Assignee',
-            'type': CustomFieldTypeT.USER,
-        },
-        {
-            'name': 'Version',
-            'type': CustomFieldTypeT.VERSION,
-        },
-        {
-            'name': 'Feature',
-            'type': CustomFieldTypeT.BOOLEAN,
-        },
-    ]
+    fields = {
+        'State': CustomFieldTypeT.STATE,
+        'Priority': CustomFieldTypeT.ENUM,
+        'H-State': CustomFieldTypeT.STATE,
+        'Integer': CustomFieldTypeT.INTEGER,
+        'Float': CustomFieldTypeT.FLOAT,
+        'Date': CustomFieldTypeT.DATE,
+        'Datetime': CustomFieldTypeT.DATETIME,
+        'String': CustomFieldTypeT.STRING,
+        'Assignee': CustomFieldTypeT.USER,
+        'Version': CustomFieldTypeT.VERSION,
+        'Feature': CustomFieldTypeT.BOOLEAN,
+    }
+
+    return {k.lower(): v for k, v in fields.items()}
 
 
 FIXED_NOW = datetime(2024, 2, 20, 12, 12, 1, 518243)
@@ -2525,7 +2492,7 @@ async def test_search_transformation(
     query: str,
     expected: dict,
 ) -> None:
-    mock__get_custom_fields.return_value = get_fake_custom_fields(_custom_fields())
+    mock__get_custom_fields.return_value = _custom_fields()
     mock_utcnow.return_value = FIXED_NOW
 
     from pm.api.search.issue import TransformError, transform_query

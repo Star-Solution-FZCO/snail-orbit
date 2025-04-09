@@ -11,7 +11,6 @@ from lark import (
     UnexpectedToken,
 )
 from lark.exceptions import VisitError
-from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.search.parse_logical_expression import (
@@ -122,38 +121,24 @@ EXPRESSION_GRAMMAR = """
 """
 
 
-class CachedCustomField(BaseModel):
-    name: str
-    type: m.CustomFieldTypeT
-    gid: str
-
-
 # pylint: disable=invalid-name, unused-argument
 # noinspection PyMethodMayBeStatic, PyUnusedLocal, PyPep8Naming
 class MongoQueryTransformer(Transformer):
     __current_user: str | None
-    __cached_fields: dict[str, list[CachedCustomField]]
+    __cached_fields: dict[str, m.CustomFieldTypeT]
 
-    def __fields_by_name(self, field_name: str) -> list[CachedCustomField]:
-        return self.__cached_fields.get(field_name.lower(), [])
-
-    def _transform_boolean_field_value(
-        self, field: CachedCustomField, value: Any
-    ) -> dict:
-        if value is None:
-            return {'value': None}
-        if isinstance(value, str) and value.lower() in ['true', 'false']:
-            return {'value': value.lower() == 'true'}
-        raise ValueError(f'Field {field.name} must be either True or False')
-
-    def __transform_single_field_value(
-        self, field: CachedCustomField, value: Any
-    ) -> dict:
-        if field.type == m.CustomFieldTypeT.BOOLEAN:
-            return self._transform_boolean_field_value(field, value)
-        if field.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
+    def __transform_field_value(self, field_name: str, value: Any) -> dict:
+        if not (field_type := self.__cached_fields.get(field_name.lower())):
+            raise ValueError(f'Field {field_name} not found')
+        if field_type == m.CustomFieldTypeT.BOOLEAN:
+            if value is None:
+                return {'value': None}
+            if isinstance(value, str) and value.lower() in ['true', 'false']:
+                return {'value': value.lower() == 'true'}
+            raise ValueError(f'Field {field_name} must be either True or False')
+        if field_type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
             return {'value.email': value}
-        if field.type in (
+        if field_type in (
             m.CustomFieldTypeT.STATE,
             m.CustomFieldTypeT.ENUM,
             m.CustomFieldTypeT.ENUM_MULTI,
@@ -161,25 +146,14 @@ class MongoQueryTransformer(Transformer):
             m.CustomFieldTypeT.VERSION_MULTI,
         ):
             return {'value.value': str(value) if value is not None else None}
-        if field.type == m.CustomFieldTypeT.STRING:
+        if field_type == m.CustomFieldTypeT.STRING:
             return {'value': str(value) if value is not None else None}
         return {'value': value}
-
-    def __transform_field_value(self, field_name: str, value: Any) -> dict:
-        if not (fields := self.__fields_by_name(field_name)):
-            raise ValueError(f'Field {field_name} not found')
-        if len(fields) == 1:
-            return self.__transform_single_field_value(fields[0], value)
-        return {
-            '$or': [
-                self.__transform_single_field_value(field, value) for field in fields
-            ]
-        }
 
     def __init__(
         self,
         current_user: str | None,
-        cached_fields: dict[str, list[CachedCustomField]],
+        cached_fields: dict[str, m.CustomFieldTypeT],
     ):
         self.__current_user = current_user
         self.__cached_fields = cached_fields
@@ -447,7 +421,7 @@ parser = Lark(EXPRESSION_GRAMMAR, parser='lalr', propagate_positions=False, cach
 
 async def transform_expression(
     expression: str,
-    cached_fields: dict[str, list[CachedCustomField]],
+    cached_fields: dict[str, m.CustomFieldTypeT],
     current_user_email: str | None = None,
 ) -> dict:
     try:
@@ -505,7 +479,7 @@ def _check_mongo_text_exp_exceeded(query: dict) -> bool:
 
 async def _transform_tree_and_extract_context(
     node: Node,
-    cached_fields: dict[str, list[CachedCustomField]],
+    cached_fields: dict[str, m.CustomFieldTypeT],
     current_user_email: str | None = None,
 ) -> dict:
     try:
@@ -559,7 +533,7 @@ async def _merge_nodes_with_context(
 
 async def transform_tree(
     node: Node,
-    cached_fields: dict[str, list[CachedCustomField]],
+    cached_fields: dict[str, m.CustomFieldTypeT],
     current_user_email: str | None = None,
 ) -> dict:
     if isinstance(node, ExpressionNode):
@@ -618,13 +592,19 @@ def transform_text_search(search: str) -> dict:
 
 
 # todo: store in redis cache with ttl
-async def _get_custom_fields() -> dict[str, list[CachedCustomField]]:
+async def _get_custom_fields() -> dict[str, m.CustomFieldTypeT]:
     fields = (
         await m.CustomField.find(with_children=True)
-        .project(CachedCustomField)
+        .aggregate(
+            [
+                {
+                    '$group': {
+                        '_id': '$name',
+                        'type': {'$first': '$type'},
+                    },
+                },
+            ]
+        )
         .to_list()
     )
-    res = {}
-    for field in fields:
-        res.setdefault(field.name.lower(), []).append(field)
-    return res
+    return {field['_id'].lower(): m.CustomFieldTypeT(field['type']) for field in fields}
