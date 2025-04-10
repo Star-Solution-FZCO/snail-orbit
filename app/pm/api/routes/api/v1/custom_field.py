@@ -12,9 +12,11 @@ import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
+    CustomFieldGroupSelectOptionsT,
     CustomFieldOutputT,
     CustomFieldSelectOptionsT,
     EnumOptionOutput,
+    ShortOptionOutput,
     StateOptionOutput,
     VersionOptionOutput,
     cf_output_from_obj,
@@ -733,7 +735,48 @@ async def select_options(
             offset=selected.offset,
             items=[VersionOptionOutput.from_obj(opt) for opt in selected.items],
         )
-    raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not select-able')
+    raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
+
+
+@router.get('/group/{custom_field_gid}/select')
+async def select_options_group(
+    custom_field_gid: str,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[CustomFieldGroupSelectOptionsT]:
+    fields = await m.CustomField.find(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    ).to_list()
+
+    if not fields:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
+
+    if fields[0].type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
+        select_fn = version_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif fields[0].type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        select_fn = enum_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif fields[0].type == m.CustomFieldTypeT.STATE:
+        select_fn = state_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif fields[0].type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
+        select_fn = user_link_select
+        output_fn = UserOutput.from_obj
+        all_options = {opt for field in fields for opt in field.users}
+    else:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
+
+    selected = select_fn(all_options, query)
+
+    return BaseListOutput.make(
+        count=selected.total,
+        limit=selected.limit,
+        offset=selected.offset,
+        items=[output_fn(opt) for opt in selected.items],
+    )
 
 
 async def count_issues_with_option(

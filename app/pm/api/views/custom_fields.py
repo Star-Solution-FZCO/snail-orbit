@@ -22,6 +22,8 @@ __all__ = (
     'CustomFieldLinkOutput',
     'CustomFieldOutputT',
     'CustomFieldSelectOptionsT',
+    'ShortOptionOutput',
+    'CustomFieldGroupSelectOptionsT',
     'cf_output_from_obj',
 )
 
@@ -247,3 +249,18 @@ def cf_output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
     if obj.type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
         return CustomFieldOutputWithVersionOptions.from_obj(obj)
     return CustomFieldOutput.from_obj(obj)
+
+
+class ShortOptionOutput(BaseModel):
+    value: str
+    color: str | None = None
+
+    @classmethod
+    def from_obj(cls, obj: m.EnumOption | m.VersionOption | m.StateOption) -> Self:
+        return cls(
+            value=obj.value,
+            color=getattr(obj, 'color', None),
+        )
+
+
+CustomFieldGroupSelectOptionsT = UserOutput | ShortOptionOutput
