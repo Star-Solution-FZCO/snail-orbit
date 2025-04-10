@@ -13,7 +13,7 @@ from lark import (
 from lark.exceptions import VisitError
 
 import pm.models as m
-from pm.api.search.parse_logical_expression import (
+from pm.api.issue_query.parse_logical_expression import (
     BracketError,
     ExpressionNode,
     LogicalOperatorT,
@@ -26,10 +26,12 @@ from pm.api.search.parse_logical_expression import (
 )
 from pm.utils.dateutils import utcnow
 
+from ._base import IssueQueryTransformError, get_custom_fields
+
 __all__ = (
-    'transform_query',
+    'transform_search',
     'transform_text_search',
-    'TransformError',
+    'SearchTransformError',
     'HASHTAG_VALUES',
     'RESERVED_FIELDS',
 )
@@ -396,7 +398,7 @@ class MongoQueryTransformer(Transformer):
             )
 
 
-class TransformError(Exception):
+class SearchTransformError(IssueQueryTransformError):
     message: str
     expected: set[str]
     position: int | None
@@ -432,26 +434,26 @@ async def transform_expression(
         )
         return transformer.transform(tree)
     except UnexpectedToken as err:
-        raise TransformError(
+        raise SearchTransformError(
             'Failed to parse query',
             position=err.pos_in_stream,
             expected=err.expected,
             orig_exc=err,
         ) from err
     except UnexpectedCharacters as err:
-        raise TransformError(
+        raise SearchTransformError(
             'Failed to parse query', position=err.pos_in_stream
         ) from err
     except UnexpectedEOF as err:
-        raise TransformError(
+        raise SearchTransformError(
             'Failed to parse query', position=err.pos_in_stream
         ) from err
     except ValueError as err:
-        raise TransformError(str(err)) from err
+        raise SearchTransformError(str(err)) from err
     except VisitError as err:
         if isinstance(err.orig_exc, ValueError) and 'Field' in str(err.orig_exc):
-            raise TransformError(str(err.orig_exc)) from err
-        raise TransformError('Failed to parse query') from err
+            raise SearchTransformError(str(err.orig_exc)) from err
+        raise SearchTransformError('Failed to parse query') from err
 
 
 OPERATOR_MAP = {
@@ -488,7 +490,7 @@ async def _transform_tree_and_extract_context(
             cached_fields=cached_fields,
             current_user_email=current_user_email,
         )
-    except TransformError as exc:
+    except SearchTransformError as exc:
         orig_exc = getattr(exc, 'orig_exc', None)
         if orig_exc and isinstance(orig_exc, UnexpectedToken):
             if any(keyword in ('_COLON', 'FIELD_NAME') for keyword in exc.expected):
@@ -554,28 +556,31 @@ async def transform_tree(
         return await _merge_nodes_with_context(left, right, node.operator)
 
 
-async def transform_query(query: str, current_user_email: str | None = None) -> dict:
+async def transform_search(query: str, current_user_email: str | None = None) -> dict:
+    if not query:
+        return {}
+
     try:
         check_brackets(query)
     except BracketError as err:
         if err.value:
-            raise TransformError(
+            raise SearchTransformError(
                 f'Invalid bracket "{err.value}" at position {err.pos}',
                 position=err.pos,
             ) from err
     try:
         tree = parse_logical_expression(query)
     except OperatorError as err:
-        raise TransformError(
+        raise SearchTransformError(
             f'Invalid operator "{err.operator}" at position {err.pos}',
             position=err.pos,
             expected=err.expected,
         ) from err
     except UnexpectedEndOfExpression as err:
-        raise TransformError(str(err)) from err
+        raise SearchTransformError(str(err)) from err
     if not tree:
         return {}
-    custom_fields = await _get_custom_fields()
+    custom_fields = await get_custom_fields()
     result = await transform_tree(
         tree, cached_fields=custom_fields, current_user_email=current_user_email
     )
@@ -583,28 +588,9 @@ async def transform_query(query: str, current_user_email: str | None = None) -> 
         ctx = result.pop('__context_search')
         result = {'$and': [result, transform_text_search(ctx)]}
     if _check_mongo_text_exp_exceeded(result):
-        raise TransformError('Failed to parse query')
+        raise SearchTransformError('Failed to parse query')
     return result
 
 
 def transform_text_search(search: str) -> dict:
     return {'$text': {'$search': search}}
-
-
-# todo: store in redis cache with ttl
-async def _get_custom_fields() -> dict[str, m.CustomFieldTypeT]:
-    fields = (
-        await m.CustomField.find(with_children=True)
-        .aggregate(
-            [
-                {
-                    '$group': {
-                        '_id': '$name',
-                        'type': {'$first': '$type'},
-                    },
-                },
-            ]
-        )
-        .to_list()
-    )
-    return {field['_id'].lower(): m.CustomFieldTypeT(field['type']) for field in fields}

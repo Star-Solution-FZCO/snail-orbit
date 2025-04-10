@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
-from pm.api.search.issue import TransformError, transform_query
+from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import (
     BaseListOutput,
@@ -120,7 +120,7 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
     user_ctx = current_user()
     try:
         await transform_query(body.query)
-    except TransformError as err:
+    except IssueQueryTransformError as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, err.message)  # pylint: disable=raise-missing-from
     except Exception as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err

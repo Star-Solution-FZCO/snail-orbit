@@ -2170,8 +2170,8 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
 ]
 
 
-@mock.patch('pm.api.search.issue._get_custom_fields', new_callable=mock.AsyncMock)
-@mock.patch('pm.api.search.issue.utcnow', new_callable=mock.Mock)
+@mock.patch('pm.api.issue_query.search.get_custom_fields', new_callable=mock.AsyncMock)
+@mock.patch('pm.api.issue_query.search.utcnow', new_callable=mock.Mock)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query, expected',
@@ -2488,21 +2488,21 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
 )
 async def test_search_transformation(
     mock_utcnow: mock.Mock,
-    mock__get_custom_fields: mock.AsyncMock,
+    mock_get_custom_fields: mock.AsyncMock,
     query: str,
     expected: dict,
 ) -> None:
-    mock__get_custom_fields.return_value = _custom_fields()
+    mock_get_custom_fields.return_value = _custom_fields()
     mock_utcnow.return_value = FIXED_NOW
 
-    from pm.api.search.issue import TransformError, transform_query
+    from pm.api.issue_query import IssueQueryTransformError, transform_query
 
     if isinstance(expected, str):
-        with pytest.raises(TransformError) as exc_info:
+        with pytest.raises(IssueQueryTransformError) as exc_info:
             await transform_query(query)
         assert str(exc_info.value) == expected
     else:
-        res = await transform_query(query)
+        res, _ = await transform_query(query)
         assert res == expected
 
     if (
@@ -2513,6 +2513,6 @@ async def test_search_transformation(
         )
         and expected != {}
     ):
-        mock__get_custom_fields.assert_awaited_once()
+        mock_get_custom_fields.assert_awaited_once()
     else:
-        mock__get_custom_fields.assert_not_awaited()
+        mock_get_custom_fields.assert_not_awaited()

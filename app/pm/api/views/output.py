@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from beanie import Document
-    from beanie.odm.queries.find import FindMany
+    from beanie.odm.queries.find import AggregationQuery, FindMany
 
 __all__ = (
     'BaseOutput',

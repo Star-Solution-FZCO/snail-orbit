@@ -8,11 +8,11 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.api.search.issue import (
+from pm.api.issue_query import split_query
+from pm.api.issue_query.parse_logical_expression import tokenize_expression
+from pm.api.issue_query.search import (
     HASHTAG_VALUES,
-    _get_custom_fields,
 )
-from pm.api.search.parse_logical_expression import tokenize_expression
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
 from pm.api.views.output import SuccessPayloadOutput
@@ -88,11 +88,20 @@ class IssueQueryToFiltersOutput(BaseModel):
     filters: list[IssueFilterOutput]
 
 
+async def _get_custom_fields() -> dict[str, list[m.CustomField]]:
+    fields = await m.CustomField.find(with_children=True).to_list()
+    res = {}
+    for field in fields:
+        res.setdefault(field.name.lower(), []).append(field)
+    return res
+
+
 @router.post('/parse-query')
 async def parse_search_query(
     body: IssueQueryToFiltersBody,
 ) -> SuccessPayloadOutput[IssueQueryToFiltersOutput]:
-    tokens = tokenize_expression(body.query)
+    search_part, _ = split_query(body.query)
+    tokens = tokenize_expression(search_part)
     if any(t[0] != 'and' for t in tokens[1::2]):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,

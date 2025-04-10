@@ -12,11 +12,11 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_event, send_task
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import (
-    TransformError,
+from pm.api.issue_query import (
+    IssueQueryTransformError,
     transform_query,
-    transform_text_search,
 )
+from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
@@ -101,10 +101,14 @@ async def list_issues(
         )
     )
 
+    pipeline = []
     if query.q:
         try:
-            flt = await transform_query(query.q, current_user_email=user_ctx.user.email)
-        except TransformError as err:
+            flt, sort_pipeline = await transform_query(
+                query.q, current_user_email=user_ctx.user.email
+            )
+            pipeline += sort_pipeline
+        except IssueQueryTransformError as err:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 err.message,
@@ -112,12 +116,25 @@ async def list_issues(
         q = q.find(flt)
     if query.search:
         q = q.find(transform_text_search(query.search))
-    q = q.sort(m.Issue.id).project(m.Issue.get_ro_projection_model())
-    return await BaseListOutput.make_from_query(
-        q,
+    cnt = await q.count()
+
+    pipeline += [
+        {
+            '$skip': query.offset,
+        },
+        {
+            '$limit': query.limit,
+        },
+    ]
+    q = q.aggregate(
+        pipeline,
+        projection_model=m.Issue.get_ro_projection_model(),
+    )
+    return BaseListOutput.make(
+        items=[IssueOutput.from_obj(obj) async for obj in q],
+        count=cnt,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=IssueOutput.from_obj,
     )
 
 

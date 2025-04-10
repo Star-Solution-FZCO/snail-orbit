@@ -12,7 +12,8 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelException
-from pm.api.search.issue import TransformError, transform_query, transform_text_search
+from pm.api.issue_query import IssueQueryTransformError, transform_query
+from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
 from pm.api.views.issue import (
@@ -398,12 +399,11 @@ async def get_board_issues(
 
     if board.query:
         try:
-            q = q.find(
-                await transform_query(
-                    board.query, current_user_email=user_ctx.user.email
-                )
+            flt, _ = await transform_query(
+                board.query, current_user_email=user_ctx.user.email
             )
-        except TransformError as err:
+            q = q.find(flt)
+        except IssueQueryTransformError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
 
     if board.projects:
@@ -411,10 +411,11 @@ async def get_board_issues(
 
     if query.q:
         try:
-            q = q.find(
-                await transform_query(query.q, current_user_email=user_ctx.user.email)
+            flt, _ = await transform_query(
+                query.q, current_user_email=user_ctx.user.email
             )
-        except TransformError as err:
+            q = q.find(flt)
+        except IssueQueryTransformError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
 
     if query.search:
