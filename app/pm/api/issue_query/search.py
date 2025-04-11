@@ -2,6 +2,8 @@ import re
 from datetime import date, datetime, time
 from typing import Any
 
+from beanie import PydanticObjectId
+from bson.errors import InvalidId
 from dateutil.relativedelta import relativedelta
 from lark import (
     Lark,
@@ -46,6 +48,7 @@ RESERVED_FIELDS = {
     'created_at',
     'created_by',
     'tag',
+    'id',
 }
 
 EXPRESSION_GRAMMAR = """
@@ -198,7 +201,7 @@ class MongoQueryTransformer(Transformer):
 
     def attribute_condition(self, args):
         field, value = args
-        if isinstance(value, str) and field in ('project', 'subject', 'tag'):
+        if isinstance(value, str) and field in ('project', 'subject', 'tag', 'id'):
             value = self.escape_regex(value)
         if field == 'project':
             if value is None:
@@ -208,6 +211,14 @@ class MongoQueryTransformer(Transformer):
             if value is None:
                 return {'subject': None}
             return {'subject': {'$regex': str(value), '$options': 'i'}}
+        if field == 'id':
+            if value is None:
+                return {'_id': None}
+            try:
+                return {'_id': PydanticObjectId(value)}
+            except InvalidId:
+                pass
+            return {'aliases': {'$regex': str(value), '$options': 'i'}}
         if field == 'text':
             if value is None:
                 return {'text': None}
