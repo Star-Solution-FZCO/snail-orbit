@@ -81,8 +81,12 @@ def encrypt_aes_key_with_x25519(
 def decrypt_aes_key_with_x25519(
     encrypted_key_b64: str,
     ephemeral_public_key_b64: str,
-    recipient_private_key: x25519.X25519PrivateKey,
+    recipient_private_key_bytes: bytes,
 ) -> bytes:
+    recipient_private_key = x25519.X25519PrivateKey.from_private_bytes(
+        recipient_private_key_bytes
+    )
+
     encrypted_package = base64.b64decode(encrypted_key_b64)
     ephemeral_public_key_bytes = base64.b64decode(ephemeral_public_key_b64)
 

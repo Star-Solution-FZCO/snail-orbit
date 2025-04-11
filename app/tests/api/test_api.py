@@ -2079,12 +2079,12 @@ async def test_api_v1_encrypted_project(
     admin_decrypted_aes_key = decrypt_aes_key_with_x25519(
         data['payload']['encryption'][0]['data'],
         data['payload']['encryption'][0]['extras']['ephemeral_public_key'],
-        admin_private_key,
+        admin_private_key_bytes,
     )
     project_decrypted_aes_key = decrypt_aes_key_with_x25519(
         data['payload']['encryption'][1]['data'],
         data['payload']['encryption'][1]['extras']['ephemeral_public_key'],
-        project_private_key,
+        project_private_key_bytes,
     )
     assert admin_decrypted_aes_key == project_decrypted_aes_key
     assert admin_decrypted_aes_key == comment_aes_key
