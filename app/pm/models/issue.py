@@ -11,7 +11,7 @@ from pm.utils.dateutils import utcnow
 from pm.utils.document import DocumentWithReadOnlyProjection
 
 from ._audit import audited_model
-from ._encryption import EncryptionKeyMeta
+from ._encryption import EncryptionMeta
 from .custom_fields import (
     CustomField,
     CustomFieldLink,
@@ -36,7 +36,6 @@ __all__ = (
     'IssueInterlinkTypeT',
     'IssueInterlink',
     'IssueLinkField',
-    'EncryptionKeyMeta',
 )
 
 
@@ -96,11 +95,6 @@ class IssueInterlink(BaseModel):
     issue: IssueLinkField
 
 
-class EncryptionMeta(BaseModel):
-    ephemeral_public_key: str
-    encryption_keys: list[EncryptionKeyMeta]
-
-
 class IssueAttachment(BaseModel):
     id: UUID
     name: str
@@ -109,7 +103,7 @@ class IssueAttachment(BaseModel):
     author: UserLinkField
     created_at: datetime
     ocr_text: str | None = None
-    encryption: EncryptionMeta | None = None
+    encryption: list[EncryptionMeta] | None = None
 
 
 class IssueComment(BaseModel):
@@ -121,7 +115,7 @@ class IssueComment(BaseModel):
     attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     is_hidden: bool = False
     spent_time: int = 0
-    encryption: EncryptionMeta | None = None
+    encryption: list[EncryptionMeta] | None = None
 
 
 class IssueFieldChange(BaseModel):
@@ -180,6 +174,7 @@ class Issue(DocumentWithReadOnlyProjection):
 
     interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]
+    encryption: list[EncryptionMeta] | None = None
 
     @property
     def id_readable(self) -> str:

@@ -20,10 +20,10 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputT,
     cf_output_from_obj,
 )
-from pm.api.views.encryption_key import (
+from pm.api.views.encryption import (
     EncryptionKeyCreate,
     EncryptionKeyOut,
-    EncryptionMetaOut,
+    EncryptionKeyPublicOut,
 )
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
@@ -753,7 +753,7 @@ async def unsubscribe_project(
 @router.get('/{project_id}/encryption_key/list')
 async def get_encryption_keys(
     project_id: PydanticObjectId,
-) -> BaseListOutput[EncryptionMetaOut]:
+) -> BaseListOutput[EncryptionKeyPublicOut]:
     project = await m.Project.find_one(m.Project.id == project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
@@ -762,10 +762,8 @@ async def get_encryption_keys(
             HTTPStatus.BAD_REQUEST, 'Project encryption settings not found'
         )
     items = [
-        EncryptionMetaOut(
-            fingerprint=key.fingerprint,
-            public_key=key.public_key,
-            algorithm=key.algorithm,
+        EncryptionKeyPublicOut.from_obj(
+            key,
             target_type=m.EncryptionTargetTypeT.PROJECT,
             target_id=project.id,
         )
@@ -778,10 +776,8 @@ async def get_encryption_keys(
         ).to_list()
         for user in users:
             items.extend(
-                EncryptionMetaOut(
-                    fingerprint=key.fingerprint,
-                    public_key=key.public_key,
-                    algorithm=key.algorithm,
+                EncryptionKeyPublicOut.from_obj(
+                    key,
                     target_type=m.EncryptionTargetTypeT.USER,
                     target_id=user.id,
                 )

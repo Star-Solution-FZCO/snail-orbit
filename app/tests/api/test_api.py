@@ -1,3 +1,6 @@
+import base64
+import hashlib
+import secrets
 import uuid
 from datetime import datetime
 from http import HTTPStatus
@@ -6,9 +9,17 @@ from typing import TYPE_CHECKING
 import mock
 import pytest
 import pytest_asyncio
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from tests.utils.avatar import gravatar_like_hash
 from tests.utils.dict_utils import filter_dict
+from tests.utils.encryption import (
+    decrypt_aes_key_with_x25519,
+    decrypt_with_aes,
+    encrypt_aes_key_with_x25519,
+    encrypt_with_aes,
+)
 
 from .create import (
     ALL_PERMISSIONS,
@@ -1857,3 +1868,229 @@ async def test_api_v1_search_delete(
     data = response.json()
     assert data['success']
     assert data['payload']['id'] == create_search
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test role',
+                'description': 'Test role description',
+                'permissions': ALL_PERMISSIONS,
+            },
+            id='role',
+        )
+    ],
+)
+async def test_api_v1_encrypted_project(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_role: str,
+) -> None:
+    admin_id, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    project_private_key = X25519PrivateKey.generate()
+    project_public_key = project_private_key.public_key()
+    project_private_key_bytes = project_private_key.private_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    project_public_key_bytes = project_public_key.public_bytes(
+        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+    )
+    project_public_key_b64 = base64.b64encode(project_public_key_bytes).decode('utf-8')
+    project_fingerprint = hashlib.sha256(project_private_key_bytes).hexdigest()[0:8]
+
+    admin_private_key = X25519PrivateKey.generate()
+    admin_public_key = admin_private_key.public_key()
+    admin_private_key_bytes = admin_private_key.private_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    admin_public_key_bytes = admin_public_key.public_bytes(
+        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+    )
+    admin_public_key_b64 = base64.b64encode(admin_public_key_bytes).decode('utf-8')
+    admin_fingerprint = hashlib.sha256(admin_private_key_bytes).hexdigest()[0:8]
+
+    response = test_client.post(
+        '/api/v1/settings/encryption_key',
+        json={
+            'name': 'Admin test Key',
+            'public_key': admin_public_key_b64,
+            'fingerprint': admin_fingerprint,
+            'algorithm': 'X25519',
+            'is_active': True,
+            'created_on': 'test machine',
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+
+    key_data = {
+        'name': 'Project test Key',
+        'public_key': project_public_key_b64,
+        'fingerprint': project_fingerprint,
+        'algorithm': 'X25519',
+        'is_active': True,
+        'created_on': 'test machine',
+    }
+
+    project_data = {
+        'name': 'Encrypted Project',
+        'slug': 'ENCR',
+        'description': 'This project is encrypted',
+        'ai_description': 'This project is encrypted',
+        'is_active': True,
+        'encryption_settings': {
+            'key': key_data,
+            'users': [
+                admin_id,
+            ],
+            'encrypt_comments': True,
+            'encrypt_description': False,
+        },
+    }
+
+    response = test_client.post(
+        '/api/v1/project', json=project_data, headers=admin_headers
+    )
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data['success'] is True
+    project = response_data['payload']
+    assert project['encryption_settings']['encrypt_comments'] is True
+    assert project['encryption_settings']['encrypt_attachments'] is True
+    assert project['encryption_settings']['encrypt_description'] is False
+    project_id = project['id']
+
+    response = test_client.get(
+        f'/api/v1/project/{project_id}/encryption_key/list', headers=admin_headers
+    )
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data['success']
+    keys = response_data['payload']['items']
+    assert len(keys) == response_data['payload']['count'] == 2
+    assert keys == [
+        {
+            'fingerprint': project_fingerprint,
+            'target_type': 'project',
+            'target_id': project_id,
+            'public_key': project_public_key_b64,
+            'algorithm': 'X25519',
+        },
+        {
+            'fingerprint': admin_fingerprint,
+            'target_type': 'user',
+            'target_id': admin_id,
+            'public_key': admin_public_key_b64,
+            'algorithm': 'X25519',
+        },
+    ]
+
+    response = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': create_role,
+        },
+    )
+    assert response.status_code == 200
+
+    issue_payload = {
+        'subject': 'Test encrypted issue',
+        'text': 'Unencrypted description',
+        'project_id': project_id,
+    }
+
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+        response = test_client.post(
+            '/api/v1/issue',
+            headers=admin_headers,
+            json=issue_payload,
+        )
+        mock_notify.assert_called_once()
+
+    assert response.status_code == 200
+    issue_id = response.json()['payload']['id']
+
+    comment_text = 'This is an encrypted comment'
+    comment_aes_key, encrypted_comment_text = encrypt_with_aes(comment_text)
+    admin_enc = encrypt_aes_key_with_x25519(
+        comment_aes_key,
+        admin_public_key_bytes,
+    )
+    project_enc = encrypt_aes_key_with_x25519(
+        comment_aes_key,
+        project_public_key_bytes,
+    )
+
+    comment_data = {
+        'text': encrypted_comment_text,
+        'encryption': [
+            {
+                'fingerprint': admin_fingerprint,
+                'target_type': 'user',
+                'target_id': admin_id,
+                'algorithm': 'X25519',
+                'data': admin_enc['encrypted_key'],
+                'extras': {'ephemeral_public_key': admin_enc['ephemeral_public_key']},
+            },
+            {
+                'fingerprint': project_fingerprint,
+                'target_type': 'project',
+                'target_id': project_id,
+                'algorithm': 'X25519',
+                'data': project_enc['encrypted_key'],
+                'extras': {'ephemeral_public_key': project_enc['ephemeral_public_key']},
+            },
+        ],
+    }
+
+    response = test_client.post(
+        f'/api/v1/issue/{issue_id}/comment', json=comment_data, headers=admin_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    comment_id = data['payload']['id']
+    assert 'encryption' in data['payload']
+    assert data['payload']['text'] == encrypted_comment_text
+    assert data['payload']['encryption'] == comment_data['encryption']
+
+    response = test_client.get(
+        f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=admin_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['text'] == encrypted_comment_text
+    assert data['payload']['encryption'] == comment_data['encryption']
+
+    admin_decrypted_aes_key = decrypt_aes_key_with_x25519(
+        data['payload']['encryption'][0]['data'],
+        data['payload']['encryption'][0]['extras']['ephemeral_public_key'],
+        admin_private_key,
+    )
+    project_decrypted_aes_key = decrypt_aes_key_with_x25519(
+        data['payload']['encryption'][1]['data'],
+        data['payload']['encryption'][1]['extras']['ephemeral_public_key'],
+        project_private_key,
+    )
+    assert admin_decrypted_aes_key == project_decrypted_aes_key
+    assert admin_decrypted_aes_key == comment_aes_key
+
+    decrypted_comment_text = decrypt_with_aes(
+        admin_decrypted_aes_key,
+        data['payload']['text'],
+    )
+    assert decrypted_comment_text == comment_text

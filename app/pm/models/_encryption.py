@@ -10,7 +10,7 @@ from pm.utils.dateutils import utcnow
 __all__ = (
     'EncryptionKeyAlgorithmT',
     'EncryptionTargetTypeT',
-    'EncryptionKeyMeta',
+    'EncryptionMeta',
     'EncryptionKey',
 )
 
@@ -18,6 +18,7 @@ __all__ = (
 class EncryptionKeyAlgorithmT(StrEnum):
     RSA = 'RSA'
     ED25519 = 'ED25519'
+    X25519 = 'X25519'
 
 
 class EncryptionTargetTypeT(StrEnum):
@@ -26,12 +27,13 @@ class EncryptionTargetTypeT(StrEnum):
     GLOBAL = 'global'
 
 
-class EncryptionKeyMeta(BaseModel):
+class EncryptionMeta(BaseModel):
     fingerprint: str
     target_type: EncryptionTargetTypeT
     target_id: PydanticObjectId | None
-    public_key: str
     algorithm: EncryptionKeyAlgorithmT
+    extras: Annotated[dict, Field(default_factory=dict)]
+    data: str
 
 
 class EncryptionKey(BaseModel):

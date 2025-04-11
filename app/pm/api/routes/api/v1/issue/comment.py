@@ -31,14 +31,14 @@ class IssueCommentCreate(BaseModel):
     text: str | None = None
     attachments: Annotated[list[UUID], Field(default_factory=list)]
     spent_time: int = 0
-    encryption: m.EncryptionKeyMeta | None = None
+    encryption: list[m.EncryptionMeta] | None = None
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
     attachments: list[UUID] | None = None
     spent_time: int | None = None
-    encryption: m.EncryptionKeyMeta | None = None
+    encryption: list[m.EncryptionMeta] | None = None
 
 
 @router.get('/list')
@@ -126,6 +126,7 @@ async def create_comment(
             )
             for a_id, a_data in attachments.items()
         ],
+        encryption=body.encryption,
     )
     issue.comments.append(comment)
     issue.updated_at = comment.created_at

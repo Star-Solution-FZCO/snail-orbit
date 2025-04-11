@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
-from pm.api.views.encryption_key import (
+from pm.api.views.encryption import (
     EncryptionKeyCreate,
     EncryptionKeyOut,
     EncryptionKeyUpdate,

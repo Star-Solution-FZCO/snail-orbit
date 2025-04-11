@@ -8,27 +8,32 @@ import pm.models as m
 
 __all__ = (
     'EncryptionKeyOut',
-    'EncryptionMetaOut',
+    'EncryptionKeyPublicOut',
     'EncryptionKeyCreate',
     'EncryptionKeyUpdate',
 )
 
 
-class EncryptionMetaOut(BaseModel):
-    public_key: str
+class EncryptionKeyPublicOut(BaseModel):
     fingerprint: str
-    algorithm: m.EncryptionKeyAlgorithmT
     target_type: m.EncryptionTargetTypeT
     target_id: PydanticObjectId | None
+    public_key: str
+    algorithm: m.EncryptionKeyAlgorithmT
 
     @classmethod
-    def from_obj(cls, obj: m.EncryptionKeyMeta) -> Self:
+    def from_obj(
+        cls,
+        obj: m.EncryptionKey,
+        target_type: m.EncryptionTargetTypeT,
+        target_id: PydanticObjectId | None = None,
+    ) -> Self:
         return cls(
-            public_key=obj.public_key,
             fingerprint=obj.fingerprint,
+            target_type=target_type,
+            target_id=target_id,
+            public_key=obj.public_key,
             algorithm=obj.algorithm,
-            target_type=obj.target_type,
-            target_id=obj.target_id,
         )
 
 
