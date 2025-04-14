@@ -130,19 +130,48 @@ async def transform_sort(
 
     custom_fields = await get_custom_fields()
 
-    return [
-        {
-            '$addFields': {
-                f'{field}__sort': _gen_sort_field(field, custom_fields=custom_fields),
+    add_field_stage = {}
+    sort_stage = {}
+    projection_stage = {}
+
+    for field_name, is_descending in fields:
+        field_name = field_name.lower()
+
+        if field_name == 'project':
+            sort_field = 'project.name'
+        elif field_name == 'id':
+            sort_field = '_id'
+        elif field_name in {'subject', 'updated_at', 'created_at'}:
+            sort_field = field_name
+        elif field_name in {'created_by', 'updated_by'}:
+            sort_field = f'{field_name}.email'
+        else:
+            sort_field = f'{field_name}__sort'
+            add_field_stage[sort_field] = _gen_sort_field(
+                field_name, custom_fields=custom_fields
+            )
+            projection_stage[sort_field] = 0
+
+        sort_stage[sort_field] = -1 if is_descending else 1
+
+    pipeline = []
+    if add_field_stage:
+        pipeline.append(
+            {
+                '$addFields': add_field_stage,
             }
-        }
-        for field, _ in fields
-    ] + [
-        {
-            '$sort': {
-                f'{field}__sort': -1 if is_descending else 1
-                for field, is_descending in fields
+        )
+    if sort_stage:
+        pipeline.append(
+            {
+                '$sort': sort_stage,
             }
-        },
-        {'$project': {f'{field}__sort': 0 for field, _ in fields}},
-    ]
+        )
+    if projection_stage:
+        pipeline.append(
+            {
+                '$project': projection_stage,
+            }
+        )
+
+    return pipeline
