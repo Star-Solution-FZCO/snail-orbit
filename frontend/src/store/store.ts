@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import {
     agileBoardApi,
     customFieldsApi,
+    encryptionKeysApi,
     groupApi,
     issueApi,
     projectApi,
@@ -30,6 +31,7 @@ export const store = configureStore({
         [sharedApi.reducerPath]: sharedApi.reducer,
         [tagApi.reducerPath]: tagApi.reducer,
         [searchApi.reducerPath]: searchApi.reducer,
+        [encryptionKeysApi.reducerPath]: encryptionKeysApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -44,6 +46,7 @@ export const store = configureStore({
             sharedApi.middleware,
             tagApi.middleware,
             searchApi.middleware,
+            encryptionKeysApi.middleware,
         ]),
 });
 

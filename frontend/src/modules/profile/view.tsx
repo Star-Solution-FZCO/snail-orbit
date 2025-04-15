@@ -1,30 +1,34 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Stack, Tab, Typography } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler, TabPanel } from "components";
+import type { SyntheticEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "store";
 import { AccountSecurity } from "./components/account_security";
 import { APITokenList } from "./components/api_tokens";
 import { Workspace } from "./components/workspace";
-import { tabs } from "./utils";
+import { useProfilePageTabs } from "./hooks";
+import { Keys } from "./tabs/keys/keys";
 
-const routeApi = getRouteApi("/_authenticated/profile/");
+type ProfileViewProps = {
+    tab?: string;
+    onTabChange?: (tab: string) => void;
+};
 
-export const ProfileView = () => {
+export const ProfileView = (props: ProfileViewProps) => {
+    const { onTabChange, tab } = props;
+
     const { t } = useTranslation();
-    const navigate = useNavigate();
-    const search = routeApi.useSearch();
+    const tabs = useProfilePageTabs();
 
-    const [currentTab, setCurrentTab] = useState(search?.tab || "api_tokens");
+    const [currentTab, setCurrentTab] = useState(tab || "api_tokens");
 
     const { data, error } = userApi.useGetProfileQuery();
 
-    const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
+    const handleChangeTab = (_: SyntheticEvent, value: string) => {
         setCurrentTab(value);
-        // @ts-ignore
-        navigate({ search: { tab: value } });
+        onTabChange?.(value);
     };
 
     if (error) {
@@ -65,6 +69,10 @@ export const ProfileView = () => {
 
                     <TabPanel value="workspace">
                         <Workspace />
+                    </TabPanel>
+
+                    <TabPanel value="keys">
+                        <Keys />
                     </TabPanel>
                 </TabContext>
             </Box>
