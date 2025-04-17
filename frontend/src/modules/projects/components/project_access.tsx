@@ -28,8 +28,8 @@ import { projectApi, roleApi, userApi } from "store";
 import type {
     BasicUserT,
     ListSelectQueryParams,
-    ProjectDetailT,
     ProjectPermissionT,
+    ProjectT,
     RoleT,
     UserOrGroupT,
 } from "types";
@@ -259,7 +259,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
 
 interface IRevokeProjectPermissionDialogProps {
     open: boolean;
-    project: ProjectDetailT;
+    project: ProjectT;
     permission: ProjectPermissionT | null;
     onClose: () => void;
 }
@@ -335,7 +335,7 @@ const RevokeProjectPermissionDialog: FC<
 };
 
 interface IProjectAccessProps {
-    project: ProjectDetailT;
+    project: ProjectT;
 }
 
 const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {

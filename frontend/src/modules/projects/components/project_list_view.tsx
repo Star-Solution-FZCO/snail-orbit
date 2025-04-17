@@ -7,10 +7,10 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
-import type { CustomFieldT, ProjectDetailT } from "types";
+import type { CustomFieldT, ProjectT } from "types";
 
 type AvailableCustomFieldsListProp1s = {
-    project: ProjectDetailT;
+    project: ProjectT;
 };
 
 const AvailableCustomFieldsList: FC<AvailableCustomFieldsListProp1s> = ({
@@ -76,7 +76,7 @@ const AvailableCustomFieldsList: FC<AvailableCustomFieldsListProp1s> = ({
 };
 
 type ProjectListViewProps = {
-    project: ProjectDetailT;
+    project: ProjectT;
 };
 
 export const ProjectListView: FC<ProjectListViewProps> = ({ project }) => {
@@ -130,7 +130,7 @@ export const ProjectListView: FC<ProjectListViewProps> = ({ project }) => {
                 flex: 1,
             },
         ],
-        [t, card_fields],
+        [t, updateProject, project.id, card_fields],
     );
 
     return (

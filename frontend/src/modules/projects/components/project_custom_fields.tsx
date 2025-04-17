@@ -22,7 +22,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
-import type { CustomFieldT, ProjectDetailT } from "types";
+import type { CustomFieldT, ProjectT } from "types";
 import {
     formatErrorMessages,
     noLimitListQueryParams,
@@ -30,7 +30,7 @@ import {
 } from "utils";
 
 interface ICustomFieldListProps {
-    project: ProjectDetailT;
+    project: ProjectT;
 }
 
 const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
@@ -213,7 +213,7 @@ const RemoveProjectCustomFieldDialog: FC<
 };
 
 interface IProjectCustomFieldsProps {
-    project: ProjectDetailT;
+    project: ProjectT;
 }
 
 const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {

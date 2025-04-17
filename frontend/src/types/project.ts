@@ -1,6 +1,26 @@
 import type { CustomFieldT } from "./custom_fields";
+import type { AddEncryptionKeyParams, EncryptionKeyT } from "./encryption_keys";
 import type { BasicUserT } from "./user";
 import type { WorkflowT } from "./workflow";
+
+export type EncryptionSettingsT = {
+    encryption_keys: EncryptionKeyT[];
+    users: BasicUserT[];
+    encrypt_attachments: boolean;
+    encrypt_comments: boolean;
+    encrypt_description: boolean;
+};
+
+export type EncryptionSettingsCreateT = {
+    key: AddEncryptionKeyParams;
+    users?: string[];
+    encrypt_comments?: boolean;
+    encrypt_description?: boolean;
+};
+
+export type UpdateEncryptionSettingsT = {
+    users: string[];
+};
 
 export type BasicProjectT = {
     id: string;
@@ -12,24 +32,37 @@ export type CreateProjectT = {
     name: string;
     slug: string;
     description?: string;
+    ai_description?: string;
     is_active?: boolean;
+    encryption_settings?: EncryptionSettingsCreateT;
 };
 
-export type ProjectT = CreateProjectT & {
+export type ProjectT = {
     id: string;
-    description: string | null;
+    name: string;
+    slug: string;
+    description?: string;
+    ai_description?: string;
+    custom_fields: CustomFieldT[];
+    card_fields: string[];
+    workflows: WorkflowT[];
     is_active: boolean;
     is_subscribed: boolean;
+    avatar_type: "local" | "default";
+    encryption_settings?: EncryptionSettingsT;
+    is_encrypted: boolean;
+    avatar: string;
 };
 
-export type ProjectDetailT = ProjectT & {
-    custom_fields: CustomFieldT[];
-    workflows: WorkflowT[];
-    card_fields: string[];
+export type UpdateProjectT = {
+    name?: string;
+    slug?: string;
+    description?: string;
+    ai_description?: string;
+    is_active?: boolean;
+    card_fields?: string[];
+    encryption_settings?: UpdateEncryptionSettingsT;
 };
-
-export type UpdateProjectT = Partial<CreateProjectT> &
-    Partial<Pick<ProjectDetailT, "card_fields">>;
 
 export type ProjectPermissionTargetT = {
     id: string;

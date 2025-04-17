@@ -1,11 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import {
+import type {
     ApiResponse,
     CreateProjectT,
     CustomFieldT,
     ListQueryParams,
     ListResponse,
-    ProjectDetailT,
     ProjectPermissionT,
     ProjectT,
     TargetTypeT,
@@ -41,14 +40,11 @@ export const projectApi = createApi({
                 return tags;
             },
         }),
-        getProject: build.query<ApiResponse<ProjectDetailT>, string>({
+        getProject: build.query<ApiResponse<ProjectT>, string>({
             query: (id) => `project/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Projects", id }],
         }),
-        createProject: build.mutation<
-            ApiResponse<ProjectDetailT>,
-            CreateProjectT
-        >({
+        createProject: build.mutation<ApiResponse<ProjectT>, CreateProjectT>({
             query: (body) => ({
                 url: "project",
                 method: "POST",
@@ -62,7 +58,7 @@ export const projectApi = createApi({
             ],
         }),
         updateProject: build.mutation<
-            ApiResponse<ProjectDetailT>,
+            ApiResponse<ProjectT>,
             { id: string } & UpdateProjectT
         >({
             query: ({ id, ...body }) => ({
@@ -75,7 +71,7 @@ export const projectApi = createApi({
             ],
         }),
         addProjectCustomField: build.mutation<
-            ApiResponse<ProjectDetailT>,
+            ApiResponse<ProjectT>,
             { id: string; customFieldId: string }
         >({
             query: ({ id, customFieldId }) => ({
@@ -87,7 +83,7 @@ export const projectApi = createApi({
             ],
         }),
         removeProjectCustomField: build.mutation<
-            ApiResponse<ProjectDetailT>,
+            ApiResponse<ProjectT>,
             { id: string; customFieldId: string }
         >({
             query: ({ id, customFieldId }) => ({
@@ -111,7 +107,7 @@ export const projectApi = createApi({
             ],
         }),
         addProjectWorkflow: build.mutation<
-            ApiResponse<ProjectDetailT>,
+            ApiResponse<ProjectT>,
             { id: string; workflowId: string }
         >({
             query: ({ id, workflowId }) => ({
@@ -123,7 +119,7 @@ export const projectApi = createApi({
             ],
         }),
         removeProjectWorkflow: build.mutation<
-            ApiResponse<ProjectDetailT>,
+            ApiResponse<ProjectT>,
             { id: string; workflowId: string }
         >({
             query: ({ id, workflowId }) => ({
@@ -176,7 +172,7 @@ export const projectApi = createApi({
                 { type: "ProjectPermissions", id },
             ],
         }),
-        subscribeProject: build.mutation<ApiResponse<ProjectDetailT>, string>({
+        subscribeProject: build.mutation<ApiResponse<ProjectT>, string>({
             query: (id) => ({
                 url: `project/${id}/subscribe`,
                 method: "POST",
@@ -186,17 +182,15 @@ export const projectApi = createApi({
                 { type: "Projects", id },
             ],
         }),
-        unsubscribeProject: build.mutation<ApiResponse<ProjectDetailT>, string>(
-            {
-                query: (id) => ({
-                    url: `project/${id}/unsubscribe`,
-                    method: "POST",
-                }),
-                invalidatesTags: (_result, _error, id) => [
-                    { type: "Projects", id: "LIST" },
-                    { type: "Projects", id },
-                ],
-            },
-        ),
+        unsubscribeProject: build.mutation<ApiResponse<ProjectT>, string>({
+            query: (id) => ({
+                url: `project/${id}/unsubscribe`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
     }),
 });

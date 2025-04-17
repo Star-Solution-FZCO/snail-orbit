@@ -7,7 +7,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "store";
 import type { ProjectT } from "types";
-import { ProjectFormTabKey, useProjectFormTabs } from "../utils";
+import type { ProjectFormTabKey } from "../utils";
+import { useProjectFormTabs } from "../utils";
 import { ProjectSubscribeButton } from "./project_subscribe_button";
 
 interface IProjectCardProps {
@@ -18,8 +19,8 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const tabs = useProjectFormTabs();
     const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
+    const tabs = useProjectFormTabs(isAdmin || false, project.is_encrypted);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
@@ -40,10 +41,6 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
             search: { tab: tab },
         });
     };
-
-    const visibleTabs = tabs.filter((tab) => {
-        return !tab.adminOnly || isAdmin;
-    });
 
     return (
         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -89,7 +86,7 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                 open={menuOpen}
                 onClose={handleClose}
             >
-                {visibleTabs.map((tab) => (
+                {tabs.map((tab) => (
                     <MenuItem
                         key={tab.value}
                         onClick={() => handleClickLink(tab.value)}

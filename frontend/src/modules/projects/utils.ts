@@ -7,41 +7,55 @@ export const enum ProjectFormTabKey {
     CUSTOM_FIELDS = "customFields",
     WORKFLOWS = "workflows",
     LIST_VIEW = "listView",
+    ENCRYPTION = "encryption",
 }
 
-export const useProjectFormTabs = () => {
-    const { t, i18n } = useTranslation();
+export const useProjectFormTabs = (
+    isAdmin: boolean,
+    isProjectEncrypted: boolean,
+) => {
+    const { t } = useTranslation();
 
-    return useMemo(
-        () => [
+    return useMemo(() => {
+        const tabs = [
             {
                 label: t("projects.sections.generalInfo"),
                 value: ProjectFormTabKey.GENERAL,
-                adminOnly: false,
             },
-            {
-                label: t("projects.sections.access"),
-                value: ProjectFormTabKey.ACCESS,
-                adminOnly: true,
-            },
-            {
-                label: t("projects.sections.customFields"),
-                value: ProjectFormTabKey.CUSTOM_FIELDS,
-                adminOnly: true,
-            },
-            {
-                label: t("projects.sections.workflows"),
-                value: ProjectFormTabKey.WORKFLOWS,
-                adminOnly: true,
-            },
-            {
-                label: t("projects.sections.listView"),
-                value: ProjectFormTabKey.LIST_VIEW,
-                adminOnly: true,
-            },
-        ],
-        [t, i18n.language],
-    );
+        ];
+
+        if (isAdmin) {
+            tabs.push(
+                ...[
+                    {
+                        label: t("projects.sections.access"),
+                        value: ProjectFormTabKey.ACCESS,
+                    },
+                    {
+                        label: t("projects.sections.customFields"),
+                        value: ProjectFormTabKey.CUSTOM_FIELDS,
+                    },
+                    {
+                        label: t("projects.sections.workflows"),
+                        value: ProjectFormTabKey.WORKFLOWS,
+                    },
+                    {
+                        label: t("projects.sections.listView"),
+                        value: ProjectFormTabKey.LIST_VIEW,
+                    },
+                ],
+            );
+        }
+
+        if (isAdmin && isProjectEncrypted) {
+            tabs.push({
+                label: t("projects.sections.encryption"),
+                value: ProjectFormTabKey.ENCRYPTION,
+            });
+        }
+
+        return tabs;
+    }, [isAdmin, isProjectEncrypted, t]);
 };
 
 export const generateSlug = (name: string): string => {

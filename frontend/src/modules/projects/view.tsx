@@ -11,6 +11,7 @@ import { projectApi, useAppSelector } from "store";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
+import { ProjectEncryptionTab } from "./components/project_encryption_tab/project_encryption_tab";
 import { ProjectListView } from "./components/project_list_view";
 import { ProjectSubscribeButton } from "./components/project_subscribe_button";
 import { ProjectWorkflows } from "./components/project_workflows";
@@ -28,15 +29,19 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
     const { t } = useTranslation();
     const { setAction } = useNavbarSettings();
 
-    const tabs = useProjectFormTabs();
+    const { data, error } = projectApi.useGetProjectQuery(projectId);
 
-    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
+    const isAdmin =
+        useAppSelector((state) => state.profile.user?.is_admin) || false;
+
+    const tabs = useProjectFormTabs(
+        isAdmin,
+        data?.payload?.is_encrypted || false,
+    );
 
     const [currentTab, setCurrentTab] = useState(
         tab || ProjectFormTabKey.GENERAL,
     );
-
-    const { data, error } = projectApi.useGetProjectQuery(projectId);
 
     const handleChangeTab = (_: SyntheticEvent, value: ProjectFormTabKey) => {
         setCurrentTab(value);
@@ -69,10 +74,6 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
 
     const project = data.payload;
 
-    const visibleTabs = tabs.filter((tab) => {
-        return !tab.adminOnly || isAdmin;
-    });
-
     return (
         <Box
             display="flex"
@@ -97,7 +98,7 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
                             onChange={handleChangeTab}
                             variant="scrollable"
                         >
-                            {visibleTabs.map((tab) => (
+                            {tabs.map((tab) => (
                                 <Tab
                                     key={tab.value}
                                     label={t(tab.label)}
@@ -111,25 +112,25 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
                         <ProjectGeneralInfo project={project} />
                     </TabPanel>
 
-                    {isAdmin && (
-                        <>
-                            <TabPanel value={ProjectFormTabKey.ACCESS}>
-                                <ProjectAccess project={project} />
-                            </TabPanel>
+                    <TabPanel value={ProjectFormTabKey.ACCESS}>
+                        <ProjectAccess project={project} />
+                    </TabPanel>
 
-                            <TabPanel value={ProjectFormTabKey.CUSTOM_FIELDS}>
-                                <ProjectCustomFields project={project} />
-                            </TabPanel>
+                    <TabPanel value={ProjectFormTabKey.CUSTOM_FIELDS}>
+                        <ProjectCustomFields project={project} />
+                    </TabPanel>
 
-                            <TabPanel value={ProjectFormTabKey.WORKFLOWS}>
-                                <ProjectWorkflows project={project} />
-                            </TabPanel>
+                    <TabPanel value={ProjectFormTabKey.WORKFLOWS}>
+                        <ProjectWorkflows project={project} />
+                    </TabPanel>
 
-                            <TabPanel value={ProjectFormTabKey.LIST_VIEW}>
-                                <ProjectListView project={project} />
-                            </TabPanel>
-                        </>
-                    )}
+                    <TabPanel value={ProjectFormTabKey.LIST_VIEW}>
+                        <ProjectListView project={project} />
+                    </TabPanel>
+
+                    <TabPanel value={ProjectFormTabKey.ENCRYPTION}>
+                        <ProjectEncryptionTab project={project} />
+                    </TabPanel>
                 </TabContext>
             </Box>
         </Box>

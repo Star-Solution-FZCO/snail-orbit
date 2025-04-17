@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
 import { workflowApi } from "store/api/workflow.api";
-import type { ProjectDetailT, WorkflowT, WorkflowTypeT } from "types";
+import type { ProjectT, WorkflowT, WorkflowTypeT } from "types";
 import {
     formatErrorMessages,
     noLimitListQueryParams,
@@ -213,7 +213,7 @@ const DetachProjectWorkflowDialog: FC<IDetachProjectWorkflowDialogProps> = ({
 };
 
 interface IProjectWorkflowsProps {
-    project: ProjectDetailT;
+    project: ProjectT;
 }
 
 const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {

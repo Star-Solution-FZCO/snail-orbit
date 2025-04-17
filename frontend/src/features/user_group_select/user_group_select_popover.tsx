@@ -11,24 +11,43 @@ import { useListQueryParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
 import { getRightAdornment, isUser } from "./utils";
 
-type ValueType = BasicUserT | GroupT;
+type SelectType = "user" | "group" | "all";
 
-type UserGroupSelectPopoverProps = {
-    value?: ValueType | ValueType[];
+type ValueType<T extends SelectType> = T extends "all"
+    ? BasicUserT | GroupT
+    : T extends "user"
+      ? BasicUserT
+      : T extends "group"
+        ? GroupT
+        : never;
+
+type UserGroupSelectPopoverProps<T extends SelectType> = {
+    value?: ValueType<T> | ValueType<T>[];
     onChange?: (
         event: SyntheticEvent,
-        value: ValueType | ValueType[] | null,
+        value: ValueType<T> | ValueType<T>[] | null,
         reason: AutocompleteChangeReason,
     ) => void;
     open: boolean;
     anchorEl?: Element | null;
     multiple?: boolean;
     onClose?: () => unknown;
+    selectType?: T;
 };
 
-export const UserGroupSelectPopover = (props: UserGroupSelectPopoverProps) => {
+export const UserGroupSelectPopover = <T extends SelectType>(
+    props: UserGroupSelectPopoverProps<T>,
+) => {
     const { t } = useTranslation();
-    const { open, anchorEl, multiple, onClose, onChange, value } = props;
+    const {
+        open,
+        anchorEl,
+        multiple,
+        onClose,
+        onChange,
+        value,
+        selectType = "all",
+    } = props;
     const [debouncedInputValue, setInputValue, inputValue] =
         useDebouncedState<string>("");
 
@@ -37,13 +56,17 @@ export const UserGroupSelectPopover = (props: UserGroupSelectPopoverProps) => {
     }); // up to 50 groups means up to 100 elements
 
     const { data: groupsData } = groupApi.useListGroupQuery(
-        open ? { ...listParams, search: debouncedInputValue } : skipToken,
+        open && (selectType === "group" || selectType === "all")
+            ? { ...listParams, search: debouncedInputValue }
+            : skipToken,
     );
     const { data: usersData } = userApi.useListUserQuery(
-        open ? { ...listParams, search: debouncedInputValue } : skipToken,
+        open && (selectType === "user" || selectType === "all")
+            ? { ...listParams, search: debouncedInputValue }
+            : skipToken,
     );
 
-    const options: ValueType[] = useMemo(
+    const options = useMemo(
         () => [
             ...(groupsData?.payload.items || []),
             ...(usersData?.payload.items || []),
@@ -70,6 +93,7 @@ export const UserGroupSelectPopover = (props: UserGroupSelectPopoverProps) => {
                 placeholder: t("userGroupSelectPopover.placeholder"),
             }}
             value={value}
+            // @ts-expect-error TODO: Fix this crap later
             onChange={onChange}
             getOptionKey={(option) => option.id}
             isOptionEqualToValue={(option, value) => option.id === value.id}

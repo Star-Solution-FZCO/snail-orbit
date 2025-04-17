@@ -1,8 +1,8 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi, useAppSelector } from "store";
-import { ProjectT, UpdateProjectT } from "types";
+import type { ProjectT, UpdateProjectT } from "types";
 import { toastApiError } from "utils";
 import { ProjectForm } from "./project_form";
 

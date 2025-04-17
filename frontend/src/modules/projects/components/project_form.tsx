@@ -2,24 +2,25 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { MDEditor } from "components";
+import type { TFunction } from "i18next";
 import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { ProjectT } from "types";
 import * as yup from "yup";
 import { generateSlug } from "../utils";
 
-const projectSchema = yup.object().shape({
-    name: yup.string().required("form.validation.required"),
-    slug: yup.string().required("form.validation.required"),
-    description: yup.string(),
-});
+const useProjectSchema = (t: TFunction) =>
+    yup.object().shape({
+        name: yup.string().required(t("form.validation.required")),
+        slug: yup.string().required(t("form.validation.required")),
+        description: yup.string(),
+    });
 
-type ProjectFormData = yup.InferType<typeof projectSchema>;
+type ProjectFormData = yup.InferType<ReturnType<typeof useProjectSchema>>;
 
 interface IProjectFormProps {
-    defaultValues?: ProjectT;
+    defaultValues?: ProjectFormData;
     onSubmit: (formData: ProjectFormData) => void;
     loading?: boolean;
     hideCancel?: boolean;
@@ -34,6 +35,7 @@ const ProjectForm: FC<IProjectFormProps> = ({
     readOnly,
 }) => {
     const { t } = useTranslation();
+    const projectSchema = useProjectSchema(t);
 
     const {
         control,

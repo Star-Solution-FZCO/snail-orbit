@@ -8,9 +8,14 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "store";
-import type { CreateProjectT } from "types";
 import { toastApiError } from "utils";
-import { ProjectForm } from "./components/project_form";
+import {
+    exportPublicKey,
+    generateKeyPair,
+    getFingerprint,
+} from "../../utils/crypto";
+import type { CreateProjectFormData } from "./components/create_project_form";
+import { CreateProjectForm } from "./components/create_project_form";
 
 const ProjectCreate = () => {
     const { t } = useTranslation();
@@ -20,8 +25,28 @@ const ProjectCreate = () => {
     const [createProject, { isLoading }] =
         projectApi.useCreateProjectMutation();
 
-    const onSubmit = (formData: CreateProjectT) => {
-        createProject(formData)
+    const onSubmit = async (formData: CreateProjectFormData) => {
+        const keyPair = await generateKeyPair("RSA");
+        const fingerprint = await getFingerprint(keyPair.publicKey);
+        const publicKey = await exportPublicKey(keyPair.publicKey);
+        const name = `RSA-${fingerprint}`;
+        createProject({
+            name: formData.name,
+            slug: formData.slug,
+            description: formData.description,
+            encryption_settings: formData.is_encrypted
+                ? {
+                      key: {
+                          name,
+                          public_key: publicKey,
+                          fingerprint,
+                          algorithm: "RSA",
+                      },
+                      encrypt_comments: formData.encrypt_comments,
+                      encrypt_description: formData.encrypt_description,
+                  }
+                : undefined,
+        })
             .unwrap()
             .then((response) => {
                 navigate({
@@ -45,7 +70,7 @@ const ProjectCreate = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     return (
         <Container
@@ -62,7 +87,7 @@ const ProjectCreate = () => {
                 {t("projects.create.title")}
             </Typography>
 
-            <ProjectForm onSubmit={onSubmit} loading={isLoading} />
+            <CreateProjectForm onSubmit={onSubmit} loading={isLoading} />
         </Container>
     );
 };
