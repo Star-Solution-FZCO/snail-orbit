@@ -52,7 +52,9 @@ class GroupUpdate(BaseModel):
 async def list_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[GroupFullOutput]:
-    q = m.Group.find().sort(m.Group.name)
+    q = m.Group.find()
+    query.apply_filter(q, m.Group)
+    query.apply_sort(q, m.Group, (m.Group.name,))
     if query.search:
         q = q.find(m.Group.search_query(query.search))
     return await BaseListOutput.make_from_query(

@@ -159,37 +159,6 @@ export const UserList = () => {
             pb={4}
             height={1}
         >
-            <TextField
-                placeholder={t("users.search.placeholder")}
-                value={query}
-                onChange={handleSearchTextField}
-                size="small"
-                slotProps={{
-                    input: {
-                        endAdornment: (
-                            <Box display="flex" alignItems="center">
-                                {(isLoading || isFetching) && (
-                                    <CircularProgress
-                                        size={20}
-                                        color="inherit"
-                                        sx={{ mr: 1 }}
-                                    />
-                                )}
-
-                                {query && (
-                                    <IconButton
-                                        onClick={handleClearSearchField}
-                                    >
-                                        <CloseIcon />
-                                    </IconButton>
-                                )}
-                            </Box>
-                        ),
-                    },
-                }}
-                fullWidth
-            />
-
             <Stack
                 direction="row"
                 display="flex"
@@ -197,17 +166,43 @@ export const UserList = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("usersWithCount", { count: rowCount })}
-                    </Typography>
-                </Box>
+                <TextField
+                    placeholder={t("users.search.placeholder")}
+                    value={query}
+                    onChange={handleSearchTextField}
+                    size="small"
+                    slotProps={{
+                        input: {
+                            endAdornment: (
+                                <Box display="flex" alignItems="center">
+                                    {(isLoading || isFetching) && (
+                                        <CircularProgress
+                                            size={20}
+                                            color="inherit"
+                                            sx={{ mr: 1 }}
+                                        />
+                                    )}
+
+                                    {query && (
+                                        <IconButton
+                                            onClick={handleClearSearchField}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            ),
+                        },
+                    }}
+                    fullWidth
+                />
 
                 <Link to="/users/create">
                     <Button
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
+                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("users.new")}
                     </Button>

@@ -1,43 +1,138 @@
 import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
 import {
     Box,
     Button,
     CircularProgress,
-    Container,
+    debounce,
+    IconButton,
     Stack,
-    Typography,
+    TextField,
 } from "@mui/material";
-import { ErrorHandler, Link, QueryPagination } from "components";
+import {
+    DataGrid,
+    GridColDef,
+    GridEventListener,
+    GridSortModel,
+} from "@mui/x-data-grid";
+import { useNavigate } from "@tanstack/react-router";
+import { ErrorHandler, Link } from "components";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "store";
+import { GroupT, ListQueryParams } from "types";
 import { useListQueryParams } from "utils";
+
+const initialQueryParams = {
+    limit: 50,
+    offset: 0,
+    sort_by: "name",
+};
 
 const GroupList = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
-    const [listQueryParams, updateListQueryParams] = useListQueryParams();
+    const [query, setQuery] = useState<string>("");
 
-    const {
-        data: groups,
-        isLoading,
-        error,
-    } = groupApi.useListGroupQuery(listQueryParams);
+    const [listQueryParams, updateListQueryParams, resetQueryParams] =
+        useListQueryParams<ListQueryParams>(initialQueryParams);
+
+    const { data, isLoading, isFetching, error } =
+        groupApi.useListGroupQuery(listQueryParams);
+
+    const columns: GridColDef<GroupT>[] = useMemo(
+        () => [
+            {
+                field: "name",
+                headerName: t("groups.fields.name"),
+                flex: 1,
+            },
+            {
+                field: "origin",
+                headerName: t("groups.fields.origin"),
+                flex: 1,
+            },
+            {
+                field: "description",
+                headerName: t("description"),
+                flex: 1,
+            },
+        ],
+        [t],
+    );
+
+    const handleClickRow: GridEventListener<"rowClick"> = ({ row }) => {
+        navigate({
+            to: "/groups/$groupId",
+            params: {
+                groupId: row.id,
+            },
+        });
+    };
+
+    const debouncedSearch = useCallback(
+        debounce((searchValue: string) => {
+            updateListQueryParams({
+                search: searchValue,
+            });
+        }, 300),
+        [],
+    );
+
+    const handleSearchTextField = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
+    };
+
+    const handleClearSearchField = () => {
+        setQuery("");
+        resetQueryParams();
+    };
+
+    const paginationModel = {
+        page: listQueryParams.offset / listQueryParams.limit,
+        pageSize: listQueryParams.limit,
+    };
+
+    const handlePaginationModelChange = (model: {
+        page: number;
+        pageSize: number;
+    }) => {
+        updateListQueryParams({
+            limit: model.pageSize,
+            offset: model.page * model.pageSize,
+            search: query,
+        });
+    };
+
+    const handleChangeSortModel = (model: GridSortModel) => {
+        updateListQueryParams({
+            sort_by:
+                model.length > 0
+                    ? `${model[0].sort === "asc" ? "" : "-"}${model[0].field}`
+                    : undefined,
+        });
+    };
+
+    const rows = data?.payload.items || [];
+    const rowCount = data?.payload.count || 0;
 
     if (error) {
         return <ErrorHandler error={error} message="groups.list.fetch.error" />;
     }
 
     return (
-        <Container
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
-                height: "100%",
-                px: 4,
-                pb: 4,
-            }}
-            disableGutters
+        <Box
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            px={4}
+            pb={4}
+            height={1}
         >
             <Stack
                 direction="row"
@@ -46,58 +141,77 @@ const GroupList = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("groups.title")}
-                </Typography>
+                <TextField
+                    placeholder={t("groups.search.placeholder")}
+                    value={query}
+                    onChange={handleSearchTextField}
+                    size="small"
+                    slotProps={{
+                        input: {
+                            endAdornment: (
+                                <Box display="flex" alignItems="center">
+                                    {(isLoading || isFetching) && (
+                                        <CircularProgress
+                                            size={20}
+                                            color="inherit"
+                                            sx={{ mr: 1 }}
+                                        />
+                                    )}
+
+                                    {query && (
+                                        <IconButton
+                                            onClick={handleClearSearchField}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            ),
+                        },
+                    }}
+                    fullWidth
+                />
 
                 <Link to="/groups/create">
                     <Button
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
+                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("groups.new")}
                     </Button>
                 </Link>
             </Stack>
 
-            {isLoading ? (
-                <Box display="flex" justifyContent="center">
-                    <CircularProgress size={48} color="inherit" />
-                </Box>
-            ) : (
-                <>
-                    <Box
-                        display="flex"
-                        flexDirection="column"
-                        alignItems="flex-start"
-                        gap={2}
-                        flex={1}
-                    >
-                        {groups?.payload?.items?.length === 0 && (
-                            <Typography>{t("groups.empty")}</Typography>
-                        )}
-
-                        {groups?.payload?.items?.map((group) => (
-                            <Link
-                                key={group.id}
-                                to="/groups/$groupId"
-                                params={{ groupId: group.id }}
-                                fontWeight="bold"
-                            >
-                                {group.name}
-                            </Link>
-                        ))}
-                    </Box>
-
-                    <QueryPagination
-                        count={groups?.payload?.count || 0}
-                        queryParams={listQueryParams}
-                        updateQueryParams={updateListQueryParams}
+            <Box flex={1} position="relative">
+                <Box sx={{ position: "absolute", inset: 0 }}>
+                    <DataGrid
+                        sx={{
+                            "& .MuiDataGrid-row": {
+                                cursor: "pointer",
+                            },
+                        }}
+                        columns={columns}
+                        rows={rows}
+                        rowCount={rowCount}
+                        initialState={{
+                            sorting: {
+                                sortModel: [{ field: "name", sort: "asc" }],
+                            },
+                        }}
+                        onRowClick={handleClickRow}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={handlePaginationModelChange}
+                        onSortModelChange={handleChangeSortModel}
+                        loading={isLoading || isFetching}
+                        sortingMode="server"
+                        paginationMode="server"
+                        density="compact"
                     />
-                </>
-            )}
-        </Container>
+                </Box>
+            </Box>
+        </Box>
     );
 };
 

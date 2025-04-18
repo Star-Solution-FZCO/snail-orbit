@@ -136,7 +136,9 @@ class CustomFieldGroupOutput(BaseModel):
 async def list_custom_field_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[CustomFieldGroupOutput]:
-    q = m.CustomField.find(with_children=True).sort(m.CustomField.name)
+    q = m.CustomField.find(with_children=True)
+    query.apply_filter(q, m.CustomField)
+    query.apply_sort(q, m.CustomField, (m.CustomField.name,))
     if query.search:
         q = q.find(m.CustomField.search_query(query.search))
     fields = await q.to_list()

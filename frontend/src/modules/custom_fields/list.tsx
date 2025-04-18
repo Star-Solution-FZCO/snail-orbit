@@ -3,14 +3,18 @@ import CloseIcon from "@mui/icons-material/Close";
 import {
     Box,
     Button,
+    CircularProgress,
     debounce,
     IconButton,
-    InputAdornment,
     Stack,
     TextField,
-    Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
+import {
+    DataGrid,
+    GridColDef,
+    GridEventListener,
+    GridSortModel,
+} from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ErrorHandler } from "components";
 import { useCallback, useMemo, useState } from "react";
@@ -22,6 +26,7 @@ import { useListQueryParams } from "utils";
 const initialQueryParams = {
     limit: 50,
     offset: 0,
+    sort_by: "name",
 };
 
 const CustomFieldList = () => {
@@ -53,6 +58,7 @@ const CustomFieldList = () => {
                 headerName: t("customFields.fields"),
                 flex: 1,
                 valueGetter: (_, row) => row.fields.length,
+                sortable: false,
             },
             {
                 field: "description",
@@ -110,6 +116,15 @@ const CustomFieldList = () => {
         });
     };
 
+    const handleChangeSortModel = (model: GridSortModel) => {
+        updateListQueryParams({
+            sort_by:
+                model.length > 0
+                    ? `${model[0].sort === "asc" ? "" : "-"}${model[0].field}`
+                    : undefined,
+        });
+    };
+
     const rows = data?.payload.items || [];
     const rowCount = data?.payload.count || 0;
 
@@ -127,7 +142,7 @@ const CustomFieldList = () => {
             display="flex"
             flexDirection="column"
             gap={2}
-            height="100%"
+            height={1}
             px={4}
             pb={4}
         >
@@ -138,63 +153,76 @@ const CustomFieldList = () => {
                 alignItems="center"
                 gap={1}
             >
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("customFields.title")}
-                    </Typography>
-                </Box>
+                <TextField
+                    placeholder={t("customFields.search.placeholder")}
+                    value={query}
+                    onChange={handleSearchTextField}
+                    size="small"
+                    slotProps={{
+                        input: {
+                            endAdornment: (
+                                <Box display="flex" alignItems="center">
+                                    {(isLoading || isFetching) && (
+                                        <CircularProgress
+                                            size={20}
+                                            color="inherit"
+                                            sx={{ mr: 1 }}
+                                        />
+                                    )}
 
+                                    {query && (
+                                        <IconButton
+                                            onClick={handleClearSearchField}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            ),
+                        },
+                    }}
+                    fullWidth
+                />
                 <Link to="/custom-fields/create">
                     <Button
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
+                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("customFields.new")}
                     </Button>
                 </Link>
             </Stack>
 
-            <TextField
-                placeholder={t("customFields.search.placeholder")}
-                value={query}
-                onChange={handleSearchTextField}
-                size="small"
-                slotProps={{
-                    input: {
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                {query && (
-                                    <IconButton
-                                        onClick={handleClearSearchField}
-                                    >
-                                        <CloseIcon />
-                                    </IconButton>
-                                )}
-                            </InputAdornment>
-                        ),
-                    },
-                }}
-                fullWidth
-            />
-
-            <DataGrid
-                sx={{
-                    "& .MuiDataGrid-row": {
-                        cursor: "pointer",
-                    },
-                }}
-                columns={columns}
-                rows={rows}
-                rowCount={rowCount}
-                getRowId={(row) => row.gid}
-                onRowClick={handleClickRow}
-                paginationModel={paginationModel}
-                onPaginationModelChange={handlePaginationModelChange}
-                loading={isLoading || isFetching}
-                paginationMode="server"
-                density="compact"
-            />
+            <Box flex={1} position="relative">
+                <Box sx={{ position: "absolute", inset: 0 }}>
+                    <DataGrid
+                        sx={{
+                            "& .MuiDataGrid-row": {
+                                cursor: "pointer",
+                            },
+                        }}
+                        columns={columns}
+                        rows={rows}
+                        rowCount={rowCount}
+                        getRowId={(row) => row.gid}
+                        initialState={{
+                            sorting: {
+                                sortModel: [{ field: "name", sort: "asc" }],
+                            },
+                        }}
+                        onRowClick={handleClickRow}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={handlePaginationModelChange}
+                        onSortModelChange={handleChangeSortModel}
+                        loading={isLoading || isFetching}
+                        sortingMode="server"
+                        paginationMode="server"
+                        density="compact"
+                    />
+                </Box>
+            </Box>
         </Box>
     );
 };
