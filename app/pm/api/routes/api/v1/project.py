@@ -394,7 +394,7 @@ async def update_project(
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
-    data = body.model_dump(exclude_unset=True)
+    data = body.model_dump(exclude_unset=True, exclude={'encryption_settings'})
     if 'card_fields' in data:
         project_field_ids = {field.id for field in obj.custom_fields}
         unknown_card_field = next(
@@ -410,22 +410,20 @@ async def update_project(
                 HTTPStatus.BAD_REQUEST,
                 f'Custom field id={unknown_card_field} not found in project fields',
             )
-    if 'encryption_settings' in data:
-        if data['encryption_settings']:
-            users = []
-            if data['encryption_settings'].users:
-                users = await m.User.find(
-                    bo.In(m.User.id, data['encryption_settings'].users)
-                ).to_list()
-                if len(users) != len(data['encryption_settings'].users):
-                    raise HTTPException(
-                        HTTPStatus.BAD_REQUEST,
-                        'Some users not found',
-                    )
-            obj.encryption_settings.users = [
-                m.UserLinkField.from_obj(user) for user in users
-            ]
-        del data['encryption_settings']
+    if body.encryption_settings:
+        users = []
+        if body.encryption_settings.users:
+            users = await m.User.find(
+                bo.In(m.User.id, body.encryption_settings.users)
+            ).to_list()
+            if len(users) != len(body.encryption_settings.users):
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    'Some users not found',
+                )
+        obj.encryption_settings.users = [
+            m.UserLinkField.from_obj(user) for user in users
+        ]
     for k, v in data.items():
         setattr(obj, k, v)
     if obj.is_changed:
