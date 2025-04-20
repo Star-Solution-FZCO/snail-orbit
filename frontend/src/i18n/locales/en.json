@@ -355,6 +355,7 @@
   "projects.customFields.remove.success": "Custom Field removed from project successfully",
   "projects.customFields.remove.title": "Remove",
   "projects.customFields.remove.warning": "This field will be removed from the project. The values it stores will be deleted. All issues in the project that store a value in this field will be updated. All workflows using this field will be disabled. This operation cannot be undone.",
+  "projects.form.encryptAttachments": "Encrypt attachments",
   "projects.form.encryptComments": "Encrypt comments",
   "projects.form.encryptDescription": "Encrypt description",
   "projects.form.encryption": "Encryption",

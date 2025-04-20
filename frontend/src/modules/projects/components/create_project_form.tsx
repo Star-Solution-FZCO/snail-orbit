@@ -211,7 +211,7 @@ const CreateProjectForm: FC<IProjectFormProps> = ({
                         }
                     />
                     <FormControlLabel
-                        label={t("projects.form.encryptComments")}
+                        label={t("projects.form.encryptAttachments")}
                         control={<Checkbox checked disabled size="small" />}
                     />
                 </FormGroup>
