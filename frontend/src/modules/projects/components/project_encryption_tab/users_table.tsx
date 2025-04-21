@@ -6,6 +6,7 @@ import {
     Button,
     IconButton,
     Paper,
+    Stack,
     Table,
     TableBody,
     TableCell,
@@ -92,7 +93,7 @@ export const UsersTable: FC<UsersTableProps> = ({
                             <TableCell>
                                 {t("projectEncryptionTab.usersTable.user")}
                             </TableCell>
-                            <TableCell sx={{ flexGrow: 0 }} />
+                            <TableCell sx={{ width: "40px" }} />
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -106,14 +107,20 @@ export const UsersTable: FC<UsersTableProps> = ({
                                 }}
                             >
                                 <TableCell>
-                                    <Avatar
-                                        src={user.avatar}
-                                        variant="rounded"
-                                        sx={{ width: 24, height: 24 }}
-                                    />
-                                    {user.name}
+                                    <Stack
+                                        direction="row"
+                                        gap={1}
+                                        alignItems="center"
+                                    >
+                                        <Avatar
+                                            src={user.avatar}
+                                            variant="rounded"
+                                            sx={{ width: 24, height: 24 }}
+                                        />
+                                        {user.name}
+                                    </Stack>
                                 </TableCell>
-                                <TableCell sx={{ flexGrow: 0 }}>
+                                <TableCell>
                                     <IconButton
                                         size="small"
                                         color="error"

@@ -1,5 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Box, CircularProgress, Container, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Container,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { QueryPagination } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
@@ -8,16 +15,20 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import { formatErrorMessages, useListQueryParams } from "utils";
+import useDebouncedState from "../../utils/hooks/use-debounced-state";
 import { ProjectCard } from "./components/project_card";
 
 const ProjectList = () => {
     const { t } = useTranslation();
     const { setAction } = useNavbarSettings();
 
+    const [debouncedSearch, setSearch] = useDebouncedState<string>("");
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
-    const { data, isLoading, error } =
-        projectApi.useListProjectQuery(listQueryParams);
+    const { data, isLoading, error } = projectApi.useListProjectQuery({
+        ...listQueryParams,
+        search: debouncedSearch,
+    });
 
     useEffect(() => {
         setAction(
@@ -41,10 +52,24 @@ const ProjectList = () => {
                 flexDirection: "column",
                 gap: 4,
                 height: "100%",
-                p: 4,
             }}
             disableGutters
         >
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                gap={1}
+            >
+                <TextField
+                    fullWidth
+                    size="small"
+                    placeholder={t("agileBoards.list.search.placeholder")}
+                    value={listQueryParams.search}
+                    onChange={(event) => setSearch(event.target.value)}
+                />
+            </Stack>
+
             {error && (
                 <Typography>
                     {formatErrorMessages(error) ||

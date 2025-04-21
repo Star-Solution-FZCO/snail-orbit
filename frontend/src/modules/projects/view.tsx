@@ -83,12 +83,12 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
             gap={2}
             flex={1}
         >
-            <Box display="flex" alignItems="center" gap={2}>
-                <Typography fontSize={24} fontWeight="bold">
-                    {project.name}
-                </Typography>
-
+            <Box display="flex" alignItems="center" gap={1}>
                 <ProjectSubscribeButton project={project} />
+
+                <Typography fontSize={24} fontWeight="bold">
+                    {project.slug} / {project.name}
+                </Typography>
             </Box>
 
             <Box display="flex" flexDirection="column" flex={1}>

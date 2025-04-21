@@ -41,6 +41,7 @@
   "agileBoards.form.swimlanes": "Swimlanes",
   "agileBoards.item.fetch.error": "Failed to fetch agile board",
   "agileBoards.list.fetch.error": "Failed to fetch agile boards",
+  "agileBoards.list.search.placeholder": "Search projects by name",
   "agileBoards.navbarButton": "Create...",
   "agileBoards.new": "New Board",
   "agileBoards.returnToList": "Return to list",

@@ -45,7 +45,13 @@ const ProjectForm: FC<IProjectFormProps> = ({
         setValue,
         watch,
     } = useForm({
-        defaultValues,
+        defaultValues: defaultValues
+            ? {
+                  name: defaultValues.name,
+                  slug: defaultValues.slug,
+                  description: defaultValues.description,
+              }
+            : {},
         resolver: yupResolver(projectSchema),
     });
 

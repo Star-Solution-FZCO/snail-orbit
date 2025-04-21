@@ -38,7 +38,7 @@ const AgileBoardList = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     return (
         <Container
@@ -61,7 +61,7 @@ const AgileBoardList = () => {
                 <TextField
                     fullWidth
                     size="small"
-                    placeholder={t("placeholder.search")}
+                    placeholder={t("agileBoards.list.search.placeholder")}
                 />
             </Stack>
 

@@ -26,7 +26,7 @@ export const ProjectSubscribeButton: FC<ProjectSubscribeButtonProps> = ({
         <StarButton
             starred={project.is_subscribed}
             onClick={handleToggleSubscribeButton}
-            size="small"
+            size="medium"
             tooltip={
                 project.is_subscribed
                     ? t("projects.unsubscribe")

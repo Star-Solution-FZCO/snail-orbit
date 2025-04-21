@@ -6,14 +6,6 @@ export const initialListQueryParams: ListQueryParams = {
     offset: 0,
 };
 
-const cleanParams = <T>(obj: Partial<T>): Partial<T> => {
-    return Object.fromEntries(
-        Object.entries(obj).filter(
-            ([_, value]) => value !== "" && value !== undefined,
-        ),
-    ) as Partial<T>;
-};
-
 const removeUndefined = <T>(obj: Partial<T>): Partial<T> => {
     return Object.fromEntries(
         Object.entries(obj).filter(([_, value]) => value !== undefined),
@@ -38,33 +30,10 @@ export const useParams = <T>(initialParams: T) => {
     return [params, updateParams, resetParams] as const;
 };
 
-const useParamsFactory =
-    <X>(factoryParams: X) =>
-    <T>(initialParams: T & Partial<X>) =>
+function createParamsHook<X>(factoryParams: X) {
+    return <T extends object>(initialParams: T & Partial<X> = {} as T) =>
         useParams<X & T>({ ...factoryParams, ...initialParams });
-
-export const useListQueryParams = <T extends ListQueryParams>(
-    params: Partial<T> = {},
-) => {
-    const initialParams: T = {
-        ...initialListQueryParams,
-        ...cleanParams(params),
-    } as T;
-
-    const [queryParams, setQueryParams] = useState<T>(initialParams);
-
-    const updateQueryParams = (newParams: Partial<T>) => {
-        setQueryParams(
-            (prev) => ({ ...cleanParams({ ...prev, ...newParams }) }) as T,
-        );
-    };
-
-    const resetQueryParams = () => {
-        setQueryParams(initialParams);
-    };
-
-    return [queryParams, updateQueryParams, resetQueryParams] as const;
-};
+}
 
 export const noLimitListQueryParams: ListQueryParams = {
     limit: 0,
@@ -76,7 +45,11 @@ export type PaginationParams = {
     perPage: number;
 };
 
-export const usePaginationParams = useParamsFactory<PaginationParams>({
+export const usePaginationParams = createParamsHook<PaginationParams>({
     page: 1,
     perPage: 10,
 });
+
+export const useListQueryParams = createParamsHook<ListQueryParams>(
+    initialListQueryParams,
+);
