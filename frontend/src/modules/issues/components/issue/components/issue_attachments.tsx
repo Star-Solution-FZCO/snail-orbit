@@ -1,11 +1,12 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Collapse, IconButton, Typography } from "@mui/material";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
 import { sharedApi } from "store";
-import { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
+import type { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { initialSelectedAttachment, useUploadToast } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";

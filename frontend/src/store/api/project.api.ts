@@ -3,6 +3,7 @@ import type {
     ApiResponse,
     CreateProjectT,
     CustomFieldT,
+    EncryptionKeyPublicT,
     ListQueryParams,
     ListResponse,
     ProjectPermissionT,
@@ -42,6 +43,13 @@ export const projectApi = createApi({
         }),
         getProject: build.query<ApiResponse<ProjectT>, string>({
             query: (id) => `project/${id}`,
+            providesTags: (_result, _error, id) => [{ type: "Projects", id }],
+        }),
+        getProjectEncryptionKeys: build.query<
+            ListResponse<EncryptionKeyPublicT>,
+            string
+        >({
+            query: (id) => `project/${id}/encryption_key/list`,
             providesTags: (_result, _error, id) => [{ type: "Projects", id }],
         }),
         createProject: build.mutation<ApiResponse<ProjectT>, CreateProjectT>({

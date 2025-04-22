@@ -41,6 +41,13 @@ export const IssueView: FC<IssueFormProps> = ({
         issue?.project?.id ?? skipToken,
     );
 
+    // const { data: encryptionKeys } =
+    //     projectApi.useGetProjectEncryptionKeysQuery(
+    //         projectData?.payload?.is_encrypted
+    //             ? projectData.payload.id
+    //             : skipToken,
+    //     );
+
     const [displayMode, setDisplayMode] = useState<"view" | "edit">(
         isDraft ? "edit" : "view",
     );

@@ -35,8 +35,8 @@ export const IssueRowBody = styled("div", { name: "IssueRow", slot: "body" })(
         overflow: "hidden",
         textOverflow: "ellipsis",
         display: "-webkit-box",
-        "-webkit-line-clamp": "2",
-        "-webkit-box-orient": "vertical",
+        webkitLineClamp: "2",
+        webkitBoxOrient: "vertical",
     }),
 );
 

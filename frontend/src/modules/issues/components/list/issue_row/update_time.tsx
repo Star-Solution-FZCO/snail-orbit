@@ -13,10 +13,13 @@ export const UpdateTime: FC<UpdateTimeProps> = memo(({ issue }) => {
     const { t } = useTranslation();
     const today = dayjs().startOf("day");
 
-    const [formatedTime, formatedToltip] = useMemo(() => {
-        if (!issue.updated_at) return ["-", "-"];
+    const [formatedTime, formatedTooltip] = useMemo(() => {
+        if (!issue.updated_at && !issue.created_at) return ["-", "-"];
+        const time = issue.updated_at || issue.created_at;
+        const userForTooltip =
+            issue.updated_by?.name || issue.created_by?.name || "-";
 
-        const dayjsTime = dayjs(issue.updated_at);
+        const dayjsTime = dayjs(time);
 
         let format = "DD MMM YYYY HH:mm";
 
@@ -30,15 +33,20 @@ export const UpdateTime: FC<UpdateTimeProps> = memo(({ issue }) => {
 
         return [
             dayjs(dayjsTime).format(format),
-            t("issueRow.updateTime.tooltip", {
-                time: dayjsTime.format("LLLL"),
-                user: issue.updated_by?.name || "-",
-            }),
+            issue.updated_at
+                ? t("issueRow.updateTime.updateTooltip", {
+                      time: dayjsTime.format("LLLL"),
+                      user: userForTooltip,
+                  })
+                : t("issueRow.updateTime.createTooltip", {
+                      time: dayjsTime.format("LLLL"),
+                      user: userForTooltip,
+                  }),
         ];
     }, [issue, t, today]);
 
     return (
-        <Tooltip title={formatedToltip}>
+        <Tooltip title={formatedTooltip}>
             <span>{formatedTime}</span>
         </Tooltip>
     );

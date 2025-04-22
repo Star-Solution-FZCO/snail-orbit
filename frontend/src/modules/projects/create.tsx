@@ -41,6 +41,7 @@ const ProjectCreate = () => {
                           public_key: publicKey,
                           fingerprint,
                           algorithm: "RSA",
+                          is_active: true,
                       },
                       encrypt_comments: formData.encrypt_comments,
                       encrypt_description: formData.encrypt_description,

@@ -12,7 +12,7 @@ export const serializeParams = (
                 }
                 res += key + "=" + encodeURIComponent(val);
             }
-        } else {
+        } else if (params[key] !== undefined) {
             if (res != "") {
                 res += "&";
             }

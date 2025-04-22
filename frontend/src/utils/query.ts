@@ -1,15 +1,10 @@
 import { useCallback, useState } from "react";
 import type { ListQueryParams } from "types";
+import { removeUndefined } from "./helpers/remove-undefined";
 
 export const initialListQueryParams: ListQueryParams = {
     limit: 10,
     offset: 0,
-};
-
-const removeUndefined = <T>(obj: Partial<T>): Partial<T> => {
-    return Object.fromEntries(
-        Object.entries(obj).filter(([_, value]) => value !== undefined),
-    ) as Partial<T>;
 };
 
 export const useParams = <T>(initialParams: T) => {
@@ -17,15 +12,26 @@ export const useParams = <T>(initialParams: T) => {
         ...initialParams,
     });
 
-    const updateParams = useCallback((newParams: Partial<T>) => {
-        setParams((prev) => ({ ...prev, ...removeUndefined(newParams) }));
-    }, []);
+    const updateParams = useCallback(
+        (value: Partial<T> | ((oldValues: T) => Partial<T>)) => {
+            if (typeof value === "function") {
+                setParams((oldValues) => ({
+                    ...oldValues,
+                    ...removeUndefined(value(oldValues)),
+                }));
+                return;
+            } else {
+                setParams((prev) => ({ ...prev, ...removeUndefined(value) }));
+            }
+        },
+        [],
+    );
 
-    const resetParams = () => {
+    const resetParams = useCallback(() => {
         setParams({
             ...initialParams,
         });
-    };
+    }, []);
 
     return [params, updateParams, resetParams] as const;
 };

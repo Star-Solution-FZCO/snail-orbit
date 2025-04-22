@@ -27,6 +27,7 @@ export const IssuesList: FC<IssuesListProps> = ({
     perPage,
     onChangePerPage,
     onUpdateIssue,
+    onIssueRowDoubleClick,
 }) => {
     const { t } = useTranslation();
 
@@ -102,6 +103,7 @@ export const IssuesList: FC<IssuesListProps> = ({
                         <IssueRow
                             issue={issue}
                             onUpdateIssue={onUpdateIssue}
+                            onIssueRowDoubleClick={onIssueRowDoubleClick}
                             {...viewSettings}
                         />
                         {viewSettings?.showDividers &&

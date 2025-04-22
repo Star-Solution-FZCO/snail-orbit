@@ -11,7 +11,7 @@ const Root = () => {
         if (profile) {
             dispatch(setUser(profile.payload));
         }
-    }, [profile]);
+    }, [dispatch, profile]);
 
     return <Outlet />;
 };

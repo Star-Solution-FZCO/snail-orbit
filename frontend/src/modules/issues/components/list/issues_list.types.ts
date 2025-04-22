@@ -9,4 +9,5 @@ export type IssuesListProps = {
     onChangePerPage?: (perPage: number) => void;
     totalCount?: number;
     onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
+    onIssueRowDoubleClick?: (issue: IssueT) => unknown;
 };

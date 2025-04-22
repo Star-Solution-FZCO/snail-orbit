@@ -72,7 +72,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                 replace: true,
             });
         }
-    }, [issue]);
+    }, [issue, issueId, navigate]);
 
     useEffect(() => {
         setAction(
@@ -84,7 +84,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;

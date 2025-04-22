@@ -4,7 +4,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
-import React, { FC, useEffect } from "react";
+import type { FC } from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
@@ -18,7 +19,7 @@ import {
     useAppDispatch,
     useAppSelector,
 } from "store";
-import { IssueT } from "types";
+import type { IssueT } from "types";
 import { formatBytes } from "utils";
 
 interface IFilePreviewProps {

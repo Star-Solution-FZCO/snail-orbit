@@ -5,11 +5,12 @@ import { ErrorHandler, Link } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
 import deepmerge from "deepmerge";
-import { FC, useCallback, useEffect } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "store";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import IssueView from "../components/issue/issue_view";
 
@@ -23,8 +24,7 @@ const IssueDraft: FC = () => {
 
     const dispatch = useAppDispatch();
 
-    const { data, isLoading, error, refetch } =
-        issueApi.useGetDraftQuery(draftId);
+    const { data, isLoading, error } = issueApi.useGetDraftQuery(draftId);
 
     const [updateDraft, { isLoading: updateLoading }] =
         issueApi.useUpdateDraftMutation();
@@ -41,7 +41,7 @@ const IssueDraft: FC = () => {
                     return Promise.reject(error);
                 });
         },
-        [draftId, refetch],
+        [draftId, updateDraft],
     );
 
     const issue = data?.payload;
@@ -61,7 +61,7 @@ const IssueDraft: FC = () => {
                 toastApiError(error);
                 return Promise.reject(error);
             });
-    }, [draftId, issue, navigate]);
+    }, [createIssue, draftId, issue?.project, navigate, t]);
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
@@ -92,7 +92,7 @@ const IssueDraft: FC = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;

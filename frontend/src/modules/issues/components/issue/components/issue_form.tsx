@@ -66,7 +66,7 @@ export const IssueForm: FC<IssueFormProps> = ({
 
     useEffect(() => {
         if (isDraft) debouncedUpdate(text, subject);
-    }, [text, subject, isDraft]);
+    }, [text, subject, isDraft, debouncedUpdate]);
 
     if (mode === "view") {
         return (

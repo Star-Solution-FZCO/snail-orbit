@@ -34,7 +34,14 @@ export const IssueModalViewContextProvider: FC<PropsWithChildren> = ({
         [],
     );
 
+    const handleClose = useCallback(() => {
+        setOpen(false);
+        // Костыль, надо как-то поправить
+        setTimeout(() => setId(null), 300);
+    }, []);
+
     const handleCreateAndOpenIssueModal = useCallback(() => {
+        if (awaitingRef.current) return;
         awaitingRef.current = true;
         createDraft()
             .unwrap()
@@ -61,7 +68,7 @@ export const IssueModalViewContextProvider: FC<PropsWithChildren> = ({
                         id={id}
                         open={open}
                         isDraft={isDraft}
-                        onClose={() => setOpen(false)}
+                        onClose={handleClose}
                     />
                 </Suspense>
             )}
