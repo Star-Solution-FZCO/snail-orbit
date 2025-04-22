@@ -1,8 +1,10 @@
+import re
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 from uuid import UUID, uuid4
 
+import beanie.operators as bo
 import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
@@ -394,6 +396,24 @@ class Issue(DocumentWithReadOnlyProjection):
         await cls.find({'tags': {'$elemMatch': {'id': tag_id}}}).update(
             {'$pull': {'tags': {'id': tag_id}}}
         )
+
+    @classmethod
+    async def update_project_slug(
+        cls, project_id: PydanticObjectId, old_slug: str, new_slug: str
+    ) -> None:
+        slug_pattern = re.compile(rf'^{old_slug}-\d+$')
+        async for issue in cls.find(
+            cls.project.id == project_id, bo.RegEx(cls.aliases, f'^{old_slug}-\d+$')
+        ):
+            current_alias = next(
+                (alias for alias in issue.aliases if slug_pattern.fullmatch(alias)),
+                None,
+            )
+            if not current_alias:
+                continue
+            current_number = current_alias.split('-')[-1]
+            issue.aliases.append(f'{new_slug}-{current_number}')
+            await issue.save()
 
     def _get_latest_comment_or_history(
         self,

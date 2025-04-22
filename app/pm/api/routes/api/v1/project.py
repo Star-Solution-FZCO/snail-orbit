@@ -5,7 +5,7 @@ from uuid import UUID
 
 from beanie import PydanticObjectId
 from beanie import operators as bo
-from fastapi import Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field, computed_field
 
 import pm.models as m
@@ -39,6 +39,8 @@ from pm.api.views.user import UserOutput
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
 __all__ = ('router',)
+
+SLUG_PATTERN = r'^\w+$'
 
 router = APIRouter(
     prefix='/project',
@@ -273,7 +275,7 @@ class EncryptionSettingsCreate(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: str
-    slug: str
+    slug: str = Field(..., pattern=SLUG_PATTERN)
     description: str | None = None
     ai_description: str | None = None
     is_active: bool = True
@@ -286,7 +288,7 @@ class EncryptionSettingsUpdate(BaseModel):
 
 class ProjectUpdate(BaseModel):
     name: str | None = None
-    slug: str | None = None
+    slug: str | None = Field(None, pattern=SLUG_PATTERN)
     description: str | None = None
     ai_description: str | None = None
     is_active: bool | None = None
@@ -342,6 +344,11 @@ async def create_project(
     body: ProjectCreate,
     _=Depends(admin_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
+    if await m.Project.check_slug_used(body.slug):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Project slug already used',
+        )
     obj = m.Project(
         name=body.name,
         slug=body.slug,
@@ -389,6 +396,7 @@ async def create_project(
 async def update_project(
     project_id: PydanticObjectId,
     body: ProjectUpdate,
+    background_tasks: BackgroundTasks,
     _=Depends(admin_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
@@ -424,6 +432,18 @@ async def update_project(
         obj.encryption_settings.users = [
             m.UserLinkField.from_obj(user) for user in users
         ]
+    if 'slug' in data and body.slug != obj.slug:
+        if await m.Project.check_slug_used(body.slug):
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                'Project slug already used',
+            )
+        background_tasks.add_task(
+            m.Issue.update_project_slug, obj.id, obj.slug, body.slug
+        )
+        obj.slug_history.append(obj.slug)
+        obj.slug = body.slug
+        del data['slug']
     for k, v in data.items():
         setattr(obj, k, v)
     if obj.is_changed:

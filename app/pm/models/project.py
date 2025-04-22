@@ -71,6 +71,7 @@ class Project(Document):
 
     name: str = Indexed(str)
     slug: str = Indexed(str, unique=True)
+    slug_history: Annotated[list[str], Field(default_factory=list)]
     description: str | None = None
     ai_description: str | None = None
     is_active: bool = True
@@ -219,6 +220,20 @@ class Project(Document):
                     }
                 }
             },
+        )
+
+    @classmethod
+    async def check_slug_used(
+        cls,
+        slug: str,
+    ) -> bool:
+        return bool(
+            await cls.find_one(
+                bo.Or(
+                    cls.slug == slug,
+                    cls.slug_history == slug,
+                )
+            )
         )
 
 
