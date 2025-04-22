@@ -562,7 +562,10 @@ async def update_issue(
         obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
     )
 
-    if 'project_id' in body.model_fields_set:
+    move_to_another_project = (
+        'project_id' in body.model_fields_set and body.project_id != obj.project.id
+    )
+    if move_to_another_project:
         project = await m.Project.find_one(
             m.Project.id == body.project_id, fetch_links=True
         )
@@ -629,6 +632,12 @@ async def update_issue(
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         ) from err
+    if move_to_another_project:
+        if existing_alias := obj.get_alias_by_slug(project.slug):
+            obj.aliases.remove(existing_alias)
+            obj.aliases.append(existing_alias)
+        else:
+            obj.aliases.append(await project.get_new_issue_alias())
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
         obj.updated_at = now

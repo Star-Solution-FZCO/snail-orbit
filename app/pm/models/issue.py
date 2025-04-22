@@ -397,6 +397,12 @@ class Issue(DocumentWithReadOnlyProjection):
             {'$pull': {'tags': {'id': tag_id}}}
         )
 
+    def get_alias_by_slug(self, slug: str) -> str | None:
+        slug_pattern = re.compile(rf'^{slug}-\d+$')
+        return next(
+            (alias for alias in self.aliases if slug_pattern.fullmatch(alias)), None
+        )
+
     @classmethod
     async def update_project_slug(
         cls, project_id: PydanticObjectId, old_slug: str, new_slug: str
