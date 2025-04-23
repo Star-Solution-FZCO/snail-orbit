@@ -146,6 +146,7 @@ class IssueOutput(BaseModel):
     project: ProjectField
     subject: str
     text: str | None
+    encryption: list[m.EncryptionMeta] | None
     fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     is_subscribed: bool
@@ -170,6 +171,7 @@ class IssueOutput(BaseModel):
             project=ProjectField.from_obj(obj.project),
             subject=obj.subject,
             text=obj.text,
+            encryption=obj.encryption,
             fields={
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields
@@ -194,6 +196,7 @@ class IssueDraftOutput(BaseModel):
     project: ProjectField | None
     subject: str | None
     text: str | None
+    encryption: list[m.EncryptionMeta] | None
     fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     created_at: datetime
@@ -206,6 +209,7 @@ class IssueDraftOutput(BaseModel):
             project=ProjectField.from_obj(obj.project) if obj.project else None,
             subject=obj.subject,
             text=obj.text,
+            encryption=obj.encryption,
             fields={
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields

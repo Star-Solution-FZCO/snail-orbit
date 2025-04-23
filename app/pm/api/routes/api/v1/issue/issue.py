@@ -40,6 +40,7 @@ class IssueCreate(BaseModel):
     project_id: PydanticObjectId
     subject: str
     text: str | None = None
+    encryption: list[m.EncryptionMeta] | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
@@ -48,6 +49,7 @@ class IssueUpdate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
+    encryption: list[m.EncryptionMeta] | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
 
@@ -56,6 +58,7 @@ class IssueDraftCreate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
+    encryption: list[m.EncryptionMeta] | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
@@ -64,6 +67,7 @@ class IssueDraftUpdate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
     text: str | None = None
+    encryption: list[m.EncryptionMeta] | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
 
@@ -172,6 +176,7 @@ async def create_draft(
         ),
         fields=validated_fields,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
+        encryption=body.encryption,
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
@@ -355,6 +360,7 @@ async def create_issue_from_draft(
         fields=draft.fields,
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
+        encryption=draft.encryption,
     )
     await update_attachments(obj, draft.attachments, user=user_ctx.user, now=now)
     try:
@@ -432,6 +438,7 @@ async def create_issue(
         fields=validated_fields,
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
+        encryption=body.encryption,
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:

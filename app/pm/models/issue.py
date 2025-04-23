@@ -466,6 +466,7 @@ class IssueDraft(Document):
     attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
+    encryption: list[EncryptionMeta] | None = None
 
     async def get_project(self, fetch_links: bool = False) -> Project | None:
         if not self.project:

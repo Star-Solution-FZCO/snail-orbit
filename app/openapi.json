@@ -16167,6 +16167,20 @@
             ],
             "title": "Text"
           },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          },
           "fields": {
             "additionalProperties": true,
             "type": "object",
@@ -16350,6 +16364,20 @@
             ],
             "title": "Text"
           },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          },
           "fields": {
             "additionalProperties": true,
             "type": "object",
@@ -16405,6 +16433,20 @@
             ],
             "title": "Text"
           },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Output"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          },
           "fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/CustomFieldValueOutputRootModel"
@@ -16434,6 +16476,7 @@
           "project",
           "subject",
           "text",
+          "encryption",
           "fields",
           "attachments",
           "created_at",
@@ -16479,6 +16522,20 @@
               }
             ],
             "title": "Text"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
           },
           "fields": {
             "anyOf": [
@@ -17165,6 +17222,20 @@
             ],
             "title": "Text"
           },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Output"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          },
           "fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/CustomFieldValueOutputRootModel"
@@ -17271,6 +17342,7 @@
           "project",
           "subject",
           "text",
+          "encryption",
           "fields",
           "attachments",
           "is_subscribed",
@@ -17662,6 +17734,20 @@
               }
             ],
             "title": "Text"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
           },
           "fields": {
             "anyOf": [

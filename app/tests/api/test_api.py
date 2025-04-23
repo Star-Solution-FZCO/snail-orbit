@@ -1264,6 +1264,7 @@ async def test_api_v1_issue(
         'resolved_at': None,
         'is_closed': False,
         'closed_at': None,
+        'encryption': None,
     }
     assert data['payload']['project']['id'] == project_id
     assert data['payload']['created_by']['id'] == admin_id
