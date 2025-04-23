@@ -19,6 +19,7 @@ from .user import UserOutput
 __all__ = (
     'IssueOutput',
     'IssueDraftOutput',
+    'IssueAttachmentBody',
     'IssueAttachmentOut',
     'IssueChangeOutputRootModel',
     'IssueCommentOutput',
@@ -60,6 +61,11 @@ class ProjectField(BaseModel):
             name=obj.name,
             slug=obj.slug,
         )
+
+
+class IssueAttachmentBody(BaseModel):
+    id: UUID
+    encryption: list[m.EncryptionMeta] | None = None
 
 
 class IssueAttachmentOut(BaseModel):

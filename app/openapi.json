@@ -15792,6 +15792,34 @@
         ],
         "title": "IntegerCustomFieldValueOutput"
       },
+      "IssueAttachmentBody": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "IssueAttachmentBody"
+      },
       "IssueAttachmentOut": {
         "properties": {
           "id": {
@@ -15955,8 +15983,7 @@
           },
           "attachments": {
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "$ref": "#/components/schemas/IssueAttachmentBody"
             },
             "type": "array",
             "title": "Attachments"
@@ -16076,8 +16103,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/IssueAttachmentBody"
                 },
                 "type": "array"
               },
@@ -16148,8 +16174,7 @@
           },
           "attachments": {
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "$ref": "#/components/schemas/IssueAttachmentBody"
             },
             "type": "array",
             "title": "Attachments"
@@ -16332,8 +16357,7 @@
           },
           "attachments": {
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "$ref": "#/components/schemas/IssueAttachmentBody"
             },
             "type": "array",
             "title": "Attachments"
@@ -16472,8 +16496,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/IssueAttachmentBody"
                 },
                 "type": "array"
               },
@@ -17656,8 +17679,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "string",
-                  "format": "uuid"
+                  "$ref": "#/components/schemas/IssueAttachmentBody"
                 },
                 "type": "array"
               },

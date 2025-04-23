@@ -18,17 +18,18 @@ from pm.api.issue_query import (
 )
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueDraftOutput, IssueOutput
+from pm.api.views.issue import IssueAttachmentBody, IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
-from pm.services.files import resolve_files
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
 from pm.workflows import WorkflowException
+
+from ._utils import update_attachments
 
 __all__ = ('router',)
 
@@ -40,7 +41,7 @@ class IssueCreate(BaseModel):
     subject: str
     text: str | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
-    attachments: Annotated[list[UUID], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
 
 class IssueUpdate(BaseModel):
@@ -48,7 +49,7 @@ class IssueUpdate(BaseModel):
     subject: str | None = None
     text: str | None = None
     fields: dict[str, Any] | None = None
-    attachments: list[UUID] | None = None
+    attachments: list[IssueAttachmentBody] | None = None
 
 
 class IssueDraftCreate(BaseModel):
@@ -56,7 +57,7 @@ class IssueDraftCreate(BaseModel):
     subject: str | None = None
     text: str | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
-    attachments: Annotated[list[UUID], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
 
 class IssueDraftUpdate(BaseModel):
@@ -64,7 +65,7 @@ class IssueDraftUpdate(BaseModel):
     subject: str | None = None
     text: str | None = None
     fields: dict[str, Any] | None = None
-    attachments: list[UUID] | None = None
+    attachments: list[IssueAttachmentBody] | None = None
 
 
 class IssueListParams(IssueSearchParams):
@@ -143,7 +144,6 @@ async def create_draft(
     body: IssueDraftCreate,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
     user_ctx = current_user()
-    now = utcnow()
     project: m.Project | None = None
     if body.project_id:
         project = await m.Project.find_one(
@@ -151,12 +151,6 @@ async def create_draft(
         )
         if not project:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
-    attachments = {}
-    if body.attachments:
-        try:
-            attachments = await resolve_files(body.attachments)
-        except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if not project and body.fields:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
@@ -177,19 +171,9 @@ async def create_draft(
             else None
         ),
         fields=validated_fields,
-        attachments=[
-            m.IssueAttachment(
-                id=a_id,
-                name=a_data.name,
-                size=a_data.size,
-                content_type=a_data.content_type,
-                author=m.UserLinkField.from_obj(user_ctx.user),
-                created_at=now,
-            )
-            for a_id, a_data in attachments.items()
-        ],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
     )
+    await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
         raise ValidateModelException(
             payload=IssueDraftOutput.from_obj(obj),
@@ -255,7 +239,6 @@ async def update_draft(
     body: IssueDraftUpdate,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
     user_ctx = current_user()
-    now = utcnow()
     obj: m.IssueDraft | None = await m.IssueDraft.find_one(m.IssueDraft.id == draft_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
@@ -290,35 +273,11 @@ async def update_draft(
         )
         obj.fields = f_val
     for k, v in body.model_dump(
-        exclude={'project_id', 'fields'}, exclude_unset=True
+        exclude={'project_id', 'fields', 'attachments'}, exclude_unset=True
     ).items():
-        if k == 'attachments':
-            new_attachment_ids = set(v)
-            current_attachment_ids = set(a.id for a in obj.attachments)
-            extra_attachment_ids = new_attachment_ids - current_attachment_ids
-            remove_attachment_ids = current_attachment_ids - new_attachment_ids
-            try:
-                extra_attachments = await resolve_files(list(extra_attachment_ids))
-            except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-            obj.attachments = [
-                a for a in obj.attachments if a.id not in remove_attachment_ids
-            ]
-            obj.attachments.extend(
-                [
-                    m.IssueAttachment(
-                        id=a_id,
-                        name=a_data.name,
-                        size=a_data.size,
-                        content_type=a_data.content_type,
-                        author=m.UserLinkField.from_obj(user_ctx.user),
-                        created_at=now,
-                    )
-                    for a_id, a_data in extra_attachments.items()
-                ]
-            )
-            continue
         setattr(obj, k, v)
+    if 'attachments' in body.model_fields_set:
+        await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
         raise ValidateModelException(
             payload=IssueDraftOutput.from_obj(obj),
@@ -389,32 +348,15 @@ async def create_issue_from_draft(
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
 
-    attachments = {}
-    if draft.attachments:
-        try:
-            attachments = await resolve_files([a.id for a in draft.attachments])
-        except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-
     obj = m.Issue(
         subject=draft.subject,
         text=draft.text,
         project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
         fields=draft.fields,
-        attachments=[
-            m.IssueAttachment(
-                id=a_id,
-                name=a_data.name,
-                size=a_data.size,
-                content_type=a_data.content_type,
-                author=m.UserLinkField.from_obj(user_ctx.user),
-                created_at=now,
-            )
-            for a_id, a_data in attachments.items()
-        ],
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
     )
+    await update_attachments(obj, draft.attachments, user=user_ctx.user, now=now)
     try:
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
@@ -480,13 +422,6 @@ async def create_issue(
         project, PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ)
     )
 
-    attachments = {}
-    if body.attachments:
-        try:
-            attachments = await resolve_files(body.attachments)
-        except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-
     validated_fields, validation_errors = await validate_custom_fields_values(
         body.fields, project
     )
@@ -495,20 +430,10 @@ async def create_issue(
         text=body.text,
         project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
         fields=validated_fields,
-        attachments=[
-            m.IssueAttachment(
-                id=a_id,
-                name=a_data.name,
-                size=a_data.size,
-                content_type=a_data.content_type,
-                author=m.UserLinkField.from_obj(user_ctx.user),
-                created_at=now,
-            )
-            for a_id, a_data in attachments.items()
-        ],
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
     )
+    await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
         raise ValidateModelException(
             payload=IssueOutput.from_obj(obj),
@@ -582,41 +507,19 @@ async def update_issue(
         project = await obj.get_project(fetch_links=True)
 
     validation_errors = []
-    extra_attachment_ids = set()
-    for k, v in body.dict(exclude_unset=True).items():
+    for k, v in body.model_dump(exclude={'attachments'}, exclude_unset=True).items():
         if k == 'fields':
             f_val, validation_errors = await validate_custom_fields_values(
                 v, project, obj
             )
             obj.fields = f_val
             continue
-        if k == 'attachments':
-            new_attachment_ids = set(v)
-            current_attachment_ids = set(a.id for a in obj.attachments)
-            extra_attachment_ids = new_attachment_ids - current_attachment_ids
-            remove_attachment_ids = current_attachment_ids - new_attachment_ids
-            try:
-                extra_attachments = await resolve_files(list(extra_attachment_ids))
-            except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-            obj.attachments = [
-                a for a in obj.attachments if a.id not in remove_attachment_ids
-            ]
-            obj.attachments.extend(
-                [
-                    m.IssueAttachment(
-                        id=a_id,
-                        name=a_data.name,
-                        size=a_data.size,
-                        content_type=a_data.content_type,
-                        author=m.UserLinkField.from_obj(user_ctx.user),
-                        created_at=now,
-                    )
-                    for a_id, a_data in extra_attachments.items()
-                ]
-            )
-            continue
         setattr(obj, k, v)
+    issue_attachment_ids = {a.id for a in obj.attachments}
+    extra_attachment_ids = {
+        a.id for a in body.attachments or [] if a.id not in issue_attachment_ids
+    }
+    await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
         raise ValidateModelException(
             payload=IssueOutput.from_obj(obj),

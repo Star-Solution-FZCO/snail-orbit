@@ -10,13 +10,14 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_task
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueCommentOutput
+from pm.api.views.issue import IssueAttachmentBody, IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.permissions import PermAnd, Permissions, PermOr
-from pm.services.files import resolve_files
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
+
+from ._utils import update_attachments
 
 __all__ = ('router',)
 
@@ -29,14 +30,14 @@ router = APIRouter(
 
 class IssueCommentCreate(BaseModel):
     text: str | None = None
-    attachments: Annotated[list[UUID], Field(default_factory=list)]
+    attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
     spent_time: int = 0
     encryption: list[m.EncryptionMeta] | None = None
 
 
 class IssueCommentUpdate(BaseModel):
     text: str | None = None
-    attachments: list[UUID] | None = None
+    attachments: list[IssueAttachmentBody] | None = None
     spent_time: int | None = None
     encryption: list[m.EncryptionMeta] | None = None
 
@@ -103,31 +104,15 @@ async def create_comment(
         issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE)
     )
 
-    attachments = {}
-    if body.attachments:
-        try:
-            attachments = await resolve_files(body.attachments)
-        except ValueError as err:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     comment = m.IssueComment(
         text=body.text,
         author=m.UserLinkField.from_obj(user_ctx.user),
         created_at=now,
         updated_at=now,
         spent_time=body.spent_time,
-        attachments=[
-            m.IssueAttachment(
-                id=a_id,
-                name=a_data.name,
-                size=a_data.size,
-                content_type=a_data.content_type,
-                author=m.UserLinkField.from_obj(user_ctx.user),
-                created_at=now,
-            )
-            for a_id, a_data in attachments.items()
-        ],
         encryption=body.encryption,
     )
+    await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
     issue.comments.append(comment)
     issue.updated_at = comment.created_at
     issue.updated_by = comment.author
@@ -164,37 +149,15 @@ async def update_comment(
         )
     if comment.is_hidden:
         raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot update hidden comments')
-    extra_attachment_ids = set()
-    for k, v in body.dict(exclude_unset=True).items():
-        if k == 'attachments':
-            new_attachment_ids = set(v)
-            current_attachment_ids = set(a.id for a in comment.attachments)
-            extra_attachment_ids = new_attachment_ids - current_attachment_ids
-            remove_attachment_ids = current_attachment_ids - new_attachment_ids
-            try:
-                extra_attachments = await resolve_files(list(extra_attachment_ids))
-            except ValueError as err:
-                raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
-            comment.attachments = [
-                a for a in comment.attachments if a.id not in remove_attachment_ids
-            ]
-            comment.attachments.extend(
-                [
-                    m.IssueAttachment(
-                        id=a_id,
-                        name=a_data.name,
-                        size=a_data.size,
-                        content_type=a_data.content_type,
-                        author=m.UserLinkField.from_obj(user_ctx.user),
-                        created_at=now,
-                    )
-                    for a_id, a_data in extra_attachments.items()
-                ]
-            )
-            continue
+    comment_attachment_ids = {a.id for a in comment.attachments}
+    extra_attachment_ids = {
+        a.id for a in body.attachments or [] if a.id not in comment_attachment_ids
+    }
+    for k, v in body.model_dump(exclude={'attachments'}, exclude_unset=True).items():
         if k == 'spent_time':
             v = v or 0
         setattr(comment, k, v)
+    await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
     if issue.is_changed:
         comment.updated_at = now
         issue.updated_at = comment.created_at

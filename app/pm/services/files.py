@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Collection
 
 from pm.config import CONFIG, FileStorageModeT
 from pm.utils.file_storage import BaseStorageClient, FileHeader, FileIDT
@@ -32,6 +33,6 @@ async def resolve_file(id_: FileIDT) -> FileHeader:
     return await client.get_file_info(id_)
 
 
-async def resolve_files(ids: list[FileIDT]) -> dict[FileIDT, FileHeader]:
+async def resolve_files(ids: Collection[FileIDT]) -> dict[FileIDT, FileHeader]:
     results = await asyncio.gather(*(resolve_file(id_) for id_ in ids))
     return dict(zip(ids, results))
