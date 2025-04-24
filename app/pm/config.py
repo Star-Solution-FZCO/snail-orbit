@@ -8,6 +8,7 @@ from typing import Any
 from dynaconf import Dynaconf, Validator
 
 from pm.constants import CONFIG_PATHS
+from pm.enums import EncryptionKeyAlgorithmT
 
 __all__ = (
     'CONFIG',
@@ -368,6 +369,22 @@ CONFIG = Dynaconf(
         Validator('DB_ENCRYPTION_KEY', default=None),
         Validator('MFA_TOTP_NAME', default='snail-orbit'),
         Validator('MFA_TOTP_ISSUER', default='snail-orbit'),
+        Validator('ENCRYPTION_GLOBAL_PUBLIC_KEY', default=None),
+        Validator(
+            'ENCRYPTION_GLOBAL_FINGERPRINT',
+            when=Validator(
+                'ENCRYPTION_GLOBAL_PUBLIC_KEY',
+                condition=bool,
+            ),
+        ),
+        Validator(
+            'ENCRYPTION_GLOBAL_ALGORITHM',
+            cast=EncryptionKeyAlgorithmT,
+            when=Validator(
+                'ENCRYPTION_GLOBAL_PUBLIC_KEY',
+                condition=bool,
+            ),
+        ),
     ],
 )
 CONFIG.configure()

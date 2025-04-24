@@ -36,6 +36,8 @@ from pm.api.views.params import ListParams
 from pm.api.views.role import RoleLinkOutput, RoleOutput
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
+from pm.config import CONFIG
+from pm.enums import EncryptionTargetTypeT
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
 __all__ = ('router',)
@@ -782,7 +784,7 @@ async def get_encryption_keys(
     items = [
         EncryptionKeyPublicOut.from_obj(
             key,
-            target_type=m.EncryptionTargetTypeT.PROJECT,
+            target_type=EncryptionTargetTypeT.PROJECT,
             target_id=project.id,
         )
         for key in project.encryption_settings.encryption_keys
@@ -796,12 +798,22 @@ async def get_encryption_keys(
             items.extend(
                 EncryptionKeyPublicOut.from_obj(
                     key,
-                    target_type=m.EncryptionTargetTypeT.USER,
+                    target_type=EncryptionTargetTypeT.USER,
                     target_id=user.id,
                 )
                 for key in user.encryption_keys
                 if key.is_active
             )
+    if CONFIG.ENCRYPTION_GLOBAL_PUBLIC_KEY:
+        items.append(
+            EncryptionKeyPublicOut(
+                fingerprint=CONFIG.ENCRYPTION_GLOBAL_FINGERPRINT,
+                target_type=EncryptionTargetTypeT.GLOBAL,
+                target_id=None,
+                public_key=CONFIG.ENCRYPTION_GLOBAL_PUBLIC_KEY,
+                algorithm=CONFIG.ENCRYPTION_GLOBAL_ALGORITHM,
+            )
+        )
     return BaseListOutput.make(
         count=len(items),
         limit=len(items),

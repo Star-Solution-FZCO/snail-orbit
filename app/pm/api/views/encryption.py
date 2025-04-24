@@ -5,6 +5,7 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 import pm.models as m
+from pm.enums import EncryptionKeyAlgorithmT, EncryptionTargetTypeT
 
 __all__ = (
     'EncryptionKeyOut',
@@ -16,16 +17,16 @@ __all__ = (
 
 class EncryptionKeyPublicOut(BaseModel):
     fingerprint: str
-    target_type: m.EncryptionTargetTypeT
+    target_type: EncryptionTargetTypeT
     target_id: PydanticObjectId | None
     public_key: str
-    algorithm: m.EncryptionKeyAlgorithmT
+    algorithm: EncryptionKeyAlgorithmT
 
     @classmethod
     def from_obj(
         cls,
         obj: m.EncryptionKey,
-        target_type: m.EncryptionTargetTypeT,
+        target_type: EncryptionTargetTypeT,
         target_id: PydanticObjectId | None = None,
     ) -> Self:
         return cls(
@@ -41,7 +42,7 @@ class EncryptionKeyOut(BaseModel):
     name: str
     public_key: str
     fingerprint: str
-    algorithm: m.EncryptionKeyAlgorithmT
+    algorithm: EncryptionKeyAlgorithmT
     is_active: bool
     created_on: str | None
     created_at: datetime
@@ -63,7 +64,7 @@ class EncryptionKeyCreate(BaseModel):
     name: str
     public_key: str
     fingerprint: str
-    algorithm: m.EncryptionKeyAlgorithmT
+    algorithm: EncryptionKeyAlgorithmT
     is_active: bool = True
     created_on: str | None = None
 

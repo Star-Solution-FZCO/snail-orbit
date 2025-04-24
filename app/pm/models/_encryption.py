@@ -1,30 +1,16 @@
 from datetime import datetime
-from enum import StrEnum
 from typing import Annotated
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field
 
+from pm.enums import EncryptionKeyAlgorithmT, EncryptionTargetTypeT
 from pm.utils.dateutils import utcnow
 
 __all__ = (
-    'EncryptionKeyAlgorithmT',
-    'EncryptionTargetTypeT',
     'EncryptionMeta',
     'EncryptionKey',
 )
-
-
-class EncryptionKeyAlgorithmT(StrEnum):
-    RSA = 'RSA'
-    ED25519 = 'ED25519'
-    X25519 = 'X25519'
-
-
-class EncryptionTargetTypeT(StrEnum):
-    USER = 'user'
-    PROJECT = 'project'
-    GLOBAL = 'global'
 
 
 class EncryptionMeta(BaseModel):
