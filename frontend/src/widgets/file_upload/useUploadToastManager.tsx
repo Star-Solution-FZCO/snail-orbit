@@ -26,11 +26,20 @@ export const useUploadToastManager = (props?: useUploadToastManagerProps) => {
         (fileName: string) => {
             if (toastMap.current.has(fileName)) return;
             const id = toast(
-                <Box display="flex" flexDirection="column" gap={1}>
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap={1}
+                    sx={(theme) => ({
+                        width: "100%",
+                        backgroundColor: theme.palette.background.paper,
+                        p: 1,
+                    })}
+                >
                     <Box
                         display="flex"
                         justifyContent="space-between"
-                        alignItems="flex-start"
+                        alignItems="center"
                         gap={1}
                     >
                         <Typography>{fileName}</Typography>

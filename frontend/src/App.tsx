@@ -1,4 +1,4 @@
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider, useColorScheme } from "@mui/material";
 import { RouterProvider } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Suspense } from "react";
@@ -8,19 +8,27 @@ import { store } from "store";
 import { theme } from "theme";
 import { router } from "./router";
 
+const ToastContainerComp = () => {
+    const { mode } = useColorScheme();
+
+    return (
+        <ToastContainer
+            position="bottom-right"
+            theme={mode}
+            transition={Slide}
+            closeOnClick
+            stacked
+        />
+    );
+};
+
 const App = () => {
     return (
         <ThemeProvider theme={theme}>
             <StoreProvider store={store}>
                 <CssBaseline />
 
-                <ToastContainer
-                    position="bottom-right"
-                    theme={theme.palette.mode}
-                    transition={Slide}
-                    closeOnClick
-                    stacked
-                />
+                <ToastContainerComp />
 
                 <RouterProvider router={router} />
 

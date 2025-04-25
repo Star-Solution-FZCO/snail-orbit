@@ -57,6 +57,9 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
             const clipboardItems = event.clipboardData?.items;
             if (!clipboardItems) return;
 
+            event.stopPropagation();
+            event.preventDefault();
+
             for (let i = 0; i < clipboardItems.length; i++) {
                 const item = clipboardItems[i];
 

@@ -11,8 +11,8 @@ import {
     TextField,
 } from "@mui/material";
 import { MDEditor, SpentTimeField, UserAvatar } from "components";
-import type { FC } from "react";
-import { useCallback, useState } from "react";
+import type { ChangeEvent, FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, useAppSelector } from "store";
 import { formatSpentTime, toastApiError } from "utils";
@@ -77,6 +77,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
     const [spentTime, setSpentTime] = useState(0);
     const [files, setFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<string[]>([]);
+    const [isFocused, setIsFocused] = useState(false);
 
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
@@ -101,19 +102,24 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
 
     const { uploadFile } = useFileUploader();
 
-    const handleChangeFileInput = useCallback(
-        async (event: React.ChangeEvent<HTMLInputElement>) => {
-            const files = event.target.files;
-            if (!files) return;
-
-            const newAttachmentIds = await Promise.all(
-                Array.from(files).map(uploadFile),
-            );
+    const handleUploadFiles = useCallback(
+        async (files: File[]) => {
+            const newAttachmentIds = await Promise.all(files.map(uploadFile));
 
             setFiles((prev) => [...prev, ...files]);
             setAttachments((prev) => [...prev, ...newAttachmentIds]);
         },
         [uploadFile],
+    );
+
+    const handleChangeFileInput = useCallback(
+        async (event: ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (!files) return;
+
+            await handleUploadFiles(Array.from(files));
+        },
+        [handleUploadFiles],
     );
 
     const handleClickDeleteFileAttachment = (
@@ -131,6 +137,33 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             setDiscardChangesDialogOpen(true);
         else setMode("view");
     };
+
+    const handlePaste = useCallback(
+        async (event: ClipboardEvent) => {
+            const clipboardItems = event.clipboardData?.items;
+            if (!clipboardItems) return;
+            const files = Array.from(clipboardItems)
+                .map((item) => item.getAsFile())
+                .filter((file) => !!file);
+            if (!files.length) return;
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            await handleUploadFiles(files);
+        },
+        [handleUploadFiles],
+    );
+
+    useEffect(() => {
+        if (isFocused) {
+            window.addEventListener("paste", handlePaste, { capture: true });
+
+            return () => {
+                window.removeEventListener("paste", handlePaste);
+            };
+        }
+    }, [handlePaste, isFocused]);
 
     const handleDiscardChanges = () => {
         setText("");
@@ -168,6 +201,8 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
                             placeholder={t("issues.comments.write")}
                             autoFocus
                             autoHeight
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
                         />
 
                         <Box display="flex" gap={1}>

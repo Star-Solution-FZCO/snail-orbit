@@ -98,6 +98,7 @@ interface IMDEditorProps {
     autoFocus?: boolean;
     defaultValue?: string;
     onBlur?: (value: string) => unknown;
+    onFocus?: (value: string) => unknown;
 }
 
 const MDEditor: FC<IMDEditorProps> = ({
@@ -109,6 +110,7 @@ const MDEditor: FC<IMDEditorProps> = ({
     autoFocus,
     defaultValue,
     onBlur,
+    onFocus,
 }) => {
     const isControlled = typeof value !== "undefined";
     const hasDefaultValue = typeof defaultValue !== "undefined";
@@ -136,6 +138,13 @@ const MDEditor: FC<IMDEditorProps> = ({
         [onBlur],
     );
 
+    const handleFocus = useCallback(
+        (_: EventInfo, editor: ClassicEditor) => {
+            if (onFocus) onFocus(editor.getData());
+        },
+        [onFocus],
+    );
+
     return (
         <Box
             sx={(theme) => ({
@@ -161,6 +170,7 @@ const MDEditor: FC<IMDEditorProps> = ({
                 data={editorValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
+                onFocus={handleFocus}
                 onReady={(editor: ClassicEditor) => {
                     editor.editing.view.change((writer: DowncastWriter) => {
                         const root = editor.editing.view.document.getRoot();
@@ -218,7 +228,7 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                 className="markdown-body"
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    a: ({ node, ...props }) => {
+                    a: ({ node: _, ...props }) => {
                         const maxLength = 50;
 
                         const children =
