@@ -12,7 +12,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { FilePreview } from "components";
 import { ProjectField } from "features/custom_fields/project_field";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "store";
 import type { IssueT, UpdateIssueT } from "types";
@@ -61,6 +61,10 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
 
     const handleChangeDisplayMode = () =>
         setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
+
+    useEffect(() => {
+        if (!open) setTimeout(() => setDisplayMode("view"), 200);
+    }, [open]);
 
     const issueId = issue.id_readable;
 

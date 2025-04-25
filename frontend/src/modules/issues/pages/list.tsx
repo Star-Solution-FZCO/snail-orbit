@@ -1,71 +1,75 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Divider, Typography } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Link } from "components";
 import { NavbarActionButton } from "components/navbar/navbar_action_button";
 import { useNavbarSettings } from "components/navbar/navbar_settings";
-import { FC, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "store";
 import { formatErrorMessages, usePaginationParams } from "utils";
 import useDebouncedState from "utils/hooks/use-debounced-state";
+import type { IssueT } from "../../../types";
 import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/query_builder/query_builder";
+import { useIssueModalView } from "../widgets/modal_view/use_modal_view";
 
-const routeApi = getRouteApi("/_authenticated/issues/");
+export type IssueListQueryParams = {
+    page?: number;
+    perPage?: number;
+    query?: string;
+};
 
-const IssueList: FC = () => {
+export type IssueListProps = {
+    queryParams?: IssueListQueryParams;
+    onQueryParamsChanged?: (params: Partial<IssueListQueryParams>) => unknown;
+};
+
+const IssueList: FC<IssueListProps> = (props) => {
+    const { queryParams, onQueryParamsChanged } = props;
+
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const search = routeApi.useSearch();
     const { setAction } = useNavbarSettings();
+    const { openIssueModal } = useIssueModalView();
 
     const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
 
     const [debouncedSearch, setSearch, searchQuery] = useDebouncedState<string>(
-        search?.query || "",
+        queryParams?.query || "",
     );
 
-    const [listQueryParams, updateListQueryParams, resetListQueryParams] =
-        usePaginationParams({
-            perPage: search?.perPage ?? 10,
-            page: search?.page ?? 1,
-            q: debouncedSearch,
-        });
+    const [listQueryParams, updateListQueryParams] = usePaginationParams({
+        perPage: queryParams?.perPage ?? 10,
+        page: queryParams?.page ?? 1,
+        query: debouncedSearch,
+    });
 
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
         limit: listQueryParams.perPage,
         offset: (listQueryParams.page - 1) * listQueryParams.perPage,
-        q: listQueryParams.q,
+        q: listQueryParams.query,
     });
 
     const [updateIssue] = issueApi.useUpdateIssueMutation();
 
     useEffect(() => {
-        updateListQueryParams({ q: debouncedSearch });
-    }, [debouncedSearch]);
+        updateListQueryParams({ query: debouncedSearch });
+    }, [debouncedSearch, updateListQueryParams]);
 
     useEffect(() => {
-        navigate({
-            // @ts-ignore
-            search: (prev: {
-                page?: number;
-                query?: string;
-                perPage?: number;
-            }) => ({
-                ...prev,
-                page: listQueryParams.page,
-                perPage: listQueryParams.perPage,
-                query: listQueryParams.q || undefined,
-            }),
-        });
-    }, [listQueryParams]);
+        onQueryParamsChanged?.(listQueryParams);
+    }, [listQueryParams, navigate, onQueryParamsChanged]);
 
     useEffect(() => {
-        resetListQueryParams();
-    }, [search]);
+        updateListQueryParams((prev) => ({
+            ...prev,
+            ...queryParams,
+        }));
+    }, [queryParams, setSearch, updateListQueryParams]);
 
     useEffect(() => {
         setAction(
@@ -77,7 +81,14 @@ const IssueList: FC = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
+
+    const handleIssueRowDoubleClick = useCallback(
+        (issue: IssueT) => {
+            openIssueModal(issue.id_readable);
+        },
+        [openIssueModal],
+    );
 
     const rows = data?.payload.items || [];
 
@@ -137,6 +148,7 @@ const IssueList: FC = () => {
                                 updateListQueryParams({ perPage, page: 1 })
                             }
                             onUpdateIssue={updateIssue}
+                            onIssueRowDoubleClick={handleIssueRowDoubleClick}
                         />
                     )}
                 </Box>

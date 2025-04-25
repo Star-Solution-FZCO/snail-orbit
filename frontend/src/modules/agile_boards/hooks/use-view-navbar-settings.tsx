@@ -48,5 +48,5 @@ export const useViewNavbarSettings = () => {
         );
 
         return () => setAction(null);
-    }, [setAction, i18n.language]);
+    }, [setAction, i18n.language, t, createAndOpenIssueModal]);
 };

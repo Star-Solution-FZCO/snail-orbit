@@ -9,4 +9,5 @@ export type IssueRowViewParams = {
 export type IssueRowProps = {
     issue: IssueT;
     onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
+    onIssueRowDoubleClick?: (issue: IssueT) => unknown;
 } & IssueRowViewParams;

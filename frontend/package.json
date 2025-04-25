@@ -12,7 +12,8 @@
     "prettier": "npx prettier . --write -l",
     "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parser.config.js",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "api-gen": "npx openapi-typescript http://localhost:9090/openapi.json -o ./src/types/backend-schema.gen.d.ts --export-type --root-types --root-types-no-schema-prefix"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^9.5.0",
@@ -52,7 +53,8 @@
     "react-toastify": "^11.0.5",
     "remark-gfm": "^4.0.1",
     "transliteration": "^2.3.5",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "type-fest": "^4.40.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "3.2.5",
@@ -85,9 +87,10 @@
     "storybook": "^8.6.4",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
-    "vite": "^6.2.1",
+    "vite": "^6.3.2",
     "vite-plugin-unused-code": "^0.1.5",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "openapi-typescript": "^7.6.1"
   },
   "packageManager": "yarn@1.22.22"
 }

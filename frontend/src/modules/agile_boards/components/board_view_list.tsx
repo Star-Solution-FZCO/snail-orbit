@@ -1,8 +1,10 @@
-import { FC, useCallback, useEffect, useMemo } from "react";
-import type { AgileBoardT, CreateIssueT } from "types";
+import type { FC } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { agileBoardApi, issueApi } from "store";
+import type { AgileBoardT, CreateIssueT, IssueT } from "types";
 import { usePaginationParams } from "utils";
-import { agileBoardApi, issueApi } from "../../../store";
 import IssuesList from "../../issues/components/list/issues_list";
+import { useIssueModalView } from "../../issues/widgets/modal_view/use_modal_view";
 
 type BoardViewListProps = {
     boardData: AgileBoardT;
@@ -17,6 +19,7 @@ export const BoardViewList: FC<BoardViewListProps> = (props) => {
         q: query,
     });
     const [updateIssue] = issueApi.useUpdateIssueMutation();
+    const { openIssueModal } = useIssueModalView();
 
     // TODO: Надо нормальный эндпоинт на это наверное
     const issues = useMemo(
@@ -49,9 +52,16 @@ export const BoardViewList: FC<BoardViewListProps> = (props) => {
         [updateIssue, refetch],
     );
 
+    const handleIssueRowDoubleClick = useCallback(
+        (issue: IssueT) => {
+            openIssueModal(issue.id_readable);
+        },
+        [openIssueModal],
+    );
+
     useEffect(() => {
         refetch();
-    }, [boardData]);
+    }, [boardData, refetch]);
 
     return (
         <IssuesList
@@ -65,6 +75,7 @@ export const BoardViewList: FC<BoardViewListProps> = (props) => {
             totalCount={issues.length}
             onChangePage={(page) => updateListQueryParams({ page })}
             onUpdateIssue={handleUpdateIssue}
+            onIssueRowDoubleClick={handleIssueRowDoubleClick}
         />
     );
 };

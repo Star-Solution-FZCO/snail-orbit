@@ -75,7 +75,7 @@ const Access = memo(() => {
     const handleUpdatePermission = useCallback(
         (permission: PermissionT, type: PermissionTypeT) => {
             const targetIdx = fields.findIndex((el) => el.id === permission.id);
-            if (targetIdx === -1) return;
+            if (targetIdx === -1 || !fields[targetIdx]) return;
             update(targetIdx, { ...fields[targetIdx], permission_type: type });
         },
         [fields, update],

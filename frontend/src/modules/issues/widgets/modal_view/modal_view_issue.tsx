@@ -47,7 +47,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
                 .unwrap()
                 .catch(toastApiError);
         },
-        [id],
+        [id, updateIssue],
     );
 
     useEffect(() => {
@@ -55,7 +55,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
             toastApiError(error);
             onClose?.();
         }
-    }, [error]);
+    }, [error, onClose]);
 
     if (!issue && isLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;

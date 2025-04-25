@@ -10,7 +10,7 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { encryptionKeysApi } from "store";
-import type { AlgorithmT, EncryptionKeyT } from "types";
+import type { EncryptionKeyAlgorithmT, EncryptionKeyT } from "types";
 import { toastApiError, useListQueryParams } from "utils";
 import {
     exportPublicKey,
@@ -62,7 +62,7 @@ export const Keys = memo(() => {
         });
     };
 
-    const handleCreateNew = async (variant: AlgorithmT) => {
+    const handleCreateNew = async (variant: EncryptionKeyAlgorithmT) => {
         setIsKeyCreating(true);
         try {
             popupState.close();
@@ -75,6 +75,7 @@ export const Keys = memo(() => {
                 fingerprint,
                 public_key: publicKey,
                 algorithm: variant,
+                is_active: true,
             })
                 .unwrap()
                 .then(() => writeKeyPairToDB(keyPair))

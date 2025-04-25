@@ -1,4 +1,4 @@
-import type { AlgorithmT } from "types/encryption_keys";
+import type { EncryptionKeyAlgorithmT } from "types/encryption_keys";
 const HASH = "SHA-256";
 
 const callOnStore = (fn: (store: IDBObjectStore) => unknown) => {
@@ -20,7 +20,7 @@ const callOnStore = (fn: (store: IDBObjectStore) => unknown) => {
     };
 };
 
-export const generateKeyPair = async (algo?: AlgorithmT) => {
+export const generateKeyPair = async (algo?: EncryptionKeyAlgorithmT) => {
     if (algo === "RSA")
         return await crypto.subtle.generateKey(
             {

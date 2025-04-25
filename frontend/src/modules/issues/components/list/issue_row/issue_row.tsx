@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
 import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { slugify } from "transliteration";
 import { IssueSubscribeButton } from "../../issue/components/issue_subscribe_button";
 import { IssueTags } from "../../issue/components/issue_tags";
@@ -11,11 +11,21 @@ import { IssueRowFields } from "./issue_row_fields";
 import { UpdateTime } from "./update_time";
 
 export const IssueRow: FC<IssueRowProps> = memo(
-    ({ issue, showCustomFields, showDescription, onUpdateIssue }) => {
+    ({
+        issue,
+        showCustomFields,
+        showDescription,
+        onUpdateIssue,
+        onIssueRowDoubleClick,
+    }) => {
         const { subject, id_readable, text } = issue;
 
+        const handleDoubleClick = useCallback(() => {
+            onIssueRowDoubleClick?.(issue);
+        }, [issue, onIssueRowDoubleClick]);
+
         return (
-            <IssueRowRoot tabIndex={0}>
+            <IssueRowRoot tabIndex={0} onDoubleClick={handleDoubleClick}>
                 <IssueRowHeader>
                     <Stack
                         direction="row"

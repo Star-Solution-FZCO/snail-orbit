@@ -1,13 +1,14 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import deepmerge from "deepmerge";
-import { FC, useCallback, useEffect } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "store";
-import { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "types";
 import { toastApiError } from "utils";
 import { IssueModal } from "../../components/issue/issue_modal";
-import { ModalViewDraftProps } from "./modal_view.types";
+import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
 
 export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
@@ -16,7 +17,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
 
-    const { data, isLoading, error, refetch } = issueApi.useGetDraftQuery(
+    const { data, isLoading, error } = issueApi.useGetDraftQuery(
         open && id ? id : skipToken,
     );
 
@@ -35,7 +36,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                     return Promise.reject(error);
                 });
         },
-        [id, refetch],
+        [id, updateDraft],
     );
 
     const issue = data?.payload;
@@ -53,7 +54,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                 toastApiError(error);
                 return Promise.reject(error);
             });
-    }, [id, issue, onClose]);
+    }, [createIssue, id, issue?.project, onClose, t]);
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
@@ -79,7 +80,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
             toastApiError(error);
             onClose?.();
         }
-    }, [error]);
+    }, [error, onClose]);
 
     if (!issue && isLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;
