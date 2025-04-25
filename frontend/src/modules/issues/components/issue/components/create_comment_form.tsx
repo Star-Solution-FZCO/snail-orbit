@@ -14,9 +14,9 @@ import { MDEditor, SpentTimeField, UserAvatar } from "components";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi, sharedApi, useAppSelector } from "store";
+import { issueApi, useAppSelector } from "store";
 import { formatSpentTime, toastApiError } from "utils";
-import { useUploadToast } from "../../../utils";
+import { useFileUploader } from "../../../../../widgets/file_upload/useFileUploader";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
 
@@ -83,10 +83,6 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
 
     const [createComment, { isLoading }] =
         issueApi.useCreateIssueCommentMutation();
-    const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
-
-    const { toastId, showToast, updateToast, activeMutations } =
-        useUploadToast();
 
     const handleClickAddComment = () => {
         createComment({
@@ -103,33 +99,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             .catch(toastApiError);
     };
 
-    const uploadFile = async (file: File) => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        if (!toastId.current[file.name]) {
-            showToast(file.name);
-        }
-
-        try {
-            const mutation = uploadAttachment(formData);
-            activeMutations.current[file.name] = mutation;
-            const response = await mutation.unwrap();
-
-            return response.payload.id;
-        } catch (error: any) {
-            if (error.name !== "AbortError") {
-                toastApiError(error);
-                updateToast(
-                    file.name,
-                    t("issues.form.attachments.upload.error"),
-                    "error",
-                    3000,
-                );
-            }
-            throw error;
-        }
-    };
+    const { uploadFile } = useFileUploader();
 
     const handleChangeFileInput = useCallback(
         async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,14 +113,7 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             setFiles((prev) => [...prev, ...files]);
             setAttachments((prev) => [...prev, ...newAttachmentIds]);
         },
-        [
-            uploadAttachment,
-            showToast,
-            updateToast,
-            activeMutations,
-            setFiles,
-            setAttachments,
-        ],
+        [uploadFile],
     );
 
     const handleClickDeleteFileAttachment = (

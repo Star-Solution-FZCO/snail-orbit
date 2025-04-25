@@ -5,10 +5,9 @@ import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
-import { sharedApi } from "store";
 import type { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
-import { toastApiError } from "utils";
-import { initialSelectedAttachment, useUploadToast } from "../../../utils";
+import { useFileUploader } from "widgets/file_upload/useFileUploader";
+import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 
@@ -26,7 +25,6 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
     const { t } = useTranslation();
 
     const { attachments: issueAttachments, id: issueId } = issue;
-    const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
 
     const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
@@ -34,36 +32,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         useState<SelectedAttachmentT>(initialSelectedAttachment);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-    const { toastId, showToast, updateToast, activeMutations } =
-        useUploadToast();
-
-    const uploadFile = async (file: File) => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        if (!toastId.current[file.name]) {
-            showToast(file.name);
-        }
-
-        try {
-            const mutation = uploadAttachment(formData);
-            activeMutations.current[file.name] = mutation;
-            const response = await mutation.unwrap();
-
-            return response.payload.id;
-        } catch (error: any) {
-            if (error.name !== "AbortError") {
-                toastApiError(error);
-                updateToast(
-                    file.name,
-                    t("issues.form.attachments.upload.error"),
-                    "error",
-                    3000,
-                );
-            }
-            throw error;
-        }
-    };
+    const { uploadFile } = useFileUploader();
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
@@ -80,15 +49,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 attachments: updatedAttachments,
             });
         },
-        [
-            issueAttachments,
-            issueId,
-            uploadAttachment,
-            showToast,
-            updateToast,
-            activeMutations,
-            onUpdateIssue,
-        ],
+        [uploadFile, issueAttachments, onUpdateIssue],
     );
 
     const handlePaste = useCallback(
@@ -116,15 +77,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 }
             }
         },
-        [
-            issueAttachments,
-            issueId,
-            uploadAttachment,
-            showToast,
-            updateToast,
-            activeMutations,
-            onUpdateIssue,
-        ],
+        [uploadFile, issueAttachments, onUpdateIssue],
     );
 
     const handleClickDeleteBrowserFile = (index: number, filename: string) => {

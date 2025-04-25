@@ -14,14 +14,15 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import type { FC } from "react";
+import type { ChangeEvent, FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, sharedApi, useAppSelector } from "store";
+import { issueApi, useAppSelector } from "store";
 import type { CommentT, SelectedAttachmentT } from "types";
 import { formatSpentTime, toastApiError } from "utils";
-import { initialSelectedAttachment, useUploadToast } from "../../../utils";
+import { useFileUploader } from "widgets/file_upload/useFileUploader";
+import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 import { HiddenInput } from "./hidden_input";
@@ -132,10 +133,6 @@ const CommentCard: FC<ICommentCardProps> = ({
 
     const [updateComment, { isLoading }] =
         issueApi.useUpdateIssueCommentMutation();
-    const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
-
-    const { toastId, showToast, updateToast, activeMutations } =
-        useUploadToast();
 
     const handleClickSave = () => {
         updateComment({
@@ -149,41 +146,10 @@ const CommentCard: FC<ICommentCardProps> = ({
             .catch(toastApiError);
     };
 
-    const uploadFile = async (file: File) => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        if (!toastId.current[file.name]) {
-            showToast(file.name);
-        }
-
-        try {
-            const mutation = uploadAttachment(formData);
-            activeMutations.current[file.name] = mutation;
-            const response = await mutation.unwrap();
-
-            return response.payload.id;
-        } catch (error: unknown) {
-            if (
-                error &&
-                typeof error === "object" &&
-                "name" in error &&
-                error.name !== "AbortError"
-            ) {
-                toastApiError(error);
-                updateToast(
-                    file.name,
-                    t("issues.form.attachments.upload.error"),
-                    "error",
-                    3000,
-                );
-            }
-            throw error;
-        }
-    };
+    const { uploadFile } = useFileUploader();
 
     const handleChangeFileInput = useCallback(
-        async (event: React.ChangeEvent<HTMLInputElement>) => {
+        async (event: ChangeEvent<HTMLInputElement>) => {
             const files = event.target.files;
             if (!files) return;
 
@@ -200,16 +166,7 @@ const CommentCard: FC<ICommentCardProps> = ({
                 ],
             });
         },
-        [
-            uploadAttachment,
-            showToast,
-            updateToast,
-            activeMutations,
-            updateComment,
-            issueId,
-            comment.id,
-            comment.attachments,
-        ],
+        [uploadFile, updateComment, issueId, comment.id, comment.attachments],
     );
 
     const handleClickDeleteAttachment = (id: string, filename: string) => {
