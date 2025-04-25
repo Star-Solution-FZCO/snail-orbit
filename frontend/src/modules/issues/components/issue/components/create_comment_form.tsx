@@ -160,7 +160,9 @@ const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
             window.addEventListener("paste", handlePaste, { capture: true });
 
             return () => {
-                window.removeEventListener("paste", handlePaste);
+                window.removeEventListener("paste", handlePaste, {
+                    capture: true,
+                });
             };
         }
     }, [handlePaste, isFocused]);
