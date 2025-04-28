@@ -11,16 +11,17 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { t } from "i18next";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "store";
-import {
+import type {
     CreateVersionOptionT,
     CustomFieldT,
     UpdateVersionOptionT,
     VersionOptionT,
-} from "types";
-import { toastApiError } from "utils";
+} from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { VersionOptionFormDialog } from "../form_dialogs/version_option_form_dialog";
 

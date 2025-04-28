@@ -2,7 +2,7 @@ import { Stack, TextField } from "@mui/material";
 import { memo } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { SearchFormValuesT } from "types/search";
+import type { SearchFormValuesT } from "shared/model/types/search";
 
 export const Main = memo(() => {
     const { t } = useTranslation();

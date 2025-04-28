@@ -1,4 +1,4 @@
-import type { CustomFieldT } from "types";
+import type { CustomFieldT } from "shared/model/types";
 
 export const getUserFieldValue = (field: CustomFieldT) => {
     if (field.type !== "user" && field.type !== "user_multi")

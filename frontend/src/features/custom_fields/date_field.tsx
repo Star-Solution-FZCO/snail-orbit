@@ -1,9 +1,9 @@
-import FieldCard from "components/fields/field_card/field_card";
-import type { FormDatePopoverProps } from "components/fields/form_date/form_date";
-import FormDatePopover from "components/fields/form_date/form_date";
 import type { Dayjs } from "dayjs";
 import type { ForwardedRef, ReactNode } from "react";
 import { forwardRef, useState } from "react";
+import FieldCard from "shared/ui/fields/field_card/field_card";
+import type { FormDatePopoverProps } from "shared/ui/fields/form_date/form_date";
+import FormDatePopover from "shared/ui/fields/form_date/form_date";
 
 type DateFieldProps = {
     label: string;

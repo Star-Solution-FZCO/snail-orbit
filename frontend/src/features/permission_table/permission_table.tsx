@@ -19,7 +19,7 @@ import { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { permissionTypes, type PermissionTypeT } from "types";
+import { permissionTypes, type PermissionTypeT } from "shared/model/types";
 import type { PermissionTableProps } from "./permission_table.types";
 
 const PermissionTable = memo((props: PermissionTableProps) => {

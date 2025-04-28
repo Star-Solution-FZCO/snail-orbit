@@ -1,13 +1,15 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, Button, IconButton } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { UserAvatar } from "components";
-import { FC, useMemo, useState } from "react";
+import type { GridColDef } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi } from "store";
-import { BasicUserT } from "types";
-import { toastApiError, useListQueryParams } from "utils";
+import type { BasicUserT } from "shared/model/types";
+import { groupApi } from "shared/model";
+import { UserAvatar } from "shared/ui";
+import { toastApiError, useListQueryParams } from "shared/utils";
 import { AddGroupMemberDialog } from "./add_group_member_dialog";
 
 interface IGroupMembersProps {

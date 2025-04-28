@@ -12,9 +12,9 @@ import { useState } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { mfaAuthenticate } from "services/auth";
-import { setUser, useAppDispatch, userApi } from "store";
-import { toastApiError } from "utils";
+import { mfaAuthenticate } from "shared/api/services/auth";
+import { setUser, useAppDispatch, userApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 type MFAFormDataT = {
     code: string;

@@ -1,11 +1,11 @@
 import { Breadcrumbs, Stack, Typography } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { ErrorHandler, Link } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { userApi } from "store";
-import { UpdateUserT } from "types";
-import { toastApiError } from "utils";
+import type { UpdateUserT } from "shared/model/types";
+import { userApi } from "shared/model";
+import { ErrorHandler, Link } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { UserForm } from "./components/user_form";
 
 const routeApi = getRouteApi("/_authenticated/users/$userId");

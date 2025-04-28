@@ -4,9 +4,9 @@ import type { MouseEventHandler } from "react";
 import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, tagApi } from "store";
-import { IssueT } from "types";
-import { TagBaseT, TagT } from "types/tag";
+import { issueApi, tagApi } from "shared/model";
+import { IssueT } from "shared/model/types";
+import { TagBaseT, TagT } from "shared/model/types/tag";
 import { TagFormDialog } from "../../../../tags/components/tag_form_dialog/tag_form_dialog";
 import { TagListPopover } from "../../../../tags/components/tag_list/tag_list_popover";
 

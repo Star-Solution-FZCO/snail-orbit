@@ -1,4 +1,4 @@
-import type { BasicCustomFieldT, CustomFieldT, FieldValueT } from "types";
+import type { BasicCustomFieldT, CustomFieldT, FieldValueT } from "shared/model/types";
 
 export type CustomFieldsChipParserProps = {
     availableFields: BasicCustomFieldT[];

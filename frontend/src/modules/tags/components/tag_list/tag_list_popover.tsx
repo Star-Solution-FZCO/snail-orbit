@@ -2,20 +2,14 @@ import { LocalOfferOutlined } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { Button, IconButton } from "@mui/material";
-import { ColorAdornment } from "components/fields/adornments/color_adornment";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
-import {
-    memo,
-    ReactNode,
-    SyntheticEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-} from "react";
+import type { ReactNode, SyntheticEvent } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { tagApi } from "store/api/tag.api";
-import { TagT } from "types/tag";
-import { noLimitListQueryParams } from "utils";
+import type { TagT } from "shared/model/types/tag";
+import { tagApi } from "shared/model/api/tag.api";
+import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import { noLimitListQueryParams } from "shared/utils";
 
 type TagListPopoverProps = {
     open: boolean;

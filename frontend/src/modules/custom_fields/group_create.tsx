@@ -1,11 +1,11 @@
 import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link, NotFound } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi, useAppSelector } from "store";
-import { CreateCustomFieldGroupT } from "types";
-import { toastApiError } from "utils";
+import type { CreateCustomFieldGroupT } from "shared/model/types";
+import { customFieldsApi, useAppSelector } from "shared/model";
+import { Link, NotFound } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { CustomFieldGroupForm } from "./components/custom_field_group_form";
 
 const CustomFieldGroupCreate = () => {

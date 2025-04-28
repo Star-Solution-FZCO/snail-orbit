@@ -12,8 +12,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { passwordReset } from "services/password_reset";
-import { toastApiError } from "utils";
+import { passwordReset } from "shared/api/services/password_reset";
+import { toastApiError } from "shared/utils";
 import * as yup from "yup";
 
 const passwordResetSchema = yup.object().shape({

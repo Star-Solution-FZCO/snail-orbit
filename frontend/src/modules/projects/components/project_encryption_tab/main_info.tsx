@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import type { EncryptionSettingsT } from "types";
+import type { EncryptionSettingsT } from "shared/model/types";
 
 type MainInfoProps = {
     encryptionSettings: EncryptionSettingsT;

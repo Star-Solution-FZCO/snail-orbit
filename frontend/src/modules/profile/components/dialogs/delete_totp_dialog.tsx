@@ -15,8 +15,8 @@ import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { userApi } from "store";
-import { toastApiError } from "utils";
+import { userApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 interface IDeleteTOTPDialogProps {
     open: boolean;

@@ -1,12 +1,12 @@
-import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
-import { ColorAdornment } from "components/fields/adornments/color_adornment";
 import dayjs from "dayjs";
+import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
+import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import type {
     BasicUserT,
     EnumFieldT,
     VersionFieldT,
     VersionOptionT,
-} from "types";
+} from "shared/model/types";
 
 export const getEnumColorAdornment = (option: EnumFieldT) =>
     option.color ? (

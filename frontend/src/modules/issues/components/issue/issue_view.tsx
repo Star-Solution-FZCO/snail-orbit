@@ -1,12 +1,12 @@
 import { Box, Stack } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { FilePreview } from "components";
 import { ProjectField } from "features/custom_fields/project_field";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import type { IssueT, UpdateIssueT } from "types";
+import { FilePreview } from "shared/ui";
+import { projectApi } from "shared/model";
+import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddLinks } from "./components/add_links";
 import { FieldContainer } from "./components/field_container";
@@ -103,7 +103,7 @@ export const IssueView: FC<IssueFormProps> = ({
                     onUpdateCache={onUpdateCache}
                 />
 
-                {!isDraft && <IssueActivities issueId={issueId} />}
+                {!isDraft && <IssueActivities issueId={issue.id} />}
             </Stack>
 
             <FieldContainer>

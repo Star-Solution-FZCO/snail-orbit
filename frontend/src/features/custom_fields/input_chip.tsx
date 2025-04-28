@@ -1,9 +1,9 @@
 import { Tooltip } from "@mui/material";
-import { FieldChip } from "components/fields/field_chip/field_chip";
-import FormInputPopover, {
-    FormInputPopoverProps,
-} from "components/fields/form_input/form_input";
-import { ForwardedRef, forwardRef, useState } from "react";
+import type { ForwardedRef } from "react";
+import { forwardRef, useState } from "react";
+import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
+import type { FormInputPopoverProps } from "shared/ui/fields/form_input/form_input";
+import FormInputPopover from "shared/ui/fields/form_input/form_input";
 
 type InputChipProps = {
     label: string;

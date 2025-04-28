@@ -1,11 +1,11 @@
 import { Breadcrumbs, Stack, Typography } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { ErrorHandler, Link } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { workflowApi } from "store";
-import { UpdateWorkflowT } from "types";
-import { toastApiError } from "utils";
+import type { UpdateWorkflowT } from "shared/model/types";
+import { workflowApi } from "shared/model";
+import { ErrorHandler, Link } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { WorkflowForm } from "./components/workflow_form";
 
 const routeApi = getRouteApi("/_authenticated/workflows/$workflowId");

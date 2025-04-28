@@ -1,4 +1,4 @@
-import type { IssueT, UpdateIssueT } from "types";
+import type { IssueT, UpdateIssueT } from "shared/model/types";
 
 export type IssuesListProps = {
     issues: IssueT[];

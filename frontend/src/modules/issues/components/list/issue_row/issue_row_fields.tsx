@@ -1,8 +1,8 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { FC } from "react";
 import { memo, useCallback, useMemo } from "react";
-import { projectApi } from "store";
-import type { FieldValueT, IssueT, UpdateIssueT } from "types";
+import { projectApi } from "shared/model";
+import type { FieldValueT, IssueT, UpdateIssueT } from "shared/model/types";
 import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 

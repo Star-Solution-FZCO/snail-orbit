@@ -6,19 +6,12 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
-import {
-    FC,
-    SyntheticEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import type { FC, SyntheticEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi, issueApi } from "store";
-import { fieldToFieldValue } from "store/utils/issue";
-import type { CustomFieldT } from "types";
+import type { CustomFieldT } from "shared/model/types";
+import { customFieldsApi, issueApi } from "shared/model";
+import { fieldToFieldValue } from "shared/model/mappers/issue";
 import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddCustomFieldButton } from "./add_custom_field_button";
 

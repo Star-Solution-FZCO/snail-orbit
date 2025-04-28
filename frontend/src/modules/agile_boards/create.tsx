@@ -1,16 +1,16 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { agileBoardApi } from "store";
-import { toastApiError } from "utils";
+import { agileBoardApi } from "shared/model";
+import { Link } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { toastApiError } from "shared/utils";
 import { CreateAgileBoardForm } from "./components/create_agile_board_form/create_agile_board_form";
-import { FormValues } from "./components/create_agile_board_form/create_agile_board_form.types";
+import type { FormValues } from "./components/create_agile_board_form/create_agile_board_form.types";
 import { form_values_to_api_data } from "./components/create_agile_board_form/form_values_to_api_data";
 
 const AgileBoardCreate = () => {

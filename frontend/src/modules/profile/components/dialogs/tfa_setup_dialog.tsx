@@ -17,9 +17,9 @@ import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { userApi } from "store";
-import type { TOTPDataT } from "types";
-import { toastApiError } from "utils";
+import type { TOTPDataT } from "shared/model/types";
+import { userApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 interface ITFASetupDialogProps {
     open: boolean;

@@ -1,10 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Button } from "@mui/material";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldT } from "types";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import type { CustomFieldT } from "shared/model/types";
 
 type AddCustomFieldButtonProps = {
     fields: CustomFieldT[];

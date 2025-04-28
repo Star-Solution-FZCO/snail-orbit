@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { UserT } from "types";
+import type { UserT } from "shared/model/types";
 import * as yup from "yup";
 
 const userSchema = yup.object().shape({

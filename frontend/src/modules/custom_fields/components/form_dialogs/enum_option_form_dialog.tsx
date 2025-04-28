@@ -7,12 +7,12 @@ import {
     DialogTitle,
     TextField,
 } from "@mui/material";
-import { ColorInputField } from "components/color_picker/color_input_field";
 import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { EnumOptionT } from "types";
+import { ColorInputField } from "shared/ui/color_picker/color_input_field";
+import type { EnumOptionT } from "shared/model/types";
 import * as yup from "yup";
 
 const enumOptionSchema = yup.object().shape({

@@ -13,12 +13,12 @@ import {
     Switch,
     TextField,
 } from "@mui/material";
-import { ColorPickerAdornment } from "components/color_picker/color_picker_adornment";
 import { memo, useCallback, useEffect } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useSchema } from "utils/hooks/use-schema";
+import { ColorPickerAdornment } from "shared/ui/color_picker/color_picker_adornment";
+import { useSchema } from "shared/utils/hooks/use-schema";
 import { formDataToTag, tagToFormData } from "./tag_form_dialog.helpers";
 import type { TagFormData, TagFormDialogProps } from "./tag_form_dialog.types";
 import { getTagFormSchema } from "./tag_form_dialog.types";

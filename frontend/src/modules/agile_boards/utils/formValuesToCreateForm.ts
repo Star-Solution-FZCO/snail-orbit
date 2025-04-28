@@ -1,4 +1,4 @@
-import type { AgileBoardT, CreateAgileBoardT } from "types";
+import type { AgileBoardT, CreateAgileBoardT } from "shared/model/types";
 
 export const formValuesToCreateForm = (
     form: AgileBoardT,

@@ -1,10 +1,10 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { roleApi } from "store";
+import { ErrorHandler, Link, TabPanel } from "shared/ui";
+import { roleApi } from "shared/model";
 import { RolePermissions } from "./components/role_permissions";
 import { RoleSettings } from "./components/role_settings";
 import { tabs } from "./utils";

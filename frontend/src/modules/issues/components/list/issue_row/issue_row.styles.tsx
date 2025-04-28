@@ -1,5 +1,5 @@
 import { alpha, styled } from "@mui/material";
-import { theme } from "theme";
+import { theme } from "shared/theme";
 
 export const IssueRowRoot = styled("div", {
     name: "IssueRow",

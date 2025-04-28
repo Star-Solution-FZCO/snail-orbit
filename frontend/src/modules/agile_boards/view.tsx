@@ -14,20 +14,20 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import { StarButton } from "components";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { agileBoardApi } from "store";
-import type { AgileBoardT, IssueT } from "types";
-import type { SearchT } from "types/search";
-import { formatErrorMessages, toastApiError } from "utils";
-import useDebouncedState from "utils/hooks/use-debounced-state";
+import type { AgileBoardT, IssueT } from "shared/model/types";
+import type { SearchT } from "shared/model/types/search";
+import { agileBoardApi } from "shared/model";
+import { StarButton } from "shared/ui";
+import { formatErrorMessages, toastApiError } from "shared/utils";
+import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
-import { useEventSubscriptionAutoReFetch } from "../../store/api/events.api";
+import { useEventSubscriptionAutoReFetch } from "../../shared/model/api/events.api";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";

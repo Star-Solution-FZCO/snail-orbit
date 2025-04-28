@@ -1,13 +1,12 @@
 import { Box, Tooltip, Typography } from "@mui/material";
-import { UserAvatar } from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import { diffWords } from "diff";
-import i18n from "i18n";
 import { t } from "i18next";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "shared/i18n";
 import type {
     BasicCustomFieldT,
     BasicUserT,
@@ -17,7 +16,8 @@ import type {
     FieldValueChangeT,
     IssueHistoryT,
     VersionFieldT,
-} from "types";
+} from "shared/model/types";
+import { UserAvatar } from "shared/ui";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);

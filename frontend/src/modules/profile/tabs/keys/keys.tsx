@@ -9,15 +9,15 @@ import { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { encryptionKeysApi } from "store";
-import type { EncryptionKeyAlgorithmT, EncryptionKeyT } from "types";
-import { toastApiError, useListQueryParams } from "utils";
+import type { EncryptionKeyAlgorithmT, EncryptionKeyT } from "shared/model/types";
+import { encryptionKeysApi } from "shared/model";
+import { toastApiError, useListQueryParams } from "shared/utils";
 import {
     exportPublicKey,
     generateKeyPair,
     getFingerprint,
     writeKeyPairToDB,
-} from "utils/crypto";
+} from "shared/utils/crypto";
 
 const emptyArr = [] as EncryptionKeyT[];
 

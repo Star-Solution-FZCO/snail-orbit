@@ -1,17 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppDispatch } from "store";
-import type { IssueT, UpdateIssueT } from "types";
-import { toastApiError } from "utils";
+import type { IssueT, UpdateIssueT } from "shared/model/types";
+import { issueApi, useAppDispatch } from "shared/model";
+import { ErrorHandler, Link } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { toastApiError } from "shared/utils";
 import IssueView from "../components/issue/issue_view";
 
 const routeApi = getRouteApi("/_authenticated/issues/draft/$draftId");

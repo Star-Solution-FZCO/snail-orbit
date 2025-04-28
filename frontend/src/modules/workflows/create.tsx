@@ -1,11 +1,11 @@
 import { Breadcrumbs, Stack, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link, NotFound } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useAppSelector, workflowApi } from "store";
-import { CreateWorkflowT } from "types";
-import { toastApiError } from "utils";
+import type { CreateWorkflowT } from "shared/model/types";
+import { useAppSelector, workflowApi } from "shared/model";
+import { Link, NotFound } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { WorkflowForm } from "./components/workflow_form";
 
 const WorkflowCreate = () => {

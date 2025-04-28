@@ -17,11 +17,9 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { UserAvatar } from "components";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi, userApi } from "store";
 import type {
     BasicUserT,
     CustomFieldT,
@@ -29,8 +27,10 @@ import type {
     UserOrGroupOptionT,
     UserOrGroupT,
     UserT,
-} from "types";
-import { toastApiError, useListQueryParams } from "utils";
+} from "shared/model/types";
+import { customFieldsApi, userApi } from "shared/model";
+import { UserAvatar } from "shared/ui";
+import { toastApiError, useListQueryParams } from "shared/utils";
 
 interface IUserOrGroupOptionProps {
     entity: UserOrGroupOptionT;

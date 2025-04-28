@@ -1,7 +1,7 @@
 import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import { projectApi } from "store";
-import type { IssueProjectT } from "types";
+import { projectApi } from "shared/model";
+import type { IssueProjectT } from "shared/model/types";
 import { SelectField } from "./select_field";
 import { cardLabelGetter } from "./utils";
 

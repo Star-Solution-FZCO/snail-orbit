@@ -16,19 +16,19 @@ import {
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import { workflowTypeMap } from "components";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi } from "store";
-import { workflowApi } from "store/api/workflow.api";
-import type { ProjectT, WorkflowT, WorkflowTypeT } from "types";
+import type { ProjectT, WorkflowT, WorkflowTypeT } from "shared/model/types";
+import { projectApi } from "shared/model";
+import { workflowApi } from "shared/model/api/workflow.api";
+import { workflowTypeMap } from "shared/ui";
 import {
     formatErrorMessages,
     noLimitListQueryParams,
     toastApiError,
-} from "utils";
+} from "shared/utils";
 
 interface IWorkflowListProps {
     projectId: string;

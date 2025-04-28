@@ -16,15 +16,15 @@ import {
     useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "store";
 import type {
     AgileBoardT,
     BasicUserT,
     EnumOptionT,
     StateOptionT,
     VersionOptionT,
-} from "types";
-import { useListQueryParams } from "utils";
+} from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { useListQueryParams } from "shared/utils";
 import { getFieldValue } from "../../../utils/normalizeFieldValue";
 
 const getOptionValue = (

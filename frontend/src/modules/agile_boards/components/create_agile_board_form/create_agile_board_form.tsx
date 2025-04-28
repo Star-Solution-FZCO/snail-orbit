@@ -1,8 +1,8 @@
 import { Box, Button, Stack, TextField } from "@mui/material";
-import { Link, MDEditor } from "components";
 import type { FC } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Link, MDEditor } from "shared/ui";
 import { ColumnFieldSelect } from "../agile_board_form/components/column_field_select";
 import { ProjectSelect } from "../agile_board_form/components/project_select";
 import type { FormValues } from "./create_agile_board_form.types";

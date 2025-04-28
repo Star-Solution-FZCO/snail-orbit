@@ -1,10 +1,10 @@
-import { AutocompleteValue, Tooltip } from "@mui/material";
-import { FieldChip } from "components/fields/field_chip/field_chip";
-import {
-    FormAutocompletePopover,
-    FormAutocompletePopoverProps,
-} from "components/fields/form_autocomplete/form_autocomplete";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import type { AutocompleteValue } from "@mui/material";
+import { Tooltip } from "@mui/material";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
+import type { FormAutocompletePopoverProps } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 
 type SelectChipProps<
     Value,

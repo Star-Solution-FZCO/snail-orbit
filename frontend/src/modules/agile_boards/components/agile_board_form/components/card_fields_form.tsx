@@ -16,8 +16,8 @@ import {
     useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "store";
-import type { AgileBoardT } from "types";
+import { agileBoardApi } from "shared/model";
+import type { AgileBoardT } from "shared/model/types";
 
 export const CardFieldsForm: FC = () => {
     const { t } = useTranslation();

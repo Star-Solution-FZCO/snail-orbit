@@ -1,10 +1,10 @@
-import { Kanban as KanbanComp } from "components/kanban/kanban";
-import type { Items, KanbanProps } from "components/kanban/kanban.types";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { agileBoardApi, issueApi } from "store";
-import type { AgileBoardT, IssueT, UpdateIssueT } from "types";
-import { toastApiError } from "utils";
+import type { AgileBoardT, IssueT, UpdateIssueT } from "shared/model/types";
+import { agileBoardApi, issueApi } from "shared/model";
+import { Kanban as KanbanComp } from "shared/ui/kanban/kanban";
+import type { Items, KanbanProps } from "shared/ui/kanban/kanban.types";
+import { toastApiError } from "shared/utils";
 import {
     columnKeyToFieldValue,
     fieldValueToColumnKey,

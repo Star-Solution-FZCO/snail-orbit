@@ -1,9 +1,9 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { roleApi } from "store";
-import { RoleT, UpdateGroupT } from "types";
-import { toastApiError } from "utils";
+import type { RoleT, UpdateGroupT } from "shared/model/types";
+import { roleApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { RoleForm } from "./role_form";
 
 interface IRoleSettingsProps {

@@ -1,17 +1,11 @@
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
-import {
-    forwardRef,
-    SyntheticEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
-import { FieldError, Merge } from "react-hook-form";
+import type { SyntheticEvent } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
+import type { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import type { BasicProjectT } from "types";
-import { noLimitListQueryParams } from "utils";
+import type { BasicProjectT } from "shared/model/types";
+import { projectApi } from "shared/model";
+import { noLimitListQueryParams } from "shared/utils";
 
 export type ProjectSelectProps = {
     value?: BasicProjectT[];

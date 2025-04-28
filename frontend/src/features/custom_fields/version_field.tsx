@@ -1,8 +1,8 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import { customFieldsApi } from "store";
-import type { VersionFieldT, VersionOptionT } from "types";
-import { noLimitListQueryParams } from "utils";
+import type { VersionFieldT, VersionOptionT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { noLimitListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
 import {
     cardLabelGetter,

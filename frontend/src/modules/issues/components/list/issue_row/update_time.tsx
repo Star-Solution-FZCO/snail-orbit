@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import type { FC } from "react";
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { IssueT } from "types";
+import type { IssueT } from "shared/model/types";
 
 type UpdateTimeProps = {
     issue: IssueT;

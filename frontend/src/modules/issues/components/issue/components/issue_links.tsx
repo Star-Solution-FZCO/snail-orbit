@@ -12,19 +12,21 @@ import {
     Link as MuiLink,
     Typography,
 } from "@mui/material";
-import { Link } from "components";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import type { IssueLinkT, IssueLinkTypeT } from "shared/model/types";
+import { linkTypes } from "shared/model/types";
 import {
     issueApi,
     toggleIssueLinks,
     useAppDispatch,
     useAppSelector,
-} from "store";
+} from "shared/model";
+import { Link } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import { IssueLinkT, IssueLinkTypeT, linkTypes } from "types";
-import { toastApiError } from "utils";
 
 const groupLinksByType = (links: IssueLinkT[]) => {
     return links.reduce<Record<IssueLinkTypeT, IssueLinkT[]>>(

@@ -53,7 +53,11 @@ export default defineConfig({
         visualizer() as PluginOption,
         unusedCode({
             patterns: ["src/**/*.*"],
-            exclude: ["**/index.ts", "src/vite-env.d.ts", "src/types/*.*"],
+            exclude: [
+                "**/index.ts",
+                "src/vite-env.d.ts",
+                "src/shared/model/types/*.*",
+            ],
         }),
         splitVendorChunkPlugin(),
     ],

@@ -1,12 +1,12 @@
 import { Button } from "@mui/material";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import type { MouseEventHandler } from "react";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "store";
-import type { AgileBoardT } from "types";
-import { useListQueryParams } from "utils";
-import { StarButton } from "../../../components";
+import type { AgileBoardT } from "shared/model/types";
+import { agileBoardApi } from "shared/model";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import { useListQueryParams } from "shared/utils";
+import { StarButton } from "../../../shared/ui";
 
 type TagListPopoverProps = {
     open: boolean;

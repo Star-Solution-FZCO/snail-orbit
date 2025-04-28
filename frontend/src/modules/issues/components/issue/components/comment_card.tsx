@@ -5,12 +5,6 @@ import LinkIcon from "@mui/icons-material/Link";
 import type { SxProps, Theme } from "@mui/material";
 import { Box, Button, Tooltip, Typography } from "@mui/material";
 import { useLocation } from "@tanstack/react-router";
-import {
-    MarkdownPreview,
-    MDEditor,
-    SpentTimeField,
-    UserAvatar,
-} from "components";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
@@ -18,9 +12,15 @@ import type { ChangeEvent, FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppSelector } from "store";
-import type { CommentT, SelectedAttachmentT } from "types";
-import { formatSpentTime, toastApiError } from "utils";
+import type { CommentT, SelectedAttachmentT } from "shared/model/types";
+import { issueApi, useAppSelector } from "shared/model";
+import {
+    MarkdownPreview,
+    MDEditor,
+    SpentTimeField,
+    UserAvatar,
+} from "shared/ui";
+import { formatSpentTime, toastApiError } from "shared/utils";
 import { useFileUploader } from "widgets/file_upload/useFileUploader";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard } from "./attachment_cards";

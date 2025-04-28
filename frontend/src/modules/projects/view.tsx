@@ -1,13 +1,13 @@
 import AddIcon from "@mui/icons-material/Add";
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Tab, Typography } from "@mui/material";
-import { ErrorHandler, Link, TabPanel } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import type { FC, SyntheticEvent } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { projectApi, useAppSelector } from "store";
+import { ErrorHandler, Link, TabPanel } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { projectApi, useAppSelector } from "shared/model";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";

@@ -1,8 +1,8 @@
 import { Stack } from "@mui/material";
 import type { FC } from "react";
 import { useCallback } from "react";
-import { projectApi } from "store";
-import type { BasicUserT, ProjectT } from "types";
+import { projectApi } from "shared/model";
+import type { BasicUserT, ProjectT } from "shared/model/types";
 import { MainInfo } from "./main_info";
 import { UsersTable } from "./users_table";
 

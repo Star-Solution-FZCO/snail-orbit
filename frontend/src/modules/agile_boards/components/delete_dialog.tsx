@@ -12,8 +12,8 @@ import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { agileBoardApi } from "store";
-import { toastApiError } from "utils";
+import { agileBoardApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 interface IDeleteAgileBoardDialogProps {
     id: string;

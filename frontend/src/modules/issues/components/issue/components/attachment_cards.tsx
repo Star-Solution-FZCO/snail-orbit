@@ -1,10 +1,11 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, Tooltip, Typography } from "@mui/material";
-import { API_URL, apiVersion } from "config";
-import { FC, useEffect, useMemo, useState } from "react";
-import { openFilePreview, useAppDispatch, useAppSelector } from "store";
-import { AttachmentT } from "types";
+import { API_URL, apiVersion } from "app/config";
+import type { FC } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { openFilePreview, useAppDispatch, useAppSelector } from "shared/model";
+import type { AttachmentT } from "shared/model/types";
 
 interface IBaseAttachmentCardProps {
     filename: string;

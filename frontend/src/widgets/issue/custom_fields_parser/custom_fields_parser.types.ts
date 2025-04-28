@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { CustomFieldT, FieldValueT } from "types";
+import type { CustomFieldT, FieldValueT } from "shared/model/types";
 
 export type CustomFieldsParserProps = {
     availableFields: CustomFieldT[];

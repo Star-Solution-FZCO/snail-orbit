@@ -1,8 +1,8 @@
-import { AvatarAdornment } from "components/fields/adornments/avatar_adornment";
 import { type SyntheticEvent, useMemo } from "react";
-import { customFieldsApi } from "store";
-import type { BasicUserT } from "types";
-import { useListQueryParams } from "utils";
+import type { BasicUserT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
+import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
 import { cardLabelGetter, getUserAvatarAdornment } from "./utils";
 

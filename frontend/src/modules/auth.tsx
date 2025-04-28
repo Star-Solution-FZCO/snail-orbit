@@ -20,9 +20,9 @@ import {
     useFormContext,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { authenticate } from "services/auth";
-import { setUser, useAppDispatch, useAppSelector, userApi } from "store";
-import { toastApiError } from "utils";
+import { authenticate } from "shared/api/services/auth";
+import { setUser, useAppDispatch, useAppSelector, userApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 type AuthFormDataT = {
     login: string;

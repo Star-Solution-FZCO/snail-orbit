@@ -1,19 +1,19 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi } from "store";
-import { toastApiError } from "utils";
+import { projectApi } from "shared/model";
+import { Link } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { toastApiError } from "shared/utils";
 import {
     exportPublicKey,
     generateKeyPair,
     getFingerprint,
-} from "../../utils/crypto";
+} from "../../shared/utils/crypto";
 import type { CreateProjectFormData } from "./components/create_project_form";
 import { CreateProjectForm } from "./components/create_project_form";
 

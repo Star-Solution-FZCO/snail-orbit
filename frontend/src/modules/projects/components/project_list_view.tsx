@@ -6,8 +6,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import type { FC } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import type { CustomFieldT, ProjectT } from "types";
+import { projectApi } from "shared/model";
+import type { CustomFieldT, ProjectT } from "shared/model/types";
 
 type AvailableCustomFieldsListProp1s = {
     project: ProjectT;

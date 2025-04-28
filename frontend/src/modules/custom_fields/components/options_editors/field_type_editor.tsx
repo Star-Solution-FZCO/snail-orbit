@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { CustomFieldT } from "types";
+import { CustomFieldT } from "shared/model/types";
 import { CustomFieldEnumOptionsEditor } from "./enum_options_editor";
 import { CustomFieldStateOptionsEditor } from "./state_options_editor";
 import { CustomFieldUserOptionsEditor } from "./user_options_editor";

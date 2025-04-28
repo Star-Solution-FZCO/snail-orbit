@@ -1,4 +1,4 @@
-import type { AgileFieldValueT } from "types";
+import type { AgileFieldValueT } from "shared/model/types";
 
 export const getFieldValue = (field: AgileFieldValueT) =>
     "state" in field

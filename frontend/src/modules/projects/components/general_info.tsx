@@ -1,9 +1,9 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi, useAppSelector } from "store";
-import type { ProjectT, UpdateProjectT } from "types";
-import { toastApiError } from "utils";
+import type { ProjectT, UpdateProjectT } from "shared/model/types";
+import { projectApi, useAppSelector } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { ProjectForm } from "./project_form";
 
 interface IProjectGeneralInfoProps {

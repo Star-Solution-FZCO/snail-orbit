@@ -10,19 +10,19 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import {
-    DataGrid,
+import type {
     GridColDef,
     GridEventListener,
     GridSortModel,
 } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, UserAvatar } from "components";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { userApi } from "store";
-import { ListQueryParams, UserT } from "types";
-import { useListQueryParams } from "utils";
+import type { ListQueryParams, UserT } from "shared/model/types";
+import { userApi } from "shared/model";
+import { ErrorHandler, UserAvatar } from "shared/ui";
+import { useListQueryParams } from "shared/utils";
 
 const initialQueryParams = {
     limit: 50,

@@ -1,7 +1,7 @@
 import { Box, CircularProgress } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { FC, useEffect, useRef } from "react";
-import { issueApi } from "store";
+import { issueApi } from "shared/model";
 
 const IssueCreate: FC = () => {
     const navigate = useNavigate();

@@ -1,11 +1,11 @@
 import { TabContext } from "@mui/lab";
 import { Box, debounce, Tab, Tabs } from "@mui/material";
-import { TabPanel } from "components";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { AgileBoardT } from "../../../../types";
+import { TabPanel } from "shared/ui";
+import type { AgileBoardT } from "../../../../shared/model/types";
 import { Access } from "./tabs/access";
 import { Card } from "./tabs/card";
 import { ColumnSwimlanes } from "./tabs/column_swimlanes";

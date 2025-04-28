@@ -1,4 +1,4 @@
-import type { CreateAgileBoardT } from "types";
+import type { CreateAgileBoardT } from "shared/model/types";
 import type { FormValues } from "./create_agile_board_form.types";
 
 export const form_values_to_api_data = (

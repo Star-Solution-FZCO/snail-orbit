@@ -1,10 +1,10 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link, TabPanel } from "components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi } from "store";
+import { ErrorHandler, Link, TabPanel } from "shared/ui";
+import { groupApi } from "shared/model";
 import { GroupMembers } from "./components/group_members";
 import { GroupSettings } from "./components/group_settings";
 import { tabs } from "./utils";

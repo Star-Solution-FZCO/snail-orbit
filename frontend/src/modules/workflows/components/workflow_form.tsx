@@ -13,8 +13,8 @@ import { Link } from "@tanstack/react-router";
 import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { WorkflowT } from "types";
-import { workflowTypes } from "types";
+import type { WorkflowT } from "shared/model/types";
+import { workflowTypes } from "shared/model/types";
 import * as yup from "yup";
 
 const workflowSchema = yup.object().shape({

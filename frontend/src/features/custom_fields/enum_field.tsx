@@ -1,9 +1,9 @@
-import { ColorAdornment } from "components/fields/adornments/color_adornment";
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import { customFieldsApi } from "store";
-import type { EnumFieldT } from "types";
-import { useListQueryParams } from "utils";
+import type { EnumFieldT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
+import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
 import { cardLabelGetter, getEnumColorAdornment } from "./utils";
 

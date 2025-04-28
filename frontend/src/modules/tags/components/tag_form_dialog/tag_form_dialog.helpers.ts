@@ -1,4 +1,4 @@
-import type { TagBaseT } from "types/tag";
+import type { TagBaseT } from "shared/model/types/tag";
 import type { TagFormData } from "./tag_form_dialog.types";
 
 export const tagToFormData = (data: TagBaseT): TagFormData => ({

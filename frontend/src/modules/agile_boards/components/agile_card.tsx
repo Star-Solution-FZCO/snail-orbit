@@ -1,19 +1,19 @@
-import IssueCard from "components/agile/issue_card/issue_card";
+import type { ComponentProps, FC } from "react";
+import { memo, useCallback, useMemo } from "react";
+import IssueCard from "shared/ui/agile/issue_card/issue_card";
 import {
     IssueCardBody,
     IssueCardBottom,
     IssueCardHeader,
-} from "components/agile/issue_card/issue_card.styles";
-import { IssueLink } from "components/issue_link";
-import type { ComponentProps, FC } from "react";
-import { memo, useCallback, useMemo } from "react";
+} from "shared/ui/agile/issue_card/issue_card.styles";
+import { IssueLink } from "shared/ui/issue_link";
 import type {
     AgileBoardCardFieldT,
     FieldValueT,
     IssueT,
     UiSettingT,
     UpdateIssueT,
-} from "types";
+} from "shared/model/types";
 import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 
 export type IssueCardProps = {

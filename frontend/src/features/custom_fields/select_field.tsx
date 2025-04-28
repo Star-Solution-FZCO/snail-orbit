@@ -1,9 +1,9 @@
 import type { AutocompleteValue } from "@mui/material";
-import FieldCard from "components/fields/field_card/field_card";
-import type { FormAutocompletePopoverProps } from "components/fields/form_autocomplete/form_autocomplete";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import FieldCard from "shared/ui/fields/field_card/field_card";
+import type { FormAutocompletePopoverProps } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 
 type SelectFieldProps<
     Value,

@@ -10,12 +10,12 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
-import { MDEditor, SpentTimeField, UserAvatar } from "components";
 import type { ChangeEvent, FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi, useAppSelector } from "store";
-import { formatSpentTime, toastApiError } from "utils";
+import { issueApi, useAppSelector } from "shared/model";
+import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
+import { formatSpentTime, toastApiError } from "shared/utils";
 import { useFileUploader } from "../../../../../widgets/file_upload/useFileUploader";
 import { BrowserFileCard } from "./attachment_cards";
 import { HiddenInput } from "./hidden_input";
@@ -63,11 +63,11 @@ const UnsavedChangesDialog: FC<IUnsavedChangesDialogProps> = ({
     );
 };
 
-interface ICreateCommentFormProps {
+type CreateCommentFormProps = {
     issueId: string;
-}
+};
 
-const CreateCommentForm: FC<ICreateCommentFormProps> = ({ issueId }) => {
+const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
     const { t } = useTranslation();
 
     const user = useAppSelector((state) => state.profile.user);

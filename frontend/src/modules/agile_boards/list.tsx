@@ -7,13 +7,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { Link, QueryPagination } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "store";
-import { formatErrorMessages, useListQueryParams } from "utils";
+import { agileBoardApi } from "shared/model";
+import { Link, QueryPagination } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { formatErrorMessages, useListQueryParams } from "shared/utils";
 import { BoardsList } from "./components/list/boards_list";
 
 const AgileBoardList = () => {

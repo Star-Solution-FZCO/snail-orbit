@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import HistoryIcon from "@mui/icons-material/History";
 import type { SelectChangeEvent } from "@mui/material";
@@ -6,11 +5,6 @@ import {
     Box,
     Button,
     CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
     MenuItem,
     Select,
     styled,
@@ -20,11 +14,12 @@ import {
 import { t } from "i18next";
 import type { FC } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { issueApi } from "store";
-import type { CommentT, IssueActivityTypeT, IssueHistoryT } from "types";
-import { formatSpentTime, toastApiError, useListQueryParams } from "utils";
+import type { CommentT, IssueActivityTypeT, IssueHistoryT } from "shared/model/types";
+import { issueApi } from "shared/model";
+import { formatSpentTime, useListQueryParams } from "shared/utils";
 import { CommentCard } from "./comment_card";
 import { CreateCommentForm } from "./create_comment_form";
+import { DeleteCommentDialog } from "./delete_comment_dialog";
 import { IssueHistory } from "./issue_history";
 
 const ActivityTypeButton = styled(Button, {
@@ -53,73 +48,11 @@ const ActivityTypeButton = styled(Button, {
     },
 }));
 
-interface IDeleteCommentDialogProps {
+type IssueActivitiesProps = {
     issueId: string;
-    open: boolean;
-    comment: CommentT | null;
-    onClose: () => void;
-}
-
-const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
-    issueId,
-    open,
-    comment,
-    onClose,
-}) => {
-    const [deleteComment, { isLoading }] =
-        issueApi.useDeleteIssueCommentMutation();
-
-    const handleClickDelete = () => {
-        if (!comment) return;
-
-        deleteComment({ id: issueId, commentId: comment.id })
-            .unwrap()
-            .then(onClose)
-            .catch(toastApiError);
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
-                {t("issues.comments.delete.title")}
-
-                <IconButton onClick={onClose} size="small" disabled={isLoading}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <DialogContent>{t("issues.comments.delete.warning")}</DialogContent>
-            <DialogActions>
-                <Button
-                    onClick={onClose}
-                    variant="outlined"
-                    color="error"
-                    disabled={isLoading}
-                >
-                    {t("cancel")}
-                </Button>
-                <Button
-                    onClick={handleClickDelete}
-                    variant="outlined"
-                    loading={isLoading}
-                >
-                    {t("delete")}
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
 };
 
-interface IIssueActivitiesProps {
-    issueId: string;
-}
-
-const IssueActivities: FC<IIssueActivitiesProps> = ({ issueId }) => {
+const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         sort_by: "time",
     });

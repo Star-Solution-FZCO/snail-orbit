@@ -9,19 +9,19 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import {
-    DataGrid,
+import type {
     GridColDef,
     GridEventListener,
     GridSortModel,
 } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link } from "components";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi } from "store";
-import { GroupT, ListQueryParams } from "types";
-import { useListQueryParams } from "utils";
+import type { GroupT, ListQueryParams } from "shared/model/types";
+import { groupApi } from "shared/model";
+import { ErrorHandler, Link } from "shared/ui";
+import { useListQueryParams } from "shared/utils";
 
 const initialQueryParams = {
     limit: 50,

@@ -18,7 +18,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { FC, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "types";
+import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "shared/model/types";
 import { defaultValueGetter, getOptionLabel, getOptionValue } from "./utils";
 
 interface InputProps<T> {

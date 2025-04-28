@@ -2,8 +2,8 @@ import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import { FC, SyntheticEvent, useCallback, useMemo, useState } from "react";
 import { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "store";
-import { BasicCustomFieldT } from "types";
+import { agileBoardApi } from "shared/model";
+import { BasicCustomFieldT } from "shared/model/types";
 
 interface IColumnFieldSelectProps {
     value?: BasicCustomFieldT;

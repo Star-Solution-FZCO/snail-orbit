@@ -1,4 +1,4 @@
-import type { SelectedAttachmentT } from "types";
+import type { SelectedAttachmentT } from "shared/model/types";
 
 export const initialSelectedAttachment: SelectedAttachmentT = {
     id: "",

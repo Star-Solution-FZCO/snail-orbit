@@ -1,18 +1,18 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link, PageTitle } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi, useAppDispatch } from "store";
-import { useEventSubscriptionAutoReFetch } from "store/api/events.api";
+import type { IssueT, UpdateIssueT } from "shared/model/types";
+import { issueApi, useAppDispatch } from "shared/model";
+import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
+import { ErrorHandler, Link, PageTitle } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import type { IssueT, UpdateIssueT } from "types";
-import { toastApiError } from "utils";
 import IssueViewComponent from "../components/issue/issue_view";
 
 type IssueViewProps = {

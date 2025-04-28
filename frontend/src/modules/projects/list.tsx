@@ -8,14 +8,14 @@ import {
     Typography,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { QueryPagination } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "store";
-import { formatErrorMessages, useListQueryParams } from "utils";
-import useDebouncedState from "../../utils/hooks/use-debounced-state";
+import { projectApi } from "shared/model";
+import { QueryPagination } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
+import { formatErrorMessages, useListQueryParams } from "shared/utils";
+import useDebouncedState from "../../shared/utils/hooks/use-debounced-state";
 import { ProjectCard } from "./components/project_card";
 
 const ProjectList = () => {

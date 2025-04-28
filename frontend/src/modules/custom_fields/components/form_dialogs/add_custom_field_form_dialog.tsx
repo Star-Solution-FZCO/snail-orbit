@@ -6,12 +6,12 @@ import {
     DialogTitle,
     IconButton,
 } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi } from "store";
-import { CreateCustomFieldT, CustomFieldGroupT } from "types";
-import { toastApiError } from "utils";
+import type { CreateCustomFieldT, CustomFieldGroupT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { CustomFieldForm } from "../custom_field_form";
 
 interface ICreateCustomFieldFormDialogProps {

@@ -11,14 +11,14 @@ import {
     Typography,
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { MDEditor } from "components";
 import type { TFunction } from "i18next";
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { exportPrivateKey, generateKeyPair } from "utils/crypto";
-import { downloadTextFile } from "utils/helpers/download-file";
+import { MDEditor } from "shared/ui";
+import { exportPrivateKey, generateKeyPair } from "shared/utils/crypto";
+import { downloadTextFile } from "shared/utils/helpers/download-file";
 import * as yup from "yup";
 import { generateSlug } from "../utils";
 

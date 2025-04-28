@@ -3,7 +3,7 @@ import { Button, Dialog, DialogActions, Stack, Tab, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { SearchFormValuesT } from "types/search";
+import type { SearchFormValuesT } from "shared/model/types/search";
 import Access from "./tabs/access";
 import Main from "./tabs/main";
 

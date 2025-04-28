@@ -2,16 +2,17 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { Box, CircularProgress, IconButton, Typography } from "@mui/material";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "store";
-import {
+import type {
     CreateEnumOptionT,
     CustomFieldT,
     EnumOptionT,
     UpdateEnumOptionT,
-} from "types";
-import { toastApiError } from "utils";
+} from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { EnumOptionFormDialog } from "../form_dialogs/enum_option_form_dialog";
 

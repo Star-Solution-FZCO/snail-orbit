@@ -1,12 +1,12 @@
 import { Box, Divider, Typography } from "@mui/material";
-import { ErrorHandler } from "components";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi } from "store";
-import type { CustomFieldGroupT, UpdateCustomFieldT } from "types";
-import { toastApiError } from "utils";
+import type { CustomFieldGroupT, UpdateCustomFieldT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { ErrorHandler } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { ConfirmChangesDialog } from "./confirm_changes_dialog";
 import { CustomFieldForm } from "./custom_field_form";
 import { DeleteCustomFieldGroupDialog } from "./delete_custom_field_group_dialog";

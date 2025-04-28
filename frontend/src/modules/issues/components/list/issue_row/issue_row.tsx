@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
-import { IssueLink } from "components/issue_link";
 import type { FC } from "react";
 import { memo, useCallback } from "react";
+import { IssueLink } from "shared/ui/issue_link";
 import { slugify } from "transliteration";
 import { IssueSubscribeButton } from "../../issue/components/issue_subscribe_button";
 import { IssueTags } from "../../issue/components/issue_tags";

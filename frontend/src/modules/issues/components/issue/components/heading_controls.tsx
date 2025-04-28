@@ -15,11 +15,11 @@ import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, toggleIssueLinks, useAppDispatch } from "store";
-import { issueToCreateIssue } from "store/utils/issue";
+import type { IssueT } from "shared/model/types";
+import { issueApi, toggleIssueLinks, useAppDispatch } from "shared/model";
+import { issueToCreateIssue } from "shared/model/mappers/issue";
+import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import type { IssueT } from "types";
-import { toastApiError } from "utils";
 import { DeleteIssueDialog } from "./delete_dialog";
 import { HeadingTagButton } from "./heading_tag_button";
 

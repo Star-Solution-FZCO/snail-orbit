@@ -1,8 +1,8 @@
-import FieldCard from "components/fields/field_card/field_card";
-import type { FormInputPopoverProps } from "components/fields/form_input/form_input";
-import FormInputPopover from "components/fields/form_input/form_input";
 import type { ForwardedRef, ReactNode } from "react";
 import { forwardRef, useState } from "react";
+import FieldCard from "shared/ui/fields/field_card/field_card";
+import type { FormInputPopoverProps } from "shared/ui/fields/form_input/form_input";
+import FormInputPopover from "shared/ui/fields/form_input/form_input";
 
 type InputFieldProps = {
     label: string;

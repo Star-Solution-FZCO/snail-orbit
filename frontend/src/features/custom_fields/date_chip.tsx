@@ -1,10 +1,10 @@
 import { Tooltip } from "@mui/material";
-import { FieldChip } from "components/fields/field_chip/field_chip";
-import FormDatePopover, {
-    FormDatePopoverProps,
-} from "components/fields/form_date/form_date";
-import { Dayjs } from "dayjs";
-import { ForwardedRef, forwardRef, useMemo, useState } from "react";
+import type { Dayjs } from "dayjs";
+import type { ForwardedRef } from "react";
+import { forwardRef, useMemo, useState } from "react";
+import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
+import type { FormDatePopoverProps } from "shared/ui/fields/form_date/form_date";
+import FormDatePopover from "shared/ui/fields/form_date/form_date";
 
 type DateChipProps = {
     label: string;

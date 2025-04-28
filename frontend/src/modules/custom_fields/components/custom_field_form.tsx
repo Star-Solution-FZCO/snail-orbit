@@ -10,7 +10,7 @@ import {
 import { useEffect, type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldT, CustomFieldTypeT } from "types";
+import type { CustomFieldT, CustomFieldTypeT } from "shared/model/types";
 import * as yup from "yup";
 import { DefaultValueInput } from "./default_value_input";
 

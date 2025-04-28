@@ -1,10 +1,10 @@
 import { Menu, MenuItem } from "@mui/material";
-import { Link } from "components";
-import { NavbarActionButton } from "components/navbar/navbar_action_button";
-import { useNavbarSettings } from "components/navbar/navbar_settings";
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "shared/ui";
+import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
+import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { useIssueModalView } from "../../issues/widgets/modal_view/use_modal_view";
 
 export const useViewNavbarSettings = () => {

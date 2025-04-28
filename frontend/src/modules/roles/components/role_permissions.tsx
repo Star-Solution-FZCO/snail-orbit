@@ -6,11 +6,11 @@ import {
     TableHead,
     TableRow,
 } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { roleApi } from "store";
-import { PermissionGroupT, PermissionKeyT, RoleT } from "types";
-import { toastApiError } from "utils";
+import type { PermissionGroupT, PermissionKeyT, RoleT } from "shared/model/types";
+import { roleApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 interface IPermissionGroupProps {
     group: PermissionGroupT;

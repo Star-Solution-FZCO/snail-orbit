@@ -12,8 +12,8 @@ import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi } from "store";
-import { toastApiError } from "utils";
+import { issueApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 
 interface IDeleteIssueDialogProps {
     id: string;

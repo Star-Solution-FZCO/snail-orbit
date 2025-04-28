@@ -1,11 +1,11 @@
 import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Link, NotFound } from "components";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { roleApi, useAppSelector } from "store";
-import { CreateRoleT } from "types";
-import { toastApiError } from "utils";
+import type { CreateRoleT } from "shared/model/types";
+import { roleApi, useAppSelector } from "shared/model";
+import { Link, NotFound } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { RoleForm } from "./components/role_form";
 
 const RoleCreate = () => {

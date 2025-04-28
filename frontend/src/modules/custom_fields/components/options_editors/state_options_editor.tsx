@@ -10,16 +10,17 @@ import {
     Typography,
 } from "@mui/material";
 import { t } from "i18next";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "store";
-import {
+import type {
     CreateStateOptionT,
     CustomFieldT,
     StateOptionT,
     UpdateStateOptionT,
-} from "types";
-import { toastApiError } from "utils";
+} from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { StateOptionFormDialog } from "../form_dialogs/state_option_form_dialog";
 

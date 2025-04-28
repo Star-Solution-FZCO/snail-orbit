@@ -1,9 +1,9 @@
-import App from "App";
+import App from "app/App";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import "react-toastify/dist/ReactToastify.css";
-import "./i18n";
-import "./index.css";
+import "./app/index.css";
+import "./shared/i18n";
 
 const rootElement = document.getElementById("root")!;
 

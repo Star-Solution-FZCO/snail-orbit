@@ -8,9 +8,9 @@ import type { FC, SyntheticEvent } from "react";
 import { useCallback, useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "store";
-import type { AgileBoardT, PermissionT, PermissionTypeT } from "types";
-import { type BasicUserT, type GroupT } from "types";
+import { agileBoardApi } from "shared/model";
+import type { AgileBoardT, PermissionT, PermissionTypeT } from "shared/model/types";
+import { type BasicUserT, type GroupT } from "shared/model/types";
 
 export const Access: FC = () => {
     const { t } = useTranslation();

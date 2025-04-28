@@ -1,14 +1,14 @@
 import type { AutocompleteChangeReason } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { FormAutocompletePopover } from "components/fields/form_autocomplete/form_autocomplete";
 import type { SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi, userApi } from "store";
-import type { GroupT } from "types";
-import { type BasicUserT } from "types";
-import { useListQueryParams } from "utils";
-import useDebouncedState from "utils/hooks/use-debounced-state";
+import type { GroupT } from "shared/model/types";
+import { type BasicUserT } from "shared/model/types";
+import { groupApi, userApi } from "shared/model";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
+import { useListQueryParams } from "shared/utils";
+import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { getRightAdornment, isUser } from "./utils";
 
 type SelectType = "user" | "group" | "all";

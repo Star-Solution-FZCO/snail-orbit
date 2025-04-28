@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { sharedApi } from "store";
-import { toastApiError } from "utils";
+import { sharedApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { useUploadToastManager } from "./useUploadToastManager";
 
 export const useFileUploader = () => {

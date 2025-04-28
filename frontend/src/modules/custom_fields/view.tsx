@@ -1,13 +1,13 @@
 import { Box, Breadcrumbs, Divider, Stack, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { ErrorHandler, Link } from "components";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { customFieldsApi } from "store";
-import type { CustomFieldGroupT, UpdateCustomFieldGroupT } from "types";
-import { toastApiError } from "utils";
+import type { CustomFieldGroupT, UpdateCustomFieldGroupT } from "shared/model/types";
+import { customFieldsApi } from "shared/model";
+import { ErrorHandler, Link } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
 import { CustomFieldEditView } from "./components/custom_field_edit_view";
 import { CustomFieldGroupForm } from "./components/custom_field_group_form";

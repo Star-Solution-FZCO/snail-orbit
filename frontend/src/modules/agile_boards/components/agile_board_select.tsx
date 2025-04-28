@@ -2,7 +2,7 @@ import { ExpandMore } from "@mui/icons-material";
 import { Button, Typography } from "@mui/material";
 import type { FC, MouseEventHandler } from "react";
 import { useState } from "react";
-import type { AgileBoardT } from "types";
+import type { AgileBoardT } from "shared/model/types";
 import { AgileBoardListPopover } from "./agile_board_list_popover";
 
 type AgileBoardSelectProps = {

@@ -1,10 +1,10 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Stack, Tab, Typography } from "@mui/material";
-import { ErrorHandler, TabPanel } from "components";
 import type { SyntheticEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { userApi } from "store";
+import { ErrorHandler, TabPanel } from "shared/ui";
+import { userApi } from "shared/model";
 import { AccountSecurity } from "./components/account_security";
 import { APITokenList } from "./components/api_tokens";
 import { Workspace } from "./components/workspace";

@@ -1,4 +1,3 @@
-import FieldCard from "components/fields/field_card/field_card";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { DateField } from "features/custom_fields/date_field";
@@ -7,8 +6,9 @@ import { InputField } from "features/custom_fields/input_field";
 import { UserField } from "features/custom_fields/user_field";
 import { VersionField } from "features/custom_fields/version_field";
 import type { FC } from "react";
-import { fieldsToFieldValueMap } from "store/utils/issue";
-import type { CustomFieldValueT, FieldValueT } from "types";
+import type { CustomFieldValueT, FieldValueT } from "shared/model/types";
+import { fieldsToFieldValueMap } from "shared/model/mappers/issue";
+import FieldCard from "shared/ui/fields/field_card/field_card";
 import type { CustomFieldsParserProps } from "./custom_fields_parser.types";
 import { getUserFieldValue, getVersionFieldValue } from "./utils";
 

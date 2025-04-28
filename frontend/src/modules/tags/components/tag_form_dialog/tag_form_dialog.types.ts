@@ -1,4 +1,4 @@
-import type { TagBaseT } from "types/tag";
+import type { TagBaseT } from "shared/model/types/tag";
 import * as yup from "yup";
 
 export const getTagFormSchema = () =>

@@ -1,6 +1,6 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import type { Preview } from "@storybook/react";
-import { theme } from "../src/theme";
+import { theme } from "../src/shared/theme";
 
 const preview: Preview = {
     parameters: {

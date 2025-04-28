@@ -1,4 +1,4 @@
-import type { AgileBoardT } from "types";
+import type { AgileBoardT } from "shared/model/types";
 
 export type FormValues = Pick<
     AgileBoardT,

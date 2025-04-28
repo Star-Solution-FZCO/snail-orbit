@@ -1,8 +1,8 @@
 import { Divider, Stack } from "@mui/material";
 import type { FC } from "react";
 import { useMemo } from "react";
-import type { AgileBoardT } from "types";
-import { interleave } from "utils/helpers/interleave";
+import type { AgileBoardT } from "shared/model/types";
+import { interleave } from "shared/utils/helpers/interleave";
 import { BoardRow } from "./board_row";
 
 type BoardsListProps = {

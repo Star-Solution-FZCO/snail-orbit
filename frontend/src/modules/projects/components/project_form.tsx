@@ -1,12 +1,12 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Box, Button, TextField } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { MDEditor } from "components";
 import type { TFunction } from "i18next";
 import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { MDEditor } from "shared/ui";
 import * as yup from "yup";
 import { generateSlug } from "../utils";
 

@@ -5,7 +5,7 @@ import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
-import type { IssueT, SelectedAttachmentT, UpdateIssueT } from "types";
+import type { IssueT, SelectedAttachmentT, UpdateIssueT } from "shared/model/types";
 import { useFileUploader } from "widgets/file_upload/useFileUploader";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";

@@ -12,13 +12,13 @@ import {
     IconButton,
     TextField,
 } from "@mui/material";
-import { UserAvatar } from "components";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi, userApi } from "store";
-import type { BasicUserT, ListSelectQueryParams } from "types";
-import { toastApiError, useListQueryParams } from "utils";
+import type { BasicUserT, ListSelectQueryParams } from "shared/model/types";
+import { groupApi, userApi } from "shared/model";
+import { UserAvatar } from "shared/ui";
+import { toastApiError, useListQueryParams } from "shared/utils";
 
 interface AddGroupMemberDialogProps {
     groupId: string;

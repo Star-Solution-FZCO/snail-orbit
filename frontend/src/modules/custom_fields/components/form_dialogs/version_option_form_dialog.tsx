@@ -16,7 +16,7 @@ import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { VersionOptionT } from "types";
+import type { VersionOptionT } from "shared/model/types";
 import * as yup from "yup";
 
 const versionOptionSchema = yup.object().shape({

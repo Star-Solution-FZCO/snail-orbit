@@ -8,7 +8,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { issueApi } from "store";
+import { issueApi } from "shared/model";
 import type { IssueModalViewContextType } from "./modal_view.types";
 import { IssueModalViewContext } from "./modal_view_context";
 import { ModalViewLoader } from "./modal_view_loader";

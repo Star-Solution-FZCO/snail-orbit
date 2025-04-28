@@ -1,9 +1,9 @@
-import { StarButton } from "components";
 import type { FC } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi } from "store";
-import type { IssueT } from "types";
+import { StarButton } from "shared/ui";
+import { issueApi } from "shared/model";
+import type { IssueT } from "shared/model/types";
 
 type IssueSubscribeButtonProps = {
     issue: IssueT;

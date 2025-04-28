@@ -20,7 +20,7 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC } from "react";
 import { type SyntheticEvent, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { BasicUserT, EncryptionSettingsT } from "types";
+import type { BasicUserT, EncryptionSettingsT } from "shared/model/types";
 
 type UsersTableProps = {
     encryptionSettings: EncryptionSettingsT;

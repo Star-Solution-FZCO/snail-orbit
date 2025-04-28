@@ -1,8 +1,8 @@
 import { Stack } from "@mui/material";
-import { Tag } from "components/tag";
 import { memo } from "react";
-import { issueApi } from "store";
-import type { IssueT } from "types";
+import { Tag } from "shared/ui/tag";
+import { issueApi } from "shared/model";
+import type { IssueT } from "shared/model/types";
 
 type IssueTagsProps = {
     issue: IssueT;

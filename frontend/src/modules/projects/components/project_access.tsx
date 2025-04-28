@@ -19,12 +19,10 @@ import {
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import { UserAvatar } from "components";
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi, roleApi, userApi } from "store";
 import type {
     BasicUserT,
     ListSelectQueryParams,
@@ -32,12 +30,14 @@ import type {
     ProjectT,
     RoleT,
     UserOrGroupT,
-} from "types";
+} from "shared/model/types";
+import { projectApi, roleApi, userApi } from "shared/model";
+import { UserAvatar } from "shared/ui";
 import {
     noLimitListQueryParams,
     toastApiError,
     useListQueryParams,
-} from "utils";
+} from "shared/utils";
 
 interface IPGrantPermissionDialogProps {
     projectId: string;

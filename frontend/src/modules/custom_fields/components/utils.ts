@@ -1,4 +1,4 @@
-import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "types";
+import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "shared/model/types";
 
 const complexCustomFieldTypes = new Set<CustomFieldTypeT>([
     "enum",

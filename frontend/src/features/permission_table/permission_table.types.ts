@@ -1,5 +1,5 @@
 import type { TableContainerProps } from "@mui/material";
-import type { PermissionT, PermissionTypeT } from "types";
+import type { PermissionT, PermissionTypeT } from "shared/model/types";
 
 export type PermissionTableProps = {
     permissions: PermissionT[];

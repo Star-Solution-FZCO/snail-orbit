@@ -10,7 +10,7 @@ import {
 import type { FC } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { AgileBoardT } from "types";
+import type { AgileBoardT } from "shared/model/types";
 
 export const ColumnsStrategyForm: FC = () => {
     const { t } = useTranslation();

@@ -1,9 +1,9 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { groupApi } from "store";
-import { GroupT, UpdateGroupT } from "types";
-import { toastApiError } from "utils";
+import type { GroupT, UpdateGroupT } from "shared/model/types";
+import { groupApi } from "shared/model";
+import { toastApiError } from "shared/utils";
 import { GroupForm } from "./group_form";
 
 interface IGroupSettingsProps {

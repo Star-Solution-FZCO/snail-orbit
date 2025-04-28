@@ -1,10 +1,10 @@
 import { Box, Button, debounce, TextField, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { MarkdownPreview, MDEditor } from "components";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { IssueT, UpdateIssueT } from "types";
+import { MarkdownPreview, MDEditor } from "shared/ui";
+import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { HeadingControls } from "./heading_controls";
 
 export type IssueFormProps = {
