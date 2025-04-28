@@ -24,6 +24,7 @@ from tests.utils.encryption import (
 from .create import (
     ALL_PERMISSIONS,
     ROLE_PERMISSIONS_BY_CATEGORY,
+    _upload_attachment,
     create_group,
     create_groups,
     create_project,
@@ -2114,3 +2115,78 @@ async def test_api_v1_encrypted_project(
         data['payload']['text'],
     )
     assert decrypted_comment_text == comment_text
+
+    # issue encryption meta
+    issue_attachment = _upload_attachment(
+        test_client, admin_headers, filename='issue_attachment.txt'
+    )
+    encryption_meta = comment_data['encryption']
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+        response = test_client.put(
+            f'/api/v1/issue/{issue_id}',
+            headers=admin_headers,
+            json={
+                'attachments': [
+                    {'id': issue_attachment, 'encryption': encryption_meta}
+                ],
+            },
+        )
+        mock_notify.assert_called_once()
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['attachments']) == 1
+    assert data['payload']['attachments'][0]['id'] == issue_attachment
+    assert data['payload']['attachments'][0]['encryption'] == encryption_meta
+    response = test_client.get(f'/api/v1/issue/{issue_id}', headers=admin_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['attachments']) == 1
+    assert data['payload']['attachments'][0]['id'] == issue_attachment
+    assert data['payload']['attachments'][0]['encryption'] == encryption_meta
+
+    # issue draft encryption meta
+    draft_attachment = _upload_attachment(
+        test_client, admin_headers, filename='draft_attachment.txt'
+    )
+    resp = test_client.post(
+        '/api/v1/issue/draft',
+        headers=admin_headers,
+        json={
+            'project_id': project_id,
+            'subject': 'Draft with attachment',
+            'attachments': [{'id': draft_attachment, 'encryption': encryption_meta}],
+        },
+    )
+    assert resp.status_code == 200
+    draft = resp.json()['payload']
+    draft_id = draft['id']
+    assert draft['attachments'][0]['encryption'] == encryption_meta
+    resp = test_client.get(f'/api/v1/issue/draft/{draft_id}', headers=admin_headers)
+    assert resp.status_code == 200
+    draft = resp.json()['payload']
+    assert draft['attachments'][0]['encryption'] == encryption_meta
+
+    # comment encryption meta
+    comment_attachment = _upload_attachment(
+        test_client, admin_headers, filename='comment_attachment.txt'
+    )
+    resp = test_client.post(
+        f'/api/v1/issue/{issue_id}/comment/',
+        headers=admin_headers,
+        json={
+            'text': 'Comment with attachment',
+            'attachments': [{'id': comment_attachment, 'encryption': encryption_meta}],
+        },
+    )
+    assert resp.status_code == 200
+    comment = resp.json()['payload']
+    comment_id = comment['id']
+    assert comment['attachments'][0]['encryption'] == encryption_meta
+    resp = test_client.get(
+        f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=admin_headers
+    )
+    assert resp.status_code == 200
+    comment = resp.json()['payload']
+    assert comment['attachments'][0]['encryption'] == encryption_meta

@@ -1,3 +1,4 @@
+import io
 from typing import TYPE_CHECKING
 
 import mock
@@ -356,3 +357,20 @@ async def create_tags(
         tag_id = await _create_tag(test_client, create_initial_admin, tag_payload)
         tag_ids.append(tag_id)
     return tag_ids
+
+
+def _upload_attachment(
+    client: 'TestClient',
+    headers: dict[str, str],
+    *,
+    filename: str = 'file.txt',
+    content: bytes | str = b'dummy content',
+) -> str:
+    if isinstance(content, str):
+        content = content.encode()
+    files = {'file': (filename, io.BytesIO(content), 'application/octet-stream')}
+    response = client.post('/api/v1/files', headers=headers, files=files)
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload['success']
+    return payload['payload']['id']

@@ -1,4 +1,3 @@
-import io
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -9,28 +8,11 @@ from fastapi.testclient import TestClient
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
-from .create import ALL_PERMISSIONS, create_role
+from .create import ALL_PERMISSIONS, _upload_attachment, create_role
 from .test_api import (
     create_initial_admin,
     create_project,
 )
-
-
-def _upload_attachment(
-    client: TestClient,
-    headers: dict[str, str],
-    *,
-    filename: str = 'file.txt',
-    content: bytes | str = b'dummy content',
-) -> str:
-    if isinstance(content, str):
-        content = content.encode()
-    files = {'file': (filename, io.BytesIO(content), 'application/octet-stream')}
-    response = client.post('/api/v1/files', headers=headers, files=files)
-    assert response.status_code == 200, response.text
-    payload = response.json()
-    assert payload['success']
-    return payload['payload']['id']
 
 
 def _assign_admin_role(
