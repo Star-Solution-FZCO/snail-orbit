@@ -1,4 +1,8 @@
-# pylint: disable=wrong-import-position, import-outside-toplevel, ungrouped-imports
+# pylint: disable=wrong-import-position, import-outside-toplevel, ungrouped-imports, wrong-import-order
+from pm.patches.beanie_links import patch_beanie_construct_query
+
+patch_beanie_construct_query()
+
 from collections.abc import Awaitable, Callable
 from http import HTTPMethod, HTTPStatus
 
