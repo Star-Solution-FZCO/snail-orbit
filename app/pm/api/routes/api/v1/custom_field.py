@@ -12,13 +12,15 @@ import pm.models as m
 from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
+    CustomFieldGroupOutputRootModel,
     CustomFieldGroupSelectOptionsT,
-    CustomFieldOutputT,
+    CustomFieldOutputRootModel,
     CustomFieldSelectOptionsT,
     EnumOptionOutput,
     ShortOptionOutput,
     StateOptionOutput,
     VersionOptionOutput,
+    cf_group_output_cls_from_type,
     cf_output_from_obj,
 )
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
@@ -123,19 +125,10 @@ class CustomFieldGroupUpdateBody(BaseModel):
     ai_description: str | None = None
 
 
-class CustomFieldGroupOutput(BaseModel):
-    gid: str
-    name: str
-    type: m.CustomFieldTypeT
-    description: str | None = None
-    ai_description: str | None = None
-    fields: list[CustomFieldOutputT]
-
-
 @router.get('/group/list')
 async def list_custom_field_groups(
     query: ListParams = Depends(),
-) -> BaseListOutput[CustomFieldGroupOutput]:
+) -> BaseListOutput[CustomFieldGroupOutputRootModel]:
     q = m.CustomField.find(with_children=True)
     query.apply_filter(q, m.CustomField)
     query.apply_sort(q, m.CustomField, (m.CustomField.name,))
@@ -145,7 +138,7 @@ async def list_custom_field_groups(
     results = {}
     for field in fields:
         if field.gid not in results:
-            results[field.gid] = CustomFieldGroupOutput(
+            results[field.gid] = cf_group_output_cls_from_type(field.type)(
                 gid=field.gid,
                 name=field.name,
                 type=field.type,
@@ -166,14 +159,14 @@ async def list_custom_field_groups(
 @router.get('/group/{custom_field_gid}')
 async def get_custom_field_group(
     custom_field_gid: str,
-) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     objs = await m.CustomField.find(
         m.CustomField.gid == custom_field_gid, with_children=True
     ).to_list()
     if not objs:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
     return SuccessPayloadOutput(
-        payload=CustomFieldGroupOutput(
+        payload=cf_group_output_cls_from_type(objs[0].type)(
             gid=custom_field_gid,
             name=objs[0].name,
             type=objs[0].type,
@@ -188,7 +181,7 @@ async def get_custom_field_group(
 @router.get('/group/{custom_field_gid}/field/{custom_field_id}')
 async def get_custom_field(
     custom_field_id: PydanticObjectId,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -201,7 +194,7 @@ async def get_custom_field(
 async def create_custom_field(
     custom_field_gid: str,
     body: CustomFieldCreateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     existed_field = await m.CustomField.find_one(
         m.CustomField.gid == custom_field_gid, with_children=True
     )
@@ -232,7 +225,7 @@ async def create_custom_field(
 @router.post('/group')
 async def create_custom_field_group(
     body: CustomFieldGroupCreateBody,
-) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     if await m.CustomField.find(
         m.CustomField.name == body.name, with_children=True
     ).exists():
@@ -252,7 +245,7 @@ async def create_custom_field_group(
 
     await obj.insert()
     return SuccessPayloadOutput(
-        payload=CustomFieldGroupOutput(
+        payload=cf_group_output_cls_from_type(obj.type)(
             gid=obj.gid,
             name=obj.name,
             type=obj.type,
@@ -268,7 +261,7 @@ async def create_custom_field_group(
 async def update_custom_field(
     custom_field_id: PydanticObjectId,
     body: CustomFieldUpdateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -287,7 +280,7 @@ async def update_custom_field(
 async def update_custom_field_group(
     custom_field_gid: str,
     body: CustomFieldGroupUpdateBody,
-) -> SuccessPayloadOutput[CustomFieldGroupOutput]:
+) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     fields = await m.CustomField.find(
         m.CustomField.gid == custom_field_gid, with_children=True
     ).to_list()
@@ -306,7 +299,7 @@ async def update_custom_field_group(
                 m.Board.update_field_embedded_links(field),
             )
     return SuccessPayloadOutput(
-        payload=CustomFieldGroupOutput(
+        payload=cf_group_output_cls_from_type(fields[0].type)(
             gid=custom_field_gid,
             name=fields[0].name,
             type=fields[0].type,
@@ -341,7 +334,7 @@ async def delete_custom_field(
 async def add_enum_option(
     custom_field_id: PydanticObjectId,
     body: EnumOptionCreateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -370,7 +363,7 @@ async def update_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
     body: EnumOptionUpdateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
@@ -401,7 +394,7 @@ async def update_enum_option(
 async def remove_enum_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
@@ -431,7 +424,7 @@ async def remove_enum_option(
 async def add_user_option(
     custom_field_id: PydanticObjectId,
     body: UserOptionCreateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -481,7 +474,7 @@ async def add_user_option(
 async def remove_user_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -503,7 +496,7 @@ async def remove_user_option(
 async def add_state_option(
     custom_field_id: PydanticObjectId,
     body: StateOptionCreateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.StateCustomField.find_one(
         m.StateCustomField.id == custom_field_id
     )
@@ -534,7 +527,7 @@ async def update_state_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
     body: StateOptionUpdateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
         m.StateCustomField.id == custom_field_id
@@ -564,7 +557,7 @@ async def update_state_option(
 async def remove_state_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
         m.StateCustomField.id == custom_field_id
@@ -592,7 +585,7 @@ async def remove_state_option(
 async def add_version_option(
     custom_field_id: PydanticObjectId,
     body: VersionOptionCreateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
     )
@@ -629,7 +622,7 @@ async def update_version_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
     body: VersionOptionUpdateBody,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True
@@ -666,7 +659,7 @@ async def update_version_option(
 async def remove_version_option(
     custom_field_id: PydanticObjectId,
     option_id: UUID,
-) -> SuccessPayloadOutput[CustomFieldOutputT]:
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
         m.CustomField.id == custom_field_id, with_children=True

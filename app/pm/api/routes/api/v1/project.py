@@ -17,7 +17,7 @@ from pm.api.context import (
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
     CustomFieldOutput,
-    CustomFieldOutputT,
+    CustomFieldOutputRootModel,
     cf_output_from_obj,
 )
 from pm.api.views.encryption import (
@@ -476,7 +476,7 @@ async def delete_project(
 async def get_available_select_fields(
     project_id: PydanticObjectId,
     query: SelectParams = Depends(),
-) -> BaseListOutput[CustomFieldOutputT]:
+) -> BaseListOutput[CustomFieldOutputRootModel]:
     project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
