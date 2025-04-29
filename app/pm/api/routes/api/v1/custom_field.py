@@ -129,7 +129,7 @@ class CustomFieldGroupUpdateBody(BaseModel):
 async def list_custom_field_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[CustomFieldGroupOutputRootModel]:
-    q = m.CustomField.find(with_children=True)
+    q = m.CustomField.find(with_children=True, fetch_links=True)
     query.apply_filter(q, m.CustomField)
     query.apply_sort(q, m.CustomField, (m.CustomField.name,))
     if query.search:
@@ -161,7 +161,9 @@ async def get_custom_field_group(
     custom_field_gid: str,
 ) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     objs = await m.CustomField.find(
-        m.CustomField.gid == custom_field_gid, with_children=True
+        m.CustomField.gid == custom_field_gid,
+        with_children=True,
+        fetch_links=True,
     ).to_list()
     if not objs:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
@@ -183,7 +185,9 @@ async def get_custom_field(
     custom_field_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -210,6 +214,7 @@ async def create_custom_field(
         ai_description=existed_field.ai_description,
         is_nullable=body.is_nullable,
         label=body.label,
+        projects=[],
     )
 
     if body.default_value is not None:
@@ -239,6 +244,7 @@ async def create_custom_field_group(
         ai_description=body.ai_description,
         is_nullable=body.is_nullable,
         label=body.label,
+        projects=[],
     )
     if body.default_value is not None:
         obj.default_value = obj.validate_value(body.default_value)
@@ -263,7 +269,9 @@ async def update_custom_field(
     body: CustomFieldUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -272,7 +280,7 @@ async def update_custom_field(
     except m.CustomFieldValidationError as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
@@ -282,7 +290,9 @@ async def update_custom_field_group(
     body: CustomFieldGroupUpdateBody,
 ) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     fields = await m.CustomField.find(
-        m.CustomField.gid == custom_field_gid, with_children=True
+        m.CustomField.gid == custom_field_gid,
+        with_children=True,
+        fetch_links=True,
     ).to_list()
     if not fields:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
@@ -290,7 +300,7 @@ async def update_custom_field_group(
     for field in fields:
         for k, v in body.model_dump(exclude_unset=True).items():
             setattr(field, k, v)
-        await field.save_changes()
+        await field.replace()
     if name_changed:
         for field in fields:
             await asyncio.gather(
@@ -336,7 +346,9 @@ async def add_enum_option(
     body: EnumOptionCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -353,7 +365,7 @@ async def add_enum_option(
         )
     )
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
@@ -366,7 +378,9 @@ async def update_enum_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -380,7 +394,7 @@ async def update_enum_option(
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
         await asyncio.gather(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
@@ -397,7 +411,9 @@ async def remove_enum_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -426,7 +442,9 @@ async def add_user_option(
     body: UserOptionCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -463,7 +481,7 @@ async def add_user_option(
         value = m.UserLinkField.from_obj(user)
     obj.options.append(m.UserOption(id=uuid4(), type=body.type, value=value))
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
@@ -476,7 +494,9 @@ async def remove_user_option(
     option_id: UUID,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -498,7 +518,8 @@ async def add_state_option(
     body: StateOptionCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.StateCustomField.find_one(
-        m.StateCustomField.id == custom_field_id
+        m.StateCustomField.id == custom_field_id,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -515,7 +536,7 @@ async def add_state_option(
         )
     )
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
@@ -530,7 +551,8 @@ async def update_state_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
-        m.StateCustomField.id == custom_field_id
+        m.StateCustomField.id == custom_field_id,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -542,7 +564,7 @@ async def update_state_option(
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
         await asyncio.gather(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
@@ -560,7 +582,8 @@ async def remove_state_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.StateCustomField.find_one(
-        m.StateCustomField.id == custom_field_id
+        m.StateCustomField.id == custom_field_id,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -587,7 +610,9 @@ async def add_version_option(
     body: VersionOptionCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -610,7 +635,7 @@ async def add_version_option(
         ),
     )
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
@@ -625,7 +650,9 @@ async def update_version_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -644,7 +671,7 @@ async def update_version_option(
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
     if obj.is_changed:
-        await obj.save_changes()
+        await obj.replace()
         await asyncio.gather(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
@@ -662,7 +689,9 @@ async def remove_version_option(
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     option_id_ = str(option_id)
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')

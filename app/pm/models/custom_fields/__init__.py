@@ -78,6 +78,15 @@ MAPPING = {
 }
 
 
+def rebuild_models() -> None:
+    # pylint: disable=import-outside-toplevel, unused-import, cyclic-import
+    from pm.models.project import Project
+
+    CustomField.model_rebuild()
+    for cf in MAPPING.values():
+        cf.model_rebuild()
+
+
 def get_cf_class(type_: CustomFieldTypeT) -> type['CustomField']:
     return MAPPING[type_]
 

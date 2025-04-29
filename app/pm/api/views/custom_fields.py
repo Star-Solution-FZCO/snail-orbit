@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, RootModel
 import pm.models as m
 
 from .group import GroupOutput
+from .project import ProjectShortOutput
 from .user import UserOutput
 
 __all__ = (
@@ -106,6 +107,7 @@ class BaseCustomFieldOutput(BaseModel, Generic[CustomFieldT], ABC):
     label: str
     description: str | None = None
     ai_description: str | None = None
+    projects: list[ProjectShortOutput]
 
     @classmethod
     def from_obj(cls, obj: CustomFieldT) -> Self:
@@ -118,6 +120,7 @@ class BaseCustomFieldOutput(BaseModel, Generic[CustomFieldT], ABC):
             label=obj.label,
             description=obj.description,
             ai_description=obj.ai_description,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -156,6 +159,7 @@ class DateCustomFieldOutput(BaseCustomFieldOutput[m.DateCustomField]):
             label=obj.label,
             description=obj.description,
             ai_description=obj.ai_description,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -192,6 +196,7 @@ class UserCustomFieldOutput(BaseCustomFieldOutput[m.UserCustomField]):
             default_value=obj.default_value,
             label=obj.label,
             users=[UserOutput.from_obj(u) for u in obj.users],
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -223,6 +228,7 @@ class UserMultiCustomFieldOutput(BaseCustomFieldOutput[m.UserMultiCustomField]):
             default_value=obj.default_value,
             label=obj.label,
             users=[UserOutput.from_obj(u) for u in obj.users],
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -243,6 +249,7 @@ class EnumCustomFieldOutput(BaseCustomFieldOutput[m.EnumCustomField]):
             default_value=obj.default_value,
             label=obj.label,
             options=[EnumOptionOutput.from_obj(opt) for opt in obj.options],
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -263,6 +270,7 @@ class EnumMultiCustomFieldOutput(BaseCustomFieldOutput[m.EnumMultiCustomField]):
             default_value=obj.default_value,
             label=obj.label,
             options=[EnumOptionOutput.from_obj(opt) for opt in obj.options],
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -285,6 +293,7 @@ class StateCustomFieldOutput(BaseCustomFieldOutput[m.StateCustomField]):
             if obj.default_value
             else None,
             label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -305,6 +314,7 @@ class VersionCustomFieldOutput(BaseCustomFieldOutput[m.VersionCustomField]):
             options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
             default_value=obj.default_value,
             label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 
@@ -325,6 +335,7 @@ class VersionMultiCustomFieldOutput(BaseCustomFieldOutput[m.VersionMultiCustomFi
             options=[VersionOptionOutput.from_obj(opt) for opt in obj.options],
             default_value=obj.default_value,
             label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
 

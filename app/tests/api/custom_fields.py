@@ -58,6 +58,7 @@ async def __create_custom_field_group(
                     'label': 'default',
                     **custom_field_payload,
                     **options_payload,
+                    'projects': [],
                 }
             ],
         },
@@ -114,6 +115,7 @@ async def _create_custom_field_enum(
                 'gid': field_data['gid'],
                 'label': 'default',
                 **custom_field_payload,
+                'projects': [],
             },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
@@ -166,6 +168,7 @@ async def _create_custom_field_state(
                 'gid': field_data['gid'],
                 'label': 'default',
                 **custom_field_payload,
+                'projects': [],
             },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
@@ -218,6 +221,7 @@ async def _create_custom_field_version(
                 'gid': field_data['gid'],
                 'label': 'default',
                 **custom_field_payload,
+                'projects': [],
             },
         }, f'{data_=}'
         opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)

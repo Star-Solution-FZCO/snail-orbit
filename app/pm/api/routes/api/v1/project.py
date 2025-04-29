@@ -484,6 +484,7 @@ async def get_available_select_fields(
     q = m.CustomField.find(
         bo.NotIn(m.CustomField.id, [field.id for field in project.custom_fields]),
         with_children=True,
+        fetch_links=True,
     ).sort(m.CustomField.name)
     if query.search:
         q = q.find(bo.RegEx(m.CustomField.name, query.search, 'i'))
@@ -533,10 +534,9 @@ async def remove_field(
     )
     if not field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found')
-    try:
-        project.custom_fields.remove(field)
-    except ValueError as err:
-        raise HTTPException(HTTPStatus.CONFLICT, 'Field not found in project') from err
+    if not any(cf.id == field_id for cf in project.custom_fields):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found in project')
+    project.custom_fields = [cf for cf in project.custom_fields if cf.id != field.id]
     try:
         project.card_fields.remove(field.id)
     except ValueError:

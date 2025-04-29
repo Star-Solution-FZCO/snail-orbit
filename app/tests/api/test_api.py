@@ -832,6 +832,7 @@ async def test_api_v1_custom_field_get_list_update(
         'gid': create_custom_field['gid'],
         'label': 'default',
         **custom_field_payload,
+        'projects': [],
     }
     if custom_field_payload['type'] in (
         'enum',

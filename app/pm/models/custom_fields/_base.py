@@ -1,12 +1,15 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import beanie.operators as bo
-from beanie import Document, PydanticObjectId
-from pydantic import BaseModel
+from beanie import BackLink, Document, PydanticObjectId
+from pydantic import BaseModel, Field
 
 from pm.models._audit import audited_model
+
+if TYPE_CHECKING:
+    from pm.models.project import Project
 
 __all__ = (
     'CustomFieldTypeT',
@@ -72,6 +75,8 @@ class CustomField(Document):
     label: str
     is_nullable: bool = True
     default_value: Any | None = None
+
+    projects: list[BackLink['Project']] = Field(original_field='custom_fields')
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
