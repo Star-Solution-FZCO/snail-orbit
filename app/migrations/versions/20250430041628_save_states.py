@@ -18,7 +18,10 @@ def _get_latest_field_change(
         issue.get('history', []), key=lambda h: h['time'], reverse=True
     ):
         for change in record.get('changes', []):
-            field_id = change.get('field', {}).get('id', None)
+            field = change.get('field')
+            if not field or not isinstance(field, dict):
+                continue
+            field_id = field.get('id', None)
             if field_id and field_id in field_ids:
                 return record['time']
     return None
