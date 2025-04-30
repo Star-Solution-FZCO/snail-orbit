@@ -27,6 +27,12 @@ repos:
         pass_filenames: false
         entry: yarn --cwd frontend prettier
         files: '^frontend/'
+      - id: gen-openapi-schema
+        name: gen-openapi-schema
+        language: system
+        pass_filenames: false
+        entry: python3 app/manage.py api openapi gen -o app/openapi.json
+        types_or: [ python, pyi ]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:

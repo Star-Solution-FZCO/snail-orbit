@@ -60,6 +60,7 @@ httpx = "*"
 pyfakefs = "*"
 pytest-cov = "*"
 pre-commit = "*"
+deepdiff = "*"
 
 [tool.poetry.group.ocr]
 optional = true

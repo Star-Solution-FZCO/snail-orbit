@@ -867,6 +867,25 @@ test = ["certifi (>=2024)", "cryptography-vectors (==44.0.2)", "pretend (>=0.7)"
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "deepdiff"
+version = "8.4.2"
+description = "Deep Difference and Search of any Python object/data. Recreate objects by adding adding deltas to each other."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "deepdiff-8.4.2-py3-none-any.whl", hash = "sha256:7e39e5b26f3747c54f9d0e8b9b29daab670c3100166b77cc0185d5793121b099"},
+    {file = "deepdiff-8.4.2.tar.gz", hash = "sha256:5c741c0867ebc7fcb83950ad5ed958369c17f424e14dee32a11c56073f4ee92a"},
+]
+
+[package.dependencies]
+orderly-set = ">=5.3.0,<6"
+
+[package.extras]
+cli = ["click (==8.1.8)", "pyyaml (==6.0.2)"]
+optimize = ["orjson"]
+
+[[package]]
 name = "dill"
 version = "0.4.0"
 description = "serialize all of Python"
@@ -2206,6 +2225,18 @@ files = [
 
 [package.dependencies]
 numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
+
+[[package]]
+name = "orderly-set"
+version = "5.4.0"
+description = "Orderly set"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "orderly_set-5.4.0-py3-none-any.whl", hash = "sha256:f0192a7f9ae3385b587b71688353fae491d1ca45878496eb71ea118be1623639"},
+    {file = "orderly_set-5.4.0.tar.gz", hash = "sha256:c8ff5ba824abe4eebcbbdd3f646ff3648ad0dd52239319d90056d8d30b6cccdd"},
+]
 
 [[package]]
 name = "packaging"
@@ -5183,4 +5214,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "bc4c957d4db5afa24966c6334ccea093b77cfe92edd9ffe5b760fe5e9b5c1f71"
+content-hash = "b12f9a33adc19773547fd1be3814e9b8c14bd6b22fa43d3b69a028fb22b0af25"
