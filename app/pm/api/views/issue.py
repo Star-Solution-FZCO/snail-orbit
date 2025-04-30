@@ -160,6 +160,8 @@ class IssueOutput(BaseModel):
     updated_at: datetime | None
     is_resolved: bool
     resolved_at: datetime | None
+    is_closed: bool
+    closed_at: datetime | None
     interlinks: list[IssueInterlinkOutput]
     tags: list[TagLinkOutput]
 
@@ -183,6 +185,8 @@ class IssueOutput(BaseModel):
             updated_at=obj.updated_at,
             is_resolved=obj.is_resolved,
             resolved_at=obj.resolved_at,
+            is_closed=obj.is_closed,
+            closed_at=obj.closed_at,
             interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
             tags=[TagLinkOutput.from_obj(tag) for tag in obj.tags],
         )
