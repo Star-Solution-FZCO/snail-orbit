@@ -24,7 +24,7 @@ import {
     useAppDispatch,
     useAppSelector,
 } from "shared/model";
-import { Link } from "shared/ui";
+import { IssueLink } from "shared/ui/issue_link";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
 
@@ -107,27 +107,27 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
                 minHeight="32px"
                 fontSize={14}
             >
-                <Link
+                <IssueLink
                     to="/issues/$issueId/$subject"
                     params={{
                         issueId: issue.id_readable,
                         subject: slugify(issue.subject),
                     }}
-                    underline="hover"
+                    resolved={issue.is_resolved}
+                    lineThrough={issue.is_resolved}
                 >
                     {issue.id_readable}
-                </Link>
-
-                <Link
+                </IssueLink>
+                <IssueLink
                     to="/issues/$issueId/$subject"
                     params={{
                         issueId: issue.id_readable,
                         subject: slugify(issue.subject),
                     }}
-                    underline="hover"
+                    resolved={issue.is_resolved}
                 >
                     {issue.subject}
-                </Link>
+                </IssueLink>
             </Box>
 
             <Box display="flex" alignItems="center" gap={1}>

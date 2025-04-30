@@ -32,6 +32,7 @@ export type IssueT = {
     attachments: AttachmentT[];
     aliases: string[];
     is_resolved: boolean;
+    is_closed: boolean;
     is_subscribed: boolean;
     tags: TagShortT[];
     created_by: BasicUserT;
@@ -39,6 +40,7 @@ export type IssueT = {
     updated_by: BasicUserT | null;
     updated_at: string | null;
     resolved_at: string | null;
+    closed_at: string | null;
     interlinks: IssueLinkT[];
 };
 
@@ -61,7 +63,7 @@ export type IssueActivityTypeT = "comment" | "spent_time" | "history";
 
 export type IssueLinkFieldT = Pick<
     IssueT,
-    "id" | "aliases" | "subject" | "id_readable"
+    "id" | "aliases" | "subject" | "id_readable" | "is_resolved" | "is_closed"
 >;
 
 export const linkTypes = [
