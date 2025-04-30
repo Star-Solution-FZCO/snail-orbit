@@ -1385,7 +1385,15 @@ async def test_api_v1_issue_link(
         assert len(data['payload']['interlinks']) == 1
         assert data['payload']['interlinks'][0]['type'] == link_type[0]
         assert data['payload']['interlinks'][0]['issue'] == filter_dict(
-            issues[1], include_keys={'id', 'aliases', 'subject', 'id_readable'}
+            issues[1],
+            include_keys={
+                'id',
+                'aliases',
+                'subject',
+                'id_readable',
+                'is_closed',
+                'is_resolved',
+            },
         )
         interlink_id = data['payload']['interlinks'][0]['id']
 
@@ -1399,7 +1407,15 @@ async def test_api_v1_issue_link(
         assert len(data['payload']['interlinks']) == 1
         assert data['payload']['interlinks'][0]['type'] == link_type[1]
         assert data['payload']['interlinks'][0]['issue'] == filter_dict(
-            issues[0], include_keys={'id', 'aliases', 'subject', 'id_readable'}
+            issues[0],
+            include_keys={
+                'id',
+                'aliases',
+                'subject',
+                'id_readable',
+                'is_closed',
+                'is_resolved',
+            },
         )
         assert data['payload']['interlinks'][0]['id'] == interlink_id
 

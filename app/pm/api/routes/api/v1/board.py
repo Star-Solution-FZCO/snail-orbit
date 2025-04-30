@@ -557,7 +557,6 @@ async def move_issue(
         after_issue = None
     if issue.is_changed:
         pr = await issue.get_project(fetch_links=True)
-        await update_tags_on_close_resolve(issue)
         try:
             for wf in pr.workflows:
                 await wf.run(issue)
@@ -567,6 +566,8 @@ async def move_issue(
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             ) from err
+        issue.update_state(now=now)
+        await update_tags_on_close_resolve(issue)
         issue.gen_history_record(user_ctx.user, time=now)
         issue.updated_at = now
         issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)

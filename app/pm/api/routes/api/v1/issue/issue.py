@@ -426,6 +426,7 @@ async def create_issue_from_draft(
             error_fields=err.fields_errors,
         ) from err
     obj.aliases.append(await project.get_new_issue_alias())
+    obj.update_state(now=now)
     await obj.insert()
     await draft.delete()
     await send_event(
@@ -525,6 +526,7 @@ async def create_issue(
             error_fields=err.fields_errors,
         ) from err
     obj.aliases.append(await project.get_new_issue_alias())
+    obj.update_state(now=now)
     await obj.insert()
     await send_event(
         Event(
@@ -621,7 +623,6 @@ async def update_issue(
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
-    await update_tags_on_close_resolve(obj)
     try:
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
@@ -632,6 +633,8 @@ async def update_issue(
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         ) from err
+    obj.update_state(now=now)
+    await update_tags_on_close_resolve(obj)
     if move_to_another_project:
         if existing_alias := obj.get_alias_by_slug(project.slug):
             obj.aliases.remove(existing_alias)

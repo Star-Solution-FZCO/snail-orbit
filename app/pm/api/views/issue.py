@@ -119,6 +119,8 @@ class IssueLinkFieldOutput(BaseModel):
     aliases: list[str]
     subject: str
     id_readable: str
+    is_resolved: bool
+    is_closed: bool
 
     @classmethod
     def from_obj(cls, obj: m.IssueLinkField) -> Self:
@@ -127,6 +129,8 @@ class IssueLinkFieldOutput(BaseModel):
             aliases=obj.aliases,
             subject=obj.subject,
             id_readable=obj.id_readable,
+            is_resolved=obj.is_resolved,
+            is_closed=obj.is_closed,
         )
 
 

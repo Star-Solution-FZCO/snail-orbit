@@ -77,6 +77,8 @@ class IssueLinkField(BaseModel):
     id: PydanticObjectId
     aliases: list[str]
     subject: str
+    is_resolved: bool
+    is_closed: bool
 
     @property
     def id_readable(self) -> str:
@@ -88,6 +90,8 @@ class IssueLinkField(BaseModel):
             id=obj.id,
             aliases=obj.aliases,
             subject=obj.subject,
+            is_resolved=obj.is_resolved,
+            is_closed=obj.is_closed,
         )
 
 
@@ -178,33 +182,20 @@ class Issue(DocumentWithReadOnlyProjection):
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]
     encryption: list[EncryptionMeta] | None = None
 
+    resolved_at: datetime | None = None
+    closed_at: datetime | None = None
+
     @property
     def id_readable(self) -> str:
         return self.aliases[-1] if self.aliases else str(self.id)
 
     @property
-    def resolved_at(self) -> datetime | None:
-        if not (resolved_state_ids := self._find_resolved_states()):
-            return None
-        if not (change := self._get_latest_field_change_record(resolved_state_ids)):
-            return self.created_at
-        return change.time
-
-    @property
-    def closed_at(self) -> datetime | None:
-        if not (closed_state_ids := self._find_closed_states()):
-            return None
-        if not (change := self._get_latest_field_change_record(closed_state_ids)):
-            return self.created_at
-        return change.time
-
-    @property
     def is_resolved(self) -> bool:
-        return bool(self._find_resolved_states())
+        return bool(self.resolved_at)
 
     @property
     def is_closed(self) -> bool:
-        return bool(self._find_closed_states())
+        return bool(self.closed_at)
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -438,48 +429,26 @@ class Issue(DocumentWithReadOnlyProjection):
             else (latest_history, latest_history.time)
         )
 
-    def _get_latest_field_change_record(
-        self,
-        field_id: PydanticObjectId | set[PydanticObjectId],
-    ) -> IssueHistoryRecord | None:
-        if isinstance(field_id, PydanticObjectId):
-            field_ids = {field_id}
-        else:
-            field_ids = field_id
-        for record in sorted(self.history, key=lambda h: h.time, reverse=True):
-            for change in record.changes:
-                if (
-                    isinstance(change.field, CustomFieldLink)
-                    and change.field.id in field_ids
-                ):
-                    return record
-        return None
+    def update_state(self, now: datetime | None = None) -> None:
+        now = now or utcnow()
+        state_fields = [
+            field for field in self.fields if field.type == CustomFieldTypeT.STATE
+        ]
+        is_resolved = bool(state_fields) and all(
+            (field.value and field.value.is_resolved) for field in state_fields
+        )
+        if not is_resolved:
+            self.resolved_at = None
+        elif not self.is_resolved:
+            self.resolved_at = now
 
-    def _find_resolved_states(self) -> set[PydanticObjectId] | None:
-        state_fields = set()
-
-        for field in self.fields:
-            if field.type != CustomFieldTypeT.STATE:
-                continue
-            if field.value and field.value.is_resolved:
-                state_fields.add(field.id)
-                continue
-            return None
-
-        return state_fields
-
-    def _find_closed_states(self) -> set[PydanticObjectId] | None:
-        state_fields = set()
-
-        for field in self.fields:
-            if field.type != CustomFieldTypeT.STATE:
-                continue
-            if field.value and field.value.is_closed:
-                state_fields.add(field.id)
-                continue
-            return None
-
-        return state_fields
+        is_closed = bool(state_fields) and all(
+            (field.value and field.value.is_closed) for field in state_fields
+        )
+        if not is_closed:
+            self.closed_at = None
+        elif not self.is_closed:
+            self.closed_at = now
 
 
 @audited_model

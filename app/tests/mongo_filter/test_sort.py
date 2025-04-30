@@ -1909,22 +1909,7 @@ async def test_sort_transformation(
                 {
                     '$and': [
                         {'subject': {'$regex': 'Test', '$options': 'i'}},
-                        {
-                            '$nor': [
-                                {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                                {
-                                    'fields': {
-                                        '$elemMatch': {
-                                            'type': 'state',
-                                            '$or': [
-                                                {'value': None},
-                                                {'value.is_resolved': False},
-                                            ],
-                                        }
-                                    }
-                                },
-                            ]
-                        },
+                        {'resolved_at': {'$ne': None}},
                     ]
                 },
                 [{'$sort': {'created_at': -1}}],

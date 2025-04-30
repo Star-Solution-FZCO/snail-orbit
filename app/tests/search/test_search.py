@@ -1614,22 +1614,7 @@ SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         '#unresolved high priority',
         {
             '$and': [
-                {
-                    '$or': [
-                        {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                        {
-                            'fields': {
-                                '$elemMatch': {
-                                    'type': 'state',
-                                    '$or': [
-                                        {'value': None},
-                                        {'value.is_resolved': False},
-                                    ],
-                                }
-                            }
-                        },
-                    ]
-                },
+                {'resolved_at': None},
                 {'$text': {'$search': 'high priority'}},
             ]
         },
@@ -1639,22 +1624,7 @@ SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         '#resolved needs verification',
         {
             '$and': [
-                {
-                    '$nor': [
-                        {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                        {
-                            'fields': {
-                                '$elemMatch': {
-                                    'type': 'state',
-                                    '$or': [
-                                        {'value': None},
-                                        {'value.is_resolved': False},
-                                    ],
-                                }
-                            }
-                        },
-                    ]
-                },
+                {'resolved_at': {'$ne': None}},
                 {'$text': {'$search': 'needs verification'}},
             ]
         },
@@ -2291,22 +2261,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
                             },
                         ],
                     },
-                    {
-                        '$or': [
-                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                            {
-                                'fields': {
-                                    '$elemMatch': {
-                                        'type': 'state',
-                                        '$or': [
-                                            {'value': None},
-                                            {'value.is_resolved': False},
-                                        ],
-                                    }
-                                }
-                            },
-                        ]
-                    },
+                    {'resolved_at': None},
                 ],
             },
             id='state open and (priority high or state closed) unresolved',
@@ -2419,41 +2374,14 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         ),
         pytest.param(
             '#resolved',
-            {
-                '$nor': [
-                    {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                    {
-                        'fields': {
-                            '$elemMatch': {
-                                'type': 'state',
-                                '$or': [{'value': None}, {'value.is_resolved': False}],
-                            }
-                        }
-                    },
-                ]
-            },
+            {'resolved_at': {'$ne': None}},
             id='resolved hashtag',
         ),
         pytest.param(
             '#resolved OR Date: 2024-12-12..inf',
             {
                 '$or': [
-                    {
-                        '$nor': [
-                            {'fields': {'$not': {'$elemMatch': {'type': 'state'}}}},
-                            {
-                                'fields': {
-                                    '$elemMatch': {
-                                        'type': 'state',
-                                        '$or': [
-                                            {'value': None},
-                                            {'value.is_resolved': False},
-                                        ],
-                                    }
-                                }
-                            },
-                        ]
-                    },
+                    {'resolved_at': {'$ne': None}},
                     {
                         'fields': {
                             '$elemMatch': {
