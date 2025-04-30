@@ -76,7 +76,7 @@ def check_openapi(args: argparse.Namespace) -> None:
             return
         raise ValueError('OpenAPI schema mismatch')
 
-    diff = deepdiff.DeepDiff(openapi_schema, data)
+    diff = deepdiff.DeepDiff(data, openapi_schema)
     if not diff:
         return
     raise ValueError(f'OpenAPI schema mismatch:\n{diff.pretty()}')
