@@ -8,7 +8,11 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import current_user
 
-from .custom_fields import CustomFieldLinkOutput
+from .custom_fields import (
+    CustomFieldLinkOutput,
+    CustomFieldValueOutputRootModel,
+    cf_value_output_cls_from_type,
+)
 from .tag import TagLinkOutput
 from .user import UserOutput
 
@@ -20,7 +24,6 @@ __all__ = (
     'IssueCommentOutput',
     'IssueHistoryOutput',
     'ProjectField',
-    'CustomFieldValueOut',
     'CustomFieldValueOutT',
     'transform_custom_field_value',
 )
@@ -96,24 +99,6 @@ def transform_custom_field_value(
     return value
 
 
-class CustomFieldValueOut(BaseModel):
-    id: PydanticObjectId
-    gid: str
-    name: str
-    type: m.CustomFieldTypeT
-    value: CustomFieldValueOutT = None
-
-    @classmethod
-    def from_obj(cls, obj: m.CustomFieldValue) -> Self:
-        return cls(
-            id=obj.id,
-            gid=obj.gid,
-            name=obj.name,
-            type=obj.type,
-            value=transform_custom_field_value(obj.value, obj),
-        )
-
-
 class IssueLinkFieldOutput(BaseModel):
     id: PydanticObjectId
     aliases: list[str]
@@ -154,7 +139,7 @@ class IssueOutput(BaseModel):
     project: ProjectField
     subject: str
     text: str | None
-    fields: dict[str, CustomFieldValueOut]
+    fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     is_subscribed: bool
     id_readable: str
@@ -179,7 +164,8 @@ class IssueOutput(BaseModel):
             subject=obj.subject,
             text=obj.text,
             fields={
-                field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
+                field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
+                for field in obj.fields
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
             is_subscribed=current_user().user.id in obj.subscribers,
@@ -201,7 +187,7 @@ class IssueDraftOutput(BaseModel):
     project: ProjectField | None
     subject: str | None
     text: str | None
-    fields: dict[str, CustomFieldValueOut]
+    fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     created_at: datetime
     created_by: UserOutput
@@ -214,7 +200,8 @@ class IssueDraftOutput(BaseModel):
             subject=obj.subject,
             text=obj.text,
             fields={
-                field.name: CustomFieldValueOut.from_obj(field) for field in obj.fields
+                field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
+                for field in obj.fields
             },
             attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
             created_at=obj.created_at,

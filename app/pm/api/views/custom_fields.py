@@ -29,8 +29,10 @@ __all__ = (
     'CustomFieldSelectOptionsT',
     'ShortOptionOutput',
     'CustomFieldGroupSelectOptionsT',
+    'CustomFieldValueOutputRootModel',
     'cf_output_from_obj',
     'cf_group_output_cls_from_type',
+    'cf_value_output_cls_from_type',
 )
 
 
@@ -570,3 +572,155 @@ class ShortOptionOutput(BaseModel):
 
 
 CustomFieldGroupSelectOptionsT = UserOutput | ShortOptionOutput
+
+
+class BaseCustomFieldValueOutput(BaseModel, ABC):
+    id: PydanticObjectId
+    gid: str
+    name: str
+    type: m.CustomFieldTypeT
+    value: Any | None
+
+    @classmethod
+    def from_obj(cls, obj: m.CustomFieldValue) -> Self:
+        return cls(
+            id=obj.id,
+            gid=obj.gid,
+            name=obj.name,
+            type=obj.type,
+            value=cls.transform_value(obj),
+        )
+
+    @classmethod
+    def transform_value(cls, obj: m.CustomFieldValue) -> Any:
+        return obj.value
+
+
+class StringCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.STRING] = m.CustomFieldTypeT.STRING
+    value: str | None
+
+
+class IntegerCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.INTEGER] = m.CustomFieldTypeT.INTEGER
+    value: int | None
+
+
+class FloatCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.FLOAT] = m.CustomFieldTypeT.FLOAT
+    value: float | None
+
+
+class BooleanCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.BOOLEAN] = m.CustomFieldTypeT.BOOLEAN
+    value: bool | None
+
+
+class DateCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.DATE] = m.CustomFieldTypeT.DATE
+    value: date | None
+
+    @classmethod
+    def transform_value(cls, obj: m.CustomFieldValue) -> Any:
+        return obj.value.date() if isinstance(obj.value, datetime) else obj.value
+
+
+class DateTimeCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
+    value: datetime | None
+
+
+class UserCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
+    value: UserOutput | None
+
+    @classmethod
+    def transform_value(cls, obj: m.CustomFieldValue) -> Any:
+        if isinstance(obj.value, m.UserLinkField):
+            return UserOutput.from_obj(obj.value)
+        return obj.value
+
+
+class UserMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.USER_MULTI] = m.CustomFieldTypeT.USER_MULTI
+    value: list[UserOutput] | None
+
+    @classmethod
+    def transform_value(cls, obj: m.CustomFieldValue) -> Any:
+        if isinstance(obj.value, list):
+            return [
+                UserOutput.from_obj(v) if isinstance(v, m.UserLinkField) else v
+                for v in obj.value
+            ]
+        return obj.value
+
+
+class EnumCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.ENUM] = m.CustomFieldTypeT.ENUM
+    value: m.EnumOption | None
+
+
+class EnumMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
+    value: list[m.EnumOption] | None
+
+
+class StateCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
+    value: m.StateOption | None
+
+
+class VersionCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.VERSION] = m.CustomFieldTypeT.VERSION
+    value: m.VersionOption | None
+
+
+class VersionMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = m.CustomFieldTypeT.VERSION_MULTI
+    value: list[m.VersionOption] | None
+
+
+CustomFieldValueOutputT = (
+    StringCustomFieldValueOutput
+    | IntegerCustomFieldValueOutput
+    | FloatCustomFieldValueOutput
+    | BooleanCustomFieldValueOutput
+    | DateCustomFieldValueOutput
+    | DateTimeCustomFieldValueOutput
+    | UserCustomFieldValueOutput
+    | UserMultiCustomFieldValueOutput
+    | EnumCustomFieldValueOutput
+    | EnumMultiCustomFieldValueOutput
+    | StateCustomFieldValueOutput
+    | VersionCustomFieldValueOutput
+    | VersionMultiCustomFieldValueOutput
+)
+
+
+class CustomFieldValueOutputRootModel(RootModel):
+    root: Annotated[CustomFieldValueOutputT, Field(..., discriminator='type')]
+
+
+CF_VALUE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldValueOutputT]] = {
+    m.CustomFieldTypeT.STRING: StringCustomFieldValueOutput,
+    m.CustomFieldTypeT.INTEGER: IntegerCustomFieldValueOutput,
+    m.CustomFieldTypeT.FLOAT: FloatCustomFieldValueOutput,
+    m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldValueOutput,
+    m.CustomFieldTypeT.DATE: DateCustomFieldValueOutput,
+    m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldValueOutput,
+    m.CustomFieldTypeT.USER: UserCustomFieldValueOutput,
+    m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldValueOutput,
+    m.CustomFieldTypeT.ENUM: EnumCustomFieldValueOutput,
+    m.CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomFieldValueOutput,
+    m.CustomFieldTypeT.STATE: StateCustomFieldValueOutput,
+    m.CustomFieldTypeT.VERSION: VersionCustomFieldValueOutput,
+    m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldValueOutput,
+}
+
+
+def cf_value_output_cls_from_type(
+    type_: m.CustomFieldTypeT,
+) -> type[CustomFieldValueOutputT]:
+    if not (output_class := CF_VALUE_OUTPUT_MAP.get(type_)):
+        raise ValueError(f'Unsupported custom field type: {type_}')
+    return output_class

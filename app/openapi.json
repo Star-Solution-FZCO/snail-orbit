@@ -13433,6 +13433,48 @@
         ],
         "title": "BooleanCustomFieldOutput"
       },
+      "BooleanCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "boolean",
+            "title": "Type",
+            "default": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "BooleanCustomFieldValueOutput"
+      },
       "ColumnOutput": {
         "properties": {
           "field_value": {
@@ -13914,93 +13956,67 @@
         "type": "object",
         "title": "CustomFieldUpdateBody"
       },
-      "CustomFieldValueOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "example": "5eb7cf5a86d9755df3a6c593"
+      "CustomFieldValueOutputRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/StringCustomFieldValueOutput"
           },
-          "gid": {
-            "type": "string",
-            "title": "Gid"
+          {
+            "$ref": "#/components/schemas/IntegerCustomFieldValueOutput"
           },
-          "name": {
-            "type": "string",
-            "title": "Name"
+          {
+            "$ref": "#/components/schemas/FloatCustomFieldValueOutput"
           },
-          "type": {
-            "$ref": "#/components/schemas/CustomFieldTypeT"
+          {
+            "$ref": "#/components/schemas/BooleanCustomFieldValueOutput"
           },
-          "value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
+          {
+            "$ref": "#/components/schemas/DateCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/DateTimeCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/UserCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/UserMultiCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/EnumCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/EnumMultiCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/StateCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/VersionCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/VersionMultiCustomFieldValueOutput"
           }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "gid",
-          "name",
-          "type"
         ],
-        "title": "CustomFieldValueOut"
+        "title": "CustomFieldValueOutputRootModel",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "boolean": "#/components/schemas/BooleanCustomFieldValueOutput",
+            "date": "#/components/schemas/DateCustomFieldValueOutput",
+            "datetime": "#/components/schemas/DateTimeCustomFieldValueOutput",
+            "enum": "#/components/schemas/EnumCustomFieldValueOutput",
+            "enum_multi": "#/components/schemas/EnumMultiCustomFieldValueOutput",
+            "float": "#/components/schemas/FloatCustomFieldValueOutput",
+            "integer": "#/components/schemas/IntegerCustomFieldValueOutput",
+            "state": "#/components/schemas/StateCustomFieldValueOutput",
+            "string": "#/components/schemas/StringCustomFieldValueOutput",
+            "user": "#/components/schemas/UserCustomFieldValueOutput",
+            "user_multi": "#/components/schemas/UserMultiCustomFieldValueOutput",
+            "version": "#/components/schemas/VersionCustomFieldValueOutput",
+            "version_multi": "#/components/schemas/VersionMultiCustomFieldValueOutput"
+          }
+        }
       },
       "DateCustomFieldGroupOutput": {
         "properties": {
@@ -14139,6 +14155,49 @@
         ],
         "title": "DateCustomFieldOutput"
       },
+      "DateCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "date",
+            "title": "Type",
+            "default": "date"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "DateCustomFieldValueOutput"
+      },
       "DateTimeCustomFieldGroupOutput": {
         "properties": {
           "gid": {
@@ -14275,6 +14334,49 @@
           "projects"
         ],
         "title": "DateTimeCustomFieldOutput"
+      },
+      "DateTimeCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "datetime",
+            "title": "Type",
+            "default": "datetime"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "DateTimeCustomFieldValueOutput"
       },
       "EncryptionKeyAlgorithmT": {
         "type": "string",
@@ -14780,6 +14882,47 @@
         ],
         "title": "EnumCustomFieldOutput"
       },
+      "EnumCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "enum",
+            "title": "Type",
+            "default": "enum"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "EnumCustomFieldValueOutput"
+      },
       "EnumMultiCustomFieldGroupOutput": {
         "properties": {
           "gid": {
@@ -14926,6 +15069,51 @@
           "options"
         ],
         "title": "EnumMultiCustomFieldOutput"
+      },
+      "EnumMultiCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "enum_multi",
+            "title": "Type",
+            "default": "enum_multi"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "EnumMultiCustomFieldValueOutput"
       },
       "EnumOption": {
         "properties": {
@@ -15235,6 +15423,48 @@
         ],
         "title": "FloatCustomFieldOutput"
       },
+      "FloatCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "float",
+            "title": "Type",
+            "default": "float"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "FloatCustomFieldValueOutput"
+      },
       "GroupCreate": {
         "properties": {
           "name": {
@@ -15519,6 +15749,48 @@
           "projects"
         ],
         "title": "IntegerCustomFieldOutput"
+      },
+      "IntegerCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "integer",
+            "title": "Type",
+            "default": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "IntegerCustomFieldValueOutput"
       },
       "IssueAttachmentOut": {
         "properties": {
@@ -15905,7 +16177,7 @@
           },
           "fields": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/CustomFieldValueOut"
+              "$ref": "#/components/schemas/CustomFieldValueOutputRootModel"
             },
             "type": "object",
             "title": "Fields"
@@ -16512,7 +16784,7 @@
           },
           "fields": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/CustomFieldValueOut"
+              "$ref": "#/components/schemas/CustomFieldValueOutputRootModel"
             },
             "type": "object",
             "title": "Fields"
@@ -18275,6 +18547,47 @@
         ],
         "title": "StateCustomFieldOutput"
       },
+      "StateCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "state",
+            "title": "Type",
+            "default": "state"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "StateCustomFieldValueOutput"
+      },
       "StateOption": {
         "properties": {
           "id": {
@@ -18599,6 +18912,48 @@
           "projects"
         ],
         "title": "StringCustomFieldOutput"
+      },
+      "StringCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "string",
+            "title": "Type",
+            "default": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "StringCustomFieldValueOutput"
       },
       "SuccessOutput": {
         "properties": {
@@ -19763,6 +20118,47 @@
         ],
         "title": "UserCustomFieldOutput"
       },
+      "UserCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "user",
+            "title": "Type",
+            "default": "user"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "UserCustomFieldValueOutput"
+      },
       "UserFullOutput": {
         "properties": {
           "id": {
@@ -20036,6 +20432,51 @@
           "users"
         ],
         "title": "UserMultiCustomFieldOutput"
+      },
+      "UserMultiCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "user_multi",
+            "title": "Type",
+            "default": "user_multi"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "UserMultiCustomFieldValueOutput"
       },
       "UserOptionCreateBody": {
         "properties": {
@@ -20365,6 +20806,47 @@
         ],
         "title": "VersionCustomFieldOutput"
       },
+      "VersionCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "version",
+            "title": "Type",
+            "default": "version"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "VersionCustomFieldValueOutput"
+      },
       "VersionMultiCustomFieldGroupOutput": {
         "properties": {
           "gid": {
@@ -20511,6 +20993,51 @@
           "options"
         ],
         "title": "VersionMultiCustomFieldOutput"
+      },
+      "VersionMultiCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "version_multi",
+            "title": "Type",
+            "default": "version_multi"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "VersionMultiCustomFieldValueOutput"
       },
       "VersionOption": {
         "properties": {
