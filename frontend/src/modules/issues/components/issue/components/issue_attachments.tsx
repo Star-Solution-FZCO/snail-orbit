@@ -5,15 +5,16 @@ import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
-import type { IssueT, SelectedAttachmentT, UpdateIssueT } from "shared/model/types";
-import { useFileUploader } from "widgets/file_upload/useFileUploader";
+import type { IssueT, SelectedAttachmentT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+import { useIssueOperations } from "../../../api/use_issue_operations";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 
 interface IIssueAttachmentsProps {
     issue: IssueT;
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
 }
 
@@ -26,30 +27,29 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
 
     const { attachments: issueAttachments, id: issueId } = issue;
 
+    const { uploadAttachment, downloadAttachment } = useIssueOperations({
+        issueId,
+    });
+
     const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
     const [selectedAttachment, setSelectedAttachment] =
         useState<SelectedAttachmentT>(initialSelectedAttachment);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-    const { uploadFile } = useFileUploader();
-
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
-            const newAttachmentIds = await Promise.all(
-                acceptedFiles.map(uploadFile),
+            const newAttachments = await Promise.all(
+                acceptedFiles.map(uploadAttachment),
             );
 
-            const updatedAttachments = [
-                ...issueAttachments.map((attachment) => attachment.id),
-                ...newAttachmentIds,
-            ];
+            const updatedAttachments = [...issueAttachments, ...newAttachments];
 
             await onUpdateIssue({
                 attachments: updatedAttachments,
             });
         },
-        [uploadFile, issueAttachments, onUpdateIssue],
+        [uploadAttachment, issueAttachments, onUpdateIssue],
     );
 
     const handlePaste = useCallback(
@@ -68,10 +68,10 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
 
                     if (!file) continue;
 
-                    const attachmentId = await uploadFile(file);
+                    const attachment = await uploadAttachment(file);
                     const updatedAttachments = [
-                        ...issueAttachments.map((attachment) => attachment.id),
-                        attachmentId,
+                        ...issueAttachments,
+                        attachment,
                     ];
 
                     await onUpdateIssue({
@@ -80,7 +80,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                 }
             }
         },
-        [uploadFile, issueAttachments, onUpdateIssue],
+        [uploadAttachment, issueAttachments, onUpdateIssue],
     );
 
     const handleClickDeleteBrowserFile = (index: number, filename: string) => {
@@ -109,9 +109,9 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
         if (selectedAttachment.type !== "server") return;
 
         onUpdateIssue({
-            attachments: issueAttachments
-                .filter((attachment) => attachment.id !== selectedAttachment.id)
-                .map((attachment) => attachment.id),
+            attachments: issueAttachments.filter(
+                (attachment) => attachment.id !== selectedAttachment.id,
+            ),
         });
 
         onUpdateCache({
@@ -207,6 +207,7 @@ const IssueAttachments: FC<IIssueAttachmentsProps> = ({
                                         attachment.name,
                                     )
                                 }
+                                onDownload={downloadAttachment}
                             />
                         ))}
 

@@ -1,23 +1,19 @@
-import { Box, Tooltip, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 import { diffWords } from "diff";
-import { t } from "i18next";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "shared/i18n";
 import type {
-    BasicCustomFieldT,
     BasicUserT,
+    CustomFieldT,
     CustomFieldValueT,
-    EnumFieldT,
     FieldBaseT,
-    FieldValueChangeT,
-    IssueHistoryT,
-    VersionFieldT,
+    VersionFieldValueT,
 } from "shared/model/types";
-import { UserAvatar } from "shared/ui";
+import type { IssueFieldChangeOutput } from "shared/model/types/backend-schema.gen";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -66,7 +62,7 @@ const renderDiff = (oldText: string, newText: string) => {
     );
 };
 
-const renderVersion = (version: VersionFieldT) => {
+const renderVersion = (version: VersionFieldValueT) => {
     return version.release_date
         ? `${version.value} (${dayjs(version.release_date).format(
               "DD MMM YYYY",
@@ -76,7 +72,7 @@ const renderVersion = (version: VersionFieldT) => {
 
 const renderValue = (
     value: CustomFieldValueT,
-    field: BasicCustomFieldT | "subject" | "text",
+    field: CustomFieldT | "subject" | "text",
 ): string => {
     if (value === null || value === undefined) {
         if (typeof field === "string") {
@@ -128,17 +124,21 @@ const renderValue = (
                 .join(", ");
 
         case "version":
-            return renderVersion(value as VersionFieldT);
+            return renderVersion(value as VersionFieldValueT);
 
         case "version_multi":
-            return (value as VersionFieldT[]).map(renderVersion).join(", ");
+            return (value as VersionFieldValueT[])
+                .map(renderVersion)
+                .join(", ");
 
         default:
             return String(value);
     }
 };
 
-const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
+export const FieldChanges: FC<{ changes: IssueFieldChangeOutput[] }> = ({
+    changes,
+}) => {
     const { t } = useTranslation();
 
     return (
@@ -187,48 +187,3 @@ const FieldChanges: FC<{ changes: FieldValueChangeT[] }> = ({ changes }) => {
         </Box>
     );
 };
-
-const IssueHistory: FC<{ record: IssueHistoryT }> = ({ record }) => {
-    return (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 2,
-                px: 1,
-                py: 0.5,
-                borderRadius: 0.5,
-                "&:hover": {
-                    backgroundColor: "action.hover",
-                },
-            }}
-        >
-            <UserAvatar src={record.author.avatar} size={32} />
-
-            <Box display="flex" flexDirection="column" fontSize={14}>
-                <Box height="24px" display="flex" alignItems="center" gap={1}>
-                    <Typography fontSize="inherit">
-                        {record.author.name}
-                    </Typography>
-
-                    <Tooltip
-                        title={dayjs
-                            .utc(record.time)
-                            .local()
-                            .format("DD MMM YYYY HH:mm")}
-                        placement="top"
-                    >
-                        <Typography fontSize="inherit" color="text.secondary">
-                            {t("issues.history.updated")}{" "}
-                            {dayjs.utc(record.time).local().fromNow()}
-                        </Typography>
-                    </Tooltip>
-                </Box>
-
-                <FieldChanges changes={record.changes} />
-            </Box>
-        </Box>
-    );
-};
-
-export { IssueHistory };

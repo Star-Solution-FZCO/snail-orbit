@@ -6,9 +6,9 @@ import { EnumChip } from "features/custom_fields/enum_chip";
 import { InputChip } from "features/custom_fields/input_chip";
 import UserChip from "features/custom_fields/user_chip";
 import type { FC } from "react";
-import type { FieldValueT } from "shared/model/types";
 import { fieldsToFieldValueMap } from "shared/model/mappers/issue";
 import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
+import type { CustomFieldValueT } from "../../../shared/model/types";
 import type { CustomFieldsChipParserProps } from "./custom_field_chip_parser.types";
 
 dayjs.extend(utc);
@@ -18,7 +18,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
     activeFields,
     onUpdateIssue,
 }) => {
-    const updateCustomFields = (key: string, value: FieldValueT) => {
+    const updateCustomFields = (key: string, value: CustomFieldValueT) => {
         onUpdateIssue({
             ...fieldsToFieldValueMap(Object.values(activeFields)),
             [key]: value,
@@ -32,18 +32,17 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                     const field = activeFields[fieldData.name];
                     switch (fieldData.type) {
                         case "enum":
-                        case "enum_multi":
+                        case "enum_multi": {
+                            const parsedField =
+                                field.type === "enum" ||
+                                field.type === "enum_multi"
+                                    ? field
+                                    : null;
                             return (
                                 <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
-                                    value={
-                                        field &&
-                                        (field.type === "enum" ||
-                                            field.type === "enum_multi")
-                                            ? field.value
-                                            : undefined
-                                    }
+                                    value={parsedField?.value || undefined}
                                     onChange={(value) => {
                                         updateCustomFields(
                                             fieldData.name,
@@ -56,9 +55,16 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     enumFieldId={fieldData.id}
                                 />
                             );
+                        }
                         case "string":
                         case "integer":
-                        case "float":
+                        case "float": {
+                            const parsedField =
+                                field.type === "string" ||
+                                field.type === "integer" ||
+                                field.type === "float"
+                                    ? field
+                                    : null;
                             return (
                                 <InputChip
                                     key={fieldData.id}
@@ -72,16 +78,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                             newValue,
                                         );
                                     }}
-                                    value={
-                                        field &&
-                                        (field.type === "string" ||
-                                            field.type === "integer" ||
-                                            field.type === "float") &&
-                                        field.value !== null &&
-                                        field.value !== undefined
-                                            ? field.value.toString()
-                                            : undefined
-                                    }
+                                    value={parsedField?.value?.toString() || ""}
                                     label={fieldData.name}
                                     id={fieldData.id}
                                     inputMode={
@@ -93,18 +90,18 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     }
                                 />
                             );
+                        }
                         case "user":
-                        case "user_multi":
+                        case "user_multi": {
+                            const parsedField =
+                                field.type === "user" ||
+                                field.type === "user_multi"
+                                    ? field
+                                    : null;
                             return (
                                 <UserChip
                                     key={fieldData.id}
-                                    value={
-                                        field &&
-                                        (field.type === "user" ||
-                                            field.type === "user_multi")
-                                            ? field?.value
-                                            : undefined
-                                    }
+                                    value={parsedField?.value || undefined}
                                     onChange={(value) => {
                                         updateCustomFields(
                                             fieldData.name,
@@ -118,17 +115,20 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     id={fieldData.id}
                                 />
                             );
+                        }
                         case "date":
-                        case "datetime":
+                        case "datetime": {
+                            const parsedField =
+                                field.type === "date" ||
+                                field.type === "datetime"
+                                    ? field
+                                    : null;
                             return (
                                 <DateChip
                                     key={fieldData.id}
                                     value={
-                                        field &&
-                                        (field.type === "date" ||
-                                            field.type === "datetime") &&
-                                        field.value
-                                            ? dayjs(field.value)
+                                        parsedField
+                                            ? dayjs(parsedField.value)
                                             : undefined
                                     }
                                     onChange={(value) => {
@@ -151,6 +151,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     }
                                 />
                             );
+                        }
                         case "boolean":
                             return (
                                 <Tooltip
@@ -172,21 +173,14 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     </FieldChip>
                                 </Tooltip>
                             );
-                        case "state":
+                        case "state": {
+                            const parsedField =
+                                field.type === "state" ? field : null;
                             return (
                                 <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
-                                    value={
-                                        field &&
-                                        field.type === "state" &&
-                                        field.value
-                                            ? {
-                                                  ...field.value,
-                                                  value: field.value.value,
-                                              }
-                                            : undefined
-                                    }
+                                    value={parsedField?.value || undefined}
                                     onChange={(value) => {
                                         updateCustomFields(
                                             fieldData.name,
@@ -198,28 +192,19 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     enumFieldId={fieldData.id}
                                 />
                             );
+                        }
                         case "version":
-                        case "version_multi":
+                        case "version_multi": {
+                            const parsedField =
+                                field.type === "version" ||
+                                field.type === "version_multi"
+                                    ? field
+                                    : null;
                             return (
                                 <EnumChip
                                     key={fieldData.id}
                                     label={fieldData.name}
-                                    value={
-                                        (field &&
-                                            field.value &&
-                                            (field.type === "version"
-                                                ? {
-                                                      ...field.value,
-                                                      value: field.value.value,
-                                                  }
-                                                : field.type === "version_multi"
-                                                  ? field.value.map((el) => ({
-                                                        ...el,
-                                                        value: el.value,
-                                                    }))
-                                                  : undefined)) ||
-                                        undefined
-                                    }
+                                    value={parsedField?.value || undefined}
                                     onChange={(value) => {
                                         updateCustomFields(
                                             fieldData.name,
@@ -231,6 +216,7 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserProps> = ({
                                     enumFieldId={fieldData.id}
                                 />
                             );
+                        }
                         default:
                             return null;
                     }

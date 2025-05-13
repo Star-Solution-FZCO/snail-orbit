@@ -1,4 +1,8 @@
-import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "shared/model/types";
+import type {
+    CustomFieldOptionT,
+    CustomFieldTypeT,
+    CustomFieldValueT,
+} from "shared/model/types";
 
 const complexCustomFieldTypes = new Set<CustomFieldTypeT>([
     "enum",
@@ -21,10 +25,14 @@ export const isPrimitive = (value: CustomFieldValueT): boolean =>
 
 export const complexValueGetter = (cfValue: CustomFieldValueT): string => {
     if (typeof cfValue === "object") {
+        // @ts-expect-error TODO: Fix types
         if ("value" in cfValue) {
+            // @ts-expect-error TODO: Fix types
             return cfValue.value;
         }
+        // @ts-expect-error TODO: Fix types
         if ("id" in cfValue) {
+            // @ts-expect-error TODO: Fix types
             return cfValue.id;
         }
     }

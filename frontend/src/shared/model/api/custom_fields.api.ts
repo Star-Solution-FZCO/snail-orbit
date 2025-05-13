@@ -2,7 +2,6 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
     ApiResponse,
     BasicUserT,
-    CreateCustomFieldGroupT,
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateStateOptionT,
@@ -21,6 +20,7 @@ import type {
     UpdateVersionOptionT,
     VersionOptionT,
 } from "shared/model/types";
+import type { CustomFieldGroupCreateBody } from "../types/backend-schema.gen";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["CustomFieldGroups", "CustomFields"];
@@ -63,7 +63,7 @@ export const customFieldsApi = createApi({
         }),
         createCustomFieldGroup: build.mutation<
             ApiResponse<CustomFieldGroupT>,
-            CreateCustomFieldGroupT
+            CustomFieldGroupCreateBody
         >({
             query: (body) => ({
                 url: "custom_field/group",

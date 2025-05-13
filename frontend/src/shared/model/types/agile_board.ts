@@ -1,17 +1,12 @@
+import type { BoardOutput, CustomFieldLinkOutput } from "./backend-schema.gen";
 import type {
     BasicCustomFieldT,
-    CustomFieldTypeT,
-    EnumFieldT,
-    StateFieldT,
-    VersionFieldT,
+    EnumFieldValueT,
+    StateFieldValueT,
+    VersionFieldValueT,
 } from "./custom_fields";
 import type { IssueT } from "./issue";
-import type {
-    PermissionT,
-    PermissionTargetT,
-    PermissionTypeT,
-} from "./permission";
-import type { BasicProjectT } from "./project";
+import type { PermissionTargetT, PermissionTypeT } from "./permission";
 
 export type ColumnT = BasicCustomFieldT;
 
@@ -40,32 +35,18 @@ export type UiSettingT = {
     columnMaxWidth?: number;
 };
 
-export type AgileBoardT = {
-    id: string;
-    name: string;
-    description: string | null;
-    query: string | null;
-    projects: BasicProjectT[];
-    columns: AgileFieldValueT[];
-    column_field: ColumnT;
-    swimlane_field: ColumnT | null;
-    swimlanes: AgileFieldValueT[];
-    card_fields: AgileBoardCardFieldT[];
-    card_colors_fields: AgileBoardCardFieldT[];
+export type AgileBoardT = Omit<BoardOutput, "ui_settings"> & {
     ui_settings: UiSettingT;
-    is_favorite: boolean;
-    permissions: PermissionT[];
 };
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
 
-export type AgileFieldValueT = EnumFieldT | StateFieldT | VersionFieldT;
+export type AgileFieldValueT =
+    | EnumFieldValueT
+    | StateFieldValueT
+    | VersionFieldValueT;
 
-export type AgileBoardCardFieldT = {
-    id: string;
-    name: string;
-    type: CustomFieldTypeT;
-};
+export type AgileBoardCardFieldT = CustomFieldLinkOutput;
 
 export type AgileColumnT = {
     field_value: AgileFieldValueT | null;

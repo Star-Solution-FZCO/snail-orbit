@@ -1,5 +1,5 @@
 import EditIcon from "@mui/icons-material/Edit";
-
+import LockIcon from "@mui/icons-material/Lock";
 import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
@@ -11,13 +11,19 @@ type IssueHeadingProps = {
     issue: IssueT;
     onEditClick?: () => unknown;
     hideSubscribeButton?: boolean;
+    isEncrypted?: boolean;
 };
 
 export const IssueHeading: FC<IssueHeadingProps> = (props) => {
-    const { issue, onEditClick, hideSubscribeButton } = props;
+    const { issue, onEditClick, hideSubscribeButton, isEncrypted } = props;
 
     return (
-        <Stack flexDirection="row" gap={1} position="relative">
+        <Stack
+            flexDirection="row"
+            gap={1}
+            position="relative"
+            justifyContent="space-between"
+        >
             {!hideSubscribeButton && (
                 <Box
                     position="absolute"
@@ -31,17 +37,20 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
                 </Box>
             )}
 
-            <Typography
+            <Stack
+                direction="row"
+                alignItems="center"
+                gap={1}
                 sx={{
                     wordBreak: "break-word",
                     color: issue.is_resolved ? "text.disabled" : "inherit",
                 }}
-                fontSize={24}
-                fontWeight="bold"
-                flex={1}
             >
-                {issue.subject}
-            </Typography>
+                <Typography fontSize={24} fontWeight="bold" flex={1}>
+                    {issue.subject}
+                </Typography>
+                {isEncrypted ? <LockIcon fontSize="small" /> : null}
+            </Stack>
 
             <Stack flexDirection="row" alignItems="flex-start" gap={1}>
                 <Tooltip title={t("issues.heading.edit")} onClick={onEditClick}>

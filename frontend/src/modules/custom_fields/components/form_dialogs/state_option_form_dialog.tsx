@@ -13,10 +13,11 @@ import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import type { StateOptionT } from "shared/model/types";
+import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import * as yup from "yup";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const stateOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     color: yup.string().nullable().default(null),
@@ -49,7 +50,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         handleSubmit,
         reset,
         formState: { errors, isDirty },
-    } = useForm({
+    } = useForm<StateOptionFormData>({
         defaultValues: defaultValues || {
             value: "",
             color: "#ccc",
@@ -70,7 +71,14 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
     }, [open, defaultValues, reset]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="xs"
+            fullWidth
+            onSubmit={handleSubmit(onSubmit)}
+            component="form"
+        >
             <DialogTitle>
                 {t(
                     defaultValues
@@ -89,6 +97,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                         variant="outlined"
                         size="small"
                         fullWidth
+                        autoFocus
                     />
 
                     <Controller
@@ -157,7 +166,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                 </Button>
 
                 <Button
-                    onClick={handleSubmit(onSubmit)}
+                    type="submit"
                     variant="outlined"
                     size="small"
                     loading={loading}

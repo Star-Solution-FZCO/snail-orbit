@@ -16,6 +16,7 @@ import {
     useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi } from "shared/model";
 import type {
     AgileBoardT,
     BasicUserT,
@@ -23,7 +24,6 @@ import type {
     StateOptionT,
     VersionOptionT,
 } from "shared/model/types";
-import { customFieldsApi } from "shared/model";
 import { useListQueryParams } from "shared/utils";
 import { getFieldValue } from "../../../utils/normalizeFieldValue";
 
@@ -155,6 +155,7 @@ export const ColumnsForm: FC = () => {
                     setSelectInput("");
                     if (option)
                         append({
+                            id: "id" in option ? option.id : option.uuid,
                             value: getOptionValue(option),
                             color:
                                 "color" in option

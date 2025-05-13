@@ -1,5 +1,12 @@
 import type { ComponentProps, FC } from "react";
 import { memo, useCallback, useMemo } from "react";
+import type {
+    AgileBoardCardFieldT,
+    CustomFieldValueT,
+    IssueT,
+    UiSettingT,
+} from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import IssueCard from "shared/ui/agile/issue_card/issue_card";
 import {
     IssueCardBody,
@@ -7,13 +14,6 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { IssueLink } from "shared/ui/issue_link";
-import type {
-    AgileBoardCardFieldT,
-    FieldValueT,
-    IssueT,
-    UiSettingT,
-    UpdateIssueT,
-} from "shared/model/types";
 import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 
 export type IssueCardProps = {
@@ -23,7 +23,7 @@ export type IssueCardProps = {
     cardColorFields: AgileBoardCardFieldT[];
     onUpdateIssue: (
         issueId: string,
-        issueValues: UpdateIssueT,
+        issueValues: IssueUpdate,
     ) => Promise<void> | void;
 } & ComponentProps<typeof IssueCard>;
 
@@ -40,7 +40,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
         const { minCardHeight } = cardSetting;
 
         const handleUpdateIssue = useCallback(
-            (fields: Record<string, FieldValueT>) =>
+            (fields: Record<string, CustomFieldValueT>) =>
                 onUpdateIssue(id_readable, { fields }),
             [id_readable, onUpdateIssue],
         );
@@ -49,7 +49,9 @@ export const AgileCard: FC<IssueCardProps> = memo(
             return cardColorFields
                 .map(({ name }) => issue.fields[name])
                 .map((field) =>
-                    (field && field.type === "enum") || field.type === "state"
+                    field &&
+                    (field.type === "enum" || field.type === "state") &&
+                    field.value
                         ? field.value.color
                         : "inherit",
                 )

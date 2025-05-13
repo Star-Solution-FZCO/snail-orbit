@@ -1,15 +1,15 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import type { EnumFieldT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
 import { cardLabelGetter, getEnumColorAdornment } from "./utils";
 
 type EnumFieldProps = {
-    value?: EnumFieldT | EnumFieldT[];
-    onChange: (value: EnumFieldT | EnumFieldT[]) => void;
+    value?: EnumFieldValueT | EnumFieldValueT[];
+    onChange: (value: EnumFieldValueT | EnumFieldValueT[]) => void;
     label: string;
     id: string;
     multiple?: boolean;
@@ -36,12 +36,14 @@ export const EnumField: FC<EnumFieldProps> = ({
     };
 
     const items = useMemo(() => {
-        return (data?.payload.items || []) as EnumFieldT[];
+        return ((data?.payload.items || []) as EnumOptionT[]).map(
+            ({ uuid, ...rest }) => ({ ...rest, id: uuid }),
+        );
     }, [data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent,
-        value: EnumFieldT | EnumFieldT[] | null,
+        value: EnumFieldValueT | EnumFieldValueT[] | null,
     ) => {
         if (!value) return undefined;
         onChange?.(value);
@@ -51,7 +53,7 @@ export const EnumField: FC<EnumFieldProps> = ({
         if (rightAdornment) return rightAdornment;
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
-        if (targetValue.color)
+        if (targetValue && targetValue.color)
             return (
                 <ColorAdornment
                     color={targetValue.color}
@@ -62,7 +64,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     }, [value, rightAdornment]);
 
     return (
-        <SelectField
+        <SelectField<EnumFieldValueT, typeof multiple, true>
             loading={isLoading}
             options={items}
             value={value}

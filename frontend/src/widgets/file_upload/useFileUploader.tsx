@@ -25,14 +25,14 @@ export const useFileUploader = () => {
     const [uploadAttachment] = sharedApi.useUploadAttachmentMutation();
 
     const uploadFile = useCallback(
-        async (file: File) => {
+        async (file: File | Blob, fileName: string) => {
             const formData = new FormData();
-            formData.append("file", file);
-            showToast(file.name);
+            formData.append("file", file, fileName);
+            showToast(fileName);
 
             try {
                 const mutation = uploadAttachment(formData);
-                mutatorsMap.current.set(file.name, mutation);
+                mutatorsMap.current.set(fileName, mutation);
                 const response = await mutation.unwrap();
 
                 return response.payload.id;
@@ -45,7 +45,7 @@ export const useFileUploader = () => {
                 ) {
                     toastApiError(error);
                     updateToast(
-                        file.name,
+                        fileName,
                         t("issues.form.attachments.upload.error"),
                         "error",
                         3000,

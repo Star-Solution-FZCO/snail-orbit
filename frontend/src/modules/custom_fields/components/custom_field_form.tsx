@@ -92,8 +92,13 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <DefaultValueInput
+                        // @ts-expect-error TODO: fix this types
                         value={value}
-                        options={defaultValues?.options}
+                        options={
+                            defaultValues && "options" in defaultValues
+                                ? defaultValues.options
+                                : []
+                        }
                         type={type}
                         onChange={onChange}
                         error={!!errors?.default_value}

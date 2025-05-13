@@ -14,13 +14,17 @@ import {
 import { t } from "i18next";
 import type { FC } from "react";
 import { useCallback, useMemo, useState } from "react";
-import type { CommentT, IssueActivityTypeT, IssueHistoryT } from "shared/model/types";
 import { issueApi } from "shared/model";
+import type {
+    CommentT,
+    IssueActivityTypeT,
+    IssueHistoryT,
+} from "shared/model/types";
 import { formatSpentTime, useListQueryParams } from "shared/utils";
-import { CommentCard } from "./comment_card";
-import { CreateCommentForm } from "./create_comment_form";
+import { CommentCard } from "./comment_card/comment_card";
+import { CreateCommentForm } from "./comments/create_comment_form";
 import { DeleteCommentDialog } from "./delete_comment_dialog";
-import { IssueHistory } from "./issue_history";
+import { IssueHistory } from "./issue_history/issue_history";
 
 const ActivityTypeButton = styled(Button, {
     shouldForwardProp: (name) => name !== "enabled",

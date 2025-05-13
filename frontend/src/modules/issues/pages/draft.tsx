@@ -1,25 +1,27 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { issueApi, useAppDispatch } from "shared/model";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
 import IssueView from "../components/issue/issue_view";
 
-const routeApi = getRouteApi("/_authenticated/issues/draft/$draftId");
+type IssueDraftProps = {
+    draftId: string;
+};
 
-const IssueDraft: FC = () => {
+const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { draftId } = routeApi.useParams();
     const { setAction } = useNavbarSettings();
 
     const dispatch = useAppDispatch();
@@ -33,7 +35,7 @@ const IssueDraft: FC = () => {
         issueApi.useCreateIssueFromDraftMutation();
 
     const handleSubmit = useCallback(
-        async (formData: UpdateIssueT) => {
+        async (formData: IssueUpdate) => {
             await updateDraft({ ...formData, id: draftId })
                 .unwrap()
                 .catch((error) => {
@@ -44,10 +46,10 @@ const IssueDraft: FC = () => {
         [draftId, updateDraft],
     );
 
-    const issue = data?.payload;
+    const draft = data?.payload;
 
     const handleCreateIssue = useCallback(async () => {
-        if (!issue?.project) {
+        if (!draft?.project) {
             toast.error(t("issues.project.required"));
             throw new Error(t("issues.project.required"));
         }
@@ -61,25 +63,21 @@ const IssueDraft: FC = () => {
                 toastApiError(error);
                 return Promise.reject(error);
             });
-    }, [createIssue, draftId, issue?.project, navigate, t]);
+    }, [createIssue, draftId, draft?.project, navigate, t]);
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
-            if (!issue) return;
+            if (!draft) return;
 
             dispatch(
-                issueApi.util.updateQueryData(
-                    "getDraft",
-                    issue.id_readable,
-                    (draft) => {
-                        draft.payload = deepmerge(draft.payload, issueValue, {
-                            arrayMerge: (_, sourceArray) => sourceArray,
-                        });
-                    },
-                ),
+                issueApi.util.updateQueryData("getDraft", draft.id, (draft) => {
+                    draft.payload = deepmerge(draft.payload, issueValue, {
+                        arrayMerge: (_, sourceArray) => sourceArray,
+                    });
+                }),
             );
         },
-        [dispatch, issue],
+        [dispatch, draft],
     );
 
     useEffect(() => {
@@ -115,9 +113,10 @@ const IssueDraft: FC = () => {
                 </Box>
             ) : (
                 <>
-                    {issue && (
+                    {draft && (
                         <IssueView
-                            issue={issue}
+                            // @ts-expect-error TODO: Split IssueT and DraftT
+                            issue={draft}
                             onUpdateIssue={handleSubmit}
                             onUpdateCache={handleUpdateCache}
                             onSaveIssue={handleCreateIssue}

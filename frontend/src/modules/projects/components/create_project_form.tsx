@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MDEditor } from "shared/ui";
-import { exportPrivateKey, generateKeyPair } from "shared/utils/crypto";
+import { exportPrivateKey, generateKeyPair } from "shared/utils/crypto/crypto";
 import { downloadTextFile } from "shared/utils/helpers/download-file";
 import * as yup from "yup";
 import { generateSlug } from "../utils";

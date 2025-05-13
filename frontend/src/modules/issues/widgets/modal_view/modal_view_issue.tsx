@@ -2,8 +2,9 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { issueApi, useAppDispatch } from "shared/model";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
 import { IssueModal } from "../../components/issue/issue_modal";
 import type { ModalViewIssueProps } from "./modal_view.types";
@@ -42,7 +43,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
     );
 
     const handleSubmit = useCallback(
-        async (formData: UpdateIssueT) => {
+        async (formData: IssueUpdate) => {
             await updateIssue({ ...formData, id })
                 .unwrap()
                 .catch(toastApiError);

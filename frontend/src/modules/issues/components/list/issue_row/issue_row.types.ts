@@ -1,4 +1,5 @@
-import type { IssueT, UpdateIssueT } from "shared/model/types";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 
 export type IssueRowViewParams = {
     showCustomFields?: boolean;
@@ -8,6 +9,6 @@ export type IssueRowViewParams = {
 
 export type IssueRowProps = {
     issue: IssueT;
-    onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
+    onUpdateIssue?: (issue: { id: string } & IssueUpdate) => unknown;
     onIssueRowDoubleClick?: (issue: IssueT) => unknown;
 } & IssueRowViewParams;

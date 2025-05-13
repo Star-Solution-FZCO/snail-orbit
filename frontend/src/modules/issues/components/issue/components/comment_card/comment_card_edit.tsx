@@ -1,0 +1,148 @@
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import { Box, Button } from "@mui/material";
+import { type ChangeEvent, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type {
+    CommentT,
+    IssueAttachmentBodyT,
+    IssueAttachmentT,
+} from "shared/model/types";
+import type { IssueCommentUpdate } from "shared/model/types/backend-schema.gen";
+import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
+import { formatSpentTime } from "shared/utils";
+import { AttachmentCard } from "../attachment_cards";
+import { HiddenInput } from "../hidden_input";
+
+type CommentCardEditProps = {
+    comment: CommentT;
+    commentText: string;
+    updateComment?: (params: IssueCommentUpdate) => unknown;
+    onClose?: () => unknown;
+    isLoading?: boolean;
+    onDeleteAttachment: (id: string, filename: string) => unknown;
+    onDownloadAttachment: (attachment: IssueAttachmentT) => unknown;
+    onUploadAttachment: (file: File) => Promise<IssueAttachmentBodyT>;
+};
+
+export const CommentCardEdit = (props: CommentCardEditProps) => {
+    const {
+        commentText,
+        comment,
+        updateComment,
+        isLoading,
+        onDeleteAttachment,
+        onDownloadAttachment,
+        onUploadAttachment,
+        onClose,
+    } = props;
+    const { t } = useTranslation();
+    const [text, setText] = useState(commentText);
+    const [spentTime, setSpentTime] = useState(comment.spent_time);
+
+    const author = comment.author;
+    const attachmentsExists = comment.attachments.length > 0;
+
+    const handleSave = () => {
+        updateComment?.({ text, spent_time: spentTime });
+        onClose?.();
+    };
+
+    const handleChangeFileInput = useCallback(
+        async (event: ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (!files) return;
+
+            const newAttachments = await Promise.all(
+                Array.from(files).map(onUploadAttachment),
+            );
+
+            await updateComment?.({
+                attachments: [...comment.attachments, ...newAttachments],
+            });
+        },
+        [onUploadAttachment, updateComment, comment.attachments],
+    );
+
+    return (
+        <Box display="flex" flexDirection="column" pl={1} py={0.5}>
+            <Box display="flex" gap={2}>
+                <UserAvatar src={author.avatar} size={32} />
+
+                <Box display="flex" flexDirection="column" gap={1} flex={1}>
+                    <MDEditor
+                        value={text}
+                        onChange={(value) => setText(value || "")}
+                        placeholder={t("issues.comments.write")}
+                        autoFocus
+                        autoHeight
+                    />
+
+                    <Box display="flex" gap={1}>
+                        <Button
+                            onClick={handleSave}
+                            variant="outlined"
+                            size="small"
+                            disabled={!text}
+                            loading={isLoading}
+                        >
+                            {t("save")}
+                        </Button>
+
+                        <Button
+                            component="label"
+                            startIcon={<AttachFileIcon />}
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                        >
+                            {t("issues.comments.attachFile")}
+
+                            <HiddenInput
+                                type="file"
+                                onChange={handleChangeFileInput}
+                                multiple
+                            />
+                        </Button>
+
+                        <SpentTimeField
+                            label={t("issues.spentTime")}
+                            initialValue={
+                                spentTime
+                                    ? formatSpentTime(spentTime)
+                                    : undefined
+                            }
+                            onChange={setSpentTime}
+                        />
+
+                        <Button
+                            onClick={onClose}
+                            variant="outlined"
+                            size="small"
+                            color="error"
+                        >
+                            {t("cancel")}
+                        </Button>
+                    </Box>
+                </Box>
+            </Box>
+
+            {attachmentsExists && (
+                <Box display="flex" flexWrap="wrap" gap={1} mt={1} ml={6}>
+                    {comment.attachments.map((attachment) => (
+                        <AttachmentCard
+                            key={attachment.id}
+                            attachment={attachment}
+                            onDelete={() =>
+                                onDeleteAttachment(
+                                    attachment.id,
+                                    attachment.name,
+                                )
+                            }
+                            onDownload={onDownloadAttachment}
+                        />
+                    ))}
+                </Box>
+            )}
+        </Box>
+    );
+};

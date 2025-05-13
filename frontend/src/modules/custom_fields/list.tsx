@@ -16,10 +16,11 @@ import type {
 } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
+import type { ChangeEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldGroupT, ListQueryParams } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { CustomFieldGroupT, ListQueryParams } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 
@@ -88,7 +89,7 @@ const CustomFieldList = () => {
     );
 
     const handleSearchTextField = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         const value = e.target.value;
         setQuery(value);
@@ -187,7 +188,7 @@ const CustomFieldList = () => {
                     <Button
                         startIcon={<AddIcon />}
                         variant="outlined"
-                        size="small"
+                        size="medium"
                         sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("customFields.new")}

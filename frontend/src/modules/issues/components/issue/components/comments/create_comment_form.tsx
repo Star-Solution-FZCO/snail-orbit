@@ -1,67 +1,16 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import CloseIcon from "@mui/icons-material/Close";
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    TextField,
-} from "@mui/material";
+import { Box, Button, TextField } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi, useAppSelector } from "shared/model";
+import { useAppSelector } from "shared/model";
+import type { IssueAttachmentBodyT } from "shared/model/types";
 import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
 import { formatSpentTime, toastApiError } from "shared/utils";
-import { useFileUploader } from "../../../../../widgets/file_upload/useFileUploader";
-import { BrowserFileCard } from "./attachment_cards";
-import { HiddenInput } from "./hidden_input";
-
-interface IUnsavedChangesDialogProps {
-    open: boolean;
-    onClose: () => void;
-    onDiscard: () => void;
-}
-
-const UnsavedChangesDialog: FC<IUnsavedChangesDialogProps> = ({
-    open,
-    onClose,
-    onDiscard,
-}) => {
-    const { t } = useTranslation();
-
-    return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
-                {t("issues.comments.unsavedChanges.title")}
-
-                <IconButton onClick={onClose} size="small">
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <DialogContent>
-                {t("issues.comments.unsavedChanges.warning")}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} variant="outlined" color="error">
-                    {t("cancel")}
-                </Button>
-                <Button onClick={onDiscard} variant="outlined">
-                    {t("issues.comments.unsavedChanges.discard")}
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-};
+import { useIssueOperations } from "../../../../api/use_issue_operations";
+import { BrowserFileCard } from "../attachment_cards";
+import { HiddenInput } from "../hidden_input";
+import { UnsavedChangesDialog } from "./unsaved_changed_dialog";
 
 type CreateCommentFormProps = {
     issueId: string;
@@ -76,14 +25,20 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
     const [text, setText] = useState("");
     const [spentTime, setSpentTime] = useState(0);
     const [files, setFiles] = useState<File[]>([]);
-    const [attachments, setAttachments] = useState<string[]>([]);
+    const [attachments, setAttachments] = useState<IssueAttachmentBodyT[]>([]);
     const [isFocused, setIsFocused] = useState(false);
 
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
 
-    const [createComment, { isLoading }] =
-        issueApi.useCreateIssueCommentMutation();
+    const {
+        createComment,
+        isLoading,
+        isCommentCreateLoading,
+        uploadAttachment,
+    } = useIssueOperations({
+        issueId,
+    });
 
     const handleClickAddComment = () => {
         createComment({
@@ -92,7 +47,6 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
             spent_time: spentTime,
             attachments,
         })
-            .unwrap()
             .then(() => {
                 setText("");
                 setMode("view");
@@ -100,16 +54,16 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
             .catch(toastApiError);
     };
 
-    const { uploadFile } = useFileUploader();
-
     const handleUploadFiles = useCallback(
         async (files: File[]) => {
-            const newAttachmentIds = await Promise.all(files.map(uploadFile));
+            const newAttachments = await Promise.all(
+                files.map(uploadAttachment),
+            );
 
             setFiles((prev) => [...prev, ...files]);
-            setAttachments((prev) => [...prev, ...newAttachmentIds]);
+            setAttachments((prev) => [...prev, ...newAttachments]);
         },
-        [uploadFile],
+        [uploadAttachment],
     );
 
     const handleChangeFileInput = useCallback(
@@ -213,7 +167,7 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
                                 variant="outlined"
                                 size="small"
                                 disabled={!text && files.length === 0}
-                                loading={isLoading}
+                                loading={isLoading || isCommentCreateLoading}
                             >
                                 {t("issues.comments.add")}
                             </Button>

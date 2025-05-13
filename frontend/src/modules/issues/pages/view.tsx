@@ -5,14 +5,16 @@ import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { issueApi, useAppDispatch } from "shared/model";
 import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link, PageTitle } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
+import { useIssueData } from "../api/use_issue_data";
 import IssueViewComponent from "../components/issue/issue_view";
 
 type IssueViewProps = {
@@ -25,21 +27,21 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const dispatch = useAppDispatch();
     const { setAction } = useNavbarSettings();
 
-    const { data, isLoading, error } = issueApi.useGetIssueQuery(issueId);
+    const { issue, project, error, isEncrypted, isLoading } = useIssueData({
+        issueId,
+    });
 
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssueMutation();
 
     const handleSubmit = useCallback(
-        async (formData: UpdateIssueT) => {
+        async (formData: IssueUpdate) => {
             await updateIssue({ ...formData, id: issueId })
                 .unwrap()
                 .catch(toastApiError);
         },
         [issueId, updateIssue],
     );
-
-    const issue = data?.payload;
 
     useEventSubscriptionAutoReFetch({ ids: [issue?.id || ""] });
 
@@ -109,14 +111,16 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                 issue && (
                     <>
                         <PageTitle
-                            title={`${issue.id_readable} : ${issue.subject}`}
+                            title={`${issue.id_readable}: ${issue.subject}`}
                         />
 
                         <IssueViewComponent
                             issue={issue}
+                            project={project}
                             onUpdateIssue={handleSubmit}
                             onUpdateCache={handleUpdateCache}
                             loading={isLoading || updateLoading}
+                            isEncrypted={isEncrypted}
                         />
                     </>
                 )

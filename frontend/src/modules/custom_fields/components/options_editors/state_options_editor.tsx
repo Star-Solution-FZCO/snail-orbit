@@ -13,13 +13,13 @@ import { t } from "i18next";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi } from "shared/model";
 import type {
     CreateStateOptionT,
     CustomFieldT,
     StateOptionT,
     UpdateStateOptionT,
 } from "shared/model/types";
-import { customFieldsApi } from "shared/model";
 import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { StateOptionFormDialog } from "../form_dialogs/state_option_form_dialog";
@@ -174,7 +174,7 @@ const CustomFieldStateOptionsEditor: FC<
             .catch(toastApiError);
     };
 
-    const options = customField.options || [];
+    const options = "options" in customField ? customField.options : [];
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>

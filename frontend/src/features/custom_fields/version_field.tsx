@@ -1,7 +1,7 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import type { VersionFieldT, VersionOptionT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { VersionFieldValueT, VersionOptionT } from "shared/model/types";
 import { noLimitListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
 import {
@@ -11,8 +11,8 @@ import {
 } from "./utils";
 
 type VersionFieldProps = {
-    value?: VersionFieldT | VersionFieldT[];
-    onChange: (value: VersionFieldT | VersionFieldT[]) => void;
+    value?: VersionFieldValueT | VersionFieldValueT[];
+    onChange: (value: VersionFieldValueT | VersionFieldValueT[]) => void;
     label: string;
     id: string;
     multiple?: boolean;
@@ -42,7 +42,7 @@ export const VersionField: FC<VersionFieldProps> = ({
 
     const handleChange = (
         _: SyntheticEvent,
-        value: VersionFieldT | VersionFieldT[] | null,
+        value: VersionFieldValueT | VersionFieldValueT[] | null,
     ) => {
         if (!value) return undefined;
         onChange(value);

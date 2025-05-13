@@ -16,9 +16,14 @@ import {
 } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import { FC, useMemo } from "react";
+import type { FC } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CustomFieldOptionT, CustomFieldTypeT, CustomFieldValueT } from "shared/model/types";
+import type {
+    CustomFieldOptionT,
+    CustomFieldTypeT,
+    CustomFieldValueT,
+} from "shared/model/types";
 import { defaultValueGetter, getOptionLabel, getOptionValue } from "./utils";
 
 interface InputProps<T> {
@@ -173,7 +178,7 @@ export const DefaultValueInput: FC<{
             case "string":
                 return (
                     <RenderTextField
-                        value={value}
+                        value={value?.toString() || ""}
                         onChange={onChange}
                         label={label}
                         error={error}
@@ -184,7 +189,7 @@ export const DefaultValueInput: FC<{
             case "boolean":
                 return (
                     <RenderBooleanSwitch
-                        value={value}
+                        value={!!value}
                         onChange={onChange}
                         label={label}
                     />
@@ -193,7 +198,7 @@ export const DefaultValueInput: FC<{
             case "float":
                 return (
                     <RenderTextField
-                        value={value}
+                        value={Number(value)}
                         onChange={onChange}
                         label={label}
                         error={error}
@@ -205,7 +210,7 @@ export const DefaultValueInput: FC<{
             case "date":
                 return (
                     <RenderDatePicker
-                        value={value}
+                        value={value?.toString() || null}
                         onChange={onChange}
                         label={label}
                         disabled={disabled}
@@ -214,7 +219,7 @@ export const DefaultValueInput: FC<{
             case "datetime":
                 return (
                     <RenderDateTimePicker
-                        value={value}
+                        value={value?.toString() || null}
                         onChange={onChange}
                         label={label}
                         disabled={disabled}
@@ -249,5 +254,5 @@ export const DefaultValueInput: FC<{
             default:
                 return null;
         }
-    }, [value, type, options, onChange, error, errorMessage, disabled]);
+    }, [type, value, onChange, label, error, helperText, disabled, options]);
 };

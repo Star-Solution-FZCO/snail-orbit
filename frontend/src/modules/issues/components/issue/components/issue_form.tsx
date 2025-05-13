@@ -3,14 +3,15 @@ import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { MarkdownPreview, MDEditor } from "shared/ui";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { HeadingControls } from "./heading_controls";
 
 export type IssueFormProps = {
     issue: IssueT;
     mode: "view" | "edit";
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onChangeDisplayMode?: (mode: "view" | "edit") => void;
     onSaveIssue?: () => Promise<void>;
     isDraft?: boolean;

@@ -1,34 +1,48 @@
-import type { CreateIssueT, CustomFieldT, FieldValueT, IssueT } from "shared/model/types";
+import type {
+    CustomFieldValueT,
+    CustomFieldWithValueT,
+    IssueT,
+} from "shared/model/types";
+import type { IssueCreate } from "../types/backend-schema.gen";
 
-export const fieldToFieldValue = (field?: CustomFieldT): FieldValueT => {
+export const fieldToFieldValue = (
+    field?: CustomFieldWithValueT,
+): CustomFieldValueT => {
     if (!field) return null;
-    if (field.type === "user") return field.value?.id;
-    else if (field.type === "user_multi")
-        return field.value?.map((el) => el.id);
-    else if (field.type === "enum") return field.value?.value;
-    else if (field.type === "enum_multi")
-        return field.value?.map((el) => el.value);
-    else if (field.type === "state") return field.value?.value;
-    else if (field.type === "version") return field.value?.value;
-    else if (field.type === "version_multi")
-        return field.value?.map((el) => el.value);
-    else return field.value;
+    switch (field.type) {
+        case "user":
+            return field.value?.id;
+        case "user_multi":
+            return field.value?.map((el) => el.id);
+        case "enum":
+        case "state":
+        case "version":
+            return field.value?.value;
+        case "enum_multi":
+        case "version_multi":
+            return field.value?.map((el) => el.value);
+        default:
+            return field.value;
+    }
 };
 
-export const fieldsToFieldValueMap = (fields: CustomFieldT[]) =>
+export const fieldsToFieldValueMap = (fields: CustomFieldWithValueT[]) =>
     fields.reduce(
         (prev, cur) => {
             if (!cur) return prev;
             prev[cur.name] = fieldToFieldValue(cur);
             return prev;
         },
-        {} as Record<string, FieldValueT>,
+        {} as Record<string, CustomFieldValueT>,
     );
 
-export const issueToCreateIssue = (issue: IssueT): CreateIssueT => ({
+export const issueToCreateIssue = (issue: IssueT): IssueCreate => ({
     subject: issue.subject,
     text: issue.text,
     project_id: issue?.project?.id || "",
     fields: fieldsToFieldValueMap(Object.values(issue.fields)),
-    attachments: issue.attachments.map((el) => el.id),
+    attachments: issue.attachments.map(({ id, encryption }) => ({
+        id,
+        encryption,
+    })),
 });

@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
-import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
-import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import type {
     BasicUserT,
-    EnumFieldT,
-    VersionFieldT,
+    EnumFieldValueT,
+    VersionFieldValueT,
     VersionOptionT,
 } from "shared/model/types";
+import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
+import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 
-export const getEnumColorAdornment = (option: EnumFieldT) =>
+export const getEnumColorAdornment = (option: EnumFieldValueT) =>
     option.color ? (
         <ColorAdornment
             color={option.color}
@@ -36,7 +36,7 @@ const formatVersion = (version: string, releaseDate: string | null): string => {
 
 export const versionOptionToField = (
     option: VersionOptionT,
-): VersionFieldT => ({
+): VersionFieldValueT => ({
     value: option.value,
     id: option.uuid,
     release_date: option.release_date,
@@ -56,5 +56,5 @@ export const cardLabelGetter = <T,>(
     }
 };
 
-export const getVersionFieldLabel = (option: VersionFieldT) =>
-    formatVersion(option.value, option.release_date);
+export const getVersionFieldLabel = (option: VersionFieldValueT) =>
+    formatVersion(option.value, option.release_date || null);

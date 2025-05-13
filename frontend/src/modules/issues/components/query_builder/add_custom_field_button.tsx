@@ -3,8 +3,8 @@ import { Button } from "@mui/material";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import type { CustomFieldT } from "shared/model/types";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 
 type AddCustomFieldButtonProps = {
     fields: CustomFieldT[];

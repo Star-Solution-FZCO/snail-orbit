@@ -9,10 +9,10 @@ import {
 import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldT } from "shared/model/types";
 import { customFieldsApi, issueApi } from "shared/model";
 import { fieldToFieldValue } from "shared/model/mappers/issue";
-import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
+import type { CustomFieldT, CustomFieldWithValueT } from "shared/model/types";
+import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser_v2/custom_fields_parser_v2";
 import { AddCustomFieldButton } from "./add_custom_field_button";
 
 type QueryBuilderProps = {
@@ -26,7 +26,7 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
     const { data, isLoading } = customFieldsApi.useListCustomFieldGroupsQuery();
 
     const availableFields = useMemo(() => {
-        return data?.payload.items.flatMap((el) => el.fields);
+        return data?.payload.items.flatMap((el) => el.fields as CustomFieldT[]);
     }, [data]);
 
     return (
@@ -71,7 +71,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
 }) => {
     const stackRef = useRef<HTMLDivElement>(null);
 
-    const [newField, setNewField] = useState<CustomFieldT | undefined>(
+    const [newField, setNewField] = useState<CustomFieldWithValueT | undefined>(
         undefined,
     );
 
@@ -79,7 +79,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
     const [parseQuery] = issueApi.useLazyFilterParseQueryStringQuery();
 
     const [selectedFields, setSelectedFields] = useState<
-        Record<string, CustomFieldT>
+        Record<string, CustomFieldWithValueT>
     >({});
 
     const syncQuery = useCallback(
@@ -101,7 +101,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
                                 ({
                                     ...el,
                                     value: fieldValueMap.get(el.name),
-                                }) as CustomFieldT,
+                                }) as CustomFieldWithValueT,
                         );
 
                     setSelectedFields(
@@ -111,12 +111,12 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
                     );
                 });
         },
-        [availableFields],
+        [availableFields, parseQuery],
     );
 
     useEffect(() => {
         if (initialQuery) syncQuery(initialQuery);
-    }, []);
+    }, []); // Intentionally left blank
 
     useEffect(() => {
         if (newField && selectedFields[newField.name] && stackRef.current) {
@@ -140,33 +140,24 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
         );
     }, [availableFields, selectedFields]);
 
-    const handleDeleteField = useCallback(
-        (e: SyntheticEvent, name: string) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setSelectedFields((fields) => {
-                const copy = { ...fields };
-                delete copy[name];
-                return copy;
-            });
-        },
-        [selectedFields],
-    );
+    const handleDeleteField = useCallback((e: SyntheticEvent, name: string) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setSelectedFields((fields) => {
+            const copy = { ...fields };
+            delete copy[name];
+            return copy;
+        });
+    }, []);
 
     const handleAddField = useCallback(
         (field: CustomFieldT) => {
-            setSelectedFields((prev) => ({ ...prev, [field.name]: field }));
-            setNewField(field);
-        },
-        [setSelectedFields],
-    );
-
-    const handleUpdateFieldValues = useCallback(
-        (fields: Record<string, CustomFieldT>) => {
+            const addedField: CustomFieldWithValueT = { ...field, value: null };
             setSelectedFields((prev) => ({
                 ...prev,
-                ...fields,
+                [field.name]: addedField,
             }));
+            setNewField(addedField);
         },
         [setSelectedFields],
     );
@@ -188,10 +179,14 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
         <>
             {Object.keys(selectedFields).length ? (
                 <Stack direction="column" gap={0} mx={-1} ref={stackRef}>
-                    <CustomFieldsParser
-                        availableFields={Object.values(selectedFields)}
-                        activeFields={selectedFields}
-                        onUpdateCache={handleUpdateFieldValues}
+                    <CustomFieldsParserV2
+                        fields={Object.values(selectedFields)}
+                        onChange={(field) =>
+                            setSelectedFields((prev) => ({
+                                ...prev,
+                                [field.name]: field,
+                            }))
+                        }
                         rightAdornmentRenderer={(field) => (
                             <IconButton
                                 onClick={(e) =>

@@ -1,10 +1,11 @@
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
-import type { AgileBoardT, IssueT, UpdateIssueT } from "shared/model/types";
 import { agileBoardApi, issueApi } from "shared/model";
+import type { AgileBoardT, IssueT } from "shared/model/types";
 import { Kanban as KanbanComp } from "shared/ui/kanban/kanban";
 import type { Items, KanbanProps } from "shared/ui/kanban/kanban.types";
 import { toastApiError } from "shared/utils";
+import type { IssueUpdate } from "../../../shared/model/types/backend-schema.gen";
 import {
     columnKeyToFieldValue,
     fieldValueToColumnKey,
@@ -35,7 +36,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({
     const [updateIssue] = issueApi.useUpdateIssueMutation();
 
     const handleUpdateIssue = useCallback(
-        async (issueId: string, formData: UpdateIssueT) => {
+        async (issueId: string, formData: IssueUpdate) => {
             await updateIssue({ ...formData, id: issueId })
                 .unwrap()
                 .then(refetch)

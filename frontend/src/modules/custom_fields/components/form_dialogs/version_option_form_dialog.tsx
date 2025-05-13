@@ -70,7 +70,14 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
     }, [open, defaultValues, reset]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="xs"
+            fullWidth
+            onSubmit={handleSubmit(onSubmit)}
+            component="form"
+        >
             <DialogTitle>
                 {t(
                     defaultValues
@@ -89,6 +96,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                         variant="outlined"
                         size="small"
                         fullWidth
+                        autoFocus
                     />
 
                     <Controller
@@ -176,11 +184,11 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                 </Button>
 
                 <Button
-                    onClick={handleSubmit(onSubmit)}
                     variant="outlined"
                     size="small"
                     loading={loading}
                     disabled={!isDirty}
+                    type="submit"
                 >
                     {t("save")}
                 </Button>

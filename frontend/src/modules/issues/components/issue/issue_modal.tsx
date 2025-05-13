@@ -9,18 +9,17 @@ import {
     Stack,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { ProjectField } from "features/custom_fields/project_field";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { projectApi } from "shared/model";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { FilePreview } from "shared/ui";
-import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddLinks } from "./components/add_links";
 import { FieldOffside } from "./components/field_offside";
 import { IssueActivities } from "./components/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";
+import { IssueCustomFields } from "./components/issue_custom_fields";
 import { IssueForm } from "./components/issue_form";
 import { IssueHeading } from "./components/issue_heading";
 import { IssueLinks } from "./components/issue_links";
@@ -30,7 +29,7 @@ import { IssueTags } from "./components/issue_tags";
 
 type IssueModalProps = {
     issue: IssueT;
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     onSaveIssue?: () => Promise<void>;
     loading?: boolean;
@@ -49,7 +48,6 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
         onUpdateCache,
         loading,
     } = props;
-    const { t } = useTranslation();
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         issue?.project?.id ?? skipToken,
@@ -157,26 +155,11 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                     <Divider />
 
                     <FieldOffside>
-                        <ProjectField
-                            label={t("issues.form.project.label")}
-                            value={issue?.project}
-                            onChange={(project) => {
-                                onUpdateIssue({ project_id: project.id });
-                                onUpdateCache({ project });
-                            }}
-                        />
-
-                        <CustomFieldsParser
-                            availableFields={
-                                projectData?.payload.custom_fields || []
-                            }
-                            activeFields={issue.fields}
-                            onUpdateIssue={(fields) =>
-                                onUpdateIssue({ fields })
-                            }
-                            onUpdateCache={(fields) =>
-                                onUpdateCache({ fields })
-                            }
+                        <IssueCustomFields
+                            issue={issue}
+                            project={projectData?.payload}
+                            onUpdateIssue={onUpdateIssue}
+                            onUpdateCache={onUpdateCache}
                         />
                     </FieldOffside>
                 </Stack>

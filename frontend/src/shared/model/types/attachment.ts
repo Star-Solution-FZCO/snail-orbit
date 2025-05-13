@@ -1,4 +1,4 @@
-import { BasicUserT } from "./user";
+import type { BasicUserT } from "./user";
 
 export type AttachmentT = {
     id: string;

@@ -2,13 +2,14 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import type { FC } from "react";
 import { memo, useCallback, useMemo } from "react";
 import { projectApi } from "shared/model";
-import type { FieldValueT, IssueT, UpdateIssueT } from "shared/model/types";
+import type { CustomFieldValueT, IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 
 type IssueRowFieldsProps = {
     issue: IssueT;
-    onUpdateIssue?: (issue: { id: string } & UpdateIssueT) => unknown;
+    onUpdateIssue?: (issue: { id: string } & IssueUpdate) => unknown;
 };
 
 export const IssueRowFields: FC<IssueRowFieldsProps> = memo(
@@ -32,7 +33,7 @@ export const IssueRowFields: FC<IssueRowFieldsProps> = memo(
         }, [projectData.data?.payload]);
 
         const handleUpdateIssue = useCallback(
-            (fields: Record<string, FieldValueT>) => {
+            (fields: Record<string, CustomFieldValueT>) => {
                 onUpdateIssue?.({ id: issue.id, fields });
             },
             [issue.id, onUpdateIssue],

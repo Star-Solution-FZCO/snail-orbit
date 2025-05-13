@@ -2,9 +2,8 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
     ApiResponse,
     CommentT,
-    CreateCommentT,
-    CreateIssueT,
-    FieldValueT,
+    CustomFieldValueT,
+    IssueDraftT,
     IssueFeedRecordT,
     IssueHistoryT,
     IssueLinkTypeT,
@@ -14,9 +13,14 @@ import type {
     ListResponse,
     ListSelectQueryParams,
     TagT,
-    UpdateCommentT,
-    UpdateIssueT,
 } from "shared/model/types";
+import type {
+    IssueCommentCreate,
+    IssueCommentUpdate,
+    IssueCreate,
+    IssueDraftUpdate,
+    IssueUpdate,
+} from "../types/backend-schema.gen";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
@@ -48,13 +52,13 @@ export const issueApi = createApi({
             query: (id) => `issue/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Issues", id }],
         }),
-        createIssue: build.mutation<ApiResponse<IssueT>, CreateIssueT>({
+        createIssue: build.mutation<ApiResponse<IssueT>, IssueCreate>({
             query: (body) => ({ url: "issue/", method: "POST", body }),
             invalidatesTags: [{ type: "Issues", id: "LIST" }],
         }),
         updateIssue: build.mutation<
             ApiResponse<IssueT>,
-            { id: string } & UpdateIssueT
+            { id: string } & IssueUpdate
         >({
             query: ({ id, ...body }) => ({
                 url: `issue/${id}`,
@@ -121,7 +125,7 @@ export const issueApi = createApi({
         }),
         createIssueComment: build.mutation<
             ApiResponse<CommentT>,
-            { id: string } & CreateCommentT
+            { id: string } & IssueCommentCreate
         >({
             query: ({ id, ...body }) => ({
                 url: `issue/${id}/comment/`,
@@ -134,7 +138,7 @@ export const issueApi = createApi({
         }),
         updateIssueComment: build.mutation<
             ApiResponse<CommentT>,
-            { id: string; commentId: string } & UpdateCommentT
+            { id: string; commentId: string } & IssueCommentUpdate
         >({
             query: ({ id, commentId, ...body }) => ({
                 url: `issue/${id}/comment/${commentId}`,
@@ -169,17 +173,17 @@ export const issueApi = createApi({
                 { type: "IssueHistories", id },
             ],
         }),
-        createDraft: build.mutation<ApiResponse<IssueT>, void>({
+        createDraft: build.mutation<ApiResponse<IssueDraftT>, void>({
             query: () => ({ url: "issue/draft", method: "POST", body: {} }),
             invalidatesTags: () => [{ type: "IssueDrafts", id: "LIST" }],
         }),
-        getDraft: build.query<ApiResponse<IssueT>, string>({
+        getDraft: build.query<ApiResponse<IssueDraftT>, string>({
             query: (id) => `issue/draft/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Drafts", id }],
         }),
         updateDraft: build.mutation<
-            ApiResponse<IssueT>,
-            { id: string } & UpdateIssueT
+            ApiResponse<IssueDraftT>,
+            { id: string } & IssueDraftUpdate
         >({
             query: ({ id, ...body }) => ({
                 url: `issue/draft/${id}`,
@@ -272,7 +276,7 @@ export const issueApi = createApi({
         }),
         filterBuildQueryString: build.query<
             ApiResponse<{ query: string }>,
-            { filters: { field: string; value: FieldValueT }[] }
+            { filters: { field: string; value: CustomFieldValueT }[] }
         >({
             query: (body) => ({
                 url: `issue/filters/build-query`,
@@ -284,7 +288,7 @@ export const issueApi = createApi({
             ApiResponse<{
                 filters: {
                     field: { id: string; name: string };
-                    value: FieldValueT;
+                    value: CustomFieldValueT;
                 }[];
             }>,
             { query: string }
@@ -323,10 +327,10 @@ export const issueApi = createApi({
                 const reverse = arg?.params?.sort_by === "-time";
                 currentCache.payload.items.sort((a, b) =>
                     reverse
-                        ? new Date(b.time).getTime() -
-                          new Date(a.time).getTime()
-                        : new Date(a.time).getTime() -
-                          new Date(b.time).getTime(),
+                        ? new Date(b?.time || 0).getTime() -
+                          new Date(a?.time || 0).getTime()
+                        : new Date(a?.time || 0).getTime() -
+                          new Date(b?.time || 0).getTime(),
                 );
                 currentCache.payload.offset = newItems.payload.offset;
                 currentCache.payload.count = newItems.payload.count;

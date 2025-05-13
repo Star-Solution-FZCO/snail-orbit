@@ -9,8 +9,8 @@ import {
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { CreateCustomFieldT, CustomFieldGroupT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { CreateCustomFieldT, CustomFieldGroupT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { CustomFieldForm } from "../custom_field_form";
 
@@ -64,6 +64,7 @@ export const CreateCustomFieldFormDialog: FC<
             <DialogContent>
                 <Box mt={1}>
                     <CustomFieldForm
+                        // @ts-expect-error TODO: Fix types
                         onSubmit={onSubmit}
                         onCancel={onClose}
                         type={customFieldGroup.type}

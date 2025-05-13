@@ -1,17 +1,14 @@
 import { Box, Stack } from "@mui/material";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { ProjectField } from "features/custom_fields/project_field";
 import type { FC } from "react";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import type { IssueT, ProjectT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { FilePreview } from "shared/ui";
-import { projectApi } from "shared/model";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
-import { CustomFieldsParser } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddLinks } from "./components/add_links";
 import { FieldContainer } from "./components/field_container";
 import { IssueActivities } from "./components/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";
+import { IssueCustomFields } from "./components/issue_custom_fields";
 import { IssueForm } from "./components/issue_form";
 import { IssueHeading } from "./components/issue_heading";
 import { IssueLinks } from "./components/issue_links";
@@ -20,33 +17,26 @@ import { IssueTags } from "./components/issue_tags";
 
 type IssueFormProps = {
     issue: IssueT;
-    onUpdateIssue: (issueValues: UpdateIssueT) => Promise<void>;
+    project?: ProjectT;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     onSaveIssue?: () => Promise<void>;
     loading?: boolean;
     isDraft?: boolean;
+    isEncrypted?: boolean;
 };
 
-export const IssueView: FC<IssueFormProps> = ({
-    issue,
-    onUpdateIssue,
-    onUpdateCache,
-    onSaveIssue,
-    loading,
-    isDraft,
-}) => {
-    const { t } = useTranslation();
-
-    const { data: projectData } = projectApi.useGetProjectQuery(
-        issue?.project?.id ?? skipToken,
-    );
-
-    // const { data: encryptionKeys } =
-    //     projectApi.useGetProjectEncryptionKeysQuery(
-    //         projectData?.payload?.is_encrypted
-    //             ? projectData.payload.id
-    //             : skipToken,
-    //     );
+export const IssueView: FC<IssueFormProps> = (props) => {
+    const {
+        issue,
+        project,
+        onUpdateIssue,
+        onUpdateCache,
+        onSaveIssue,
+        loading,
+        isDraft,
+        isEncrypted,
+    } = props;
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">(
         isDraft ? "edit" : "view",
@@ -69,6 +59,7 @@ export const IssueView: FC<IssueFormProps> = ({
                                 <IssueHeading
                                     issue={issue}
                                     onEditClick={handleChangeDisplayMode}
+                                    isEncrypted={isEncrypted}
                                 />
                                 <IssueTags issue={issue} />
                             </Stack>
@@ -107,20 +98,11 @@ export const IssueView: FC<IssueFormProps> = ({
             </Stack>
 
             <FieldContainer>
-                <ProjectField
-                    label={t("issues.form.project.label")}
-                    value={issue?.project}
-                    onChange={(project) => {
-                        onUpdateIssue({ project_id: project.id });
-                        onUpdateCache({ project });
-                    }}
-                />
-
-                <CustomFieldsParser
-                    availableFields={projectData?.payload.custom_fields || []}
-                    activeFields={issue.fields}
-                    onUpdateIssue={(fields) => onUpdateIssue({ fields })}
-                    onUpdateCache={(fields) => onUpdateCache({ fields })}
+                <IssueCustomFields
+                    issue={issue}
+                    project={project}
+                    onUpdateIssue={onUpdateIssue}
+                    onUpdateCache={onUpdateCache}
                 />
             </FieldContainer>
 

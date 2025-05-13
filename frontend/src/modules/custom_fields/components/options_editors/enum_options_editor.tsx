@@ -5,13 +5,13 @@ import { Box, CircularProgress, IconButton, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi } from "shared/model";
 import type {
     CreateEnumOptionT,
     CustomFieldT,
     EnumOptionT,
     UpdateEnumOptionT,
 } from "shared/model/types";
-import { customFieldsApi } from "shared/model";
 import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { EnumOptionFormDialog } from "../form_dialogs/enum_option_form_dialog";
@@ -143,7 +143,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
             .catch(toastApiError);
     };
 
-    const options = customField.options || [];
+    const options = "options" in customField ? customField.options : [];
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>

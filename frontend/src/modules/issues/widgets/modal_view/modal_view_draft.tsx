@@ -4,8 +4,9 @@ import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { IssueT, UpdateIssueT } from "shared/model/types";
 import { issueApi, useAppDispatch } from "shared/model";
+import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
 import { IssueModal } from "../../components/issue/issue_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
@@ -28,7 +29,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         issueApi.useCreateIssueFromDraftMutation();
 
     const handleSubmit = useCallback(
-        async (formData: UpdateIssueT) => {
+        async (formData: IssueUpdate) => {
             await updateDraft({ ...formData, id })
                 .unwrap()
                 .catch((error) => {
@@ -39,10 +40,10 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         [id, updateDraft],
     );
 
-    const issue = data?.payload;
+    const draft = data?.payload;
 
     const handleCreateIssue = useCallback(async () => {
-        if (!issue?.project) {
+        if (!draft?.project) {
             toast.error(t("issues.project.required"));
             throw new Error(t("issues.project.required"));
         }
@@ -54,25 +55,21 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                 toastApiError(error);
                 return Promise.reject(error);
             });
-    }, [createIssue, id, issue?.project, onClose, t]);
+    }, [createIssue, id, draft?.project, onClose, t]);
 
     const handleUpdateCache = useCallback(
         (issueValue: Partial<IssueT>) => {
-            if (!issue) return;
+            if (!draft) return;
 
             dispatch(
-                issueApi.util.updateQueryData(
-                    "getDraft",
-                    issue.id_readable,
-                    (draft) => {
-                        draft.payload = deepmerge(draft.payload, issueValue, {
-                            arrayMerge: (_, sourceArray) => sourceArray,
-                        });
-                    },
-                ),
+                issueApi.util.updateQueryData("getDraft", draft.id, (draft) => {
+                    draft.payload = deepmerge(draft.payload, issueValue, {
+                        arrayMerge: (_, sourceArray) => sourceArray,
+                    });
+                }),
             );
         },
-        [dispatch, issue],
+        [dispatch, draft],
     );
 
     useEffect(() => {
@@ -82,14 +79,15 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         }
     }, [error, onClose]);
 
-    if (!issue && isLoading)
+    if (!draft && isLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;
 
-    if (!issue) return null;
+    if (!draft) return null;
 
     return (
         <IssueModal
-            issue={issue}
+            // @ts-expect-error TODO: divide issue and draft
+            issue={draft}
             onUpdateIssue={handleSubmit}
             onUpdateCache={handleUpdateCache}
             onSaveIssue={handleCreateIssue}

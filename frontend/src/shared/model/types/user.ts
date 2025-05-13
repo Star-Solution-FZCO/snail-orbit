@@ -1,11 +1,7 @@
+import type { UserOutput } from "./backend-schema.gen";
 import type { GroupT } from "./group";
 
-export type BasicUserT = {
-    id: string;
-    name: string;
-    email: string;
-    avatar: string;
-};
+export type BasicUserT = UserOutput;
 
 export type UserT = BasicUserT & {
     is_admin: boolean;

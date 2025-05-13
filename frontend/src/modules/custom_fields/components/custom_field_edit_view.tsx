@@ -3,8 +3,8 @@ import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { CustomFieldGroupT, UpdateCustomFieldT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { CustomFieldGroupT, UpdateCustomFieldT } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
 import { toastApiError } from "shared/utils";
 import { ConfirmChangesDialog } from "./confirm_changes_dialog";
@@ -105,6 +105,7 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                 </Typography>
 
                 <CustomFieldForm
+                    // @ts-expect-error TODO: fix this types
                     onSubmit={handleSubmit}
                     onDelete={() => setDeleteDialogOpen(true)}
                     defaultValues={customField}

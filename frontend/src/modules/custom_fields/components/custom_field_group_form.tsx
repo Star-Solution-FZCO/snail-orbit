@@ -163,6 +163,7 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
                             control={control}
                             render={({ field: { value, onChange } }) => (
                                 <DefaultValueInput
+                                    // @ts-expect-error TODO: Fix this types
                                     value={value}
                                     type={customFieldGroupType}
                                     onChange={onChange}

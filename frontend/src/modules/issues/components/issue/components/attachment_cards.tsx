@@ -5,9 +5,9 @@ import { API_URL, apiVersion } from "app/config";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { openFilePreview, useAppDispatch, useAppSelector } from "shared/model";
-import type { AttachmentT } from "shared/model/types";
+import type { IssueAttachmentT } from "shared/model/types";
 
-interface IBaseAttachmentCardProps {
+type BaseAttachmentCardProps = {
     filename: string;
     isImage: boolean;
     url: string;
@@ -15,9 +15,9 @@ interface IBaseAttachmentCardProps {
     onDownload?: () => void;
     onDelete: () => void;
     canDelete?: boolean;
-}
+};
 
-const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
+const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
     filename,
     isImage,
     url,
@@ -48,7 +48,7 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
                 {filename}
             </Typography>
         );
-    }, [filename]);
+    }, [filename, isImage]);
 
     const controls = useMemo(() => {
         return (
@@ -73,7 +73,7 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
                 )}
             </>
         );
-    }, [onDelete, canDelete]);
+    }, [onDownload, canDelete, onDelete]);
 
     return (
         <Tooltip title={filename} placement="bottom-start">
@@ -190,12 +190,12 @@ const BaseAttachmentCard: FC<IBaseAttachmentCardProps> = ({
     );
 };
 
-interface IBrowserFileCardProps {
+type BrowserFileCardProps = {
     file: File;
     onDelete: () => void;
-}
+};
 
-const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
+const BrowserFileCard: FC<BrowserFileCardProps> = ({ file, onDelete }) => {
     const [fileUrl, setFileUrl] = useState<string>("");
 
     const handleClick = () => {
@@ -222,11 +222,16 @@ const BrowserFileCard: FC<IBrowserFileCardProps> = ({ file, onDelete }) => {
 };
 
 interface IAttachmentCardProps {
-    attachment: AttachmentT;
+    attachment: IssueAttachmentT;
     onDelete: () => void;
+    onDownload: (attachment: IssueAttachmentT) => void;
 }
 
-const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
+const AttachmentCard: FC<IAttachmentCardProps> = ({
+    attachment,
+    onDelete,
+    onDownload,
+}) => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.profile.user);
 
@@ -244,12 +249,12 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({ attachment, onDelete }) => {
                 }),
             );
         } else {
-            window.open(fileUrl, "_blank");
+            onDownload(attachment);
         }
     };
 
     const handleDownload = () => {
-        window.location.assign(fileUrl);
+        onDownload(attachment);
     };
 
     return (

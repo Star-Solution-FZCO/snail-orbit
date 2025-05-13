@@ -20,6 +20,7 @@ import {
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi, userApi } from "shared/model";
 import type {
     BasicUserT,
     CustomFieldT,
@@ -28,7 +29,6 @@ import type {
     UserOrGroupT,
     UserT,
 } from "shared/model/types";
-import { customFieldsApi, userApi } from "shared/model";
 import { UserAvatar } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 
@@ -220,7 +220,7 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                         onScroll: handleScroll,
                     }}
                     renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
+                        const { key: _, ...optionProps } = props;
                         return (
                             <li {...optionProps} key={option.data.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
@@ -361,7 +361,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
             .catch(toastApiError);
     };
 
-    const users = customField.options || [];
+    const users = "options" in customField ? customField.options : [];
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>

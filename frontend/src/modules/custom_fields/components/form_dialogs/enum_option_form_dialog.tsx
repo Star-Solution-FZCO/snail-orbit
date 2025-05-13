@@ -11,10 +11,11 @@ import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import type { EnumOptionT } from "shared/model/types";
+import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import * as yup from "yup";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const enumOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     color: yup.string().nullable().default(null),
@@ -45,14 +46,23 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
         handleSubmit,
         reset,
         formState: { errors, isDirty },
-    } = useForm({ defaultValues: defaultValues || { value: "", color: null } });
+    } = useForm<EnumOptionFormData>({
+        defaultValues: defaultValues || { value: "", color: null },
+    });
 
     useEffect(() => {
         reset(defaultValues || { value: "", color: "#ccc" });
     }, [open, defaultValues, reset]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="xs"
+            fullWidth
+            onSubmit={handleSubmit(onSubmit)}
+            component="form"
+        >
             <DialogTitle>
                 {t(
                     defaultValues
@@ -71,6 +81,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                         variant="outlined"
                         size="small"
                         fullWidth
+                        autoFocus
                     />
 
                     <Controller
@@ -99,11 +110,11 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                 </Button>
 
                 <Button
-                    onClick={handleSubmit(onSubmit)}
                     variant="outlined"
                     size="small"
                     loading={loading}
                     disabled={!isDirty}
+                    type="submit"
                 >
                     {t("save")}
                 </Button>

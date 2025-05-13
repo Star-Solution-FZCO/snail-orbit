@@ -2,8 +2,8 @@ import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { CreateCustomFieldGroupT } from "shared/model/types";
 import { customFieldsApi, useAppSelector } from "shared/model";
+import type { CustomFieldGroupCreateBody } from "shared/model/types/backend-schema.gen";
 import { Link, NotFound } from "shared/ui";
 import { toastApiError } from "shared/utils";
 import { CustomFieldGroupForm } from "./components/custom_field_group_form";
@@ -17,7 +17,7 @@ const CustomFieldGroupCreate = () => {
     const [createCustomFieldGroup, { isLoading }] =
         customFieldsApi.useCreateCustomFieldGroupMutation();
 
-    const onSubmit = (formData: CreateCustomFieldGroupT) => {
+    const onSubmit = (formData: CustomFieldGroupCreateBody) => {
         createCustomFieldGroup(formData)
             .unwrap()
             .then((res) => {

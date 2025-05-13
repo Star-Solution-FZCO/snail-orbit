@@ -1,15 +1,15 @@
 import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import type { EnumFieldT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
 import { cardLabelGetter, getEnumColorAdornment } from "./utils";
 
 type EnumChipProps = {
-    value?: EnumFieldT | EnumFieldT[];
-    onChange: (value: EnumFieldT | EnumFieldT[]) => void;
+    value?: EnumFieldValueT | EnumFieldValueT[];
+    onChange: (value: EnumFieldValueT | EnumFieldValueT[]) => void;
     label: string;
     enumFieldId: string;
     multiple?: boolean;
@@ -34,12 +34,14 @@ export const EnumChip: FC<EnumChipProps> = ({
     };
 
     const items = useMemo(() => {
-        return (data?.payload.items || []) as unknown as EnumFieldT[];
+        return ((data?.payload.items || []) as unknown as EnumOptionT[]).map(
+            (el) => ({ ...el, id: el.uuid }),
+        );
     }, [data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent<Element, Event>,
-        value: EnumFieldT | EnumFieldT[] | null,
+        value: EnumFieldValueT | EnumFieldValueT[] | null,
     ) => {
         if (!value) return;
         onChange(value);
@@ -53,7 +55,7 @@ export const EnumChip: FC<EnumChipProps> = ({
     }, [value]);
 
     return (
-        <SelectChip
+        <SelectChip<EnumFieldValueT, typeof multiple, undefined>
             loading={isLoading}
             options={items}
             value={value}
