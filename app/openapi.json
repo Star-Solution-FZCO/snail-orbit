@@ -11251,7 +11251,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/IssueFieldChangeOutput"
+                  "$ref": "#/components/schemas/IssueChangeOutputRootModel"
                 },
                 "type": "array"
               },
@@ -15858,6 +15858,88 @@
         ],
         "title": "IssueAttachmentOut"
       },
+      "IssueBooleanFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "boolean",
+            "title": "Field Type",
+            "default": "boolean"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueBooleanFieldChangeOutput"
+      },
+      "IssueChangeOutputRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssueSubjectChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueFieldChangeOutputRootModel"
+          },
+          {
+            "$ref": "#/components/schemas/IssueTextChangeOutput"
+          }
+        ],
+        "title": "IssueChangeOutputRootModel",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "field": "#/components/schemas/IssueFieldChangeOutputRootModel",
+            "subject": "#/components/schemas/IssueSubjectChangeOutput",
+            "text": "#/components/schemas/IssueTextChangeOutput"
+          }
+        }
+      },
       "IssueCommentCreate": {
         "properties": {
           "text": {
@@ -16080,6 +16162,130 @@
         ],
         "title": "IssueCreate"
       },
+      "IssueDateFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "date",
+            "title": "Field Type",
+            "default": "date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueDateFieldChangeOutput"
+      },
+      "IssueDateTimeFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "datetime",
+            "title": "Field Type",
+            "default": "datetime"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueDateTimeFieldChangeOutput"
+      },
       "IssueDraftCreate": {
         "properties": {
           "project_id": {
@@ -16281,6 +16487,130 @@
         "type": "object",
         "title": "IssueDraftUpdate"
       },
+      "IssueEnumFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "enum",
+            "title": "Field Type",
+            "default": "enum"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueEnumFieldChangeOutput"
+      },
+      "IssueEnumMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "enum_multi",
+            "title": "Field Type",
+            "default": "enum_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueEnumMultiFieldChangeOutput"
+      },
       "IssueFeedRecordOutput": {
         "properties": {
           "type": {
@@ -16318,157 +16648,67 @@
         ],
         "title": "IssueFeedRecordType"
       },
-      "IssueFieldChangeOutput": {
-        "properties": {
-          "field": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CustomFieldLinkOutput"
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "subject",
-                  "text"
-                ]
-              }
-            ],
-            "title": "Field"
+      "IssueFieldChangeOutputRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssueStringFieldChangeOutput"
           },
-          "old_value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Old Value"
+          {
+            "$ref": "#/components/schemas/IssueIntegerFieldChangeOutput"
           },
-          "new_value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "New Value"
+          {
+            "$ref": "#/components/schemas/IssueFloatFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueBooleanFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueDateFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueDateTimeFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueUserFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueUserMultiFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueEnumFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueEnumMultiFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueStateFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueVersionFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueVersionMultiFieldChangeOutput"
           }
-        },
-        "type": "object",
-        "required": [
-          "field",
-          "old_value",
-          "new_value"
         ],
-        "title": "IssueFieldChangeOutput"
+        "title": "IssueFieldChangeOutputRootModel",
+        "discriminator": {
+          "propertyName": "field_type",
+          "mapping": {
+            "boolean": "#/components/schemas/IssueBooleanFieldChangeOutput",
+            "date": "#/components/schemas/IssueDateFieldChangeOutput",
+            "datetime": "#/components/schemas/IssueDateTimeFieldChangeOutput",
+            "enum": "#/components/schemas/IssueEnumFieldChangeOutput",
+            "enum_multi": "#/components/schemas/IssueEnumMultiFieldChangeOutput",
+            "float": "#/components/schemas/IssueFloatFieldChangeOutput",
+            "integer": "#/components/schemas/IssueIntegerFieldChangeOutput",
+            "state": "#/components/schemas/IssueStateFieldChangeOutput",
+            "string": "#/components/schemas/IssueStringFieldChangeOutput",
+            "user": "#/components/schemas/IssueUserFieldChangeOutput",
+            "user_multi": "#/components/schemas/IssueUserMultiFieldChangeOutput",
+            "version": "#/components/schemas/IssueVersionFieldChangeOutput",
+            "version_multi": "#/components/schemas/IssueVersionMultiFieldChangeOutput"
+          }
+        }
       },
       "IssueFilterBody": {
         "properties": {
@@ -16550,6 +16790,66 @@
         ],
         "title": "IssueFiltersToQueryOutput"
       },
+      "IssueFloatFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "float",
+            "title": "Field Type",
+            "default": "float"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueFloatFieldChangeOutput"
+      },
       "IssueHistoryOutput": {
         "properties": {
           "id": {
@@ -16567,7 +16867,7 @@
           },
           "changes": {
             "items": {
-              "$ref": "#/components/schemas/IssueFieldChangeOutput"
+              "$ref": "#/components/schemas/IssueChangeOutputRootModel"
             },
             "type": "array",
             "title": "Changes"
@@ -16586,6 +16886,66 @@
           "is_hidden"
         ],
         "title": "IssueHistoryOutput"
+      },
+      "IssueIntegerFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "integer",
+            "title": "Field Type",
+            "default": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueIntegerFieldChangeOutput"
       },
       "IssueInterlinkCreate": {
         "properties": {
@@ -17027,6 +17387,148 @@
         ],
         "title": "IssueSpentTimeRecordOutput"
       },
+      "IssueStateFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "state",
+            "title": "Field Type",
+            "default": "state"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueStateFieldChangeOutput"
+      },
+      "IssueStringFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "string",
+            "title": "Field Type",
+            "default": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueStringFieldChangeOutput"
+      },
+      "IssueSubjectChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "subject",
+            "title": "Type",
+            "default": "subject"
+          },
+          "old_value": {
+            "type": "string",
+            "title": "Old Value"
+          },
+          "new_value": {
+            "type": "string",
+            "title": "New Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value"
+        ],
+        "title": "IssueSubjectChangeOutput"
+      },
       "IssueTagCreate": {
         "properties": {
           "tag_id": {
@@ -17060,6 +17562,44 @@
           "tag_id"
         ],
         "title": "IssueTagDelete"
+      },
+      "IssueTextChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "text",
+            "title": "Type",
+            "default": "text"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value"
+        ],
+        "title": "IssueTextChangeOutput"
       },
       "IssueUpdate": {
         "properties": {
@@ -17130,6 +17670,254 @@
         },
         "type": "object",
         "title": "IssueUpdate"
+      },
+      "IssueUserFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "user",
+            "title": "Field Type",
+            "default": "user"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueUserFieldChangeOutput"
+      },
+      "IssueUserMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "user_multi",
+            "title": "Field Type",
+            "default": "user_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueUserMultiFieldChangeOutput"
+      },
+      "IssueVersionFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "version",
+            "title": "Field Type",
+            "default": "version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueVersionFieldChangeOutput"
+      },
+      "IssueVersionMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "version_multi",
+            "title": "Field Type",
+            "default": "version_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueVersionMultiFieldChangeOutput"
       },
       "MFASettingOut": {
         "properties": {

@@ -1,15 +1,15 @@
+from abc import ABC
 from datetime import date, datetime
-from typing import Any, Literal, Self
+from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, RootModel
 
 import pm.models as m
 from pm.api.context import current_user
 
 from .custom_fields import (
-    CustomFieldLinkOutput,
     CustomFieldValueOutputRootModel,
     cf_value_output_cls_from_type,
 )
@@ -20,12 +20,13 @@ __all__ = (
     'IssueOutput',
     'IssueDraftOutput',
     'IssueAttachmentOut',
-    'IssueFieldChangeOutput',
+    'IssueChangeOutputRootModel',
     'IssueCommentOutput',
     'IssueHistoryOutput',
     'ProjectField',
     'CustomFieldValueOutT',
     'transform_custom_field_value',
+    'issue_change_output_from_obj',
 )
 
 CustomFieldValueOutT = (
@@ -209,23 +210,215 @@ class IssueDraftOutput(BaseModel):
         )
 
 
-class IssueFieldChangeOutput(BaseModel):
-    field: CustomFieldLinkOutput | Literal['subject', 'text']
-    old_value: CustomFieldValueOutT | str | None
-    new_value: CustomFieldValueOutT | str | None
+class IssueBaseChangeOutput(BaseModel, ABC):
+    type: Literal['subject', 'text', 'field']
+    old_value: Any | None
+    new_value: Any | None
+
+
+class IssueFieldChangeBaseOutput(IssueBaseChangeOutput, ABC):
+    type: Literal['field'] = 'field'
+    field_id: PydanticObjectId
+    field_gid: str
+    field_name: str
+    field_type: m.CustomFieldTypeT
 
     @classmethod
     def from_obj(cls, obj: m.IssueFieldChange) -> Self:
         if isinstance(obj.field, str):
-            return cls(
-                field=obj.field,
-                old_value=obj.old_value,
-                new_value=obj.new_value,
-            )
+            raise ValueError(f'Unknown field type: {obj.field}')
         return cls(
-            field=CustomFieldLinkOutput.from_obj(obj.field),
+            field_id=obj.field.id,
+            field_gid=obj.field.gid,
+            field_name=obj.field.name,
+            field_type=obj.field.type,
             old_value=transform_custom_field_value(obj.old_value, obj.field),
             new_value=transform_custom_field_value(obj.new_value, obj.field),
+        )
+
+
+class IssueStringFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.STRING] = m.CustomFieldTypeT.STRING
+    old_value: str | None
+    new_value: str | None
+
+
+class IssueIntegerFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.INTEGER] = m.CustomFieldTypeT.INTEGER
+    old_value: int | None
+    new_value: int | None
+
+
+class IssueFloatFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.FLOAT] = m.CustomFieldTypeT.FLOAT
+    old_value: float | None
+    new_value: float | None
+
+
+class IssueBooleanFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.BOOLEAN] = m.CustomFieldTypeT.BOOLEAN
+    old_value: bool | None
+    new_value: bool | None
+
+
+class IssueDateFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.DATE] = m.CustomFieldTypeT.DATE
+    old_value: date | None
+    new_value: date | None
+
+
+class IssueDateTimeFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
+    old_value: datetime | None
+    new_value: datetime | None
+
+
+class IssueUserFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
+    old_value: UserOutput | None
+    new_value: UserOutput | None
+
+
+class IssueUserMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.USER_MULTI] = m.CustomFieldTypeT.USER_MULTI
+    old_value: list[UserOutput] | None
+    new_value: list[UserOutput] | None
+
+
+class IssueEnumFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.ENUM] = m.CustomFieldTypeT.ENUM
+    old_value: m.EnumOption | None
+    new_value: m.EnumOption | None
+
+
+class IssueEnumMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
+    old_value: list[m.EnumOption] | None
+    new_value: list[m.EnumOption] | None
+
+
+class IssueStateFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
+    old_value: m.StateOption | None
+    new_value: m.StateOption | None
+
+
+class IssueVersionFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.VERSION] = m.CustomFieldTypeT.VERSION
+    old_value: m.VersionOption | None
+    new_value: m.VersionOption | None
+
+
+class IssueVersionMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = (
+        m.CustomFieldTypeT.VERSION_MULTI
+    )
+    old_value: list[m.VersionOption] | None
+    new_value: list[m.VersionOption] | None
+
+
+class IssueSubjectChangeOutput(IssueBaseChangeOutput):
+    type: Literal['subject'] = 'subject'
+    old_value: str
+    new_value: str
+
+
+class IssueTextChangeOutput(IssueBaseChangeOutput):
+    type: Literal['text'] = 'text'
+    old_value: str | None
+    new_value: str | None
+
+
+IssueFieldChangeOutputT = (
+    IssueStringFieldChangeOutput
+    | IssueIntegerFieldChangeOutput
+    | IssueFloatFieldChangeOutput
+    | IssueBooleanFieldChangeOutput
+    | IssueDateFieldChangeOutput
+    | IssueDateTimeFieldChangeOutput
+    | IssueUserFieldChangeOutput
+    | IssueUserMultiFieldChangeOutput
+    | IssueEnumFieldChangeOutput
+    | IssueEnumMultiFieldChangeOutput
+    | IssueStateFieldChangeOutput
+    | IssueVersionFieldChangeOutput
+    | IssueVersionMultiFieldChangeOutput
+)
+
+
+class IssueFieldChangeOutputRootModel(RootModel):
+    root: Annotated[IssueFieldChangeOutputT, Field(..., discriminator='field_type')]
+
+
+FIELD_CHANGE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[IssueFieldChangeOutputT]] = {
+    m.CustomFieldTypeT.STRING: IssueStringFieldChangeOutput,
+    m.CustomFieldTypeT.INTEGER: IssueIntegerFieldChangeOutput,
+    m.CustomFieldTypeT.FLOAT: IssueFloatFieldChangeOutput,
+    m.CustomFieldTypeT.BOOLEAN: IssueBooleanFieldChangeOutput,
+    m.CustomFieldTypeT.DATE: IssueDateFieldChangeOutput,
+    m.CustomFieldTypeT.DATETIME: IssueDateTimeFieldChangeOutput,
+    m.CustomFieldTypeT.USER: IssueUserFieldChangeOutput,
+    m.CustomFieldTypeT.USER_MULTI: IssueUserMultiFieldChangeOutput,
+    m.CustomFieldTypeT.ENUM: IssueEnumFieldChangeOutput,
+    m.CustomFieldTypeT.ENUM_MULTI: IssueEnumMultiFieldChangeOutput,
+    m.CustomFieldTypeT.STATE: IssueStateFieldChangeOutput,
+    m.CustomFieldTypeT.VERSION: IssueVersionFieldChangeOutput,
+    m.CustomFieldTypeT.VERSION_MULTI: IssueVersionMultiFieldChangeOutput,
+}
+
+
+def issue_field_change_output_from_obj(
+    obj: m.IssueFieldChange,
+) -> IssueFieldChangeOutputT:
+    if isinstance(obj.field, str):
+        raise ValueError(f'Unknown field type: {obj.field}')
+    if obj.field.type not in FIELD_CHANGE_OUTPUT_MAP:
+        raise ValueError(f'Unknown field type: {obj.field.type}')
+    return FIELD_CHANGE_OUTPUT_MAP[obj.field.type].from_obj(obj)
+
+
+IssueChangeOutputT = (
+    IssueSubjectChangeOutput | IssueFieldChangeOutputRootModel | IssueTextChangeOutput
+)
+
+
+def issue_change_output_from_obj(obj: m.IssueFieldChange) -> IssueChangeOutputT:
+    if not isinstance(obj.field, str):
+        return issue_field_change_output_from_obj(obj).from_obj(obj)
+    if obj.field == 'subject':
+        return IssueSubjectChangeOutput(
+            old_value=obj.old_value,
+            new_value=obj.new_value,
+        )
+    if obj.field == 'text':
+        return IssueTextChangeOutput(
+            old_value=obj.old_value,
+            new_value=obj.new_value,
+        )
+    raise ValueError(f'Unknown field type: {obj.field}')
+
+
+class IssueChangeOutputRootModel(RootModel):
+    root: Annotated[IssueChangeOutputT, Field(..., discriminator='type')]
+
+
+class IssueHistoryOutput(BaseModel):
+    id: UUID
+    author: UserOutput
+    time: datetime
+    changes: list[IssueChangeOutputRootModel]
+    is_hidden: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.IssueHistoryRecord) -> Self:
+        return cls(
+            id=obj.id,
+            author=UserOutput.from_obj(obj.author),
+            time=obj.time,
+            changes=[issue_change_output_from_obj(c) for c in obj.changes]
+            if not obj.is_hidden
+            else [],
+            is_hidden=obj.is_hidden,
         )
 
 
@@ -254,24 +447,4 @@ class IssueCommentOutput(BaseModel):
             is_hidden=obj.is_hidden,
             spent_time=obj.spent_time,
             encryption=obj.encryption,
-        )
-
-
-class IssueHistoryOutput(BaseModel):
-    id: UUID
-    author: UserOutput
-    time: datetime
-    changes: list[IssueFieldChangeOutput]
-    is_hidden: bool
-
-    @classmethod
-    def from_obj(cls, obj: m.IssueHistoryRecord) -> Self:
-        return cls(
-            id=obj.id,
-            author=UserOutput.from_obj(obj.author),
-            time=obj.time,
-            changes=[IssueFieldChangeOutput.from_obj(c) for c in obj.changes]
-            if not obj.is_hidden
-            else [],
-            is_hidden=obj.is_hidden,
         )

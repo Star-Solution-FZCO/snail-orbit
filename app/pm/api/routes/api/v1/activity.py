@@ -8,7 +8,11 @@ from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.utils.router import APIRouter
-from pm.api.views.issue import IssueFieldChangeOutput, ProjectField
+from pm.api.views.issue import (
+    IssueChangeOutputRootModel,
+    ProjectField,
+    issue_change_output_from_obj,
+)
 from pm.api.views.output import BaseListOutput
 from pm.api.views.user import UserOutput
 from pm.utils.dateutils import utcfromtimestamp
@@ -47,7 +51,7 @@ class Activity(BaseModel):
     action: ActionT
     issue: IssueShortOutput
     time: datetime
-    changes: list[IssueFieldChangeOutput] | None = None
+    changes: list[IssueChangeOutputRootModel] | None = None
 
 
 def _get_issue_activity_unsorted(
@@ -62,9 +66,7 @@ def _get_issue_activity_unsorted(
                     action=ActionT.ISSUE_UPDATED,
                     issue=IssueShortOutput.from_obj(issue),
                     time=history.time,
-                    changes=[
-                        IssueFieldChangeOutput.from_obj(c) for c in history.changes
-                    ],
+                    changes=[issue_change_output_from_obj(c) for c in history.changes],
                 )
             )
     for comment in issue.comments:
