@@ -1,8 +1,10 @@
 import type {
     IssueAttachmentBody,
     IssueAttachmentOut,
+    IssueChangeOutputRootModel,
     IssueDraftOutput,
     IssueFeedRecordOutput,
+    IssueFieldChangeOutputRootModel,
     IssueHistoryOutput,
     IssueInterlinkTypeT,
     IssueLinkFieldOutput,
@@ -21,6 +23,9 @@ export type IssueHistoryT = IssueHistoryOutput;
 
 export type IssueAttachmentBodyT = IssueAttachmentBody;
 export type IssueAttachmentT = IssueAttachmentOut;
+
+export type IssueChangeT = IssueChangeOutputRootModel;
+export type IssueFieldChangeT = IssueFieldChangeOutputRootModel;
 
 export type IssueActivityTypeT = "comment" | "spent_time" | "history";
 

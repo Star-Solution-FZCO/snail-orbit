@@ -6,14 +6,7 @@ import { diffWords } from "diff";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "shared/i18n";
-import type {
-    BasicUserT,
-    CustomFieldT,
-    CustomFieldValueT,
-    FieldBaseT,
-    VersionFieldValueT,
-} from "shared/model/types";
-import type { IssueFieldChangeOutput } from "shared/model/types/backend-schema.gen";
+import type { IssueChangeT, VersionFieldValueT } from "shared/model/types";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -70,99 +63,104 @@ const renderVersion = (version: VersionFieldValueT) => {
         : version.value;
 };
 
-const renderValue = (
-    value: CustomFieldValueT,
-    field: CustomFieldT | "subject" | "text",
-): string => {
-    if (value === null || value === undefined) {
-        if (typeof field === "string") {
-            return "";
-        }
-        return `${i18n.t("common.no")} ${field.name}`;
+const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
+    if (change.type !== "field") {
+        const target = type === "old" ? change.old_value : change.new_value;
+        return target || "";
     }
 
-    if (typeof field === "string") {
-        switch (field) {
-            case "subject":
-            case "text":
-                return value as string;
-            default:
-                return String(value);
-        }
-    }
+    const noValue = `${i18n.t("common.no")} ${change.field_name}`;
 
-    switch (field.type) {
-        case "boolean":
-            return value ? i18n.t("common.yes") : i18n.t("common.no");
+    switch (change.field_type) {
+        case "boolean": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target ? i18n.t("common.yes") : i18n.t("common.no");
+        }
 
         case "integer":
-        case "float":
-            return value.toString();
+        case "float": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.toString() || noValue;
+        }
 
-        case "string":
-            return value as string;
+        case "string": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target || "";
+        }
 
-        case "date":
-            return dayjs(value as string).format("DD MMM YYYY");
+        case "date": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return dayjs(target).format("DD MMM YYYY");
+        }
 
-        case "datetime":
-            return dayjs(value as string).format("DD MMM YYYY HH:mm");
+        case "datetime": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return dayjs(target).format("DD MMM YYYY HH:mm");
+        }
 
-        case "user":
-            return (value as BasicUserT).name;
+        case "user": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.avatar || noValue;
+        }
 
-        case "user_multi":
-            return (value as BasicUserT[]).map((user) => user.name).join(", ");
+        case "user_multi": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.map((user) => user.name).join(", ") || noValue;
+        }
 
         case "enum":
-        case "state":
-            return (value as FieldBaseT).value;
+        case "state": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.value || noValue;
+        }
 
-        case "enum_multi":
-            return (value as EnumFieldT[])
-                .map((option) => option.value)
-                .join(", ");
+        case "enum_multi": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.map((option) => option.value).join(", ") || noValue;
+        }
 
-        case "version":
-            return renderVersion(value as VersionFieldValueT);
+        case "version": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target ? renderVersion(target) : noValue;
+        }
 
-        case "version_multi":
-            return (value as VersionFieldValueT[])
-                .map(renderVersion)
-                .join(", ");
+        case "version_multi": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.map(renderVersion).join(", ") || noValue;
+        }
 
         default:
-            return String(value);
+            return "";
     }
 };
 
-export const FieldChanges: FC<{ changes: IssueFieldChangeOutput[] }> = ({
-    changes,
-}) => {
+export const FieldChanges: FC<{
+    changes: IssueChangeT[];
+}> = ({ changes }) => {
     const { t } = useTranslation();
 
     return (
         <Box display="flex" flexDirection="column" gap={0.5} mt={0.5}>
-            {changes.map(({ field, old_value, new_value }, index) => (
+            {changes.map((change, index) => (
                 <Box
                     key={index}
                     display="flex"
                     flexDirection="column"
                     gap={0.5}
                 >
-                    {typeof field === "string" &&
-                    (field === "subject" || field === "text") ? (
+                    {change.type === "subject" || change.type === "text" ? (
                         <>
                             <Typography
                                 fontSize="inherit"
                                 color="text.secondary"
                             >
-                                {t(field)} {t("common.changed").toLowerCase()}:
+                                {t(change.type)}{" "}
+                                {t("common.changed").toLowerCase()}:
                             </Typography>
 
                             {renderDiff(
-                                renderValue(old_value, field),
-                                renderValue(new_value, field),
+                                renderValue(change, "old"),
+                                renderValue(change, "new"),
                             )}
                         </>
                     ) : (
@@ -171,14 +169,11 @@ export const FieldChanges: FC<{ changes: IssueFieldChangeOutput[] }> = ({
                                 fontSize="inherit"
                                 color="text.secondary"
                             >
-                                {typeof field === "string"
-                                    ? t(field)
-                                    : field.name}
-                                :
+                                {change.field_name}:
                             </Typography>
                             <Typography fontSize="inherit">
-                                {renderValue(old_value, field)} →{" "}
-                                {renderValue(new_value, field)}
+                                {renderValue(change, "old")} →{" "}
+                                {renderValue(change, "new")}
                             </Typography>
                         </Box>
                     )}
