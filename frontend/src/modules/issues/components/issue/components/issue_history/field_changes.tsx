@@ -90,17 +90,23 @@ const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
 
         case "date": {
             const target = type === "old" ? change.old_value : change.new_value;
-            return dayjs(target).format("DD MMM YYYY");
+            const parsedValue = dayjs(target);
+            return parsedValue.isValid()
+                ? parsedValue.format("DD MMM YYYY")
+                : "-";
         }
 
         case "datetime": {
             const target = type === "old" ? change.old_value : change.new_value;
-            return dayjs(target).format("DD MMM YYYY HH:mm");
+            const parsedValue = dayjs(target);
+            return parsedValue.isValid()
+                ? parsedValue.format("DD MMM YYYY HH:mm")
+                : "-";
         }
 
         case "user": {
             const target = type === "old" ? change.old_value : change.new_value;
-            return target?.avatar || noValue;
+            return target?.name || noValue;
         }
 
         case "user_multi": {

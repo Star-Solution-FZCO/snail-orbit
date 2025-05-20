@@ -151,11 +151,16 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                                 />
                             );
                         }
-                        case "date":
+                        case "date": {
+                            const parsedValue = dayjs(field.value);
                             return (
                                 <DateField
                                     {...baseCompProps(field)}
-                                    value={dayjs(field.value)}
+                                    value={
+                                        parsedValue.isValid()
+                                            ? parsedValue
+                                            : undefined
+                                    }
                                     onChange={(value) => {
                                         onChange?.({
                                             ...field,
@@ -165,11 +170,17 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                                     type="date"
                                 />
                             );
-                        case "datetime":
+                        }
+                        case "datetime": {
+                            const parsedValue = dayjs(field.value);
                             return (
                                 <DateField
                                     {...baseCompProps(field)}
-                                    value={dayjs(field.value)}
+                                    value={
+                                        parsedValue.isValid()
+                                            ? parsedValue
+                                            : undefined
+                                    }
                                     onChange={(value) => {
                                         onChange?.({
                                             ...field,
@@ -181,6 +192,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                                     type="datetime"
                                 />
                             );
+                        }
                         case "state":
                             return (
                                 <EnumField
