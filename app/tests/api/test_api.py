@@ -1196,7 +1196,10 @@ async def test_api_v1_custom_field_project_link_multiple(
         pytest.param(
             {
                 'subject': 'Test issue',
-                'text': 'Test issue text\nBlah blah blah',
+                'text': {
+                    'value': 'Test issue text\nBlah blah blah',
+                    'encryption': None,
+                },
             },
             id='issue',
         )
@@ -1265,7 +1268,6 @@ async def test_api_v1_issue(
         'resolved_at': None,
         'is_closed': False,
         'closed_at': None,
-        'encryption': None,
     }
     assert data['payload']['project']['id'] == project_id
     assert data['payload']['created_by']['id'] == admin_id
@@ -1325,11 +1327,17 @@ async def test_api_v1_issue(
             [
                 {
                     'subject': 'Test issue1',
-                    'text': 'Test issue text\nBlah blah blah',
+                    'text': {
+                        'value': 'Test issue text\nBlah blah blah',
+                        'encryption': None,
+                    },
                 },
                 {
                     'subject': 'Test issue 2',
-                    'text': 'Test issue text\nBlah blah blah',
+                    'text': {
+                        'value': 'Test issue text\nBlah blah blah',
+                        'encryption': None,
+                    },
                 },
             ],
             id='issues',
@@ -2028,7 +2036,7 @@ async def test_api_v1_encrypted_project(
 
     issue_payload = {
         'subject': 'Test encrypted issue',
-        'text': 'Unencrypted description',
+        'text': {'value': 'Unencrypted description', 'encryption': None},
         'project_id': project_id,
     }
 
@@ -2055,25 +2063,31 @@ async def test_api_v1_encrypted_project(
     )
 
     comment_data = {
-        'text': encrypted_comment_text,
-        'encryption': [
-            {
-                'fingerprint': admin_fingerprint,
-                'target_type': 'user',
-                'target_id': admin_id,
-                'algorithm': 'X25519',
-                'data': admin_enc['encrypted_key'],
-                'extras': {'ephemeral_public_key': admin_enc['ephemeral_public_key']},
-            },
-            {
-                'fingerprint': project_fingerprint,
-                'target_type': 'project',
-                'target_id': project_id,
-                'algorithm': 'X25519',
-                'data': project_enc['encrypted_key'],
-                'extras': {'ephemeral_public_key': project_enc['ephemeral_public_key']},
-            },
-        ],
+        'text': {
+            'value': encrypted_comment_text,
+            'encryption': [
+                {
+                    'fingerprint': admin_fingerprint,
+                    'target_type': 'user',
+                    'target_id': admin_id,
+                    'algorithm': 'X25519',
+                    'data': admin_enc['encrypted_key'],
+                    'extras': {
+                        'ephemeral_public_key': admin_enc['ephemeral_public_key']
+                    },
+                },
+                {
+                    'fingerprint': project_fingerprint,
+                    'target_type': 'project',
+                    'target_id': project_id,
+                    'algorithm': 'X25519',
+                    'data': project_enc['encrypted_key'],
+                    'extras': {
+                        'ephemeral_public_key': project_enc['ephemeral_public_key']
+                    },
+                },
+            ],
+        },
     }
 
     response = test_client.post(
@@ -2084,9 +2098,10 @@ async def test_api_v1_encrypted_project(
     assert data['success']
 
     comment_id = data['payload']['id']
-    assert 'encryption' in data['payload']
-    assert data['payload']['text'] == encrypted_comment_text
-    assert data['payload']['encryption'] == comment_data['encryption']
+    assert data['payload']['text'] == {
+        'value': encrypted_comment_text,
+        'encryption': comment_data['text']['encryption'],
+    }
 
     response = test_client.get(
         f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=admin_headers
@@ -2094,17 +2109,19 @@ async def test_api_v1_encrypted_project(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['text'] == encrypted_comment_text
-    assert data['payload']['encryption'] == comment_data['encryption']
+    assert data['payload']['text'] == {
+        'value': encrypted_comment_text,
+        'encryption': comment_data['text']['encryption'],
+    }
 
     admin_decrypted_aes_key = decrypt_aes_key_with_x25519(
-        data['payload']['encryption'][0]['data'],
-        data['payload']['encryption'][0]['extras']['ephemeral_public_key'],
+        data['payload']['text']['encryption'][0]['data'],
+        data['payload']['text']['encryption'][0]['extras']['ephemeral_public_key'],
         admin_private_key_bytes,
     )
     project_decrypted_aes_key = decrypt_aes_key_with_x25519(
-        data['payload']['encryption'][1]['data'],
-        data['payload']['encryption'][1]['extras']['ephemeral_public_key'],
+        data['payload']['text']['encryption'][1]['data'],
+        data['payload']['text']['encryption'][1]['extras']['ephemeral_public_key'],
         project_private_key_bytes,
     )
     assert admin_decrypted_aes_key == project_decrypted_aes_key
@@ -2112,7 +2129,7 @@ async def test_api_v1_encrypted_project(
 
     decrypted_comment_text = decrypt_with_aes(
         admin_decrypted_aes_key,
-        data['payload']['text'],
+        data['payload']['text']['value'],
     )
     assert decrypted_comment_text == comment_text
 
@@ -2120,7 +2137,7 @@ async def test_api_v1_encrypted_project(
     issue_attachment = _upload_attachment(
         test_client, admin_headers, filename='issue_attachment.txt'
     )
-    encryption_meta = comment_data['encryption']
+    encryption_meta = comment_data['text']['encryption']
     with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
         response = test_client.put(
             f'/api/v1/issue/{issue_id}',
@@ -2176,7 +2193,7 @@ async def test_api_v1_encrypted_project(
         f'/api/v1/issue/{issue_id}/comment/',
         headers=admin_headers,
         json={
-            'text': 'Comment with attachment',
+            'text': {'value': 'Comment with attachment', 'encryption': None},
             'attachments': [{'id': comment_attachment, 'encryption': encryption_meta}],
         },
     )

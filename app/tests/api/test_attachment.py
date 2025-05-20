@@ -68,7 +68,7 @@ def _assign_admin_role(
         pytest.param(
             {
                 'subject': 'Issue with files',
-                'text': 'Created via integration-test',
+                'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
         )
@@ -221,7 +221,7 @@ async def test_issue_attachments_crud(
         pytest.param(
             {
                 'subject': 'Issue with files',
-                'text': 'Created via integration-test',
+                'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
         )
@@ -375,7 +375,7 @@ async def test_issue_draft_attachments_crud(
         pytest.param(
             {
                 'subject': 'Issue with files',
-                'text': 'Created via integration-test',
+                'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
         )
@@ -420,7 +420,7 @@ async def test_issue_comment_attachments_crud(
         f'/api/v1/issue/{issue_id}/comment',
         headers=headers,
         json={
-            'text': 'Comment with attachment',
+            'text': {'value': 'Comment with attachment', 'encryption': None},
             'attachments': [{'id': comment_attachment1}],
         },
     )

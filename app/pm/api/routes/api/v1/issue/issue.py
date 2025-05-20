@@ -18,6 +18,7 @@ from pm.api.issue_query import (
 )
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
+from pm.api.views.encryption import EncryptedObject
 from pm.api.views.issue import IssueAttachmentBody, IssueDraftOutput, IssueOutput
 from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
 from pm.api.views.params import IssueSearchParams
@@ -39,8 +40,7 @@ router = APIRouter()
 class IssueCreate(BaseModel):
     project_id: PydanticObjectId
     subject: str
-    text: str | None = None
-    encryption: list[m.EncryptionMeta] | None = None
+    text: EncryptedObject | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
@@ -48,8 +48,7 @@ class IssueCreate(BaseModel):
 class IssueUpdate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
-    text: str | None = None
-    encryption: list[m.EncryptionMeta] | None = None
+    text: EncryptedObject | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
 
@@ -57,8 +56,7 @@ class IssueUpdate(BaseModel):
 class IssueDraftCreate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
-    text: str | None = None
-    encryption: list[m.EncryptionMeta] | None = None
+    text: EncryptedObject | None = None
     fields: Annotated[dict[str, Any], Field(default_factory=dict)]
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
 
@@ -66,8 +64,7 @@ class IssueDraftCreate(BaseModel):
 class IssueDraftUpdate(BaseModel):
     project_id: PydanticObjectId | None = None
     subject: str | None = None
-    text: str | None = None
-    encryption: list[m.EncryptionMeta] | None = None
+    text: EncryptedObject | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
 
@@ -168,7 +165,7 @@ async def create_draft(
         )
     obj = m.IssueDraft(
         subject=body.subject,
-        text=body.text,
+        text=body.text.value if body.text else None,
         project=(
             m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug)
             if project
@@ -176,7 +173,7 @@ async def create_draft(
         ),
         fields=validated_fields,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
-        encryption=body.encryption,
+        encryption=body.text.encryption if body.text else None,
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
@@ -278,11 +275,14 @@ async def update_draft(
         )
         obj.fields = f_val
     for k, v in body.model_dump(
-        exclude={'project_id', 'fields', 'attachments'}, exclude_unset=True
+        exclude={'project_id', 'fields', 'attachments', 'text'}, exclude_unset=True
     ).items():
         setattr(obj, k, v)
     if 'attachments' in body.model_fields_set:
         await update_attachments(obj, body.attachments, user=user_ctx.user)
+    if 'text' in body.model_fields_set:
+        obj.text = body.text.value if body.text else None
+        obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
         raise ValidateModelException(
             payload=IssueDraftOutput.from_obj(obj),
@@ -433,12 +433,12 @@ async def create_issue(
     )
     obj = m.Issue(
         subject=body.subject,
-        text=body.text,
+        text=body.text.value if body.text else None,
         project=m.ProjectLinkField(id=project.id, name=project.name, slug=project.slug),
         fields=validated_fields,
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
-        encryption=body.encryption,
+        encryption=body.text.encryption if body.text else None,
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
@@ -514,7 +514,9 @@ async def update_issue(
         project = await obj.get_project(fetch_links=True)
 
     validation_errors = []
-    for k, v in body.model_dump(exclude={'attachments'}, exclude_unset=True).items():
+    for k, v in body.model_dump(
+        exclude={'attachments', 'text'}, exclude_unset=True
+    ).items():
         if k == 'fields':
             f_val, validation_errors = await validate_custom_fields_values(
                 v, project, obj
@@ -528,6 +530,9 @@ async def update_issue(
     }
     if 'attachments' in body.model_fields_set:
         await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
+    if 'text' in body.model_fields_set:
+        obj.text = body.text.value if body.text else None
+        obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
         raise ValidateModelException(
             payload=IssueOutput.from_obj(obj),

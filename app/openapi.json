@@ -14378,6 +14378,60 @@
         ],
         "title": "DateTimeCustomFieldValueOutput"
       },
+      "EncryptedObject-Input": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "EncryptedObject"
+      },
+      "EncryptedObject-Output": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Output"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "EncryptedObject"
+      },
       "EncryptionKeyAlgorithmT": {
         "type": "string",
         "enum": [
@@ -15973,13 +16027,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
+            ]
           },
           "attachments": {
             "items": {
@@ -15992,20 +16045,6 @@
             "type": "integer",
             "title": "Spent Time",
             "default": 0
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
           }
         },
         "type": "object",
@@ -16021,13 +16060,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
+            ]
           },
           "author": {
             "$ref": "#/components/schemas/UserOutput"
@@ -16056,20 +16094,6 @@
           "spent_time": {
             "type": "integer",
             "title": "Spent Time"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Output"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
           }
         },
         "type": "object",
@@ -16081,8 +16105,7 @@
           "updated_at",
           "attachments",
           "is_hidden",
-          "spent_time",
-          "encryption"
+          "spent_time"
         ],
         "title": "IssueCommentOutput"
       },
@@ -16091,13 +16114,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
+            ]
           },
           "attachments": {
             "anyOf": [
@@ -16123,20 +16145,6 @@
               }
             ],
             "title": "Spent Time"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
           }
         },
         "type": "object",
@@ -16159,27 +16167,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "additionalProperties": true,
@@ -16356,27 +16349,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "additionalProperties": true,
@@ -16425,27 +16403,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Output"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "additionalProperties": {
@@ -16476,7 +16439,6 @@
           "project",
           "subject",
           "text",
-          "encryption",
           "fields",
           "attachments",
           "created_at",
@@ -16515,27 +16477,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "anyOf": [
@@ -17214,27 +17161,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Output"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Output"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "additionalProperties": {
@@ -17342,7 +17274,6 @@
           "project",
           "subject",
           "text",
-          "encryption",
           "fields",
           "attachments",
           "is_subscribed",
@@ -17727,27 +17658,12 @@
           "text": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EncryptedObject-Input"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Text"
-          },
-          "encryption": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EncryptionMeta-Input"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Encryption"
+            ]
           },
           "fields": {
             "anyOf": [

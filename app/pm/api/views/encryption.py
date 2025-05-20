@@ -12,6 +12,7 @@ __all__ = (
     'EncryptionKeyPublicOut',
     'EncryptionKeyCreate',
     'EncryptionKeyUpdate',
+    'EncryptedObject',
 )
 
 
@@ -72,3 +73,8 @@ class EncryptionKeyCreate(BaseModel):
 class EncryptionKeyUpdate(BaseModel):
     name: str | None = None
     is_active: bool | None = None
+
+
+class EncryptedObject(BaseModel):
+    value: str
+    encryption: list[m.EncryptionMeta] | None = None

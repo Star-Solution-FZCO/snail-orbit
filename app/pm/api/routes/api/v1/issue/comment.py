@@ -10,6 +10,7 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_task
 from pm.api.utils.router import APIRouter
+from pm.api.views.encryption import EncryptedObject
 from pm.api.views.issue import IssueAttachmentBody, IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
@@ -29,17 +30,15 @@ router = APIRouter(
 
 
 class IssueCommentCreate(BaseModel):
-    text: str | None = None
+    text: EncryptedObject | None = None
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
     spent_time: int = 0
-    encryption: list[m.EncryptionMeta] | None = None
 
 
 class IssueCommentUpdate(BaseModel):
-    text: str | None = None
+    text: EncryptedObject | None = None
     attachments: list[IssueAttachmentBody] | None = None
     spent_time: int | None = None
-    encryption: list[m.EncryptionMeta] | None = None
 
 
 @router.get('/list')
@@ -105,12 +104,12 @@ async def create_comment(
     )
 
     comment = m.IssueComment(
-        text=body.text,
+        text=body.text.value if body.text else None,
         author=m.UserLinkField.from_obj(user_ctx.user),
         created_at=now,
         updated_at=now,
         spent_time=body.spent_time,
-        encryption=body.encryption,
+        encryption=body.text.encryption if body.text else None,
     )
     await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
     issue.comments.append(comment)
@@ -153,12 +152,17 @@ async def update_comment(
     extra_attachment_ids = {
         a.id for a in body.attachments or [] if a.id not in comment_attachment_ids
     }
-    for k, v in body.model_dump(exclude={'attachments'}, exclude_unset=True).items():
+    for k, v in body.model_dump(
+        exclude={'attachments', 'text'}, exclude_unset=True
+    ).items():
         if k == 'spent_time':
             v = v or 0
         setattr(comment, k, v)
     if 'attachments' in body.model_fields_set:
         await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
+    if 'text' in body.model_fields_set:
+        comment.text = body.text.value if body.text else None
+        comment.encryption = body.text.encryption if body.text else None
     if issue.is_changed:
         comment.updated_at = now
         issue.updated_at = comment.created_at

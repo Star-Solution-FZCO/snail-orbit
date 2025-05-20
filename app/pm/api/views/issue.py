@@ -13,6 +13,7 @@ from .custom_fields import (
     CustomFieldValueOutputRootModel,
     cf_value_output_cls_from_type,
 )
+from .encryption import EncryptedObject
 from .tag import TagLinkOutput
 from .user import UserOutput
 
@@ -145,8 +146,7 @@ class IssueOutput(BaseModel):
     aliases: list[str]
     project: ProjectField
     subject: str
-    text: str | None
-    encryption: list[m.EncryptionMeta] | None
+    text: EncryptedObject | None
     fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     is_subscribed: bool
@@ -170,8 +170,12 @@ class IssueOutput(BaseModel):
             aliases=obj.aliases,
             project=ProjectField.from_obj(obj.project),
             subject=obj.subject,
-            text=obj.text,
-            encryption=obj.encryption,
+            text=EncryptedObject(
+                value=obj.text,
+                encryption=obj.encryption,
+            )
+            if obj.text
+            else None,
             fields={
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields
@@ -195,8 +199,7 @@ class IssueDraftOutput(BaseModel):
     id: PydanticObjectId
     project: ProjectField | None
     subject: str | None
-    text: str | None
-    encryption: list[m.EncryptionMeta] | None
+    text: EncryptedObject | None
     fields: dict[str, CustomFieldValueOutputRootModel]
     attachments: list[IssueAttachmentOut]
     created_at: datetime
@@ -208,8 +211,12 @@ class IssueDraftOutput(BaseModel):
             id=obj.id,
             project=ProjectField.from_obj(obj.project) if obj.project else None,
             subject=obj.subject,
-            text=obj.text,
-            encryption=obj.encryption,
+            text=EncryptedObject(
+                value=obj.text,
+                encryption=obj.encryption,
+            )
+            if obj.text
+            else None,
             fields={
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields
@@ -434,20 +441,28 @@ class IssueHistoryOutput(BaseModel):
 
 class IssueCommentOutput(BaseModel):
     id: UUID
-    text: str | None
+    text: EncryptedObject | None
     author: UserOutput
     created_at: datetime
     updated_at: datetime
     attachments: list[IssueAttachmentOut]
     is_hidden: bool
     spent_time: int
-    encryption: list[m.EncryptionMeta] | None
 
     @classmethod
     def from_obj(cls, obj: m.IssueComment) -> Self:
+        text = (
+            EncryptedObject(
+                value=obj.text,
+                encryption=obj.encryption,
+            )
+            if obj.text
+            else None
+        )
+
         return cls(
             id=obj.id,
-            text=obj.text if not obj.is_hidden else None,
+            text=text if not obj.is_hidden else None,
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
@@ -456,5 +471,4 @@ class IssueCommentOutput(BaseModel):
             else [],
             is_hidden=obj.is_hidden,
             spent_time=obj.spent_time,
-            encryption=obj.encryption,
         )
