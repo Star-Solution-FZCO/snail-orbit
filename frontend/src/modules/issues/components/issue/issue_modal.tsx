@@ -14,7 +14,6 @@ import { useEffect, useState } from "react";
 import { projectApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { FilePreview } from "shared/ui";
 import { AddLinks } from "./components/add_links";
 import { FieldOffside } from "./components/field_offside";
 import { IssueActivities } from "./components/issue_activities";
@@ -33,29 +32,18 @@ type IssueModalProps = {
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     onSaveIssue?: () => Promise<void>;
     loading?: boolean;
-    isDraft?: boolean;
     onClose?: () => void;
 } & Pick<DialogProps, "open">;
 
 export const IssueModal: FC<IssueModalProps> = (props) => {
-    const {
-        open,
-        onClose,
-        issue,
-        isDraft,
-        onSaveIssue,
-        onUpdateIssue,
-        onUpdateCache,
-        loading,
-    } = props;
+    const { open, onClose, issue, onUpdateIssue, onUpdateCache, loading } =
+        props;
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         issue?.project?.id ?? skipToken,
     );
 
-    const [displayMode, setDisplayMode] = useState<"view" | "edit">(
-        isDraft ? "edit" : "view",
-    );
+    const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
 
     const handleChangeDisplayMode = () =>
         setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
@@ -78,22 +66,20 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                 })}
             >
                 <Stack direction="column" gap={2} flex={1} pt={2} pl={2}>
-                    {!isDraft && (
-                        <Box pr={2}>
-                            <IssueMeta issue={issue} />
+                    <Box pr={2}>
+                        <IssueMeta issue={issue} />
 
-                            {displayMode === "view" && (
-                                <Stack>
-                                    <IssueHeading
-                                        issue={issue}
-                                        onEditClick={handleChangeDisplayMode}
-                                        hideSubscribeButton
-                                    />
-                                    <IssueTags issue={issue} />
-                                </Stack>
-                            )}
-                        </Box>
-                    )}
+                        {displayMode === "view" && (
+                            <Stack>
+                                <IssueHeading
+                                    issue={issue}
+                                    onEditClick={handleChangeDisplayMode}
+                                    hideSubscribeButton
+                                />
+                                <IssueTags issue={issue} />
+                            </Stack>
+                        )}
+                    </Box>
 
                     <Stack
                         direction="column"
@@ -109,21 +95,15 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                             mode={displayMode}
                             onUpdateIssue={onUpdateIssue}
                             onChangeDisplayMode={setDisplayMode}
-                            onSaveIssue={onSaveIssue}
                             loading={loading}
-                            isDraft={isDraft}
                         />
 
-                        {!isDraft && (
-                            <>
-                                <AddLinks issueId={issueId} />
+                        <AddLinks issueId={issueId} />
 
-                                <IssueLinks
-                                    issueId={issueId}
-                                    links={issue.interlinks}
-                                />
-                            </>
-                        )}
+                        <IssueLinks
+                            issueId={issueId}
+                            links={issue.interlinks}
+                        />
 
                         <IssueAttachments
                             issue={issue}
@@ -131,7 +111,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                             onUpdateCache={onUpdateCache}
                         />
 
-                        {!isDraft && <IssueActivities issueId={issue.id} />}
+                        <IssueActivities issueId={issue.id} />
                     </Stack>
                 </Stack>
 
@@ -164,7 +144,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                     </FieldOffside>
                 </Stack>
 
-                <FilePreview issue={issue} isDraft={isDraft} />
+                {/*<FilePreview issue={issue} isDraft={isDraft} />*/}
             </DialogContent>
         </Dialog>
     );

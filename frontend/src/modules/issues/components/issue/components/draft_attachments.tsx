@@ -1,21 +1,21 @@
 import type {
     IssueAttachmentBodyT,
     IssueAttachmentT,
-    IssueT,
+    IssueDraftT,
 } from "shared/model/types";
-import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { AttachmentsList } from "./attachments_list";
 
-type IssueAttachmentsProps = {
-    issue: IssueT;
-    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
-    onUpdateCache: (issueValue: Partial<IssueT>) => void;
+type DraftAttachmentsProps = {
+    draft: IssueDraftT;
+    onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
+    onUpdateCache: (issueValue: Partial<IssueDraftT>) => void;
 };
 
-export const IssueAttachments = (props: IssueAttachmentsProps) => {
+export const DraftAttachments = (props: DraftAttachmentsProps) => {
     const {
-        issue: { attachments, project },
-        onUpdateIssue,
+        draft: { attachments, project },
+        onUpdateDraft,
         onUpdateCache,
     } = props;
 
@@ -26,7 +26,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             ),
         });
 
-        await onUpdateIssue({
+        await onUpdateDraft({
             attachments: attachments.filter(
                 (attachment) => attachment.id !== attachmentToDelete.id,
             ),
@@ -38,7 +38,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
     ) => {
         const newAttachments = [...attachments, ...attachmentsToUpload];
 
-        await onUpdateIssue({
+        await onUpdateDraft({
             attachments: newAttachments,
         });
     };

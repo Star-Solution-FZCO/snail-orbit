@@ -1,7 +1,6 @@
-import { Box, Button, debounce, TextField, Typography } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
@@ -13,8 +12,6 @@ export type IssueFormProps = {
     mode: "view" | "edit";
     onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onChangeDisplayMode?: (mode: "view" | "edit") => void;
-    onSaveIssue?: () => Promise<void>;
-    isDraft?: boolean;
     loading?: boolean;
 };
 
@@ -23,51 +20,22 @@ export const IssueForm: FC<IssueFormProps> = ({
     mode,
     onUpdateIssue,
     onChangeDisplayMode,
-    onSaveIssue,
     loading,
-    isDraft,
 }) => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
 
     const [subject, setSubject] = useState<string>(issue?.subject || "");
     const [text, setText] = useState<string>(issue?.text || "");
 
-    const debouncedUpdate = useCallback(
-        debounce((text: string, subject: string) => {
-            onUpdateIssue({ text, subject });
-        }, 500),
-        [],
-    );
-
     const handleClickSave = useCallback(async () => {
-        if (isDraft) {
-            if (onSaveIssue) {
-                await onSaveIssue();
-            }
-        } else {
-            await onUpdateIssue({ text, subject });
-        }
+        await onUpdateIssue({ text, subject });
+
         onChangeDisplayMode?.("view");
-    }, [
-        isDraft,
-        onSaveIssue,
-        onUpdateIssue,
-        text,
-        subject,
-        onChangeDisplayMode,
-    ]);
+    }, [onUpdateIssue, text, subject, onChangeDisplayMode]);
 
     const handleClickCancel = () => {
-        if (isDraft) {
-            navigate({ to: "/issues" });
-        }
         onChangeDisplayMode?.("view");
     };
-
-    useEffect(() => {
-        if (isDraft) debouncedUpdate(text, subject);
-    }, [text, subject, isDraft, debouncedUpdate]);
 
     if (mode === "view") {
         return (
@@ -100,7 +68,7 @@ export const IssueForm: FC<IssueFormProps> = ({
                     fullWidth
                 />
 
-                {!isDraft && <HeadingControls issue={issue} />}
+                <HeadingControls issue={issue} />
             </Box>
 
             <MDEditor

@@ -65,6 +65,9 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
         "oldestFirst",
     );
 
+    const { data: issueData, isLoading: issueLoading } =
+        issueApi.useGetIssueQuery(issueId);
+
     const { data, isLoading: feedLoading } = issueApi.useListIssueFeedQuery({
         id: issueId,
         params: listQueryParams,
@@ -193,10 +196,13 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
             </Box>
 
             <Box pl={1} my={2}>
-                <CreateCommentForm issueId={issueId} />
+                <CreateCommentForm
+                    issueId={issueId}
+                    projectId={issueData?.payload.project.id}
+                />
             </Box>
 
-            {(feedLoading || spentTimeLoading) && (
+            {(feedLoading || spentTimeLoading || issueLoading) && (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={20} />
                 </Box>
@@ -210,6 +216,7 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
                             <CommentCard
                                 key={comment.id}
                                 issueId={issueId}
+                                projectId={issueData?.payload.project.id}
                                 comment={comment}
                                 onEdit={setCurrentEditingComment}
                                 onCancel={() => setCurrentEditingComment(null)}

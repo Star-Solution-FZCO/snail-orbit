@@ -3,7 +3,6 @@ import type { FC } from "react";
 import { useState } from "react";
 import type { IssueT, ProjectT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { FilePreview } from "shared/ui";
 import { AddLinks } from "./components/add_links";
 import { FieldContainer } from "./components/field_container";
 import { IssueActivities } from "./components/issue_activities";
@@ -20,9 +19,7 @@ type IssueFormProps = {
     project?: ProjectT;
     onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
-    onSaveIssue?: () => Promise<void>;
     loading?: boolean;
-    isDraft?: boolean;
     isEncrypted?: boolean;
 };
 
@@ -32,15 +29,11 @@ export const IssueView: FC<IssueFormProps> = (props) => {
         project,
         onUpdateIssue,
         onUpdateCache,
-        onSaveIssue,
         loading,
-        isDraft,
         isEncrypted,
     } = props;
 
-    const [displayMode, setDisplayMode] = useState<"view" | "edit">(
-        isDraft ? "edit" : "view",
-    );
+    const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
 
     const handleChangeDisplayMode = () =>
         setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
@@ -50,43 +43,32 @@ export const IssueView: FC<IssueFormProps> = (props) => {
     return (
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
-                {!isDraft && (
-                    <Box display="flex" flexDirection="column" gap={2}>
-                        <IssueMeta issue={issue} />
+                <Box display="flex" flexDirection="column" gap={2}>
+                    <IssueMeta issue={issue} />
 
-                        {displayMode === "view" && (
-                            <Stack>
-                                <IssueHeading
-                                    issue={issue}
-                                    onEditClick={handleChangeDisplayMode}
-                                    isEncrypted={isEncrypted}
-                                />
-                                <IssueTags issue={issue} />
-                            </Stack>
-                        )}
-                    </Box>
-                )}
+                    {displayMode === "view" && (
+                        <Stack>
+                            <IssueHeading
+                                issue={issue}
+                                onEditClick={handleChangeDisplayMode}
+                                isEncrypted={isEncrypted}
+                            />
+                            <IssueTags issue={issue} />
+                        </Stack>
+                    )}
+                </Box>
 
                 <IssueForm
                     issue={issue}
                     mode={displayMode}
                     onUpdateIssue={onUpdateIssue}
                     onChangeDisplayMode={setDisplayMode}
-                    onSaveIssue={onSaveIssue}
                     loading={loading}
-                    isDraft={isDraft}
                 />
 
-                {!isDraft && (
-                    <>
-                        <AddLinks issueId={issueId} />
+                <AddLinks issueId={issueId} />
 
-                        <IssueLinks
-                            issueId={issueId}
-                            links={issue.interlinks}
-                        />
-                    </>
-                )}
+                <IssueLinks issueId={issueId} links={issue.interlinks} />
 
                 <IssueAttachments
                     issue={issue}
@@ -94,7 +76,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                     onUpdateCache={onUpdateCache}
                 />
 
-                {!isDraft && <IssueActivities issueId={issue.id} />}
+                <IssueActivities issueId={issue.id} />
             </Stack>
 
             <FieldContainer>
@@ -106,7 +88,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                 />
             </FieldContainer>
 
-            <FilePreview issue={issue} isDraft={isDraft} />
+            {/*<FilePreview issue={issue} isDraft={false} />*/}
         </Box>
     );
 };

@@ -1,0 +1,81 @@
+import { Box, Button, debounce, TextField } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { IssueDraftT } from "shared/model/types";
+import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
+import { MDEditor } from "shared/ui";
+
+export type DraftFormProps = {
+    draft: IssueDraftT;
+    onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
+    onCreateIssue?: () => Promise<void>;
+    loading?: boolean;
+};
+
+export const DraftForm: FC<DraftFormProps> = (props) => {
+    const { draft, onCreateIssue, onUpdateDraft, loading } = props;
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+
+    const [subject, setSubject] = useState<string>(draft?.subject || "");
+    const [text, setText] = useState<string>(draft?.text || "");
+
+    const debouncedUpdate = useCallback(
+        debounce((text: string, subject: string) => {
+            onUpdateDraft({ text, subject });
+        }, 500),
+        [],
+    );
+
+    const handleClickCancel = () => {
+        navigate({ to: "/issues" });
+    };
+
+    useEffect(() => {
+        debouncedUpdate(text, subject);
+    }, [text, subject, debouncedUpdate]);
+
+    return (
+        <>
+            <Box display="flex" alignItems="center" gap={1}>
+                <TextField
+                    label={t("issues.form.subject")}
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                />
+            </Box>
+
+            <MDEditor
+                value={text}
+                onChange={setText}
+                placeholder={t("issues.form.text")}
+            />
+
+            <Box display="flex" gap={1}>
+                <Button
+                    onClick={onCreateIssue}
+                    variant="outlined"
+                    size="small"
+                    loading={loading}
+                    disabled={loading || !subject}
+                >
+                    {t("save")}
+                </Button>
+
+                <Button
+                    onClick={handleClickCancel}
+                    color="error"
+                    variant="outlined"
+                    size="small"
+                >
+                    {t("cancel")}
+                </Button>
+            </Box>
+        </>
+    );
+};

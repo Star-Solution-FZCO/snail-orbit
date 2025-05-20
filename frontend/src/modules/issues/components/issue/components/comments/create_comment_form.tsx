@@ -7,16 +7,21 @@ import { useAppSelector } from "shared/model";
 import type { IssueAttachmentBodyT } from "shared/model/types";
 import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
 import { formatSpentTime, toastApiError } from "shared/utils";
-import { useIssueOperations } from "../../../../api/use_issue_operations";
+import { useAttachmentOperations } from "../../../../api/use_attachment_operations";
+import { useCommentOperations } from "../../../../api/use_comment_operations";
 import { BrowserFileCard } from "../attachment_cards";
 import { HiddenInput } from "../hidden_input";
 import { UnsavedChangesDialog } from "./unsaved_changed_dialog";
 
 type CreateCommentFormProps = {
     issueId: string;
+    projectId?: string;
 };
 
-const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
+const CreateCommentForm: FC<CreateCommentFormProps> = ({
+    issueId,
+    projectId,
+}) => {
     const { t } = useTranslation();
 
     const user = useAppSelector((state) => state.profile.user);
@@ -31,14 +36,12 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({ issueId }) => {
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
 
-    const {
-        createComment,
-        isLoading,
-        isCommentCreateLoading,
-        uploadAttachment,
-    } = useIssueOperations({
-        issueId,
-    });
+    const { createComment, isLoading, isCommentCreateLoading } =
+        useCommentOperations({
+            projectId,
+        });
+
+    const { uploadAttachment } = useAttachmentOperations({ projectId });
 
     const handleClickAddComment = () => {
         createComment({

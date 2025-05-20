@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import type { CommentT, SelectedAttachmentT } from "shared/model/types";
 import type { IssueCommentUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { useIssueOperations } from "../../../../api/use_issue_operations";
+import { useAttachmentOperations } from "../../../../api/use_attachment_operations";
+import { useCommentOperations } from "../../../../api/use_comment_operations";
 import { initialSelectedAttachment } from "../../../../utils";
 import { DeleteAttachmentDialog } from "../delete_attachment_dialog";
 import { CommentCardEdit } from "./comment_card_edit";
@@ -18,6 +19,7 @@ dayjs.extend(utc);
 
 type CommentCardProps = {
     issueId: string;
+    projectId?: string;
     comment: CommentT;
     onEdit: (comment: CommentT) => void;
     onCancel: () => void;
@@ -27,6 +29,7 @@ type CommentCardProps = {
 
 const CommentCard: FC<CommentCardProps> = ({
     issueId,
+    projectId,
     comment,
     onEdit,
     onCancel,
@@ -35,16 +38,15 @@ const CommentCard: FC<CommentCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const {
-        getCommentText,
-        updateComment,
-        isLoading,
-        isCommentUpdateLoading,
-        downloadAttachment,
-        uploadAttachment,
-    } = useIssueOperations({
-        issueId,
+    const { getCommentText, updateComment, isLoading, isCommentUpdateLoading } =
+        useCommentOperations({
+            projectId,
+        });
+
+    const { uploadAttachment, downloadAttachment } = useAttachmentOperations({
+        projectId,
     });
+
     const [commentText, setCommentText] = useState<string>("");
     const [commentTextLoading, setCommentTextLoading] = useState(true);
 

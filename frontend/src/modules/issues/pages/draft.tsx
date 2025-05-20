@@ -7,13 +7,14 @@ import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "shared/model";
-import type { IssueT } from "shared/model/types";
+import type { IssueDraftT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
-import IssueView from "../components/issue/issue_view";
+import { useProjectData } from "../api/use_project_data";
+import { DraftView } from "../components/issue/draft_view";
 
 type IssueDraftProps = {
     draftId: string;
@@ -26,7 +27,17 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
 
     const dispatch = useAppDispatch();
 
-    const { data, isLoading, error } = issueApi.useGetDraftQuery(draftId);
+    const {
+        data,
+        isLoading,
+        error: draftError,
+    } = issueApi.useGetDraftQuery(draftId);
+
+    const {
+        project,
+        isLoading: isProjectLoading,
+        error: projectError,
+    } = useProjectData({ projectId: data?.payload.project?.id });
 
     const [updateDraft, { isLoading: updateLoading }] =
         issueApi.useUpdateDraftMutation();
@@ -66,7 +77,7 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     }, [createIssue, draftId, draft?.project, navigate, t]);
 
     const handleUpdateCache = useCallback(
-        (issueValue: Partial<IssueT>) => {
+        (issueValue: Partial<IssueDraftT>) => {
             if (!draft) return;
 
             dispatch(
@@ -92,6 +103,8 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         return () => setAction(null);
     }, [setAction, t]);
 
+    const error = draftError || projectError;
+
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;
     }
@@ -107,23 +120,22 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
             }}
             disableGutters
         >
-            {isLoading ? (
+            {isLoading || isProjectLoading ? (
                 <Box display="flex" justifyContent="center">
                     <CircularProgress color="inherit" size={36} />
                 </Box>
             ) : (
                 <>
                     {draft && (
-                        <IssueView
-                            // @ts-expect-error TODO: Split IssueT and DraftT
-                            issue={draft}
-                            onUpdateIssue={handleSubmit}
+                        <DraftView
+                            draft={draft}
+                            onUpdateDraft={handleSubmit}
+                            project={project}
                             onUpdateCache={handleUpdateCache}
-                            onSaveIssue={handleCreateIssue}
+                            onCreateIssue={handleCreateIssue}
                             loading={
                                 isLoading || updateLoading || createLoading
                             }
-                            isDraft
                         />
                     )}
                 </>

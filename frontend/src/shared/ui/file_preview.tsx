@@ -8,7 +8,6 @@ import type { FC } from "react";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { IssueT } from "shared/model/types";
 import {
     clearFiles,
     closeFilePreview,
@@ -20,6 +19,7 @@ import {
     useAppDispatch,
     useAppSelector,
 } from "shared/model";
+import type { IssueT } from "shared/model/types";
 import { formatBytes } from "shared/utils";
 
 interface IFilePreviewProps {
@@ -27,6 +27,8 @@ interface IFilePreviewProps {
     isDraft?: boolean;
 }
 
+// TODO: @alikhan Rewrite this to not to use global state and issues.
+//       If this is a common component it needs to be fully dedicated
 const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();

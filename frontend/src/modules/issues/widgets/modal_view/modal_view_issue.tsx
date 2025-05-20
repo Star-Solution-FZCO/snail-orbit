@@ -6,6 +6,7 @@ import { issueApi, useAppDispatch } from "shared/model";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
+import { useProjectData } from "../../api/use_project_data";
 import { IssueModal } from "../../components/issue/issue_modal";
 import type { ModalViewIssueProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
@@ -18,6 +19,10 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
     const { data, isLoading, error } = issueApi.useGetIssueQuery(
         open && id ? id : skipToken,
     );
+
+    const { isLoading: isProjectLoading } = useProjectData({
+        projectId: data?.payload.project.id,
+    });
 
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssueMutation();
@@ -58,7 +63,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
         }
     }, [error, onClose]);
 
-    if (!issue && isLoading)
+    if ((!issue && isLoading) || isProjectLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;
 
     if (!issue) return null;

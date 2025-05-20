@@ -14,7 +14,7 @@ import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import { useIssueData } from "../api/use_issue_data";
+import { useProjectData } from "../api/use_project_data";
 import IssueViewComponent from "../components/issue/issue_view";
 
 type IssueViewProps = {
@@ -27,9 +27,20 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const dispatch = useAppDispatch();
     const { setAction } = useNavbarSettings();
 
-    const { issue, project, error, isEncrypted, isLoading } = useIssueData({
-        issueId,
-    });
+    const {
+        data: issueData,
+        isLoading: isIssueLoading,
+        error: issueError,
+    } = issueApi.useGetIssueQuery(issueId);
+
+    const {
+        project,
+        isLoading: isProjectLoading,
+        isEncrypted,
+        error: projectError,
+    } = useProjectData({ projectId: issueData?.payload.project.id });
+
+    const issue = issueData?.payload;
 
     const [updateIssue, { isLoading: updateLoading }] =
         issueApi.useUpdateIssueMutation();
@@ -87,6 +98,9 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
 
         return () => setAction(null);
     }, [setAction, t]);
+
+    const error = issueError || projectError;
+    const isLoading = isIssueLoading || isProjectLoading;
 
     if (error) {
         return <ErrorHandler error={error} message="issues.item.fetch.error" />;

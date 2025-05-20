@@ -5,10 +5,10 @@ import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { issueApi, useAppDispatch } from "shared/model";
-import type { IssueT } from "shared/model/types";
+import type { IssueDraftT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { IssueModal } from "../../components/issue/issue_modal";
+import { DraftModal } from "../../components/issue/draft_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
 
@@ -58,7 +58,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     }, [createIssue, id, draft?.project, onClose, t]);
 
     const handleUpdateCache = useCallback(
-        (issueValue: Partial<IssueT>) => {
+        (issueValue: Partial<IssueDraftT>) => {
             if (!draft) return;
 
             dispatch(
@@ -85,16 +85,14 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     if (!draft) return null;
 
     return (
-        <IssueModal
-            // @ts-expect-error TODO: divide issue and draft
-            issue={draft}
-            onUpdateIssue={handleSubmit}
+        <DraftModal
+            draft={draft}
+            onUpdateDraft={handleSubmit}
             onUpdateCache={handleUpdateCache}
-            onSaveIssue={handleCreateIssue}
+            onCreateIssue={handleCreateIssue}
             loading={isLoading || updateLoading || createLoading}
             open={open}
             onClose={onClose}
-            isDraft
         />
     );
 };
