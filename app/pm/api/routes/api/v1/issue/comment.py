@@ -157,7 +157,8 @@ async def update_comment(
         if k == 'spent_time':
             v = v or 0
         setattr(comment, k, v)
-    await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
+    if 'attachments' in body.model_fields_set:
+        await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
     if issue.is_changed:
         comment.updated_at = now
         issue.updated_at = comment.created_at

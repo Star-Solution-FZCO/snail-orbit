@@ -526,7 +526,8 @@ async def update_issue(
     extra_attachment_ids = {
         a.id for a in body.attachments or [] if a.id not in issue_attachment_ids
     }
-    await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
+    if 'attachments' in body.model_fields_set:
+        await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
         raise ValidateModelException(
             payload=IssueOutput.from_obj(obj),
