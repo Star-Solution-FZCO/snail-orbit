@@ -1,8 +1,12 @@
 import type { ComponentProps, FC } from "react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
+import {
+    fieldsToFieldValueMap,
+    fieldToFieldValue,
+} from "shared/model/mappers/issue";
 import type {
     AgileBoardCardFieldT,
-    CustomFieldValueT,
+    CustomFieldWithValueT,
     IssueT,
     UiSettingT,
 } from "shared/model/types";
@@ -14,7 +18,7 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { IssueLink } from "shared/ui/issue_link";
-import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
+import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser_v2/custom_fields_chip_parser_v2";
 
 export type IssueCardProps = {
     issue: IssueT;
@@ -39,12 +43,6 @@ export const AgileCard: FC<IssueCardProps> = memo(
         const { id_readable, subject } = issue;
         const { minCardHeight } = cardSetting;
 
-        const handleUpdateIssue = useCallback(
-            (fields: Record<string, CustomFieldValueT>) =>
-                onUpdateIssue(id_readable, { fields }),
-            [id_readable, onUpdateIssue],
-        );
-
         const colors = useMemo(() => {
             return cardColorFields
                 .map(({ name }) => issue.fields[name])
@@ -57,6 +55,23 @@ export const AgileCard: FC<IssueCardProps> = memo(
                 )
                 .map((el) => el || "inherit");
         }, [cardColorFields, issue]);
+
+        const fields: CustomFieldWithValueT[] = useMemo(() => {
+            return cardFields.map((cardField) => {
+                const targetIssueField = issue.fields[cardField.name];
+                if (targetIssueField) return targetIssueField;
+                return { ...cardField, value: null };
+            });
+        }, [cardFields, issue.fields]);
+
+        const onFieldUpdate = (field: CustomFieldWithValueT) => {
+            onUpdateIssue?.(id_readable, {
+                fields: {
+                    ...fieldsToFieldValueMap(Object.values(issue.fields)),
+                    [field.name]: fieldToFieldValue(field),
+                },
+            });
+        };
 
         return (
             <IssueCard
@@ -80,10 +95,9 @@ export const AgileCard: FC<IssueCardProps> = memo(
                         <span>{subject}</span>
                     </IssueCardHeader>
                     <IssueCardBottom>
-                        <CustomFieldsChipParser
-                            activeFields={issue.fields}
-                            availableFields={cardFields}
-                            onUpdateIssue={handleUpdateIssue}
+                        <CustomFieldsChipParserV2
+                            fields={fields}
+                            onChange={onFieldUpdate}
                         />
                     </IssueCardBottom>
                 </IssueCardBody>

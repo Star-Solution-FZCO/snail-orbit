@@ -11,7 +11,7 @@ type EnumChipProps = {
     value?: EnumFieldValueT | EnumFieldValueT[];
     onChange: (value: EnumFieldValueT | EnumFieldValueT[]) => void;
     label: string;
-    enumFieldId: string;
+    id: string;
     multiple?: boolean;
 };
 
@@ -19,7 +19,7 @@ export const EnumChip: FC<EnumChipProps> = ({
     value,
     onChange,
     label,
-    enumFieldId,
+    id,
     multiple,
 }) => {
     const [listQueryParams] = useListQueryParams({
@@ -30,7 +30,7 @@ export const EnumChip: FC<EnumChipProps> = ({
         customFieldsApi.useLazyListSelectOptionsQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id: enumFieldId, ...listQueryParams });
+        fetchOptions({ id, ...listQueryParams });
     };
 
     const items = useMemo(() => {
@@ -63,7 +63,7 @@ export const EnumChip: FC<EnumChipProps> = ({
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
-            id={enumFieldId}
+            id={id}
             multiple={multiple}
             getOptionRightAdornment={getEnumColorAdornment}
             isOptionEqualToValue={(a, b) => a.value === b.value}

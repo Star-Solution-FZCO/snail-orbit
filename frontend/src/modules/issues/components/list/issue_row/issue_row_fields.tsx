@@ -1,15 +1,19 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { FC } from "react";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { projectApi } from "shared/model";
-import type { CustomFieldValueT, IssueT } from "shared/model/types";
+import {
+    fieldsToFieldValueMap,
+    fieldToFieldValue,
+} from "shared/model/mappers/issue";
+import type { CustomFieldWithValueT, IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { CustomFieldsChipParser } from "widgets/issue/custom_field_chip_parser/custom_field_chip_parser";
+import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser_v2/custom_fields_chip_parser_v2";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 
 type IssueRowFieldsProps = {
     issue: IssueT;
-    onUpdateIssue?: (issue: { id: string } & IssueUpdate) => unknown;
+    onUpdateIssue?: (issue: IssueUpdate) => unknown;
 };
 
 export const IssueRowFields: FC<IssueRowFieldsProps> = memo(
@@ -20,33 +24,33 @@ export const IssueRowFields: FC<IssueRowFieldsProps> = memo(
             project?.id || skipToken,
         );
 
-        const availableFields = useMemo(() => {
-            if (!projectData.data?.payload) return [];
+        const fields: CustomFieldWithValueT[] = useMemo(() => {
+            const projectFields =
+                projectData?.data?.payload.custom_fields || [];
 
-            const { card_fields, custom_fields } = projectData.data.payload;
-            const fieldsMap = new Map(
-                custom_fields.map((field) => [field.id, field]),
-            );
-            return card_fields
-                .map((id) => fieldsMap.get(id))
-                .filter((el) => !!el);
-        }, [projectData.data?.payload]);
+            return projectFields.map((projectField) => {
+                const targetIssueField = issue.fields[projectField.name];
+                if (targetIssueField) return targetIssueField;
+                return { ...projectField, value: null };
+            });
+        }, [issue.fields, projectData?.data?.payload.custom_fields]);
 
-        const handleUpdateIssue = useCallback(
-            (fields: Record<string, CustomFieldValueT>) => {
-                onUpdateIssue?.({ id: issue.id, fields });
-            },
-            [issue.id, onUpdateIssue],
-        );
+        const onFieldUpdate = (field: CustomFieldWithValueT) => {
+            onUpdateIssue?.({
+                fields: {
+                    ...fieldsToFieldValueMap(Object.values(issue.fields)),
+                    [field.name]: fieldToFieldValue(field),
+                },
+            });
+        };
 
         if (!project || !projectData.isSuccess) return null;
 
         return (
             <IssueRowFieldsContainer>
-                <CustomFieldsChipParser
-                    activeFields={issue.fields}
-                    availableFields={availableFields}
-                    onUpdateIssue={handleUpdateIssue}
+                <CustomFieldsChipParserV2
+                    fields={fields}
+                    onChange={onFieldUpdate}
                 />
             </IssueRowFieldsContainer>
         );

@@ -102,7 +102,9 @@ export const IssuesList: FC<IssuesListProps> = ({
                     <React.Fragment key={issue.id}>
                         <IssueRow
                             issue={issue}
-                            onUpdateIssue={onUpdateIssue}
+                            onUpdateIssue={(values) =>
+                                onUpdateIssue?.({ id: issue.id, ...values })
+                            }
                             onIssueRowDoubleClick={onIssueRowDoubleClick}
                             {...viewSettings}
                         />
