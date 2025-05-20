@@ -1,17 +1,18 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { MarkdownPreview, MDEditor } from "shared/ui";
+import { useIssueOperations } from "../../../api/use_issue_operations";
 import { HeadingControls } from "./heading_controls";
 
 export type IssueFormProps = {
     issue: IssueT;
     mode: "view" | "edit";
     onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
-    onChangeDisplayMode?: (mode: "view" | "edit") => void;
+    onChangeDisplayMode?: (mode: "view" | "edit") => unknown;
     loading?: boolean;
 };
 
@@ -24,11 +25,22 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    const { getIssueText } = useIssueOperations({ issueId: issue.id });
+
     const [subject, setSubject] = useState<string>(issue?.subject || "");
-    const [text, setText] = useState<string>(issue?.text || "");
+    const [text, setText] = useState<string>("");
+    const [textLoading, setTextLoading] = useState(true);
+
+    useEffect(() => {
+        setTextLoading(true);
+        getIssueText(issue).then((res) => {
+            setText(res || issue.text?.value || "");
+            setTextLoading(false);
+        });
+    }, [issue, getIssueText]);
 
     const handleClickSave = useCallback(async () => {
-        await onUpdateIssue({ text, subject });
+        await onUpdateIssue({ text: { value: text }, subject });
 
         onChangeDisplayMode?.("view");
     }, [onUpdateIssue, text, subject, onChangeDisplayMode]);
@@ -40,8 +52,8 @@ export const IssueForm: FC<IssueFormProps> = ({
     if (mode === "view") {
         return (
             <Box mt={-1}>
-                {issue.text ? (
-                    <MarkdownPreview text={issue.text} />
+                {text || textLoading ? (
+                    <MarkdownPreview text={text || t("Wait a little...")} />
                 ) : (
                     <Box
                         sx={{ cursor: "pointer" }}

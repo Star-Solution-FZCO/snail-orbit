@@ -1,5 +1,5 @@
 import type { CustomFieldT } from "./custom_fields";
-import type { AddEncryptionKeyParams, EncryptionKeyT } from "./encryption_keys";
+import type { AddEncryptionKeyParams, EncryptionKeyT } from "./encryption";
 import type { BasicUserT } from "./user";
 import type { WorkflowT } from "./workflow";
 

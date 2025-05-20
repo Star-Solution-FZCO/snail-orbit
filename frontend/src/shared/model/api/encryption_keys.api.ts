@@ -5,7 +5,7 @@ import type {
     ListQueryParams,
     ListResponse,
 } from "shared/model/types";
-import type { EncryptionKeyT } from "shared/model/types/encryption_keys";
+import type { EncryptionKeyT } from "shared/model/types/encryption";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["EncryptionKeys"];

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor } from "shared/ui";
+import { useDraftOperations } from "../../../api/use_draft_operations";
 
 export type DraftFormProps = {
     draft: IssueDraftT;
@@ -19,12 +20,23 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
+    const { getDraftText } = useDraftOperations({ draftId: draft.id });
+
     const [subject, setSubject] = useState<string>(draft?.subject || "");
-    const [text, setText] = useState<string>(draft?.text || "");
+    const [text, setText] = useState<string>("");
+    const [textLoading, setTextLoading] = useState(true);
+
+    useEffect(() => {
+        setTextLoading(true);
+        getDraftText(draft).then((res) => {
+            setText(res || draft.text?.value || "");
+            setTextLoading(false);
+        });
+    }, [getDraftText, draft]);
 
     const debouncedUpdate = useCallback(
         debounce((text: string, subject: string) => {
-            onUpdateDraft({ text, subject });
+            onUpdateDraft({ text: { value: text }, subject });
         }, 500),
         [],
     );
@@ -61,8 +73,8 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                     onClick={onCreateIssue}
                     variant="outlined"
                     size="small"
-                    loading={loading}
-                    disabled={loading || !subject}
+                    loading={loading || textLoading}
+                    disabled={loading || textLoading || !subject}
                 >
                     {t("save")}
                 </Button>

@@ -1,13 +1,13 @@
 import { skipToken } from "@reduxjs/toolkit/query";
-import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppDispatch } from "shared/model";
-import type { IssueDraftT } from "shared/model/types";
+import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
+import { useDraftOperations } from "../../api/use_draft_operations";
+import { useProjectData } from "../../api/use_project_data";
 import { DraftModal } from "../../components/issue/draft_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
@@ -15,27 +15,28 @@ import { ModalViewLoader } from "./modal_view_loader";
 export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     const { open, id, onClose } = props;
 
-    const dispatch = useAppDispatch();
     const { t } = useTranslation();
 
     const { data, isLoading, error } = issueApi.useGetDraftQuery(
         open && id ? id : skipToken,
     );
 
-    const [updateDraft, { isLoading: updateLoading }] =
-        issueApi.useUpdateDraftMutation();
+    const { isLoading: isProjectLoading } = useProjectData({
+        projectId: data?.payload.project?.id,
+    });
 
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
 
+    const { updateDraft, updateDraftCache, isDraftUpdateLoading } =
+        useDraftOperations({ draftId: id });
+
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            await updateDraft({ ...formData, id })
-                .unwrap()
-                .catch((error) => {
-                    toastApiError(error);
-                    return Promise.reject(error);
-                });
+            await updateDraft({ ...formData, id }).catch((error) => {
+                toastApiError(error);
+                return Promise.reject(error);
+            });
         },
         [id, updateDraft],
     );
@@ -57,21 +58,6 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
             });
     }, [createIssue, id, draft?.project, onClose, t]);
 
-    const handleUpdateCache = useCallback(
-        (issueValue: Partial<IssueDraftT>) => {
-            if (!draft) return;
-
-            dispatch(
-                issueApi.util.updateQueryData("getDraft", draft.id, (draft) => {
-                    draft.payload = deepmerge(draft.payload, issueValue, {
-                        arrayMerge: (_, sourceArray) => sourceArray,
-                    });
-                }),
-            );
-        },
-        [dispatch, draft],
-    );
-
     useEffect(() => {
         if (error) {
             toastApiError(error);
@@ -79,7 +65,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         }
     }, [error, onClose]);
 
-    if (!draft && isLoading)
+    if ((!draft && isLoading) || isProjectLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;
 
     if (!draft) return null;
@@ -88,9 +74,14 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         <DraftModal
             draft={draft}
             onUpdateDraft={handleSubmit}
-            onUpdateCache={handleUpdateCache}
+            onUpdateCache={updateDraftCache}
             onCreateIssue={handleCreateIssue}
-            loading={isLoading || updateLoading || createLoading}
+            loading={
+                isLoading ||
+                isDraftUpdateLoading ||
+                createLoading ||
+                isProjectLoading
+            }
             open={open}
             onClose={onClose}
         />

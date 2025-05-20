@@ -43,7 +43,7 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
     const attachmentsExists = comment.attachments.length > 0;
 
     const handleSave = () => {
-        updateComment?.({ text, spent_time: spentTime });
+        updateComment?.({ text: { value: text }, spent_time: spentTime });
         onClose?.();
     };
 

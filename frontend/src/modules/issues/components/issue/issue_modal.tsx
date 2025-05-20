@@ -33,11 +33,19 @@ type IssueModalProps = {
     onSaveIssue?: () => Promise<void>;
     loading?: boolean;
     onClose?: () => void;
+    isEncrypted?: boolean;
 } & Pick<DialogProps, "open">;
 
 export const IssueModal: FC<IssueModalProps> = (props) => {
-    const { open, onClose, issue, onUpdateIssue, onUpdateCache, loading } =
-        props;
+    const {
+        open,
+        onClose,
+        issue,
+        onUpdateIssue,
+        onUpdateCache,
+        loading,
+        isEncrypted,
+    } = props;
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         issue?.project?.id ?? skipToken,
@@ -75,6 +83,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                                     issue={issue}
                                     onEditClick={handleChangeDisplayMode}
                                     hideSubscribeButton
+                                    isEncrypted={isEncrypted}
                                 />
                                 <IssueTags issue={issue} />
                             </Stack>

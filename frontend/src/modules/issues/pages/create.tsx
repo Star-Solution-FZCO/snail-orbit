@@ -25,7 +25,7 @@ const IssueCreate: FC = () => {
                     awaitingRef.current = false;
                 });
         }
-    }, [isLoading, createDraft]);
+    }, [isLoading, createDraft, navigate]);
 
     return (
         <Box

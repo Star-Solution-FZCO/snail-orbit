@@ -46,7 +46,9 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
     const handleClickAddComment = () => {
         createComment({
             id: issueId,
-            text,
+            text: {
+                value: text,
+            },
             spent_time: spentTime,
             attachments,
         })

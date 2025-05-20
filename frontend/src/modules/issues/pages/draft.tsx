@@ -1,18 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppDispatch } from "shared/model";
-import type { IssueDraftT } from "shared/model/types";
+import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
+import { useDraftOperations } from "../api/use_draft_operations";
 import { useProjectData } from "../api/use_project_data";
 import { DraftView } from "../components/issue/draft_view";
 
@@ -24,8 +23,6 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { setAction } = useNavbarSettings();
-
-    const dispatch = useAppDispatch();
 
     const {
         data,
@@ -39,20 +36,18 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         error: projectError,
     } = useProjectData({ projectId: data?.payload.project?.id });
 
-    const [updateDraft, { isLoading: updateLoading }] =
-        issueApi.useUpdateDraftMutation();
-
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
 
+    const { updateDraft, updateDraftCache, isDraftUpdateLoading } =
+        useDraftOperations({ draftId });
+
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            await updateDraft({ ...formData, id: draftId })
-                .unwrap()
-                .catch((error) => {
-                    toastApiError(error);
-                    return Promise.reject(error);
-                });
+            await updateDraft({ ...formData, id: draftId }).catch((error) => {
+                toastApiError(error);
+                return Promise.reject(error);
+            });
         },
         [draftId, updateDraft],
     );
@@ -75,21 +70,6 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
                 return Promise.reject(error);
             });
     }, [createIssue, draftId, draft?.project, navigate, t]);
-
-    const handleUpdateCache = useCallback(
-        (issueValue: Partial<IssueDraftT>) => {
-            if (!draft) return;
-
-            dispatch(
-                issueApi.util.updateQueryData("getDraft", draft.id, (draft) => {
-                    draft.payload = deepmerge(draft.payload, issueValue, {
-                        arrayMerge: (_, sourceArray) => sourceArray,
-                    });
-                }),
-            );
-        },
-        [dispatch, draft],
-    );
 
     useEffect(() => {
         setAction(
@@ -131,10 +111,12 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
                             draft={draft}
                             onUpdateDraft={handleSubmit}
                             project={project}
-                            onUpdateCache={handleUpdateCache}
+                            onUpdateCache={updateDraftCache}
                             onCreateIssue={handleCreateIssue}
                             loading={
-                                isLoading || updateLoading || createLoading
+                                isLoading ||
+                                isDraftUpdateLoading ||
+                                createLoading
                             }
                         />
                     )}

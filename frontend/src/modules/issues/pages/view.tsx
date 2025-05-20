@@ -1,19 +1,18 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import deepmerge from "deepmerge";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi, useAppDispatch } from "shared/model";
+import { issueApi } from "shared/model";
 import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
-import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link, PageTitle } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
+import { useIssueOperations } from "../api/use_issue_operations";
 import { useProjectData } from "../api/use_project_data";
 import IssueViewComponent from "../components/issue/issue_view";
 
@@ -24,7 +23,6 @@ type IssueViewProps = {
 const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
     const { setAction } = useNavbarSettings();
 
     const {
@@ -42,37 +40,17 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
 
     const issue = issueData?.payload;
 
-    const [updateIssue, { isLoading: updateLoading }] =
-        issueApi.useUpdateIssueMutation();
+    const { updateIssue, updateIssueCache, isIssueUpdateLoading } =
+        useIssueOperations({ issueId });
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            await updateIssue({ ...formData, id: issueId })
-                .unwrap()
-                .catch(toastApiError);
+            updateIssue({ ...formData, id: issueId }).catch(toastApiError);
         },
         [issueId, updateIssue],
     );
 
     useEventSubscriptionAutoReFetch({ ids: [issue?.id || ""] });
-
-    const handleUpdateCache = useCallback(
-        (issueValue: Partial<IssueT>) => {
-            if (!issue) return;
-            dispatch(
-                issueApi.util.updateQueryData(
-                    "getIssue",
-                    issue.id_readable,
-                    (draft) => {
-                        draft.payload = deepmerge(draft.payload, issueValue, {
-                            arrayMerge: (_, sourceArray) => sourceArray,
-                        });
-                    },
-                ),
-            );
-        },
-        [dispatch, issue],
-    );
 
     useEffect(() => {
         if (issue && issue.id_readable && issue.id_readable !== issueId) {
@@ -132,8 +110,8 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                             issue={issue}
                             project={project}
                             onUpdateIssue={handleSubmit}
-                            onUpdateCache={handleUpdateCache}
-                            loading={isLoading || updateLoading}
+                            onUpdateCache={updateIssueCache}
+                            loading={isLoading || isIssueUpdateLoading}
                             isEncrypted={isEncrypted}
                         />
                     </>

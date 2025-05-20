@@ -1,8 +1,9 @@
 import type {
+    EncryptedObjectT,
     EncryptionKeyAlgorithmT,
     EncryptionKeyPublicT,
     EncryptionMetaT,
-} from "shared/model/types/encryption_keys";
+} from "shared/model/types/encryption";
 import { getAllKeys, writeNewKey } from "./crypto_keys";
 
 const HASH = "SHA-256";
@@ -329,4 +330,12 @@ export const getAESKeyFromMetas = async (
         anyMeta.meta,
         anyMeta.key.pair.privateKey,
     );
+};
+
+export const decryptObject = async (object: EncryptedObjectT) => {
+    if (!object.encryption) return object.value;
+    const key = await getAESKeyFromMetas(object.encryption);
+    if (!key) return object.value;
+    const res = await decryptTextWithAES(object.value, key);
+    return res || object.value;
 };

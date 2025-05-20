@@ -57,7 +57,7 @@ const CommentCard: FC<CommentCardProps> = ({
     useEffect(() => {
         setCommentTextLoading(true);
         getCommentText(comment).then((res) => {
-            setCommentText(res || comment.text || "");
+            setCommentText(res || comment.text?.value || "");
             setCommentTextLoading(false);
         });
     }, [comment, getCommentText]);

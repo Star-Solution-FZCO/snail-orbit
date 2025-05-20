@@ -2,9 +2,8 @@ import { useCallback } from "react";
 import { issueApi } from "shared/model";
 import type { CommentT } from "shared/model/types";
 import {
-    decryptTextWithAES,
+    decryptObject,
     encryptTextWithAES,
-    getAESKeyFromMetas,
     wrapAESKey,
 } from "shared/utils/crypto/crypto";
 import { useProjectData } from "./use_project_data";
@@ -27,9 +26,9 @@ export const useCommentOperations = (props: { projectId?: string }) => {
                 const { text, key } = await encryptTextWithAES(inputText);
                 const encryption = await wrapAESKey(key, encryptionKeys);
 
-                return { text, encryption };
+                return { value: text, encryption };
             }
-            return { text: inputText };
+            return { value: inputText };
         },
         [encryptionKeys, isEncrypted],
     );
@@ -38,9 +37,11 @@ export const useCommentOperations = (props: { projectId?: string }) => {
         async (
             params: Parameters<typeof createComment>[0],
         ): Promise<ReturnType<typeof createComment>> => {
-            const processedText = await processCommentText(params.text || "");
+            const processedText = await processCommentText(
+                params.text?.value || "",
+            );
 
-            return createComment({ ...params, ...processedText });
+            return createComment({ ...params, text: processedText });
         },
         [processCommentText, createComment],
     );
@@ -49,24 +50,20 @@ export const useCommentOperations = (props: { projectId?: string }) => {
         async (
             params: Parameters<typeof updateComment>[0],
         ): Promise<ReturnType<typeof updateComment>> => {
-            const processedText = await processCommentText(params.text || "");
+            const processedText = await processCommentText(
+                params.text?.value || "",
+            );
 
             return updateComment({ ...params, ...processedText });
         },
         [processCommentText, updateComment],
     );
 
-    const getCommentText = useCallback(
-        async (comment: CommentT) => {
-            if (!isEncrypted || !comment.text || !comment.encryption)
-                return comment.text;
-            const key = await getAESKeyFromMetas(comment.encryption);
-            if (!key) return comment.text;
-            const res = await decryptTextWithAES(comment.text, key);
-            return res || comment.text;
-        },
-        [isEncrypted],
-    );
+    const getCommentText = useCallback(async (comment: CommentT) => {
+        if (!comment.text || !comment.text?.encryption)
+            return comment.text?.value;
+        return await decryptObject(comment.text);
+    }, []);
 
     return {
         isLoading,
