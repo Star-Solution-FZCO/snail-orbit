@@ -4,8 +4,11 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { CustomFieldGroupT, UpdateCustomFieldGroupT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type {
+    CustomFieldGroupT,
+    UpdateCustomFieldGroupT,
+} from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { toastApiError } from "shared/utils";
 import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";

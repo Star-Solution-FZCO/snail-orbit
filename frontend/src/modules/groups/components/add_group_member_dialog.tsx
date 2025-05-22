@@ -15,8 +15,8 @@ import {
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { BasicUserT, ListSelectQueryParams } from "shared/model/types";
 import { groupApi, userApi } from "shared/model";
+import type { BasicUserT, ListSelectQueryParams } from "shared/model/types";
 import { UserAvatar } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 

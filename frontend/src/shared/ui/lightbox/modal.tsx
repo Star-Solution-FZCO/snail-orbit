@@ -4,53 +4,28 @@ import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
-import type { FC } from "react";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import {
-    clearFiles,
-    closeFilePreview,
-    issueApi,
-    selectFilePreviewByIndex,
-    setFiles,
-    setNextFilePreview,
-    setPreviousFilePreview,
-    useAppDispatch,
-    useAppSelector,
-} from "shared/model";
-import type { IssueT } from "shared/model/types";
 import { formatBytes } from "shared/utils";
+import { useLightbox } from "./context";
 
-interface IFilePreviewProps {
-    issue: IssueT;
-    isDraft?: boolean;
-}
-
-// TODO: @alikhan Rewrite this to not to use global state and issues.
-//       If this is a common component it needs to be fully dedicated
-const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
+export const LightboxModal = () => {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
 
     const {
-        open,
-        currentFile: file,
+        isOpen,
         files,
-        currentIndex,
-    } = useAppSelector((state) => state.shared.filePreview);
-
-    const { data: commentsData } = issueApi.useListIssueCommentsQuery(
-        {
-            id: issue.id_readable,
-        },
-        {
-            skip: isDraft,
-        },
-    );
+        currentFile: file,
+        index: currentIndex,
+        close,
+        next,
+        prev,
+        select,
+    } = useLightbox();
 
     const handleClose = () => {
-        dispatch(closeFilePreview());
+        close();
     };
 
     const handleDownload = () => {
@@ -73,43 +48,30 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
 
     const handleClickNextFile = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        dispatch(setNextFilePreview());
+        next();
     };
 
     const handleClickPreviousFile = (
         e: React.MouseEvent<HTMLButtonElement>,
     ) => {
         e.stopPropagation();
-        dispatch(setPreviousFilePreview());
+        prev();
     };
 
     const handleClickThumbnail = (index: number) => {
-        dispatch(selectFilePreviewByIndex(index));
+        select(index);
     };
 
     useEffect(() => {
-        const commentsAttachments = commentsData
-            ? commentsData.payload.items
-                  .flatMap((comment) => comment.attachments)
-                  .reverse()
-            : [];
-        dispatch(setFiles([...issue.attachments, ...commentsAttachments]));
-
-        return () => {
-            dispatch(clearFiles());
-        };
-    }, [issue.attachments, commentsData?.payload]);
-
-    useEffect(() => {
-        if (!open) return;
+        if (!isOpen) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "ArrowLeft") {
-                dispatch(setPreviousFilePreview());
+                prev();
             } else if (e.key === "ArrowRight") {
-                dispatch(setNextFilePreview());
+                next();
             } else if (e.key === "Escape") {
-                dispatch(closeFilePreview());
+                close();
             }
         };
 
@@ -118,13 +80,13 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [open, dispatch]);
+    }, [isOpen, prev, next, close]);
 
     const showNavigationControls = files.length > 1;
 
     return (
         <Modal
-            open={open}
+            open={isOpen}
             onClose={handleClose}
             slotProps={{
                 backdrop: {
@@ -154,7 +116,7 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
                     <Typography onClick={(e) => e.stopPropagation()}>
                         {file.name}{" "}
                         <Typography component="span" color="text.secondary">
-                            {formatBytes(file.size)}
+                            {formatBytes(file.size || 0)}
                         </Typography>
                     </Typography>
 
@@ -272,5 +234,3 @@ const FilePreview: FC<IFilePreviewProps> = ({ issue, isDraft }) => {
         </Modal>
     );
 };
-
-export { FilePreview };

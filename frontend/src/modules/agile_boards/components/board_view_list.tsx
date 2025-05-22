@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo } from "react";
-import type { AgileBoardT, CreateIssueT, IssueT } from "shared/model/types";
 import { agileBoardApi, issueApi } from "shared/model";
+import type { AgileBoardT, CreateIssueT, IssueT } from "shared/model/types";
 import { usePaginationParams } from "shared/utils";
 import IssuesList from "../../issues/components/list/issues_list";
 import { useIssueModalView } from "../../issues/widgets/modal_view/use_modal_view";

@@ -2,9 +2,9 @@ import { Box, Tooltip, Typography } from "@mui/material";
 import dayjs from "dayjs";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import type { IssueT } from "shared/model/types";
 import { IssueLink } from "shared/ui/issue_link";
 import { slugify } from "transliteration";
-import type { IssueT } from "shared/model/types";
 
 type IssueMetaProps = {
     issue: IssueT;

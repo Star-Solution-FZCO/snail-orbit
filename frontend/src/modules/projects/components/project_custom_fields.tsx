@@ -20,8 +20,8 @@ import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { CustomFieldT, ProjectT } from "shared/model/types";
 import { projectApi } from "shared/model";
+import type { CustomFieldT, ProjectT } from "shared/model/types";
 import { Link } from "shared/ui";
 import {
     formatErrorMessages,

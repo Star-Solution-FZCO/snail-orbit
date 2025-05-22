@@ -14,13 +14,13 @@ import { t } from "i18next";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { customFieldsApi } from "shared/model";
 import type {
     CreateVersionOptionT,
     CustomFieldT,
     UpdateVersionOptionT,
     VersionOptionT,
 } from "shared/model/types";
-import { customFieldsApi } from "shared/model";
 import { toastApiError } from "shared/utils";
 import { DeleteCustomFieldOptionDialog } from "../delete_option_dialog";
 import { VersionOptionFormDialog } from "../form_dialogs/version_option_form_dialog";

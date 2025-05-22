@@ -11,7 +11,12 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, type SyntheticEvent, useCallback, useMemo } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { BasicUserT, GroupT, PermissionT, PermissionTypeT } from "shared/model/types";
+import type {
+    BasicUserT,
+    GroupT,
+    PermissionT,
+    PermissionTypeT,
+} from "shared/model/types";
 import type { SearchFormValuesT } from "shared/model/types/search";
 
 const Access = memo(() => {

@@ -42,6 +42,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <EnumChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -55,6 +56,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <EnumChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field.value || undefined}
                                     multiple
                                     onChange={(value) => {
@@ -69,6 +71,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <InputChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="text"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -83,6 +86,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <InputChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="numeric"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -97,6 +101,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <InputChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="decimal"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -133,6 +138,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <UserChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -146,6 +152,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <UserChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -162,6 +169,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <DateChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={
                                         parsedValue.isValid()
                                             ? parsedValue
@@ -182,6 +190,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <DateChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={
                                         parsedValue.isValid()
                                             ? parsedValue
@@ -203,6 +212,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <EnumChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -216,6 +226,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <EnumChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -229,6 +240,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                             return (
                                 <EnumChip
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({

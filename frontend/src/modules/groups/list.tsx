@@ -18,8 +18,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { GroupT, ListQueryParams } from "shared/model/types";
 import { groupApi } from "shared/model";
+import type { GroupT, ListQueryParams } from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 

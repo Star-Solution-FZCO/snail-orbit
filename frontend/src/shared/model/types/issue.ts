@@ -1,4 +1,5 @@
 import type {
+    IssueCreate,
     IssueAttachmentBody,
     IssueAttachmentOut,
     IssueChangeOutputRootModel,
@@ -16,6 +17,7 @@ import type { ProjectT } from "./project";
 
 export type IssueProjectT = Pick<ProjectT, "id" | "name" | "slug">;
 
+export type CreateIssueT = IssueCreate;
 export type IssueT = IssueOutput;
 export type IssueDraftT = IssueDraftOutput;
 

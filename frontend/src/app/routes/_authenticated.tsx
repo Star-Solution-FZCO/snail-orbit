@@ -1,9 +1,9 @@
 import { Box } from "@mui/material";
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
+import { useAppSelector } from "shared/model";
 import { NavBar, PageTitle } from "shared/ui";
 import { NavbarSettingsContextProvider } from "shared/ui/navbar/navbar_settings";
-import { useAppSelector } from "shared/model";
 
 export const Route = createFileRoute("/_authenticated")({
     component: Component,

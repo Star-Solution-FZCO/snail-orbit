@@ -19,14 +19,18 @@ import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { IssueLinkTypeT, IssueT, ListQueryParams } from "shared/model/types";
-import { linkTypes } from "shared/model/types";
 import {
     closeIssueLinks,
     issueApi,
     useAppDispatch,
     useAppSelector,
 } from "shared/model";
+import type {
+    IssueLinkTypeT,
+    IssueT,
+    ListQueryParams,
+} from "shared/model/types";
+import { linkTypes } from "shared/model/types";
 import { Link, QueryPagination } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 import { slugify } from "transliteration";

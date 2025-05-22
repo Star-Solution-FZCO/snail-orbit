@@ -42,6 +42,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <EnumField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -55,6 +56,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <EnumField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field.value || undefined}
                                     multiple
                                     onChange={(value) => {
@@ -69,6 +71,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <InputField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="text"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -83,6 +86,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <InputField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="numeric"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -97,6 +101,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <InputField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     inputMode="decimal"
                                     value={field.value?.toString() || ""}
                                     onChange={(val) => {
@@ -112,6 +117,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <FieldCard
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     orientation="vertical"
                                     value={field.value ? "+" : "-"}
                                     onClick={() => {
@@ -126,6 +132,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <UserField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -139,6 +146,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <UserField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -155,6 +163,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <DateField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={
                                         parsedValue.isValid()
                                             ? parsedValue
@@ -175,6 +184,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <DateField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={
                                         parsedValue.isValid()
                                             ? parsedValue
@@ -196,6 +206,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <EnumField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -209,6 +220,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <VersionField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({
@@ -222,6 +234,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             return (
                                 <VersionField
                                     {...baseCompProps(field)}
+                                    key={field.id}
                                     value={field?.value || undefined}
                                     onChange={(value) => {
                                         onChange?.({

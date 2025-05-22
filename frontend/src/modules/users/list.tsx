@@ -19,8 +19,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ListQueryParams, UserT } from "shared/model/types";
 import { userApi } from "shared/model";
+import type { ListQueryParams, UserT } from "shared/model/types";
 import { ErrorHandler, UserAvatar } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 

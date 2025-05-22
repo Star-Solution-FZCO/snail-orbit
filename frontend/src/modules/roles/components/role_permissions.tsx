@@ -8,8 +8,12 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import type { PermissionGroupT, PermissionKeyT, RoleT } from "shared/model/types";
 import { roleApi } from "shared/model";
+import type {
+    PermissionGroupT,
+    PermissionKeyT,
+    RoleT,
+} from "shared/model/types";
 import { toastApiError } from "shared/utils";
 
 interface IPermissionGroupProps {

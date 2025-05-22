@@ -6,6 +6,7 @@ import { Provider as StoreProvider } from "react-redux";
 import { Slide, ToastContainer } from "react-toastify";
 import { store } from "shared/model";
 import { theme } from "shared/theme";
+import { Lightbox } from "shared/ui";
 import { router } from "./router";
 
 const ToastContainerComp = () => {
@@ -30,7 +31,9 @@ const App = () => {
 
                 <ToastContainerComp />
 
-                <RouterProvider router={router} />
+                <Lightbox>
+                    <RouterProvider router={router} />
+                </Lightbox>
 
                 <Suspense>
                     <TanStackRouterDevtools

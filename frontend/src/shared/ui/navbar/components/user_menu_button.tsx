@@ -7,7 +7,11 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { logout } from "shared/api/services/auth";
-import { logout as logoutAction, useAppDispatch, useAppSelector } from "shared/model";
+import {
+    logout as logoutAction,
+    useAppDispatch,
+    useAppSelector,
+} from "shared/model";
 import { About } from "../../about";
 
 export const UserMenuButton = memo(() => {

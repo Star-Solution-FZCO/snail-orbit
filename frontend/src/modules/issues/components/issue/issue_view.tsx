@@ -87,8 +87,6 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                     onUpdateCache={onUpdateCache}
                 />
             </FieldContainer>
-
-            {/*<FilePreview issue={issue} isDraft={false} />*/}
         </Box>
     );
 };

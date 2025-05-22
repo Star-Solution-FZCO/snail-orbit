@@ -3,8 +3,8 @@ import type { SyntheticEvent } from "react";
 import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import type { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { BasicProjectT } from "shared/model/types";
 import { projectApi } from "shared/model";
+import type { BasicProjectT } from "shared/model/types";
 import { noLimitListQueryParams } from "shared/utils";
 
 export type ProjectSelectProps = {

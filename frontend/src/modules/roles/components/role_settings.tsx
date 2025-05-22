@@ -1,8 +1,8 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { RoleT, UpdateGroupT } from "shared/model/types";
 import { roleApi } from "shared/model";
+import type { RoleT, UpdateGroupT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { RoleForm } from "./role_form";
 

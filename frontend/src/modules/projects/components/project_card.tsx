@@ -1,7 +1,7 @@
 import { Avatar, Stack, Tooltip, Typography } from "@mui/material";
 import type { FC } from "react";
-import { Link } from "shared/ui";
 import type { ProjectT } from "shared/model/types";
+import { Link } from "shared/ui";
 import { ProjectSubscribeButton } from "./project_subscribe_button";
 
 interface IProjectCardProps {

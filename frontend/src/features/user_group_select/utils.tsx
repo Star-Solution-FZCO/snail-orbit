@@ -1,6 +1,6 @@
 import GroupIcon from "@mui/icons-material/Group";
-import { AvatarAdornment } from "../../shared/ui/fields/adornments/avatar_adornment";
 import type { BasicUserT, GroupT } from "../../shared/model/types";
+import { AvatarAdornment } from "../../shared/ui/fields/adornments/avatar_adornment";
 
 export type ValueType = BasicUserT | GroupT;
 

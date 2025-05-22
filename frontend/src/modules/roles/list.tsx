@@ -18,8 +18,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ListQueryParams, RoleT } from "shared/model/types";
 import { roleApi } from "shared/model";
+import type { ListQueryParams, RoleT } from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 

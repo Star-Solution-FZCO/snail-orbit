@@ -1,8 +1,8 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import type { GroupT, UpdateGroupT } from "shared/model/types";
 import { groupApi } from "shared/model";
+import type { GroupT, UpdateGroupT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { GroupForm } from "./group_form";
 

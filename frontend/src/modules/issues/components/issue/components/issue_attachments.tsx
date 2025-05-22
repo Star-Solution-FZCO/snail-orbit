@@ -1,9 +1,13 @@
+import { useEffect } from "react";
+import { issueApi } from "shared/model";
 import type {
     IssueAttachmentBodyT,
     IssueAttachmentT,
     IssueT,
 } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+import { useLightbox } from "shared/ui";
+import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 import { AttachmentsList } from "./attachments_list";
 
 type IssueAttachmentsProps = {
@@ -14,10 +18,20 @@ type IssueAttachmentsProps = {
 
 export const IssueAttachments = (props: IssueAttachmentsProps) => {
     const {
-        issue: { attachments, project },
+        issue: { id_readable, attachments, project },
         onUpdateIssue,
         onUpdateCache,
     } = props;
+
+    const { data: commentsData } = issueApi.useListIssueCommentsQuery({
+        id: id_readable,
+    });
+
+    const {
+        load: loadLBFiles,
+        clear: clearLBFiles,
+        close: closeLB,
+    } = useLightbox();
 
     const handleDelete = async (attachmentToDelete: IssueAttachmentT) => {
         onUpdateCache({
@@ -42,6 +56,34 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             attachments: newAttachments,
         });
     };
+
+    useEffect(() => {
+        const issueAttachments = attachments.map((a) => ({
+            id: a.id,
+            src: makeFileUrl(a.id),
+            name: a.name,
+            size: a.size,
+        }));
+
+        const commentsAttachments = commentsData
+            ? commentsData.payload.items
+                  .flatMap((comment) => comment.attachments)
+                  .reverse()
+                  .map((a) => ({
+                      id: a.id,
+                      src: makeFileUrl(a.id),
+                      name: a.name,
+                      size: a.size,
+                  }))
+            : [];
+
+        loadLBFiles([...issueAttachments, ...commentsAttachments]);
+
+        return () => {
+            closeLB();
+            clearLBFiles();
+        };
+    }, [attachments, commentsData, loadLBFiles, closeLB, clearLBFiles]);
 
     return (
         <AttachmentsList

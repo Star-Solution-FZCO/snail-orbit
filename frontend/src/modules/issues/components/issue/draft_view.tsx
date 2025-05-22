@@ -51,8 +51,6 @@ export const DraftView: FC<DraftViewProps> = (props) => {
                     onUpdateCache={onUpdateCache}
                 />
             </FieldContainer>
-
-            {/*<FilePreview issue={issue} isDraft={isDraft} />*/}
         </Box>
     );
 };

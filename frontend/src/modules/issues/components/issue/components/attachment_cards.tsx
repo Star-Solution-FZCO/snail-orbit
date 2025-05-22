@@ -1,11 +1,12 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, Tooltip, Typography } from "@mui/material";
-import { API_URL, apiVersion } from "app/config";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { openFilePreview, useAppDispatch, useAppSelector } from "shared/model";
+import { useAppSelector } from "shared/model";
 import type { IssueAttachmentT } from "shared/model/types";
+import { useLightbox } from "shared/ui/lightbox";
+import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 
 type BaseAttachmentCardProps = {
     filename: string;
@@ -232,22 +233,21 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
     onDelete,
     onDownload,
 }) => {
-    const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.profile.user);
 
-    const fileUrl = API_URL + apiVersion + "/files/" + attachment.id;
+    const { open } = useLightbox();
+
+    const fileUrl = makeFileUrl(attachment.id);
     const isImage = attachment.content_type.startsWith("image/");
 
     const handleClick = () => {
         if (isImage) {
-            dispatch(
-                openFilePreview({
-                    id: attachment.id,
-                    src: fileUrl,
-                    name: attachment.name,
-                    size: attachment.size,
-                }),
-            );
+            open({
+                id: attachment.id,
+                src: fileUrl,
+                name: attachment.name,
+                size: attachment.size,
+            });
         } else {
             onDownload(attachment);
         }

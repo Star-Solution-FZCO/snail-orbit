@@ -1,5 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { ListQueryParams, ListResponse, TagBaseT, TagT } from "shared/model/types";
+import type {
+    ListQueryParams,
+    ListResponse,
+    TagBaseT,
+    TagT,
+} from "shared/model/types";
 import { type ApiResponse } from "shared/model/types";
 import customFetchBase from "./custom_fetch_base";
 import { issueApi } from "./issue.api";

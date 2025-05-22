@@ -23,6 +23,7 @@ import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { projectApi, roleApi, userApi } from "shared/model";
 import type {
     BasicUserT,
     ListSelectQueryParams,
@@ -31,7 +32,6 @@ import type {
     RoleT,
     UserOrGroupT,
 } from "shared/model/types";
-import { projectApi, roleApi, userApi } from "shared/model";
 import { UserAvatar } from "shared/ui";
 import {
     noLimitListQueryParams,

@@ -2,8 +2,8 @@ import { Stack, TextField } from "@mui/material";
 import type { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { MDEditor } from "shared/ui";
 import type { AgileBoardT } from "shared/model/types";
+import { MDEditor } from "shared/ui";
 import { ProjectSelect } from "../components/project_select";
 
 export const MainInfo: FC = () => {

@@ -4,8 +4,8 @@ import { Link } from "@tanstack/react-router";
 import type { FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { MDEditor } from "shared/ui";
 import type { GroupT } from "shared/model/types";
+import { MDEditor } from "shared/ui";
 import * as yup from "yup";
 
 const groupSchema = yup.object().shape({

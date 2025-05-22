@@ -21,8 +21,8 @@ import utc from "dayjs/plugin/utc";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { APITokenT } from "shared/model/types";
 import { userApi } from "shared/model";
+import type { APITokenT } from "shared/model/types";
 import { Clipboard } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 

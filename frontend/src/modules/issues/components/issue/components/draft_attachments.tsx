@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import type {
     IssueAttachmentBodyT,
     IssueAttachmentT,
     IssueDraftT,
 } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
+import { useLightbox } from "shared/ui";
+import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 import { AttachmentsList } from "./attachments_list";
 
 type DraftAttachmentsProps = {
@@ -18,6 +21,12 @@ export const DraftAttachments = (props: DraftAttachmentsProps) => {
         onUpdateDraft,
         onUpdateCache,
     } = props;
+
+    const {
+        load: loadLBFiles,
+        clear: clearLBFiles,
+        close: closeLB,
+    } = useLightbox();
 
     const handleDelete = async (attachmentToDelete: IssueAttachmentT) => {
         onUpdateCache({
@@ -42,6 +51,22 @@ export const DraftAttachments = (props: DraftAttachmentsProps) => {
             attachments: newAttachments,
         });
     };
+
+    useEffect(() => {
+        loadLBFiles(
+            attachments.map((a) => ({
+                id: a.id,
+                src: makeFileUrl(a.id),
+                name: a.name,
+                size: a.size,
+            })),
+        );
+
+        return () => {
+            closeLB();
+            clearLBFiles();
+        };
+    }, [attachments, loadLBFiles, closeLB, clearLBFiles]);
 
     return (
         <AttachmentsList

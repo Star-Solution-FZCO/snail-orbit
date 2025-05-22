@@ -1,7 +1,7 @@
 import type { ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import type { BasicUserT } from "shared/model/types";
 import { customFieldsApi } from "shared/model";
+import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";

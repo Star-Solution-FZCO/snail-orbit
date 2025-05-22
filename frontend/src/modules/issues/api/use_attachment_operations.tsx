@@ -1,4 +1,3 @@
-import { API_URL, apiVersion } from "app/config";
 import { useCallback } from "react";
 import type {
     IssueAttachmentBodyT,
@@ -13,6 +12,7 @@ import {
 } from "shared/utils/crypto/crypto";
 import { downloadBlob } from "shared/utils/helpers/download-file";
 import { downloadFileToVariable } from "shared/utils/helpers/download-file-to-variable";
+import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 import { readFile } from "shared/utils/helpers/read-file";
 import { useFileUploader } from "widgets/file_upload/useFileUploader";
 import { useProjectData } from "./use_project_data";
@@ -52,7 +52,7 @@ export const useAttachmentOperations = (props: { projectId?: string }) => {
 
     const downloadAttachment = useCallback(
         async (attachment: IssueAttachmentT) => {
-            const fileUrl = API_URL + apiVersion + "/files/" + attachment.id;
+            const fileUrl = makeFileUrl(attachment.id);
 
             if (!isEncrypted || !attachment.encryption) {
                 window.open(fileUrl, "_blank");

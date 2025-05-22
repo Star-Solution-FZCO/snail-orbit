@@ -1,10 +1,10 @@
 import { Box, Stack } from "@mui/material";
 import type { FC } from "react";
 import { useCallback } from "react";
-import { StarButton } from "shared/ui";
-import { IssueLink } from "shared/ui/issue_link";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
+import { StarButton } from "shared/ui";
+import { IssueLink } from "shared/ui/issue_link";
 
 type BoardRowProps = {
     board: AgileBoardT;

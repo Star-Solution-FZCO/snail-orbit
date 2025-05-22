@@ -1,6 +1,14 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { ApiResponse, ListQueryParams, ListResponse } from "shared/model/types";
-import type { CreateSearchT, SearchT, UpdateSearchT } from "shared/model/types/search";
+import type {
+    ApiResponse,
+    ListQueryParams,
+    ListResponse,
+} from "shared/model/types";
+import type {
+    CreateSearchT,
+    SearchT,
+    UpdateSearchT,
+} from "shared/model/types/search";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Search"];

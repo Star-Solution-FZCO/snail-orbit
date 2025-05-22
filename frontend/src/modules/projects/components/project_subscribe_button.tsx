@@ -1,9 +1,9 @@
 import type { FC } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { StarButton } from "shared/ui";
 import { projectApi } from "shared/model";
 import type { ProjectT } from "shared/model/types";
+import { StarButton } from "shared/ui";
 
 type ProjectSubscribeButtonProps = {
     project: ProjectT;

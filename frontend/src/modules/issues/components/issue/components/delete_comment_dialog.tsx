@@ -9,8 +9,8 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
-import type { CommentT } from "shared/model/types";
 import { issueApi } from "shared/model";
+import type { CommentT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 
 type IDeleteCommentDialogProps = {
