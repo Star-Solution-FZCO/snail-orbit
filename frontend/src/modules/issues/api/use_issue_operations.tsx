@@ -49,11 +49,10 @@ export const useIssueOperations = (params: { issueId: string }) => {
 
     const handleUpdateIssue = useCallback(
         async (params: Parameters<typeof updateIssue>[0]) => {
-            const processedText = await processIssueText(
-                params.text?.value || "",
-            );
+            if (params.text !== undefined)
+                params.text = await processIssueText(params.text?.value || "");
 
-            return updateIssue({ ...params, text: processedText }).unwrap();
+            return updateIssue(params).unwrap();
         },
         [processIssueText, updateIssue],
     );

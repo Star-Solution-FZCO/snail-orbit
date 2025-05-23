@@ -49,11 +49,10 @@ export const useDraftOperations = (params: { draftId: string }) => {
 
     const handleUpdateDraft = useCallback(
         async (params: Parameters<typeof updateDraft>[0]) => {
-            const processedText = await processDraftText(
-                params.text?.value || "",
-            );
+            if (params.text !== undefined)
+                params.text = await processDraftText(params.text?.value || "");
 
-            return updateDraft({ ...params, text: processedText }).unwrap();
+            return updateDraft(params).unwrap();
         },
         [processDraftText, updateDraft],
     );
