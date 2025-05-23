@@ -25,6 +25,15 @@ export const useProjectData = (props: { projectId?: string }) => {
     return {
         project: projectData?.payload,
         encryptionKeys: encryptionKeysData?.payload.items || [],
+        isAttachmentsEncrypted:
+            isEncrypted &&
+            !!projectData?.payload.encryption_settings?.encrypt_attachments,
+        isCommentsEncrypted:
+            isEncrypted &&
+            !!projectData?.payload.encryption_settings?.encrypt_comments,
+        isDescriptionEncrypted:
+            isEncrypted &&
+            !!projectData?.payload.encryption_settings?.encrypt_description,
         isLoading,
         isEncrypted,
         error,

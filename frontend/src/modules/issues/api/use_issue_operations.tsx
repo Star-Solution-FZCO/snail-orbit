@@ -24,7 +24,7 @@ export const useIssueOperations = (params: { issueId: string }) => {
 
     const {
         isLoading: isProjectLoading,
-        isEncrypted,
+        isDescriptionEncrypted,
         encryptionKeys,
         error: projectError,
     } = useProjectData({
@@ -36,7 +36,7 @@ export const useIssueOperations = (params: { issueId: string }) => {
 
     const processIssueText = useCallback(
         async (inputText: string) => {
-            if (isEncrypted) {
+            if (isDescriptionEncrypted && !!inputText) {
                 const { text, key } = await encryptTextWithAES(inputText);
                 const encryption = await wrapAESKey(key, encryptionKeys);
 
@@ -44,7 +44,7 @@ export const useIssueOperations = (params: { issueId: string }) => {
             }
             return { value: inputText };
         },
-        [encryptionKeys, isEncrypted],
+        [encryptionKeys, isDescriptionEncrypted],
     );
 
     const handleUpdateIssue = useCallback(

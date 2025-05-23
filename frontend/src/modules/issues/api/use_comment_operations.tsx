@@ -11,7 +11,7 @@ import { useProjectData } from "./use_project_data";
 export const useCommentOperations = (props: { projectId?: string }) => {
     const { projectId } = props;
 
-    const { isLoading, isEncrypted, encryptionKeys } = useProjectData({
+    const { isLoading, isCommentsEncrypted, encryptionKeys } = useProjectData({
         projectId,
     });
 
@@ -22,7 +22,7 @@ export const useCommentOperations = (props: { projectId?: string }) => {
 
     const processCommentText = useCallback(
         async (inputText: string) => {
-            if (isEncrypted) {
+            if (isCommentsEncrypted && !!inputText) {
                 const { text, key } = await encryptTextWithAES(inputText);
                 const encryption = await wrapAESKey(key, encryptionKeys);
 
@@ -30,7 +30,7 @@ export const useCommentOperations = (props: { projectId?: string }) => {
             }
             return { value: inputText };
         },
-        [encryptionKeys, isEncrypted],
+        [encryptionKeys, isCommentsEncrypted],
     );
 
     const handleCreateComment = useCallback(

@@ -20,15 +20,16 @@ import { useProjectData } from "./use_project_data";
 export const useAttachmentOperations = (props: { projectId?: string }) => {
     const { projectId } = props;
 
-    const { isLoading, isEncrypted, encryptionKeys } = useProjectData({
-        projectId,
-    });
+    const { isLoading, isAttachmentsEncrypted, encryptionKeys } =
+        useProjectData({
+            projectId,
+        });
 
     const { uploadFile } = useFileUploader();
 
     const uploadAttachment = useCallback(
         async (file: File): Promise<IssueAttachmentBodyT> => {
-            if (!isEncrypted) {
+            if (!isAttachmentsEncrypted) {
                 const id = await uploadFile(file, file.name);
                 return { id };
             } else {
@@ -47,14 +48,14 @@ export const useAttachmentOperations = (props: { projectId?: string }) => {
                 return { id, encryption };
             }
         },
-        [encryptionKeys, isEncrypted, uploadFile],
+        [encryptionKeys, isAttachmentsEncrypted, uploadFile],
     );
 
     const downloadAttachment = useCallback(
         async (attachment: IssueAttachmentT) => {
             const fileUrl = makeFileUrl(attachment.id);
 
-            if (!isEncrypted || !attachment.encryption) {
+            if (!isAttachmentsEncrypted || !attachment.encryption) {
                 window.open(fileUrl, "_blank");
             } else {
                 const file = await downloadFileToVariable(fileUrl);
@@ -65,7 +66,7 @@ export const useAttachmentOperations = (props: { projectId?: string }) => {
                 downloadBlob(new Blob([fileDecrypted]), attachment.name);
             }
         },
-        [isEncrypted],
+        [isAttachmentsEncrypted],
     );
 
     return {

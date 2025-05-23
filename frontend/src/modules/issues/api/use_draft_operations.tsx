@@ -24,9 +24,9 @@ export const useDraftOperations = (params: { draftId: string }) => {
 
     const {
         isLoading: isProjectLoading,
-        isEncrypted,
         encryptionKeys,
         error: projectError,
+        isDescriptionEncrypted,
     } = useProjectData({
         projectId: draft?.project?.id,
     });
@@ -36,7 +36,7 @@ export const useDraftOperations = (params: { draftId: string }) => {
 
     const processDraftText = useCallback(
         async (inputText: string) => {
-            if (isEncrypted) {
+            if (isDescriptionEncrypted && !!inputText) {
                 const { text, key } = await encryptTextWithAES(inputText);
                 const encryption = await wrapAESKey(key, encryptionKeys);
 
@@ -44,7 +44,7 @@ export const useDraftOperations = (params: { draftId: string }) => {
             }
             return { value: inputText };
         },
-        [encryptionKeys, isEncrypted],
+        [encryptionKeys, isDescriptionEncrypted],
     );
 
     const handleUpdateDraft = useCallback(

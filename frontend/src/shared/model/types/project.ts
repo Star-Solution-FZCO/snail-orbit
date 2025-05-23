@@ -1,7 +1,6 @@
-import type { CustomFieldT } from "./custom_fields";
+import type { ProjectOutput } from "./backend-schema.gen";
 import type { AddEncryptionKeyParams, EncryptionKeyT } from "./encryption";
 import type { BasicUserT } from "./user";
-import type { WorkflowT } from "./workflow";
 
 export type EncryptionSettingsT = {
     encryption_keys: EncryptionKeyT[];
@@ -37,22 +36,7 @@ export type CreateProjectT = {
     encryption_settings?: EncryptionSettingsCreateT;
 };
 
-export type ProjectT = {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    ai_description?: string;
-    custom_fields: CustomFieldT[];
-    card_fields: string[];
-    workflows: WorkflowT[];
-    is_active: boolean;
-    is_subscribed: boolean;
-    avatar_type: "local" | "default";
-    encryption_settings?: EncryptionSettingsT;
-    is_encrypted: boolean;
-    avatar: string;
-};
+export type ProjectT = ProjectOutput;
 
 export type UpdateProjectT = {
     name?: string;
