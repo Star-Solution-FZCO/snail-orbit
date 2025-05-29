@@ -1,4 +1,5 @@
 import type {
+    CustomFieldGroupLinkOutput,
     CustomFieldGroupOutputRootModel,
     CustomFieldOutputRootModel,
     CustomFieldValueOutputRootModel,
@@ -103,6 +104,8 @@ export type CreateCustomFieldT = {
 };
 
 export type CustomFieldT = CustomFieldOutputRootModel;
+
+export type CustomFieldGroupLinkT = CustomFieldGroupLinkOutput;
 
 export type CustomFieldWithValueT = CustomFieldValueOutputRootModel;
 

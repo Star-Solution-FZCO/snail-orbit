@@ -16,15 +16,15 @@ export const ColumnSwimlanes: FC = () => {
         <Stack direction="column" gap={2}>
             <Controller
                 control={control}
-                name="column_field"
+                name="columns.field"
                 render={({
                     field: { onChange, value },
-                    formState: { errors },
+                    fieldState: { error },
                 }) => (
                     <ColumnFieldSelect
                         onChange={onChange}
                         value={value}
-                        error={errors.column_field}
+                        error={error}
                         projectId={projects.map((project) => project.id)}
                     />
                 )}
@@ -36,15 +36,15 @@ export const ColumnSwimlanes: FC = () => {
 
             <Controller
                 control={control}
-                name="swimlane_field"
+                name="swimlanes.field"
                 render={({
                     field: { onChange, value },
-                    formState: { errors },
+                    fieldState: { error },
                 }) => (
                     <SwimlaneFieldSelect
                         onChange={onChange}
                         value={value}
-                        error={errors.swimlane_field}
+                        error={error}
                         projectId={projects.map((project) => project.id)}
                     />
                 )}

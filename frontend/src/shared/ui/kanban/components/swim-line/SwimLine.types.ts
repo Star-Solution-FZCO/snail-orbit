@@ -1,15 +1,11 @@
-import { SxProps } from "@mui/material";
-import { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type { SxProps } from "@mui/material";
+import type { ReactNode } from "react";
 
 export type SwimLineProps = {
     children: ReactNode;
-    label?: string;
-    style?: CSSProperties;
-    hover?: boolean;
-    handleProps?: HTMLAttributes<any>;
-    hideHandle?: boolean;
-    scrollable?: boolean;
+    label?: ReactNode;
+    isClosed?: boolean;
+    onClosedChange?: (value: boolean) => void;
     shadow?: boolean;
-    placeholder?: boolean;
     sx?: SxProps;
 };

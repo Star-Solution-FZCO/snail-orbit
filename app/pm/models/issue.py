@@ -203,6 +203,9 @@ class Issue(DocumentWithReadOnlyProjection):
     def get_field_by_id(self, id_: PydanticObjectId) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.id == id_), None)
 
+    def get_field_by_gid(self, gid: str) -> CustomFieldValue | None:
+        return next((field for field in self.fields if field.gid == gid), None)
+
     def _fields_diff(
         self,
     ) -> dict[PydanticObjectId, tuple[CustomFieldValueT, CustomFieldValueT]]:

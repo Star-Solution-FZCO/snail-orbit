@@ -60,7 +60,13 @@ export const AgileCard: FC<IssueCardProps> = memo(
             return cardFields.map((cardField) => {
                 const targetIssueField = issue.fields[cardField.name];
                 if (targetIssueField) return targetIssueField;
-                return { ...cardField, value: null };
+                return {
+                    id: cardField.gid,
+                    gid: cardField.gid,
+                    type: cardField.type,
+                    name: cardField.name,
+                    value: null,
+                };
             });
         }, [cardFields, issue.fields]);
 

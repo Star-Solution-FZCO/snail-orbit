@@ -17,19 +17,15 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "shared/model";
+import type { AgileBoardT } from "shared/model/types";
 import type {
-    AgileBoardT,
-    BasicUserT,
-    EnumOptionT,
-    StateOptionT,
-    VersionOptionT,
-} from "shared/model/types";
+    ShortOptionOutput,
+    UserOutput,
+} from "shared/model/types/backend-schema.gen";
 import { useListQueryParams } from "shared/utils";
 import { getFieldValue } from "../../../utils/normalizeFieldValue";
 
-const getOptionValue = (
-    option: EnumOptionT | StateOptionT | BasicUserT | VersionOptionT,
-): string => {
+const getOptionValue = (option: UserOutput | ShortOptionOutput): string => {
     return "value" in option ? option.value : option.name;
 };
 
@@ -44,25 +40,25 @@ export const ColumnsForm: FC = () => {
     const { control } = useFormContext<AgileBoardT>();
 
     const field = useWatch({
-        name: "column_field",
+        name: "columns.field",
         control,
     });
 
     const columns = useWatch({
         control,
-        name: "columns",
+        name: "columns.values",
     });
 
     const { fields, append, remove } = useFieldArray<AgileBoardT>({
         control,
-        name: "columns",
+        name: "columns.values",
     });
 
     const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+        customFieldsApi.useLazyListGroupSelectOptionsQuery();
 
     const handleSelectOpen = () => {
-        fetchOptions({ id: field.id, ...listQueryParams });
+        fetchOptions({ gid: field.gid, ...listQueryParams });
     };
 
     const filteredOptions = useMemo(() => {
@@ -71,6 +67,7 @@ export const ColumnsForm: FC = () => {
                 (option) =>
                     !columns.some(
                         (column) =>
+                            !!column &&
                             getFieldValue(column) === getOptionValue(option),
                     ),
             ) || []
@@ -90,7 +87,7 @@ export const ColumnsForm: FC = () => {
                 >
                     <Controller
                         control={control}
-                        name={`columns.${index}` as const}
+                        name={`columns.values.${index}` as const}
                         render={({
                             field: { value, onChange, ...rest },
                             fieldState: { invalid, error },
@@ -98,9 +95,7 @@ export const ColumnsForm: FC = () => {
                             <TextField
                                 placeholder={t(`agileBoards.form.column`)}
                                 error={invalid}
-                                helperText={
-                                    error?.message ? t(error.message) : null
-                                }
+                                helperText={error?.message}
                                 variant="outlined"
                                 size="small"
                                 fullWidth
@@ -155,7 +150,7 @@ export const ColumnsForm: FC = () => {
                     setSelectInput("");
                     if (option)
                         append({
-                            id: "id" in option ? option.id : option.uuid,
+                            id: "id" in option ? option.id : option.value,
                             value: getOptionValue(option),
                             color:
                                 "color" in option

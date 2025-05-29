@@ -1,59 +1,45 @@
-import type {
-    CancelDrop,
-    KeyboardCoordinateGetter,
-    Modifiers,
-    UniqueIdentifier,
-} from "@dnd-kit/core";
-import type { CSSProperties } from "react";
-import type { ContainerProps } from "./components/container";
-import type { ItemProps } from "./components/item";
-import type { SwimLineProps } from "./components/swim-line";
+import type { ComponentType, ReactNode } from "react";
 
-export type Items = Record<
-    UniqueIdentifier,
-    Record<UniqueIdentifier, UniqueIdentifier[]>
->;
+export type UniqueIdentifier = string | number;
 
-export type KanbanProps = {
-    adjustScale?: boolean;
-    cancelDrop?: CancelDrop;
-    columns?: number;
-    headers?: string[];
-    containerStyle?: CSSProperties;
-    coordinateGetter?: KeyboardCoordinateGetter;
-    getItemStyles?(args: {
-        value: UniqueIdentifier;
-        index: number;
-        overIndex: number;
-        isDragging: boolean;
-        containerId: UniqueIdentifier;
-        isSorting: boolean;
-        isDragOverlay: boolean;
-    }): CSSProperties;
-    handle?: boolean;
-    items?: Items;
-    modifiers?: Modifiers;
-    renderItemContent?: ItemProps["renderItemContent"];
-    scrollable?: boolean;
-    vertical?: boolean;
-    wrapperStyle?(args: { index: number }): CSSProperties;
+export type KanbanItems<I> = Array<Array<Array<I>>>;
+
+export type ItemData = {
+    itemIndex?: number;
+    columnIndex: number;
+    swimLaneIndex: number;
+};
+
+export type ColumnArg<C> = { type: "column"; value: C };
+export type SwimLaneArg<S> = { type: "swimLane"; value: S };
+export type ItemArg<I> = { type: "item"; value: I };
+
+export type KanbanProps<I, S, C> = {
+    columns: C[];
+    swimLanes: S[];
+    items: KanbanItems<I>;
+    getLabel: (data: ColumnArg<C> | SwimLaneArg<S>) => ReactNode;
+    getIsClosed?: (data: ColumnArg<C> | SwimLaneArg<S>) => boolean;
+    getKey: (
+        data: ColumnArg<C> | SwimLaneArg<S> | ItemArg<I>,
+    ) => UniqueIdentifier;
+    onClosedChange?: (
+        data: ColumnArg<C> | SwimLaneArg<S>,
+        value: boolean,
+    ) => void;
+    inBlockColumns?: number;
+    ItemContent?: ComponentType<{ data: I }>;
     onCardMoved?(
-        id: UniqueIdentifier,
+        item: I,
         from: {
-            column: UniqueIdentifier;
-            swimLine: UniqueIdentifier;
-            after: UniqueIdentifier | null;
+            column: C;
+            swimLane: S;
+            after: I | null;
         },
         to: {
-            column: UniqueIdentifier;
-            swimLine: UniqueIdentifier;
-            after: UniqueIdentifier | null;
+            column: C;
+            swimLane: S;
+            after: I | null;
         },
     ): Promise<boolean | undefined> | boolean | undefined | void;
-    swimLineProps?:
-        | Omit<SwimLineProps, "children">
-        | ((swimLineId: UniqueIdentifier) => Omit<SwimLineProps, "children">);
-    containerProps?:
-        | Omit<ContainerProps, "children">
-        | ((containerId: UniqueIdentifier) => Omit<ContainerProps, "children">);
 };

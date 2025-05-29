@@ -1,14 +1,15 @@
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
-import { FC, SyntheticEvent, useCallback, useMemo, useState } from "react";
-import { FieldError, Merge } from "react-hook-form";
+import type { FC, SyntheticEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
-import { BasicCustomFieldT } from "shared/model/types";
+import type { AgileBoardCardFieldT } from "shared/model/types";
 
 interface IColumnFieldSelectProps {
-    value?: BasicCustomFieldT;
-    onChange: (value: BasicCustomFieldT) => void;
-    error?: Merge<FieldError, any>;
+    value?: AgileBoardCardFieldT;
+    onChange: (value: AgileBoardCardFieldT) => void;
+    error?: Merge<FieldError, unknown>;
     projectId: string[];
 }
 
@@ -28,13 +29,13 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
     const options = useMemo(() => {
         if (!data) return [];
         return data.payload.items;
-    }, [data]) as BasicCustomFieldT[];
+    }, [data]);
 
     const handleOpen = useCallback(() => {
         setIsOpen(true);
 
         fetchCustomFields({ project_id: projectId });
-    }, [setIsOpen, projectId]);
+    }, [fetchCustomFields, projectId]);
 
     const handleClose = useCallback(() => {
         setIsOpen(false);
@@ -42,7 +43,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
 
     const handleChange = (
         _: SyntheticEvent,
-        value: BasicCustomFieldT | null,
+        value: AgileBoardCardFieldT | null,
     ) => {
         if (value && onChange) onChange(value);
     };
@@ -56,7 +57,7 @@ const ColumnFieldSelect: FC<IColumnFieldSelectProps> = ({
             onClose={handleClose}
             onChange={handleChange}
             getOptionLabel={(option) => option?.name || ""}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+            isOptionEqualToValue={(option, value) => option.gid === value.gid}
             renderInput={(params) => (
                 <TextField
                     {...params}
