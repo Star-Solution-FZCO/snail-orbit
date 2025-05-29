@@ -1,7 +1,7 @@
 import { Box, Button, debounce, TextField } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
@@ -22,11 +22,14 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
 
     const { getDraftText } = useDraftOperations({ draftId: draft.id });
 
+    const initialTextLoaded = useRef<boolean>(false);
     const [subject, setSubject] = useState<string>(draft?.subject || "");
     const [text, setText] = useState<string>("");
     const [textLoading, setTextLoading] = useState(true);
 
     useEffect(() => {
+        if (initialTextLoaded.current) return;
+        initialTextLoaded.current = true;
         setTextLoading(true);
         getDraftText(draft).then((res) => {
             setText(res || draft.text?.value || "");

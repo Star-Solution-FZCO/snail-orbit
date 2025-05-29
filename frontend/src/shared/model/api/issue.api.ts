@@ -145,8 +145,8 @@ export const issueApi = createApi({
                 method: "PUT",
                 body,
             }),
-            invalidatesTags: (_result, _error, { commentId }) => [
-                { type: "IssueComments", id: commentId },
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueComments", id: id },
             ],
         }),
         deleteIssueComment: build.mutation<
@@ -157,8 +157,8 @@ export const issueApi = createApi({
                 url: `issue/${id}/comment/${commentId}`,
                 method: "DELETE",
             }),
-            invalidatesTags: (_result, _error, { commentId }) => [
-                { type: "IssueComments", id: commentId },
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueComments", id: id },
             ],
         }),
         listIssueHistory: build.query<
@@ -307,37 +307,6 @@ export const issueApi = createApi({
                 url: `issue/${id}/feed/list`,
                 params,
             }),
-            serializeQueryArgs: ({ endpointName, queryArgs }) => {
-                return `${endpointName}:${queryArgs.id}:${queryArgs.params?.sort_by ?? "time"}`;
-            },
-            merge: (currentCache, newItems, { arg }) => {
-                const existingIds = new Set(
-                    currentCache.payload.items.map((item) => item.data.id),
-                );
-
-                const uniqueItems = newItems.payload.items.filter(
-                    (item) => !existingIds.has(item.data.id),
-                );
-
-                currentCache.payload.items = [
-                    ...currentCache.payload.items,
-                    ...uniqueItems,
-                ];
-
-                const reverse = arg?.params?.sort_by === "-time";
-                currentCache.payload.items.sort((a, b) =>
-                    reverse
-                        ? new Date(b?.time || 0).getTime() -
-                          new Date(a?.time || 0).getTime()
-                        : new Date(a?.time || 0).getTime() -
-                          new Date(b?.time || 0).getTime(),
-                );
-                currentCache.payload.offset = newItems.payload.offset;
-                currentCache.payload.count = newItems.payload.count;
-            },
-            forceRefetch: ({ currentArg, previousArg }) =>
-                currentArg?.params?.offset !== previousArg?.params?.offset ||
-                currentArg?.params?.sort_by !== previousArg?.params?.sort_by,
             providesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
                 { type: "IssueHistories", id },

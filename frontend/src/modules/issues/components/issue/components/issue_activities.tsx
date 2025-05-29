@@ -20,7 +20,11 @@ import type {
     IssueActivityTypeT,
     IssueHistoryT,
 } from "shared/model/types";
-import { formatSpentTime, useListQueryParams } from "shared/utils";
+import {
+    formatSpentTime,
+    toastApiError,
+    useListQueryParams,
+} from "shared/utils";
 import { CommentCard } from "./comment_card/comment_card";
 import { CreateCommentForm } from "./comments/create_comment_form";
 import { DeleteCommentDialog } from "./delete_comment_dialog";
@@ -68,13 +72,20 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
     const { data: issueData, isLoading: issueLoading } =
         issueApi.useGetIssueQuery(issueId);
 
-    const { data, isLoading: feedLoading } = issueApi.useListIssueFeedQuery({
+    const {
+        data,
+        isLoading: feedLoading,
+        refetch: refetchFeed,
+    } = issueApi.useListIssueFeedQuery({
         id: issueId,
         params: listQueryParams,
     });
 
     const { data: issueSpentTime, isLoading: spentTimeLoading } =
         issueApi.useGetIssueSpentTimeQuery(issueId);
+
+    const [deleteComment, { isLoading: isDeleteDialogLoading }] =
+        issueApi.useDeleteIssueCommentMutation();
 
     const [currentEditingComment, setCurrentEditingComment] =
         useState<CommentT | null>(null);
@@ -93,6 +104,16 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
     const handleCloseDeleteCommentDialog = () => {
         setDeleteCommentDialogOpen(false);
         setCurrentEditingComment(null);
+    };
+
+    const handleClickDelete = () => {
+        if (!currentEditingComment) return;
+
+        deleteComment({ id: issueId, commentId: currentEditingComment.id })
+            .unwrap()
+            .then(handleCloseDeleteCommentDialog)
+            .then(refetchFeed)
+            .catch(toastApiError);
     };
 
     const handleClickActivityType = (type: IssueActivityTypeT) => {
@@ -118,7 +139,7 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
 
     const handleClickLoadMore = useCallback(() => {
         updateListQueryParams({
-            offset: listQueryParams.offset + listQueryParams.limit,
+            limit: listQueryParams.limit + 10,
         });
     }, [listQueryParams, updateListQueryParams]);
 
@@ -252,10 +273,10 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
                 )}
 
             <DeleteCommentDialog
-                issueId={issueId}
                 open={deleteCommentDialogOpen}
-                comment={currentEditingComment}
                 onClose={handleCloseDeleteCommentDialog}
+                onSubmit={handleClickDelete}
+                isLoading={isDeleteDialogLoading}
             />
         </Box>
     );

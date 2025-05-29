@@ -9,35 +9,20 @@ import {
 } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
-import { issueApi } from "shared/model";
-import type { CommentT } from "shared/model/types";
-import { toastApiError } from "shared/utils";
 
 type IDeleteCommentDialogProps = {
-    issueId: string;
     open: boolean;
-    comment: CommentT | null;
     onClose: () => void;
+    onSubmit?: () => void;
+    isLoading?: boolean;
 };
 
 export const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
-    issueId,
     open,
-    comment,
     onClose,
+    onSubmit,
+    isLoading,
 }) => {
-    const [deleteComment, { isLoading }] =
-        issueApi.useDeleteIssueCommentMutation();
-
-    const handleClickDelete = () => {
-        if (!comment) return;
-
-        deleteComment({ id: issueId, commentId: comment.id })
-            .unwrap()
-            .then(onClose)
-            .catch(toastApiError);
-    };
-
     return (
         <Dialog open={open} onClose={onClose}>
             <DialogTitle
@@ -64,7 +49,7 @@ export const DeleteCommentDialog: FC<IDeleteCommentDialogProps> = ({
                     {t("cancel")}
                 </Button>
                 <Button
-                    onClick={handleClickDelete}
+                    onClick={onSubmit}
                     variant="outlined"
                     loading={isLoading}
                 >
