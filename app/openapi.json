@@ -10696,6 +10696,91 @@
         }
       }
     },
+    "/api/v2/board/{board_id}/issues": {
+      "get": {
+        "tags": [
+          "api",
+          "v2",
+          "board"
+        ],
+        "summary": "Get Board Issues",
+        "operationId": "get_board_issues_api_v2_board__board_id__issues_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "board_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Board Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_BoardIssuesOutput_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/oidc": {
       "get": {
         "tags": [
@@ -12864,6 +12949,156 @@
           "columns"
         ],
         "title": "BoardCreate"
+      },
+      "BoardIssuesOutput": {
+        "properties": {
+          "swimlanes": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/UserOutput"
+                  },
+                  "type": "array"
+                },
+                {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/EnumOption"
+                  },
+                  "type": "array"
+                },
+                {
+                  "$ref": "#/components/schemas/StateOption"
+                },
+                {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionOption"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {},
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Swimlanes"
+          },
+          "columns": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/UserOutput"
+                  },
+                  "type": "array"
+                },
+                {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/EnumOption"
+                  },
+                  "type": "array"
+                },
+                {
+                  "$ref": "#/components/schemas/StateOption"
+                },
+                {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionOption"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {},
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "issues": {
+            "items": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/IssueOutput"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "swimlanes",
+          "columns",
+          "issues"
+        ],
+        "title": "BoardIssuesOutput"
       },
       "BoardOutput": {
         "properties": {
@@ -19794,6 +20029,23 @@
           "payload"
         ],
         "title": "SuccessPayloadOutput[ApiTokenCreateOut]"
+      },
+      "SuccessPayloadOutput_BoardIssuesOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BoardIssuesOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[BoardIssuesOutput]"
       },
       "SuccessPayloadOutput_BoardOutput_": {
         "properties": {
