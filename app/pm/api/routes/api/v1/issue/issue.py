@@ -249,6 +249,14 @@ async def update_draft(
             HTTPStatus.FORBIDDEN, 'You do not have permission to update this draft'
         )
     if 'project_id' in body.model_fields_set:
+        if obj.project is not None:
+            current_project = await obj.get_project(fetch_links=True)
+            if current_project and current_project.encryption_settings is not None:
+                raise HTTPException(
+                    HTTPStatus.UNPROCESSABLE_ENTITY,
+                    'Cannot change project for drafts in encrypted projects',
+                )
+
         project: m.Project | None = None
         if body.project_id:
             if not (
@@ -500,6 +508,13 @@ async def update_issue(
         'project_id' in body.model_fields_set and body.project_id != obj.project.id
     )
     if move_to_another_project:
+        current_project = await obj.get_project(fetch_links=True)
+        if current_project.encryption_settings is not None:
+            raise HTTPException(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                'Cannot change project for issues in encrypted projects',
+            )
+
         project = await m.Project.find_one(
             m.Project.id == body.project_id, fetch_links=True
         )
