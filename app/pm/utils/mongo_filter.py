@@ -181,12 +181,12 @@ def get_available_field(
         and field_name not in available_fields
         and field_name_dash not in available_fields
     ):
-        raise PermissionError(f'you can not search by field {field_name}')
+        raise PermissionError(f'You cannot search by field {field_name}')
     try:
         field = model.model_fields[field_parts[0]]
     except KeyError as err:
         raise PermissionError(
-            f'you can not search by this field "{field_name}"',
+            f'You cannot search by this field "{field_name}"'
         ) from err
     return field_name, field
 

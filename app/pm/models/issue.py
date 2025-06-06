@@ -338,7 +338,9 @@ class Issue(DocumentWithReadOnlyProjection):
             fetch_links=fetch_links,
         )
         if not pr:
-            raise ValueError(f'Project {self.project.id} not found')
+            raise ValueError(
+                f'Project {self.project.name} ({self.project.slug}) not found'
+            )
         return pr
 
     @classmethod
@@ -682,7 +684,9 @@ class IssueDraft(Document):
             fetch_links=fetch_links,
         )
         if not pr:
-            raise ValueError(f'Project {self.project.id} not found')
+            raise ValueError(
+                f'Project {self.project.name} ({self.project.slug}) not found'
+            )
         return pr
 
     @classmethod

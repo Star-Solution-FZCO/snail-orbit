@@ -127,7 +127,7 @@ class CustomFieldLink(BaseModel):
     async def resolve(self) -> CustomField:
         obj = await CustomField.find_one(CustomField.id == self.id, with_children=True)
         if obj is None:
-            raise ValueError(f'CustomField not found: {self.id}')
+            raise ValueError(f'CustomField not found: {self.name}')
         return obj
 
 

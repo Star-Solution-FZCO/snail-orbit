@@ -299,7 +299,7 @@ async def create_board(
         ):
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
-                'Swimlane field can not be of type MULTI',
+                'Swimlane field cannot be of type MULTI',
             )
         _all_projects_has_custom_field(swimlane_field, projects)
         swimlanes = await validate_custom_field_values(swimlane_field, body.swimlanes)
@@ -1026,7 +1026,7 @@ def _all_projects_has_custom_field(
         if all(cf.gid != field.gid for cf in p.custom_fields):
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
-                f'Field {field.name} not found in project {p.id}',
+                f'Field {field.name} not found in project {p.name} ({p.slug})',
             )
 
 

@@ -51,7 +51,7 @@ class TagLinkField(BaseModel):
     async def resolve(self) -> 'Tag':
         obj = await Tag.find_one(Tag.id == self.id)
         if obj is None:
-            raise ValueError(f'Tag not found: {self.id}')
+            raise ValueError(f'Tag not found: {self.name}')
         return obj
 
 

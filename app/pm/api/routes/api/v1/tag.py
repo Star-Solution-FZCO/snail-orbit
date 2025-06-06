@@ -165,7 +165,9 @@ async def update_tag(
     if not tag:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Tag not found')
     if not tag.check_permissions(user_ctx, m.PermissionType.EDIT):
-        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail='Forbidden')
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail='No permission to modify this tag'
+        )
     for k, v in tag_data.model_dump(exclude_unset=True).items():
         setattr(tag, k, v)
     if tag.is_changed:
@@ -183,7 +185,9 @@ async def delete_tag(
     if not tag:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Tag not found')
     if not tag.check_permissions(user_ctx, m.PermissionType.ADMIN):
-        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail='Forbidden')
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail='No permission to modify this tag'
+        )
     await tag.delete()
     await m.Issue.remove_tag_embedded_links(tag_id)
     return ModelIdOutput.make(tag_id)

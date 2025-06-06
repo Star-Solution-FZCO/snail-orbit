@@ -795,7 +795,7 @@ async def link_issues(
         if any(il.issue.id == target_issue.id for il in obj.interlinks):
             raise HTTPException(
                 HTTPStatus.CONFLICT,
-                f'Issue already linked to {target_issue.id}',
+                f'Issue already linked to {target_issue.id_readable}',
             )
 
         il_id = uuid4()
