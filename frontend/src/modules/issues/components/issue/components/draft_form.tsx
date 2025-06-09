@@ -17,20 +17,26 @@ export type DraftFormProps = {
 
 export const DraftForm: FC<DraftFormProps> = (props) => {
     const { draft, onCreateIssue, onUpdateDraft, loading } = props;
+
     const { t } = useTranslation();
     const navigate = useNavigate();
 
     const { getDraftText } = useDraftOperations({ draftId: draft.id });
 
     const initialTextLoaded = useRef<boolean>(false);
+
     const [subject, setSubject] = useState<string>(draft?.subject || "");
     const [text, setText] = useState<string>("");
+
     const [textLoading, setTextLoading] = useState(true);
 
     useEffect(() => {
         if (initialTextLoaded.current) return;
+
         initialTextLoaded.current = true;
+
         setTextLoading(true);
+
         getDraftText(draft).then((res) => {
             setText(res || draft.text?.value || "");
             setTextLoading(false);

@@ -1,8 +1,8 @@
 import type {
-    IssueCreate,
     IssueAttachmentBody,
     IssueAttachmentOut,
     IssueChangeOutputRootModel,
+    IssueCreate,
     IssueDraftOutput,
     IssueFeedRecordOutput,
     IssueFieldChangeOutputRootModel,

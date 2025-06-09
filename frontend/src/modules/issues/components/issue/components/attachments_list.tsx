@@ -58,6 +58,12 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
             const clipboardItems = event.clipboardData?.items;
             if (!clipboardItems) return;
 
+            const hasFiles = Array.from(clipboardItems).some(
+                (item) => item.kind === "file",
+            );
+
+            if (!hasFiles) return;
+
             event.stopPropagation();
             event.preventDefault();
 
