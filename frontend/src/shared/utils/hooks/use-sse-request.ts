@@ -1,39 +1,53 @@
-import { EVENTS_URL } from "app/config";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+    SSESharedWorkerManager,
+    WorkerEvent,
+} from "./sse-shared-worker-manager";
 
 type UseSseRequestParams<T> = {
     url: string;
     onMessage?: (data: T) => void;
 };
 
-const baseUrl = EVENTS_URL;
-
 export const useSseRequest = <T>(params: UseSseRequestParams<T>) => {
     const { url, onMessage } = params;
 
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
+    const onMessageRef = useRef(onMessage);
+
     useEffect(() => {
-        setIsLoading(true);
+        onMessageRef.current = onMessage;
+    }, [onMessage]);
 
-        const eventSource = new EventSource(baseUrl + url);
+    useEffect(() => {
+        const manager = SSESharedWorkerManager.getInstance();
 
-        eventSource.onopen = () => {
-            setIsLoading(false);
-            setIsOpen(true);
+        const handleWorkerMessage = (event: WorkerEvent) => {
+            switch (event.type) {
+                case "open":
+                    setIsLoading(false);
+                    setIsOpen(true);
+                    break;
+
+                case "message":
+                    if (onMessageRef.current && event.data) {
+                        onMessageRef.current(event.data as T);
+                    }
+                    break;
+
+                case "error":
+                    setIsLoading(false);
+                    setIsOpen(false);
+                    break;
+            }
         };
 
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data) as T;
-            onMessage?.(data);
-        };
+        const unsubscribe = manager.subscribe(url, handleWorkerMessage);
 
-        return () => {
-            eventSource.close();
-            setIsOpen(false);
-        };
-    }, [onMessage, url]);
+        return unsubscribe;
+    }, [url]);
 
     return { isLoading, isOpen };
 };
