@@ -16,6 +16,7 @@ export const useSseRequest = <T>(params: UseSseRequestParams<T>) => {
 
     useEffect(() => {
         setIsLoading(true);
+
         const eventSource = new EventSource(baseUrl + url);
 
         eventSource.onopen = () => {

@@ -143,6 +143,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                     {formatErrorMessages(error) ||
                         t("agileBoards.item.fetch.error")}
                 </Typography>
+
                 <Button onClick={goToFullListHandler} variant="contained">
                     {t("agileBoards.returnToList")}
                 </Button>
@@ -300,6 +301,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                         </Box>
                     ) : null}
                 </Box>
+
                 <Box sx={{ width: "100%" }}>
                     {mode === "board" ? (
                         <AgileBoard
@@ -316,6 +318,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                         </Box>
                     )}
                 </Box>
+
                 <DeleteAgileBoardDialog
                     id={agileBoard.id}
                     open={deleteDialogOpen}

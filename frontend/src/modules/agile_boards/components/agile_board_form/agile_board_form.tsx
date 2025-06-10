@@ -4,8 +4,8 @@ import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import type { AgileBoardT } from "shared/model/types";
 import { TabPanel } from "shared/ui";
-import type { AgileBoardT } from "../../../../shared/model/types";
 import { Access } from "./tabs/access";
 import { Card } from "./tabs/card";
 import { ColumnSwimlanes } from "./tabs/column_swimlanes";
@@ -91,15 +91,19 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                             />
                         </Tabs>
                     </Box>
+
                     <TabPanel value={tabs.main}>
                         <MainInfo />
                     </TabPanel>
+
                     <TabPanel value={tabs.column_and_swim_lines}>
                         <ColumnSwimlanes />
                     </TabPanel>
+
                     <TabPanel value={tabs.card}>
                         <Card />
                     </TabPanel>
+
                     <TabPanel value={tabs.access}>
                         <Access />
                     </TabPanel>

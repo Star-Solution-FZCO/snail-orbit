@@ -3,8 +3,15 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import LinkIcon from "@mui/icons-material/Link";
-import { Box, IconButton, Modal, Tooltip, Typography } from "@mui/material";
-import { useEffect } from "react";
+import {
+    Box,
+    IconButton,
+    Modal,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/material";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { formatBytes } from "shared/utils";
@@ -23,6 +30,9 @@ export const LightboxModal = () => {
         prev,
         select,
     } = useLightbox();
+
+    const thumbnailsContainerRef = useRef<HTMLDivElement>(null);
+    const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const handleClose = () => {
         close();
@@ -62,6 +72,44 @@ export const LightboxModal = () => {
         select(index);
     };
 
+    const scrollToActiveThumbnail = () => {
+        const container = thumbnailsContainerRef.current;
+        const activeThumbnail = thumbnailRefs.current[currentIndex];
+
+        if (!container || !activeThumbnail) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const thumbnailRect = activeThumbnail.getBoundingClientRect();
+
+        const thumbnailLeft =
+            thumbnailRect.left - containerRect.left + container.scrollLeft;
+        const thumbnailRight = thumbnailLeft + thumbnailRect.width;
+
+        const containerWidth = container.clientWidth;
+        const scrollLeft = container.scrollLeft;
+        const scrollRight = scrollLeft + containerWidth;
+
+        let newScrollLeft = scrollLeft;
+
+        if (thumbnailLeft < scrollLeft) {
+            newScrollLeft = thumbnailLeft - 20;
+        } else if (thumbnailRight > scrollRight) {
+            newScrollLeft = thumbnailRight - containerWidth + 20;
+        }
+
+        container.scrollTo({
+            left: Math.max(0, newScrollLeft),
+            behavior: "smooth",
+        });
+    };
+
+    useEffect(() => {
+        if (isOpen && files.length > 1) {
+            const timeoutId = setTimeout(scrollToActiveThumbnail, 100);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [currentIndex, isOpen, files.length]);
+
     useEffect(() => {
         if (!isOpen) return;
 
@@ -82,6 +130,10 @@ export const LightboxModal = () => {
         };
     }, [isOpen, prev, next, close]);
 
+    useEffect(() => {
+        thumbnailRefs.current = thumbnailRefs.current.slice(0, files.length);
+    }, [files.length]);
+
     const showNavigationControls = files.length > 1;
 
     return (
@@ -96,17 +148,15 @@ export const LightboxModal = () => {
                 },
             }}
         >
-            <Box
-                display="flex"
-                flexDirection="column"
+            <Stack
                 position="fixed"
                 sx={{
                     outline: "none",
                     inset: 0,
                 }}
             >
-                <Box
-                    display="flex"
+                <Stack
+                    direction="row"
                     justifyContent="space-between"
                     alignItems="center"
                     minHeight="64px"
@@ -123,12 +173,12 @@ export const LightboxModal = () => {
                     <IconButton onClick={handleClose}>
                         <CloseIcon />
                     </IconButton>
-                </Box>
+                </Stack>
 
-                <Box
+                <Stack
                     width={1}
                     height={1}
-                    display="flex"
+                    direction="row"
                     justifyContent={
                         showNavigationControls ? "space-between" : "center"
                     }
@@ -159,20 +209,20 @@ export const LightboxModal = () => {
                             <ArrowForwardIosIcon />
                         </IconButton>
                     )}
-                </Box>
+                </Stack>
 
-                <Box
-                    display="flex"
+                <Stack
+                    direction="row"
                     alignItems="center"
                     px={4}
                     gap={3}
                     minHeight="64px"
                 >
-                    <Box
-                        display="flex"
+                    <Stack
+                        direction="row"
                         alignItems="center"
                         gap={1}
-                        flexBasis="30%"
+                        flexBasis="25%"
                     >
                         <Tooltip title={t("download")}>
                             <IconButton onClick={handleDownload}>
@@ -185,52 +235,66 @@ export const LightboxModal = () => {
                                 <LinkIcon />
                             </IconButton>
                         </Tooltip>
-                    </Box>
+                    </Stack>
 
-                    <Box
-                        px={4}
-                        flex={1}
-                        display="flex"
-                        gap={1}
-                        justifyContent="center"
-                        alignItems="center"
-                        overflow="auto"
-                    >
-                        {files.map((file, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    width: 64,
-                                    height: 40,
-                                    borderRadius: 1,
-                                    cursor: "pointer",
-                                    borderWidth: 4,
-                                    borderColor:
-                                        currentIndex === index
-                                            ? "info.dark"
-                                            : "transparent",
-                                    borderStyle: "solid",
-                                    boxSizing: "border-box",
-                                }}
-                                onClick={() => handleClickThumbnail(index)}
-                            >
+                    <Box flex={1} px={4} overflow="hidden">
+                        <Stack
+                            ref={thumbnailsContainerRef}
+                            direction="row"
+                            justifyContent="flex-start"
+                            gap={1}
+                            py={1}
+                            overflow="auto"
+                            sx={{
+                                scrollbarWidth: "none",
+                                msOverflowStyle: "none",
+                                "&::-webkit-scrollbar": {
+                                    display: "none",
+                                },
+                            }}
+                        >
+                            {files.map((file, index) => (
                                 <Box
-                                    component="img"
-                                    src={file.src}
-                                    width="100%"
-                                    height="100%"
-                                    sx={{
-                                        objectFit: "cover",
-                                        objectPosition: "center",
+                                    key={index}
+                                    ref={(el: HTMLDivElement | null) => {
+                                        thumbnailRefs.current[index] = el;
                                     }}
-                                />
-                            </Box>
-                        ))}
+                                    sx={{
+                                        minWidth: 64,
+                                        height: 40,
+                                        borderRadius: 1,
+                                        cursor: "pointer",
+                                        borderWidth: 4,
+                                        borderColor:
+                                            currentIndex === index
+                                                ? "info.dark"
+                                                : "transparent",
+                                        borderStyle: "solid",
+                                        boxSizing: "border-box",
+                                        transition: "border-color 0.2s ease",
+                                        flexShrink: 0,
+                                    }}
+                                    onClick={() => handleClickThumbnail(index)}
+                                >
+                                    <Box
+                                        component="img"
+                                        src={file.src}
+                                        width="100%"
+                                        height="100%"
+                                        sx={{
+                                            objectFit: "cover",
+                                            objectPosition: "center",
+                                            borderRadius: "inherit",
+                                        }}
+                                    />
+                                </Box>
+                            ))}
+                        </Stack>
                     </Box>
 
-                    <Box flexBasis="30%" />
-                </Box>
-            </Box>
+                    <Box flexBasis="25%" />
+                </Stack>
+            </Stack>
         </Modal>
     );
 };
