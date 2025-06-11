@@ -1,10 +1,10 @@
+import { Tooltip } from "@mui/material";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { DateField } from "features/custom_fields/date_field";
-import { EnumField } from "features/custom_fields/enum_field";
-import { InputField } from "features/custom_fields/input_field";
-import { UserField } from "features/custom_fields/user_field";
-import { VersionField } from "features/custom_fields/version_field";
+import { DateChip } from "features/custom_fields/date_chip";
+import { EnumChip } from "features/custom_fields/enum_chip";
+import { InputChip } from "features/custom_fields/input_chip";
+import UserChip from "features/custom_fields/user_chip";
 import type { FC } from "react";
 import { useCallback } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
@@ -14,12 +14,12 @@ import type {
     UserOutput,
     VersionOption,
 } from "shared/model/types/backend-schema.gen";
-import FieldCard from "shared/ui/fields/field_card/field_card";
-import type { CustomFieldsParserV2Props } from "./custom_fields_parser_v2.types";
+import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
+import type { CustomFieldsChipParserV2Props } from "./custom_fields_chip_parser.types";
 
 dayjs.extend(utc);
 
-export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
+export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
     fields,
     onChange,
     rightAdornmentRenderer,
@@ -40,7 +40,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                     switch (field.type) {
                         case "enum":
                             return (
-                                <EnumField
+                                <EnumChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field.value || undefined}
@@ -54,7 +54,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "enum_multi":
                             return (
-                                <EnumField
+                                <EnumChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field.value || undefined}
@@ -69,7 +69,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "string":
                             return (
-                                <InputField
+                                <InputChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     inputMode="text"
@@ -84,7 +84,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "integer":
                             return (
-                                <InputField
+                                <InputChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     inputMode="numeric"
@@ -99,7 +99,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "float": {
                             return (
-                                <InputField
+                                <InputChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     inputMode="decimal"
@@ -115,22 +115,28 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                         }
                         case "boolean":
                             return (
-                                <FieldCard
-                                    {...baseCompProps(field)}
+                                <Tooltip
                                     key={field.id}
-                                    orientation="vertical"
-                                    value={field.value ? "+" : "-"}
-                                    onClick={() => {
-                                        onChange?.({
-                                            ...field,
-                                            value: !field.value,
-                                        });
-                                    }}
-                                />
+                                    arrow
+                                    title={`${field.name}: ${field?.value ? "+" : "-"}`}
+                                    enterDelay={1000}
+                                >
+                                    <FieldChip
+                                        onClick={() => {
+                                            const newValue = !field?.value;
+                                            onChange?.({
+                                                ...field,
+                                                value: newValue,
+                                            });
+                                        }}
+                                    >
+                                        {field?.value ? "+" : "-"}
+                                    </FieldChip>
+                                </Tooltip>
                             );
                         case "user":
                             return (
-                                <UserField
+                                <UserChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field?.value || undefined}
@@ -144,7 +150,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "user_multi": {
                             return (
-                                <UserField
+                                <UserChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field?.value || undefined}
@@ -161,7 +167,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                         case "date": {
                             const parsedValue = dayjs(field.value);
                             return (
-                                <DateField
+                                <DateChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={
@@ -182,7 +188,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                         case "datetime": {
                             const parsedValue = dayjs(field.value);
                             return (
-                                <DateField
+                                <DateChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={
@@ -204,7 +210,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                         }
                         case "state":
                             return (
-                                <EnumField
+                                <EnumChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field?.value || undefined}
@@ -218,7 +224,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "version":
                             return (
-                                <VersionField
+                                <EnumChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field?.value || undefined}
@@ -232,7 +238,7 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                             );
                         case "version_multi":
                             return (
-                                <VersionField
+                                <EnumChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     value={field?.value || undefined}

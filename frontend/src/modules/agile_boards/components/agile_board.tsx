@@ -1,11 +1,9 @@
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
-import { agileBoardApi, issueApi } from "shared/model";
+import { agileBoardApi } from "shared/model";
 import type { AgileBoardT, IssueT } from "shared/model/types";
-import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { Kanban as KanbanComp } from "shared/ui/kanban/kanban";
 import type { KanbanProps } from "shared/ui/kanban/kanban.types";
-import { toastApiError } from "shared/utils";
 import { useCalcColumns } from "../utils/useCalcColumns";
 import type { BoardEntry } from "../utils/useFormatBoardIssues";
 import {
@@ -32,17 +30,6 @@ export const AgileBoard: FC<AgileBoardProps> = ({
     });
 
     const [moveIssue] = agileBoardApi.useMoveIssueMutation();
-    const [updateIssue] = issueApi.useUpdateIssueMutation();
-
-    const handleUpdateIssue = useCallback(
-        async (issueId: string, formData: IssueUpdate) => {
-            await updateIssue({ ...formData, id: issueId })
-                .unwrap()
-                .then(refetch)
-                .catch(toastApiError);
-        },
-        [refetch, updateIssue],
-    );
 
     useEffect(() => {
         refetch();
@@ -79,12 +66,11 @@ export const AgileBoard: FC<AgileBoardProps> = ({
                 issue={data}
                 cardSetting={boardData.ui_settings}
                 cardFields={boardData.card_fields}
-                onUpdateIssue={handleUpdateIssue}
                 cardColorFields={boardData.card_colors_fields}
                 onDoubleClick={() => onCardDoubleClick?.(data)}
             />
         ),
-        [boardData, handleUpdateIssue, onCardDoubleClick],
+        [boardData, onCardDoubleClick],
     );
 
     if (!formatedBoardIssues) return null;

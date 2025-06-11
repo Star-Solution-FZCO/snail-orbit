@@ -1,58 +1,41 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { FC } from "react";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { projectApi } from "shared/model";
-import {
-    fieldsToFieldValueMap,
-    fieldToFieldValue,
-} from "shared/model/mappers/issue";
-import type { CustomFieldWithValueT, IssueT } from "shared/model/types";
-import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser_v2/custom_fields_chip_parser_v2";
+import type { IssueT } from "shared/model/types";
+import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
+import { IssueCustomFieldChips } from "widgets/issue/issue_custom_field_chips/issue_custom_fields_chips";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 
 type IssueRowFieldsProps = {
     issue: IssueT;
-    onUpdateIssue?: (issue: IssueUpdate) => unknown;
 };
 
-export const IssueRowFields: FC<IssueRowFieldsProps> = memo(
-    ({ issue, onUpdateIssue }) => {
-        const { project } = issue;
+export const IssueRowFields: FC<IssueRowFieldsProps> = memo(({ issue }) => {
+    const { project, id_readable } = issue;
 
-        const projectData = projectApi.useGetProjectQuery(
-            project?.id || skipToken,
-        );
+    const { updateIssue, updateIssueCache, isLoading } = useIssueOperations({
+        issueId: id_readable,
+    });
 
-        const fields: CustomFieldWithValueT[] = useMemo(() => {
-            const projectFields =
-                projectData?.data?.payload.custom_fields || [];
+    const projectData = projectApi.useGetProjectQuery(project?.id || skipToken);
 
-            return projectFields.map((projectField) => {
-                const targetIssueField = issue.fields[projectField.name];
-                if (targetIssueField) return targetIssueField;
-                return { ...projectField, value: null };
-            });
-        }, [issue.fields, projectData?.data?.payload.custom_fields]);
+    if (
+        !project ||
+        !projectData.isSuccess ||
+        !projectData.data.payload ||
+        isLoading
+    )
+        return null;
 
-        const onFieldUpdate = (field: CustomFieldWithValueT) => {
-            onUpdateIssue?.({
-                fields: {
-                    ...fieldsToFieldValueMap(Object.values(issue.fields)),
-                    [field.name]: fieldToFieldValue(field),
-                },
-            });
-        };
-
-        if (!project || !projectData.isSuccess) return null;
-
-        return (
-            <IssueRowFieldsContainer>
-                <CustomFieldsChipParserV2
-                    fields={fields}
-                    onChange={onFieldUpdate}
-                />
-            </IssueRowFieldsContainer>
-        );
-    },
-);
+    return (
+        <IssueRowFieldsContainer>
+            <IssueCustomFieldChips
+                issue={issue}
+                project={projectData.data.payload}
+                onUpdateIssue={updateIssue}
+                onUpdateCache={updateIssueCache}
+            />
+        </IssueRowFieldsContainer>
+    );
+});

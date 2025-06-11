@@ -11,13 +11,7 @@ import { IssueRowFields } from "./issue_row_fields";
 import { UpdateTime } from "./update_time";
 
 export const IssueRow: FC<IssueRowProps> = memo(
-    ({
-        issue,
-        showCustomFields,
-        showDescription,
-        onUpdateIssue,
-        onIssueRowDoubleClick,
-    }) => {
+    ({ issue, showCustomFields, showDescription, onIssueRowDoubleClick }) => {
         const { subject, id_readable, text } = issue;
 
         const handleDoubleClick = useCallback(() => {
@@ -64,13 +58,8 @@ export const IssueRow: FC<IssueRowProps> = memo(
                     <UpdateTime issue={issue} />
                 </IssueRowHeader>
 
-                {showDescription && <IssueRowBody>{text}</IssueRowBody>}
-                {showCustomFields && (
-                    <IssueRowFields
-                        onUpdateIssue={onUpdateIssue}
-                        issue={issue}
-                    />
-                )}
+                {showDescription && <IssueRowBody>{text?.value}</IssueRowBody>}
+                {showCustomFields && <IssueRowFields issue={issue} />}
             </IssueRowRoot>
         );
     },

@@ -6,20 +6,9 @@ import {
     fieldsToFieldValueMap,
     fieldToFieldValue,
 } from "shared/model/mappers/issue";
-import type {
-    CustomFieldWithValueT,
-    IssueT,
-    ProjectT,
-} from "shared/model/types";
-import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser_v2/custom_fields_parser_v2";
-
-type IssueCustomFieldsProps = {
-    issue: IssueT;
-    project?: ProjectT;
-    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
-    onUpdateCache: (issueValue: Partial<IssueT>) => void;
-};
+import type { CustomFieldWithValueT } from "shared/model/types";
+import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
+import type { IssueCustomFieldsProps } from "./issue_custom_fields.types";
 
 export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
     issue,

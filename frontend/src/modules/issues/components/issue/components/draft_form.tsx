@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor } from "shared/ui";
-import { useDraftOperations } from "../../../api/use_draft_operations";
+import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
 
 export type DraftFormProps = {
     draft: IssueDraftT;

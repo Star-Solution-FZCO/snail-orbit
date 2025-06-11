@@ -12,8 +12,8 @@ import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import { useIssueOperations } from "../api/use_issue_operations";
-import { useProjectData } from "../api/use_project_data";
+import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
+import { useProjectData } from "widgets/issue/api/use_project_data";
 import IssueViewComponent from "../components/issue/issue_view";
 
 type IssueViewProps = {

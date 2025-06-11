@@ -2,6 +2,8 @@ import deepmerge from "deepmerge";
 import { useCallback } from "react";
 import { issueApi, useAppDispatch } from "shared/model";
 import type { IssueT } from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+import { toastApiError } from "shared/utils";
 import {
     decryptObject,
     encryptTextWithAES,
@@ -48,13 +50,15 @@ export const useIssueOperations = (params: { issueId: string }) => {
     );
 
     const handleUpdateIssue = useCallback(
-        async (params: Parameters<typeof updateIssue>[0]) => {
+        async (params: IssueUpdate) => {
             if (params.text !== undefined)
                 params.text = await processIssueText(params.text?.value || "");
 
-            return updateIssue(params).unwrap();
+            return updateIssue({ ...params, id: issueId })
+                .unwrap()
+                .catch(toastApiError);
         },
-        [processIssueText, updateIssue],
+        [issueId, processIssueText, updateIssue],
     );
 
     const handleUpdateCache = useCallback(
