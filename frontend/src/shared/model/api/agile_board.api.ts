@@ -1,13 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import deepmerge from "deepmerge";
 import type {
+    AgileBoardCardFieldT,
     AgileBoardT,
-    AgileSwimLineT,
     ApiResponse,
+    BoardIssuesT,
     ChangePermissionParams,
-    ColumnT,
     CreateAgileBoardT,
-    CustomFieldT,
+    CustomFieldGroupLinkT,
     GrantPermissionParams,
     ListQueryParams,
     ListResponse,
@@ -19,12 +19,6 @@ import type {
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["AgileBoards", "AgileBoardIssue", "AgileBoardIssues"];
-
-const swimLinesToTags = (swimLines: AgileSwimLineT[]) =>
-    swimLines
-        .flatMap((el) => el.columns)
-        .flatMap((el) => el.issues)
-        .map((el) => ({ type: "AgileBoardIssue", id: el.id }));
 
 export const agileBoardApi = createApi({
     reducerPath: "agileBoardApi",
@@ -59,7 +53,7 @@ export const agileBoardApi = createApi({
             ],
         }),
         listAvailableColumns: build.query<
-            ListResponse<ColumnT>,
+            ListResponse<AgileBoardCardFieldT>,
             { project_id: string[] }
         >({
             query: (params) => ({
@@ -68,7 +62,7 @@ export const agileBoardApi = createApi({
             }),
         }),
         listAvailableSwimlanes: build.query<
-            ListResponse<ColumnT>,
+            ListResponse<AgileBoardCardFieldT>,
             { project_id: string[] }
         >({
             query: (params) => ({
@@ -77,7 +71,7 @@ export const agileBoardApi = createApi({
             }),
         }),
         listAvailableCustomFields: build.query<
-            ListResponse<CustomFieldT>,
+            ListResponse<CustomFieldGroupLinkT>,
             { project_id: string[] }
         >({
             query: (params) => ({
@@ -86,7 +80,7 @@ export const agileBoardApi = createApi({
             }),
         }),
         listAvailableColorsCustomFields: build.query<
-            ListResponse<CustomFieldT>,
+            ListResponse<CustomFieldGroupLinkT>,
             { project_id: string[] }
         >({
             query: (params) => ({
@@ -208,7 +202,7 @@ export const agileBoardApi = createApi({
             ],
         }),
         getBoardIssues: build.query<
-            ListResponse<AgileSwimLineT>,
+            ApiResponse<BoardIssuesT>,
             { boardId: string; q?: string }
         >({
             query: ({ boardId, ...params }) => ({
@@ -216,9 +210,8 @@ export const agileBoardApi = createApi({
                 method: "GET",
                 params,
             }),
-            providesTags: (result, _error, { boardId }) => [
+            providesTags: (_result, _error, { boardId }) => [
                 { type: "AgileBoardIssues", id: boardId },
-                ...(result ? swimLinesToTags(result.payload.items) : []),
             ],
         }),
         moveIssue: build.mutation<ApiResponse<{ id: string }>, MoveIssueT>({

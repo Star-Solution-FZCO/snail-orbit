@@ -17,19 +17,15 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "shared/model";
+import type { AgileBoardT } from "shared/model/types";
 import type {
-    AgileBoardT,
-    BasicUserT,
-    EnumOptionT,
-    StateOptionT,
-    VersionOptionT,
-} from "shared/model/types";
+    ShortOptionOutput,
+    UserOutput,
+} from "shared/model/types/backend-schema.gen";
 import { useListQueryParams } from "shared/utils";
 import { getFieldValue } from "../../../utils/normalizeFieldValue";
 
-const getOptionValue = (
-    option: EnumOptionT | StateOptionT | BasicUserT | VersionOptionT,
-): string => {
+const getOptionValue = (option: UserOutput | ShortOptionOutput): string => {
     return "value" in option ? option.value : option.name;
 };
 
@@ -44,25 +40,25 @@ export const SwimlanesForm: FC = () => {
     const { control } = useFormContext<AgileBoardT>();
 
     const field = useWatch({
-        name: "swimlane_field",
+        name: "swimlanes.field",
         control,
     });
 
     const swimlanes = useWatch({
         control,
-        name: "swimlanes",
+        name: "swimlanes.values",
     });
 
     const { fields, append, remove } = useFieldArray<AgileBoardT>({
         control,
-        name: "swimlanes",
+        name: "swimlanes.values",
     });
 
     const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+        customFieldsApi.useLazyListGroupSelectOptionsQuery();
 
     const handleSelectOpen = () => {
-        if (field) fetchOptions({ id: field.id, ...listQueryParams });
+        if (field) fetchOptions({ gid: field.gid, ...listQueryParams });
     };
 
     const filteredOptions = useMemo(() => {
@@ -90,7 +86,7 @@ export const SwimlanesForm: FC = () => {
                 >
                     <Controller
                         control={control}
-                        name={`swimlanes.${index}` as const}
+                        name={`swimlanes.values.${index}` as const}
                         render={({
                             field: { value, onChange, ...rest },
                             fieldState: { invalid, error },
@@ -157,7 +153,7 @@ export const SwimlanesForm: FC = () => {
                     setSelectInput("");
                     if (option)
                         append({
-                            id: "id" in option ? option.id : option.uuid,
+                            id: "id" in option ? option.id : option.value,
                             value: getOptionValue(option),
                             color:
                                 "color" in option

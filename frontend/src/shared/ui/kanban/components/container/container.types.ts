@@ -1,16 +1,11 @@
-import { SxProps } from "@mui/material";
-import { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type { SxProps } from "@mui/material";
+import type { ReactNode } from "react";
 
 export type ContainerProps = {
     children: ReactNode;
     columns?: number;
-    label?: string;
-    style?: CSSProperties;
-    hover?: boolean;
-    handleProps?: HTMLAttributes<any>;
-    hideHandle?: boolean;
-    scrollable?: boolean;
-    shadow?: boolean;
-    placeholder?: boolean;
+    columnIndex: number;
+    swimLaneIndex: number;
     sx?: SxProps;
+    isClosed?: boolean;
 };

@@ -1,6 +1,10 @@
-import type { BoardOutput, CustomFieldLinkOutput } from "./backend-schema.gen";
 import type {
-    BasicCustomFieldT,
+    BoardCreate,
+    BoardIssuesOutput,
+    BoardOutput,
+    CustomFieldGroupLinkOutput,
+} from "./backend-schema.gen";
+import type {
     EnumFieldValueT,
     StateFieldValueT,
     VersionFieldValueT,
@@ -8,21 +12,9 @@ import type {
 import type { IssueT } from "./issue";
 import type { PermissionTargetT, PermissionTypeT } from "./permission";
 
-export type ColumnT = BasicCustomFieldT;
+export type CreateAgileBoardT = BoardCreate;
 
-export type CreateAgileBoardT = {
-    name: string;
-    description: string | null;
-    query: string | null;
-    column_field: string;
-    columns: string[];
-    projects: string[];
-    swimlane_field: string | null; // custom field id
-    swimlanes: string[]; // list of custom field ids
-    card_fields: string[]; // list of custom field ids
-    card_colors_fields: string[]; // list of custom field ids
-    ui_settings?: UiSettingT;
-};
+export type BoardIssuesT = BoardIssuesOutput;
 
 export const columnsStrategies = ["column", "maxWidth"] as const;
 
@@ -46,7 +38,7 @@ export type AgileFieldValueT =
     | StateFieldValueT
     | VersionFieldValueT;
 
-export type AgileBoardCardFieldT = CustomFieldLinkOutput;
+export type AgileBoardCardFieldT = CustomFieldGroupLinkOutput;
 
 export type AgileColumnT = {
     field_value: AgileFieldValueT | null;

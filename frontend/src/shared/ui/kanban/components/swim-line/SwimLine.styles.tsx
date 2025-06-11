@@ -2,14 +2,12 @@ import { styled } from "@mui/material";
 
 export type StyledSwimLineProps = {
     scrollable?: boolean;
-    placeholder?: boolean;
     shadow?: boolean;
     focusVisible?: boolean;
-    hover?: boolean;
 };
 
 export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
-    ({ theme, scrollable, placeholder, shadow, focusVisible, hover }) => ({
+    ({ theme, scrollable, shadow, focusVisible }) => ({
         display: "flex",
         flexDirection: "column",
         gridAutoRows: "max-content",
@@ -17,7 +15,6 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
         boxSizing: "border-box",
         appearance: "none",
         outline: "none",
-        minHeight: "200px",
         transition: theme.transitions.create("background-color", {
             duration: theme.transitions.duration.standard,
             easing: theme.transitions.easing.easeInOut,
@@ -28,32 +25,10 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
         borderBottom: "1px solid",
         borderColor: theme.palette.grey["700"],
 
-        ...(hover
-            ? {
-                  backgroundColor: theme.palette.background.boardFocused,
-              }
-            : {}),
-
         ...(scrollable
             ? {
                   "& ul": {
                       overflowY: "auto",
-                  },
-              }
-            : {}),
-
-        ...(placeholder
-            ? {
-                  justifyContent: "center",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  color: "rgba(0,0,0,0.5)",
-                  backgroundColor: "transparent",
-                  borderStyle: "dashed",
-                  borderColor: "rgba(0, 0, 0, 0.08)",
-
-                  "&:hover": {
-                      borderColor: "rgba(0, 0, 0, 0.15)",
                   },
               }
             : {}),

@@ -94,7 +94,8 @@ class IssueAttachmentOut(BaseModel):
 
 
 def transform_custom_field_value(
-    value: m.CustomFieldValueT, field: m.CustomFieldLink | m.CustomField
+    value: m.CustomFieldValueT,
+    field: m.CustomFieldLink | m.CustomField | m.CustomFieldGroupLink,
 ) -> CustomFieldValueOutT:
     if value is None:
         return None

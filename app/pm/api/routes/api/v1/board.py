@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 from collections.abc import Sequence
 from http import HTTPStatus
 from typing import Annotated, Any
@@ -6,7 +7,7 @@ from uuid import UUID
 import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
@@ -15,12 +16,26 @@ from pm.api.exceptions import ValidateModelException
 from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
-from pm.api.views.custom_fields import CustomFieldLinkOutput
+from pm.api.views.custom_fields import (
+    BooleanCustomFieldGroupWithValuesOutput,
+    CustomFieldGroupLinkOutput,
+    CustomFieldGroupWithValuesOutputT,
+    CustomFieldLinkOutput,
+    DateCustomFieldGroupWithValuesOutput,
+    DateTimeCustomFieldGroupWithValuesOutput,
+    EnumCustomFieldGroupWithValuesOutput,
+    FloatCustomFieldGroupWithValuesOutput,
+    IntegerCustomFieldGroupWithValuesOutput,
+    StateCustomFieldGroupWithValuesOutput,
+    StringCustomFieldGroupWithValuesOutput,
+    UserCustomFieldGroupWithValuesOutput,
+    VersionCustomFieldGroupWithValuesOutput,
+    custom_field_group_with_values_output_cls_from_type,
+)
 from pm.api.views.issue import (
     CustomFieldValueOutT,
     IssueOutput,
     ProjectField,
-    transform_custom_field_value,
 )
 from pm.api.views.output import (
     BaseListOutput,
@@ -36,6 +51,7 @@ from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions import task_notify_by_pararam
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType
+from pm.utils.pydantic_uuid import UUIDStr
 from pm.workflows import WorkflowException
 
 __all__ = ('router',)
@@ -47,22 +63,85 @@ router = APIRouter(
 )
 
 
+BoardColumnOutputT = (
+    EnumCustomFieldGroupWithValuesOutput
+    | StateCustomFieldGroupWithValuesOutput
+    | VersionCustomFieldGroupWithValuesOutput
+)
+
+
+class BoardColumnOutputRootModel(RootModel):
+    root: Annotated[BoardColumnOutputT, Field(..., discriminator='type')]
+
+
+BoardSwimlaneOutputT = (
+    StringCustomFieldGroupWithValuesOutput
+    | IntegerCustomFieldGroupWithValuesOutput
+    | FloatCustomFieldGroupWithValuesOutput
+    | BooleanCustomFieldGroupWithValuesOutput
+    | DateCustomFieldGroupWithValuesOutput
+    | DateTimeCustomFieldGroupWithValuesOutput
+    | UserCustomFieldGroupWithValuesOutput
+    | EnumCustomFieldGroupWithValuesOutput
+    | StateCustomFieldGroupWithValuesOutput
+    | VersionCustomFieldGroupWithValuesOutput
+)
+
+
+class BoardSwimlaneOutputRootModel(RootModel):
+    root: Annotated[BoardSwimlaneOutputT, Field(..., discriminator='type')]
+
+
+def transform_field_with_values_to_discriminated(
+    values: list[m.CustomFieldValueT],
+    field: m.CustomFieldLink | m.CustomField | m.CustomFieldGroupLink,
+) -> CustomFieldGroupWithValuesOutputT:
+    output_cls = custom_field_group_with_values_output_cls_from_type(field.type)
+
+    transformed_values = []
+    for value in values:
+        transformed_value = value
+        if value is None:
+            transformed_value = None
+        elif field.type == m.CustomFieldTypeT.DATE and value is not None:
+            transformed_value = value.date()
+        elif isinstance(value, m.UserLinkField):
+            transformed_value = UserOutput.from_obj(value)
+        elif (
+            isinstance(value, list) and value and isinstance(value[0], m.UserLinkField)
+        ):
+            transformed_value = [UserOutput.from_obj(v) for v in value]
+        transformed_values.append(transformed_value)
+
+    return output_cls(
+        field=CustomFieldGroupLinkOutput.from_obj(field),
+        type=field.type,
+        values=transformed_values,
+    )
+
+
 class BoardOutput(BaseModel):
-    id: PydanticObjectId
-    name: str
-    description: str | None
-    query: str | None
-    projects: list[ProjectField]
-    column_field: CustomFieldLinkOutput
-    columns: list[CustomFieldValueOutT]
-    swimlane_field: CustomFieldLinkOutput | None = None
-    swimlanes: list[CustomFieldValueOutT]
-    card_fields: list[CustomFieldLinkOutput]
-    card_colors_fields: list[CustomFieldLinkOutput]
-    ui_settings: dict
-    created_by: UserOutput
-    permissions: list[PermissionOutput]
-    is_favorite: bool
+    id: PydanticObjectId = Field(description='Board identifier')
+    name: str = Field(description='Board name')
+    description: str | None = Field(description='Board description')
+    query: str | None = Field(description='Board query filter')
+    projects: list[ProjectField] = Field(description='Associated projects')
+    columns: BoardColumnOutputRootModel = Field(
+        description='Column configuration with discriminated values'
+    )
+    swimlanes: BoardSwimlaneOutputRootModel | None = Field(
+        description='Swimlane configuration with discriminated values'
+    )
+    card_fields: list[CustomFieldGroupLinkOutput] = Field(
+        description='Fields shown on cards'
+    )
+    card_colors_fields: list[CustomFieldGroupLinkOutput] = Field(
+        description='Fields used for card colors'
+    )
+    ui_settings: dict = Field(description='UI configuration settings')
+    created_by: UserOutput = Field(description='Board creator')
+    permissions: list[PermissionOutput] = Field(description='Board permissions')
+    is_favorite: bool = Field(description='Whether board is favorited by current user')
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
@@ -73,20 +152,19 @@ class BoardOutput(BaseModel):
             description=obj.description,
             query=obj.query,
             projects=[ProjectField.from_obj(p) for p in obj.projects],
-            column_field=CustomFieldLinkOutput.from_obj(obj.column_field),
-            columns=[
-                transform_custom_field_value(v, obj.column_field) for v in obj.columns
-            ],
-            swimlane_field=CustomFieldLinkOutput.from_obj(obj.swimlane_field)
+            columns=transform_field_with_values_to_discriminated(
+                obj.columns, obj.column_field
+            ),
+            swimlanes=transform_field_with_values_to_discriminated(
+                obj.swimlanes, obj.swimlane_field
+            )
             if obj.swimlane_field
             else None,
-            swimlanes=[
-                transform_custom_field_value(v, obj.swimlane_field)
-                for v in obj.swimlanes
+            card_fields=[
+                CustomFieldGroupLinkOutput.from_obj(f) for f in obj.card_fields
             ],
-            card_fields=[CustomFieldLinkOutput.from_obj(f) for f in obj.card_fields],
             card_colors_fields=[
-                CustomFieldLinkOutput.from_obj(f) for f in obj.card_colors_fields
+                CustomFieldGroupLinkOutput.from_obj(f) for f in obj.card_colors_fields
             ],
             ui_settings=obj.ui_settings,
             created_by=UserOutput.from_obj(obj.created_by),
@@ -102,12 +180,12 @@ class BoardCreate(BaseModel):
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId]
-    column_field: PydanticObjectId
+    column_field: UUIDStr
     columns: list
-    swimlane_field: PydanticObjectId | None = None
+    swimlane_field: UUIDStr | None = None
     swimlanes: Annotated[list, Field(default_factory=list)]
-    card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
-    card_colors_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    card_fields: Annotated[list[UUIDStr], Field(default_factory=list)]
+    card_colors_fields: Annotated[list[UUIDStr], Field(default_factory=list)]
     ui_settings: Annotated[dict, Field(default_factory=dict)]
 
 
@@ -116,12 +194,12 @@ class BoardUpdate(BaseModel):
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId] | None = None
-    column_field: PydanticObjectId | None = None
+    column_field: UUIDStr | None = None
     columns: list | None = None
-    swimlane_field: PydanticObjectId | None = None
+    swimlane_field: UUIDStr | None = None
     swimlanes: list | None = None
-    card_fields: list[PydanticObjectId] | None = None
-    card_colors_fields: list[PydanticObjectId] | None = None
+    card_fields: list[UUIDStr] | None = None
+    card_colors_fields: list[UUIDStr] | None = None
     ui_settings: dict | None = None
 
 
@@ -176,32 +254,34 @@ async def create_board(
     if len(projects) != len(body.projects):
         not_found = set(body.projects) - {p.id for p in projects}
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Projects not found: {not_found}')
-    column_field: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == body.column_field, with_children=True
-    )
-    if not column_field:
+
+    card_fields = await _resolve_custom_field_groups(body.card_fields)
+    for cf in card_fields:
+        _any_projects_has_custom_field(cf, projects)
+
+    card_colors_fields = await _resolve_custom_field_groups(body.card_colors_fields)
+    for cf in card_colors_fields:
+        validate_custom_field_has_one_color(cf)
+        _all_projects_has_custom_field(cf, projects)
+
+    column_field_ = await _resolve_custom_field_groups([body.column_field])
+    if not column_field_:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
+    column_field = column_field_[0]
     if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
         raise HTTPException(
             HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
         )
     _all_projects_has_custom_field(column_field, projects)
-    card_fields = await _resolve_custom_fields(body.card_fields)
-    for cf in card_fields:
-        _any_projects_has_custom_field(cf, projects)
-    card_colors_fields = await _resolve_custom_fields(body.card_colors_fields)
-    for cf in card_colors_fields:
-        validate_custom_field_has_one_color(cf)
-        _all_projects_has_custom_field(cf, projects)
-    columns = validate_custom_field_values(column_field, body.columns)
-    swimlane_field: m.CustomField | None = None
+    columns = await validate_custom_field_values(column_field, body.columns)
+
+    swimlane_field: m.CustomFieldGroupLink | None = None
     swimlanes = []
     if body.swimlane_field:
-        swimlane_field = await m.CustomField.find_one(
-            m.CustomField.id == body.swimlane_field, with_children=True
-        )
-        if not swimlane_field:
+        swimlane_field_ = await _resolve_custom_field_groups([body.swimlane_field])
+        if not swimlane_field_:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Swimlane field not found')
+        swimlane_field = swimlane_field_[0]
         if swimlane_field.type in (
             m.CustomFieldTypeT.ENUM_MULTI,
             m.CustomFieldTypeT.USER_MULTI,
@@ -210,22 +290,19 @@ async def create_board(
                 HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
             )
         _all_projects_has_custom_field(swimlane_field, projects)
-        swimlanes = validate_custom_field_values(swimlane_field, body.swimlanes)
+        swimlanes = await validate_custom_field_values(swimlane_field, body.swimlanes)
+
     board = m.Board(
         name=body.name,
         description=body.description,
         query=body.query,
         projects=[m.ProjectLinkField.from_obj(p) for p in projects],
-        column_field=m.CustomFieldLink.from_obj(column_field),
+        column_field=column_field,
         columns=columns,
-        swimlane_field=m.CustomFieldLink.from_obj(swimlane_field)
-        if swimlane_field
-        else None,
+        swimlane_field=swimlane_field,
         swimlanes=swimlanes,
-        card_fields=[m.CustomFieldLink.from_obj(cf) for cf in card_fields],
-        card_colors_fields=[
-            m.CustomFieldLink.from_obj(cf) for cf in card_colors_fields
-        ],
+        card_fields=card_fields,
+        card_colors_fields=card_colors_fields,
         ui_settings=body.ui_settings,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
         permissions=[
@@ -264,11 +341,14 @@ async def update_board(
     user_ctx = current_user()
     if not board.check_permissions(user_ctx, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this board')
-    data = body.dict(exclude_unset=True)
-    for k in ('name', 'description', 'query', 'ui_settings'):
-        if k in data:
-            setattr(board, k, data[k])
-    if 'projects' in data:
+
+    data = body.model_dump(
+        exclude_unset=True, include={'name', 'description', 'query', 'ui_settings'}
+    )
+    for k, v in data.items():
+        setattr(board, k, v)
+
+    if 'projects' in body.model_fields_set:
         projects = await m.Project.find(
             bo.In(m.Project.id, body.projects),
             fetch_links=True,
@@ -281,30 +361,32 @@ async def update_board(
         board.projects = [m.ProjectLinkField.from_obj(p) for p in projects]
     else:
         projects = [await p.resolve(fetch_links=True) for p in board.projects]
-    if 'column_field' in data:
-        column_field: m.CustomField | None = await m.CustomField.find_one(
-            m.CustomField.id == body.column_field, with_children=True
-        )
-        if not column_field:
+
+    if 'column_field' in body.model_fields_set:
+        column_field_ = await _resolve_custom_field_groups([body.column_field])
+        if not column_field_:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
-        if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
+        board.column_field = column_field_[0]
+        if board.column_field.type not in (
+            m.CustomFieldTypeT.STATE,
+            m.CustomFieldTypeT.ENUM,
+        ):
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
             )
-        board.column_field = m.CustomFieldLink.from_obj(column_field)
-    else:
-        column_field = await board.column_field.resolve()
-    if 'columns' in data:
-        columns = body.columns
-    else:
-        columns = board.columns
-    if 'swimlane_field' in data:
-        if body.swimlane_field:
-            swimlane_field: m.CustomField | None = await m.CustomField.find_one(
-                m.CustomField.id == body.swimlane_field, with_children=True
-            )
-            if not swimlane_field:
+
+    _all_projects_has_custom_field(board.column_field, projects)
+    columns = body.columns if 'columns' in body.model_fields_set else board.columns
+    board.columns = await validate_custom_field_values(board.column_field, columns)
+
+    if 'swimlane_field' in body.model_fields_set:
+        if not body.swimlane_field:
+            board.swimlane_field = None
+        else:
+            swimlane_field_ = await _resolve_custom_field_groups([body.swimlane_field])
+            if not swimlane_field_:
                 raise HTTPException(HTTPStatus.BAD_REQUEST, 'Swimlane field not found')
+            swimlane_field = swimlane_field_[0]
             if swimlane_field.type in (
                 m.CustomFieldTypeT.ENUM_MULTI,
                 m.CustomFieldTypeT.USER_MULTI,
@@ -312,52 +394,31 @@ async def update_board(
                 raise HTTPException(
                     HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
                 )
-            board.swimlane_field = m.CustomFieldLink.from_obj(swimlane_field)
-        else:
-            swimlane_field = None
-            board.swimlane_field = None
-    else:
-        swimlane_field = (
-            await board.swimlane_field.resolve() if board.swimlane_field else None
+            board.swimlane_field = swimlane_field
+    if board.swimlane_field:
+        _all_projects_has_custom_field(board.swimlane_field, projects)
+        swimlanes = (
+            body.swimlanes if 'swimlanes' in body.model_fields_set else board.swimlanes
         )
-    if 'swimlanes' in data:
-        if swimlane_field:
-            swimlanes = body.swimlanes
-        else:
-            swimlanes = []
+        board.swimlanes = await validate_custom_field_values(
+            board.swimlane_field, swimlanes
+        )
     else:
-        swimlanes = board.swimlanes
+        board.swimlanes = []
 
-    card_fields: list[m.CustomField | m.CustomFieldLink] = board.card_fields
-    if 'card_fields' in data:
-        card_fields = await _resolve_custom_fields(body.card_fields)
-    for cf in card_fields:
+    if 'card_fields' in body.model_fields_set:
+        board.card_fields = await _resolve_custom_field_groups(body.card_fields)
+    for cf in board.card_fields:
         _any_projects_has_custom_field(cf, projects)
-    board.card_fields = [m.CustomFieldLink.from_obj(cf) for cf in card_fields]
 
-    card_colors_fields: list[m.CustomField | m.CustomFieldLink] = (
-        board.card_colors_fields
-    )
-    if 'card_colors_fields' in data:
-        card_colors_fields = await _resolve_custom_fields(body.card_colors_fields)
-    for cf in card_colors_fields:
+    if 'card_colors_fields' in body.model_fields_set:
+        board.card_colors_fields = await _resolve_custom_field_groups(
+            body.card_colors_fields
+        )
+    for cf in board.card_colors_fields:
         validate_custom_field_has_one_color(cf)
         _all_projects_has_custom_field(cf, projects)
-    board.card_colors_fields = [
-        m.CustomFieldLink.from_obj(cf) for cf in card_colors_fields
-    ]
 
-    _all_projects_has_custom_field(column_field, projects)
-    board.column_field = m.CustomFieldLink.from_obj(column_field)
-    board.columns = validate_custom_field_values(column_field, columns)
-    if swimlane_field:
-        _all_projects_has_custom_field(swimlane_field, projects)
-        board.swimlanes = validate_custom_field_values(swimlane_field, swimlanes)
-        board.swimlane_field = m.CustomFieldLink.from_obj(swimlane_field)
-    else:
-        board.swimlane_field = None
-        board.swimlanes = []
-    board.projects = [m.ProjectLinkField.from_obj(p) for p in projects]
     if board.is_changed:
         await board.replace()
     return SuccessPayloadOutput(payload=BoardOutput.from_obj(board))
@@ -377,11 +438,21 @@ async def delete_board(
     return ModelIdOutput.make(board_id)
 
 
+class BoardIssuesOutput(BaseModel):
+    columns: BoardColumnOutputRootModel = Field(
+        description='Column configuration with discriminated values'
+    )
+    swimlanes: BoardSwimlaneOutputRootModel | None = Field(
+        description='Swimlane configuration with discriminated values'
+    )
+    issues: list[list[list[IssueOutput]]]
+
+
 @router.get('/{board_id}/issues')
 async def get_board_issues(
     board_id: PydanticObjectId,
     query: IssueSearchParams = Depends(),
-) -> BaseListOutput[SwimlaneOutput]:
+) -> SuccessPayloadOutput[BoardIssuesOutput]:
     user_ctx = current_user()
 
     board: m.Board | None = await m.Board.find_one(m.Board.id == board_id)
@@ -436,10 +507,10 @@ async def get_board_issues(
 
     for issue in await q.project(m.Issue.get_ro_projection_model()).to_list():
         if board.swimlane_field and not (
-            sl_field := issue.get_field_by_id(board.swimlane_field.id)
+            sl_field := issue.get_field_by_gid(board.swimlane_field.gid)
         ):
             continue
-        if not (col_field := issue.get_field_by_id(board.column_field.id)):
+        if not (col_field := issue.get_field_by_gid(board.column_field.gid)):
             continue
         if col_field.value not in board.columns:
             continue
@@ -457,43 +528,47 @@ async def get_board_issues(
     if non_swimlane is not None:
         for col_result in non_swimlane.values():
             col_result.sort(key=lambda i: priorities.get(i.id, float('inf')))
-    return BaseListOutput.make(
-        count=len(swimlanes) + (1 if non_swimlane is not None else 0),
-        limit=len(swimlanes) + (1 if non_swimlane is not None else 0),
-        offset=0,
-        items=[
-            SwimlaneOutput(
-                field_value=transform_custom_field_value(sl, board.swimlane_field),
-                columns=[
-                    ColumnOutput(
-                        field_value=transform_custom_field_value(
-                            col, board.column_field
-                        ),
-                        issues=[IssueOutput.from_obj(issue) for issue in issues],
-                    )
-                    for col, issues in cols.items()
-                ],
-            )
-            for sl, cols in swimlanes.items()
-        ]
-        + (
-            [
-                SwimlaneOutput(
-                    field_value=None,
-                    columns=[
-                        ColumnOutput(
-                            field_value=transform_custom_field_value(
-                                col, board.column_field
-                            ),
-                            issues=[IssueOutput.from_obj(issue) for issue in issues],
-                        )
-                        for col, issues in non_swimlane.items()
-                    ],
+
+    issues_list = []
+
+    for sl, cols in swimlanes.items():
+        swimlane_columns = []
+        for col_value in board.columns:
+            if col_value in cols:
+                issues = cols[col_value]
+                issues.sort(key=lambda i: priorities.get(i.id, float('inf')))
+                swimlane_columns.append(
+                    [IssueOutput.from_obj(issue) for issue in issues]
                 )
-            ]
-            if non_swimlane is not None
-            else []
-        ),
+            else:
+                swimlane_columns.append([])
+        issues_list.append(swimlane_columns)
+
+    if non_swimlane is not None:
+        non_swimlane_columns = []
+        for col_value in board.columns:
+            if col_value in non_swimlane:
+                issues = non_swimlane[col_value]
+                issues.sort(key=lambda i: priorities.get(i.id, float('inf')))
+                non_swimlane_columns.append(
+                    [IssueOutput.from_obj(issue) for issue in issues]
+                )
+            else:
+                non_swimlane_columns.append([])
+        issues_list.append(non_swimlane_columns)
+
+    return SuccessPayloadOutput(
+        payload=BoardIssuesOutput(
+            columns=transform_field_with_values_to_discriminated(
+                board.columns, board.column_field
+            ),
+            swimlanes=transform_field_with_values_to_discriminated(
+                board.swimlanes, board.swimlane_field
+            )
+            if board.swimlane_field
+            else None,
+            issues=issues_list,
+        )
     )
 
 
@@ -526,11 +601,12 @@ async def move_issue(
 
     data = body.dict(exclude_unset=True)
     if 'column' in data:
-        column_field = await board.column_field.resolve()
-        column = validate_custom_field_values(column_field, [data['column']])[0]
+        column = (
+            await validate_custom_field_values(board.column_field, [data['column']])
+        )[0]
         if column not in board.columns:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid column')
-        if not (issue_field := issue.get_field_by_id(board.column_field.id)):
+        if not (issue_field := issue.get_field_by_gid(board.column_field.gid)):
             raise HTTPException(
                 HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no column field'
             )
@@ -538,11 +614,12 @@ async def move_issue(
     if 'swimlane' in data:
         if not board.swimlane_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board has no swimlanes')
-        swimlane_field = await board.swimlane_field.resolve()
-        swimlane = validate_custom_field_values(swimlane_field, [body.swimlane])[0]
+        swimlane = (
+            await validate_custom_field_values(board.swimlane_field, [body.swimlane])
+        )[0]
         if swimlane not in board.swimlanes:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid swimlane')
-        if not (issue_field := issue.get_field_by_id(board.swimlane_field.id)):
+        if not (issue_field := issue.get_field_by_gid(board.swimlane_field.gid)):
             raise HTTPException(
                 HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no swimlane field'
             )
@@ -594,7 +671,7 @@ async def move_issue(
 @router.get('/column_field/select')
 async def select_column_field(
     project_id: list[PydanticObjectId] = Query(...),
-) -> BaseListOutput[CustomFieldLinkOutput]:
+) -> BaseListOutput[CustomFieldGroupLinkOutput]:
     projects = await m.Project.find(
         bo.In(m.Project.id, project_id),
         fetch_links=True,
@@ -608,14 +685,14 @@ async def select_column_field(
         count=len(fields),
         limit=len(fields),
         offset=0,
-        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+        items=[CustomFieldGroupLinkOutput.from_obj(cf) for cf in fields],
     )
 
 
 @router.get('/swimlane_field/select')
 async def select_swimlane_field(
     project_id: list[PydanticObjectId] = Query(...),
-) -> BaseListOutput[CustomFieldLinkOutput]:
+) -> BaseListOutput[CustomFieldGroupLinkOutput]:
     projects = await m.Project.find(
         bo.In(m.Project.id, project_id),
         fetch_links=True,
@@ -629,7 +706,7 @@ async def select_swimlane_field(
         count=len(fields),
         limit=len(fields),
         offset=0,
-        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+        items=[CustomFieldGroupLinkOutput.from_obj(cf) for cf in fields],
     )
 
 
@@ -656,7 +733,7 @@ async def select_custom_field(
 @router.get('/card_color_field/select')
 async def select_card_color_field(
     project_id: list[PydanticObjectId] = Query(...),
-) -> BaseListOutput[CustomFieldLinkOutput]:
+) -> BaseListOutput[CustomFieldGroupLinkOutput]:
     projects = await m.Project.find(
         bo.In(m.Project.id, project_id),
         fetch_links=True,
@@ -674,7 +751,7 @@ async def select_card_color_field(
         count=len(fields),
         limit=len(fields),
         offset=0,
-        items=[CustomFieldLinkOutput.from_obj(cf) for cf in fields],
+        items=[CustomFieldGroupLinkOutput.from_obj(cf) for cf in fields],
     )
 
 
@@ -848,22 +925,25 @@ async def unfavorite_board(
 
 def _intersect_custom_fields(
     projects: Sequence[m.Project],
-) -> set[m.CustomField]:
+) -> set[m.CustomFieldGroupLink]:
     if not projects:
         return set()
-    fields = set(projects[0].custom_fields)
-    for p in projects[1:]:
-        fields &= set(p.custom_fields)
-    return fields
+    return set.intersection(
+        *(
+            {m.CustomFieldGroupLink.from_obj(cf) for cf in pr.custom_fields}
+            for pr in projects
+        )
+    )
 
 
 def _all_projects_has_custom_field(
-    field: m.CustomField | m.CustomFieldLink, projects: Sequence[m.Project]
+    field: m.CustomField | m.CustomFieldLink | m.CustomFieldGroupLink,
+    projects: Sequence[m.Project],
 ) -> None:
     if not projects:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'No projects specified')
     for p in projects:
-        if all(cf.id != field.id for cf in p.custom_fields):
+        if all(cf.gid != field.gid for cf in p.custom_fields):
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 f'Field {field.name} not found in project {p.id}',
@@ -871,46 +951,60 @@ def _all_projects_has_custom_field(
 
 
 def _any_projects_has_custom_field(
-    field: m.CustomField | m.CustomFieldLink, projects: Sequence[m.Project]
+    field: m.CustomField | m.CustomFieldLink | m.CustomFieldGroupLink,
+    projects: Sequence[m.Project],
 ) -> None:
     if not projects:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'No projects specified')
     for p in projects:
-        if any(cf.id == field.id for cf in p.custom_fields):
+        if any(cf.gid == field.gid for cf in p.custom_fields):
             return None
     raise HTTPException(
-        HTTPStatus.BAD_REQUEST, f'Projects does not have custom field {field.id}'
+        HTTPStatus.BAD_REQUEST, f'Projects does not have custom field {field.name}'
     )
 
 
-async def _resolve_custom_fields(
-    fields: list[PydanticObjectId],
-) -> list[m.CustomField]:
-    if not fields:
+async def _resolve_custom_field_groups(
+    field_gids: list[str],
+) -> list[m.CustomFieldGroupLink]:
+    if not field_gids:
         return []
     results = await m.CustomField.find(
-        bo.In(m.CustomField.id, fields), with_children=True
+        bo.In(m.CustomField.gid, field_gids), with_children=True
     ).to_list()
-    if len(results) != len(fields):
-        not_found = set(fields) - {cf.id for cf in results}
+    groups = {m.CustomFieldGroupLink.from_obj(cf) for cf in results}
+    if len(groups) != len(field_gids):
+        not_found = set(field_gids) - {g.gid for g in groups}
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Fields not found: {not_found}')
+    return list(groups)
+
+
+async def validate_custom_field_values(
+    field: m.CustomFieldGroupLink,
+    values: list,
+) -> list[m.CustomFieldValueT]:
+    fields = await field.resolve()
+    results = []
+    for val in values:
+        transformed_value = None
+        for cf in fields:
+            try:
+                results.append(cf.validate_value(val))
+                break
+            except m.CustomFieldValidationError as err:
+                transformed_value = err.value
+                continue
+        else:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Value {transformed_value} is not valid for field {field.name}',
+            )
+
     return results
 
 
-def validate_custom_field_values(
-    field: m.CustomField,
-    values: list,
-) -> list[m.CustomFieldValueT]:
-    try:
-        return [field.validate_value(v) for v in values]
-    except m.CustomFieldValidationError as err:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST, f'Invalid value {err.value} for field {field.name}'
-        ) from err
-
-
 def validate_custom_field_has_one_color(
-    field: m.CustomField,
+    field: m.CustomFieldGroupLink | m.CustomFieldLink | m.CustomField,
 ) -> None:
     if field.type not in (
         m.CustomFieldTypeT.ENUM,

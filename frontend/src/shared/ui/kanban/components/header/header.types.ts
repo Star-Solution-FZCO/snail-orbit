@@ -1,3 +1,7 @@
+import type { ReactNode } from "react";
+
 export type HeaderProps = {
-    columns: { id: string; label: string }[];
+    label: ReactNode;
+    isClosed?: boolean;
+    onClosedChange?: (value: boolean) => void;
 };

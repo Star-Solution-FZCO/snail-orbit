@@ -8,6 +8,7 @@ from pm.models.user import UserLinkField
 from ._base import (
     CustomField,
     CustomFieldCanBeNoneError,
+    CustomFieldGroupLink,
     CustomFieldLink,
     CustomFieldTypeT,
     CustomFieldValidationError,
@@ -35,6 +36,7 @@ __all__ = (
     'get_cf_class',
     'CustomField',
     'CustomFieldLink',
+    'CustomFieldGroupLink',
     'CustomFieldTypeT',
     'CustomFieldCanBeNoneError',
     'CustomFieldValidationError',

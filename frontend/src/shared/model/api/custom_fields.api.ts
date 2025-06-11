@@ -20,7 +20,11 @@ import type {
     UpdateVersionOptionT,
     VersionOptionT,
 } from "shared/model/types";
-import type { CustomFieldGroupCreateBody } from "../types/backend-schema.gen";
+import type {
+    CustomFieldGroupCreateBody,
+    ShortOptionOutput,
+    UserOutput,
+} from "../types/backend-schema.gen";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["CustomFieldGroups", "CustomFields"];
@@ -147,7 +151,7 @@ export const customFieldsApi = createApi({
                 id: string;
             } & UpdateCustomFieldT
         >({
-            query: ({ gid, id, ...body }) => ({
+            query: ({ gid: _, id, ...body }) => ({
                 url: `custom_field/${id}`,
                 method: "PUT",
                 body,
@@ -322,6 +326,18 @@ export const customFieldsApi = createApi({
             }),
             providesTags: (_result, _error, { id }) => [
                 { type: "CustomFieldOption", id },
+            ],
+        }),
+        listGroupSelectOptions: build.query<
+            ListResponse<UserOutput | ShortOptionOutput>,
+            { gid: string } & (ListQueryParams | void)
+        >({
+            query: ({ gid, ...params }) => ({
+                url: `custom_field/group/${gid}/select`,
+                params: params ?? undefined,
+            }),
+            providesTags: (_result, _error, { gid }) => [
+                { type: "CustomFieldGroupOption", gid },
             ],
         }),
     }),

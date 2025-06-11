@@ -49,7 +49,7 @@ export const CardColorsFieldsForm: FC = () => {
     const filteredOptions = useMemo(() => {
         return (
             options?.payload?.items.filter(
-                (option) => !colorFields.some(({ id }) => id === option.id),
+                (option) => !colorFields.some(({ gid }) => gid === option.gid),
             ) || []
         );
     }, [options, colorFields]);

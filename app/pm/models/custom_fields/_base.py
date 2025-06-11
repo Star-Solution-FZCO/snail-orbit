@@ -15,6 +15,7 @@ __all__ = (
     'CustomFieldTypeT',
     'CustomField',
     'CustomFieldLink',
+    'CustomFieldGroupLink',
     'CustomFieldValidationError',
     'CustomFieldCanBeNoneError',
 )
@@ -111,3 +112,25 @@ class CustomFieldLink(BaseModel):
         if obj is None:
             raise ValueError(f'CustomField not found: {self.id}')
         return obj
+
+
+class CustomFieldGroupLink(BaseModel):
+    gid: str
+    name: str
+    type: CustomFieldTypeT
+
+    @classmethod
+    def from_obj(cls, obj: CustomField | CustomFieldLink | Self) -> Self:
+        return cls(
+            gid=obj.gid,
+            name=obj.name,
+            type=obj.type,
+        )
+
+    async def resolve(self) -> list[CustomField]:
+        return await CustomField.find(
+            CustomField.gid == self.gid, with_children=True
+        ).to_list()
+
+    def __hash__(self) -> int:
+        return hash(self.gid)

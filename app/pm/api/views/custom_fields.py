@@ -21,6 +21,7 @@ __all__ = (
     'UserCustomFieldOutput',
     'VersionCustomFieldOutput',
     'CustomFieldLinkOutput',
+    'CustomFieldGroupLinkOutput',
     'CustomFieldOutputT',
     'CustomFieldOutputRootModel',
     'CustomFieldGroupOutputT',
@@ -33,6 +34,19 @@ __all__ = (
     'cf_output_from_obj',
     'cf_group_output_cls_from_type',
     'cf_value_output_cls_from_type',
+    'StringCustomFieldGroupWithValuesOutput',
+    'IntegerCustomFieldGroupWithValuesOutput',
+    'FloatCustomFieldGroupWithValuesOutput',
+    'BooleanCustomFieldGroupWithValuesOutput',
+    'DateCustomFieldGroupWithValuesOutput',
+    'DateTimeCustomFieldGroupWithValuesOutput',
+    'UserCustomFieldGroupWithValuesOutput',
+    'UserMultiCustomFieldGroupWithValuesOutput',
+    'EnumCustomFieldGroupWithValuesOutput',
+    'EnumMultiCustomFieldGroupWithValuesOutput',
+    'StateCustomFieldGroupWithValuesOutput',
+    'VersionCustomFieldGroupWithValuesOutput',
+    'VersionMultiCustomFieldGroupWithValuesOutput',
 )
 
 
@@ -405,6 +419,22 @@ class CustomFieldLinkOutput(BaseModel):
         )
 
 
+class CustomFieldGroupLinkOutput(BaseModel):
+    gid: str
+    name: str
+    type: m.CustomFieldTypeT
+
+    @classmethod
+    def from_obj(
+        cls, obj: m.CustomField | m.CustomFieldLink | m.CustomFieldGroupLink
+    ) -> Self:
+        return cls(
+            gid=obj.gid,
+            name=obj.name,
+            type=obj.type,
+        )
+
+
 CF_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldOutputT]] = {
     m.CustomFieldTypeT.STRING: StringCustomFieldOutput,
     m.CustomFieldTypeT.INTEGER: IntegerCustomFieldOutput,
@@ -722,5 +752,129 @@ def cf_value_output_cls_from_type(
     type_: m.CustomFieldTypeT,
 ) -> type[CustomFieldValueOutputT]:
     if not (output_class := CF_VALUE_OUTPUT_MAP.get(type_)):
+        raise ValueError(f'Unsupported custom field type: {type_}')
+    return output_class
+
+
+class BaseCustomFieldGroupWithValuesOutput(BaseModel, ABC):
+    field: CustomFieldGroupLinkOutput = Field(description='Field definition')
+    type: m.CustomFieldTypeT = Field(description='Field type for discrimination')
+
+
+class StringCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.STRING] = m.CustomFieldTypeT.STRING
+    values: list[str | None] = Field(description='String values')
+
+
+class IntegerCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.INTEGER] = m.CustomFieldTypeT.INTEGER
+    values: list[int | None] = Field(description='Integer values')
+
+
+class FloatCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.FLOAT] = m.CustomFieldTypeT.FLOAT
+    values: list[float | None] = Field(description='Float values')
+
+
+class BooleanCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.BOOLEAN] = m.CustomFieldTypeT.BOOLEAN
+    values: list[bool | None] = Field(description='Boolean values')
+
+
+class DateCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.DATE] = m.CustomFieldTypeT.DATE
+    values: list[date | None] = Field(description='Date values')
+
+
+class DateTimeCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
+    values: list[datetime | None] = Field(description='DateTime values')
+
+
+class UserCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
+    values: list[UserOutput | None] = Field(description='User values')
+
+
+class UserMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.USER_MULTI] = m.CustomFieldTypeT.USER_MULTI
+    values: list[list[UserOutput] | None] = Field(description='Multiple user values')
+
+
+class EnumCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.ENUM] = m.CustomFieldTypeT.ENUM
+    values: list[m.EnumOption | None] = Field(description='Enum option values')
+
+
+class EnumMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
+    values: list[list[m.EnumOption] | None] = Field(
+        description='Multiple enum option values'
+    )
+
+
+class StateCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
+    values: list[m.StateOption | None] = Field(description='State option values')
+
+
+class VersionCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.VERSION] = m.CustomFieldTypeT.VERSION
+    values: list[m.VersionOption | None] = Field(description='Version option values')
+
+
+class VersionMultiCustomFieldGroupWithValuesOutput(
+    BaseCustomFieldGroupWithValuesOutput
+):
+    type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = m.CustomFieldTypeT.VERSION_MULTI
+    values: list[list[m.VersionOption] | None] = Field(
+        description='Multiple version option values'
+    )
+
+
+CustomFieldGroupWithValuesOutputT = (
+    StringCustomFieldGroupWithValuesOutput
+    | IntegerCustomFieldGroupWithValuesOutput
+    | FloatCustomFieldGroupWithValuesOutput
+    | BooleanCustomFieldGroupWithValuesOutput
+    | DateCustomFieldGroupWithValuesOutput
+    | DateTimeCustomFieldGroupWithValuesOutput
+    | UserCustomFieldGroupWithValuesOutput
+    | UserMultiCustomFieldGroupWithValuesOutput
+    | EnumCustomFieldGroupWithValuesOutput
+    | EnumMultiCustomFieldGroupWithValuesOutput
+    | StateCustomFieldGroupWithValuesOutput
+    | VersionCustomFieldGroupWithValuesOutput
+    | VersionMultiCustomFieldGroupWithValuesOutput
+)
+
+
+class CustomFieldGroupWithValuesOutputRootModel(RootModel):
+    root: Annotated[CustomFieldGroupWithValuesOutputT, Field(..., discriminator='type')]
+
+
+CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP: dict[
+    m.CustomFieldTypeT, type[CustomFieldGroupWithValuesOutputT]
+] = {
+    m.CustomFieldTypeT.STRING: StringCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.INTEGER: IntegerCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.FLOAT: FloatCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.DATE: DateCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.USER: UserCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.ENUM: EnumCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.STATE: StateCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.VERSION: VersionCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupWithValuesOutput,
+}
+
+
+def custom_field_group_with_values_output_cls_from_type(
+    type_: m.CustomFieldTypeT,
+) -> type[CustomFieldGroupWithValuesOutputT]:
+    if not (output_class := CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP.get(type_)):
         raise ValueError(f'Unsupported custom field type: {type_}')
     return output_class

@@ -1,14 +1,15 @@
 import { Autocomplete, CircularProgress, TextField } from "@mui/material";
-import { FC, SyntheticEvent, useCallback, useMemo, useState } from "react";
-import { FieldError, Merge } from "react-hook-form";
+import type { FC, SyntheticEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { FieldError, Merge } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
-import { BasicCustomFieldT } from "shared/model/types";
+import { type AgileBoardCardFieldT } from "shared/model/types";
 
 interface ISwimlaneFieldSelectProps {
-    value?: BasicCustomFieldT | null;
-    onChange: (value: BasicCustomFieldT | null) => void;
-    error?: Merge<FieldError, any>;
+    value?: AgileBoardCardFieldT | null;
+    onChange: (value: AgileBoardCardFieldT | null) => void;
+    error?: Merge<FieldError, unknown>;
     projectId: string[];
 }
 
@@ -28,13 +29,13 @@ export const SwimlaneFieldSelect: FC<ISwimlaneFieldSelectProps> = ({
     const options = useMemo(() => {
         if (!data) return [];
         return data.payload.items;
-    }, [data]) as BasicCustomFieldT[];
+    }, [data]);
 
     const handleOpen = useCallback(() => {
         setIsOpen(true);
 
         fetchSwimlaneFields({ project_id: projectId });
-    }, [setIsOpen, projectId]);
+    }, [fetchSwimlaneFields, projectId]);
 
     const handleClose = useCallback(() => {
         setIsOpen(false);
@@ -42,7 +43,7 @@ export const SwimlaneFieldSelect: FC<ISwimlaneFieldSelectProps> = ({
 
     const handleChange = (
         _: SyntheticEvent,
-        value: BasicCustomFieldT | null,
+        value: AgileBoardCardFieldT | null,
     ) => {
         if (onChange) onChange(value);
     };
@@ -56,7 +57,7 @@ export const SwimlaneFieldSelect: FC<ISwimlaneFieldSelectProps> = ({
             onClose={handleClose}
             onChange={handleChange}
             getOptionLabel={(option) => option?.name || ""}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+            isOptionEqualToValue={(option, value) => option.gid === value.gid}
             renderInput={(params) => (
                 <TextField
                     {...params}

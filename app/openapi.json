@@ -7540,7 +7540,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_SwimlaneOutput_"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_BoardIssuesOutput_"
                 }
               }
             }
@@ -7672,7 +7672,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldLinkOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldGroupLinkOutput_"
                 }
               }
             }
@@ -7728,7 +7728,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldLinkOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldGroupLinkOutput_"
                 }
               }
             }
@@ -7840,7 +7840,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldLinkOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_CustomFieldGroupLinkOutput_"
                 }
               }
             }
@@ -10696,91 +10696,6 @@
         }
       }
     },
-    "/api/v2/board/{board_id}/issues": {
-      "get": {
-        "tags": [
-          "api",
-          "v2",
-          "board"
-        ],
-        "summary": "Get Board Issues",
-        "operationId": "get_board_issues_api_v2_board__board_id__issues_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "board_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "Board Id"
-            }
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Q"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_BoardIssuesOutput_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/auth/oidc": {
       "get": {
         "tags": [
@@ -11521,6 +11436,23 @@
         ],
         "title": "BaseListOutput[BoardOutput]"
       },
+      "BaseListOutput_CustomFieldGroupLinkOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BaseListPayload_CustomFieldGroupLinkOutput_"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BaseListOutput[CustomFieldGroupLinkOutput]"
+      },
       "BaseListOutput_CustomFieldGroupOutputRootModel_": {
         "properties": {
           "success": {
@@ -11810,23 +11742,6 @@
         ],
         "title": "BaseListOutput[SearchOutput]"
       },
-      "BaseListOutput_SwimlaneOutput_": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_SwimlaneOutput_"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "BaseListOutput[SwimlaneOutput]"
-      },
       "BaseListOutput_TagOutput_": {
         "properties": {
           "success": {
@@ -12038,6 +11953,37 @@
           "items"
         ],
         "title": "BaseListPayload[BoardOutput]"
+      },
+      "BaseListPayload_CustomFieldGroupLinkOutput_": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "BaseListPayload[CustomFieldGroupLinkOutput]"
       },
       "BaseListPayload_CustomFieldGroupOutputRootModel_": {
         "properties": {
@@ -12566,37 +12512,6 @@
         ],
         "title": "BaseListPayload[SearchOutput]"
       },
-      "BaseListPayload_SwimlaneOutput_": {
-        "properties": {
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/SwimlaneOutput"
-            },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "count",
-          "limit",
-          "offset",
-          "items"
-        ],
-        "title": "BaseListPayload[SwimlaneOutput]"
-      },
       "BaseListPayload_TagOutput_": {
         "properties": {
           "count": {
@@ -12841,6 +12756,28 @@
         ],
         "title": "BaseListPayload[UserOutput]"
       },
+      "BoardColumnOutputRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/StateCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          }
+        ],
+        "title": "BoardColumnOutputRootModel",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
+            "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
+            "version": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          }
+        }
+      },
       "BoardCreate": {
         "properties": {
           "name": {
@@ -12882,11 +12819,10 @@
           },
           "column_field": {
             "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "format": "uuid",
             "title": "Column Field",
-            "example": "5eb7cf5a86d9755df3a6c593"
+            "description": "UUID string"
           },
           "columns": {
             "items": {},
@@ -12897,10 +12833,9 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 24,
-                "minLength": 24,
-                "pattern": "^[0-9a-f]{24}$",
-                "example": "5eb7cf5a86d9755df3a6c593"
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
               },
               {
                 "type": "null"
@@ -12916,10 +12851,9 @@
           "card_fields": {
             "items": {
               "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+              "format": "uuid",
+              "description": "UUID string"
             },
             "type": "array",
             "title": "Card Fields"
@@ -12927,10 +12861,9 @@
           "card_colors_fields": {
             "items": {
               "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+              "format": "uuid",
+              "description": "UUID string"
             },
             "type": "array",
             "title": "Card Colors Fields"
@@ -12952,131 +12885,20 @@
       },
       "BoardIssuesOutput": {
         "properties": {
-          "swimlanes": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/UserOutput"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/EnumOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/StateOption"
-                },
-                {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/VersionOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "string",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {},
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Swimlanes"
-          },
           "columns": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/UserOutput"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/EnumOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/StateOption"
-                },
-                {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/VersionOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "string",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {},
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Columns"
+            "$ref": "#/components/schemas/BoardColumnOutputRootModel",
+            "description": "Column configuration with discriminated values"
+          },
+          "swimlanes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoardSwimlaneOutputRootModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Swimlane configuration with discriminated values"
           },
           "issues": {
             "items": {
@@ -13094,8 +12916,8 @@
         },
         "type": "object",
         "required": [
-          "swimlanes",
           "columns",
+          "swimlanes",
           "issues"
         ],
         "title": "BoardIssuesOutput"
@@ -13105,11 +12927,13 @@
           "id": {
             "type": "string",
             "title": "Id",
+            "description": "Board identifier",
             "example": "5eb7cf5a86d9755df3a6c593"
           },
           "name": {
             "type": "string",
-            "title": "Name"
+            "title": "Name",
+            "description": "Board name"
           },
           "description": {
             "anyOf": [
@@ -13120,7 +12944,8 @@
                 "type": "null"
               }
             ],
-            "title": "Description"
+            "title": "Description",
+            "description": "Board description"
           },
           "query": {
             "anyOf": [
@@ -13131,186 +12956,70 @@
                 "type": "null"
               }
             ],
-            "title": "Query"
+            "title": "Query",
+            "description": "Board query filter"
           },
           "projects": {
             "items": {
               "$ref": "#/components/schemas/ProjectField"
             },
             "type": "array",
-            "title": "Projects"
-          },
-          "column_field": {
-            "$ref": "#/components/schemas/CustomFieldLinkOutput"
+            "title": "Projects",
+            "description": "Associated projects"
           },
           "columns": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/UserOutput"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/EnumOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/StateOption"
-                },
-                {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/VersionOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "string",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {},
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Columns"
+            "$ref": "#/components/schemas/BoardColumnOutputRootModel",
+            "description": "Column configuration with discriminated values"
           },
-          "swimlane_field": {
+          "swimlanes": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/CustomFieldLinkOutput"
+                "$ref": "#/components/schemas/BoardSwimlaneOutputRootModel"
               },
               {
                 "type": "null"
               }
-            ]
-          },
-          "swimlanes": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/UserOutput"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/EnumOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "$ref": "#/components/schemas/StateOption"
-                },
-                {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                {
-                  "items": {
-                    "$ref": "#/components/schemas/VersionOption"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "string",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {},
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Swimlanes"
+            ],
+            "description": "Swimlane configuration with discriminated values"
           },
           "card_fields": {
             "items": {
-              "$ref": "#/components/schemas/CustomFieldLinkOutput"
+              "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
             },
             "type": "array",
-            "title": "Card Fields"
+            "title": "Card Fields",
+            "description": "Fields shown on cards"
           },
           "card_colors_fields": {
             "items": {
-              "$ref": "#/components/schemas/CustomFieldLinkOutput"
+              "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
             },
             "type": "array",
-            "title": "Card Colors Fields"
+            "title": "Card Colors Fields",
+            "description": "Fields used for card colors"
           },
           "ui_settings": {
             "additionalProperties": true,
             "type": "object",
-            "title": "Ui Settings"
+            "title": "Ui Settings",
+            "description": "UI configuration settings"
           },
           "created_by": {
-            "$ref": "#/components/schemas/UserOutput"
+            "$ref": "#/components/schemas/UserOutput",
+            "description": "Board creator"
           },
           "permissions": {
             "items": {
               "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
             },
             "type": "array",
-            "title": "Permissions"
+            "title": "Permissions",
+            "description": "Board permissions"
           },
           "is_favorite": {
             "type": "boolean",
-            "title": "Is Favorite"
+            "title": "Is Favorite",
+            "description": "Whether board is favorited by current user"
           }
         },
         "type": "object",
@@ -13320,7 +13029,6 @@
           "description",
           "query",
           "projects",
-          "column_field",
           "columns",
           "swimlanes",
           "card_fields",
@@ -13331,6 +13039,56 @@
           "is_favorite"
         ],
         "title": "BoardOutput"
+      },
+      "BoardSwimlaneOutputRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/StringCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IntegerCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/FloatCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/BooleanCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/DateCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/DateTimeCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/UserCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/StateCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          }
+        ],
+        "title": "BoardSwimlaneOutputRootModel",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "boolean": "#/components/schemas/BooleanCustomFieldGroupWithValuesOutput",
+            "date": "#/components/schemas/DateCustomFieldGroupWithValuesOutput",
+            "datetime": "#/components/schemas/DateTimeCustomFieldGroupWithValuesOutput",
+            "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
+            "float": "#/components/schemas/FloatCustomFieldGroupWithValuesOutput",
+            "integer": "#/components/schemas/IntegerCustomFieldGroupWithValuesOutput",
+            "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
+            "string": "#/components/schemas/StringCustomFieldGroupWithValuesOutput",
+            "user": "#/components/schemas/UserCustomFieldGroupWithValuesOutput",
+            "version": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          }
+        }
       },
       "BoardUpdate": {
         "properties": {
@@ -13389,10 +13147,9 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 24,
-                "minLength": 24,
-                "pattern": "^[0-9a-f]{24}$",
-                "example": "5eb7cf5a86d9755df3a6c593"
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
               },
               {
                 "type": "null"
@@ -13416,10 +13173,9 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 24,
-                "minLength": 24,
-                "pattern": "^[0-9a-f]{24}$",
-                "example": "5eb7cf5a86d9755df3a6c593"
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
               },
               {
                 "type": "null"
@@ -13444,10 +13200,9 @@
               {
                 "items": {
                   "type": "string",
-                  "maxLength": 24,
-                  "minLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                  "format": "uuid",
+                  "description": "UUID string"
                 },
                 "type": "array"
               },
@@ -13462,10 +13217,9 @@
               {
                 "items": {
                   "type": "string",
-                  "maxLength": 24,
-                  "minLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                  "format": "uuid",
+                  "description": "UUID string"
                 },
                 "type": "array"
               },
@@ -13585,6 +13339,41 @@
           "fields"
         ],
         "title": "BooleanCustomFieldGroupOutput"
+      },
+      "BooleanCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "boolean",
+            "title": "Type",
+            "default": "boolean"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Boolean values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "BooleanCustomFieldGroupWithValuesOutput"
       },
       "BooleanCustomFieldOutput": {
         "properties": {
@@ -13710,83 +13499,6 @@
         ],
         "title": "BooleanCustomFieldValueOutput"
       },
-      "ColumnOutput": {
-        "properties": {
-          "field_value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Field Value"
-          },
-          "issues": {
-            "items": {
-              "$ref": "#/components/schemas/IssueOutput"
-            },
-            "type": "array",
-            "title": "Issues"
-          }
-        },
-        "type": "object",
-        "required": [
-          "field_value",
-          "issues"
-        ],
-        "title": "ColumnOutput"
-      },
       "CustomFieldCreateBody": {
         "properties": {
           "label": {
@@ -13872,6 +13584,28 @@
           "type"
         ],
         "title": "CustomFieldGroupCreateBody"
+      },
+      "CustomFieldGroupLinkOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CustomFieldTypeT"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "type"
+        ],
+        "title": "CustomFieldGroupLinkOutput"
       },
       "CustomFieldGroupOutputRootModel": {
         "oneOf": [
@@ -14307,6 +14041,42 @@
         ],
         "title": "DateCustomFieldGroupOutput"
       },
+      "DateCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "date",
+            "title": "Type",
+            "default": "date"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Date values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "DateCustomFieldGroupWithValuesOutput"
+      },
       "DateCustomFieldOutput": {
         "properties": {
           "id": {
@@ -14486,6 +14256,42 @@
           "fields"
         ],
         "title": "DateTimeCustomFieldGroupOutput"
+      },
+      "DateTimeCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "datetime",
+            "title": "Type",
+            "default": "datetime"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "DateTime values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "DateTimeCustomFieldGroupWithValuesOutput"
       },
       "DateTimeCustomFieldOutput": {
         "properties": {
@@ -15082,6 +14888,41 @@
         ],
         "title": "EnumCustomFieldGroupOutput"
       },
+      "EnumCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "enum",
+            "title": "Type",
+            "default": "enum"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Enum option values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "EnumCustomFieldGroupWithValuesOutput"
+      },
       "EnumCustomFieldOutput": {
         "properties": {
           "id": {
@@ -15630,6 +15471,41 @@
         ],
         "title": "FloatCustomFieldGroupOutput"
       },
+      "FloatCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "float",
+            "title": "Type",
+            "default": "float"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Float values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "FloatCustomFieldGroupWithValuesOutput"
+      },
       "FloatCustomFieldOutput": {
         "properties": {
           "id": {
@@ -15956,6 +15832,41 @@
           "fields"
         ],
         "title": "IntegerCustomFieldGroupOutput"
+      },
+      "IntegerCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "integer",
+            "title": "Type",
+            "default": "integer"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Integer values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "IntegerCustomFieldGroupWithValuesOutput"
       },
       "IntegerCustomFieldOutput": {
         "properties": {
@@ -19505,6 +19416,41 @@
         ],
         "title": "StateCustomFieldGroupOutput"
       },
+      "StateCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "state",
+            "title": "Type",
+            "default": "state"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StateOption"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "State option values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "StateCustomFieldGroupWithValuesOutput"
+      },
       "StateCustomFieldOutput": {
         "properties": {
           "id": {
@@ -19877,6 +19823,41 @@
           "fields"
         ],
         "title": "StringCustomFieldGroupOutput"
+      },
+      "StringCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "string",
+            "title": "Type",
+            "default": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "String values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "StringCustomFieldGroupWithValuesOutput"
       },
       "StringCustomFieldOutput": {
         "properties": {
@@ -20497,83 +20478,6 @@
         ],
         "title": "SuccessPayloadOutput[VersionOutput]"
       },
-      "SwimlaneOutput": {
-        "properties": {
-          "field_value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserOutput"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Field Value"
-          },
-          "columns": {
-            "items": {
-              "$ref": "#/components/schemas/ColumnOutput"
-            },
-            "type": "array",
-            "title": "Columns"
-          }
-        },
-        "type": "object",
-        "required": [
-          "field_value",
-          "columns"
-        ],
-        "title": "SwimlaneOutput"
-      },
       "TOTPCreateOut": {
         "properties": {
           "created_at": {
@@ -21084,6 +20988,41 @@
           "fields"
         ],
         "title": "UserCustomFieldGroupOutput"
+      },
+      "UserCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "user",
+            "title": "Type",
+            "default": "user"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "User values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "UserCustomFieldGroupWithValuesOutput"
       },
       "UserCustomFieldOutput": {
         "properties": {
@@ -21780,6 +21719,41 @@
           "fields"
         ],
         "title": "VersionCustomFieldGroupOutput"
+      },
+      "VersionCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "version",
+            "title": "Type",
+            "default": "version"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Version option values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "VersionCustomFieldGroupWithValuesOutput"
       },
       "VersionCustomFieldOutput": {
         "properties": {

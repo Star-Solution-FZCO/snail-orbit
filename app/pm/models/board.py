@@ -5,7 +5,12 @@ from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
 from ._audit import audited_model
-from .custom_fields import CustomField, CustomFieldLink, CustomFieldValueT
+from .custom_fields import (
+    CustomField,
+    CustomFieldGroupLink,
+    CustomFieldLink,
+    CustomFieldValueT,
+)
 from .group import GroupLinkField
 from .permission import (
     PermissionRecord,
@@ -31,13 +36,15 @@ class Board(Document):
     description: str | None = None
     query: str | None = None
     projects: Annotated[list[ProjectLinkField], Field(default_factory=list)]
-    column_field: CustomFieldLink
+    column_field: CustomFieldGroupLink
     columns: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
-    swimlane_field: CustomFieldLink | None = None
+    swimlane_field: CustomFieldGroupLink | None = None
     swimlanes: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
     issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
-    card_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
-    card_colors_fields: Annotated[list[CustomFieldLink], Field(default_factory=list)]
+    card_fields: Annotated[list[CustomFieldGroupLink], Field(default_factory=list)]
+    card_colors_fields: Annotated[
+        list[CustomFieldGroupLink], Field(default_factory=list)
+    ]
     ui_settings: Annotated[dict, Field(default_factory=dict)]
     created_by: UserLinkField
     permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
@@ -120,23 +127,22 @@ class Board(Document):
 
     @classmethod
     async def update_field_embedded_links(
-        cls, field: CustomField | CustomFieldLink
+        cls, field: CustomField | CustomFieldLink | CustomFieldGroupLink
     ) -> None:
-        if isinstance(field, CustomField):
-            field = CustomFieldLink.from_obj(field)
-        await cls.find(cls.column_field.id == field.id).update(
+        field = CustomFieldGroupLink.from_obj(field)
+        await cls.find(cls.column_field.gid == field.gid).update(
             {'$set': {'column_field': field}}
         )
-        await cls.find(cls.swimlane_field.id == field.id).update(
+        await cls.find(cls.swimlane_field.gid == field.gid).update(
             {'$set': {'swimlane_field': field}}
         )
-        await cls.find(cls.card_fields.id == field.id).update(
+        await cls.find(cls.card_fields.gid == field.gid).update(
             {'$set': {'card_fields.$[f]': field}},
-            array_filters=[{'f.id': field.id}],
+            array_filters=[{'f.gid': field.gid}],
         )
-        await cls.find(cls.card_colors_fields.id == field.id).update(
+        await cls.find(cls.card_colors_fields.gid == field.gid).update(
             {'$set': {'card_colors_fields.$[f]': field}},
-            array_filters=[{'f.id': field.id}],
+            array_filters=[{'f.gid': field.gid}],
         )
 
     @classmethod

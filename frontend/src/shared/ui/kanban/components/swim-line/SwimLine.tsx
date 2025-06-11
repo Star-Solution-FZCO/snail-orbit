@@ -1,50 +1,34 @@
-import { forwardRef } from "react";
-import { Handle } from "../handle/Handle";
+import type { FC } from "react";
+import { ChevronButton } from "../ChevronButton";
 import {
     HeaderStyled,
     StyledSwimLine,
     StyledSwimLineList,
 } from "./SwimLine.styles";
-import { SwimLineProps } from "./SwimLine.types";
+import type { SwimLineProps } from "./SwimLine.types";
 
-export const SwimLine = forwardRef<HTMLDivElement, SwimLineProps>(
-    (
-        {
-            children,
-            handleProps,
-            hover,
-            label,
-            placeholder,
-            style,
-            scrollable,
-            shadow,
-            hideHandle,
-            ...props
-        },
-        ref,
-    ) => {
-        return (
-            <StyledSwimLine
-                {...props}
-                style={{ ...style }}
-                ref={ref}
-                hover={hover}
-                placeholder={placeholder}
-                scrollable={scrollable}
-                shadow={shadow}
-            >
-                <HeaderStyled
-                    sx={{ display: hideHandle && !label ? "none" : "initial" }}
-                >
-                    {!hideHandle ? <Handle {...handleProps} /> : null}
-                    {label ?? null}
-                </HeaderStyled>
-                {placeholder ? (
-                    children
-                ) : (
-                    <StyledSwimLineList>{children}</StyledSwimLineList>
-                )}
-            </StyledSwimLine>
-        );
-    },
-);
+export const SwimLine: FC<SwimLineProps> = ({
+    children,
+    label,
+    shadow,
+    isClosed,
+    onClosedChange,
+    ...props
+}) => {
+    return (
+        <StyledSwimLine {...props} shadow={shadow}>
+            <HeaderStyled sx={{ display: !label ? "none" : "initial" }}>
+                {isClosed !== undefined && (
+                    <ChevronButton
+                        open={isClosed}
+                        onClick={() => onClosedChange?.(!isClosed)}
+                    />
+                )}{" "}
+                {label ?? null}
+            </HeaderStyled>
+            {isClosed === undefined || !isClosed ? (
+                <StyledSwimLineList>{children}</StyledSwimLineList>
+            ) : null}
+        </StyledSwimLine>
+    );
+};

@@ -1,14 +1,17 @@
 import type { AgileBoardT, CreateAgileBoardT } from "shared/model/types";
+import { notEmpty } from "shared/utils/helpers/notEmpty";
 
 export const formValuesToCreateForm = (
     form: AgileBoardT,
 ): CreateAgileBoardT => ({
     ...form,
-    columns: form.columns.map((el) => el.value),
+    columns: form.columns.values.filter(notEmpty).map((el) => el.value),
     projects: form.projects.map((project) => project.id),
-    column_field: form.column_field.id,
-    swimlane_field: form.swimlane_field?.id || null,
-    swimlanes: form.swimlanes.map((el) => el.value),
-    card_fields: form.card_fields.map((field) => field.id),
-    card_colors_fields: form.card_colors_fields.map((field) => field.id),
+    column_field: form.columns.field.gid,
+    swimlane_field: form.swimlanes?.field?.gid || null,
+    swimlanes: form.swimlanes?.values
+        ?.filter(notEmpty)
+        .map((el) => (typeof el === "object" && "value" in el ? el.value : el)),
+    card_fields: form.card_fields.map((field) => field.gid),
+    card_colors_fields: form.card_colors_fields.map((field) => field.gid),
 });
