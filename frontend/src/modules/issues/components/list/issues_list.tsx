@@ -26,7 +26,6 @@ export const IssuesList: FC<IssuesListProps> = ({
     totalCount,
     perPage,
     onChangePerPage,
-    onUpdateIssue,
     onIssueRowDoubleClick,
 }) => {
     const { t } = useTranslation();
@@ -102,9 +101,6 @@ export const IssuesList: FC<IssuesListProps> = ({
                     <React.Fragment key={issue.id}>
                         <IssueRow
                             issue={issue}
-                            onUpdateIssue={(values) =>
-                                onUpdateIssue?.({ id: issue.id, ...values })
-                            }
                             onIssueRowDoubleClick={onIssueRowDoubleClick}
                             {...viewSettings}
                         />

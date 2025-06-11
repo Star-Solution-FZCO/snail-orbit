@@ -1,5 +1,7 @@
+import { LinearProgress } from "@mui/material";
 import type { ComponentProps, FC } from "react";
 import { memo, useMemo } from "react";
+import { projectApi } from "shared/model";
 import {
     fieldsToFieldValueMap,
     fieldToFieldValue,
@@ -10,7 +12,6 @@ import type {
     IssueT,
     UiSettingT,
 } from "shared/model/types";
-import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import IssueCard from "shared/ui/agile/issue_card/issue_card";
 import {
     IssueCardBody,
@@ -18,30 +19,27 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { IssueLink } from "shared/ui/issue_link";
-import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser_v2/custom_fields_chip_parser_v2";
+import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
+import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser/custom_fields_chip_parser";
 
 export type IssueCardProps = {
     issue: IssueT;
     cardSetting: UiSettingT;
     cardFields: AgileBoardCardFieldT[];
     cardColorFields: AgileBoardCardFieldT[];
-    onUpdateIssue: (
-        issueId: string,
-        issueValues: IssueUpdate,
-    ) => Promise<void> | void;
 } & ComponentProps<typeof IssueCard>;
 
 export const AgileCard: FC<IssueCardProps> = memo(
-    ({
-        issue,
-        cardSetting,
-        cardFields,
-        onUpdateIssue,
-        cardColorFields,
-        ...props
-    }) => {
+    ({ issue, cardSetting, cardColorFields, cardFields, ...props }) => {
         const { id_readable, subject } = issue;
         const { minCardHeight } = cardSetting;
+
+        const { data: projectData, isLoading: isProjectLoading } =
+            projectApi.useGetProjectQuery(issue.project.id);
+
+        const { updateIssueCache, updateIssue, isLoading } = useIssueOperations(
+            { issueId: id_readable },
+        );
 
         const colors = useMemo(() => {
             return cardColorFields
@@ -57,24 +55,28 @@ export const AgileCard: FC<IssueCardProps> = memo(
         }, [cardColorFields, issue]);
 
         const fields: CustomFieldWithValueT[] = useMemo(() => {
-            return cardFields.map((cardField) => {
-                const targetIssueField = issue.fields[cardField.name];
-                if (targetIssueField) return targetIssueField;
-                return {
-                    id: cardField.gid,
-                    gid: cardField.gid,
-                    type: cardField.type,
-                    name: cardField.name,
-                    value: null,
-                };
-            });
-        }, [cardFields, issue.fields]);
+            const projectFields = projectData?.payload.custom_fields || [];
+            const cardFieldIds = new Set(cardFields.map((el) => el.gid));
+
+            return projectFields
+                .filter((field) => cardFieldIds.has(field.gid))
+                .map((projectField) => {
+                    const targetIssueField = issue.fields[projectField.name];
+                    if (targetIssueField) return targetIssueField;
+                    return { ...projectField, value: null };
+                });
+        }, [cardFields, issue.fields, projectData?.payload.custom_fields]);
 
         const onFieldUpdate = (field: CustomFieldWithValueT) => {
-            onUpdateIssue?.(id_readable, {
+            updateIssue?.({
                 fields: {
                     ...fieldsToFieldValueMap(Object.values(issue.fields)),
                     [field.name]: fieldToFieldValue(field),
+                },
+            });
+            updateIssueCache?.({
+                fields: {
+                    [field.name]: field,
                 },
             });
         };
@@ -100,12 +102,15 @@ export const AgileCard: FC<IssueCardProps> = memo(
                         </IssueLink>
                         <span>{subject}</span>
                     </IssueCardHeader>
-                    <IssueCardBottom>
-                        <CustomFieldsChipParserV2
-                            fields={fields}
-                            onChange={onFieldUpdate}
-                        />
-                    </IssueCardBottom>
+                    {isProjectLoading || isLoading ? <LinearProgress /> : null}
+                    {projectData && !isProjectLoading && !isLoading ? (
+                        <IssueCardBottom>
+                            <CustomFieldsChipParserV2
+                                fields={fields}
+                                onChange={onFieldUpdate}
+                            />
+                        </IssueCardBottom>
+                    ) : null}
                 </IssueCardBody>
             </IssueCard>
         );

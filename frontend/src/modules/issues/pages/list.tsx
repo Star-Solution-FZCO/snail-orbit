@@ -54,8 +54,6 @@ const IssueList: FC<IssueListProps> = (props) => {
         q: listQueryParams.query,
     });
 
-    const [updateIssue] = issueApi.useUpdateIssueMutation();
-
     useEffect(() => {
         updateListQueryParams({ query: debouncedSearch });
     }, [debouncedSearch, updateListQueryParams]);
@@ -147,7 +145,6 @@ const IssueList: FC<IssueListProps> = (props) => {
                             onChangePerPage={(perPage) =>
                                 updateListQueryParams({ perPage, page: 1 })
                             }
-                            onUpdateIssue={updateIssue}
                             onIssueRowDoubleClick={handleIssueRowDoubleClick}
                         />
                     )}

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { MarkdownPreview, MDEditor } from "shared/ui";
-import { useIssueOperations } from "../../../api/use_issue_operations";
+import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { HeadingControls } from "./heading_controls";
 
 export type IssueFormProps = {

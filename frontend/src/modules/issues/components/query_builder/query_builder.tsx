@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { customFieldsApi, issueApi } from "shared/model";
 import { fieldToFieldValue } from "shared/model/mappers/issue";
 import type { CustomFieldT, CustomFieldWithValueT } from "shared/model/types";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser_v2/custom_fields_parser_v2";
+import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddCustomFieldButton } from "./add_custom_field_button";
 
 type QueryBuilderProps = {

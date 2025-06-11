@@ -10,7 +10,7 @@ import type {
     IssueAttachmentT,
     SelectedAttachmentT,
 } from "shared/model/types";
-import { useAttachmentOperations } from "../../../api/use_attachment_operations";
+import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";

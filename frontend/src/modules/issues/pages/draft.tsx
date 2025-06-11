@@ -11,8 +11,8 @@ import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
-import { useDraftOperations } from "../api/use_draft_operations";
-import { useProjectData } from "../api/use_project_data";
+import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
+import { useProjectData } from "widgets/issue/api/use_project_data";
 import { DraftView } from "../components/issue/draft_view";
 
 type IssueDraftProps = {

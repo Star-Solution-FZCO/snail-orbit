@@ -12,7 +12,7 @@ import type {
     ProjectT,
 } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser_v2/custom_fields_parser_v2";
+import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 
 type DraftCustomFieldsProps = {
     draft: IssueDraftT;
