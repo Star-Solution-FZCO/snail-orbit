@@ -60,7 +60,9 @@ def main() -> int:
         default=VersionType.PATCH,
         help='version type to bump (major, minor, patch), default: patch',
     )
-    parser.add_argument('--no-fetch', action='store_true', help='do not fetch tags from remote')
+    parser.add_argument(
+        '--no-fetch', action='store_true', help='do not fetch tags from remote'
+    )
     parser.add_argument('--push', action='store_true', help='push new tag to remote')
     parser.add_argument('--dry-run', action='store_true', help='do not tag or push')
     args = parser.parse_args()
