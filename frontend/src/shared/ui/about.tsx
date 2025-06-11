@@ -7,7 +7,7 @@ import {
     Typography,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { appVersion } from "app/config";
+import { APP_VERSION } from "app/config";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { sharedApi } from "shared/model";
@@ -32,7 +32,7 @@ const About = memo((props: AboutProps) => {
             <DialogContent>
                 <Box display="flex" flexDirection="column">
                     <Typography>
-                        {t("about.frontendVersion")}: {appVersion}
+                        {t("about.frontendVersion")}: {APP_VERSION}
                     </Typography>
                     <Typography>
                         {t("about.backendVersion")}:{" "}

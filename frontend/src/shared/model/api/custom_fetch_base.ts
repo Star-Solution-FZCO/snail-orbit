@@ -4,7 +4,7 @@ import type {
     FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { API_URL, apiVersion } from "app/config";
+import { API_URL, API_VERSION } from "app/config";
 import { Mutex } from "async-mutex";
 import Cookies from "js-cookie";
 import { logout, refreshToken } from "shared/api/services/auth";
@@ -21,7 +21,7 @@ const baseQuery = () => {
         headers["X-CSRF-TOKEN"] = csrfAccessToken;
     }
     return fetchBaseQuery({
-        baseUrl: (API_URL || "/api/") + apiVersion,
+        baseUrl: (API_URL || "/api/") + API_VERSION,
         credentials: "include",
         headers,
         paramsSerializer: serializeParams,
