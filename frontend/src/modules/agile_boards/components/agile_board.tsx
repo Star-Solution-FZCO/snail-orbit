@@ -1,12 +1,18 @@
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT, IssueT } from "shared/model/types";
 import { Kanban as KanbanComp } from "shared/ui/kanban/kanban";
-import type { KanbanProps } from "shared/ui/kanban/kanban.types";
+import type {
+    ColumnArg,
+    KanbanProps,
+    SwimLaneArg,
+} from "shared/ui/kanban/kanban.types";
+import { toastApiError } from "../../../shared/utils";
 import { useCalcColumns } from "../utils/useCalcColumns";
 import type { BoardEntry } from "../utils/useFormatBoardIssues";
 import {
+    defaultSwimLaneId,
     getKey,
     getLabel,
     useFormatBoardIssues,
@@ -24,6 +30,8 @@ export const AgileBoard: FC<AgileBoardProps> = ({
     query,
     onCardDoubleClick,
 }) => {
+    const [closedSet, setClosedSet] = useState<Record<string, boolean>>({});
+
     const { data, refetch } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
         q: query,
@@ -44,9 +52,15 @@ export const AgileBoard: FC<AgileBoardProps> = ({
             issue_id: issue.id.toString(),
             board_id: boardData.id,
             column: to.column.value.toString(),
-            swimlane: to.swimLane?.value.toString() || undefined,
+            swimlane:
+                to.swimLane === undefined ||
+                to.swimLane.value === defaultSwimLaneId
+                    ? undefined
+                    : to.swimLane.value.toString(),
             after_issue: to.after?.id.toString() || null,
-        });
+        })
+            .unwrap()
+            .catch(toastApiError);
     };
 
     const inBlockColumns = useCalcColumns({
@@ -73,6 +87,25 @@ export const AgileBoard: FC<AgileBoardProps> = ({
         [boardData, onCardDoubleClick],
     );
 
+    const handleIsClosed = useCallback(
+        (data: ColumnArg<BoardEntry> | SwimLaneArg<BoardEntry>) =>
+            !!closedSet[data.type + "-" + data.value.id],
+        [closedSet],
+    );
+
+    const handleClose = useCallback(
+        (
+            data: ColumnArg<BoardEntry> | SwimLaneArg<BoardEntry>,
+            value: boolean,
+        ) => {
+            setClosedSet((prev) => ({
+                ...prev,
+                [data.type + "-" + data.value.id]: value,
+            }));
+        },
+        [],
+    );
+
     if (!formatedBoardIssues) return null;
 
     const { issues, columns, swimLanes } = formatedBoardIssues;
@@ -87,6 +120,8 @@ export const AgileBoard: FC<AgileBoardProps> = ({
             ItemContent={AgileCardComponent}
             onCardMoved={handleCardMoved}
             inBlockColumns={inBlockColumns}
+            getIsClosed={handleIsClosed}
+            onClosedChange={handleClose}
         />
     );
 };
