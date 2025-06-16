@@ -1,5 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
-import { Breadcrumbs, Container, Typography } from "@mui/material";
+import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,20 +42,13 @@ const AgileBoardCreate = () => {
         );
 
         return () => setAction(null);
-    }, [setAction]);
+    }, [setAction, t]);
 
     return (
         <Container sx={{ px: 4, pb: 4 }} disableGutters>
-            <Breadcrumbs sx={{ mb: 2 }}>
-                <Link to="/agiles" underline="hover">
-                    <Typography fontSize={24} fontWeight="bold">
-                        {t("agileBoards.title")}
-                    </Typography>
-                </Link>
-                <Typography fontSize={24} fontWeight="bold">
-                    {t("agileBoards.create.title")}
-                </Typography>
-            </Breadcrumbs>
+            <Typography fontSize={24} fontWeight="bold" mb={1}>
+                {t("agileBoards.create.title")}
+            </Typography>
 
             <CreateAgileBoardForm onSubmit={onSubmit} />
         </Container>

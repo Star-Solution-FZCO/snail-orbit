@@ -1,9 +1,12 @@
 import { Box, Button, Stack, TextField } from "@mui/material";
+import { bindPopover, bindTrigger } from "material-ui-popup-state";
+import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC } from "react";
+import { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link, MDEditor } from "shared/ui";
-import { ColumnFieldSelect } from "../agile_board_form/components/column_field_select";
+import { ColumnSelectPopover } from "../agile_board_form/components/columns_select_popover";
 import { ProjectSelect } from "../agile_board_form/components/project_select";
 import type { FormValues } from "./create_agile_board_form.types";
 
@@ -13,7 +16,7 @@ export type CreateAgileBoardFormProps = {
 
 const defaultValues: FormValues = {
     name: "",
-    column_field: undefined,
+    columns: undefined,
     description: "",
     projects: [],
 };
@@ -23,6 +26,11 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    const columnSelectPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "column-select",
+    });
+
     const form = useForm<FormValues>({
         defaultValues,
     });
@@ -30,6 +38,11 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
     const { handleSubmit, control } = form;
 
     const projects = useWatch({ control, name: "projects" });
+
+    const projectIds = useMemo(
+        () => projects.map((project) => project.id),
+        [projects],
+    );
 
     return (
         <Box
@@ -77,13 +90,23 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
 
             <Controller
                 control={control}
-                name="column_field"
-                render={({ field, formState: { errors } }) => (
-                    <ColumnFieldSelect
-                        {...field}
-                        error={errors.column_field}
-                        projectId={projects?.map((project) => project.id) || []}
-                    />
+                name="columns.field"
+                render={({ field: { onChange, value } }) => (
+                    <span>
+                        {t("Columns described by")}:{" "}
+                        <Button
+                            {...bindTrigger(columnSelectPopoverState)}
+                            variant="text"
+                            size="small"
+                        >
+                            {value?.name || "-"}
+                        </Button>
+                        <ColumnSelectPopover
+                            {...bindPopover(columnSelectPopoverState)}
+                            projectId={projectIds}
+                            onChange={(_, value) => onChange(value)}
+                        />
+                    </span>
                 )}
             />
 

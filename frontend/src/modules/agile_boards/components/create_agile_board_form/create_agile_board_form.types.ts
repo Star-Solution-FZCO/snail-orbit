@@ -4,4 +4,4 @@ export type FormValues = Pick<
     AgileBoardT,
     "name" | "description" | "projects"
 > &
-    Partial<Pick<AgileBoardT, "column_field">>;
+    Partial<Pick<AgileBoardT, "columns">>;
