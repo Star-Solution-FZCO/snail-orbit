@@ -26,27 +26,21 @@ import {
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { AgileBoardT } from "shared/model/types";
-import type {
-    ShortOptionOutput,
-    UserOutput,
-} from "shared/model/types/backend-schema.gen";
 import { notEmpty } from "shared/utils/helpers/notEmpty";
+import { getOptionKey, getOptionValue } from "../helpers/options";
+import type { OptionT } from "../types/options.types";
 import { ColumnSelectPopover } from "./columns_select_popover";
 import { OptionsSelectPopover } from "./options_select_popover";
 
-const getOptionValue = (option: UserOutput | ShortOptionOutput): string => {
-    return "value" in option ? option.value : option.name;
-};
-
 const ColumnTableRow: FC<{
-    column: UserOutput | ShortOptionOutput;
+    column: OptionT;
     onRemove?: () => void;
     idx: number;
 }> = (data) => {
     const { onRemove, column, idx } = data;
 
     const { handleRef, ref } = useSortable({
-        id: getOptionValue(column),
+        id: getOptionKey(column),
         index: idx,
         data: { column, idx },
     });
@@ -99,6 +93,7 @@ export const ColumnsForm: FC = () => {
         control,
         name: "columns.values",
     });
+
     const selectedColumns = useMemo(
         () => columns?.filter(notEmpty) || [],
         [columns],
@@ -112,16 +107,18 @@ export const ColumnsForm: FC = () => {
     const handleOptionSelected = useCallback(
         (
             _: SyntheticEvent,
-            value: (UserOutput | ShortOptionOutput) | null,
+            value: OptionT | null,
             reason: AutocompleteChangeReason,
         ) => {
             if (!value) return null;
             if (reason === "selectOption") {
                 append({
-                    id: "id" in value ? value.id : value.value,
+                    id: getOptionKey(value),
                     value: getOptionValue(value),
                     color:
-                        "color" in value ? value.color || undefined : undefined,
+                        typeof value === "object" && "color" in value
+                            ? value.color || undefined
+                            : undefined,
                     is_archived: false,
                 });
             }
@@ -192,7 +189,7 @@ export const ColumnsForm: FC = () => {
                                 (column, idx) =>
                                     column && (
                                         <ColumnTableRow
-                                            key={getOptionValue(column)}
+                                            key={getOptionKey(column)}
                                             column={column}
                                             idx={idx}
                                             onRemove={() => remove(idx)}

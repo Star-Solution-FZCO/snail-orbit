@@ -3,18 +3,10 @@ import type { FC, SyntheticEvent } from "react";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "shared/model";
-import type {
-    ShortOptionOutput,
-    UserOutput,
-} from "shared/model/types/backend-schema.gen";
 import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { useListQueryParams } from "shared/utils";
-
-type OptionT = UserOutput | ShortOptionOutput;
-
-const getOptionValue = (option: OptionT): string => {
-    return "value" in option ? option.value : option.name;
-};
+import { getOptionKey, getOptionValue } from "../helpers/options";
+import type { OptionT } from "../types/options.types";
 
 interface OptionsSelectPopoverProps {
     value?: OptionT[];
@@ -74,7 +66,7 @@ export const OptionsSelectPopover: FC<OptionsSelectPopoverProps> = ({
             isOptionEqualToValue={(a, b) =>
                 getOptionValue(a) === getOptionValue(b)
             }
-            getOptionKey={(el) => ("id" in el ? el.id : el.value)}
+            getOptionKey={getOptionKey}
             loading={isOptionsLoading}
         />
     );

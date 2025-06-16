@@ -1,14 +1,23 @@
+import { type DragDropEventHandlers, DragDropProvider } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { DragHandle } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
-    Autocomplete,
-    CircularProgress,
-    FormLabel,
+    type AutocompleteChangeReason,
+    Button,
     IconButton,
+    Paper,
     Stack,
-    TextField,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableRow,
 } from "@mui/material";
+import { bindPopover, bindTrigger } from "material-ui-popup-state";
+import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { type SyntheticEvent, useCallback, useMemo } from "react";
 import {
     Controller,
     useFieldArray,
@@ -16,28 +25,59 @@ import {
     useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
-import type {
-    ShortOptionOutput,
-    UserOutput,
-} from "shared/model/types/backend-schema.gen";
-import { useListQueryParams } from "shared/utils";
-import { getFieldValue } from "../../../utils/normalizeFieldValue";
+import { notEmpty } from "shared/utils/helpers/notEmpty";
+import { getOptionKey, getOptionValue } from "../helpers/options";
+import type { OptionT } from "../types/options.types";
+import { OptionsSelectPopover } from "./options_select_popover";
+import { SwimlanesSelectPopover } from "./swimlanes_select_popover";
 
-const getOptionValue = (option: UserOutput | ShortOptionOutput): string => {
-    return "value" in option ? option.value : option.name;
+const SwimlaneTableRow: FC<{
+    swimlane: OptionT;
+    onRemove?: () => void;
+    idx: number;
+}> = (data) => {
+    const { onRemove, swimlane, idx } = data;
+
+    const { handleRef, ref } = useSortable({
+        id: getOptionKey(swimlane),
+        index: idx,
+        data: { swimlane, idx },
+    });
+
+    return (
+        <TableRow ref={ref}>
+            <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
+                <IconButton size="medium" ref={handleRef}>
+                    <DragHandle fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+            <TableCell>{getOptionValue(swimlane)}</TableCell>
+            <TableCell align="right">
+                <IconButton size="small" color="error" onClick={onRemove}>
+                    <DeleteIcon fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+        </TableRow>
+    );
 };
 
 export const SwimlanesForm: FC = () => {
     const { t } = useTranslation();
 
-    const [selectInput, setSelectInput] = useState<string>("");
-    const [listQueryParams] = useListQueryParams({
-        limit: 0,
+    const swimlaneSelectPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "swimlane-select",
+    });
+
+    const swimlaneOptionsPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "swimlane-options-select",
     });
 
     const { control } = useFormContext<AgileBoardT>();
+
+    const projects = useWatch({ control, name: "projects" });
 
     const field = useWatch({
         name: "swimlanes.field",
@@ -49,121 +89,124 @@ export const SwimlanesForm: FC = () => {
         name: "swimlanes.values",
     });
 
-    const { fields, append, remove } = useFieldArray<AgileBoardT>({
+    const { move, append, remove } = useFieldArray<AgileBoardT>({
         control,
         name: "swimlanes.values",
     });
 
-    const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
-        customFieldsApi.useLazyListGroupSelectOptionsQuery();
+    const selectedSwimlanes = useMemo(
+        () => swimlanes?.filter(notEmpty) || [],
+        [swimlanes],
+    );
 
-    const handleSelectOpen = () => {
-        if (field) fetchOptions({ gid: field.gid, ...listQueryParams });
-    };
+    const handleOptionSelected = useCallback(
+        (
+            _: SyntheticEvent,
+            value: OptionT | null,
+            reason: AutocompleteChangeReason,
+        ) => {
+            if (!value) return null;
+            if (reason === "selectOption") {
+                append({
+                    id: getOptionKey(value),
+                    value: getOptionValue(value),
+                    color:
+                        typeof value === "object" && "color" in value
+                            ? value.color || undefined
+                            : undefined,
+                    is_archived: false,
+                });
+            }
+        },
+        [append],
+    );
 
-    const filteredOptions = useMemo(() => {
-        return (
-            options?.payload?.items.filter(
-                (option) =>
-                    !swimlanes.some(
-                        (swimlane) =>
-                            getFieldValue(swimlane) === getOptionValue(option),
-                    ),
-            ) || []
-        );
-    }, [options, swimlanes]);
+    const handleDragEnd = useCallback<DragDropEventHandlers["onDragEnd"]>(
+        (event) => {
+            const { operation, canceled } = event;
+            const { source, target } = operation;
+
+            if (canceled || !source || !target || !isSortable(source)) return;
+
+            const from = source.sortable.initialIndex;
+            const to = source.sortable.index;
+            move(from, to);
+        },
+        [move],
+    );
+
+    const projectIds = useMemo(
+        () => projects.map((project) => project.id),
+        [projects],
+    );
 
     return (
-        <Stack gap={1}>
-            <FormLabel>{t("agileBoards.form.swimlanes")}</FormLabel>
-
-            {fields.map((field, index) => (
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    key={field.id}
-                    gap={1}
-                >
-                    <Controller
-                        control={control}
-                        name={`swimlanes.values.${index}` as const}
-                        render={({
-                            field: { value, onChange, ...rest },
-                            fieldState: { invalid, error },
-                        }) => (
-                            <TextField
-                                placeholder={t(`agileBoards.form.swimlane`)}
-                                error={invalid}
-                                helperText={
-                                    error?.message ? t(error.message) : null
-                                }
-                                variant="outlined"
+        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+            <Stack direction="row" justifyContent="space-between">
+                <Controller
+                    control={control}
+                    name="swimlanes.field"
+                    render={({ field: { onChange, value } }) => (
+                        <span>
+                            {t("Swimlanes described by")}:{" "}
+                            <Button
+                                {...bindTrigger(swimlaneSelectPopoverState)}
+                                variant="text"
                                 size="small"
-                                fullWidth
-                                disabled
-                                value={getFieldValue(value)}
-                                onChange={(e) =>
-                                    onChange({ name: e.target.value })
+                            >
+                                {value?.name || t("None")}
+                            </Button>
+                            <SwimlanesSelectPopover
+                                {...bindPopover(swimlaneSelectPopoverState)}
+                                projectId={projectIds}
+                                onChange={(_, value) =>
+                                    value?.gid === "none"
+                                        ? onChange(null)
+                                        : onChange(value)
                                 }
-                                {...rest}
                             />
-                        )}
-                    />
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => remove(index)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ))}
-            <Autocomplete
-                onOpen={handleSelectOpen}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        placeholder={t(
-                            "agileBoard.swimlanes.selectPlaceholder",
-                        )}
-                        slotProps={{
-                            input: {
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {isOptionsLoading ? (
-                                            <CircularProgress
-                                                color="inherit"
-                                                size={12}
+                        </span>
+                    )}
+                />
+
+                <Button
+                    variant="text"
+                    size="small"
+                    disabled={!field?.gid}
+                    {...bindTrigger(swimlaneOptionsPopoverState)}
+                >
+                    {t("Add swimlane")}
+                </Button>
+
+                <OptionsSelectPopover
+                    {...bindPopover(swimlaneOptionsPopoverState)}
+                    value={selectedSwimlanes}
+                    onChange={handleOptionSelected}
+                    fieldId={field?.gid}
+                />
+            </Stack>
+
+            {swimlanes && (
+                <TableContainer>
+                    <Table size="small">
+                        <TableBody>
+                            <DragDropProvider onDragEnd={handleDragEnd}>
+                                {swimlanes.map(
+                                    (swimlane, idx) =>
+                                        swimlane && (
+                                            <SwimlaneTableRow
+                                                key={getOptionKey(swimlane)}
+                                                swimlane={swimlane}
+                                                idx={idx}
+                                                onRemove={() => remove(idx)}
                                             />
-                                        ) : null}
-                                        {params.InputProps.endAdornment}
-                                    </>
-                                ),
-                            },
-                        }}
-                        size="small"
-                    />
-                )}
-                options={filteredOptions}
-                getOptionLabel={getOptionValue}
-                inputValue={selectInput}
-                value={null}
-                onChange={(_, option) => {
-                    setSelectInput("");
-                    if (option)
-                        append({
-                            id: "id" in option ? option.id : option.value,
-                            value: getOptionValue(option),
-                            color:
-                                "color" in option
-                                    ? option.color || undefined
-                                    : undefined,
-                            is_archived: false,
-                        });
-                }}
-                disableCloseOnSelect
-            />
+                                        ),
+                                )}
+                            </DragDropProvider>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
         </Stack>
     );
 };
