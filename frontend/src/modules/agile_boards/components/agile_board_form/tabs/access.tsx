@@ -1,5 +1,5 @@
 import type { AutocompleteChangeReason } from "@mui/material";
-import { Box, Button, Stack } from "@mui/material";
+import { Button, Paper, Stack } from "@mui/material";
 import PermissionTable from "features/permission_table/permission_table";
 import { UserGroupSelectPopover } from "features/user_group_select/user_group_select_popover";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
@@ -99,10 +99,20 @@ export const Access: FC = () => {
     );
 
     return (
-        <Stack direction="column" gap={2}>
-            <Box>
-                <Button variant="outlined" {...bindTrigger(popupState)}>
-                    {t("agileBoardForm.accessTab.add")}
+        <Stack direction="column" gap={1} component={Paper} sx={{ p: 1 }}>
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+                <span>{t("Grant access to board for this users")}</span>
+
+                <Button
+                    variant="text"
+                    size="small"
+                    {...bindTrigger(popupState)}
+                >
+                    {t("Add user")}
                 </Button>
                 <UserGroupSelectPopover
                     {...bindPopover(popupState)}
@@ -110,7 +120,7 @@ export const Access: FC = () => {
                     onChange={handleUserSelectChange}
                     value={selectedTargets}
                 />
-            </Box>
+            </Stack>
             <PermissionTable
                 permissions={permissions}
                 onDeletePermission={handleRevokePermission}

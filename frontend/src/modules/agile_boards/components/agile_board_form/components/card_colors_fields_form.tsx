@@ -1,28 +1,67 @@
+import type { DragDropEventHandlers } from "@dnd-kit/react";
+import { DragDropProvider } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { DragHandle } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
-    Autocomplete,
-    CircularProgress,
-    FormLabel,
+    type AutocompleteChangeReason,
+    Button,
     IconButton,
+    Paper,
     Stack,
-    TextField,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableRow,
 } from "@mui/material";
+import { bindPopover, bindTrigger } from "material-ui-popup-state";
+import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
-import {
-    Controller,
-    useFieldArray,
-    useFormContext,
-    useWatch,
-} from "react-hook-form";
+import { type SyntheticEvent, useCallback, useMemo } from "react";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { agileBoardApi } from "shared/model";
-import type { AgileBoardT } from "shared/model/types";
+import type { AgileBoardT, CustomFieldGroupLinkT } from "shared/model/types";
+import { CardColorFieldsSelectPopover } from "./card_color_fields_select_popover";
+
+const ColumnTableRow: FC<{
+    field: CustomFieldGroupLinkT;
+    onRemove?: () => void;
+    idx: number;
+}> = (data) => {
+    const { onRemove, field, idx } = data;
+
+    const { handleRef, ref } = useSortable({
+        id: field.gid,
+        index: idx,
+        data: { field, idx },
+    });
+
+    return (
+        <TableRow ref={ref}>
+            <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
+                <IconButton size="medium" ref={handleRef}>
+                    <DragHandle fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+            <TableCell>{field.name}</TableCell>
+            <TableCell align="right">
+                <IconButton size="small" color="error" onClick={onRemove}>
+                    <DeleteIcon fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+        </TableRow>
+    );
+};
 
 export const CardColorsFieldsForm: FC = () => {
     const { t } = useTranslation();
 
-    const [selectInput, setSelectInput] = useState<string>("");
+    const cardColorFieldsPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "card-color-fields-select",
+    });
+
     const { control } = useFormContext<AgileBoardT>();
 
     const colorFields = useWatch({
@@ -30,112 +69,89 @@ export const CardColorsFieldsForm: FC = () => {
         name: "card_colors_fields",
     });
 
-    const { fields, append, remove } = useFieldArray<AgileBoardT>({
+    const { append, remove, move } = useFieldArray<AgileBoardT>({
         control,
         name: "card_colors_fields",
     });
 
     const selectedProjects = useWatch({ control, name: "projects" });
 
-    const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
-        agileBoardApi.useLazyListAvailableColorsCustomFieldsQuery();
+    const handleOptionSelected = useCallback(
+        (
+            _: SyntheticEvent,
+            value: CustomFieldGroupLinkT | null,
+            reason: AutocompleteChangeReason,
+        ) => {
+            if (value && reason === "selectOption") {
+                append(value);
+            }
+        },
+        [append],
+    );
 
-    const handleSelectOpen = () => {
-        fetchOptions({
-            project_id: selectedProjects.map((project) => project.id),
-        });
-    };
+    const projectIds = useMemo(
+        () => selectedProjects.map((project) => project.id),
+        [selectedProjects],
+    );
 
-    const filteredOptions = useMemo(() => {
-        return (
-            options?.payload?.items.filter(
-                (option) => !colorFields.some(({ gid }) => gid === option.gid),
-            ) || []
-        );
-    }, [options, colorFields]);
+    const handleDragEnd = useCallback<DragDropEventHandlers["onDragEnd"]>(
+        (event) => {
+            const { operation, canceled } = event;
+            const { source, target } = operation;
+
+            if (canceled || !source || !target || !isSortable(source)) return;
+
+            const from = source.sortable.initialIndex;
+            const to = source.sortable.index;
+            move(from, to);
+        },
+        [move],
+    );
 
     return (
-        <Stack gap={1}>
-            <FormLabel>{t("cardColorFieldsForm.form.fields")}</FormLabel>
+        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+                <span>{t("cardColorFieldsForm.form.fields")}</span>
 
-            {fields.map((field, index) => (
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    key={field.id}
-                    gap={1}
+                <Button
+                    size="small"
+                    variant="text"
+                    {...bindTrigger(cardColorFieldsPopoverState)}
                 >
-                    <Controller
-                        control={control}
-                        name={`card_colors_fields.${index}` as const}
-                        render={({
-                            field: { value, onChange, ...rest },
-                            fieldState: { invalid, error },
-                        }) => (
-                            <TextField
-                                placeholder={t(
-                                    `cardColorFieldsForm.form.field`,
-                                )}
-                                error={invalid}
-                                helperText={
-                                    error?.message ? t(error.message) : null
-                                }
-                                variant="outlined"
-                                size="small"
-                                disabled
-                                fullWidth
-                                value={value.name}
-                                onChange={(e) =>
-                                    onChange({ name: e.target.value })
-                                }
-                                {...rest}
-                            />
-                        )}
-                    />
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => remove(index)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ))}
-            <Autocomplete
-                onOpen={handleSelectOpen}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        placeholder={t("cardColorFieldsForm.selectPlaceholder")}
-                        slotProps={{
-                            input: {
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {isOptionsLoading ? (
-                                            <CircularProgress
-                                                color="inherit"
-                                                size={12}
-                                            />
-                                        ) : null}
-                                        {params.InputProps.endAdornment}
-                                    </>
-                                ),
-                            },
-                        }}
-                        size="small"
-                    />
-                )}
-                options={filteredOptions}
-                getOptionLabel={(option) => option.name}
-                inputValue={selectInput}
-                value={null}
-                onChange={(_, option) => {
-                    setSelectInput("");
-                    if (option) append({ ...option });
-                }}
-                disableCloseOnSelect
-            />
+                    {t("Add color field")}
+                </Button>
+
+                <CardColorFieldsSelectPopover
+                    {...bindPopover(cardColorFieldsPopoverState)}
+                    value={colorFields}
+                    projectIds={projectIds}
+                    onChange={handleOptionSelected}
+                />
+            </Stack>
+
+            <TableContainer>
+                <Table size="small">
+                    <TableBody>
+                        <DragDropProvider onDragEnd={handleDragEnd}>
+                            {colorFields.map(
+                                (field, idx) =>
+                                    field && (
+                                        <ColumnTableRow
+                                            key={field.gid}
+                                            field={field}
+                                            idx={idx}
+                                            onRemove={() => remove(idx)}
+                                        />
+                                    ),
+                            )}
+                        </DragDropProvider>
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Stack>
     );
 };

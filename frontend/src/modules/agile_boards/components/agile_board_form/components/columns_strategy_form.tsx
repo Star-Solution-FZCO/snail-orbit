@@ -1,8 +1,9 @@
 import {
+    Box,
     FormControl,
-    FormLabel,
     InputLabel,
     MenuItem,
+    Paper,
     Select,
     Stack,
     TextField,
@@ -20,8 +21,10 @@ export const ColumnsStrategyForm: FC = () => {
     const strategy = useWatch({ control, name: "ui_settings.columnsStrategy" });
 
     return (
-        <Stack gap={1}>
-            <FormLabel>{t("ui_settings.columnsStrategy.label")}</FormLabel>
+        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+            <Box component="span" mb={1}>
+                {t("ui_settings.columnsStrategy.label")}
+            </Box>
 
             <Controller
                 control={control}

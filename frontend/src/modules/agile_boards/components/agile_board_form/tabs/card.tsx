@@ -6,7 +6,7 @@ import { ColumnsStrategyForm } from "../components/columns_strategy_form";
 
 export const Card: FC = () => {
     return (
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={1}>
             <CardFieldsForm />
 
             <ColumnsStrategyForm />

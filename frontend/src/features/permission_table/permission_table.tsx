@@ -6,7 +6,6 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    Paper,
     Stack,
     Table,
     TableBody,
@@ -24,12 +23,7 @@ import type { PermissionTableProps } from "./permission_table.types";
 
 const PermissionTable = memo((props: PermissionTableProps) => {
     const { t } = useTranslation();
-    const {
-        permissions,
-        onDeletePermission,
-        onChangePermissionType,
-        containerComponent,
-    } = props;
+    const { permissions, onDeletePermission, onChangePermissionType } = props;
 
     const popupState = usePopupState({
         variant: "popover",
@@ -51,7 +45,7 @@ const PermissionTable = memo((props: PermissionTableProps) => {
     );
 
     return (
-        <TableContainer component={containerComponent || Paper}>
+        <TableContainer>
             <Table size="small">
                 <TableHead>
                     <TableRow>
