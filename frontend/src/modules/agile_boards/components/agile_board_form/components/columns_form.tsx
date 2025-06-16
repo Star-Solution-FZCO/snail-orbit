@@ -1,14 +1,23 @@
+import { type DragDropEventHandlers, DragDropProvider } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { DragHandle } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
-    Autocomplete,
-    CircularProgress,
-    FormLabel,
+    type AutocompleteChangeReason,
+    Button,
     IconButton,
+    Paper,
     Stack,
-    TextField,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableRow,
 } from "@mui/material";
-import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { bindPopover, bindTrigger } from "material-ui-popup-state";
+import { usePopupState } from "material-ui-popup-state/hooks";
+import type { FC, SyntheticEvent } from "react";
+import { useCallback, useMemo } from "react";
 import {
     Controller,
     useFieldArray,
@@ -16,28 +25,65 @@ import {
     useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
 import type {
     ShortOptionOutput,
     UserOutput,
 } from "shared/model/types/backend-schema.gen";
-import { useListQueryParams } from "shared/utils";
-import { getFieldValue } from "../../../utils/normalizeFieldValue";
+import { notEmpty } from "shared/utils/helpers/notEmpty";
+import { ColumnSelectPopover } from "./columns_select_popover";
+import { OptionsSelectPopover } from "./options_select_popover";
 
 const getOptionValue = (option: UserOutput | ShortOptionOutput): string => {
     return "value" in option ? option.value : option.name;
 };
 
+const ColumnTableRow: FC<{
+    column: UserOutput | ShortOptionOutput;
+    onRemove?: () => void;
+    idx: number;
+}> = (data) => {
+    const { onRemove, column, idx } = data;
+
+    const { handleRef, ref } = useSortable({
+        id: getOptionValue(column),
+        index: idx,
+        data: { column, idx },
+    });
+
+    return (
+        <TableRow ref={ref}>
+            <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
+                <IconButton size="medium" ref={handleRef}>
+                    <DragHandle fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+            <TableCell>{getOptionValue(column)}</TableCell>
+            <TableCell align="right">
+                <IconButton size="small" color="error" onClick={onRemove}>
+                    <DeleteIcon fontSize="inherit" />
+                </IconButton>
+            </TableCell>
+        </TableRow>
+    );
+};
+
 export const ColumnsForm: FC = () => {
     const { t } = useTranslation();
 
-    const [selectInput, setSelectInput] = useState<string>("");
-    const [listQueryParams] = useListQueryParams({
-        limit: 0,
+    const columnSelectPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "column-select",
+    });
+
+    const columnOptionsPopoverState = usePopupState({
+        variant: "popover",
+        popupId: "column-options-select",
     });
 
     const { control } = useFormContext<AgileBoardT>();
+
+    const projects = useWatch({ control, name: "projects" });
 
     const field = useWatch({
         name: "columns.field",
@@ -49,118 +95,114 @@ export const ColumnsForm: FC = () => {
         name: "columns.values",
     });
 
-    const { fields, append, remove } = useFieldArray<AgileBoardT>({
+    const { append, remove, move } = useFieldArray<AgileBoardT>({
         control,
         name: "columns.values",
     });
+    const selectedColumns = useMemo(
+        () => columns?.filter(notEmpty) || [],
+        [columns],
+    );
 
-    const [fetchOptions, { data: options, isLoading: isOptionsLoading }] =
-        customFieldsApi.useLazyListGroupSelectOptionsQuery();
+    const projectIds = useMemo(
+        () => projects.map((project) => project.id),
+        [projects],
+    );
 
-    const handleSelectOpen = () => {
-        fetchOptions({ gid: field.gid, ...listQueryParams });
-    };
+    const handleOptionSelected = useCallback(
+        (
+            _: SyntheticEvent,
+            value: (UserOutput | ShortOptionOutput) | null,
+            reason: AutocompleteChangeReason,
+        ) => {
+            if (!value) return null;
+            if (reason === "selectOption") {
+                append({
+                    id: "id" in value ? value.id : value.value,
+                    value: getOptionValue(value),
+                    color:
+                        "color" in value ? value.color || undefined : undefined,
+                    is_archived: false,
+                });
+            }
+        },
+        [append],
+    );
 
-    const filteredOptions = useMemo(() => {
-        return (
-            options?.payload?.items.filter(
-                (option) =>
-                    !columns.some(
-                        (column) =>
-                            !!column &&
-                            getFieldValue(column) === getOptionValue(option),
-                    ),
-            ) || []
-        );
-    }, [options, columns]);
+    const handleDragEnd = useCallback<DragDropEventHandlers["onDragEnd"]>(
+        (event) => {
+            const { operation, canceled } = event;
+            const { source, target } = operation;
+
+            if (canceled || !source || !target || !isSortable(source)) return;
+
+            const from = source.sortable.initialIndex;
+            const to = source.sortable.index;
+            move(from, to);
+        },
+        [move],
+    );
 
     return (
-        <Stack gap={1}>
-            <FormLabel>{t("agileBoards.form.columns")}</FormLabel>
-
-            {fields.map((field, index) => (
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    key={field.id}
-                    gap={1}
-                >
-                    <Controller
-                        control={control}
-                        name={`columns.values.${index}` as const}
-                        render={({
-                            field: { value, onChange, ...rest },
-                            fieldState: { invalid, error },
-                        }) => (
-                            <TextField
-                                placeholder={t(`agileBoards.form.column`)}
-                                error={invalid}
-                                helperText={error?.message}
-                                variant="outlined"
+        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+            <Stack direction="row" justifyContent="space-between">
+                <Controller
+                    control={control}
+                    name="columns.field"
+                    render={({ field: { onChange, value } }) => (
+                        <span>
+                            {t("Columns described by")}:{" "}
+                            <Button
+                                {...bindTrigger(columnSelectPopoverState)}
+                                variant="text"
                                 size="small"
-                                fullWidth
-                                disabled
-                                value={getFieldValue(value)}
-                                onChange={(e) =>
-                                    onChange({ name: e.target.value })
-                                }
-                                {...rest}
+                            >
+                                {value.name}
+                            </Button>
+                            <ColumnSelectPopover
+                                {...bindPopover(columnSelectPopoverState)}
+                                projectId={projectIds}
+                                onChange={(_, value) => onChange(value)}
                             />
-                        )}
-                    />
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => remove(index)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ))}
-            <Autocomplete
-                onOpen={handleSelectOpen}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        placeholder={t("agileBoard.columns.selectPlaceholder")}
-                        slotProps={{
-                            input: {
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {isOptionsLoading ? (
-                                            <CircularProgress
-                                                color="inherit"
-                                                size={12}
-                                            />
-                                        ) : null}
-                                        {params.InputProps.endAdornment}
-                                    </>
-                                ),
-                            },
-                        }}
-                        size="small"
-                    />
-                )}
-                options={filteredOptions}
-                getOptionLabel={getOptionValue}
-                inputValue={selectInput}
-                value={null}
-                onChange={(_, option) => {
-                    setSelectInput("");
-                    if (option)
-                        append({
-                            id: "id" in option ? option.id : option.value,
-                            value: getOptionValue(option),
-                            color:
-                                "color" in option
-                                    ? option.color || undefined
-                                    : undefined,
-                            is_archived: false,
-                        });
-                }}
-                disableCloseOnSelect
-            />
+                        </span>
+                    )}
+                />
+
+                <Button
+                    variant="text"
+                    size="small"
+                    {...bindTrigger(columnOptionsPopoverState)}
+                >
+                    {t("Add column")}
+                </Button>
+
+                <OptionsSelectPopover
+                    {...bindPopover(columnOptionsPopoverState)}
+                    value={selectedColumns}
+                    onChange={handleOptionSelected}
+                    fieldId={field.gid}
+                />
+            </Stack>
+
+            <TableContainer>
+                <Table size="small">
+                    <TableBody>
+                        <DragDropProvider onDragEnd={handleDragEnd}>
+                            {columns.map(
+                                (column, idx) =>
+                                    column && (
+                                        <ColumnTableRow
+                                            key={getOptionValue(column)}
+                                            column={column}
+                                            idx={idx}
+                                            onRemove={() => remove(idx)}
+                                        />
+                                    ),
+                            )}
+                        </DragDropProvider>
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Stack>
     );
 };

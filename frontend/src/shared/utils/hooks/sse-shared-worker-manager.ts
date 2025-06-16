@@ -78,8 +78,6 @@ export class SSESharedWorkerManager {
             id: subscriberId,
         };
 
-        console.log(message);
-
         this.port.postMessage(message);
 
         return () => {
