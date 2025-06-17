@@ -221,6 +221,7 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                     backgroundColor: "inherit",
                     color: theme.palette.text.primary,
                     wordBreak: "break-word",
+                    fontSize: "0.875rem",
                 },
             })}
         >
