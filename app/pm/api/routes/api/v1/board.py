@@ -521,13 +521,55 @@ async def get_board_issues(
         if sl_field.value not in swimlanes:
             continue
         swimlanes[sl_field.value][col_field.value].append(issue)
-    priorities = {id_: idx for idx, id_ in enumerate(board.issues_order)}
-    for sl_result in swimlanes.values():
-        for col_result in sl_result.values():
-            col_result.sort(key=lambda i: priorities.get(i.id, float('inf')))
-    if non_swimlane is not None:
-        for col_result in non_swimlane.values():
-            col_result.sort(key=lambda i: priorities.get(i.id, float('inf')))
+    if board.issues_order:
+
+        def apply_relationship_ordering(col_issues: list[m.Issue]) -> None:
+            if not col_issues or not board.issues_order:
+                return
+
+            relationships = dict(board.issues_order)
+            issue_ids_in_col = {issue.id for issue in col_issues}
+
+            relevant_relationships = [
+                (issue_id, after_id)
+                for issue_id, after_id in relationships.items()
+                if issue_id in issue_ids_in_col
+                and (after_id is None or after_id in issue_ids_in_col)
+            ]
+
+            if not relevant_relationships:
+                return
+
+            result = col_issues.copy()
+            issue_map = {issue.id: i for i, issue in enumerate(result)}
+
+            for moved_issue_id, after_issue_id in relevant_relationships:
+                moved_idx = issue_map.get(moved_issue_id)
+                if moved_idx is None:
+                    continue
+
+                moved_issue = result.pop(moved_idx)
+
+                if after_issue_id is None:
+                    target_idx = 0
+                else:
+                    after_idx = issue_map.get(after_issue_id)
+                    if after_idx is None:
+                        continue
+                    target_idx = after_idx + 1 if after_idx < moved_idx else after_idx
+
+                result.insert(target_idx, moved_issue)
+
+                issue_map = {issue.id: i for i, issue in enumerate(result)}
+
+            col_issues[:] = result
+
+        for sl_result in swimlanes.values():
+            for col_result in sl_result.values():
+                apply_relationship_ordering(col_result)
+        if non_swimlane is not None:
+            for col_result in non_swimlane.values():
+                apply_relationship_ordering(col_result)
 
     issues_list = []
 
@@ -536,7 +578,6 @@ async def get_board_issues(
         for col_value in board.columns:
             if col_value in cols:
                 issues = cols[col_value]
-                issues.sort(key=lambda i: priorities.get(i.id, float('inf')))
                 swimlane_columns.append(
                     [IssueOutput.from_obj(issue) for issue in issues]
                 )
@@ -549,7 +590,6 @@ async def get_board_issues(
         for col_value in board.columns:
             if col_value in non_swimlane:
                 issues = non_swimlane[col_value]
-                issues.sort(key=lambda i: priorities.get(i.id, float('inf')))
                 non_swimlane_columns.append(
                     [IssueOutput.from_obj(issue) for issue in issues]
                 )

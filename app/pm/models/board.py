@@ -40,7 +40,13 @@ class Board(Document):
     columns: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
     swimlane_field: CustomFieldGroupLink | None = None
     swimlanes: Annotated[list[CustomFieldValueT], Field(default_factory=list)]
-    issues_order: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    issues_order: Annotated[
+        list[tuple[PydanticObjectId, PydanticObjectId | None]],
+        Field(
+            default_factory=list,
+            description='List of (issue_id, after_issue_id) pairs representing explicit positioning. after_issue_id=None means first position',
+        ),
+    ]
     card_fields: Annotated[list[CustomFieldGroupLink], Field(default_factory=list)]
     card_colors_fields: Annotated[
         list[CustomFieldGroupLink], Field(default_factory=list)
@@ -111,19 +117,13 @@ class Board(Document):
     def move_issue(
         self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
     ) -> None:
-        try:
-            self.issues_order.remove(issue_id)
-        except ValueError:
-            pass
-        new_idx = 0
-        if after_id:
-            try:
-                new_idx = self.issues_order.index(after_id) + 1
-            except ValueError:
-                self.issues_order.append(after_id)
-                self.issues_order.append(issue_id)
-                return
-        self.issues_order.insert(new_idx, issue_id)
+        self.issues_order = [
+            (iss_id, after_iss_id)
+            for iss_id, after_iss_id in self.issues_order
+            if iss_id != issue_id
+        ]
+
+        self.issues_order.append((issue_id, after_id))
 
     @classmethod
     async def update_field_embedded_links(
