@@ -8,7 +8,6 @@ import {
     IconButton,
     Stack,
     TextField,
-    Typography,
 } from "@mui/material";
 import type {
     GridColDef,
@@ -16,12 +15,12 @@ import type {
     GridSortModel,
 } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "shared/model";
 import type { ListQueryParams, UserT } from "shared/model/types";
-import { ErrorHandler, UserAvatar } from "shared/ui";
+import { ErrorHandler, Link, UserAvatar } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 
 const initialQueryParams = {
@@ -51,7 +50,10 @@ export const UserList = () => {
                 renderCell: ({ row }) => (
                     <Box display="flex" alignItems="center" gap={1} height={1}>
                         <UserAvatar src={row.avatar} />
-                        <Typography fontSize="inherit">{row.name}</Typography>
+
+                        <Link to="/users/$userId" params={{ userId: row.id }}>
+                            {row.name}
+                        </Link>
                     </Box>
                 ),
             },
@@ -199,10 +201,10 @@ export const UserList = () => {
 
                 <Link to="/users/create">
                     <Button
+                        sx={{ whiteSpace: "nowrap", height: "40px" }}
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
-                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("users.new")}
                     </Button>

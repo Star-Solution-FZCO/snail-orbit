@@ -16,7 +16,7 @@ import type {
     GridSortModel,
 } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { workflowApi } from "shared/model";
@@ -25,7 +25,7 @@ import type {
     WorkflowT,
     WorkflowTypeT,
 } from "shared/model/types";
-import { ErrorHandler, workflowTypeMap } from "shared/ui";
+import { ErrorHandler, Link, workflowTypeMap } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 
 const initialQueryParams = {
@@ -52,6 +52,14 @@ export const WorkflowList = () => {
                 field: "name",
                 headerName: t("workflows.fields.name"),
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Link
+                        to="/workflows/$workflowId"
+                        params={{ workflowId: row.id }}
+                    >
+                        {row.name}
+                    </Link>
+                ),
             },
             {
                 field: "type",
@@ -198,10 +206,10 @@ export const WorkflowList = () => {
 
                 <Link to="/workflows/create">
                     <Button
+                        sx={{ whiteSpace: "nowrap", height: "40px" }}
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
-                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("workflows.new")}
                     </Button>

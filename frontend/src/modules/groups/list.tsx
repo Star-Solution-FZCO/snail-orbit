@@ -47,6 +47,11 @@ const GroupList = () => {
                 field: "name",
                 headerName: t("groups.fields.name"),
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Link to="/groups/$groupId" params={{ groupId: row.id }}>
+                        {row.name}
+                    </Link>
+                ),
             },
             {
                 field: "origin",
@@ -174,10 +179,10 @@ const GroupList = () => {
 
                 <Link to="/groups/create">
                     <Button
+                        sx={{ whiteSpace: "nowrap", height: "40px" }}
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
-                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("groups.new")}
                     </Button>

@@ -15,13 +15,13 @@ import type {
     GridSortModel,
 } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type { ChangeEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "shared/model";
 import type { CustomFieldGroupT, ListQueryParams } from "shared/model/types";
-import { ErrorHandler } from "shared/ui";
+import { ErrorHandler, Link } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
 
 const initialQueryParams = {
@@ -48,6 +48,14 @@ const CustomFieldList = () => {
                 field: "name",
                 headerName: t("customFields.fields.name"),
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Link
+                        to="/custom-fields/$customFieldGroupId"
+                        params={{ customFieldGroupId: row.gid }}
+                    >
+                        {row.name}
+                    </Link>
+                ),
             },
             {
                 field: "type",
@@ -186,10 +194,10 @@ const CustomFieldList = () => {
                 />
                 <Link to="/custom-fields/create">
                     <Button
+                        sx={{ whiteSpace: "nowrap", height: "40px" }}
                         startIcon={<AddIcon />}
                         variant="outlined"
-                        size="medium"
-                        sx={{ whiteSpace: "nowrap" }}
+                        size="small"
                     >
                         {t("customFields.new")}
                     </Button>

@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
-import { UserAvatar } from "shared/ui";
+import { Link, UserAvatar } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 import { AddGroupMemberDialog } from "./add_group_member_dialog";
 
@@ -71,7 +71,9 @@ const GroupMembers: FC<IGroupMembersProps> = ({ groupId }) => {
                 renderCell: ({ row }) => (
                     <Box display="flex" alignItems="center" gap={1}>
                         <UserAvatar src={row.avatar} />
-                        {row.name}
+                        <Link to="/users/$userId" params={{ userId: row.id }}>
+                            {row.name}
+                        </Link>
                     </Box>
                 ),
             },

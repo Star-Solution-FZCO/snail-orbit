@@ -47,6 +47,11 @@ const RoleList = () => {
                 field: "name",
                 headerName: t("roles.fields.name"),
                 flex: 1,
+                renderCell: ({ row }) => (
+                    <Link to="/roles/$roleId" params={{ roleId: row.id }}>
+                        {row.name}
+                    </Link>
+                ),
             },
             {
                 field: "description",
@@ -169,10 +174,10 @@ const RoleList = () => {
 
                 <Link to="/roles/create">
                     <Button
+                        sx={{ whiteSpace: "nowrap", height: "40px" }}
                         startIcon={<AddIcon />}
                         variant="outlined"
                         size="small"
-                        sx={{ whiteSpace: "nowrap" }}
                     >
                         {t("roles.new")}
                     </Button>
