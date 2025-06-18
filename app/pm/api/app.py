@@ -84,7 +84,10 @@ if CONFIG.RO_MODE:
 
 @app.on_event('startup')
 async def app_init() -> None:
+    from pm.db import check_database_version
     from pm.models import __beanie_models__
+
+    check_database_version()
 
     client = AsyncIOMotorClient(CONFIG.DB_URI)
     db = client.get_default_database()
