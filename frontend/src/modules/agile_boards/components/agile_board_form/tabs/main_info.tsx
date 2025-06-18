@@ -34,7 +34,7 @@ export const MainInfo: FC = () => {
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <MDEditor
-                        defaultValue={value || ""}
+                        value={value || ""}
                         onBlur={onChange}
                         placeholder={t("agileBoards.form.description")}
                     />

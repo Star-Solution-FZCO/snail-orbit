@@ -71,7 +71,6 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
     const [updateAgileBoard] = agileBoardApi.useUpdateAgileBoardMutation();
-
     const [favoriteAgileBoard] = agileBoardApi.useFavoriteBoardMutation();
 
     const agileBoard = useMemo(() => data?.payload, [data]);
