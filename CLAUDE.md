@@ -39,7 +39,14 @@ cd app && mypy pm
 python3 app/manage.py api openapi gen -o app/openapi.json
 
 # Database migrations
-python3 app/manage.py api db migrate
+python3 app/manage.py db init          # Initialize migration system
+python3 app/manage.py db create <name> # Create new migration
+python3 app/manage.py db up            # Apply all pending migrations
+python3 app/manage.py db down          # Rollback all migrations
+python3 app/manage.py db status        # Show migration status
+python3 app/manage.py db up --revision <id>     # Apply to specific revision
+python3 app/manage.py db down --revision <id>   # Rollback to specific revision
+python3 app/manage.py db up --use-transactions  # Use transactions (replica set required)
 ```
 
 ### Frontend (frontend/)
