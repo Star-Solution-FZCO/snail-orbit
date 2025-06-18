@@ -124,6 +124,54 @@ docker build -f frontend/Dockerfile --target ui -t snail-orbit-ui .
 - **Type Annotations**: All function parameters and return values MUST be annotated
 - **Avoid Any**: Use specific types instead of `Any` wherever possible
 - **Pydantic Models**: All fields MUST have `Field(description="...")` for documentation
+- **Code Comments**: DO NOT add inline comments or comments inside functions. Use docstrings only when necessary for documenting public APIs
+
+#### Code Style Conventions
+
+**String Quoting & Formatting:**
+- Use single quotes (`'`) for strings, not double quotes
+- 160 character line limit (configured in ruff/pylint)
+- Modern union syntax: `str | None` instead of `Optional[str]` or `Union[str, None]`
+
+**Import Organization:**
+```python
+# Standard library imports first
+from datetime import datetime
+from typing import Annotated, Self
+
+# Third-party imports second (with consistent aliasing)
+import beanie.operators as bo
+from beanie import Document, PydanticObjectId
+from fastapi import HTTPException
+
+# Local imports last (absolute for cross-module, relative for same directory)
+import pm.models as m
+from pm.api.context import current_user
+from ._base import CustomField
+```
+
+**Naming Conventions:**
+- Classes: PascalCase (`UserCreate`, `IssueOutput`)
+- Functions/variables: snake_case (`user_ctx`, `create_user`)
+- Constants: UPPER_SNAKE_CASE (`UNKNOWN_ID`)
+- Link fields: `*LinkField` pattern (`UserLinkField`)
+- Enums: `*TypeT` or `*Type` pattern (`CustomFieldTypeT`)
+
+**Async Patterns:**
+- All database operations must be async
+- Use `asyncio.gather()` for parallel operations
+- Beanie ODM method chaining: `await m.User.find_one(m.User.id == user_id)`
+
+**Error Handling:**
+```python
+# ✅ CORRECT - Consistent HTTP exception pattern
+if not user:
+    raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+```
+
+**Response Models:**
+- Use wrapper classes: `SuccessPayloadOutput[T]`, `BaseListOutput[T]`
+- Input validation with Pydantic models (`UserCreate`, `IssueUpdate`)
 
 #### Type Annotation Examples
 
