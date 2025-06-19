@@ -385,6 +385,12 @@ CONFIG = Dynaconf(
                 condition=bool,
             ),
         ),
+        Validator(
+            'DB_AUTO_MIGRATE',
+            cast=bool,
+            default=False,
+            description='Auto-run database migrations on startup (upgrades only)',
+        ),
     ],
 )
 CONFIG.configure()
