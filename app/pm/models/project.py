@@ -4,6 +4,7 @@ from typing import Annotated, Any, Self
 from uuid import UUID, uuid4
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, Link, PydanticObjectId, Update
 from pydantic import BaseModel, Field
 
@@ -68,6 +69,20 @@ class Project(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel(
+                [('permissions.target_type', 1), ('permissions.target.id', 1)],
+                name='permissions_target_index',
+            ),
+            pymongo.IndexModel([('subscribers', 1)], name='subscribers_index'),
+            pymongo.IndexModel([('custom_fields', 1)], name='custom_fields_index'),
+            pymongo.IndexModel([('slug_history', 1)], name='slug_history_index'),
+            pymongo.IndexModel([('is_active', 1)], name='is_active_index'),
+            pymongo.IndexModel([('workflows', 1)], name='workflows_index'),
+            pymongo.IndexModel(
+                [('encryption_settings.users.id', 1)], name='encryption_users_index'
+            ),
+        ]
 
     name: str = Indexed(str)
     slug: str = Indexed(str, unique=True)

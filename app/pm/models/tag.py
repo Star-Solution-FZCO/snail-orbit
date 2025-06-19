@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import Any, Self
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel
 
@@ -48,6 +49,14 @@ class Tag(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
+            pymongo.IndexModel([('color', 1)], name='color_index'),
+            pymongo.IndexModel(
+                [('untag_on_resolve', 1)], name='untag_on_resolve_index'
+            ),
+            pymongo.IndexModel([('untag_on_close', 1)], name='untag_on_close_index'),
+        ]
 
     name: str = Indexed(str)
     description: str | None = None

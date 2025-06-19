@@ -3,6 +3,7 @@ from enum import StrEnum
 from typing import Any, Self
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel
 
@@ -53,6 +54,13 @@ class Group(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel([('origin', 1)], name='origin_index'),
+            pymongo.IndexModel([('external_id', 1)], name='external_id_index'),
+            pymongo.IndexModel(
+                [('predefined_scope', 1)], name='predefined_scope_index'
+            ),
+        ]
 
     name: str = Indexed(str, unique=True)
     description: str | None = None

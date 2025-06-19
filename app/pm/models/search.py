@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import Annotated, Any
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
@@ -26,6 +27,17 @@ class Search(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel(
+                [
+                    ('permissions.target_type', 1),
+                    ('permissions.target.id', 1),
+                    ('permissions.permission_type', 1),
+                ],
+                name='permissions_compound_index',
+            ),
+            pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
+        ]
 
     name: str = Indexed(str)
     query: str

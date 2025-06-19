@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed
 
 from pm.workflows import get_on_change_script_from_string
@@ -34,6 +35,10 @@ class Workflow(Document):
         use_state_management = True
         state_management_save_previous = True
         is_root = True
+        indexes = [
+            pymongo.IndexModel([('type', 1)], name='type_index'),
+            pymongo.IndexModel([('type', 1), ('name', 1)], name='type_name_index'),
+        ]
 
     name: str = Indexed(str)
     type: WorkflowType

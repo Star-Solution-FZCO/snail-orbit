@@ -156,6 +156,43 @@ class Issue(DocumentWithReadOnlyProjection):
                 ],
                 name='text_index',
             ),
+            pymongo.IndexModel([('project.id', 1)], name='project_id_index'),
+            pymongo.IndexModel([('created_at', -1)], name='created_at_index'),
+            pymongo.IndexModel([('updated_at', -1)], name='updated_at_index'),
+            pymongo.IndexModel([('aliases', 1)], name='aliases_index'),
+            pymongo.IndexModel(
+                [('project.id', 1), ('created_at', -1)], name='project_created_at_index'
+            ),
+            pymongo.IndexModel(
+                [('project.id', 1), ('updated_at', -1)], name='project_updated_at_index'
+            ),
+            pymongo.IndexModel(
+                [('project.id', 1), ('resolved_at', 1)],
+                name='project_resolved_at_index',
+            ),
+            pymongo.IndexModel(
+                [('fields.gid', 1), ('fields.value', 1)], name='fields_gid_value_index'
+            ),
+            pymongo.IndexModel([('fields.id', 1)], name='fields_id_index'),
+            pymongo.IndexModel([('fields.name', 1)], name='fields_name_index'),
+            pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
+            pymongo.IndexModel([('updated_by.id', 1)], name='updated_by_id_index'),
+            pymongo.IndexModel([('subscribers', 1)], name='subscribers_index'),
+            pymongo.IndexModel([('resolved_at', 1)], name='resolved_at_index'),
+            pymongo.IndexModel([('closed_at', 1)], name='closed_at_index'),
+            pymongo.IndexModel([('tags.id', 1)], name='tags_id_index'),
+            pymongo.IndexModel([('tags.name', 1)], name='tags_name_index'),
+            pymongo.IndexModel(
+                [('interlinks.issue.id', 1)], name='interlinks_issue_id_index'
+            ),
+            pymongo.IndexModel(
+                [('created_by.id', 1), ('created_at', -1)],
+                name='created_by_created_at_index',
+            ),
+            pymongo.IndexModel(
+                [('subscribers', 1), ('updated_at', -1)],
+                name='subscribers_updated_at_index',
+            ),
         ]
 
     class Config:

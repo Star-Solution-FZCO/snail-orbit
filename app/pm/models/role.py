@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import Annotated, Any, Self
 
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Field
 
@@ -43,6 +44,9 @@ class Role(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel([('permissions', 1)], name='permissions_index'),
+        ]
 
     name: Annotated[str, Indexed(str)]
     description: str | None = None

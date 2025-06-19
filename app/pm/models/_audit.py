@@ -8,6 +8,7 @@ from uuid import UUID
 import aiofiles
 import aiofiles.os as aio_os
 import bson
+import pymongo
 from beanie import (
     Delete,
     Document,
@@ -50,6 +51,20 @@ class AuditAuthorField(BaseModel):
 class AuditRecord(Document):
     class Settings:
         name = 'audits'
+        indexes = [
+            pymongo.IndexModel([('time', -1)], name='time_index'),
+            pymongo.IndexModel([('author.id', 1)], name='author_id_index'),
+            pymongo.IndexModel(
+                [('collection', 1), ('object_id', 1), ('time', -1)],
+                name='object_audit_history_index',
+            ),
+            pymongo.IndexModel([('action', 1)], name='action_index'),
+            pymongo.IndexModel([('revision', 1)], name='revision_index'),
+            pymongo.IndexModel([('next_revision', 1)], name='next_revision_index'),
+            pymongo.IndexModel(
+                [('author.id', 1), ('time', -1)], name='author_time_index'
+            ),
+        ]
 
     collection: str = Indexed(str)
     object_id: PydanticObjectId = Indexed(PydanticObjectId)

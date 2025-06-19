@@ -7,6 +7,7 @@ from typing import Annotated, Any, Self
 
 import bcrypt
 import beanie.operators as bo
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, Field
@@ -154,6 +155,24 @@ class User(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel([('groups.id', 1)], name='groups_id_index'),
+            pymongo.IndexModel(
+                [('api_tokens.is_active', 1)], name='api_tokens_active_index'
+            ),
+            pymongo.IndexModel(
+                [('is_active', 1)],
+                name='is_active_index',
+                partialFilterExpression={'is_active': True},
+            ),
+            pymongo.IndexModel([('is_admin', 1)], name='is_admin_index'),
+            pymongo.IndexModel([('origin', 1)], name='origin_index'),
+            pymongo.IndexModel([('mfa_enabled', 1)], name='mfa_enabled_index'),
+            pymongo.IndexModel(
+                [('name', pymongo.TEXT), ('email', pymongo.TEXT)],
+                name='user_text_search_index',
+            ),
+        ]
 
     name: str = Indexed(str)
     email: str = Indexed(str, unique=True)

@@ -3,6 +3,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Self
 
 import beanie.operators as bo
+import pymongo
 from beanie import BackLink, Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
@@ -66,6 +67,16 @@ class CustomField(Document):
         use_state_management = True
         state_management_save_previous = True
         is_root = True
+        indexes = [
+            pymongo.IndexModel([('gid', 1)], name='gid_index'),
+            pymongo.IndexModel([('type', 1)], name='type_index'),
+            pymongo.IndexModel([('gid', 1), ('type', 1)], name='gid_type_index'),
+            pymongo.IndexModel([('name', 1)], name='name_index'),
+            pymongo.IndexModel(
+                [('name', pymongo.TEXT), ('description', pymongo.TEXT)],
+                name='field_text_search_index',
+            ),
+        ]
 
     name: str
     type: CustomFieldTypeT

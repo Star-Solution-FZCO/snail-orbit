@@ -1,6 +1,7 @@
 from itertools import chain
 from typing import Annotated
 
+import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
@@ -31,6 +32,30 @@ class Board(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
+        indexes = [
+            pymongo.IndexModel(
+                [
+                    ('permissions.target_type', 1),
+                    ('permissions.target.id', 1),
+                    ('permissions.permission_type', 1),
+                ],
+                name='permissions_compound_index',
+            ),
+            pymongo.IndexModel([('projects.id', 1)], name='projects_id_index'),
+            pymongo.IndexModel([('favorite_of', 1)], name='favorite_of_index'),
+            pymongo.IndexModel(
+                [('column_field.gid', 1)], name='column_field_gid_index'
+            ),
+            pymongo.IndexModel(
+                [('swimlane_field.gid', 1)], name='swimlane_field_gid_index'
+            ),
+            pymongo.IndexModel([('card_fields.gid', 1)], name='card_fields_gid_index'),
+            pymongo.IndexModel(
+                [('card_colors_fields.gid', 1)], name='card_colors_fields_gid_index'
+            ),
+            pymongo.IndexModel([('issues_order', 1)], name='issues_order_index'),
+            pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
+        ]
 
     name: str = Indexed(str)
     description: str | None = None
