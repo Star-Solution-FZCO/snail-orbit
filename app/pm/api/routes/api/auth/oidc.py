@@ -1,269 +1,126 @@
-import time
 from http import HTTPStatus
-from urllib.parse import urljoin
+from typing import Any
 
-import jwt
-from fastapi import Cookie, Depends, Form, HTTPException, Request, Response
+from authlib.integrations.starlette_client import OAuth
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.api.utils.router import APIRouter
 from pm.config import CONFIG
-from pm.utils.oidc import auth_with_oidc_token, discover_oidc_params
 
-router = APIRouter(prefix='/oidc', tags=['oidc'])
+oidc_app = FastAPI()
+oidc_app.add_middleware(SessionMiddleware, secret_key=CONFIG.OIDC_SESSION_SECRET)
 
-STATE_COOKIE_NAME = 'oidc_state'
-CALL_BACK_PATH = '/api/auth/oidc/callback'
-STATE_NOT_BEFORE_DELTA = 60  # 1 minute
-STATE_TTL = 10 * 60  # 10 minutes
-
-
-@router.get('')
-async def oidc(
-    request: Request,
-) -> RedirectResponse:
-    if not CONFIG.OIDC_ENABLED:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_IMPLEMENTED,
-            detail='OIDC is not enabled',
-        )
-    params = await discover_oidc_params(CONFIG.OIDC_DISCOVERY_URL)
-    state_data = _gen_state_data(request)
-    state = jwt.encode(
-        state_data,
-        CONFIG.JWT_SECRET,
-        algorithm='HS256',
-    )
-    resp = RedirectResponse(
-        params.gen_login_url(
-            CONFIG.OIDC_CLIENT_ID,
-            state=state,
-            callback_url=urljoin(str(request.base_url), CALL_BACK_PATH),
-        )
-    )
-    resp.set_cookie(
-        STATE_COOKIE_NAME,
-        state,
-        httponly=True,
-        secure=not CONFIG.DEV_MODE,
-        samesite='lax',
-        path='/api/auth/oidc/callback',
-    )
-    return resp
+oauth = OAuth()
+oauth.register(
+    name='oidc',
+    client_id=CONFIG.OIDC_CLIENT_ID,
+    client_secret=CONFIG.OIDC_CLIENT_SECRET,
+    server_metadata_url=CONFIG.OIDC_DISCOVERY_URL,
+    client_kwargs={'scope': 'openid profile email'},
+)
 
 
-@router.get('/callback')
+@oidc_app.get(
+    '/',
+    summary='Initiate OIDC Authentication',
+    description='Redirects to OIDC provider for authentication',
+    tags=['oidc'],
+)
+async def oidc(request: Request) -> RedirectResponse:
+    callback_url = f'{request.base_url}api/auth/oidc/callback'
+    return await oauth.oidc.authorize_redirect(request, callback_url)
+
+
+@oidc_app.get(
+    '/callback',
+    summary='OIDC Authentication Callback',
+    description='Handles OIDC provider callback and completes authentication',
+    tags=['oidc'],
+)
 async def oidc_callback(
-    request: Request,
-    response: Response,
-    state: str,
-    state_cookie: str = Cookie(None, alias=STATE_COOKIE_NAME),
-    auth: AuthJWT = Depends(),
+    request: Request, auth: AuthJWT = Depends()
 ) -> RedirectResponse:
-    if not CONFIG.OIDC_ENABLED:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_IMPLEMENTED,
-            detail='OIDC is not enabled',
-        )
-    if state_cookie is None:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='State cookie is missing',
-        )
-    response.delete_cookie(STATE_COOKIE_NAME)
-    if state != state_cookie:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='State mismatch',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
     try:
-        state_data = _decode_state(request, state)
-    except StateCheckException as err:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail=err.detail,
-            headers={'set-cookie': response.headers['set-cookie']},
-        ) from err
-    email = await auth_with_oidc_token(
-        code=request.query_params.get('code'),
-        client_id=CONFIG.OIDC_CLIENT_ID,
-        client_secret=CONFIG.OIDC_CLIENT_SECRET,
-        discovery_url=CONFIG.OIDC_DISCOVERY_URL,
-        callback_url=urljoin(str(request.base_url), CALL_BACK_PATH),
-    )
-    if not email:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Invalid token',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
+        token: dict[str, Any] = await oauth.oidc.authorize_access_token(request)
+        user_info: dict[str, Any] = token.get(
+            'userinfo'
+        ) or await oauth.oidc.get_userinfo(token)
+        email: str | None = user_info.get('email') or user_info.get('sub')
+        if not email:
+            raise ValueError('No email found')
+    except Exception as err:
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid token') from err
+
     if not (user := await m.User.find_one(m.User.email == email)):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='User not found',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'User not found')
+
     if user.mfa_enabled:
-        resp = RedirectResponse(CONFIG.OIDC_MFA_PAGE)
-        state_data['user'] = user.email
-        state = jwt.encode(
-            state_data,
-            CONFIG.JWT_SECRET,
-            algorithm='HS256',
-        )
-        resp.set_cookie(
-            STATE_COOKIE_NAME,
-            state,
-            httponly=True,
-            secure=not CONFIG.DEV_MODE,
-            samesite='lax',
-            path='/api/auth/oidc/mfa',
-        )
-        return resp
-    return gen_authorized_response(user, auth, redirect_url=state_data.get('redirect'))
+        request.session['mfa_user_email'] = user.email
+        request.session['redirect_url'] = request.query_params.get('redirect')
+        return RedirectResponse(CONFIG.OIDC_MFA_PAGE)
+
+    redirect_url: str = request.query_params.get('redirect') or '/'
+    return _create_auth_response(user, auth, redirect_url)
 
 
-@router.post('/mfa')
+@oidc_app.post(
+    '/mfa',
+    summary='OIDC MFA Verification',
+    description='Verifies multi-factor authentication code for OIDC login',
+    tags=['oidc'],
+)
 async def mfa_check(
     request: Request,
-    response: Response,
     mfa_totp_code: str = Form(...),
-    state_cookie: str = Cookie(None, alias=STATE_COOKIE_NAME),
     auth: AuthJWT = Depends(),
 ) -> RedirectResponse:
-    if not CONFIG.OIDC_ENABLED:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_IMPLEMENTED,
-            detail='OIDC is not enabled',
-        )
-    if state_cookie is None:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='State cookie is missing',
-        )
-    response.delete_cookie(STATE_COOKIE_NAME)
-    mfa_code = mfa_totp_code.strip()
-    if not mfa_code:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='MFA code is empty',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
-    try:
-        state_data = _decode_state(request, state_cookie)
-    except StateCheckException as err:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail=err.detail,
-            headers={'set-cookie': response.headers['set-cookie']},
-        ) from err
-    email = state_data.get('user')
-    if not email:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Invalid token',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
+    if not (mfa_code := mfa_totp_code.strip()):
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'MFA code is empty')
+
+    if not (email := request.session.get('mfa_user_email')):
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid session')
+
     if not (user := await m.User.find_one(m.User.email == email)):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='User not found',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'User not found')
+
     if not user.check_totp(mfa_code):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='MFA failed',
-            headers={'set-cookie': response.headers['set-cookie']},
-        )
-    return gen_authorized_response(
-        user, auth, redirect_url=state_data.get('redirect'), mfa_passed=True
-    )
+        raise HTTPException(HTTPStatus.UNAUTHORIZED, 'MFA failed')
+
+    redirect_url: str = request.session.get('redirect_url') or '/'
+    request.session.clear()
+
+    return _create_auth_response(user, auth, redirect_url, mfa_passed=True)
 
 
-def gen_authorized_response(
+def _create_auth_response(
     user: m.User,
     auth: AuthJWT,
-    redirect_url: str | None = None,
+    redirect_url: str = '/',
     mfa_passed: bool = False,
 ) -> RedirectResponse:
-    access_token = auth.create_access_token(
+    user_claims: dict[str, bool] = {'mfa_passed': mfa_passed}
+
+    access_token: str = auth.create_access_token(
         subject=user.email,
         algorithm='HS256',
         expires_time=CONFIG.ACCESS_TOKEN_EXPIRES,
-        user_claims={
-            'mfa_passed': mfa_passed,
-        },
+        user_claims=user_claims,
     )
-    refresh_expires = CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES
-    refresh_token = auth.create_refresh_token(
+    refresh_token: str = auth.create_refresh_token(
         subject=user.email,
         algorithm='HS256',
         expires_time=CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES,
-        user_claims={
-            'mfa_passed': mfa_passed,
-        },
+        user_claims=user_claims,
     )
-    resp = RedirectResponse(
-        redirect_url or '/',
-        status_code=HTTPStatus.FOUND,
-    )
-    resp.delete_cookie(STATE_COOKIE_NAME)
+
+    resp = RedirectResponse(redirect_url, status_code=HTTPStatus.FOUND)
     auth.set_access_cookies(
         access_token, max_age=CONFIG.ACCESS_TOKEN_EXPIRES, response=resp
     )
-    auth.set_refresh_cookies(refresh_token, max_age=refresh_expires, response=resp)
+    auth.set_refresh_cookies(
+        refresh_token, max_age=CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES, response=resp
+    )
     return resp
-
-
-def _gen_state_data(req: Request) -> dict:
-    now = time.time()
-    data = {
-        'ip': req.client.host,
-        'not_before': now - STATE_NOT_BEFORE_DELTA,
-        'expires': now + STATE_TTL,
-    }
-    if url := req.query_params.get('redirect'):
-        data['redirect'] = url
-    return data
-
-
-class StateCheckException(Exception):
-    detail: str
-
-    def __init__(self, detail: str) -> None:
-        self.detail = detail
-
-
-def _decode_state(req: Request, state: str) -> dict:
-    try:
-        data = jwt.decode(
-            state,
-            CONFIG.JWT_SECRET,
-            algorithms=['HS256'],
-        )
-    except jwt.PyJWTError as err:
-        raise StateCheckException(
-            detail='Invalid state',
-        ) from err
-    if not isinstance(data, dict):
-        raise StateCheckException(
-            detail='Invalid state',
-        )
-    if not (ip := data.get('ip')) or ip != req.client.host:
-        raise StateCheckException(
-            detail='State mismatch',
-        )
-    now = time.time()
-    if not (not_before := data.get('not_before')) or not_before > now:
-        raise StateCheckException(
-            detail='State not yet valid',
-        )
-    if not (expires := data.get('expires')) or expires < now:
-        raise StateCheckException(
-            detail='State expired',
-        )
-    return data

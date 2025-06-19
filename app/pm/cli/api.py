@@ -41,17 +41,57 @@ def gen_openapi_schema() -> dict:
     envs = {
         # this secret is used for generating the openapi schema only
         'SNAIL_ORBIT_JWT_SECRET': 'nosec',  # nosec: hardcoded_password_string
+        'SNAIL_ORBIT_OIDC_ENABLED': 'true',
+        'SNAIL_ORBIT_OIDC_CLIENT_ID': 'dummy',
+        'SNAIL_ORBIT_OIDC_CLIENT_SECRET': 'dummy',
+        'SNAIL_ORBIT_OIDC_DISCOVERY_URL': 'https://example.com/.well-known/openid-configuration',
+        'SNAIL_ORBIT_OIDC_SESSION_SECRET': 'dummy',
     }
     with set_envs(envs):
         from pm.api.app import app
 
-        return get_openapi(
+        schema = get_openapi(
             title=app.title,
             version=app.version,
             openapi_version=app.openapi_version,
             description=app.description,
             routes=app.routes,
         )
+
+        # Include all mounted FastAPI sub-apps
+        from fastapi import FastAPI
+
+        for route in app.routes:
+            if (
+                hasattr(route, 'app')
+                and hasattr(route, 'path')
+                and isinstance(route.app, FastAPI)
+            ):
+                sub_app = route.app
+                mount_path = route.path.rstrip('/')
+
+                # Generate schema for the sub-app
+                sub_schema = get_openapi(
+                    title=sub_app.title or 'Sub App',
+                    version=sub_app.version or '1.0.0',
+                    routes=sub_app.routes,
+                )
+
+                # Add sub-app paths with proper prefix
+                for path, methods in sub_schema.get('paths', {}).items():
+                    prefixed_path = mount_path + ('' if path == '/' else path)
+                    schema['paths'][prefixed_path] = methods
+
+                # Merge components if they exist
+                if 'components' in sub_schema:
+                    if 'components' not in schema:
+                        schema['components'] = {}
+                    for component_type, components in sub_schema['components'].items():
+                        if component_type not in schema['components']:
+                            schema['components'][component_type] = {}
+                        schema['components'][component_type].update(components)
+
+        return schema
 
 
 def gen_openapi(args: argparse.Namespace) -> None:

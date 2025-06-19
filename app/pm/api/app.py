@@ -126,3 +126,8 @@ from pm.api.routes import api_router, events_router  # noqa
 
 app.include_router(api_router)
 app.include_router(events_router)
+
+if CONFIG.OIDC_ENABLED:
+    from pm.api.routes.api.auth.oidc import oidc_app
+
+    app.mount('/api/auth/oidc', oidc_app)

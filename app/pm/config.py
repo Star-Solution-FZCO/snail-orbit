@@ -204,6 +204,18 @@ CONFIG = Dynaconf(
             when=Validator('OIDC_ENABLED', condition=bool),
         ),
         Validator(
+            'OIDC_REQUEST_TIMEOUT',
+            cast=int,
+            default=30,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
+        Validator(
+            'OIDC_SESSION_SECRET',
+            is_type_of=str,
+            must_exist=True,
+            when=Validator('OIDC_ENABLED', condition=bool),
+        ),
+        Validator(
             'TASKS_BROKER_URL',
             cast=str,
             default='',

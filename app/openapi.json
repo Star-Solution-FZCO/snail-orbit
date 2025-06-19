@@ -10696,130 +10696,6 @@
         }
       }
     },
-    "/api/auth/oidc": {
-      "get": {
-        "tags": [
-          "api",
-          "auth",
-          "oidc"
-        ],
-        "summary": "Oidc",
-        "operationId": "oidc_api_auth_oidc_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/oidc/callback": {
-      "get": {
-        "tags": [
-          "api",
-          "auth",
-          "oidc"
-        ],
-        "summary": "Oidc Callback",
-        "operationId": "oidc_callback_api_auth_oidc_callback_get",
-        "parameters": [
-          {
-            "name": "state",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "State"
-            }
-          },
-          {
-            "name": "oidc_state",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Oidc State"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/oidc/mfa": {
-      "post": {
-        "tags": [
-          "api",
-          "auth",
-          "oidc"
-        ],
-        "summary": "Mfa Check",
-        "operationId": "mfa_check_api_auth_oidc_mfa_post",
-        "parameters": [
-          {
-            "name": "oidc_state",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Oidc State"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_mfa_check_api_auth_oidc_mfa_post"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -11197,6 +11073,86 @@
             "description": "Comma-separated list of values"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc": {
+      "get": {
+        "tags": [
+          "oidc"
+        ],
+        "summary": "Initiate OIDC Authentication",
+        "description": "Redirects to OIDC provider for authentication",
+        "operationId": "oidc__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc/callback": {
+      "get": {
+        "tags": [
+          "oidc"
+        ],
+        "summary": "OIDC Authentication Callback",
+        "description": "Handles OIDC provider callback and completes authentication",
+        "operationId": "oidc_callback_callback_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc/mfa": {
+      "post": {
+        "tags": [
+          "oidc"
+        ],
+        "summary": "OIDC MFA Verification",
+        "description": "Verifies multi-factor authentication code for OIDC login",
+        "operationId": "mfa_check_mfa_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_mfa_check_mfa_post"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -13244,19 +13200,6 @@
         },
         "type": "object",
         "title": "BoardUpdate"
-      },
-      "Body_mfa_check_api_auth_oidc_mfa_post": {
-        "properties": {
-          "mfa_totp_code": {
-            "type": "string",
-            "title": "Mfa Totp Code"
-          }
-        },
-        "type": "object",
-        "required": [
-          "mfa_totp_code"
-        ],
-        "title": "Body_mfa_check_api_auth_oidc_mfa_post"
       },
       "Body_upload_attachment_api_v1_files_post": {
         "properties": {
@@ -22570,6 +22513,19 @@
           "granted"
         ],
         "title": "PermissionOutput"
+      },
+      "Body_mfa_check_mfa_post": {
+        "properties": {
+          "mfa_totp_code": {
+            "type": "string",
+            "title": "Mfa Totp Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mfa_totp_code"
+        ],
+        "title": "Body_mfa_check_mfa_post"
       }
     },
     "securitySchemes": {
