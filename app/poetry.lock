@@ -3698,14 +3698,14 @@ asymmetric = ["cryptography (>=2.6)"]
 
 [[package]]
 name = "starsol-mongo-migrate"
-version = "0.1.0"
+version = "0.2.0"
 description = "MongoDB migration tool"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "starsol_mongo_migrate-0.1.0-py3-none-any.whl", hash = "sha256:e39d602bca9b0d7a5139b6cb00351dcc0cc751e0125f3d824eb42bac50f14f7f"},
-    {file = "starsol_mongo_migrate-0.1.0.tar.gz", hash = "sha256:4916b0408fe43b045f45378b28b1d28de79991d456140cfd6c178655f30a7c81"},
+    {file = "starsol_mongo_migrate-0.2.0-py3-none-any.whl", hash = "sha256:26d5cf89c9bd4ebf24dd02c9b863916a6175a56e7d6741f02d44571ae7575551"},
+    {file = "starsol_mongo_migrate-0.2.0.tar.gz", hash = "sha256:8932f29bea9e314c9076a00bf4d6a4c6eefaa9749ce1e446f9541d4f2fb45af9"},
 ]
 
 [package.dependencies]
@@ -5214,4 +5214,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "b12f9a33adc19773547fd1be3814e9b8c14bd6b22fa43d3b69a028fb22b0af25"
+content-hash = "2f096fa5488e3aa0e25e438811cacf8a913327a6ad1ed4829c8382ff5b23d674"

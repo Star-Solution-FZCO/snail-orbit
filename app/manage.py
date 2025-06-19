@@ -3,6 +3,7 @@ import asyncio
 import sys
 
 from pm.cli.api import add_api_args
+from pm.cli.db import add_db_args
 from pm.cli.ocr import add_ocr_args
 from pm.cli.tasks import add_tasks_args
 from pm.cli.user import add_user_args
@@ -20,6 +21,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(required=True)
     add_api_args(subparsers.add_parser('api', help='API server commands'))
+    add_db_args(subparsers.add_parser('db', help='Database migration commands'))
     add_ocr_args(subparsers.add_parser('ocr', help='OCR worker commands'))
     add_user_args(subparsers.add_parser('user', help='User commands'))
     add_workflow_args(subparsers.add_parser('workflow', help='Workflow commands'))
