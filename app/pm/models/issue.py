@@ -150,6 +150,7 @@ class Issue(DocumentWithReadOnlyProjection):
                 [
                     ('subject', pymongo.TEXT),
                     ('text', pymongo.TEXT),
+                    ('aliases', pymongo.TEXT),
                     ('attachments.ocr_text', pymongo.TEXT),
                     ('comments.text', pymongo.TEXT),
                 ],

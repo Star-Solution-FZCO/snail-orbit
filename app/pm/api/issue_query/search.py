@@ -181,15 +181,17 @@ class MongoQueryTransformer(Transformer):
 
     def attribute_condition(self, args):
         field, value = args
-        if isinstance(value, str) and field in ('project', 'subject', 'tag', 'id'):
-            value = self.escape_regex(value)
         if field == 'project':
             if value is None:
                 return {'project.slug': None}
+            if isinstance(value, str):
+                value = self.escape_regex(value)
             return {'project.slug': {'$regex': f'^{value}$', '$options': 'i'}}
         if field == 'subject':
             if value is None:
                 return {'subject': None}
+            if isinstance(value, str):
+                value = self.escape_regex(value)
             return {'subject': {'$regex': str(value), '$options': 'i'}}
         if field == 'id':
             if value is None:
@@ -198,6 +200,8 @@ class MongoQueryTransformer(Transformer):
                 return {'_id': PydanticObjectId(value)}
             except InvalidId:
                 pass
+            if isinstance(value, str):
+                value = self.escape_regex(value)
             return {'aliases': {'$regex': str(value), '$options': 'i'}}
         if field == 'text':
             if value is None:
@@ -217,6 +221,8 @@ class MongoQueryTransformer(Transformer):
         if field == 'tag':
             if value is None:
                 return {'tags': []}
+            if isinstance(value, str):
+                value = self.escape_regex(value)
             return {'tags.name': {'$regex': f'^{value}$', '$options': 'i'}}
         if field in ('updated_by', 'created_by'):
             return {f'{field}.email': value}
