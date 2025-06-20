@@ -1,6 +1,7 @@
 import type { DragDropEventHandlers } from "@dnd-kit/react";
 import { DragDropProvider } from "@dnd-kit/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { notEmpty } from "../../utils/helpers/notEmpty";
 import { Container } from "./components/container";
 import { Header } from "./components/header";
 import { HeaderStyledContainer } from "./components/header/header.styles";
@@ -37,7 +38,7 @@ export const Kanban = <I, S, C>({
             const target = event.operation.target;
             if (!target || !target.data) return;
             const data = target.data as ItemData;
-            if (!data.itemIndex) return;
+            if (!notEmpty(data.itemIndex)) return;
             draggedItem.current =
                 items[data.swimLaneIndex][data.columnIndex][data.itemIndex];
             draggedItemData.current = data;

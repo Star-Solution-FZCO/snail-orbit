@@ -1,3 +1,4 @@
+import { skipToken } from "@reduxjs/toolkit/query";
 import deepmerge from "deepmerge";
 import { useCallback } from "react";
 import { issueApi, useAppDispatch } from "shared/model";
@@ -11,8 +12,13 @@ import {
 } from "shared/utils/crypto/crypto";
 import { useProjectData } from "./use_project_data";
 
-export const useIssueOperations = (params: { issueId: string }) => {
-    const { issueId } = params;
+type Params = {
+    issueId: string;
+    issue?: IssueT;
+};
+
+export const useIssueOperations = (params: Params) => {
+    const { issueId, issue: outerIssue } = params;
 
     const dispatch = useAppDispatch();
 
@@ -20,18 +26,16 @@ export const useIssueOperations = (params: { issueId: string }) => {
         data: issueData,
         isLoading: isIssueLoading,
         error: issueError,
-    } = issueApi.useGetIssueQuery(issueId);
+    } = issueApi.useGetIssueQuery(outerIssue ? skipToken : issueId);
 
-    const issue = issueData?.payload;
+    const issue = outerIssue || issueData?.payload;
 
     const {
         isLoading: isProjectLoading,
         isDescriptionEncrypted,
         encryptionKeys,
         error: projectError,
-    } = useProjectData({
-        projectId: issue?.project.id,
-    });
+    } = useProjectData({ projectId: issue?.project.id });
 
     const [updateIssue, { isLoading: isIssueUpdateLoading }] =
         issueApi.useUpdateIssueMutation();

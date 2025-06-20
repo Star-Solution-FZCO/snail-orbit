@@ -19,6 +19,7 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { IssueLink } from "shared/ui/issue_link";
+import { notEmpty } from "shared/utils/helpers/notEmpty";
 import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser/custom_fields_chip_parser";
 
@@ -38,7 +39,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
             projectApi.useGetProjectQuery(issue.project.id);
 
         const { updateIssueCache, updateIssue, isLoading } = useIssueOperations(
-            { issueId: id_readable },
+            { issueId: id_readable, issue },
         );
 
         const colors = useMemo(() => {
@@ -56,15 +57,19 @@ export const AgileCard: FC<IssueCardProps> = memo(
 
         const fields: CustomFieldWithValueT[] = useMemo(() => {
             const projectFields = projectData?.payload.custom_fields || [];
-            const cardFieldIds = new Set(cardFields.map((el) => el.gid));
+            const projectFieldMap = new Map(
+                projectFields.map((el) => [el.gid, el]),
+            );
 
-            return projectFields
-                .filter((field) => cardFieldIds.has(field.gid))
-                .map((projectField) => {
-                    const targetIssueField = issue.fields[projectField.name];
+            return cardFields
+                .map((field) => {
+                    const targetIssueField = issue.fields[field.name];
                     if (targetIssueField) return targetIssueField;
+                    const projectField = projectFieldMap.get(field.gid);
+                    if (!projectField) return null;
                     return { ...projectField, value: null };
-                });
+                })
+                .filter(notEmpty);
         }, [cardFields, issue.fields, projectData?.payload.custom_fields]);
 
         const onFieldUpdate = (field: CustomFieldWithValueT) => {
