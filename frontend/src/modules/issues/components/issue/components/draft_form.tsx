@@ -6,6 +6,7 @@ import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor } from "shared/ui";
 import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
+import { MDPreview } from "./md_preview";
 
 export type DraftFormProps = {
     draft: IssueDraftT;
@@ -92,6 +93,8 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                     {t("cancel")}
                 </Button>
             </Box>
+
+            <MDPreview content={text} />
         </>
     );
 };

@@ -53,8 +53,9 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
             attachments,
         })
             .then(() => {
-                setText("");
                 setMode("view");
+                setText("");
+                setSpentTime(0);
             })
             .catch(toastApiError);
     };
@@ -159,11 +160,11 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
                         <MDEditor
                             value={text}
                             onChange={(value) => setText(value || "")}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
                             placeholder={t("issues.comments.write")}
                             autoFocus
                             autoHeight
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
                         />
 
                         <Box display="flex" gap={1}>
