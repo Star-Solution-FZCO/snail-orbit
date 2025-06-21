@@ -3,6 +3,7 @@ import { Autocomplete, Box, Checkbox, Stack } from "@mui/material";
 import type { ComponentProps, ReactNode, SyntheticEvent } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "../../link";
 import {
     BottomSlot,
     PopperComponent,
@@ -22,6 +23,7 @@ export type FormAutocompleteContentProps<
     getOptionLeftAdornment?: (el: Value) => ReactNode;
     getOptionRightAdornment?: (el: Value) => ReactNode;
     getOptionDescription?: (el: Value) => ReactNode;
+    getOptionLink?: (el: Value) => string;
 };
 
 export const FormAutocompleteContent = <
@@ -39,6 +41,7 @@ export const FormAutocompleteContent = <
     getOptionRightAdornment,
     getOptionDescription,
     getOptionLabel,
+    getOptionLink,
     ...props
 }: FormAutocompleteContentProps<Value, Multiple, DisableClearable>) => {
     const { t } = useTranslation();
@@ -77,12 +80,17 @@ export const FormAutocompleteContent = <
                 renderOption={(props, option, { selected }) => {
                     const { key, ...optionProps } = props;
                     return (
-                        <li key={key} {...optionProps}>
+                        <Box component="li" key={key} {...optionProps}>
                             <Stack
                                 direction="row"
                                 justifyContent="space-between"
-                                sx={{ width: 1 }}
+                                sx={{
+                                    width: 1,
+                                    textDecoration: "none",
+                                }}
                                 alignItems="center"
+                                component={getOptionLink ? Link : "div"}
+                                to={getOptionLink?.(option)}
                             >
                                 <Stack direction="row" gap={0.5}>
                                     {multiple ? (
@@ -117,7 +125,7 @@ export const FormAutocompleteContent = <
                                 </Stack>
                                 {getOptionRightAdornment?.(option)}
                             </Stack>
-                        </li>
+                        </Box>
                     );
                 }}
                 options={options}

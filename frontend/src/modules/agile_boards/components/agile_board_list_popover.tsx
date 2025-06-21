@@ -1,4 +1,5 @@
 import { Button } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import type { MouseEventHandler } from "react";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,19 +7,19 @@ import { agileBoardApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
 import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { useListQueryParams } from "shared/utils";
-import { StarButton } from "../../../shared/ui";
+import { Link, StarButton } from "../../../shared/ui";
 
 type TagListPopoverProps = {
     open: boolean;
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
     onSelect?: (tag: AgileBoardT) => void;
-    onGoToListClick?: () => void;
 };
 
 export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
-    const { open, anchorEl, onClose, onSelect, onGoToListClick } = props;
+    const { open, anchorEl, onClose, onSelect } = props;
     const [params] = useListQueryParams();
+    const navigate = useNavigate();
 
     const { t } = useTranslation();
 
@@ -56,7 +57,7 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
 
     useEffect(() => {
         if (open) fetchTags(params);
-    }, [open, params]);
+    }, [fetchTags, open, params]);
 
     const handleChange = useCallback(
         (value: AgileBoardT | AgileBoardT[] | null) => {
@@ -66,15 +67,21 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
         [onSelect],
     );
 
+    const onGoToListClick = useCallback(() => {
+        navigate({ to: "/agiles/list" });
+    }, [navigate]);
+
     const bottomSlot = useMemo(() => {
         if (!onGoToListClick) return null;
 
         return (
-            <Button fullWidth size="small" onClick={onGoToListClick}>
-                {t("agileBoardListPopover.goToList")}
-            </Button>
+            <Link to="/agiles/list">
+                <Button fullWidth size="small" onClick={onGoToListClick}>
+                    {t("agileBoardListPopover.goToList")}
+                </Button>
+            </Link>
         );
-    }, [onGoToListClick]);
+    }, [onGoToListClick, t]);
 
     return (
         <>
@@ -94,6 +101,7 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
                 getOptionLabel={(el) => el.name}
                 getOptionRightAdornment={rightAdornment}
                 getOptionDescription={(el) => el.description}
+                getOptionLink={(el) => `/agiles/${el.id}`}
             />
         </>
     );

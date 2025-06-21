@@ -158,7 +158,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
             direction="horizontal"
             autoSaveId="agileBoardView"
             id="agileBoardView"
-            style={{ overflow: "visible" }}
+            sx={{ overflow: "visible" }}
         >
             <Stack
                 direction="column"
@@ -169,7 +169,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                 id="mainContent"
                 maxWidth="100dvw"
                 overflow="auto"
-                style={{ overflow: "visible" }}
+                sx={{ overflow: "visible" }}
             >
                 <Box px={4}>
                     <Stack
@@ -181,7 +181,6 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                         <AgileBoardSelect
                             value={agileBoard}
                             onChange={handleBoardSelect}
-                            onGoToListClick={goToFullListHandler}
                         />
 
                         <TextField
