@@ -1,11 +1,12 @@
 import type { DragDropEventHandlers } from "@dnd-kit/react";
-import { DragDropProvider } from "@dnd-kit/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notEmpty } from "../../utils/helpers/notEmpty";
 import { Container } from "./components/container";
 import { Header } from "./components/header";
 import { HeaderStyledContainer } from "./components/header/header.styles";
 import Item from "./components/item";
+import { ItemStyled } from "./components/item/Item.styles";
 import { SwimLine } from "./components/swim-line";
 import { makeCopy, move, sensors } from "./kanban.helper";
 import type { ItemData, KanbanItems, KanbanProps } from "./kanban.types";
@@ -55,6 +56,18 @@ export const Kanban = <I, S, C>({
         [],
     );
 
+    const [perColumnCounters, perSwimLaneCounter] = useMemo(() => {
+        const columnsRes = new Array(columns.length).fill(0);
+        const swimLanesRes = new Array(swimLanes.length).fill(0);
+        items.forEach((swimLane, sIdx) =>
+            swimLane.forEach((column, idx) => {
+                columnsRes[idx] += column.length;
+                swimLanesRes[sIdx] += column.length;
+            }),
+        );
+        return [columnsRes, swimLanesRes];
+    }, [columns.length, items, swimLanes.length]);
+
     const handleDragEnd = useCallback<DragDropEventHandlers["onDragEnd"]>(
         (event) => {
             const { operation, canceled } = event;
@@ -102,14 +115,14 @@ export const Kanban = <I, S, C>({
     );
 
     return (
-        <DragDropProvider
+        <DragDropProvider<ItemData>
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
             <HeaderStyledContainer>
-                {columns.map((column) => (
+                {columns.map((column, idx) => (
                     <Header
                         key={getKey({ type: "column", value: column })}
                         label={getLabel({ type: "column", value: column })}
@@ -123,6 +136,7 @@ export const Kanban = <I, S, C>({
                                 value,
                             )
                         }
+                        issueCount={perColumnCounters[idx]}
                     />
                 ))}
             </HeaderStyledContainer>
@@ -140,6 +154,7 @@ export const Kanban = <I, S, C>({
                             value,
                         )
                     }
+                    issueCount={perSwimLaneCounter[swimLaneIdx]}
                 >
                     {columns.map((column, columnIdx) => (
                         <Container
@@ -186,6 +201,20 @@ export const Kanban = <I, S, C>({
                     ))}
                 </SwimLine>
             ))}
+            <DragOverlay>
+                {draggedItem.current ? (
+                    <ItemStyled>
+                        {ItemContent ? (
+                            <ItemContent data={draggedItem.current} />
+                        ) : (
+                            getKey({
+                                type: "item",
+                                value: draggedItem.current,
+                            })
+                        )}
+                    </ItemStyled>
+                ) : null}
+            </DragOverlay>
         </DragDropProvider>
     );
 };

@@ -62,8 +62,9 @@ export const StyledSwimLineList = styled("ul")(({ theme }) => ({
 
 export const HeaderStyled = styled("div")(({ theme }) => ({
     display: "flex",
+    flexDirection: "row",
     padding: theme.spacing(1),
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     backgroundColor: theme.palette.background.board,
 }));

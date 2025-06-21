@@ -7,7 +7,7 @@ export const HeaderStyled = styled("div", {
     padding: theme.spacing(1),
     gap: theme.spacing(1),
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     backgroundColor: theme.palette.background.board,
     flexGrow: isClosed ? 0 : 1,
     borderRight: "1px solid",

@@ -17,19 +17,19 @@ const ItemComponent = ({
         [columnIndex, swimLaneIndex],
     );
 
-    const { ref } = useSortable({
+    const { ref, isDragging } = useSortable({
         id: id,
         index: itemIndex,
         group: groupId,
         accept: ["item"],
         type: "item",
-        feedback: "clone",
+        feedback: "default",
         collisionPriority: CollisionPriority.Low,
         data: { itemIndex, columnIndex, swimLaneIndex },
     });
 
     return (
-        <ItemStyled ref={ref} tabIndex={0}>
+        <ItemStyled ref={ref} tabIndex={0} isDragging={isDragging}>
             {children}
         </ItemStyled>
     );

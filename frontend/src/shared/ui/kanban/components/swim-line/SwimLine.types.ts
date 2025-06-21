@@ -8,4 +8,5 @@ export type SwimLineProps = {
     onClosedChange?: (value: boolean) => void;
     shadow?: boolean;
     sx?: SxProps;
+    issueCount?: number;
 };

@@ -1,4 +1,6 @@
+import { Typography } from "@mui/material";
 import type { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronButton } from "../ChevronButton";
 import {
     HeaderStyled,
@@ -13,18 +15,28 @@ export const SwimLine: FC<SwimLineProps> = ({
     shadow,
     isClosed,
     onClosedChange,
+    issueCount,
     ...props
 }) => {
+    const { t } = useTranslation();
+
     return (
         <StyledSwimLine {...props} shadow={shadow}>
-            <HeaderStyled sx={{ display: !label ? "none" : "initial" }}>
-                {isClosed !== undefined && (
-                    <ChevronButton
-                        open={isClosed}
-                        onClick={() => onClosedChange?.(!isClosed)}
-                    />
-                )}{" "}
-                {label ?? null}
+            <HeaderStyled sx={!label ? { display: "none" } : undefined}>
+                <span>
+                    {isClosed !== undefined && (
+                        <ChevronButton
+                            open={isClosed}
+                            onClick={() => onClosedChange?.(!isClosed)}
+                        />
+                    )}{" "}
+                    {label ?? null}
+                </span>
+                {issueCount !== undefined ? (
+                    <Typography component="span" variant="caption">
+                        {`${t("Issues")} ${issueCount}`}
+                    </Typography>
+                ) : null}
             </HeaderStyled>
             {isClosed === undefined || !isClosed ? (
                 <StyledSwimLineList>{children}</StyledSwimLineList>
