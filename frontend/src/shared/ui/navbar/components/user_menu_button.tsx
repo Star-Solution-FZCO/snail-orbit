@@ -13,6 +13,7 @@ import {
     useAppSelector,
 } from "shared/model";
 import { About } from "../../about";
+import { Link } from "../../link";
 
 export const UserMenuButton = memo(() => {
     const dispatch = useAppDispatch();
@@ -45,12 +46,19 @@ export const UserMenuButton = memo(() => {
 
     return (
         <>
-            <Avatar
-                sx={{ width: 32, height: 32, cursor: "pointer" }}
-                src={user?.avatar}
-                variant="rounded"
-                {...bindTrigger(popupState)}
-            />
+            <Link to="/profile">
+                <Avatar
+                    sx={{ width: 32, height: 32, cursor: "pointer" }}
+                    src={user?.avatar}
+                    variant="rounded"
+                    {...bindTrigger(popupState)}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        bindTrigger(popupState).onClick(e);
+                    }}
+                />
+            </Link>
 
             <Menu
                 anchorOrigin={{

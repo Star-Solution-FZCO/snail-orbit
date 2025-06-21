@@ -13,6 +13,7 @@ type DraftViewProps = {
     onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueDraftT>) => void;
     onCreateIssue?: () => Promise<void>;
+    onGoBack?: () => void;
     loading?: boolean;
 };
 
@@ -23,6 +24,7 @@ export const DraftView: FC<DraftViewProps> = (props) => {
         onUpdateDraft,
         onUpdateCache,
         onCreateIssue,
+        onGoBack,
         loading,
     } = props;
 
@@ -34,6 +36,7 @@ export const DraftView: FC<DraftViewProps> = (props) => {
                     loading={loading}
                     onUpdateDraft={onUpdateDraft}
                     onCreateIssue={onCreateIssue}
+                    onCancel={onGoBack}
                 />
 
                 <DraftAttachments

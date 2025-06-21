@@ -41,7 +41,7 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
         draft?.project?.id ?? skipToken,
     );
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
+        <Dialog open={open} fullWidth maxWidth="lg">
             <DialogContent
                 sx={(theme) => ({
                     padding: 0,
@@ -65,6 +65,7 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
                             draft={draft}
                             onUpdateDraft={onUpdateDraft}
                             onCreateIssue={onCreateIssue}
+                            onCancel={onClose}
                             loading={loading}
                         />
 
@@ -102,8 +103,6 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
                         />
                     </FieldOffside>
                 </Stack>
-
-                {/*<FilePreview issue={issue} isDraft={isDraft} />*/}
             </DialogContent>
         </Dialog>
     );

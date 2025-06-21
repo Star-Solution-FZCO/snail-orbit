@@ -1,5 +1,4 @@
 import { Box, Button, debounce, TextField } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,14 +11,14 @@ export type DraftFormProps = {
     draft: IssueDraftT;
     onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
     onCreateIssue?: () => Promise<void>;
+    onCancel?: () => void;
     loading?: boolean;
 };
 
 export const DraftForm: FC<DraftFormProps> = (props) => {
-    const { draft, onCreateIssue, onUpdateDraft, loading } = props;
+    const { draft, onCreateIssue, onUpdateDraft, loading, onCancel } = props;
 
     const { t } = useTranslation();
-    const navigate = useNavigate();
 
     const { getDraftText } = useDraftOperations({ draftId: draft.id });
 
@@ -49,10 +48,6 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
         }, 500),
         [],
     );
-
-    const handleClickCancel = () => {
-        navigate({ to: "/issues" });
-    };
 
     useEffect(() => {
         debouncedUpdate(text, subject);
@@ -89,7 +84,7 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                 </Button>
 
                 <Button
-                    onClick={handleClickCancel}
+                    onClick={onCancel}
                     color="error"
                     variant="outlined"
                     size="small"

@@ -1,6 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,8 @@ type IssueDraftProps = {
 const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const canGoBack = useCanGoBack();
+    const router = useRouter();
     const { setAction } = useNavbarSettings();
 
     const {
@@ -83,6 +85,11 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         return () => setAction(null);
     }, [setAction, t]);
 
+    const handleGoBack = () => {
+        if (canGoBack) router.history.back();
+        else navigate({ to: "/issues", replace: true });
+    };
+
     const error = draftError || projectError;
 
     if (error) {
@@ -113,6 +120,7 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
                             project={project}
                             onUpdateCache={updateDraftCache}
                             onCreateIssue={handleCreateIssue}
+                            onGoBack={handleGoBack}
                             loading={
                                 isLoading ||
                                 isDraftUpdateLoading ||

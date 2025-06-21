@@ -25,6 +25,7 @@ export const ItemStyled = styled("li")<ItemStyledProps>(({ theme }) => ({
     fontWeight: theme.typography.fontWeightRegular,
     fontSize: theme.typography.fontSize,
     whiteSpace: "nowrap",
+    borderRadius: theme.shape.borderRadius,
 
     transform: "scale(var(--scale, 1))",
     transition: `box-shadow ${theme.transitions.duration.short} ${theme.transitions.easing.easeOut}`,

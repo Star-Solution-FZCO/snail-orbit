@@ -29,13 +29,13 @@ import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
 import { useEventSubscriptionAutoReFetch } from "../../shared/model/api/events.api";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
+import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";
 import { AgileBoardForm } from "./components/agile_board_form/agile_board_form";
 import { AgileBoardSelect } from "./components/agile_board_select";
 import { BoardViewList } from "./components/board_view_list";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
-import { useViewNavbarSettings } from "./hooks/use-view-navbar-settings";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
 import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
@@ -52,7 +52,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     const { t } = useTranslation();
     const { openIssueModal } = useIssueModalView();
 
-    useViewNavbarSettings();
+    useCreateIssueNavbarSettings();
     useEventSubscriptionAutoReFetch({ boards_ids: [boardId] });
 
     const searchSelectPopoverState = usePopupState({

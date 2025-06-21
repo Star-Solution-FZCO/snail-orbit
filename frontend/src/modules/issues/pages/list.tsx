@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Divider, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
@@ -6,15 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "shared/model";
-import { Link } from "shared/ui";
-import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
-import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { formatErrorMessages, usePaginationParams } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import type { IssueT } from "../../../shared/model/types";
 import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/query_builder/query_builder";
+import { useCreateIssueNavbarSettings } from "../hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "../widgets/modal_view/use_modal_view";
 
 export type IssueListQueryParams = {
@@ -33,8 +30,9 @@ const IssueList: FC<IssueListProps> = (props) => {
 
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { setAction } = useNavbarSettings();
     const { openIssueModal } = useIssueModalView();
+
+    useCreateIssueNavbarSettings();
 
     const [showQueryBuilder, setShowQueryBuilder] = useState<boolean>(false);
 
@@ -68,18 +66,6 @@ const IssueList: FC<IssueListProps> = (props) => {
             ...queryParams,
         }));
     }, [queryParams, setSearch, updateListQueryParams]);
-
-    useEffect(() => {
-        setAction(
-            <Link to="/issues/create">
-                <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("issues.new")}
-                </NavbarActionButton>
-            </Link>,
-        );
-
-        return () => setAction(null);
-    }, [setAction, t]);
 
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {

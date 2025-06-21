@@ -28,9 +28,9 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            updateIssue({ ...formData, id }).catch(toastApiError);
+            updateIssue(formData).catch(toastApiError);
         },
-        [id, updateIssue],
+        [updateIssue],
     );
 
     useEffect(() => {
