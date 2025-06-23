@@ -1012,11 +1012,14 @@ async def _resolve_custom_field_groups(
     results = await m.CustomField.find(
         bo.In(m.CustomField.gid, field_gids), with_children=True
     ).to_list()
-    groups = {m.CustomFieldGroupLink.from_obj(cf) for cf in results}
+
+    groups = {cf.gid: m.CustomFieldGroupLink.from_obj(cf) for cf in results}
+
     if len(groups) != len(field_gids):
-        not_found = set(field_gids) - {g.gid for g in groups}
+        not_found = set(field_gids) - set(groups.keys())
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Fields not found: {not_found}')
-    return list(groups)
+
+    return [groups[gid] for gid in field_gids]
 
 
 async def validate_custom_field_values(
