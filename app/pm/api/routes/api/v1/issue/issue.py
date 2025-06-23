@@ -613,6 +613,12 @@ async def delete_issue(
     )
 
     await obj.delete()
+    await m.Issue.find(
+        {'interlinks': {'$elemMatch': {'issue.id': obj.id}}},
+    ).update(
+        {'$pull': {'interlinks': {'issue.id': obj.id}}},
+    )
+
     task_notify_by_pararam.delay(
         'delete',
         obj.subject,
@@ -825,25 +831,22 @@ async def unlink_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Interlink not found')
 
     target_obj: m.Issue | None = await m.Issue.find_one(m.Issue.id == src_il.issue.id)
-    if not target_obj:
-        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Target issue not found')
-    target_il = next(
-        (il for il in target_obj.interlinks if il.id == interlink_id), None
-    )
-    if not target_il:
-        raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Target interlink not found'
+    target_il = None
+
+    if target_obj:
+        user_ctx.validate_issue_permission(
+            target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+        )
+        target_il = next(
+            (il for il in target_obj.interlinks if il.id == interlink_id), None
         )
 
-    user_ctx.validate_issue_permission(
-        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
-    )
-
     obj.interlinks.remove(src_il)
-    target_obj.interlinks.remove(target_il)
-
     await obj.replace()
-    await target_obj.replace()
+
+    if target_obj and target_il:
+        target_obj.interlinks.remove(target_il)
+        await target_obj.replace()
 
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
