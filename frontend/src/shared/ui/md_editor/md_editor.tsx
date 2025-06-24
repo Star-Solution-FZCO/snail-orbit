@@ -86,7 +86,7 @@ const toolbar = {
             items: ["sourceEditing"],
         },
     ],
-    shouldNotGroupWhenFull: false,
+    shouldNotGroupWhenFull: true,
 };
 
 interface IMDEditorProps {
@@ -172,15 +172,6 @@ const MDEditor: FC<IMDEditorProps> = ({
                 onBlur={handleBlur}
                 onFocus={handleFocus}
                 onReady={(editor: ClassicEditor) => {
-                    editor.editing.view.change((writer: DowncastWriter) => {
-                        const root = editor.editing.view.document.getRoot();
-                        if (root)
-                            writer.setStyle(
-                                "height",
-                                "calc(100% - 40px)",
-                                root,
-                            );
-                    });
                     if (autoFocus) {
                         editor.editing.view.focus();
                     }
@@ -222,6 +213,9 @@ const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
                     color: theme.palette.text.primary,
                     wordBreak: "break-word",
                     fontSize: "0.875rem",
+                    "& code": {
+                        whiteSpace: "pre-wrap",
+                    }
                 },
             })}
         >
