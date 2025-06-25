@@ -48,7 +48,7 @@ from pm.api.views.permission import PermissionOutput
 from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
-from pm.tasks.actions import task_notify_by_pararam
+from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType
 from pm.utils.pydantic_uuid import UUIDStr
@@ -689,7 +689,7 @@ async def move_issue(
         issue.updated_at = now
         issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await issue.replace()
-        await task_notify_by_pararam.kiq(
+        await schedule_batched_notification(
             'update',
             issue.subject,
             issue.id_readable,

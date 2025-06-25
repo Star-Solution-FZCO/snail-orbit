@@ -440,6 +440,13 @@ CONFIG = Dynaconf(
             default=None,
             description='SMTP SSL mode (tls, ssl, or None)',
         ),
+        # Notification batching configuration
+        Validator(
+            'NOTIFICATION_BATCH_DELAY_SECONDS',
+            cast=int,
+            default=30,
+            description='Delay in seconds before sending batched notifications',
+        ),
     ],
 )
 CONFIG.configure()

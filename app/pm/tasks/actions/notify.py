@@ -37,14 +37,29 @@ async def notify_by_pararam(
     project_id: str,
     author: str | None = None,
 ) -> None:
+    logger.info(
+        'Sending notification: issue=%s, action=%s, author=%s, subscribers=%d',
+        issue_id_readable,
+        action,
+        author,
+        len(issue_subscribers),
+    )
+
     if not CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN:
+        logger.warning(
+            'Pararam notification bot token not configured, skipping notification'
+        )
         return
+
     pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
     author_str = f' by {author}' if author else ''
     message = (
         f'Issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]'
         f'({urljoin(CONFIG.PUBLIC_BASE_URL, f"/issues/{issue_id_readable}")}) was {action}d{author_str}.'
     )
+
+    logger.debug('Notification message: %s', message)
+
     recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
     if project := await m.Project.find_one(
         m.Project.id == PydanticObjectId(project_id)
@@ -54,8 +69,25 @@ async def notify_by_pararam(
         u.email
         for u in await m.User.find(bo.In(m.User.id, list(recipients_ids))).to_list()
     }
+
+    logger.info(
+        'Sending notification to %d recipients: %s', len(recipients), list(recipients)
+    )
+
+    sent_count = 0
     for recipient in recipients:
-        _send_message(pararam_bot, recipient, message)
+        try:
+            _send_message(pararam_bot, recipient, message)
+            sent_count += 1
+        except Exception as e:
+            logger.error('Failed to send notification to %s: %s', recipient, e)
+
+    logger.info(
+        'Successfully sent %d/%d notifications for issue %s',
+        sent_count,
+        len(recipients),
+        issue_id_readable,
+    )
 
 
 @broker.task(

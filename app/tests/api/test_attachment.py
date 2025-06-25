@@ -95,7 +95,9 @@ async def test_issue_attachments_crud(
     )
 
     with (
-        mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify,
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        ) as mock_notify,
     ):
         attachment1 = _upload_attachment(
             test_client, headers, filename='attachment1.txt'
@@ -122,7 +124,9 @@ async def test_issue_attachments_crud(
     assert [a['id'] for a in issue['attachments']] == [attachment1]
 
     with (
-        mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify,
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        ) as mock_notify,
     ):
         attachment2 = _upload_attachment(
             test_client, headers, filename='attachment2.txt'
@@ -153,7 +157,9 @@ async def test_issue_attachments_crud(
     assert len(data) == 2
 
     with (
-        mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify,
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        ) as mock_notify,
     ):
         resp = test_client.put(
             f'/api/v1/issue/{issue_id}',
@@ -168,7 +174,9 @@ async def test_issue_attachments_crud(
         mock_notify.assert_called_once()
 
     with (
-        mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify,
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        ) as mock_notify,
     ):
         resp = test_client.put(
             f'/api/v1/issue/{issue_id}',
@@ -321,7 +329,9 @@ async def test_issue_draft_attachments_crud(
     assert any(d['id'] == draft_id for d in drafts)
 
     with (
-        mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify,
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        ) as mock_notify,
     ):
         resp = test_client.post(
             f'/api/v1/issue/draft/{draft_id}/create',
@@ -401,7 +411,7 @@ async def test_issue_comment_attachments_crud(
         admin_id=admin_id,
     )
 
-    with mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq'):
+    with mock.patch('pm.api.routes.api.v1.issue.issue.schedule_batched_notification'):
         resp = test_client.post(
             '/api/v1/issue',
             headers=headers,

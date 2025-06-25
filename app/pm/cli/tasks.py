@@ -89,6 +89,12 @@ def run_scheduler(args: argparse.Namespace) -> None:
     asyncio.run(start_scheduler())
 
 
+def run_notification_processor(args: argparse.Namespace) -> None:
+    from pm.tasks.batch_processor import main
+
+    asyncio.run(main())
+
+
 def add_tasks_args(parser: argparse.ArgumentParser) -> None:
     subparsers = parser.add_subparsers(required=True)
 
@@ -97,3 +103,6 @@ def add_tasks_args(parser: argparse.ArgumentParser) -> None:
 
     scheduler_parser = subparsers.add_parser('beat')
     scheduler_parser.set_defaults(func=run_scheduler)
+
+    notification_processor_parser = subparsers.add_parser('notification-processor')
+    notification_processor_parser.set_defaults(func=run_notification_processor)

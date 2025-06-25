@@ -25,7 +25,7 @@ from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
 from pm.services.issue import update_tags_on_close_resolve
-from pm.tasks.actions import task_notify_by_pararam
+from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
 from pm.workflows import WorkflowException
@@ -395,7 +395,7 @@ async def create_issue_from_draft(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    await task_notify_by_pararam.kiq(
+    await schedule_batched_notification(
         'create',
         obj.subject,
         obj.id_readable,
@@ -478,7 +478,7 @@ async def create_issue(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    await task_notify_by_pararam.kiq(
+    await schedule_batched_notification(
         'create',
         obj.subject,
         obj.id_readable,
@@ -577,7 +577,7 @@ async def update_issue(
         obj.updated_at = now
         obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
-        await task_notify_by_pararam.kiq(
+        await schedule_batched_notification(
             'update',
             obj.subject,
             obj.id_readable,
@@ -619,7 +619,7 @@ async def delete_issue(
         {'$pull': {'interlinks': {'issue.id': obj.id}}},
     )
 
-    await task_notify_by_pararam.kiq(
+    await schedule_batched_notification(
         'delete',
         obj.subject,
         obj.id_readable,
