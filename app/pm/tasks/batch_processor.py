@@ -55,6 +55,7 @@ async def process_expired_batch(timer_key: str) -> None:
             batch.issue_subscribers,
             batch.project_id,
             author=batch.author,
+            field_changes=batch.field_changes,
         )
 
         logger.info(

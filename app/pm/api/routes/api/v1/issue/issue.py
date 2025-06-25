@@ -574,6 +574,7 @@ async def update_issue(
             obj.aliases.append(await project.get_new_issue_alias())
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
+        latest_history_changes = obj.history[-1].changes if obj.history else []
         obj.updated_at = now
         obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
@@ -584,6 +585,7 @@ async def update_issue(
             [str(s) for s in obj.subscribers],
             str(obj.project.id),
             author=user_ctx.user.email,
+            field_changes=latest_history_changes,
         )
         await send_event(
             Event(
@@ -921,7 +923,7 @@ async def validate_custom_fields_values(
 
     results = []
     errors: list[m.CustomFieldValidationError] = []
-    for f in project.custom_fields:  # type: m.CustomField
+    for f in project.custom_fields:
         if f.name not in fields:
             issue_field_val = issue_fields.get(f.name)
             fields[f.name] = (

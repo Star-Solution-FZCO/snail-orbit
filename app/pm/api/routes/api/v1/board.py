@@ -686,6 +686,7 @@ async def move_issue(
         issue.update_state(now=now)
         await update_tags_on_close_resolve(issue)
         issue.gen_history_record(user_ctx.user, time=now)
+        latest_history_changes = issue.history[-1].changes if issue.history else []
         issue.updated_at = now
         issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await issue.replace()
@@ -696,6 +697,7 @@ async def move_issue(
             [str(s) for s in issue.subscribers],
             str(issue.project.id),
             author=user_ctx.user.email,
+            field_changes=latest_history_changes,
         )
         await send_event(
             Event(
