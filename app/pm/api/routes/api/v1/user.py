@@ -128,7 +128,7 @@ async def create_user(
         obj.password_reset_token = password_token_obj
         await obj.save_changes()
     if body.send_email_invite:
-        task_send_email.delay(
+        await task_send_email.kiq(
             recipients=[obj.email],
             subject='Snail orbit registration',
             body=render_template(
@@ -138,7 +138,7 @@ async def create_user(
             ),
         )
     if body.send_pararam_invite:
-        task_send_pararam_message.delay(
+        await task_send_pararam_message.kiq(
             user_email=obj.email,
             message=render_template(
                 TemplateT.INVITE_PARARAM,

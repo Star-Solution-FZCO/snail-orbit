@@ -8,6 +8,7 @@ TEST_CONFIG = {
     'DEBUG': True,
     'JWT_SECRET': secrets.token_hex(32),
     'DEV_PASSWORD': secrets.token_hex(32),
+    'TASKS_BROKER_URL': 'amqp://guest:guest@localhost:5672/',
 }
 ENV_PREFIX = 'SNAIL_ORBIT'
 

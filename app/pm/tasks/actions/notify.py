@@ -1,3 +1,4 @@
+import logging
 from typing import Literal
 from urllib.parse import urljoin
 
@@ -7,17 +8,21 @@ from pararamio import PararamioBot
 
 import pm.models as m
 from pm.config import CONFIG
-from pm.tasks._base import run_task
-from pm.tasks.app import celery_app
+from pm.tasks._base import setup_database
+from pm.tasks.app import broker
 
 __all__ = ('task_notify_by_pararam',)
+
+logger = logging.getLogger(__name__)
 
 
 def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
     try:
         bot.post_private_message_by_user_email(user_email, message)
-    except Exception:  # nosec: try_except_pass
-        pass
+        logger.debug('Notification sent successfully to %s', user_email)
+    except Exception as e:
+        logger.error('Failed to send notification to %s: %s', user_email, e)
+        raise  # Let taskiq handle retries
 
 
 def sanitize_issue_subject(subject: str) -> str:
@@ -53,8 +58,12 @@ async def notify_by_pararam(
         _send_message(pararam_bot, recipient, message)
 
 
-@celery_app.task(name='notify_by_pararam')
-def task_notify_by_pararam(
+@broker.task(
+    task_name='notify_by_pararam',
+    retry=2,
+    retry_delay=30,
+)
+async def task_notify_by_pararam(
     action: Literal['create', 'update', 'delete'],
     issue_subject: str,
     issue_id_readable: str,
@@ -62,13 +71,12 @@ def task_notify_by_pararam(
     project_id: str,
     author: str | None = None,
 ) -> None:
-    run_task(
-        notify_by_pararam(
-            action,
-            issue_subject,
-            issue_id_readable,
-            issue_subscribers,
-            project_id,
-            author=author,
-        )
+    await setup_database()
+    await notify_by_pararam(
+        action,
+        issue_subject,
+        issue_id_readable,
+        issue_subscribers,
+        project_id,
+        author=author,
     )

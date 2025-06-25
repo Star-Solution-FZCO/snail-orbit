@@ -46,6 +46,7 @@ def gen_openapi_schema() -> dict:
         'SNAIL_ORBIT_OIDC_CLIENT_SECRET': 'dummy',
         'SNAIL_ORBIT_OIDC_DISCOVERY_URL': 'https://example.com/.well-known/openid-configuration',
         'SNAIL_ORBIT_OIDC_SESSION_SECRET': 'dummy',
+        'SNAIL_ORBIT_TASKS_BROKER_URL': 'amqp://localhost:5672/',
     }
     with set_envs(envs):
         from pm.api.app import app

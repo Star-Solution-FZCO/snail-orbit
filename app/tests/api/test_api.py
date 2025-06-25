@@ -895,7 +895,7 @@ async def test_api_v1_issue(
     )
     assert response.status_code == 200
 
-    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify:
         response = test_client.post(
             f'/api/v1/issue',
             headers=headers,
@@ -1034,7 +1034,7 @@ async def test_api_v1_issue_link(
     assert response.status_code == 200
 
     issues = []
-    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay'):
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq'):
         for issue_payload in issue_payloads:
             response = test_client.post(
                 f'/api/v1/issue',
@@ -1707,7 +1707,7 @@ async def test_api_v1_encrypted_project(
         'project_id': project_id,
     }
 
-    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify:
         response = test_client.post(
             '/api/v1/issue',
             headers=admin_headers,
@@ -1805,7 +1805,7 @@ async def test_api_v1_encrypted_project(
         test_client, admin_headers, filename='issue_attachment.txt'
     )
     encryption_meta = comment_data['text']['encryption']
-    with mock.patch('pm.tasks.actions.task_notify_by_pararam.delay') as mock_notify:
+    with mock.patch('pm.tasks.actions.task_notify_by_pararam.kiq') as mock_notify:
         response = test_client.put(
             f'/api/v1/issue/{issue_id}',
             headers=admin_headers,

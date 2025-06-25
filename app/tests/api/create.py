@@ -139,8 +139,8 @@ async def _create_user(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     with (
-        mock.patch('pm.tasks.actions.task_send_email.delay') as mock_email,
-        mock.patch('pm.tasks.actions.task_send_pararam_message.delay') as mock_pararam,
+        mock.patch('pm.tasks.actions.task_send_email.kiq') as mock_email,
+        mock.patch('pm.tasks.actions.task_send_pararam_message.kiq') as mock_pararam,
     ):
         response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
         if user_payload.get('send_email_invite', False):

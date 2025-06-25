@@ -395,7 +395,7 @@ async def create_issue_from_draft(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    task_notify_by_pararam.delay(
+    await task_notify_by_pararam.kiq(
         'create',
         obj.subject,
         obj.id_readable,
@@ -478,7 +478,7 @@ async def create_issue(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    task_notify_by_pararam.delay(
+    await task_notify_by_pararam.kiq(
         'create',
         obj.subject,
         obj.id_readable,
@@ -577,7 +577,7 @@ async def update_issue(
         obj.updated_at = now
         obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
-        task_notify_by_pararam.delay(
+        await task_notify_by_pararam.kiq(
             'update',
             obj.subject,
             obj.id_readable,
@@ -619,7 +619,7 @@ async def delete_issue(
         {'$pull': {'interlinks': {'issue.id': obj.id}}},
     )
 
-    task_notify_by_pararam.delay(
+    await task_notify_by_pararam.kiq(
         'delete',
         obj.subject,
         obj.id_readable,

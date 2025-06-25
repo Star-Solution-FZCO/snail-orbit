@@ -403,6 +403,43 @@ CONFIG = Dynaconf(
             default=False,
             description='Auto-run database migrations on startup (upgrades only)',
         ),
+        # SMTP Configuration
+        Validator(
+            'SMTP_HOST',
+            is_type_of=str | None,
+            default=None,
+            description='SMTP server hostname',
+        ),
+        Validator(
+            'SMTP_PORT',
+            cast=int,
+            default=587,
+            description='SMTP server port',
+        ),
+        Validator(
+            'SMTP_LOGIN',
+            is_type_of=str | None,
+            default=None,
+            description='SMTP login username',
+        ),
+        Validator(
+            'SMTP_PASSWORD',
+            is_type_of=str | None,
+            default=None,
+            description='SMTP login password',
+        ),
+        Validator(
+            'SMTP_SENDER',
+            is_type_of=str | None,
+            default=None,
+            description='SMTP sender email address',
+        ),
+        Validator(
+            'SMTP_SSL_MODE',
+            is_type_of=str | None,
+            default=None,
+            description='SMTP SSL mode (tls, ssl, or None)',
+        ),
     ],
 )
 CONFIG.configure()

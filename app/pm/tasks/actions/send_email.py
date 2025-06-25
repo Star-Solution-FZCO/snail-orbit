@@ -1,3 +1,4 @@
+import logging
 import smtplib
 from base64 import b64decode
 from email.encoders import encode_base64
@@ -8,9 +9,11 @@ from email.utils import formatdate
 from typing import Dict, Optional, Sequence
 
 from pm.config import CONFIG
-from pm.tasks.app import celery_app
+from pm.tasks.app import broker
 
 __all__ = ('task_send_email',)
+
+logger = logging.getLogger(__name__)
 
 
 def _send_email(
@@ -49,11 +52,29 @@ def _send_email(
             msg.attach(attachment)
         mail_client.sendmail(CONFIG.SMTP_SENDER, recipients, msg.as_string())
         mail_client.close()
-    except Exception:  # pylint: disable=broad-exception-caught  # nosec: try_except_pass
-        pass
+        logger.info('Email sent successfully to %d recipients', len(recipients))
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error('SMTP authentication failed: %s', e)
+        raise  # Don't retry auth failures
+    except smtplib.SMTPServerDisconnected as e:
+        logger.warning('SMTP server disconnected: %s', e)
+        raise  # Will be retried by taskiq
+    except smtplib.SMTPRecipientsRefused as e:
+        logger.error('SMTP recipients refused: %s', e)
+        raise  # Don't retry invalid recipients
+    except (smtplib.SMTPException, OSError) as e:
+        logger.error('SMTP error occurred: %s', e)
+        raise  # Will be retried by taskiq
+    except Exception as e:
+        logger.error('Unexpected error sending email: %s', e)
+        raise  # Let taskiq handle unexpected errors
 
 
-@celery_app.task(name='send_email')
+@broker.task(
+    task_name='send_email',
+    retry=3,
+    retry_delay=60,
+)
 def task_send_email(
     recipients: Sequence[str],
     subject: str,

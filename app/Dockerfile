@@ -49,7 +49,8 @@ ENTRYPOINT ["python3", "manage.py", "api", "server", "--host", "0.0.0.0", "--tru
 
 
 FROM api AS tasks
-ENTRYPOINT ["python3", "manage.py", "tasks"]
+ENV PYTHONUNBUFFERED=1
+ENTRYPOINT ["python3", "-u", "manage.py", "tasks"]
 CMD ["worker"]
 
 

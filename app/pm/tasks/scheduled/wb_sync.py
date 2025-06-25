@@ -3,6 +3,8 @@ import asyncio
 import pm.models as m
 from pm.config import CONFIG
 from pm.services.avatars import generate_default_avatar
+from pm.tasks._base import setup_database
+from pm.tasks.app import broker
 from pm.utils.wb import WbAPIClient
 
 __all__ = ('wb_sync',)
@@ -134,6 +136,16 @@ async def wb_team_sync() -> None:
                     )
 
 
-async def wb_sync() -> None:
+async def _wb_sync() -> None:
     await wb_user_sync()
     await wb_team_sync()
+
+
+@broker.task(
+    schedule=[{'cron': '*/5 * * * *'}] if CONFIG.WB_SYNC_ENABLED else [],
+    task_name='wb_sync',
+)
+async def wb_sync() -> None:
+    if CONFIG.WB_SYNC_ENABLED:
+        await setup_database()
+        await _wb_sync()

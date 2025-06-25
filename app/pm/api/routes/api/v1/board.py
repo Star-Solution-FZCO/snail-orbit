@@ -689,7 +689,7 @@ async def move_issue(
         issue.updated_at = now
         issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await issue.replace()
-        task_notify_by_pararam.delay(
+        await task_notify_by_pararam.kiq(
             'update',
             issue.subject,
             issue.id_readable,

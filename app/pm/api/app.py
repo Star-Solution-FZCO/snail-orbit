@@ -86,6 +86,7 @@ if CONFIG.RO_MODE:
 async def app_init() -> None:
     from pm.db import check_database_version
     from pm.models import __beanie_models__
+    from pm.tasks.app import broker
 
     check_database_version()
 
@@ -93,6 +94,9 @@ async def app_init() -> None:
     db = client.get_default_database()
     await init_beanie(db, document_models=__beanie_models__)
     init_read_only_projection_models(__beanie_models__)
+
+    # Initialize taskiq broker for task kicking
+    await broker.startup()
 
 
 @AuthJWT.load_config
@@ -120,6 +124,14 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
 from pm.api.error_handlers import connect_error_handlers  # noqa
 
 connect_error_handlers(app)
+
+
+@app.on_event('shutdown')
+async def app_shutdown() -> None:
+    from pm.tasks.app import broker
+
+    # Clean shutdown of taskiq broker
+    await broker.shutdown()
 
 
 from pm.api.routes import api_router, events_router  # noqa

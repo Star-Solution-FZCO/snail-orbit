@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Snail Orbit is a FastAPI + React TypeScript project management tool with a modern, scalable architecture. The system consists of:
 
-- **Backend**: FastAPI (Python) with MongoDB/Beanie ODM, Redis, Celery tasks
+- **Backend**: FastAPI (Python) with MongoDB/Beanie ODM, RabbitMQ, Taskiq tasks
 - **Frontend**: React 19 + TypeScript with TanStack Router, Material-UI, Redux Toolkit
 - **Architecture**: Event-driven microservices with real-time updates and workflow automation
 
@@ -17,7 +17,7 @@ Snail Orbit is a FastAPI + React TypeScript project management tool with a moder
 # Run API server
 python3 app/manage.py api server
 
-# Run Celery worker
+# Run Taskiq worker
 python3 app/manage.py tasks worker
 
 # Run OCR worker
@@ -92,7 +92,7 @@ docker build -f frontend/Dockerfile --target ui -t snail-orbit-ui .
 - **`app/pm/api/routes/`**: FastAPI route handlers organized by version (/v1, /v2)
 - **`app/pm/api/views/`**: Pydantic schemas for API input/output
 - **`app/pm/services/`**: Business logic layer
-- **`app/pm/tasks/`**: Celery async tasks and workflow engine
+- **`app/pm/tasks/`**: Taskiq async tasks and workflow engine
 - **`app/pm/utils/`**: Utilities (encryption, file storage, MongoDB filters)
 - **`app/manage.py`**: CLI entry point for all services
 
@@ -264,6 +264,25 @@ When working with custom fields:
 - Configuration in `app/pyproject.toml` under `[tool.pytest.ini_options]`
 - Run with: `cd app && python3 -m pytest`
 
+### Task Tests
+
+**Unit Tests Only:**
+- Located in `app/tests/tasks/test_task_integration.py`
+- Test task business logic, configuration validation, and error handling
+- No external dependencies required (uses mocks for RabbitMQ, database, external APIs)
+- Run with: `cd app && python3 -m pytest tests/tasks/ -v`
+
+**Test Coverage:**
+- Async task execution with database setup
+- Email task configuration and SMTP error handling  
+- Pararam notification task with API mocking
+- Workflow task execution logic
+- RabbitMQ broker configuration validation
+- Retry policy verification
+- Logging behavior testing
+
+**Note:** Only unit tests are implemented for the task system, using mocks instead of integration tests that would require live RabbitMQ connections.
+
 ### Test Database
 - Uses MongoDB connection from `settings.toml`
 
@@ -285,6 +304,36 @@ The repository uses pre-commit hooks that run:
 - Environment-specific overrides supported
 - Frontend config in `frontend/env.template.js` for build-time variables
 
+### Task Queue Configuration
+
+**Required Settings:**
+```toml
+# RabbitMQ broker for task queue (required)
+TASKS_BROKER_URL = "amqp://user:password@localhost:5672/"
+
+# Optional SMTP settings for email tasks
+SMTP_HOST = "smtp.example.com"
+SMTP_PORT = 587
+SMTP_LOGIN = "user@example.com"
+SMTP_PASSWORD = "password"
+SMTP_SENDER = "noreply@example.com"
+SMTP_SSL_MODE = "tls"  # or "ssl" or null
+
+# Optional Pararam notification settings
+PARARAM_NOTIFICATION_BOT_TOKEN = "your-bot-token"
+
+# Optional WB sync settings
+WB_SYNC_ENABLED = true
+WB_URL = "https://wb.example.com"
+WB_API_TOKEN_KID = "your-key-id"
+WB_API_TOKEN_SECRET = "your-secret"
+```
+
+**Environment Variables:**
+- `SNAIL_ORBIT_TASKS_BROKER_URL` - AMQP URL for RabbitMQ broker
+- `SNAIL_ORBIT_SMTP_HOST` - SMTP server hostname
+- `SNAIL_ORBIT_PARARAM_NOTIFICATION_BOT_TOKEN` - Bot token for notifications
+
 ## OpenAPI Integration
 
 The backend automatically generates OpenAPI schemas that drive frontend TypeScript types:
@@ -293,6 +342,48 @@ The backend automatically generates OpenAPI schemas that drive frontend TypeScri
 3. Types end up in `frontend/src/shared/model/types/backend-schema.gen.ts`
 
 Always regenerate types after backend API changes.
+
+## Task Queue Monitoring
+
+### Health Checks
+Task system health can be monitored through:
+- **RabbitMQ Connection**: Workers will fail to start if RabbitMQ is unreachable
+- **Task Processing**: Monitor task completion rates and errors in worker logs
+- **Queue Status**: Use RabbitMQ management interface or CLI tools
+
+### Troubleshooting
+```bash
+# Check RabbitMQ connection
+docker exec -it rabbitmq-container rabbitmq-diagnostics ping
+
+# View task queue status
+docker exec -it rabbitmq-container rabbitmqctl list_queues
+
+# View task logs
+docker-compose logs tasks-worker
+docker-compose logs tasks-beat
+
+# Check worker startup and task registration
+docker-compose logs tasks-worker | grep "Starting taskiq worker"
+docker-compose logs tasks-worker | grep "Registered tasks"
+
+# RabbitMQ management interface (if enabled)
+# Access at http://localhost:15672 with guest/guest
+```
+
+### Task Types and Retry Policies
+- **Email tasks**: 3 retries, 60s delay 
+- **Pararam notifications**: 3 retries, 30s delay  
+- **Issue notifications**: 2 retries, 30s delay (to avoid spam)
+- **Workflow execution**: 1 retry, 60s delay (to avoid duplicate execution)
+- **WB sync**: Runs every 5 minutes if enabled
+- **Workflow scheduler**: Runs every minute to check scheduled workflows
+
+### Task Architecture
+- **Async Tasks**: All tasks are async functions with proper database setup
+- **Message Persistence**: RabbitMQ queues are durable with persistent messages
+- **Worker Startup**: Programmatic startup with proper logging and error handling
+- **Task Discovery**: Registry-based task imports for clean separation
 
 ## Code Quality Requirements
 

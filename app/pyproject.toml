@@ -33,7 +33,8 @@ aiohttp = "*"
 authlib = "*"
 httpx = "*"
 itsdangerous = "*"
-celery = "*"
+taskiq = "*"
+taskiq-aio-pika = "*"
 pillow = "*"
 pararamio = {version = ">=2.0.1"}
 lark = "*"
@@ -64,6 +65,7 @@ pyfakefs = "*"
 pytest-cov = "*"
 pre-commit = "*"
 deepdiff = "*"
+fakeredis = "*"
 
 [tool.poetry.group.ocr]
 optional = true
@@ -108,3 +110,4 @@ skips = ["*/tests/*"]
 [tool.pytest.ini_options]
 addopts = "-p no:warnings -v --color=yes"
 asyncio_default_fixture_loop_scope = "function"
+markers = []
