@@ -76,7 +76,9 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                     onUpdateCache={onUpdateCache}
                 />
 
-                <IssueActivities issueId={issue.id} />
+                {displayMode === "view" && (
+                    <IssueActivities issueId={issue.id} />
+                )}
             </Stack>
 
             <FieldContainer>

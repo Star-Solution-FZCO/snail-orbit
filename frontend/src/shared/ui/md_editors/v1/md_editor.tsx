@@ -1,6 +1,6 @@
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { Box } from "@mui/material";
-import type { DowncastWriter, EventInfo } from "ckeditor5";
+import type { EventInfo } from "ckeditor5";
 import {
     Autoformat,
     AutoLink,
@@ -28,9 +28,8 @@ import "ckeditor5/ckeditor5.css";
 import "github-markdown-css";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import i18n from "shared/i18n";
+import { IMDEditorProps } from "../types";
 import "./md_editor.css";
 import { syncSourceEditing, useCKEditorStyles } from "./utils";
 
@@ -89,30 +88,17 @@ const toolbar = {
     shouldNotGroupWhenFull: true,
 };
 
-interface IMDEditorProps {
-    value?: string;
-    onChange?: (value: string) => unknown;
-    placeholder?: string;
-    readOnly?: boolean;
-    autoHeight?: boolean;
-    autoFocus?: boolean;
-    defaultValue?: string;
-    onBlur?: (value: string) => unknown;
-    onFocus?: (value: string) => unknown;
-}
-
-const MDEditor: FC<IMDEditorProps> = ({
+export const MDEditorV1: FC<IMDEditorProps> = ({
     value,
+    defaultValue,
     onChange,
+    onBlur,
+    onFocus,
     placeholder,
     readOnly,
     autoHeight,
     autoFocus,
-    defaultValue,
-    onBlur,
-    onFocus,
 }) => {
-    const isControlled = typeof value !== "undefined";
     const hasDefaultValue = typeof defaultValue !== "undefined";
 
     const editorStyles = useCKEditorStyles();
@@ -120,6 +106,7 @@ const MDEditor: FC<IMDEditorProps> = ({
         hasDefaultValue ? defaultValue : "",
     );
 
+    const isControlled = typeof value !== "undefined";
     const editorValue = isControlled ? value : innerValue;
 
     const handleChange = useCallback(
@@ -203,51 +190,3 @@ const MDEditor: FC<IMDEditorProps> = ({
         </Box>
     );
 };
-
-const MarkdownPreview: FC<{ text?: string | null }> = ({ text }) => {
-    return (
-        <Box
-            sx={(theme) => ({
-                "& .markdown-body": {
-                    backgroundColor: "inherit",
-                    color: theme.palette.text.primary,
-                    wordBreak: "break-word",
-                    fontSize: "0.875rem",
-                    "& code": {
-                        whiteSpace: "pre-wrap",
-                    }
-                },
-            })}
-        >
-            <Markdown
-                className="markdown-body"
-                remarkPlugins={[remarkGfm]}
-                components={{
-                    a: ({ node: _, ...props }) => {
-                        const maxLength = 50;
-
-                        const children =
-                            typeof props.children === "string" &&
-                            props.children.length > maxLength
-                                ? props.children.slice(0, maxLength) + "..."
-                                : props.children;
-
-                        return (
-                            <a
-                                {...props}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {children}
-                            </a>
-                        );
-                    },
-                }}
-            >
-                {text}
-            </Markdown>
-        </Box>
-    );
-};
-
-export { MarkdownPreview, MDEditor };

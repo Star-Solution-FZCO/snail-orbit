@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "shared/model";
 import type { CommentT, IssueAttachmentT } from "shared/model/types";
-import { MarkdownPreview, UserAvatar } from "shared/ui";
+import { MarkdownRenderer, UserAvatar } from "shared/ui";
 import { formatSpentTime } from "shared/utils";
 import { AttachmentCard } from "../attachment_cards";
 import { CommentCardActionButtons } from "./comment_card_action_buttons";
@@ -131,13 +131,13 @@ export const CommentCardView = (props: CommentCardViewProps) => {
                             fontWeight="bold"
                             color="text.primary"
                         >
-                            {formatSpentTime(comment.spent_time)}
+                            {formatSpentTime(comment.spent_time, true)}
                         </Typography>
                     </Typography>
                 )}
 
                 <Box mt={0.5}>
-                    <MarkdownPreview text={commentText} />
+                    <MarkdownRenderer content={commentText} />
                 </Box>
 
                 {attachmentsExists && (
