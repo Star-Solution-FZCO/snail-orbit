@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Any, Literal
 from urllib.parse import urljoin
@@ -9,20 +8,35 @@ from pararamio import PararamioBot
 
 import pm.models as m
 from pm.config import CONFIG
+from pm.logging import get_logger, log_context
 from pm.tasks._base import setup_database
 from pm.tasks.app import broker
 
 __all__ = ('task_notify_by_pararam',)
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
     try:
         bot.post_private_message_by_user_email(user_email, message)
-        logger.debug('Notification sent successfully to %s', user_email)
+        logger.debug(
+            'Pararam notification sent successfully',
+            extra={
+                'event': 'pararam_notification_sent',
+                'recipient_email': user_email,
+            },
+        )
     except Exception as e:
-        logger.error('Failed to send notification to %s: %s', user_email, e)
+        logger.error(
+            'Failed to send Pararam notification',
+            exc_info=e,
+            extra={
+                'event': 'pararam_notification_failed',
+                'recipient_email': user_email,
+                'error_type': type(e).__name__,
+            },
+        )
         raise
 
 
@@ -103,63 +117,96 @@ async def notify_by_pararam(
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
 ) -> None:
-    logger.info(
-        'Sending notification: issue=%s, action=%s, author=%s, subscribers=%d',
-        issue_id_readable,
-        action,
-        author,
-        len(issue_subscribers),
-    )
-
-    if not CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN:
-        logger.warning(
-            'Pararam notification bot token not configured, skipping notification'
-        )
-        return
-
-    pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
-    author_str = f' by {author}' if author else ''
-
-    message = (
-        f'Issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]'
-        f'({urljoin(CONFIG.PUBLIC_BASE_URL, f"/issues/{issue_id_readable}")}) was {action}d{author_str}'
-    )
-
-    if field_changes and action == 'update':
-        changes_message = _generate_field_changes_message(field_changes)
-        if changes_message:
-            message += changes_message
-
-    logger.debug('Notification message: %s', message)
-
-    recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
-    if project := await m.Project.find_one(
-        m.Project.id == PydanticObjectId(project_id)
+    with log_context(
+        issue_id=issue_id_readable, project_id=project_id, task_name='notify_by_pararam'
     ):
-        recipients_ids.update(set(project.subscribers))
-    recipients = {
-        u.email
-        for u in await m.User.find(bo.In(m.User.id, list(recipients_ids))).to_list()
-    }
+        logger.info(
+            'Starting Pararam notification task',
+            extra={
+                'event': 'pararam_notification_started',
+                'action': action,
+                'author': author,
+                'subscriber_count': len(issue_subscribers),
+                'field_changes_count': len(field_changes) if field_changes else 0,
+            },
+        )
 
-    logger.info(
-        'Sending notification to %d recipients: %s', len(recipients), list(recipients)
-    )
+        if not CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN:
+            logger.warning(
+                'Pararam notification bot token not configured, skipping notification',
+                extra={
+                    'event': 'pararam_notification_skipped',
+                    'reason': 'missing_bot_token',
+                },
+            )
+            return
 
-    sent_count = 0
-    for recipient in recipients:
-        try:
-            _send_message(pararam_bot, recipient, message)
-            sent_count += 1
-        except Exception as e:
-            logger.error('Failed to send notification to %s: %s', recipient, e)
+        pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
+        author_str = f' by {author}' if author else ''
 
-    logger.info(
-        'Successfully sent %d/%d notifications for issue %s',
-        sent_count,
-        len(recipients),
-        issue_id_readable,
-    )
+        message = (
+            f'Issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]'
+            f'({urljoin(CONFIG.PUBLIC_BASE_URL, f"/issues/{issue_id_readable}")}) was {action}d{author_str}'
+        )
+
+        if field_changes and action == 'update':
+            changes_message = _generate_field_changes_message(field_changes)
+            if changes_message:
+                message += changes_message
+
+        logger.debug(
+            'Generated notification message',
+            extra={
+                'event': 'notification_message_generated',
+                'message_length': len(message),
+                'has_field_changes': bool(field_changes),
+            },
+        )
+
+        recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
+        if project := await m.Project.find_one(
+            m.Project.id == PydanticObjectId(project_id)
+        ):
+            recipients_ids.update(set(project.subscribers))
+        recipients = {
+            u.email
+            for u in await m.User.find(bo.In(m.User.id, list(recipients_ids))).to_list()
+        }
+
+        logger.info(
+            'Sending Pararam notifications to recipients',
+            extra={
+                'event': 'pararam_notification_recipients_resolved',
+                'recipient_count': len(recipients),
+                'recipients': list(recipients),
+            },
+        )
+
+        sent_count = 0
+        for recipient in recipients:
+            try:
+                _send_message(pararam_bot, recipient, message)
+                sent_count += 1
+            except Exception as e:
+                logger.error(
+                    'Failed to send notification to recipient',
+                    exc_info=e,
+                    extra={
+                        'event': 'pararam_notification_recipient_failed',
+                        'recipient_email': recipient,
+                        'error_type': type(e).__name__,
+                    },
+                )
+
+        logger.info(
+            'Pararam notification task completed',
+            extra={
+                'event': 'pararam_notification_completed',
+                'sent_count': sent_count,
+                'total_recipients': len(recipients),
+                'success_rate': sent_count / len(recipients) if recipients else 0,
+            },
+        )
 
 
 @broker.task(
@@ -176,13 +223,50 @@ async def task_notify_by_pararam(
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
 ) -> None:
-    await setup_database()
-    await notify_by_pararam(
-        action,
-        issue_subject,
-        issue_id_readable,
-        issue_subscribers,
-        project_id,
-        author=author,
-        field_changes=field_changes,
-    )
+    with log_context(
+        task_id='notify_by_pararam',
+        task_name='Pararam Notification',
+        issue_id=issue_id_readable,
+        project_id=project_id,
+    ):
+        logger.info(
+            'Task started',
+            extra={
+                'event': 'task_started',
+                'task_type': 'notification',
+                'notification_method': 'pararam',
+            },
+        )
+
+        try:
+            await setup_database()
+            await notify_by_pararam(
+                action,
+                issue_subject,
+                issue_id_readable,
+                issue_subscribers,
+                project_id,
+                author=author,
+                field_changes=field_changes,
+            )
+
+            logger.info(
+                'Task completed successfully',
+                extra={
+                    'event': 'task_completed',
+                    'task_type': 'notification',
+                    'notification_method': 'pararam',
+                },
+            )
+        except Exception as e:
+            logger.error(
+                'Task failed',
+                exc_info=e,
+                extra={
+                    'event': 'task_failed',
+                    'task_type': 'notification',
+                    'notification_method': 'pararam',
+                    'error_type': type(e).__name__,
+                },
+            )
+            raise

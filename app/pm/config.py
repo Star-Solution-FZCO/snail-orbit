@@ -447,6 +447,49 @@ CONFIG = Dynaconf(
             default=30,
             description='Delay in seconds before sending batched notifications',
         ),
+        # Logging Configuration
+        Validator(
+            'LOG_LEVEL',
+            is_type_of=str,
+            default='INFO',
+            description='Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)',
+        ),
+        Validator(
+            'LOG_FORMAT',
+            is_type_of=str,
+            default='json',
+            description='Log format type (json, pretty, console)',
+        ),
+        Validator(
+            'LOG_FILE',
+            is_type_of=str | None,
+            default=None,
+            description='Path to log file (if None, only console logging)',
+        ),
+        Validator(
+            'LOG_FILE_MAX_BYTES',
+            cast=int,
+            default=10_000_000,
+            description='Maximum size of log file before rotation (bytes)',
+        ),
+        Validator(
+            'LOG_FILE_BACKUP_COUNT',
+            cast=int,
+            default=5,
+            description='Number of backup log files to keep',
+        ),
+        Validator(
+            'LOG_REQUESTS',
+            cast=bool,
+            default=True,
+            description='Whether to log HTTP requests',
+        ),
+        Validator(
+            'LOG_ERRORS',
+            cast=bool,
+            default=True,
+            description='Whether to log HTTP errors',
+        ),
     ],
 )
 CONFIG.configure()

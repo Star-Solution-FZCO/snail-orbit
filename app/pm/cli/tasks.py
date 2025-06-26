@@ -12,16 +12,12 @@ def run_worker(args: argparse.Namespace) -> None:
     from pm.tasks.app import broker, import_all_tasks
 
     async def start_worker() -> None:
-        import logging
         import sys
 
-        logging.basicConfig(
-            level=logging.INFO,
-            format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
-            stream=sys.stdout,
-            force=True,
-        )
-        logger = logging.getLogger('taskiq.worker.startup')
+        from pm.logging import configure_logging, get_logger
+
+        configure_logging()
+        logger = get_logger('taskiq.worker.startup')
 
         import_all_tasks()
 
@@ -55,16 +51,12 @@ def run_scheduler(args: argparse.Namespace) -> None:
     from pm.tasks.app import import_all_tasks, scheduler
 
     async def start_scheduler() -> None:
-        import logging
         import sys
 
-        logging.basicConfig(
-            level=logging.INFO,
-            format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
-            stream=sys.stdout,
-            force=True,
-        )
-        logger = logging.getLogger('taskiq.scheduler.startup')
+        from pm.logging import configure_logging, get_logger
+
+        configure_logging()
+        logger = get_logger('taskiq.scheduler.startup')
 
         import_all_tasks()
 
@@ -92,7 +84,25 @@ def run_scheduler(args: argparse.Namespace) -> None:
 def run_notification_processor(args: argparse.Namespace) -> None:
     from pm.tasks.batch_processor import main
 
-    asyncio.run(main())
+    async def start_notification_processor() -> None:
+        from pm.logging import configure_logging, get_logger
+
+        configure_logging()
+        logger = get_logger('taskiq.notification_processor.startup')
+
+        logger.info('Starting notification batch processor...')
+
+        try:
+            await main()
+        except KeyboardInterrupt:
+            logger.info('Notification processor interrupted by user')
+        except Exception as e:
+            logger.error(
+                'Notification processor failed with error: %s', e, exc_info=True
+            )
+            raise
+
+    asyncio.run(start_notification_processor())
 
 
 def add_tasks_args(parser: argparse.ArgumentParser) -> None:
