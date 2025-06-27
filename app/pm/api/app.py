@@ -3,6 +3,11 @@ from pm.patches.beanie_links import patch_beanie_construct_query
 
 patch_beanie_construct_query()
 
+# Configure logging early
+from pm.logging import configure_logging
+
+configure_logging()
+
 from collections.abc import Awaitable, Callable
 from http import HTTPMethod, HTTPStatus
 
@@ -64,6 +69,11 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+# Add logging middleware for request correlation and context
+from pm.logging import create_logging_middleware
+
+app.middleware('http')(create_logging_middleware())
 
 if CONFIG.RO_MODE:
     RO_METHODS = {HTTPMethod.GET, HTTPMethod.HEAD, HTTPMethod.OPTIONS}

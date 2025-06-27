@@ -1,4 +1,3 @@
-import logging
 import smtplib
 from base64 import b64decode
 from email.encoders import encode_base64
@@ -9,11 +8,12 @@ from email.utils import formatdate
 from typing import Dict, Optional, Sequence
 
 from pm.config import CONFIG
+from pm.logging import get_logger, log_context
 from pm.tasks.app import broker
 
 __all__ = ('task_send_email',)
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _send_email(
@@ -23,9 +23,30 @@ def _send_email(
     attachments: Optional[Dict[str, str]] = None,
 ) -> None:
     if not CONFIG.SMTP_HOST:
+        logger.warning(
+            'SMTP host not configured, skipping email',
+            extra={
+                'event': 'email_skipped',
+                'reason': 'smtp_not_configured',
+                'recipient_count': len(recipients),
+            },
+        )
         return
+
     if not attachments:
         attachments = {}
+
+    logger.info(
+        'Sending email',
+        extra={
+            'event': 'email_send_started',
+            'recipient_count': len(recipients),
+            'subject': subject,
+            'attachment_count': len(attachments),
+            'body_length': len(body),
+        },
+    )
+
     try:
         if CONFIG.SMTP_SSL_MODE and CONFIG.SMTP_SSL_MODE in ('tls', 'ssl'):
             mail_client: smtplib.SMTP | smtplib.SMTP_SSL = smtplib.SMTP_SSL(
@@ -52,21 +73,69 @@ def _send_email(
             msg.attach(attachment)
         mail_client.sendmail(CONFIG.SMTP_SENDER, recipients, msg.as_string())
         mail_client.close()
-        logger.info('Email sent successfully to %d recipients', len(recipients))
+
+        logger.info(
+            'Email sent successfully',
+            extra={
+                'event': 'email_sent',
+                'recipient_count': len(recipients),
+                'subject': subject,
+            },
+        )
     except smtplib.SMTPAuthenticationError as e:
-        logger.error('SMTP authentication failed: %s', e)
+        logger.error(
+            'SMTP authentication failed',
+            exc_info=e,
+            extra={
+                'event': 'email_failed',
+                'error_type': 'smtp_auth_failed',
+                'smtp_host': CONFIG.SMTP_HOST,
+                'smtp_port': CONFIG.SMTP_PORT,
+            },
+        )
         raise  # Don't retry auth failures
     except smtplib.SMTPServerDisconnected as e:
-        logger.warning('SMTP server disconnected: %s', e)
+        logger.warning(
+            'SMTP server disconnected',
+            exc_info=e,
+            extra={
+                'event': 'email_failed',
+                'error_type': 'smtp_disconnected',
+                'smtp_host': CONFIG.SMTP_HOST,
+            },
+        )
         raise  # Will be retried by taskiq
     except smtplib.SMTPRecipientsRefused as e:
-        logger.error('SMTP recipients refused: %s', e)
+        logger.error(
+            'SMTP recipients refused',
+            exc_info=e,
+            extra={
+                'event': 'email_failed',
+                'error_type': 'recipients_refused',
+                'recipients': list(recipients),
+            },
+        )
         raise  # Don't retry invalid recipients
     except (smtplib.SMTPException, OSError) as e:
-        logger.error('SMTP error occurred: %s', e)
+        logger.error(
+            'SMTP error occurred',
+            exc_info=e,
+            extra={
+                'event': 'email_failed',
+                'error_type': 'smtp_error',
+                'smtp_host': CONFIG.SMTP_HOST,
+            },
+        )
         raise  # Will be retried by taskiq
     except Exception as e:
-        logger.error('Unexpected error sending email: %s', e)
+        logger.error(
+            'Unexpected error sending email',
+            exc_info=e,
+            extra={
+                'event': 'email_failed',
+                'error_type': 'unexpected_error',
+            },
+        )
         raise  # Let taskiq handle unexpected errors
 
 
@@ -81,4 +150,42 @@ def task_send_email(
     body: str,
     attachments: Optional[Dict[str, str]] = None,
 ) -> None:
-    _send_email(recipients, subject, body, attachments)
+    with log_context(
+        task_id='send_email',
+        task_name='Email Notification',
+        recipient_count=len(recipients),
+    ):
+        logger.info(
+            'Email task started',
+            extra={
+                'event': 'task_started',
+                'task_type': 'notification',
+                'notification_method': 'email',
+                'recipient_count': len(recipients),
+                'subject': subject,
+            },
+        )
+
+        try:
+            _send_email(recipients, subject, body, attachments)
+
+            logger.info(
+                'Email task completed successfully',
+                extra={
+                    'event': 'task_completed',
+                    'task_type': 'notification',
+                    'notification_method': 'email',
+                },
+            )
+        except Exception as e:
+            logger.error(
+                'Email task failed',
+                exc_info=e,
+                extra={
+                    'event': 'task_failed',
+                    'task_type': 'notification',
+                    'notification_method': 'email',
+                    'error_type': type(e).__name__,
+                },
+            )
+            raise
