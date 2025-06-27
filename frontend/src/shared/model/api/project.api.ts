@@ -200,5 +200,32 @@ export const projectApi = createApi({
                 { type: "Projects", id },
             ],
         }),
+        uploadProjectAvatar: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string; body: FormData }
+        >({
+            query: ({ id, body }) => ({
+                url: `project/${id}/avatar`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
+        deleteProjectAvatar: build.mutation<
+            ApiResponse<{ id: string }>,
+            string
+        >({
+            query: (id) => ({
+                url: `project/${id}/avatar`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
     }),
 });

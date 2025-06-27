@@ -55,7 +55,7 @@ export const IssueForm: FC<IssueFormProps> = ({
             <Box mt={-1}>
                 {text || textLoading ? (
                     <MarkdownRenderer
-                        content={text || t("issue.form.text.loading")}
+                        content={text || t("issues.form.text.loading")}
                     />
                 ) : (
                     <Box

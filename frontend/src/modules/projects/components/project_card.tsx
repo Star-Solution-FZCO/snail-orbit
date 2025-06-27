@@ -21,9 +21,10 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                     fontWeight: "bold",
                     mx: 2,
                 }}
+                src={project.avatar}
                 variant="rounded"
             >
-                {project.name.slice(0, 3).toUpperCase()}
+                {project.slug.slice(0, 3).toUpperCase()}
             </Avatar>
 
             <Stack overflow="hidden">
@@ -38,9 +39,9 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                 <Tooltip
                     title={project.description}
                     placement="top"
-                    arrow
                     enterDelay={1000}
                     disableInteractive
+                    arrow
                 >
                     <Typography
                         variant="subtitle2"

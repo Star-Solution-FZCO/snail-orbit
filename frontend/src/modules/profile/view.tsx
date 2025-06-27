@@ -1,7 +1,7 @@
 import { TabContext, TabList } from "@mui/lab";
 import { Box, Stack, Tab, Typography } from "@mui/material";
 import type { SyntheticEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "shared/model";
 import { ErrorHandler, TabPanel } from "shared/ui";
@@ -30,6 +30,10 @@ export const ProfileView = (props: ProfileViewProps) => {
         setCurrentTab(value);
         onTabChange?.(value);
     };
+
+    useEffect(() => {
+        setCurrentTab(tab || "api_tokens");
+    }, [tab]);
 
     if (error) {
         return <ErrorHandler error={error} message="users.item.fetch.error" />;

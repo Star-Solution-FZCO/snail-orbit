@@ -5,7 +5,7 @@ from uuid import UUID
 
 from beanie import PydanticObjectId
 from beanie import operators as bo
-from fastapi import BackgroundTasks, Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field, computed_field
 
 import pm.models as m
@@ -29,6 +29,7 @@ from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
     BaseListOutput,
     ModelIdOutput,
+    SuccessOutput,
     SuccessPayloadOutput,
     UUIDOutput,
 )
@@ -39,6 +40,9 @@ from pm.api.views.user import UserOutput
 from pm.config import CONFIG
 from pm.enums import EncryptionTargetTypeT
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
+from pm.services.avatars import PROJECT_AVATAR_STORAGE_DIR
+from pm.services.files import get_storage_client
+from pm.utils.file_storage._base import FileHeader, StorageFileNotFound
 
 __all__ = ('router',)
 
@@ -820,3 +824,36 @@ async def get_encryption_keys(
         offset=0,
         items=items,
     )
+
+
+@router.post('/{project_id}/avatar')
+async def upload_project_avatar(
+    project_id: PydanticObjectId,
+    file: UploadFile = File(...),
+) -> SuccessOutput:
+    client = get_storage_client()
+    file_header = FileHeader(
+        size=file.size, name=file.filename, content_type=file.content_type
+    )
+    await client.upload_file(
+        project_id, file, file_header, folder=PROJECT_AVATAR_STORAGE_DIR
+    )
+    await m.Project.find_one(m.Project.id == project_id).update(
+        {'$set': {'avatar_type': m.ProjectAvatarType.LOCAL}}
+    )
+    return SuccessOutput()
+
+
+@router.delete('/{project_id}/avatar')
+async def delete_project_avatar(
+    project_id: PydanticObjectId,
+) -> SuccessOutput:
+    client = get_storage_client()
+    try:
+        await client.delete_file(project_id, folder=PROJECT_AVATAR_STORAGE_DIR)
+    except StorageFileNotFound as err:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
+    await m.Project.find_one(m.Project.id == project_id).update(
+        {'$set': {'avatar_type': m.ProjectAvatarType.DEFAULT}}
+    )
+    return SuccessOutput()
