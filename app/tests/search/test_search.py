@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 import mock
 import pytest
+from bson import ObjectId
 
 
 def _custom_fields() -> dict:
@@ -355,6 +356,129 @@ TEST_TAG_RESERVED_FIELD_PYTEST_PARAMS = [
         id='tag',
     ),
     pytest.param('tag: null', {'tags': []}, id='tag null search'),
+]
+
+# Test case-insensitive field names for built-in fields
+TEST_CASE_INSENSITIVE_FIELD_PYTEST_PARAMS = [
+    # Test project field case variations
+    pytest.param(
+        'Project: test',
+        {'project.slug': {'$regex': '^test$', '$options': 'i'}},
+        id='case insensitive project field uppercase P',
+    ),
+    pytest.param(
+        'PROJECT: test',
+        {'project.slug': {'$regex': '^test$', '$options': 'i'}},
+        id='case insensitive project field all uppercase',
+    ),
+    # Test subject field case variations
+    pytest.param(
+        'Subject: bug',
+        {'subject': {'$regex': 'bug', '$options': 'i'}},
+        id='case insensitive subject field uppercase S',
+    ),
+    pytest.param(
+        'SUBJECT: bug',
+        {'subject': {'$regex': 'bug', '$options': 'i'}},
+        id='case insensitive subject field all uppercase',
+    ),
+    # Test id field case variations
+    pytest.param(
+        'Id: 507f1f77bcf86cd799439011',
+        {'_id': ObjectId('507f1f77bcf86cd799439011')},
+        id='case insensitive id field uppercase I',
+    ),
+    pytest.param(
+        'ID: 507f1f77bcf86cd799439011',
+        {'_id': ObjectId('507f1f77bcf86cd799439011')},
+        id='case insensitive id field all uppercase',
+    ),
+    # Test text field case variations
+    pytest.param(
+        'Text: search',
+        {'$text': {'$search': 'search'}},
+        id='case insensitive text field uppercase T',
+    ),
+    pytest.param(
+        'TEXT: search',
+        {'$text': {'$search': 'search'}},
+        id='case insensitive text field all uppercase',
+    ),
+    # Test tag field case variations
+    pytest.param(
+        'Tag: important',
+        {'tags.name': {'$regex': '^important$', '$options': 'i'}},
+        id='case insensitive tag field uppercase T',
+    ),
+    pytest.param(
+        'TAG: important',
+        {'tags.name': {'$regex': '^important$', '$options': 'i'}},
+        id='case insensitive tag field all uppercase',
+    ),
+    # Test created_at field case variations
+    pytest.param(
+        'Created_At: 2024-01-01',
+        {
+            'created_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive created_at field mixed case',
+    ),
+    pytest.param(
+        'CREATED_AT: 2024-01-01',
+        {
+            'created_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive created_at field all uppercase',
+    ),
+    # Test updated_at field case variations
+    pytest.param(
+        'Updated_At: 2024-01-01',
+        {
+            'updated_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive updated_at field mixed case',
+    ),
+    pytest.param(
+        'UPDATED_AT: 2024-01-01',
+        {
+            'updated_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive updated_at field all uppercase',
+    ),
+    # Test created_by field case variations
+    pytest.param(
+        'Created_By: user@example.com',
+        {'created_by.email': 'user@example.com'},
+        id='case insensitive created_by field mixed case',
+    ),
+    pytest.param(
+        'CREATED_BY: user@example.com',
+        {'created_by.email': 'user@example.com'},
+        id='case insensitive created_by field all uppercase',
+    ),
+    # Test updated_by field case variations
+    pytest.param(
+        'Updated_By: user@example.com',
+        {'updated_by.email': 'user@example.com'},
+        id='case insensitive updated_by field mixed case',
+    ),
+    pytest.param(
+        'UPDATED_BY: user@example.com',
+        {'updated_by.email': 'user@example.com'},
+        id='case insensitive updated_by field all uppercase',
+    ),
 ]
 TEST_DATETIME_FIELD_PYTEST_PARAMS = [
     pytest.param(
@@ -2403,6 +2527,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         *TEST_TEXT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_TAG_RESERVED_FIELD_PYTEST_PARAMS,
+        *TEST_CASE_INSENSITIVE_FIELD_PYTEST_PARAMS,
         *TEST_DATETIME_FIELD_PYTEST_PARAMS,
         *TEST_DATE_FIELD_PYTEST_PARAMS,
         *TEST_STRING_FIELD_PYTEST_PARAMS,

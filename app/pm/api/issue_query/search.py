@@ -181,19 +181,20 @@ class MongoQueryTransformer(Transformer):
 
     def attribute_condition(self, args):
         field, value = args
-        if field == 'project':
+        field_lower = field.lower()
+        if field_lower == 'project':
             if value is None:
                 return {'project.slug': None}
             if isinstance(value, str):
                 value = self.escape_regex(value)
             return {'project.slug': {'$regex': f'^{value}$', '$options': 'i'}}
-        if field == 'subject':
+        if field_lower == 'subject':
             if value is None:
                 return {'subject': None}
             if isinstance(value, str):
                 value = self.escape_regex(value)
             return {'subject': {'$regex': str(value), '$options': 'i'}}
-        if field == 'id':
+        if field_lower == 'id':
             if value is None:
                 return {'_id': None}
             try:
@@ -203,11 +204,11 @@ class MongoQueryTransformer(Transformer):
             if isinstance(value, str):
                 value = self.escape_regex(value)
             return {'aliases': {'$regex': str(value), '$options': 'i'}}
-        if field == 'text':
+        if field_lower == 'text':
             if value is None:
                 return {'text': None}
             return {'$text': {'$search': str(value)}}
-        if field in ('updated_at', 'created_at'):
+        if field_lower in ('updated_at', 'created_at'):
             if isinstance(value, date) and not isinstance(value, datetime):
                 start_of_day = datetime.combine(value, time.min)
                 now = utcnow()
@@ -216,16 +217,16 @@ class MongoQueryTransformer(Transformer):
                     end_of_day = min(end_of_day_max, now)
                 else:
                     end_of_day = end_of_day_max
-                return {field: {'$gte': start_of_day, '$lte': end_of_day}}
-            return {field: value}
-        if field == 'tag':
+                return {field_lower: {'$gte': start_of_day, '$lte': end_of_day}}
+            return {field_lower: value}
+        if field_lower == 'tag':
             if value is None:
                 return {'tags': []}
             if isinstance(value, str):
                 value = self.escape_regex(value)
             return {'tags.name': {'$regex': f'^{value}$', '$options': 'i'}}
-        if field in ('updated_by', 'created_by'):
-            return {f'{field}.email': value}
+        if field_lower in ('updated_by', 'created_by'):
+            return {f'{field_lower}.email': value}
         return {
             'fields': {
                 '$elemMatch': {
