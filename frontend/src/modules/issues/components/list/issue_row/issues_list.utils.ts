@@ -24,4 +24,4 @@ export const issueListSettingOptions: Record<
     },
 };
 
-export const perPageOptions = [5, 10, 15, 20, 50];
+export const perPageOptions = [10, 25, 50, 100, 500, 1000];

@@ -70,7 +70,7 @@ class IssueDraftUpdate(BaseModel):
 
 
 class IssueListParams(IssueSearchParams):
-    limit: int = Query(50, le=50, description='limit results')
+    limit: int = Query(50, le=1000, description='limit results')
     offset: int = Query(0, description='offset')
 
 
@@ -188,7 +188,7 @@ async def create_draft(
 
 @router.get('/draft/list')
 async def list_drafts(
-    limit: int = Query(50, le=50, description='limit results'),
+    limit: int = Query(50, le=1000, description='limit results'),
     offset: int = Query(0, description='offset'),
 ) -> BaseListOutput[IssueDraftOutput]:
     user_ctx = current_user()

@@ -1863,7 +1863,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 50,
+              "maximum": 1000,
               "default": 50,
               "title": "Limit"
             }
@@ -1972,7 +1972,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 50,
+              "maximum": 1000,
               "description": "limit results",
               "default": 50,
               "title": "Limit"
