@@ -84,7 +84,7 @@ class ProjectListItemOutput(BaseModel):
 
     @computed_field
     @property
-    def avatar(self) -> str:
+    def avatar(self) -> str | None:
         return (
             f'/api/avatar/project/{self.id}'
             if self.avatar_type == m.ProjectAvatarType.LOCAL
@@ -243,7 +243,7 @@ class ProjectOutput(BaseModel):
 
     @computed_field
     @property
-    def avatar(self) -> str:
+    def avatar(self) -> str | None:
         return (
             f'/api/avatar/project/{self.id}'
             if self.avatar_type == m.ProjectAvatarType.LOCAL

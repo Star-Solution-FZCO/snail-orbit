@@ -18575,7 +18575,14 @@
             "title": "Is Encrypted"
           },
           "avatar": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Avatar",
             "readOnly": true
           }
@@ -18682,7 +18689,14 @@
             "readOnly": true
           },
           "avatar": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Avatar",
             "readOnly": true
           }
