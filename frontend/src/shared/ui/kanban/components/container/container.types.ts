@@ -1,3 +1,4 @@
+import type { CollisionDetector } from "@dnd-kit/abstract";
 import type { SxProps } from "@mui/material";
 import type { ReactNode } from "react";
 
@@ -8,4 +9,5 @@ export type ContainerProps = {
     swimLaneIndex: number;
     sx?: SxProps;
     isClosed?: boolean;
+    collisionDetector?: CollisionDetector;
 };

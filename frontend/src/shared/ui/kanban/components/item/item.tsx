@@ -11,6 +11,7 @@ const ItemComponent = ({
     swimLaneIndex,
     id,
     children,
+    collisionDetector,
 }: ItemProps) => {
     const groupId = useMemo(
         () => getGroupId({ columnIndex, swimLaneIndex }),
@@ -25,6 +26,7 @@ const ItemComponent = ({
         type: "item",
         feedback: "default",
         collisionPriority: CollisionPriority.Low,
+        collisionDetector: collisionDetector,
         data: { itemIndex, columnIndex, swimLaneIndex },
     });
 

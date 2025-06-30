@@ -10,22 +10,23 @@ import type {
     AgileBoardCardFieldT,
     CustomFieldWithValueT,
     IssueT,
-    UiSettingT,
 } from "shared/model/types";
 import IssueCard from "shared/ui/agile/issue_card/issue_card";
 import {
     IssueCardBody,
     IssueCardBottom,
+    IssueCardDescription,
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { IssueLink } from "shared/ui/issue_link";
 import { notEmpty } from "shared/utils/helpers/notEmpty";
 import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser/custom_fields_chip_parser";
+import type { TotalAgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
 
 export type IssueCardProps = {
     issue: IssueT;
-    cardSetting: UiSettingT;
+    cardSetting: TotalAgileBoardViewSettings;
     cardFields: AgileBoardCardFieldT[];
     cardColorFields: AgileBoardCardFieldT[];
 } & ComponentProps<typeof IssueCard>;
@@ -33,7 +34,8 @@ export type IssueCardProps = {
 export const AgileCard: FC<IssueCardProps> = memo(
     ({ issue, cardSetting, cardColorFields, cardFields, ...props }) => {
         const { id_readable, subject } = issue;
-        const { minCardHeight } = cardSetting;
+        const { minCardHeight, showCustomFields, showDescription } =
+            cardSetting;
 
         const { data: projectData, isLoading: isProjectLoading } =
             projectApi.useGetProjectQuery(issue.project.id);
@@ -107,8 +109,18 @@ export const AgileCard: FC<IssueCardProps> = memo(
                         </IssueLink>
                         <span>{subject}</span>
                     </IssueCardHeader>
+                    {showDescription &&
+                        issue.text &&
+                        !issue.text?.encryption?.length && (
+                            <IssueCardDescription>
+                                {issue.text.value}
+                            </IssueCardDescription>
+                        )}
                     {isProjectLoading || isLoading ? <LinearProgress /> : null}
-                    {projectData && !isProjectLoading && !isLoading ? (
+                    {projectData &&
+                    !isProjectLoading &&
+                    !isLoading &&
+                    showCustomFields ? (
                         <IssueCardBottom>
                             <CustomFieldsChipParserV2
                                 fields={fields}

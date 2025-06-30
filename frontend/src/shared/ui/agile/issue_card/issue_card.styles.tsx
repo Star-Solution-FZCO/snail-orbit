@@ -57,6 +57,19 @@ export const IssueCardHeader = styled(Box, {
     },
 }));
 
+export const IssueCardDescription = styled(Box, {
+    name: "IssueCard",
+    slot: "description",
+})(({ theme }) => ({
+    fontSize: theme.typography.pxToRem(12),
+    color: theme.palette.text.secondary,
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    display: "-webkit-box",
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: 2,
+}));
+
 export const IssueCardBottom = styled(Box, {
     name: "IssueCard",
     slot: "bottom",

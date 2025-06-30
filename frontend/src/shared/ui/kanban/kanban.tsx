@@ -8,7 +8,12 @@ import { HeaderStyledContainer } from "./components/header/header.styles";
 import Item from "./components/item";
 import { ItemStyled } from "./components/item/Item.styles";
 import { SwimLine } from "./components/swim-line";
-import { makeCopy, move, sensors } from "./kanban.helper";
+import {
+    getCollisionDetection,
+    makeCopy,
+    move,
+    sensors,
+} from "./kanban.helper";
 import type { ItemData, KanbanItems, KanbanProps } from "./kanban.types";
 
 export const Kanban = <I, S, C>({
@@ -19,6 +24,7 @@ export const Kanban = <I, S, C>({
     items: outerItems,
     ItemContent,
     inBlockColumns,
+    collisionDetection,
     onCardMoved,
     getIsClosed,
     onClosedChange,
@@ -114,6 +120,11 @@ export const Kanban = <I, S, C>({
         [columns, items, onCardMoved, swimLanes],
     );
 
+    const collisionDetectionStrategy = useMemo(
+        () => getCollisionDetection(collisionDetection),
+        [collisionDetection],
+    );
+
     return (
         <DragDropProvider<ItemData>
             sensors={sensors}
@@ -166,6 +177,7 @@ export const Kanban = <I, S, C>({
                                 type: "column",
                                 value: column,
                             })}
+                            collisionDetector={collisionDetectionStrategy}
                         >
                             {items[swimLaneIdx] &&
                                 items[swimLaneIdx][columnIdx] &&
@@ -184,6 +196,9 @@ export const Kanban = <I, S, C>({
                                                 itemIndex={index}
                                                 columnIndex={columnIdx}
                                                 swimLaneIndex={swimLaneIdx}
+                                                collisionDetector={
+                                                    collisionDetectionStrategy
+                                                }
                                             >
                                                 {ItemContent ? (
                                                     <ItemContent data={item} />

@@ -1,9 +1,15 @@
 import {
+    defaultCollisionDetection,
+    pointerIntersection,
+    shapeIntersection,
+} from "@dnd-kit/collision";
+import {
     type DragDropEventHandlers,
     KeyboardSensor,
     PointerSensor,
 } from "@dnd-kit/react";
 import type { ItemData, KanbanItems } from "./kanban.types";
+import { KanbanCollisionDetection } from "./kanban.types";
 
 export const sensors = [
     PointerSensor.configure({
@@ -64,4 +70,16 @@ export const move = <I>(
     else targetParent.splice(targetData.itemIndex, 0, el);
 
     return copy;
+};
+
+export const getCollisionDetection = (val?: KanbanCollisionDetection) => {
+    if (val === undefined) return defaultCollisionDetection;
+    switch (val) {
+        case KanbanCollisionDetection.PointerIntersection:
+            return pointerIntersection;
+        case KanbanCollisionDetection.ShapeIntersection:
+            return shapeIntersection;
+        case KanbanCollisionDetection.Default:
+            return defaultCollisionDetection;
+    }
 };

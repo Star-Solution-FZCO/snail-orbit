@@ -12,6 +12,7 @@ export const Container: FC<ContainerProps> = ({
     swimLaneIndex,
     columnIndex,
     isClosed,
+    collisionDetector,
     ...props
 }) => {
     const groupId = useMemo(
@@ -24,6 +25,7 @@ export const Container: FC<ContainerProps> = ({
         type: "container",
         accept: ["item"],
         collisionPriority: CollisionPriority.Lowest,
+        collisionDetector: collisionDetector,
         data: {
             swimLaneIndex,
             columnIndex,

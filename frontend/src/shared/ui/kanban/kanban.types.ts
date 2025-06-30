@@ -14,6 +14,12 @@ export type ColumnArg<C> = { type: "column"; value: C };
 export type SwimLaneArg<S> = { type: "swimLane"; value: S };
 export type ItemArg<I> = { type: "item"; value: I };
 
+export const enum KanbanCollisionDetection {
+    Default,
+    PointerIntersection,
+    ShapeIntersection,
+}
+
 export type KanbanProps<I, S, C> = {
     columns: C[];
     swimLanes: S[];
@@ -29,6 +35,7 @@ export type KanbanProps<I, S, C> = {
     ) => void;
     inBlockColumns?: number;
     ItemContent?: ComponentType<{ data: I }>;
+    collisionDetection?: KanbanCollisionDetection;
     onCardMoved?(
         item: I,
         from: {
