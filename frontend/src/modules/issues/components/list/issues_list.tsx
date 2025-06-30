@@ -4,19 +4,20 @@ import {
     Pagination,
     Select,
     Stack,
-    ToggleButton,
-    ToggleButtonGroup,
     Typography,
 } from "@mui/material";
 import type { FC } from "react";
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
+import { useLSState } from "shared/utils/helpers/local-storage";
 import IssueRow from "./issue_row/issue_row";
+import type { IssueRowViewParams } from "./issue_row/issue_row.types";
 import {
-    issueListSettingOptions,
+    defaultIssueRowViewParams,
     perPageOptions,
 } from "./issue_row/issues_list.utils";
 import type { IssuesListProps } from "./issues_list.types";
+import { IssuesListSettings } from "./issues_list_settings";
 
 export const IssuesList: FC<IssuesListProps> = ({
     issues,
@@ -30,13 +31,11 @@ export const IssuesList: FC<IssuesListProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [selectedIssueViewOption, setSelectedIssueViewOption] =
-        useState<string>("medium");
-
-    const viewSettings = useMemo(
-        () => issueListSettingOptions[selectedIssueViewOption],
-        [selectedIssueViewOption],
-    );
+    const [issueViewParams, setIssueViewParams] =
+        useLSState<IssueRowViewParams>(
+            "ISSUE_LIST_PARAMS",
+            defaultIssueRowViewParams,
+        );
 
     return (
         <Stack gap={1}>
@@ -58,24 +57,10 @@ export const IssuesList: FC<IssuesListProps> = ({
                 </Typography>
 
                 <Stack direction="row" gap={1}>
-                    <ToggleButtonGroup
-                        size="medium"
-                        exclusive
-                        value={selectedIssueViewOption}
-                        onChange={(_, value) =>
-                            setSelectedIssueViewOption(value)
-                        }
-                    >
-                        {Object.keys(issueListSettingOptions).map((key) => (
-                            <ToggleButton
-                                key={key}
-                                value={key}
-                                sx={{ px: 0.8, py: 0.2 }}
-                            >
-                                {issueListSettingOptions[key].label}
-                            </ToggleButton>
-                        ))}
-                    </ToggleButtonGroup>
+                    <IssuesListSettings
+                        rowViewParams={issueViewParams}
+                        onRowViewParamsChange={setIssueViewParams}
+                    />
 
                     <Select
                         variant="outlined"
@@ -102,9 +87,9 @@ export const IssuesList: FC<IssuesListProps> = ({
                         <IssueRow
                             issue={issue}
                             onIssueRowDoubleClick={onIssueRowDoubleClick}
-                            {...viewSettings}
+                            {...issueViewParams}
                         />
-                        {viewSettings?.showDividers &&
+                        {issueViewParams?.showDividers &&
                             index !== issues.length - 1 && <Divider />}
                     </React.Fragment>
                 ))}

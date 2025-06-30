@@ -6,7 +6,7 @@ import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { IssueCustomFields } from "widgets/issue/issue_custom_fields/issue_custom_fields";
 import { AddLinks } from "./components/add_links";
 import { FieldContainer } from "./components/field_container";
-import { IssueActivities } from "./components/issue_activities";
+import { IssueActivities } from "./components/issue_activities/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";
 import { IssueForm } from "./components/issue_form";
 import { IssueHeading } from "./components/issue_heading";

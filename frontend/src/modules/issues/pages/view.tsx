@@ -45,9 +45,9 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            updateIssue({ ...formData, id: issueId }).catch(toastApiError);
+            updateIssue({ ...formData }).catch(toastApiError);
         },
-        [issueId, updateIssue],
+        [updateIssue],
     );
 
     useEventSubscriptionAutoReFetch({ ids: [issue?.id || ""] });

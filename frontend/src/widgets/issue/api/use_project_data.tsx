@@ -34,6 +34,8 @@ export const useProjectData = (props: { projectId?: string }) => {
         isDescriptionEncrypted:
             isEncrypted &&
             !!projectData?.payload.encryption_settings?.encrypt_description,
+        isProjectLoading,
+        isEncryptionKeysLoading,
         isLoading,
         isEncrypted,
         error,

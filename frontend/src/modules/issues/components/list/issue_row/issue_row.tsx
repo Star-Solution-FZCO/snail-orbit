@@ -58,7 +58,9 @@ export const IssueRow: FC<IssueRowProps> = memo(
                     <UpdateTime issue={issue} />
                 </IssueRowHeader>
 
-                {showDescription && <IssueRowBody>{text?.value}</IssueRowBody>}
+                {showDescription && !text?.encryption?.length && (
+                    <IssueRowBody>{text?.value}</IssueRowBody>
+                )}
                 {showCustomFields && <IssueRowFields issue={issue} />}
             </IssueRowRoot>
         );

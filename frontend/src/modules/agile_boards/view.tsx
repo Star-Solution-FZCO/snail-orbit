@@ -28,6 +28,7 @@ import { formatErrorMessages, toastApiError } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
 import { useEventSubscriptionAutoReFetch } from "../../shared/model/api/events.api";
+import { saveToLS } from "../../shared/utils/helpers/local-storage";
 import { QueryBuilder } from "../issues/components/query_builder/query_builder";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
@@ -37,7 +38,6 @@ import { AgileBoardSelect } from "./components/agile_board_select";
 import { BoardViewList } from "./components/board_view_list";
 import { DeleteAgileBoardDialog } from "./components/delete_dialog";
 import { formValuesToCreateForm } from "./utils/formValuesToCreateForm";
-import { setLastViewBoardId } from "./utils/lastViewBoardStorage";
 
 type AgileBoardViewProps = {
     boardId: string;
@@ -84,7 +84,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     }, [debouncedSearch, onQueryChange]);
 
     useEffect(() => {
-        setLastViewBoardId(boardId);
+        saveToLS("LAST_VIEW_BOARD", boardId);
     }, [boardId]);
 
     const handleBoardSelect = useCallback(

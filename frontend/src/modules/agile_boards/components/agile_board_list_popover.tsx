@@ -1,5 +1,4 @@
 import { Button } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
 import type { MouseEventHandler } from "react";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +18,6 @@ type TagListPopoverProps = {
 export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
     const { open, anchorEl, onClose, onSelect } = props;
     const [params] = useListQueryParams();
-    const navigate = useNavigate();
 
     const { t } = useTranslation();
 
@@ -67,21 +65,22 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
         [onSelect],
     );
 
-    const onGoToListClick = useCallback(() => {
-        navigate({ to: "/agiles/list" });
-    }, [navigate]);
-
     const bottomSlot = useMemo(() => {
-        if (!onGoToListClick) return null;
-
         return (
-            <Link to="/agiles/list">
-                <Button fullWidth size="small" onClick={onGoToListClick}>
-                    {t("agileBoardListPopover.goToList")}
-                </Button>
-            </Link>
+            <>
+                <Link to="/agiles/create">
+                    <Button fullWidth size="small">
+                        {t("New board")}
+                    </Button>
+                </Link>
+                <Link to="/agiles/list">
+                    <Button fullWidth size="small">
+                        {t("View list")}
+                    </Button>
+                </Link>
+            </>
         );
-    }, [onGoToListClick, t]);
+    }, [t]);
 
     return (
         <>

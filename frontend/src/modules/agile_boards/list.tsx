@@ -1,24 +1,23 @@
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
+    Button,
     CircularProgress,
     Container,
     Stack,
     TextField,
     Typography,
 } from "@mui/material";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import { Link, QueryPagination } from "shared/ui";
-import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
-import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { formatErrorMessages, useListQueryParams } from "shared/utils";
+import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { BoardsList } from "./components/list/boards_list";
 
 const AgileBoardList = () => {
     const { t } = useTranslation();
-    const { setAction } = useNavbarSettings();
+    useCreateIssueNavbarSettings();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
@@ -27,18 +26,6 @@ const AgileBoardList = () => {
         isLoading,
         error,
     } = agileBoardApi.useListAgileBoardQuery(listQueryParams);
-
-    useEffect(() => {
-        setAction(
-            <Link to="/agiles/create">
-                <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("agileBoards.new")}
-                </NavbarActionButton>
-            </Link>,
-        );
-
-        return () => setAction(null);
-    }, [setAction, t]);
 
     return (
         <Container
@@ -63,6 +50,16 @@ const AgileBoardList = () => {
                     size="small"
                     placeholder={t("agileBoards.list.search.placeholder")}
                 />
+
+                <Link to="/agiles/create">
+                    <Button
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        sx={{ textWrap: "nowrap", height: "40px" }}
+                    >
+                        {t("New board")}
+                    </Button>
+                </Link>
             </Stack>
 
             {error && (

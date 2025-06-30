@@ -21,7 +21,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         open && id ? id : skipToken,
     );
 
-    const { isLoading: isProjectLoading } = useProjectData({
+    const { isLoading: isProjectDataLoading } = useProjectData({
         projectId: data?.payload.project?.id,
     });
 
@@ -65,7 +65,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
         }
     }, [error, onClose]);
 
-    if ((!draft && isLoading) || isProjectLoading)
+    if (!draft && isLoading)
         return <ModalViewLoader open={open} onClose={onClose} />;
 
     if (!draft) return null;
@@ -80,7 +80,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                 isLoading ||
                 isDraftUpdateLoading ||
                 createLoading ||
-                isProjectLoading
+                isProjectDataLoading
             }
             open={open}
             onClose={onClose}

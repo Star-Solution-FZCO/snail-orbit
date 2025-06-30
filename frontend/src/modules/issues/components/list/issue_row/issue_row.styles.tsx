@@ -9,6 +9,7 @@ export const IssueRowRoot = styled("div", {
     flexDirection: "column",
     padding: theme.spacing(0.5),
     fontSize: theme.typography.pxToRem(14),
+    minWidth: theme.typography.pxToRem(200),
 
     "&:focus": {
         outline: "none",
@@ -35,8 +36,10 @@ export const IssueRowBody = styled("div", { name: "IssueRow", slot: "body" })(
         overflow: "hidden",
         textOverflow: "ellipsis",
         display: "-webkit-box",
-        webkitLineClamp: "2",
-        webkitBoxOrient: "vertical",
+        lineClamp: "2",
+        boxOrient: "vertical",
+        WebkitLineClamp: "2",
+        WebkitBoxOrient: "vertical",
     }),
 );
 

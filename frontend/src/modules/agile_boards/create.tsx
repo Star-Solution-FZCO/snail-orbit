@@ -1,14 +1,10 @@
-import AddIcon from "@mui/icons-material/Add";
 import { Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { agileBoardApi } from "shared/model";
-import { Link } from "shared/ui";
-import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
-import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
+import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { CreateAgileBoardForm } from "./components/create_agile_board_form/create_agile_board_form";
 import type { FormValues } from "./components/create_agile_board_form/create_agile_board_form.types";
 import { form_values_to_api_data } from "./components/create_agile_board_form/form_values_to_api_data";
@@ -16,7 +12,7 @@ import { form_values_to_api_data } from "./components/create_agile_board_form/fo
 const AgileBoardCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { setAction } = useNavbarSettings();
+    useCreateIssueNavbarSettings();
 
     const [createAgileBoard] = agileBoardApi.useCreateAgileBoardMutation();
 
@@ -31,18 +27,6 @@ const AgileBoardCreate = () => {
             })
             .catch(toastApiError);
     };
-
-    useEffect(() => {
-        setAction(
-            <Link to="/agiles/create">
-                <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("agileBoards.new")}
-                </NavbarActionButton>
-            </Link>,
-        );
-
-        return () => setAction(null);
-    }, [setAction, t]);
 
     return (
         <Container sx={{ px: 4, pb: 4 }} disableGutters>
