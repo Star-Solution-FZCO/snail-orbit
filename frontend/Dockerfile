@@ -1,10 +1,22 @@
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+
 WORKDIR /src/frontend
 COPY frontend/package.json .
 COPY frontend/yarn.lock .
 RUN yarn install --frozen-lockfile
 COPY frontend .
 COPY app/openapi.json /src/app/openapi.json
+
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_RELEASE=""
+ARG SENTRY_AUTH_TOKEN=""
+
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+
 RUN yarn build
 
 

@@ -5,4 +5,5 @@
     window["env"]["EVENTS_URL"] = "${EVENTS_URL}";
     window["env"]["APP_VERSION"] = "${APP_VERSION}";
     window["env"]["ENVIRONMENT"] = "${ENVIRONMENT}";
+    window["env"]["SENTRY_DSN"] = "${SENTRY_DSN}";
 })(this);

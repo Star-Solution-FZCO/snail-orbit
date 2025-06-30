@@ -5,6 +5,7 @@ declare global {
             EVENTS_URL?: string;
             APP_VERSION?: string;
             ENVIRONMENT?: string;
+            SENTRY_DSN?: string;
         };
     }
 }
@@ -27,7 +28,8 @@ const META_CONFIG = {
 type Environment = keyof typeof META_CONFIG;
 
 const getEnvironment = (): Environment => {
-    const env = window?.env?.ENVIRONMENT as Environment;
+    const env = (window?.env?.ENVIRONMENT ||
+        import.meta.env.VITE_ENVIRONMENT) as Environment;
 
     if (env && env in META_CONFIG) {
         return env;
@@ -57,6 +59,8 @@ export const EVENTS_URL =
 export const APP_VERSION =
     window?.env?.APP_VERSION || import.meta.env.VITE_APP_VERSION || "__DEV__";
 export const API_VERSION = "v1";
+export const SENTRY_DSN =
+    window?.env?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN || "";
 export const APP_TITLE = metaConfig.title;
 export const FAVICON_URL = metaConfig.favicon;
 

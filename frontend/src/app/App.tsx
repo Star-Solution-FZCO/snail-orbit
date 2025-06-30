@@ -8,6 +8,7 @@ import { store } from "shared/model";
 import { theme } from "shared/theme";
 import { Lightbox } from "shared/ui";
 import { router } from "./router";
+import "./sentry";
 
 const ToastContainerComp = () => {
     const { mode } = useColorScheme();
