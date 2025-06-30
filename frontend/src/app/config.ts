@@ -6,6 +6,7 @@ declare global {
             APP_VERSION?: string;
             ENVIRONMENT?: string;
             SENTRY_DSN?: string;
+            SENTRY_ENVIRONMENT?: string;
         };
     }
 }
@@ -61,6 +62,10 @@ export const APP_VERSION =
 export const API_VERSION = "v1";
 export const SENTRY_DSN =
     window?.env?.SENTRY_DSN || import.meta.env.VITE_SENTRY_DSN || "";
+export const SENTRY_ENVIRONMENT =
+    window?.env?.SENTRY_ENVIRONMENT ||
+    import.meta.env.VITE_SENTRY_ENVIRONMENT ||
+    "dev";
 export const APP_TITLE = metaConfig.title;
 export const FAVICON_URL = metaConfig.favicon;
 

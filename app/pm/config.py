@@ -94,12 +94,6 @@ CONFIG = Dynaconf(
             default=None,
         ),
         Validator(
-            'SENTRY_PROJECT_SLUG',
-            is_type_of=str | None,
-            default=None,
-            when=Validator('SENTRY_DSN', condition=bool),
-        ),
-        Validator(
             'SENTRY_ENVIRONMENT',
             is_type_of=str | None,
             default=None,

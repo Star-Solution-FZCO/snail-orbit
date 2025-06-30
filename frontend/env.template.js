@@ -6,4 +6,5 @@
     window["env"]["APP_VERSION"] = "${APP_VERSION}";
     window["env"]["ENVIRONMENT"] = "${ENVIRONMENT}";
     window["env"]["SENTRY_DSN"] = "${SENTRY_DSN}";
+    window["env"]["SENTRY_ENVIRONMENT"] = "${SENTRY_ENVIRONMENT}";
 })(this);

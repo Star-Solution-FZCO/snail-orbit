@@ -24,15 +24,14 @@ from starsol_fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pm.api.views.output import ErrorOutput
 from pm.config import CONFIG
+from pm.constants import SENTRY_PACKAGE_NAME
 from pm.utils.document import init_read_only_projection_models
 from pm.version import APP_VERSION
 
 if CONFIG.SENTRY_DSN:
     sentry_sdk.init(
         dsn=CONFIG.SENTRY_DSN,
-        release=f'{CONFIG.SENTRY_PROJECT_SLUG}@{APP_VERSION}'
-        if CONFIG.SENTRY_PROJECT_SLUG
-        else None,
+        release=f'{SENTRY_PACKAGE_NAME}@{APP_VERSION}',
         environment=CONFIG.SENTRY_ENVIRONMENT,
         ca_certs=CONFIG.SENTRY_CA_CERTS,
         debug=CONFIG.DEBUG,

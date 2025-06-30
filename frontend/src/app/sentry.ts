@@ -1,10 +1,12 @@
 import * as Sentry from "@sentry/react";
-import { SENTRY_DSN } from "./config";
+import { APP_VERSION, SENTRY_DSN, SENTRY_ENVIRONMENT } from "./config";
 import { router } from "./router";
 
 if (SENTRY_DSN) {
     Sentry.init({
         dsn: SENTRY_DSN,
+        release: `snail-orbit@${APP_VERSION}`,
+        environment: SENTRY_ENVIRONMENT,
         sendDefaultPii: true,
         integrations: [
             Sentry.tanstackRouterBrowserTracingIntegration(router),
