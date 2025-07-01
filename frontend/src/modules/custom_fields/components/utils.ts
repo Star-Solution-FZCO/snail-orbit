@@ -12,6 +12,8 @@ const complexCustomFieldTypes = new Set<CustomFieldTypeT>([
     "version",
     "version_multi",
     "state",
+    "owned",
+    "owned_multi",
 ]);
 
 export const isComplexCustomFieldType = (type: CustomFieldTypeT) => {

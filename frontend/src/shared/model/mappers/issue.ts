@@ -17,9 +17,11 @@ export const fieldToFieldValue = (
         case "enum":
         case "state":
         case "version":
+        case "owned":
             return field.value?.value;
         case "enum_multi":
         case "version_multi":
+        case "owned_multi":
             return field.value?.map((el) => el.value);
         default:
             return field.value;

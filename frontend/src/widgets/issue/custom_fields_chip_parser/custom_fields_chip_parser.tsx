@@ -4,12 +4,14 @@ import utc from "dayjs/plugin/utc";
 import { DateChip } from "features/custom_fields/date_chip";
 import { EnumChip } from "features/custom_fields/enum_chip";
 import { InputChip } from "features/custom_fields/input_chip";
+import { OwnedChip } from "features/custom_fields/owned_chip";
 import UserChip from "features/custom_fields/user_chip";
 import type { FC } from "react";
 import { useCallback } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import type {
     EnumOption,
+    OwnedOptionOutput,
     StateOption,
     UserOutput,
     VersionOption,
@@ -248,6 +250,35 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                                         onChange?.({
                                             ...field,
                                             value: value as VersionOption[],
+                                        });
+                                    }}
+                                    multiple
+                                />
+                            );
+                        case "owned":
+                            return (
+                                <OwnedChip
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    value={field?.value || undefined}
+                                    onChange={(value) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: value as OwnedOptionOutput,
+                                        });
+                                    }}
+                                />
+                            );
+                        case "owned_multi":
+                            return (
+                                <OwnedChip
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    value={field?.value || undefined}
+                                    onChange={(value) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: value as OwnedOptionOutput[],
                                         });
                                     }}
                                     multiple

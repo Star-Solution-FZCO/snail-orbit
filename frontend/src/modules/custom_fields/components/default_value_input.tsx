@@ -229,6 +229,7 @@ export const DefaultValueInput: FC<{
             case "enum":
             case "user":
             case "version":
+            case "owned":
                 return (
                     <RenderSelect
                         value={defaultValueGetter(value)}
@@ -241,6 +242,7 @@ export const DefaultValueInput: FC<{
             case "enum_multi":
             case "user_multi":
             case "version_multi":
+            case "owned_multi":
                 return (
                     <RenderSelect
                         value={defaultValueGetter(value)}

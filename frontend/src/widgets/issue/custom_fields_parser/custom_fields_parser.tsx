@@ -3,6 +3,7 @@ import utc from "dayjs/plugin/utc";
 import { DateField } from "features/custom_fields/date_field";
 import { EnumField } from "features/custom_fields/enum_field";
 import { InputField } from "features/custom_fields/input_field";
+import { OwnedField } from "features/custom_fields/owned_field";
 import { UserField } from "features/custom_fields/user_field";
 import { VersionField } from "features/custom_fields/version_field";
 import type { FC } from "react";
@@ -10,6 +11,7 @@ import { useCallback } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import type {
     EnumOption,
+    OwnedOption,
     StateOption,
     UserOutput,
     VersionOption,
@@ -240,6 +242,35 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                                         onChange?.({
                                             ...field,
                                             value: value as VersionOption[],
+                                        });
+                                    }}
+                                    multiple
+                                />
+                            );
+                        case "owned":
+                            return (
+                                <OwnedField
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    value={field?.value || undefined}
+                                    onChange={(value) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: value as OwnedOption,
+                                        });
+                                    }}
+                                />
+                            );
+                        case "owned_multi":
+                            return (
+                                <OwnedField
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    value={field?.value || undefined}
+                                    onChange={(value) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: value as OwnedOption[],
                                         });
                                     }}
                                     multiple

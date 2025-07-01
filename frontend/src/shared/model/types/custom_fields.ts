@@ -7,6 +7,9 @@ import type {
     EnumCustomFieldValueOutput,
     EnumOption,
     EnumOptionOutput,
+    OwnedCustomFieldOutput,
+    OwnedMultiCustomFieldOutput,
+    OwnedOptionOutput,
     StateOption,
     StateOptionOutput,
     UserOptionOutput,
@@ -29,6 +32,8 @@ export const customFieldsTypes = [
     "state",
     "version",
     "version_multi",
+    "owned",
+    "owned_multi",
 ] as const;
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
@@ -68,11 +73,23 @@ export type UpdateVersionOptionT = Partial<CreateVersionOptionT> & {
     option_id: string;
 };
 
+// owned
+export type CreateOwnedOptionT = {
+    value: string;
+    owner: string | null;
+    color: string | null;
+};
+
+export type UpdateOwnedOptionT = Partial<CreateOwnedOptionT> & {
+    option_id: string;
+};
+
 export type CustomFieldOptionT =
     | EnumOptionT
     | StateOptionT
     | UserOrGroupOptionT
-    | VersionOptionT;
+    | VersionOptionT
+    | OwnedOptionT;
 
 // fields
 export type FieldBaseT = {
@@ -88,6 +105,9 @@ export type StateFieldValueT = StateOption;
 
 export type VersionOptionT = VersionOptionOutput;
 export type VersionFieldValueT = VersionOption;
+
+export type OwnedOptionT = OwnedOptionOutput;
+export type OwnedFieldValueT = OwnedOption;
 
 export type UserOrGroupOptionT = UserOptionOutput;
 
@@ -112,6 +132,10 @@ export type CustomFieldWithValueT = CustomFieldValueOutputRootModel;
 export type EnumCustomFieldT = EnumCustomFieldOutput;
 
 export type EnumCustomFieldWithValueT = EnumCustomFieldValueOutput;
+
+export type OwnedCustomFieldT = OwnedCustomFieldOutput;
+
+export type OwnedMultiCustomFieldT = OwnedMultiCustomFieldOutput;
 
 export type CustomFieldValueT =
     | string

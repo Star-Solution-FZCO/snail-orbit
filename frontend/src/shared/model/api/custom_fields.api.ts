@@ -4,6 +4,7 @@ import type {
     BasicUserT,
     CreateCustomFieldT,
     CreateEnumOptionT,
+    CreateOwnedOptionT,
     CreateStateOptionT,
     CreateVersionOptionT,
     CustomFieldGroupT,
@@ -11,11 +12,13 @@ import type {
     EnumOptionT,
     ListQueryParams,
     ListResponse,
+    OwnedOptionT,
     StateOptionT,
     TargetTypeT,
     UpdateCustomFieldGroupT,
     UpdateCustomFieldT,
     UpdateEnumOptionT,
+    UpdateOwnedOptionT,
     UpdateStateOptionT,
     UpdateVersionOptionT,
     VersionOptionT,
@@ -314,9 +317,51 @@ export const customFieldsApi = createApi({
                 { type: "CustomFields", id },
             ],
         }),
+        createCustomFieldOwnedOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & CreateOwnedOptionT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `custom_field/${id}/owned-option`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        updateCustomFieldOwnedOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & UpdateOwnedOptionT
+        >({
+            query: ({ id, option_id, ...body }) => ({
+                url: `custom_field/${id}/owned-option/${option_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        deleteCustomFieldOwnedOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string; option_id: string }
+        >({
+            query: ({ id, option_id }) => ({
+                url: `custom_field/${id}/owned-option/${option_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
         listSelectOptions: build.query<
             ListResponse<
-                EnumOptionT | StateOptionT | BasicUserT | VersionOptionT
+                | EnumOptionT
+                | StateOptionT
+                | BasicUserT
+                | VersionOptionT
+                | OwnedOptionT
             >,
             { id: string } & (ListQueryParams | void)
         >({

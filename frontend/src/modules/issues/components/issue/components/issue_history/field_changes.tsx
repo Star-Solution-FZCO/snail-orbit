@@ -125,6 +125,17 @@ const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
             return target?.map((option) => option.value).join(", ") || noValue;
         }
 
+        case "owned": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            if (!target) return noValue;
+            return target?.value || noValue;
+        }
+
+        case "owned_multi": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target?.map((option) => option.value).join(", ") || noValue;
+        }
+
         case "version": {
             const target = type === "old" ? change.old_value : change.new_value;
             return target ? renderVersion(target) : noValue;
