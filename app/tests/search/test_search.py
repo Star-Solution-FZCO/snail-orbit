@@ -20,6 +20,7 @@ def _custom_fields() -> dict:
         'Assignee': CustomFieldTypeT.USER,
         'Version': CustomFieldTypeT.VERSION,
         'Feature': CustomFieldTypeT.BOOLEAN,
+        'Subsystem': CustomFieldTypeT.OWNED,
     }
 
     return {k.lower(): v for k, v in fields.items()}
@@ -608,6 +609,21 @@ TEST_STATE_FIELD_PYTEST_PARAMS = [
         id=f'state field with value {value}',
     )
     for value in [1.1, '1.1', 'null', '1-v', 'v-20']
+]
+TEST_OWNED_FIELD_PYTEST_PARAMS = [
+    pytest.param(
+        f'Subsystem: {value}',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^subsystem$', '$options': 'i'},
+                    'value.value': f'{value}' if value != 'null' else None,
+                }
+            }
+        },
+        id=f'owned field with value {value}',
+    )
+    for value in ['null', 'UI', 'API']
 ]
 TEST_RELATIVE_DT_PYTEST_PARAMS = [
     pytest.param(
@@ -2533,6 +2549,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         *TEST_STRING_FIELD_PYTEST_PARAMS,
         *TEST_ENUM_FIELD_PYTEST_PARAMS,
         *TEST_STATE_FIELD_PYTEST_PARAMS,
+        *TEST_OWNED_FIELD_PYTEST_PARAMS,
         *TEST_RELATIVE_DT_PYTEST_PARAMS,
         *TEST_USER_FIELD_PYTEST_PARAMS,
         *SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,

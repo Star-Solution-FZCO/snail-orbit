@@ -57,6 +57,8 @@ class CustomFieldTypeT(StrEnum):
     VERSION_MULTI = 'version_multi'
     USER = 'user'
     USER_MULTI = 'user_multi'
+    OWNED = 'owned'
+    OWNED_MULTI = 'owned_multi'
 
 
 @audited_model

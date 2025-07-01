@@ -482,6 +482,84 @@ async def test_api_v1_tag(
             },
             id='version_multi',
         ),
+        pytest.param(
+            {
+                'name': 'Test owned field',
+                'type': 'owned',
+                'is_nullable': True,
+                'description': 'Owned custom field description',
+                'ai_description': 'Owned custom field AI description',
+                'default_value': None,
+                'options': [
+                    {
+                        'value': 'High Priority',
+                        'owner': {
+                            'id': '507f1f77bcf86cd799439011',
+                            'name': 'Admin User',
+                            'email': 'admin@example.com',
+                        },
+                        'color': '#ff0000',
+                        'is_archived': False,
+                    },
+                    {
+                        'value': 'Medium Priority',
+                        'owner': None,
+                        'color': '#ffff00',
+                        'is_archived': False,
+                    },
+                    {
+                        'value': 'Low Priority',
+                        'owner': {
+                            'id': '507f1f77bcf86cd799439012',
+                            'name': 'User Two',
+                            'email': 'user2@example.com',
+                        },
+                        'color': '#00ff00',
+                        'is_archived': False,
+                    },
+                ],
+            },
+            id='owned',
+        ),
+        pytest.param(
+            {
+                'name': 'Test owned multi field',
+                'type': 'owned_multi',
+                'is_nullable': True,
+                'description': 'Multi-owned custom field description',
+                'ai_description': 'Multi-owned custom field AI description',
+                'default_value': None,
+                'options': [
+                    {
+                        'value': 'Team Lead',
+                        'owner': {
+                            'id': '507f1f77bcf86cd799439013',
+                            'name': 'Team Lead',
+                            'email': 'teamlead@example.com',
+                        },
+                        'color': '#ff0000',
+                        'is_archived': False,
+                    },
+                    {
+                        'value': 'Developer',
+                        'owner': {
+                            'id': '507f1f77bcf86cd799439014',
+                            'name': 'Developer User',
+                            'email': 'developer@example.com',
+                        },
+                        'color': '#00ff00',
+                        'is_archived': False,
+                    },
+                    {
+                        'value': 'Unassigned',
+                        'owner': None,
+                        'color': '#808080',
+                        'is_archived': False,
+                    },
+                ],
+            },
+            id='owned_multi',
+        ),
     ],
 )
 async def test_api_v1_custom_field_get_list_update(
@@ -502,17 +580,30 @@ async def test_api_v1_custom_field_get_list_update(
         **custom_field_payload,
         'projects': [],
     }
+
     if custom_field_payload['type'] in (
         'enum',
         'enum_multi',
         'state',
         'version',
         'version_multi',
+        'owned',
+        'owned_multi',
     ):
-        field_expected_payload['options'] = [
-            {'uuid': create_custom_field['options'][option['value']], **option}
-            for option in custom_field_payload['options']
-        ]
+        if custom_field_payload['type'] in ('owned', 'owned_multi'):
+            # For owned fields, use the actual API response data instead of original test data
+            field_expected_payload['options'] = [
+                {
+                    'uuid': create_custom_field['options'][option['value']],
+                    **create_custom_field['_option_data'][option['value']],
+                }
+                for option in custom_field_payload['options']
+            ]
+        else:
+            field_expected_payload['options'] = [
+                {'uuid': create_custom_field['options'][option['value']], **option}
+                for option in custom_field_payload['options']
+            ]
 
     assert response.status_code == 200
     assert response.json() == {

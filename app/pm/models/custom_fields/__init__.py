@@ -14,6 +14,7 @@ from ._base import (
     CustomFieldValidationError,
 )
 from .enum_cf import EnumCustomField, EnumMultiCustomField, EnumOption
+from .owned_cf import OwnedCustomField, OwnedMultiCustomField, OwnedOption
 from .plain import (
     BooleanCustomField,
     DateCustomField,
@@ -61,6 +62,9 @@ __all__ = (
     'UserOption',
     'UserOptionType',
     'GroupOption',
+    'OwnedCustomField',
+    'OwnedMultiCustomField',
+    'OwnedOption',
 )
 
 MAPPING = {
@@ -77,6 +81,8 @@ MAPPING = {
     CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomField,
     CustomFieldTypeT.USER: UserCustomField,
     CustomFieldTypeT.USER_MULTI: UserMultiCustomField,
+    CustomFieldTypeT.OWNED: OwnedCustomField,
+    CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomField,
 }
 
 
@@ -105,6 +111,8 @@ CustomFieldValueT = (
     | StateOption
     | VersionOption
     | list[VersionOption]
+    | OwnedOption
+    | list[OwnedOption]
     | PydanticObjectId
     | Any
     | None

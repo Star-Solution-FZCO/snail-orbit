@@ -7019,6 +7019,400 @@
         }
       }
     },
+    "/api/v1/custom_field/group/{custom_field_gid}/field/{custom_field_id}/owned-option": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Add Owned Option",
+        "operationId": "add_owned_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__owned_option_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnedOptionCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/{custom_field_id}/owned-option": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Add Owned Option",
+        "operationId": "add_owned_option_api_v1_custom_field__custom_field_id__owned_option_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnedOptionCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Update Owned Option",
+        "operationId": "update_owned_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__owned_option__option_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnedOptionUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Remove Owned Option",
+        "operationId": "remove_owned_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__owned_option__option_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/{custom_field_id}/owned-option/{option_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Update Owned Option",
+        "operationId": "update_owned_option_api_v1_custom_field__custom_field_id__owned_option__option_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnedOptionUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Remove Owned Option",
+        "operationId": "remove_owned_option_api_v1_custom_field__custom_field_id__owned_option__option_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/custom_field/group/{custom_field_gid}/field/{custom_field_id}/select": {
       "get": {
         "tags": [
@@ -7086,7 +7480,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__"
+                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
                 }
               }
             }
@@ -7171,7 +7565,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__"
+                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
                 }
               }
             }
@@ -11729,7 +12123,7 @@
         ],
         "title": "BaseListOutput[TagOutput]"
       },
-      "BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__": {
+      "BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -11737,14 +12131,14 @@
             "default": true
           },
           "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__"
+            "$ref": "#/components/schemas/BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
           }
         },
         "type": "object",
         "required": [
           "payload"
         ],
-        "title": "BaseListOutput[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput]]"
+        "title": "BaseListOutput[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
       },
       "BaseListOutput_Union_UserOutput__ShortOptionOutput__": {
         "properties": {
@@ -12513,7 +12907,7 @@
         ],
         "title": "BaseListPayload[TagOutput]"
       },
-      "BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__": {
+      "BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__": {
         "properties": {
           "count": {
             "type": "integer",
@@ -12541,6 +12935,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/VersionOptionOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/OwnedOptionOutput"
                 }
               ]
             },
@@ -12555,7 +12952,7 @@
           "offset",
           "items"
         ],
-        "title": "BaseListPayload[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput]]"
+        "title": "BaseListPayload[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
       },
       "BaseListPayload_Union_UserOutput__ShortOptionOutput__": {
         "properties": {
@@ -13604,6 +14001,12 @@
           },
           {
             "$ref": "#/components/schemas/VersionMultiCustomFieldGroupOutput"
+          },
+          {
+            "$ref": "#/components/schemas/OwnedCustomFieldGroupOutput"
+          },
+          {
+            "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupOutput"
           }
         ],
         "title": "CustomFieldGroupOutputRootModel",
@@ -13617,6 +14020,8 @@
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldGroupOutput",
             "float": "#/components/schemas/FloatCustomFieldGroupOutput",
             "integer": "#/components/schemas/IntegerCustomFieldGroupOutput",
+            "owned": "#/components/schemas/OwnedCustomFieldGroupOutput",
+            "owned_multi": "#/components/schemas/OwnedMultiCustomFieldGroupOutput",
             "state": "#/components/schemas/StateCustomFieldGroupOutput",
             "string": "#/components/schemas/StringCustomFieldGroupOutput",
             "user": "#/components/schemas/UserCustomFieldGroupOutput",
@@ -13804,6 +14209,12 @@
           },
           {
             "$ref": "#/components/schemas/VersionMultiCustomFieldOutput"
+          },
+          {
+            "$ref": "#/components/schemas/OwnedCustomFieldOutput"
+          },
+          {
+            "$ref": "#/components/schemas/OwnedMultiCustomFieldOutput"
           }
         ],
         "title": "CustomFieldOutputRootModel",
@@ -13817,6 +14228,8 @@
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldOutput",
             "float": "#/components/schemas/FloatCustomFieldOutput",
             "integer": "#/components/schemas/IntegerCustomFieldOutput",
+            "owned": "#/components/schemas/OwnedCustomFieldOutput",
+            "owned_multi": "#/components/schemas/OwnedMultiCustomFieldOutput",
             "state": "#/components/schemas/StateCustomFieldOutput",
             "string": "#/components/schemas/StringCustomFieldOutput",
             "user": "#/components/schemas/UserCustomFieldOutput",
@@ -13841,7 +14254,9 @@
           "version",
           "version_multi",
           "user",
-          "user_multi"
+          "user_multi",
+          "owned",
+          "owned_multi"
         ],
         "title": "CustomFieldTypeT"
       },
@@ -13915,6 +14330,12 @@
             "$ref": "#/components/schemas/EnumMultiCustomFieldValueOutput"
           },
           {
+            "$ref": "#/components/schemas/OwnedCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/OwnedMultiCustomFieldValueOutput"
+          },
+          {
             "$ref": "#/components/schemas/StateCustomFieldValueOutput"
           },
           {
@@ -13935,6 +14356,8 @@
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldValueOutput",
             "float": "#/components/schemas/FloatCustomFieldValueOutput",
             "integer": "#/components/schemas/IntegerCustomFieldValueOutput",
+            "owned": "#/components/schemas/OwnedCustomFieldValueOutput",
+            "owned_multi": "#/components/schemas/OwnedMultiCustomFieldValueOutput",
             "state": "#/components/schemas/StateCustomFieldValueOutput",
             "string": "#/components/schemas/StringCustomFieldValueOutput",
             "user": "#/components/schemas/UserCustomFieldValueOutput",
@@ -16811,6 +17234,12 @@
             "$ref": "#/components/schemas/IssueEnumMultiFieldChangeOutput"
           },
           {
+            "$ref": "#/components/schemas/IssueOwnedFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueOwnedMultiFieldChangeOutput"
+          },
+          {
             "$ref": "#/components/schemas/IssueStateFieldChangeOutput"
           },
           {
@@ -16831,6 +17260,8 @@
             "enum_multi": "#/components/schemas/IssueEnumMultiFieldChangeOutput",
             "float": "#/components/schemas/IssueFloatFieldChangeOutput",
             "integer": "#/components/schemas/IssueIntegerFieldChangeOutput",
+            "owned": "#/components/schemas/IssueOwnedFieldChangeOutput",
+            "owned_multi": "#/components/schemas/IssueOwnedMultiFieldChangeOutput",
             "state": "#/components/schemas/IssueStateFieldChangeOutput",
             "string": "#/components/schemas/IssueStringFieldChangeOutput",
             "user": "#/components/schemas/IssueUserFieldChangeOutput",
@@ -17393,6 +17824,130 @@
           "tags"
         ],
         "title": "IssueOutput"
+      },
+      "IssueOwnedFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "owned",
+            "title": "Field Type",
+            "default": "owned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueOwnedFieldChangeOutput"
+      },
+      "IssueOwnedMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "owned_multi",
+            "title": "Field Type",
+            "default": "owned_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueOwnedMultiFieldChangeOutput"
       },
       "IssueQueryToFiltersBody": {
         "properties": {
@@ -18218,6 +18773,574 @@
           "payload"
         ],
         "title": "ModelIdOutput"
+      },
+      "OwnedCustomFieldGroupOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned",
+            "title": "Type",
+            "default": "owned"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedCustomFieldOutput"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "fields"
+        ],
+        "title": "OwnedCustomFieldGroupOutput"
+      },
+      "OwnedCustomFieldOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned",
+            "title": "Type",
+            "default": "owned"
+          },
+          "is_nullable": {
+            "type": "boolean",
+            "title": "Is Nullable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnedOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectShortOutput"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedOptionOutput"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "is_nullable",
+          "default_value",
+          "label",
+          "projects",
+          "options"
+        ],
+        "title": "OwnedCustomFieldOutput"
+      },
+      "OwnedCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned",
+            "title": "Type",
+            "default": "owned"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "OwnedCustomFieldValueOutput"
+      },
+      "OwnedMultiCustomFieldGroupOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned_multi",
+            "title": "Type",
+            "default": "owned_multi"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedMultiCustomFieldOutput"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "fields"
+        ],
+        "title": "OwnedMultiCustomFieldGroupOutput"
+      },
+      "OwnedMultiCustomFieldOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned_multi",
+            "title": "Type",
+            "default": "owned_multi"
+          },
+          "is_nullable": {
+            "type": "boolean",
+            "title": "Is Nullable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOptionOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectShortOutput"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedOptionOutput"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "is_nullable",
+          "default_value",
+          "label",
+          "projects",
+          "options"
+        ],
+        "title": "OwnedMultiCustomFieldOutput"
+      },
+      "OwnedMultiCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned_multi",
+            "title": "Type",
+            "default": "owned_multi"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "OwnedMultiCustomFieldValueOutput"
+      },
+      "OwnedOption": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier for the option"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "Display value of the option"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserLinkField"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "User who owns this option"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Color associated with the option"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "description": "Whether the option is archived",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "value"
+        ],
+        "title": "OwnedOption"
+      },
+      "OwnedOptionCreateBody": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24,
+                "minLength": 24,
+                "pattern": "^[0-9a-f]{24}$",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "OwnedOptionCreateBody"
+      },
+      "OwnedOptionOutput": {
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Uuid"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid",
+          "value"
+        ],
+        "title": "OwnedOptionOutput"
+      },
+      "OwnedOptionUpdateBody": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24,
+                "minLength": 24,
+                "pattern": "^[0-9a-f]{24}$",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Archived"
+          }
+        },
+        "type": "object",
+        "title": "OwnedOptionUpdateBody"
       },
       "PasswordResetSetBody": {
         "properties": {

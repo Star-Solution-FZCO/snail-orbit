@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 from abc import ABC
 from datetime import date, datetime
 from typing import Annotated, Any, Generic, Literal, Self, TypeVar
@@ -16,10 +17,13 @@ __all__ = (
     'EnumOptionOutput',
     'StateOptionOutput',
     'VersionOptionOutput',
+    'OwnedOptionOutput',
     'StateCustomFieldOutput',
     'EnumCustomFieldOutput',
     'UserCustomFieldOutput',
     'VersionCustomFieldOutput',
+    'OwnedCustomFieldOutput',
+    'OwnedMultiCustomFieldOutput',
     'CustomFieldLinkOutput',
     'CustomFieldGroupLinkOutput',
     'CustomFieldOutputT',
@@ -47,6 +51,10 @@ __all__ = (
     'StateCustomFieldGroupWithValuesOutput',
     'VersionCustomFieldGroupWithValuesOutput',
     'VersionMultiCustomFieldGroupWithValuesOutput',
+    'OwnedCustomFieldGroupWithValuesOutput',
+    'OwnedMultiCustomFieldGroupWithValuesOutput',
+    'OwnedCustomFieldGroupOutput',
+    'OwnedMultiCustomFieldGroupOutput',
 )
 
 
@@ -106,6 +114,24 @@ class VersionOptionOutput(BaseModel):
             value=obj.value,
             release_date=obj.release_date.date() if obj.release_date else None,
             is_released=obj.is_released,
+            is_archived=obj.is_archived,
+        )
+
+
+class OwnedOptionOutput(BaseModel):
+    uuid: UUID
+    value: str
+    owner: UserOutput | None = None
+    color: str | None = None
+    is_archived: bool = False
+
+    @classmethod
+    def from_obj(cls, obj: m.OwnedOption) -> Self:
+        return cls(
+            uuid=obj.id,
+            value=obj.value,
+            owner=UserOutput.from_obj(obj.owner) if obj.owner else None,
+            color=obj.color,
             is_archived=obj.is_archived,
         )
 
@@ -355,6 +381,52 @@ class VersionMultiCustomFieldOutput(BaseCustomFieldOutput[m.VersionMultiCustomFi
         )
 
 
+class OwnedCustomFieldOutput(BaseCustomFieldOutput[m.OwnedCustomField]):
+    type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    default_value: OwnedOptionOutput | None
+    options: list[OwnedOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.OwnedCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            gid=obj.gid,
+            name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
+            is_nullable=obj.is_nullable,
+            options=[OwnedOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=OwnedOptionOutput.from_obj(obj.default_value)
+            if obj.default_value
+            else None,
+            label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
+        )
+
+
+class OwnedMultiCustomFieldOutput(BaseCustomFieldOutput[m.OwnedMultiCustomField]):
+    type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    default_value: list[OwnedOptionOutput] | None
+    options: list[OwnedOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.OwnedMultiCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            gid=obj.gid,
+            name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
+            is_nullable=obj.is_nullable,
+            options=[OwnedOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=[OwnedOptionOutput.from_obj(opt) for opt in obj.default_value]
+            if obj.default_value
+            else None,
+            label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
+        )
+
+
 CustomFieldOutputT = (
     StringCustomFieldOutput
     | IntegerCustomFieldOutput
@@ -369,11 +441,17 @@ CustomFieldOutputT = (
     | StateCustomFieldOutput
     | VersionCustomFieldOutput
     | VersionMultiCustomFieldOutput
+    | OwnedCustomFieldOutput
+    | OwnedMultiCustomFieldOutput
 )
 
 
 CustomFieldSelectOptionsT = (
-    EnumOptionOutput | UserOutput | StateOptionOutput | VersionOptionOutput
+    EnumOptionOutput
+    | UserOutput
+    | StateOptionOutput
+    | VersionOptionOutput
+    | OwnedOptionOutput
 )
 
 
@@ -449,6 +527,8 @@ CF_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldOutputT]] = {
     m.CustomFieldTypeT.STATE: StateCustomFieldOutput,
     m.CustomFieldTypeT.VERSION: VersionCustomFieldOutput,
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldOutput,
+    m.CustomFieldTypeT.OWNED: OwnedCustomFieldOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldOutput,
 }
 
 
@@ -543,6 +623,18 @@ class VersionMultiCustomFieldGroupOutput(
     fields: list[VersionMultiCustomFieldOutput]
 
 
+class OwnedCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.OwnedCustomField]):
+    type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    fields: list[OwnedCustomFieldOutput]
+
+
+class OwnedMultiCustomFieldGroupOutput(
+    BaseCustomFieldGroupOutput[m.OwnedMultiCustomField]
+):
+    type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    fields: list[OwnedMultiCustomFieldOutput]
+
+
 CustomFieldGroupOutputT = (
     StringCustomFieldGroupOutput
     | IntegerCustomFieldGroupOutput
@@ -557,6 +649,8 @@ CustomFieldGroupOutputT = (
     | StateCustomFieldGroupOutput
     | VersionCustomFieldGroupOutput
     | VersionMultiCustomFieldGroupOutput
+    | OwnedCustomFieldGroupOutput
+    | OwnedMultiCustomFieldGroupOutput
 )
 
 
@@ -578,6 +672,8 @@ CF_GROUP_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldGroupOutputT]] = {
     m.CustomFieldTypeT.STATE: StateCustomFieldGroupOutput,
     m.CustomFieldTypeT.VERSION: VersionCustomFieldGroupOutput,
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupOutput,
+    m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupOutput,
 }
 
 
@@ -695,6 +791,16 @@ class EnumMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
     value: list[m.EnumOption] | None
 
 
+class OwnedCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    value: m.OwnedOption | None
+
+
+class OwnedMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    value: list[m.OwnedOption] | None
+
+
 class StateCustomFieldValueOutput(BaseCustomFieldValueOutput):
     type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
     value: m.StateOption | None
@@ -721,6 +827,8 @@ CustomFieldValueOutputT = (
     | UserMultiCustomFieldValueOutput
     | EnumCustomFieldValueOutput
     | EnumMultiCustomFieldValueOutput
+    | OwnedCustomFieldValueOutput
+    | OwnedMultiCustomFieldValueOutput
     | StateCustomFieldValueOutput
     | VersionCustomFieldValueOutput
     | VersionMultiCustomFieldValueOutput
@@ -742,6 +850,8 @@ CF_VALUE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldValueOutputT]] = {
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldValueOutput,
     m.CustomFieldTypeT.ENUM: EnumCustomFieldValueOutput,
     m.CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomFieldValueOutput,
+    m.CustomFieldTypeT.OWNED: OwnedCustomFieldValueOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldValueOutput,
     m.CustomFieldTypeT.STATE: StateCustomFieldValueOutput,
     m.CustomFieldTypeT.VERSION: VersionCustomFieldValueOutput,
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldValueOutput,
@@ -832,6 +942,18 @@ class VersionMultiCustomFieldGroupWithValuesOutput(
     )
 
 
+class OwnedCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    values: list[m.OwnedOption | None] = Field(description='Owned option values')
+
+
+class OwnedMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    values: list[list[m.OwnedOption] | None] = Field(
+        description='Multiple owned option values'
+    )
+
+
 CustomFieldGroupWithValuesOutputT = (
     StringCustomFieldGroupWithValuesOutput
     | IntegerCustomFieldGroupWithValuesOutput
@@ -846,6 +968,8 @@ CustomFieldGroupWithValuesOutputT = (
     | StateCustomFieldGroupWithValuesOutput
     | VersionCustomFieldGroupWithValuesOutput
     | VersionMultiCustomFieldGroupWithValuesOutput
+    | OwnedCustomFieldGroupWithValuesOutput
+    | OwnedMultiCustomFieldGroupWithValuesOutput
 )
 
 
@@ -869,6 +993,8 @@ CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP: dict[
     m.CustomFieldTypeT.STATE: StateCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.VERSION: VersionCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupWithValuesOutput,
 }
 
 

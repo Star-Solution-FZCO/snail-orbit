@@ -315,6 +315,18 @@ class IssueEnumMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
     new_value: list[m.EnumOption] | None
 
 
+class IssueOwnedFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    old_value: m.OwnedOption | None
+    new_value: m.OwnedOption | None
+
+
+class IssueOwnedMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    old_value: list[m.OwnedOption] | None
+    new_value: list[m.OwnedOption] | None
+
+
 class IssueStateFieldChangeOutput(IssueFieldChangeBaseOutput):
     field_type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
     old_value: m.StateOption | None
@@ -358,6 +370,8 @@ IssueFieldChangeOutputT = (
     | IssueUserMultiFieldChangeOutput
     | IssueEnumFieldChangeOutput
     | IssueEnumMultiFieldChangeOutput
+    | IssueOwnedFieldChangeOutput
+    | IssueOwnedMultiFieldChangeOutput
     | IssueStateFieldChangeOutput
     | IssueVersionFieldChangeOutput
     | IssueVersionMultiFieldChangeOutput
@@ -379,6 +393,8 @@ FIELD_CHANGE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[IssueFieldChangeOutputT]]
     m.CustomFieldTypeT.USER_MULTI: IssueUserMultiFieldChangeOutput,
     m.CustomFieldTypeT.ENUM: IssueEnumFieldChangeOutput,
     m.CustomFieldTypeT.ENUM_MULTI: IssueEnumMultiFieldChangeOutput,
+    m.CustomFieldTypeT.OWNED: IssueOwnedFieldChangeOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: IssueOwnedMultiFieldChangeOutput,
     m.CustomFieldTypeT.STATE: IssueStateFieldChangeOutput,
     m.CustomFieldTypeT.VERSION: IssueVersionFieldChangeOutput,
     m.CustomFieldTypeT.VERSION_MULTI: IssueVersionMultiFieldChangeOutput,

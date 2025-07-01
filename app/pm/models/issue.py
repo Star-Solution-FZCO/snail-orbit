@@ -21,6 +21,7 @@ from .custom_fields import (
     CustomFieldValue,
     CustomFieldValueT,
     EnumOption,
+    OwnedOption,
     StateOption,
     VersionOption,
 )
@@ -347,6 +348,37 @@ class Issue(DocumentWithReadOnlyProjection):
             {'$set': {'history.$[h].author': user}},
             array_filters=[{'h.author.id': user.id}],
         )
+        await cls.find(
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'type': CustomFieldTypeT.OWNED,
+                        'value.owner.id': user.id,
+                    }
+                }
+            }
+        ).update(
+            {'$set': {'fields.$[f].value.owner': user}},
+            array_filters=[
+                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id}
+            ],
+        )
+        await cls.find(
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'type': CustomFieldTypeT.OWNED_MULTI,
+                        'value.owner.id': user.id,
+                    }
+                }
+            }
+        ).update(
+            {'$set': {'fields.$[f].value.$[v].owner': user}},
+            array_filters=[
+                {'f.type': CustomFieldTypeT.OWNED_MULTI, 'f.value.owner.id': user.id},
+                {'v.owner.id': user.id},
+            ],
+        )
 
     @classmethod
     async def update_field_embedded_links(
@@ -380,9 +412,13 @@ class Issue(DocumentWithReadOnlyProjection):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionOption | StateOption | EnumOption,
+        option: VersionOption | StateOption | EnumOption | OwnedOption,
     ) -> None:
-        if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
+        if field.type in (
+            CustomFieldTypeT.ENUM_MULTI,
+            CustomFieldTypeT.VERSION_MULTI,
+            CustomFieldTypeT.OWNED_MULTI,
+        ):
             await cls.find(
                 {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
             ).update(
@@ -544,6 +580,37 @@ class IssueDraft(Document):
             {'$set': {'attachments.$[a].author': user}},
             array_filters=[{'a.author.id': user.id}],
         )
+        await cls.find(
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'type': CustomFieldTypeT.OWNED,
+                        'value.owner.id': user.id,
+                    }
+                }
+            }
+        ).update(
+            {'$set': {'fields.$[f].value.owner': user}},
+            array_filters=[
+                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id}
+            ],
+        )
+        await cls.find(
+            {
+                'fields': {
+                    '$elemMatch': {
+                        'type': CustomFieldTypeT.OWNED_MULTI,
+                        'value.owner.id': user.id,
+                    }
+                }
+            }
+        ).update(
+            {'$set': {'fields.$[f].value.$[v].owner': user}},
+            array_filters=[
+                {'f.type': CustomFieldTypeT.OWNED_MULTI, 'f.value.owner.id': user.id},
+                {'v.owner.id': user.id},
+            ],
+        )
 
     @classmethod
     async def update_field_embedded_links(
@@ -571,9 +638,13 @@ class IssueDraft(Document):
     async def update_field_option_embedded_links(
         cls,
         field: CustomField | CustomFieldLink,
-        option: VersionOption | StateOption | EnumOption,
+        option: VersionOption | StateOption | EnumOption | OwnedOption,
     ) -> None:
-        if field.type in (CustomFieldTypeT.ENUM_MULTI, CustomFieldTypeT.VERSION_MULTI):
+        if field.type in (
+            CustomFieldTypeT.ENUM_MULTI,
+            CustomFieldTypeT.VERSION_MULTI,
+            CustomFieldTypeT.OWNED_MULTI,
+        ):
             await cls.find(
                 {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
             ).update(

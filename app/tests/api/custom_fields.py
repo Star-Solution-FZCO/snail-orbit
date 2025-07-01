@@ -43,6 +43,15 @@ async def __create_custom_field_group(
     assert len(data['payload']['fields']) == 1
     assert data['payload']['fields'][0]['id']
     options_payload = {'options': []} if has_options else {}
+
+    # Normalize default_value for owned multi-field types (empty list becomes None)
+    expected_payload = custom_field_payload.copy()
+    if (
+        expected_payload.get('type') in ('owned_multi',)
+        and expected_payload.get('default_value') == []
+    ):
+        expected_payload['default_value'] = None
+
     assert data == {
         'success': True,
         'payload': {
@@ -56,7 +65,7 @@ async def __create_custom_field_group(
                     'id': data['payload']['fields'][0]['id'],
                     'gid': data['payload']['gid'],
                     'label': 'default',
-                    **custom_field_payload,
+                    **expected_payload,
                     **options_payload,
                     'projects': [],
                 }
@@ -237,6 +246,119 @@ async def _create_custom_field_version(
     return {**field_data, 'options': option_ids}
 
 
+async def _create_custom_field_owned(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    custom_field_payload: dict,
+) -> dict:
+    from .create import _create_user
+
+    custom_field_payload = custom_field_payload.copy()
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    if custom_field_payload['type'] not in ('owned', 'owned_multi'):
+        pytest.xfail('Unsupported custom field type')
+    if options := custom_field_payload.get('options', []):
+        del custom_field_payload['options']
+
+    # Create users for options that have owners
+    user_mapping = {}
+    for opt in options:
+        if 'owner' in opt and opt['owner'] is not None:
+            owner_data = opt['owner']
+            if owner_data['id'] not in user_mapping:
+                # Create user payload based on the owner data
+                user_payload = {
+                    'email': owner_data['email'],
+                    'name': owner_data['name'],
+                    'is_active': True,
+                    'send_email_invite': False,
+                    'send_pararam_invite': False,
+                }
+                # Create the user and store the mapping
+                user_id = await _create_user(
+                    test_client, create_initial_admin, user_payload
+                )
+                user_mapping[owner_data['id']] = user_id
+
+    field_data = await __create_custom_field_group(
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
+        has_options=True,
+    )
+
+    async def _add_option(opt: dict) -> tuple[str, str]:
+        # Convert owner object to just the ID for API request
+        opt_payload = opt.copy()
+        if 'owner' in opt_payload and opt_payload['owner'] is not None:
+            # Map the original test user ID to the actual created user ID
+            original_id = opt_payload['owner']['id']
+            opt_payload['owner'] = user_mapping[original_id]
+
+        resp_ = test_client.post(
+            f'/api/v1/custom_field/{field_data["id"]}/owned-option',
+            headers=headers,
+            json=opt_payload,
+        )
+        assert resp_.status_code == 200, f'{resp_=}'
+        data_ = resp_.json()
+        assert data_['payload']['id'] == field_data['id']
+        opts_ = data_['payload'].pop('options')
+
+        # Normalize default_value for owned multi-field types (empty list becomes None)
+        expected_payload = custom_field_payload.copy()
+        if (
+            expected_payload.get('type') in ('owned_multi',)
+            and expected_payload.get('default_value') == []
+        ):
+            expected_payload['default_value'] = None
+
+        assert data_ == {
+            'success': True,
+            'payload': {
+                'id': field_data['id'],
+                'gid': field_data['gid'],
+                'label': 'default',
+                **expected_payload,
+                'projects': [],
+            },
+        }, f'{data_=}'
+        opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
+        assert opt_, f'{opts_=}'
+        assert opt_.get('uuid'), f'{opt_=}'
+
+        # Build expected option for comparison (handling owner field differences)
+        expected_opt = {'uuid': opt_['uuid'], **opt}
+        if 'owner' in expected_opt and expected_opt['owner'] is not None:
+            # For owned fields, the API returns owner as UserOutput, so we build the expected structure
+            original_owner = expected_opt['owner']
+            user_id = user_mapping[original_owner['id']]
+            # UserOutput format: id, name, email, is_active, avatar (computed)
+            expected_opt['owner'] = {
+                'id': user_id,
+                'name': original_owner['name'],
+                'email': original_owner['email'],
+                'is_active': True,  # We created users as active
+                'avatar': opt_['owner'][
+                    'avatar'
+                ],  # Use the actual avatar from response
+            }
+
+        assert opt_ == expected_opt
+        return opt_['uuid'], opt['value'], opt_
+
+    option_ids = {}
+    option_data = {}
+    for option in options:
+        opt_id, opt_val, opt_data = await _add_option(option)
+        option_ids[opt_val] = opt_id
+        option_data[opt_val] = opt_data
+
+    # Store the actual API response data for owned fields instead of original test data
+    return {**field_data, 'options': option_ids, '_option_data': option_data}
+
+
 async def _create_custom_field(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
@@ -252,6 +374,10 @@ async def _create_custom_field(
         )
     if custom_field_payload['type'] in ('version', 'version_multi'):
         return await _create_custom_field_version(
+            test_client, create_initial_admin, custom_field_payload
+        )
+    if custom_field_payload['type'] in ('owned', 'owned_multi'):
+        return await _create_custom_field_owned(
             test_client, create_initial_admin, custom_field_payload
         )
     return await _create_custom_field_plain(

@@ -17,6 +17,7 @@ from pm.api.views.custom_fields import (
     CustomFieldOutputRootModel,
     CustomFieldSelectOptionsT,
     EnumOptionOutput,
+    OwnedOptionOutput,
     ShortOptionOutput,
     StateOptionOutput,
     VersionOptionOutput,
@@ -87,6 +88,20 @@ class VersionOptionUpdateBody(BaseModel):
     value: str | None = None
     release_date: date | None = None
     is_released: bool | None = None
+    is_archived: bool | None = None
+
+
+class OwnedOptionCreateBody(BaseModel):
+    value: str
+    owner: PydanticObjectId | None = None
+    color: str | None = None
+    is_archived: bool = False
+
+
+class OwnedOptionUpdateBody(BaseModel):
+    value: str | None = None
+    owner: PydanticObjectId | None = None
+    color: str | None = None
     is_archived: bool | None = None
 
 
@@ -716,6 +731,132 @@ async def remove_version_option(
     return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
 
 
+@router.post('/{custom_field_id}/owned-option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/owned-option')
+async def add_owned_option(
+    custom_field_id: PydanticObjectId,
+    body: OwnedOptionCreateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    obj: m.CustomField | None = await m.OwnedCustomField.find_one(
+        m.OwnedCustomField.id == custom_field_id,
+        fetch_links=True,
+    )
+    if not obj:
+        obj = await m.OwnedMultiCustomField.find_one(
+            m.OwnedMultiCustomField.id == custom_field_id,
+            fetch_links=True,
+        )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if any(opt.value == body.value for opt in obj.options):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
+
+    owner = None
+    if body.owner:
+        owner = await m.User.find_one(m.User.id == body.owner, fetch_links=True)
+        if not owner:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'Owner user not found')
+        owner = m.UserLinkField.from_obj(owner)
+
+    obj.options.append(
+        m.OwnedOption(
+            id=str(uuid4()),
+            value=body.value,
+            owner=owner,
+            color=body.color,
+            is_archived=body.is_archived,
+        )
+    )
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+
+
+@router.put('/{custom_field_id}/owned-option/{option_id}')
+@router.put(
+    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}'
+)
+async def update_owned_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+    body: OwnedOptionUpdateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.OwnedCustomField.find_one(
+        m.OwnedCustomField.id == custom_field_id,
+        fetch_links=True,
+    )
+    if not obj:
+        obj = await m.OwnedMultiCustomField.find_one(
+            m.OwnedMultiCustomField.id == custom_field_id,
+            fetch_links=True,
+        )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id_), None)
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+
+    for k, v in body.dict(exclude_unset=True).items():
+        if k == 'owner':
+            if v:
+                owner = await m.User.find_one(m.User.id == v, fetch_links=True)
+                if not owner:
+                    raise HTTPException(HTTPStatus.NOT_FOUND, 'Owner user not found')
+                setattr(opt, k, m.UserLinkField.from_obj(owner))
+            else:
+                setattr(opt, k, None)
+        else:
+            setattr(opt, k, v)
+
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = opt
+    if obj.is_changed:
+        await obj.replace()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+
+
+@router.delete('/{custom_field_id}/owned-option/{option_id}')
+@router.delete(
+    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}'
+)
+async def remove_owned_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+        fetch_links=True,
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if obj.type not in (m.CustomFieldTypeT.OWNED, m.CustomFieldTypeT.OWNED_MULTI):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Custom field is not of type OWNED or OWNED_MULTI',
+        )
+    opt = next((opt for opt in obj.options if opt.id == option_id_), None)
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
+    obj.options.remove(opt)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = None
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+
+
 @router.get('/{custom_field_id}/select')
 @router.get('/group/{custom_field_gid}/field/{custom_field_id}/select')
 async def select_options(
@@ -759,6 +900,14 @@ async def select_options(
             offset=selected.offset,
             items=[VersionOptionOutput.from_obj(opt) for opt in selected.items],
         )
+    if isinstance(obj, m.OwnedCustomField | m.OwnedMultiCustomField):
+        selected = enum_option_select(obj.options, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[OwnedOptionOutput.from_obj(opt) for opt in selected.items],
+        )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
 
 
@@ -779,6 +928,10 @@ async def select_options_group(
         output_fn = ShortOptionOutput.from_obj
         all_options = {opt for field in fields for opt in field.options}
     elif fields[0].type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
+        select_fn = enum_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif fields[0].type in (m.CustomFieldTypeT.OWNED, m.CustomFieldTypeT.OWNED_MULTI):
         select_fn = enum_option_select
         output_fn = ShortOptionOutput.from_obj
         all_options = {opt for field in fields for opt in field.options}
