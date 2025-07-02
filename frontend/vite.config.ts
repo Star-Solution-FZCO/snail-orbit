@@ -39,7 +39,7 @@ export default defineConfig(() => {
 
     if (isSentryConfigured) {
         console.log("Sentry is configured. Will upload source maps on build.");
-        
+
         plugins.push(
             sentryVitePlugin({
                 org: sentryOrg,

@@ -211,7 +211,7 @@ export const useToolbarCommands = (
                             textContent.length === 0 ||
                             offset >= textContent.length
                         ) {
-                            selection.insertText(`\n${prefix}`);
+                            selection.insertText(prefix);
                             return;
                         }
 
@@ -224,7 +224,7 @@ export const useToolbarCommands = (
                             lineStart >= textContent.length ||
                             lineEnd > textContent.length
                         ) {
-                            selection.insertText(`\n${prefix}`);
+                            selection.insertText(prefix);
                             return;
                         }
 
@@ -264,10 +264,10 @@ export const useToolbarCommands = (
                             );
                             selection.insertText(newLine);
                         } catch (error) {
-                            selection.insertText(`\n${prefix}`);
+                            selection.insertText(prefix);
                         }
                     } else {
-                        selection.insertText(`\n${prefix}`);
+                        selection.insertText(prefix);
                     }
                 }
             });
