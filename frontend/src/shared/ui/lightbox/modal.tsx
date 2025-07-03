@@ -177,17 +177,24 @@ export const LightboxModal = () => {
 
                 <Stack
                     width={1}
-                    height={1}
+                    flex={1}
                     direction="row"
-                    justifyContent={
-                        showNavigationControls ? "space-between" : "center"
-                    }
+                    justifyContent="center"
                     alignItems="center"
                     px={4}
+                    pb={3}
                     onClick={handleClose}
+                    position="relative"
                 >
                     {showNavigationControls && (
-                        <IconButton onClick={handleClickPreviousFile}>
+                        <IconButton
+                            sx={{
+                                position: "absolute",
+                                left: 24,
+                                zIndex: 10,
+                            }}
+                            onClick={handleClickPreviousFile}
+                        >
                             <ArrowBackIosNewIcon />
                         </IconButton>
                     )}
@@ -197,15 +204,22 @@ export const LightboxModal = () => {
                         src={file.src}
                         sx={{
                             display: "block",
-                            maxWidth: "80%",
-                            maxHeight: "calc(100vh - 128px)",
+                            maxWidth: "90%",
+                            maxHeight: "calc(100vh - 200px)",
                             objectFit: "contain",
                         }}
                         onClick={(e) => e.stopPropagation()}
                     />
 
                     {showNavigationControls && (
-                        <IconButton onClick={handleClickNextFile}>
+                        <IconButton
+                            onClick={handleClickNextFile}
+                            sx={{
+                                position: "absolute",
+                                right: 24,
+                                zIndex: 10,
+                            }}
+                        >
                             <ArrowForwardIosIcon />
                         </IconButton>
                     )}
@@ -237,11 +251,34 @@ export const LightboxModal = () => {
                         </Tooltip>
                     </Stack>
 
-                    <Box flex={1} px={4} overflow="hidden">
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        flex={1}
+                        gap={1}
+                        px={4}
+                        justifyContent="center"
+                        overflow="hidden"
+                    >
+                        {showNavigationControls && (
+                            <IconButton
+                                onClick={handleClickPreviousFile}
+                                size="small"
+                            >
+                                <ArrowBackIosNewIcon />
+                            </IconButton>
+                        )}
+
                         <Stack
                             ref={thumbnailsContainerRef}
+                            maxWidth="600px"
                             direction="row"
-                            justifyContent="flex-start"
+                            justifyContent={
+                                files.length * 72 <= 600
+                                    ? "center"
+                                    : "flex-start"
+                            }
+                            alignItems="center"
                             gap={1}
                             py={1}
                             overflow="auto"
@@ -260,7 +297,7 @@ export const LightboxModal = () => {
                                         thumbnailRefs.current[index] = el;
                                     }}
                                     sx={{
-                                        minWidth: 64,
+                                        width: 64,
                                         height: 40,
                                         borderRadius: 1,
                                         cursor: "pointer",
@@ -271,8 +308,18 @@ export const LightboxModal = () => {
                                                 : "transparent",
                                         borderStyle: "solid",
                                         boxSizing: "border-box",
-                                        transition: "border-color 0.2s ease",
+                                        transition: "all 0.2s ease",
                                         flexShrink: 0,
+                                        opacity:
+                                            currentIndex === index ? 1 : 0.7,
+                                        transform:
+                                            currentIndex === index
+                                                ? "scale(1.05)"
+                                                : "scale(1)",
+                                        "&:hover": {
+                                            opacity: 1,
+                                            transform: "scale(1.05)",
+                                        },
                                     }}
                                     onClick={() => handleClickThumbnail(index)}
                                 >
@@ -290,7 +337,16 @@ export const LightboxModal = () => {
                                 </Box>
                             ))}
                         </Stack>
-                    </Box>
+
+                        {showNavigationControls && (
+                            <IconButton
+                                onClick={handleClickNextFile}
+                                size="small"
+                            >
+                                <ArrowForwardIosIcon />
+                            </IconButton>
+                        )}
+                    </Stack>
 
                     <Box flexBasis="25%" />
                 </Stack>
