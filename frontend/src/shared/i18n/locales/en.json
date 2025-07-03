@@ -233,6 +233,8 @@
   "issues.activities.oldestFirst": "Sort: Oldest first",
   "issues.attachments.delete.confirmation": "Are you sure you want to delete attachment",
   "issues.attachments.delete.title": "Delete attachment",
+  "issues.form.attachments.listView": "Change to List View",
+  "issues.form.attachments.cardView": "Change to Card View",
   "issues.clone": "Clone Issue",
   "issues.clone.created": "A clone of the current issue has been created",
   "issues.comments.add": "Add comment",

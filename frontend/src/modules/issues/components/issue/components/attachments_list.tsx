@@ -1,6 +1,15 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Box, Collapse, IconButton, Typography } from "@mui/material";
+import GridViewIcon from "@mui/icons-material/GridView";
+import ListIcon from "@mui/icons-material/List";
+import {
+    Box,
+    Collapse,
+    IconButton,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/material";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -10,9 +19,11 @@ import type {
     IssueAttachmentT,
     SelectedAttachmentT,
 } from "shared/model/types";
+import { useLSState } from "shared/utils/helpers/local-storage";
 import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
+import { AttachmentListItem } from "./attachment_list_item";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
 
 type AttachmentsListProps = {
@@ -36,6 +47,10 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
         projectId: projectId,
     });
 
+    const [displayMode, setDisplayMode] = useLSState<"card" | "list">(
+        "ISSUES_ATTACHMENTS_DISPLAY_MODE",
+        "card",
+    );
     const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
     const [selectedAttachment, setSelectedAttachment] =
@@ -133,31 +148,63 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
     return (
         <Box display="flex" flexDirection="column">
             {attachmentsExists && (
-                <Box display="flex" alignItems="center" gap={0.5} mb={1}>
-                    <IconButton
-                        sx={{ p: 0 }}
-                        onClick={() =>
-                            setAttachmentsExpanded(!attachmentsExpanded)
-                        }
-                        size="small"
-                    >
-                        <ExpandMoreIcon
-                            sx={{
-                                transform: attachmentsExpanded
-                                    ? "rotate(180deg)"
-                                    : "rotate(0)",
-                                transition: "transform 0.2s",
-                            }}
-                            fontSize="small"
-                        />
-                    </IconButton>
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    gap={0.5}
+                    width={1}
+                    mb={1}
+                >
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                        <IconButton
+                            sx={{ p: 0 }}
+                            onClick={() =>
+                                setAttachmentsExpanded(!attachmentsExpanded)
+                            }
+                            size="small"
+                        >
+                            <ExpandMoreIcon
+                                sx={{
+                                    transform: attachmentsExpanded
+                                        ? "rotate(180deg)"
+                                        : "rotate(0)",
+                                    transition: "transform 0.2s",
+                                }}
+                                fontSize="small"
+                            />
+                        </IconButton>
 
-                    <Typography fontWeight="bold">
-                        {t("issues.form.attachments.title")}{" "}
-                        <Typography component="span" color="text.secondary">
-                            ({files.length + attachments.length})
+                        <Typography fontWeight="bold">
+                            {t("issues.form.attachments.title")}{" "}
+                            <Typography component="span" color="text.secondary">
+                                ({files.length + attachments.length})
+                            </Typography>
                         </Typography>
-                    </Typography>
+                    </Box>
+
+                    <Tooltip
+                        title={t(
+                            displayMode === "card"
+                                ? "issues.form.attachments.listView"
+                                : "issues.form.attachments.cardView",
+                        )}
+                    >
+                        <IconButton
+                            onClick={() =>
+                                setDisplayMode(
+                                    displayMode === "card" ? "list" : "card",
+                                )
+                            }
+                            size="small"
+                        >
+                            {displayMode === "card" ? (
+                                <ListIcon fontSize="small" />
+                            ) : (
+                                <GridViewIcon fontSize="small" />
+                            )}
+                        </IconButton>
+                    </Tooltip>
                 </Box>
             )}
 
@@ -189,34 +236,54 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
 
             {attachmentsExists && (
                 <Collapse in={attachmentsExpanded}>
-                    <Box display="flex" gap={1} flexWrap="wrap" mt={1}>
-                        {attachments.map((attachment) => (
-                            <AttachmentCard
-                                key={attachment.id}
-                                attachment={attachment}
-                                onDelete={() =>
-                                    handleClickDeleteIssueAttachment(
-                                        attachment.id,
-                                        attachment.name,
-                                    )
-                                }
-                                onDownload={downloadAttachment}
-                            />
-                        ))}
+                    {displayMode === "card" && (
+                        <Box display="flex" gap={1} flexWrap="wrap" mt={1}>
+                            {attachments.map((attachment) => (
+                                <AttachmentCard
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    onDelete={() =>
+                                        handleClickDeleteIssueAttachment(
+                                            attachment.id,
+                                            attachment.name,
+                                        )
+                                    }
+                                    onDownload={downloadAttachment}
+                                />
+                            ))}
 
-                        {files.map((file, index) => (
-                            <BrowserFileCard
-                                key={`${file.name}-${index}`}
-                                file={file}
-                                onDelete={() =>
-                                    handleClickDeleteBrowserFile(
-                                        index,
-                                        file.name,
-                                    )
-                                }
-                            />
-                        ))}
-                    </Box>
+                            {files.map((file, index) => (
+                                <BrowserFileCard
+                                    key={`${file.name}-${index}`}
+                                    file={file}
+                                    onDelete={() =>
+                                        handleClickDeleteBrowserFile(
+                                            index,
+                                            file.name,
+                                        )
+                                    }
+                                />
+                            ))}
+                        </Box>
+                    )}
+
+                    {displayMode === "list" && (
+                        <Stack mt={1} gap={1}>
+                            {attachments.map((attachment) => (
+                                <AttachmentListItem
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    onDelete={() =>
+                                        handleClickDeleteIssueAttachment(
+                                            attachment.id,
+                                            attachment.name,
+                                        )
+                                    }
+                                    onDownload={downloadAttachment}
+                                />
+                            ))}
+                        </Stack>
+                    )}
                 </Collapse>
             )}
 
