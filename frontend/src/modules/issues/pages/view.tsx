@@ -107,6 +107,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                         />
 
                         <IssueViewComponent
+                            key={issue.id}
                             issue={issue}
                             project={project}
                             onUpdateIssue={handleSubmit}

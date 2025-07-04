@@ -40,6 +40,10 @@ export const IssueForm: FC<IssueFormProps> = ({
         });
     }, [issue, getIssueText]);
 
+    useEffect(() => {
+        setSubject(issue?.subject);
+    }, [issue?.subject]);
+
     const handleClickSave = useCallback(async () => {
         await onUpdateIssue({ text: { value: text }, subject });
 
