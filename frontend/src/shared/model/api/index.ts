@@ -5,6 +5,7 @@ export * from "./group.api";
 export * from "./issue.api";
 export * from "./project.api";
 export * from "./role.api";
+export * from "./search.api";
 export * from "./shared.api";
 export * from "./tag.api";
 export * from "./user.api";

@@ -12,16 +12,20 @@ type UseSseRequestParams<T> = {
 export const useSseRequest = <T>(params: UseSseRequestParams<T>) => {
     const { url, onMessage } = params;
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(!document.hidden);
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
     const onMessageRef = useRef(onMessage);
+    const unsubscribeRef = useRef<(() => void) | null>(null);
+    const isPageVisible = useRef(!document.hidden);
 
-    useEffect(() => {
-        onMessageRef.current = onMessage;
-    }, [onMessage]);
+    const subscribe = () => {
+        if (unsubscribeRef.current || !isPageVisible.current) {
+            return;
+        }
 
-    useEffect(() => {
+        setIsLoading(true);
+        
         const manager = SSESharedWorkerManager.getInstance();
 
         const handleWorkerMessage = (event: WorkerEvent) => {
@@ -44,10 +48,52 @@ export const useSseRequest = <T>(params: UseSseRequestParams<T>) => {
             }
         };
 
-        const unsubscribe = manager.subscribe(url, handleWorkerMessage);
+        unsubscribeRef.current = manager.subscribe(url, handleWorkerMessage);
+    };
 
-        return unsubscribe;
+    const unsubscribe = () => {
+        if (unsubscribeRef.current) {
+            unsubscribeRef.current();
+            unsubscribeRef.current = null;
+
+            setIsOpen(false);
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        onMessageRef.current = onMessage;
+    }, [onMessage]);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            const isVisible = !document.hidden;
+            isPageVisible.current = isVisible;
+
+            if (isVisible) {
+                subscribe();
+            } else {
+                unsubscribe();
+            }
+        };
+
+        if (!document.hidden) {
+            subscribe();
+        }
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+            );
+            unsubscribe();
+        };
     }, [url]);
 
-    return { isLoading, isOpen };
+    return {
+        isLoading,
+        isOpen,
+    };
 };

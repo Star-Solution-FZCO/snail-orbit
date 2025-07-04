@@ -50,6 +50,8 @@ export const AgileBoard: FC<AgileBoardProps> = ({
     const { data, refetch } = agileBoardApi.useGetBoardIssuesQuery({
         boardId: boardData.id,
         q: query,
+    }, {
+        refetchOnFocus: true,
     });
 
     const [moveIssue] = agileBoardApi.useMoveIssueMutation();

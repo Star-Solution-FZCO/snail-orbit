@@ -11,9 +11,10 @@ import {
     tagApi,
     userApi,
     workflowApi,
+    searchApi,
 } from "./api";
-import { searchApi } from "./api/search.api";
 import { profileReducer, sharedReducer } from "./slices";
+import { setupListeners } from "@reduxjs/toolkit/query";
 
 export const store = configureStore({
     devTools: import.meta.env.DEV,
@@ -49,6 +50,8 @@ export const store = configureStore({
             encryptionKeysApi.middleware,
         ]),
 });
+
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

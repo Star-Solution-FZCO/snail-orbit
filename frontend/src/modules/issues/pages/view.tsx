@@ -29,7 +29,9 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
         data: issueData,
         isLoading: isIssueLoading,
         error: issueError,
-    } = issueApi.useGetIssueQuery(issueId);
+    } = issueApi.useGetIssueQuery(issueId, {
+        refetchOnFocus: true,
+    });
 
     const {
         project,
