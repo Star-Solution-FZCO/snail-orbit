@@ -1,25 +1,40 @@
 import { Avatar, styled } from "@mui/material";
-import { ComponentProps, forwardRef } from "react";
+import type { ComponentProps } from "react";
+import { forwardRef } from "react";
 
 export type AvatarAdornmentProps = {
-    size?: "medium" | "small";
+    size?: "medium" | "small" | "xsmall";
 } & ComponentProps<typeof Avatar>;
 
 export const AvatarAdornmentStyled = styled(Avatar)<
     Pick<AvatarAdornmentProps, "size">
->(({ theme, size }) => ({
-    width:
-        size === "small"
-            ? theme.typography.pxToRem(20)
-            : theme.typography.pxToRem(26),
-    height:
-        size === "small"
-            ? theme.typography.pxToRem(20)
-            : theme.typography.pxToRem(26),
+>(({ theme, size = "small" }) => ({
     flexShrink: 0,
     borderRadius: 3,
     margin: 0,
     marginRight: "0 !important",
+
+    ...(size === "small"
+        ? {
+              width: theme.typography.pxToRem(20),
+              height: theme.typography.pxToRem(20),
+          }
+        : {}),
+
+    ...(size === "medium"
+        ? {
+              width: theme.typography.pxToRem(26),
+              height: theme.typography.pxToRem(26),
+          }
+        : {}),
+
+    ...(size === "xsmall"
+        ? {
+              width: theme.typography.pxToRem(10),
+              height: theme.typography.pxToRem(10),
+              borderRadius: "50%",
+          }
+        : {}),
 }));
 
 export const AvatarAdornment = forwardRef<HTMLDivElement, AvatarAdornmentProps>(

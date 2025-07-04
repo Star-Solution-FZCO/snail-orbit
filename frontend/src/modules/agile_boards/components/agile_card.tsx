@@ -125,6 +125,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                             <CustomFieldsChipParserV2
                                 fields={fields}
                                 onChange={onFieldUpdate}
+                                size="xsmall"
                             />
                         </IssueCardBottom>
                     ) : null}

@@ -2,6 +2,7 @@ import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "shared/model";
 import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
+import type { ColorAdornmentProps } from "shared/ui/fields/adornments/color_adornment";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
@@ -13,6 +14,7 @@ type EnumChipProps = {
     label: string;
     id: string;
     multiple?: boolean;
+    size?: ColorAdornmentProps["size"];
 };
 
 export const EnumChip: FC<EnumChipProps> = ({
@@ -21,6 +23,7 @@ export const EnumChip: FC<EnumChipProps> = ({
     label,
     id,
     multiple,
+    size,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -51,8 +54,8 @@ export const EnumChip: FC<EnumChipProps> = ({
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
         if (targetValue.color)
-            return <ColorAdornment color={targetValue.color} size="small" />;
-    }, [value]);
+            return <ColorAdornment color={targetValue.color} size={size} />;
+    }, [size, value]);
 
     return (
         <SelectChip<EnumFieldValueT, typeof multiple, undefined>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export const saveToLS = <T>(key: string, value: T): void => {
     const packedValue = { value };
@@ -15,23 +15,35 @@ export const getFromLS = <T>(key: string): T | null => {
     }
 };
 
+type Setter<T> = T | ((prevState: T) => T);
+
+const isFunction = <T>(value: Setter<T>): value is (prevState: T) => T => {
+    return typeof value === "function";
+};
+
 export function useLSState<T>(
     key: string,
     defaultValue: T,
-): [T, (value: T) => void];
+): [T, (value: Setter<T>) => void];
 export function useLSState<T>(
     key: string,
     defaultValue?: undefined,
-): [T | undefined, (value: T) => void];
+): [T | undefined, (value: Setter<T>) => void];
 export function useLSState<T>(key: string, defaultValue?: T) {
     const [state, setState] = useState<T | undefined>(
         getFromLS(key) || defaultValue,
     );
 
-    const handleChangeStage = (value: T) => {
-        saveToLS(key, value);
-        setState(value);
-    };
+    const handleChangeStage = useCallback(
+        (value: Setter<T>) => {
+            setState((prev) => {
+                const newValue = isFunction(value) ? value(prev as T) : value;
+                saveToLS(key, newValue);
+                return newValue;
+            });
+        },
+        [key],
+    );
 
     return [state, handleChangeStage] as const;
 }

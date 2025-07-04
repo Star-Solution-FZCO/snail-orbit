@@ -1,6 +1,6 @@
 import { Stack, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT, IssueT } from "shared/model/types";
@@ -38,9 +38,12 @@ export const AgileBoard: FC<AgileBoardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [closedSet, setClosedSet] = useState<Record<string, boolean>>({});
+    const [closedSet, setClosedSet] = useLSState<Record<string, boolean>>(
+        "AGILE_BOARD_CLOSED_STATE_" + boardData.id,
+        {},
+    );
     const [viewSettings, setViewSettings] = useLSState<AgileBoardViewSettings>(
-        "AGILE_BOARD_VIEW_SETTINGS",
+        "AGILE_BOARD_VIEW_SETTINGS_" + boardData.id,
         defaultAgileBoardViewSettings,
     );
 

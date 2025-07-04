@@ -23,14 +23,16 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
     fields,
     onChange,
     rightAdornmentRenderer,
+    size = "small",
 }) => {
     const baseCompProps = useCallback(
         (field: CustomFieldWithValueT) => ({
             id: field.id,
             label: field.name,
             rightAdornment: rightAdornmentRenderer?.(field),
+            size: size,
         }),
-        [rightAdornmentRenderer],
+        [rightAdornmentRenderer, size],
     );
 
     return (
