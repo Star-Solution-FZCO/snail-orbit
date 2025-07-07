@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "shared/model";
-import { formatErrorMessages, usePaginationParams } from "shared/utils";
+import {
+    defaultLimit,
+    formatErrorMessages,
+    usePaginationParams,
+} from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import type { IssueT } from "../../../shared/model/types";
 import { SearchField } from "../components/issue/components/search_field";
@@ -41,7 +45,7 @@ const IssueList: FC<IssueListProps> = (props) => {
     );
 
     const [listQueryParams, updateListQueryParams] = usePaginationParams({
-        perPage: queryParams?.perPage ?? 10,
+        perPage: queryParams?.perPage ?? defaultLimit,
         page: queryParams?.page ?? 1,
         query: debouncedSearch,
     });

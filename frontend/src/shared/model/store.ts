@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import {
     agileBoardApi,
     customFieldsApi,
@@ -7,14 +8,13 @@ import {
     issueApi,
     projectApi,
     roleApi,
+    searchApi,
     sharedApi,
     tagApi,
     userApi,
     workflowApi,
-    searchApi,
 } from "./api";
 import { profileReducer, sharedReducer } from "./slices";
-import { setupListeners } from "@reduxjs/toolkit/query";
 
 export const store = configureStore({
     devTools: import.meta.env.DEV,

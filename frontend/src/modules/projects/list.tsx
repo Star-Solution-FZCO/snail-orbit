@@ -4,6 +4,8 @@ import {
     Button,
     CircularProgress,
     Container,
+    MenuItem,
+    Select,
     Stack,
     TextField,
     Typography,
@@ -16,6 +18,8 @@ import { formatErrorMessages, useListQueryParams } from "shared/utils";
 import useDebouncedState from "../../shared/utils/hooks/use-debounced-state";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { ProjectCard } from "./components/project_card";
+
+const perPageOptions = [10, 25, 50, 100, 500, 1000];
 
 const ProjectList = () => {
     const { t } = useTranslation();
@@ -37,8 +41,9 @@ const ProjectList = () => {
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 4,
+                gap: 2,
                 height: "100%",
+                px: 4,
             }}
             disableGutters
         >
@@ -81,6 +86,48 @@ const ProjectList = () => {
                 </Box>
             ) : (
                 <>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                    >
+                        <Typography
+                            fontSize={12}
+                            color="textDisabled"
+                            variant="subtitle2"
+                        >
+                            {count ? `${count} projects` : null}
+                        </Typography>
+
+                        <Stack direction="row" gap={1}>
+                            <Select
+                                variant="outlined"
+                                size="small"
+                                value={listQueryParams.limit}
+                                renderValue={() => listQueryParams.limit}
+                                sx={{
+                                    ".MuiSelect-select": {
+                                        py: 0.5,
+                                        pl: 1,
+                                        pr: 2,
+                                    },
+                                }}
+                                onChange={(e) =>
+                                    updateListQueryParams({
+                                        limit: +e.target.value,
+                                        offset: 0,
+                                    })
+                                }
+                            >
+                                {perPageOptions.map((value) => (
+                                    <MenuItem key={value} value={value}>
+                                        {value}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </Stack>
+                    </Stack>
+
                     <Box
                         display="flex"
                         flexDirection="column"
