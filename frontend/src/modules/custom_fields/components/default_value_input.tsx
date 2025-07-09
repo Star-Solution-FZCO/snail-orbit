@@ -196,6 +196,7 @@ export const DefaultValueInput: FC<{
                 );
             case "integer":
             case "float":
+            case "duration":
                 return (
                     <RenderTextField
                         value={Number(value)}

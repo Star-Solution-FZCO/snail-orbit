@@ -25,6 +25,7 @@ export const customFieldsTypes = [
     "boolean",
     "date",
     "datetime",
+    "duration",
     "user",
     "user_multi",
     "enum",

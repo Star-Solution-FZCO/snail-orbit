@@ -145,6 +145,7 @@
   "customFields.types.enum_multi": "Enum Multi",
   "customFields.types.float": "Float",
   "customFields.types.integer": "Integer",
+  "customFields.types.duration": "Duration",
   "customFields.types.state": "State",
   "customFields.types.string": "String",
   "customFields.types.user": "User",

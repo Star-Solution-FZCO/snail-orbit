@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { DateField } from "features/custom_fields/date_field";
+import { DurationField } from "features/custom_fields/duration_field";
 import { EnumField } from "features/custom_fields/enum_field";
 import { InputField } from "features/custom_fields/input_field";
 import { OwnedField } from "features/custom_fields/owned_field";
@@ -89,6 +90,21 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
                         case "integer":
                             return (
                                 <InputField
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    inputMode="numeric"
+                                    value={field.value?.toString() || ""}
+                                    onChange={(val) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: Number(val),
+                                        });
+                                    }}
+                                />
+                            );
+                        case "duration":
+                            return (
+                                <DurationField
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     inputMode="numeric"

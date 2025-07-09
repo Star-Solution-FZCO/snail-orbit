@@ -1,0 +1,54 @@
+import type { ForwardedRef, ReactNode } from "react";
+import { forwardRef, useState } from "react";
+import FieldCard from "shared/ui/fields/field_card/field_card";
+import type { FormInputPopoverProps } from "shared/ui/fields/form_input/form_input";
+import FormInputPopover from "shared/ui/fields/form_input/form_input";
+
+type DurationFieldProps = {
+    label: string;
+    rightAdornment?: ReactNode;
+} & Pick<FormInputPopoverProps, "value" | "onChange" | "id" | "inputMode">;
+
+export const DurationField = forwardRef(
+    (
+        {
+            value,
+            onChange,
+            label,
+            id,
+            inputMode,
+            rightAdornment,
+        }: DurationFieldProps,
+        ref: ForwardedRef<HTMLDivElement>,
+    ) => {
+        const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+        const handleChange = (value: string) => {
+            onChange?.(value);
+            setAnchorEl(null);
+        };
+
+        return (
+            <>
+                <FieldCard
+                    label={label}
+                    value={value ?? "?"}
+                    rightAdornment={rightAdornment}
+                    orientation="vertical"
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                    data-field-card-id={id}
+                />
+                <FormInputPopover
+                    ref={ref}
+                    anchorEl={anchorEl}
+                    id={id}
+                    open={!!anchorEl}
+                    onClose={() => setAnchorEl(null)}
+                    onChange={handleChange}
+                    value={value}
+                    inputMode={inputMode}
+                />
+            </>
+        );
+    },
+);

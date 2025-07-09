@@ -2,6 +2,7 @@ import { Tooltip } from "@mui/material";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { DateChip } from "features/custom_fields/date_chip";
+import { DurationChip } from "features/custom_fields/duration_chip";
 import { EnumChip } from "features/custom_fields/enum_chip";
 import { InputChip } from "features/custom_fields/input_chip";
 import { OwnedChip } from "features/custom_fields/owned_chip";
@@ -89,6 +90,21 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                         case "integer":
                             return (
                                 <InputChip
+                                    {...baseCompProps(field)}
+                                    key={field.id}
+                                    inputMode="numeric"
+                                    value={field.value?.toString() || ""}
+                                    onChange={(val) => {
+                                        onChange?.({
+                                            ...field,
+                                            value: Number(val),
+                                        });
+                                    }}
+                                />
+                            );
+                        case "duration":
+                            return (
+                                <DurationChip
                                     {...baseCompProps(field)}
                                     key={field.id}
                                     inputMode="numeric"
