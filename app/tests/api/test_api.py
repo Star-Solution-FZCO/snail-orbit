@@ -358,6 +358,17 @@ async def test_api_v1_tag(
         ),
         pytest.param(
             {
+                'name': 'Test duration field',
+                'type': 'duration',
+                'is_nullable': False,
+                'description': 'Duration custom field description',
+                'ai_description': 'Duration custom field AI description',
+                'default_value': 3600,
+            },
+            id='duration',
+        ),
+        pytest.param(
+            {
                 'name': 'Test enum field',
                 'type': 'enum',
                 'is_nullable': True,

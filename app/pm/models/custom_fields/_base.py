@@ -50,6 +50,7 @@ class CustomFieldTypeT(StrEnum):
     BOOLEAN = 'boolean'
     DATE = 'date'
     DATETIME = 'datetime'
+    DURATION = 'duration'
     ENUM = 'enum'
     ENUM_MULTI = 'enum_multi'
     STATE = 'state'

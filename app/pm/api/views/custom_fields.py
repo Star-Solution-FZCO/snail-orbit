@@ -44,6 +44,8 @@ __all__ = (
     'BooleanCustomFieldGroupWithValuesOutput',
     'DateCustomFieldGroupWithValuesOutput',
     'DateTimeCustomFieldGroupWithValuesOutput',
+    'DurationCustomFieldOutput',
+    'DurationCustomFieldGroupWithValuesOutput',
     'UserCustomFieldGroupWithValuesOutput',
     'UserMultiCustomFieldGroupWithValuesOutput',
     'EnumCustomFieldGroupWithValuesOutput',
@@ -208,6 +210,11 @@ class DateCustomFieldOutput(BaseCustomFieldOutput[m.DateCustomField]):
 class DateTimeCustomFieldOutput(BaseCustomFieldOutput[m.DateTimeCustomField]):
     type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
     default_value: datetime | None
+
+
+class DurationCustomFieldOutput(BaseCustomFieldOutput[m.DurationCustomField]):
+    type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    default_value: int | None
 
 
 class UserCustomFieldOutput(BaseCustomFieldOutput[m.UserCustomField]):
@@ -434,6 +441,7 @@ CustomFieldOutputT = (
     | BooleanCustomFieldOutput
     | DateCustomFieldOutput
     | DateTimeCustomFieldOutput
+    | DurationCustomFieldOutput
     | UserCustomFieldOutput
     | UserMultiCustomFieldOutput
     | EnumCustomFieldOutput
@@ -520,6 +528,7 @@ CF_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldOutputT]] = {
     m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldOutput,
     m.CustomFieldTypeT.DATE: DateCustomFieldOutput,
     m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldOutput,
+    m.CustomFieldTypeT.DURATION: DurationCustomFieldOutput,
     m.CustomFieldTypeT.USER: UserCustomFieldOutput,
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldOutput,
     m.CustomFieldTypeT.ENUM: EnumCustomFieldOutput,
@@ -582,6 +591,11 @@ class DateTimeCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.DateTimeCustom
     fields: list[DateTimeCustomFieldOutput]
 
 
+class DurationCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.DurationCustomField]):
+    type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    fields: list[DurationCustomFieldOutput]
+
+
 class UserCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.UserCustomField]):
     type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
     fields: list[UserCustomFieldOutput]
@@ -642,6 +656,7 @@ CustomFieldGroupOutputT = (
     | BooleanCustomFieldGroupOutput
     | DateCustomFieldGroupOutput
     | DateTimeCustomFieldGroupOutput
+    | DurationCustomFieldGroupOutput
     | UserCustomFieldGroupOutput
     | UserMultiCustomFieldGroupOutput
     | EnumCustomFieldGroupOutput
@@ -665,6 +680,7 @@ CF_GROUP_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldGroupOutputT]] = {
     m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldGroupOutput,
     m.CustomFieldTypeT.DATE: DateCustomFieldGroupOutput,
     m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldGroupOutput,
+    m.CustomFieldTypeT.DURATION: DurationCustomFieldGroupOutput,
     m.CustomFieldTypeT.USER: UserCustomFieldGroupOutput,
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldGroupOutput,
     m.CustomFieldTypeT.ENUM: EnumCustomFieldGroupOutput,
@@ -756,6 +772,11 @@ class DateTimeCustomFieldValueOutput(BaseCustomFieldValueOutput):
     value: datetime | None
 
 
+class DurationCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    value: int | None
+
+
 class UserCustomFieldValueOutput(BaseCustomFieldValueOutput):
     type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
     value: UserOutput | None
@@ -823,6 +844,7 @@ CustomFieldValueOutputT = (
     | BooleanCustomFieldValueOutput
     | DateCustomFieldValueOutput
     | DateTimeCustomFieldValueOutput
+    | DurationCustomFieldValueOutput
     | UserCustomFieldValueOutput
     | UserMultiCustomFieldValueOutput
     | EnumCustomFieldValueOutput
@@ -846,6 +868,7 @@ CF_VALUE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldValueOutputT]] = {
     m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldValueOutput,
     m.CustomFieldTypeT.DATE: DateCustomFieldValueOutput,
     m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldValueOutput,
+    m.CustomFieldTypeT.DURATION: DurationCustomFieldValueOutput,
     m.CustomFieldTypeT.USER: UserCustomFieldValueOutput,
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldValueOutput,
     m.CustomFieldTypeT.ENUM: EnumCustomFieldValueOutput,
@@ -899,6 +922,11 @@ class DateCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput)
 class DateTimeCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
     type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
     values: list[datetime | None] = Field(description='DateTime values')
+
+
+class DurationCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    values: list[int | None] = Field(description='Duration values in seconds')
 
 
 class UserCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
@@ -961,6 +989,7 @@ CustomFieldGroupWithValuesOutputT = (
     | BooleanCustomFieldGroupWithValuesOutput
     | DateCustomFieldGroupWithValuesOutput
     | DateTimeCustomFieldGroupWithValuesOutput
+    | DurationCustomFieldGroupWithValuesOutput
     | UserCustomFieldGroupWithValuesOutput
     | UserMultiCustomFieldGroupWithValuesOutput
     | EnumCustomFieldGroupWithValuesOutput
@@ -986,6 +1015,7 @@ CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP: dict[
     m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.DATE: DateCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.DURATION: DurationCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.USER: UserCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.ENUM: EnumCustomFieldGroupWithValuesOutput,

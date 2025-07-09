@@ -21,6 +21,7 @@ CUSTOM_FIELDS_PLAIN_TYPES = (
     'boolean',
     'datetime',
     'date',
+    'duration',
 )
 
 

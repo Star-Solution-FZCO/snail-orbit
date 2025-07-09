@@ -14,6 +14,7 @@ def _custom_fields() -> dict:
         'H-State': CustomFieldTypeT.STATE,
         'Integer': CustomFieldTypeT.INTEGER,
         'Float': CustomFieldTypeT.FLOAT,
+        'Duration': CustomFieldTypeT.DURATION,
         'Date': CustomFieldTypeT.DATE,
         'Datetime': CustomFieldTypeT.DATETIME,
         'String': CustomFieldTypeT.STRING,
@@ -219,6 +220,167 @@ TEST_INTEGER_FIELD_PYTEST_PARAMS = [
             }
         },
         id='number range number..inf',
+    ),
+]
+TEST_DURATION_FIELD_PYTEST_PARAMS = [
+    pytest.param(
+        'Duration: 3600',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': 1 * 60 * 60,
+                }
+            }
+        },
+        id='duration field with 1 hour (3600 seconds)',
+    ),
+    pytest.param(
+        'Duration: 1800..7200',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$gte': 30 * 60, '$lte': 2 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with range 30min to 2h',
+    ),
+    pytest.param(
+        'Duration: 0..3600',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$gte': 0, '$lte': 1 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with range 0 to 1 hour',
+    ),
+    pytest.param(
+        'Duration: 3600..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$gt': 1 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with range 1 hour to infinity',
+    ),
+    pytest.param(
+        'Duration: null',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': None,
+                }
+            }
+        },
+        id='duration field with null value',
+    ),
+    pytest.param(
+        'Duration: 1h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': 1 * 60 * 60,
+                }
+            }
+        },
+        id='duration field with 1h format',
+    ),
+    pytest.param(
+        'Duration: 1d 2h 4m 5s',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': 1 * 24 * 60 * 60 + 2 * 60 * 60 + 4 * 60 + 5,
+                }
+            }
+        },
+        id='duration field with complex format 1d 2h 4m 5s',
+    ),
+    pytest.param(
+        'Duration: 30m',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': 30 * 60,
+                }
+            }
+        },
+        id='duration field with 30m format',
+    ),
+    pytest.param(
+        'Duration: 2w 3d',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': 2 * 7 * 24 * 60 * 60 + 3 * 24 * 60 * 60,
+                }
+            }
+        },
+        id='duration field with weeks and days format',
+    ),
+    pytest.param(
+        'Duration: 30m..2h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$gte': 30 * 60, '$lte': 2 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with range in duration format 30m to 2h',
+    ),
+    pytest.param(
+        'Duration: 1h..inf',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$gt': 1 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with infinity range from 1h format',
+    ),
+    pytest.param(
+        'Duration: -inf..1h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {'$lt': 1 * 60 * 60},
+                }
+            }
+        },
+        id='duration field with infinity range up to 1h format',
+    ),
+    pytest.param(
+        'Duration: 1h 4m..2d 4h',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^duration$', '$options': 'i'},
+                    'value': {
+                        '$gte': 1 * 60 * 60 + 4 * 60,
+                        '$lte': 2 * 24 * 60 * 60 + 4 * 60 * 60,
+                    },
+                }
+            }
+        },
+        id='duration field with mixed unit range 1h 4m to 2d 4h',
     ),
 ]
 TEST_PROJECT_RESERVED_FIELD_PYTEST_PARAMS = [
@@ -2538,6 +2700,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         *TEST_VERSION_FIELD_PYTEST_PARAMS,
         *TEST_BOOLEAN_FIELD_PYTEST_PARAMS,
         *TEST_INTEGER_FIELD_PYTEST_PARAMS,
+        *TEST_DURATION_FIELD_PYTEST_PARAMS,
         *TEST_PROJECT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_SUBJECT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_TEXT_RESERVED_FIELD_PYTEST_PARAMS,

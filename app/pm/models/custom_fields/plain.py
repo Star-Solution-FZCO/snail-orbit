@@ -10,6 +10,7 @@ __all__ = (
     'BooleanCustomField',
     'DateCustomField',
     'DateTimeCustomField',
+    'DurationCustomField',
 )
 
 
@@ -108,3 +109,21 @@ class DateTimeCustomField(CustomField):
         raise CustomFieldValidationError(
             field=self, value=value, msg='must be a datetime in ISO format'
         )
+
+
+class DurationCustomField(CustomField):
+    type: CustomFieldTypeT = CustomFieldTypeT.DURATION
+
+    def validate_value(self, value: Any) -> Any:
+        value = super().validate_value(value)
+        if value is None:
+            return value
+        if not isinstance(value, int):
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='must be an integer representing seconds'
+            )
+        if value < 0:
+            raise CustomFieldValidationError(
+                field=self, value=value, msg='must be a positive number of seconds'
+            )
+        return value

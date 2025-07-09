@@ -13982,6 +13982,9 @@
             "$ref": "#/components/schemas/DateTimeCustomFieldGroupOutput"
           },
           {
+            "$ref": "#/components/schemas/DurationCustomFieldGroupOutput"
+          },
+          {
             "$ref": "#/components/schemas/UserCustomFieldGroupOutput"
           },
           {
@@ -14016,6 +14019,7 @@
             "boolean": "#/components/schemas/BooleanCustomFieldGroupOutput",
             "date": "#/components/schemas/DateCustomFieldGroupOutput",
             "datetime": "#/components/schemas/DateTimeCustomFieldGroupOutput",
+            "duration": "#/components/schemas/DurationCustomFieldGroupOutput",
             "enum": "#/components/schemas/EnumCustomFieldGroupOutput",
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldGroupOutput",
             "float": "#/components/schemas/FloatCustomFieldGroupOutput",
@@ -14190,6 +14194,9 @@
             "$ref": "#/components/schemas/DateTimeCustomFieldOutput"
           },
           {
+            "$ref": "#/components/schemas/DurationCustomFieldOutput"
+          },
+          {
             "$ref": "#/components/schemas/UserCustomFieldOutput"
           },
           {
@@ -14224,6 +14231,7 @@
             "boolean": "#/components/schemas/BooleanCustomFieldOutput",
             "date": "#/components/schemas/DateCustomFieldOutput",
             "datetime": "#/components/schemas/DateTimeCustomFieldOutput",
+            "duration": "#/components/schemas/DurationCustomFieldOutput",
             "enum": "#/components/schemas/EnumCustomFieldOutput",
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldOutput",
             "float": "#/components/schemas/FloatCustomFieldOutput",
@@ -14248,6 +14256,7 @@
           "boolean",
           "date",
           "datetime",
+          "duration",
           "enum",
           "enum_multi",
           "state",
@@ -14318,6 +14327,9 @@
             "$ref": "#/components/schemas/DateTimeCustomFieldValueOutput"
           },
           {
+            "$ref": "#/components/schemas/DurationCustomFieldValueOutput"
+          },
+          {
             "$ref": "#/components/schemas/UserCustomFieldValueOutput"
           },
           {
@@ -14352,6 +14364,7 @@
             "boolean": "#/components/schemas/BooleanCustomFieldValueOutput",
             "date": "#/components/schemas/DateCustomFieldValueOutput",
             "datetime": "#/components/schemas/DateTimeCustomFieldValueOutput",
+            "duration": "#/components/schemas/DurationCustomFieldValueOutput",
             "enum": "#/components/schemas/EnumCustomFieldValueOutput",
             "enum_multi": "#/components/schemas/EnumMultiCustomFieldValueOutput",
             "float": "#/components/schemas/FloatCustomFieldValueOutput",
@@ -14798,6 +14811,184 @@
           "value"
         ],
         "title": "DateTimeCustomFieldValueOutput"
+      },
+      "DurationCustomFieldGroupOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "duration",
+            "title": "Type",
+            "default": "duration"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/DurationCustomFieldOutput"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "fields"
+        ],
+        "title": "DurationCustomFieldGroupOutput"
+      },
+      "DurationCustomFieldOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "duration",
+            "title": "Type",
+            "default": "duration"
+          },
+          "is_nullable": {
+            "type": "boolean",
+            "title": "Is Nullable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectShortOutput"
+            },
+            "type": "array",
+            "title": "Projects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "is_nullable",
+          "default_value",
+          "label",
+          "projects"
+        ],
+        "title": "DurationCustomFieldOutput"
+      },
+      "DurationCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "duration",
+            "title": "Type",
+            "default": "duration"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "DurationCustomFieldValueOutput"
       },
       "EncryptedObject-Input": {
         "properties": {

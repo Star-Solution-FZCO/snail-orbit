@@ -30,6 +30,14 @@ from pm.utils.dateutils import utcnow
 
 from ._base import IssueQueryTransformError, get_custom_fields
 
+DURATION_UNIT_MULTIPLIERS = {
+    's': 1,
+    'm': 60,
+    'h': 60 * 60,
+    'd': 24 * 60 * 60,
+    'w': 7 * 24 * 60 * 60,
+}
+
 __all__ = (
     'transform_search',
     'transform_text_search',
@@ -63,6 +71,7 @@ EXPRESSION_GRAMMAR = """
 
     attribute_values: NULL_VALUE
                     | NUMBER_VALUE
+                    | DURATION_VALUE
                     | DATE_VALUE
                     | DATETIME_VALUE
                     | relative_dt
@@ -72,6 +81,9 @@ EXPRESSION_GRAMMAR = """
                     | number_range
                     | number_left_inf_range
                     | number_right_inf_range
+                    | duration_range
+                    | duration_left_inf_range
+                    | duration_right_inf_range
                     | date_range
                     | date_left_inf_range
                     | date_right_inf_range
@@ -86,6 +98,9 @@ EXPRESSION_GRAMMAR = """
     number_range: NUMBER_VALUE _RANGE_DELIMITER NUMBER_VALUE
     number_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER NUMBER_VALUE
     number_right_inf_range: NUMBER_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
+    duration_range: DURATION_VALUE _RANGE_DELIMITER DURATION_VALUE
+    duration_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER DURATION_VALUE
+    duration_right_inf_range: DURATION_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
     date_range: DATE_VALUE _RANGE_DELIMITER DATE_VALUE
     date_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER DATE_VALUE
     date_right_inf_range: DATE_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
@@ -113,6 +128,7 @@ EXPRESSION_GRAMMAR = """
     INF_MINUS_VALUE.1: "-inf"i
     FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ -]*/
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?(?!\\.(?!\\.)|\\d|[a-zA-Z]|-)/
+    DURATION_VALUE.4: /(?:[0-9]+[smhdw]\\s*)+(?![a-zA-Z0-9])/
     STRING_VALUE: /[^:()" *${}]+/
     QUOTED_STRING: /"[^"]*"/
     SIGN: ("+" | "-")
@@ -155,6 +171,17 @@ class MongoQueryTransformer(Transformer):
             return {'value.value': str(value) if value is not None else None}
         if field_type == m.CustomFieldTypeT.STRING:
             return {'value': str(value) if value is not None else None}
+        if field_type == m.CustomFieldTypeT.DURATION:
+            if value is None:
+                return {'value': None}
+            if isinstance(value, dict):
+                return {
+                    'value': {
+                        k: int(v) if isinstance(v, (int, float)) else v
+                        for k, v in value.items()
+                    }
+                }
+            return {'value': int(value)}
         return {'value': value}
 
     def __init__(
@@ -335,6 +362,17 @@ class MongoQueryTransformer(Transformer):
     def NUMBER_VALUE(self, token):
         return float(token.value)
 
+    def DURATION_VALUE(self, token):
+        duration_str = token.value.strip()
+        matches = re.findall(r'(\d+)([smhdw])', duration_str.lower())
+
+        if not matches:
+            raise ValueError(f'Invalid duration format: {duration_str}')
+
+        return sum(
+            int(amount) * DURATION_UNIT_MULTIPLIERS[unit] for amount, unit in matches
+        )
+
     def DATE_VALUE(self, token):
         return date.fromisoformat(token.value)
 
@@ -360,6 +398,16 @@ class MongoQueryTransformer(Transformer):
         return {'$lt': args[1]}
 
     def number_right_inf_range(self, args):
+        return {'$gt': args[0]}
+
+    def duration_range(self, args):
+        self._validate_range(args)
+        return {'$gte': args[0], '$lte': args[1]}
+
+    def duration_left_inf_range(self, args):
+        return {'$lt': args[1]}
+
+    def duration_right_inf_range(self, args):
         return {'$gt': args[0]}
 
     def date_range(self, args):
