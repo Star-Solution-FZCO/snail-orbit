@@ -13,7 +13,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import { Link, QueryPagination } from "shared/ui";
-import { formatErrorMessages, useListQueryParams } from "shared/utils";
+import {
+    formatErrorMessages,
+    perPageOptions,
+    useListQueryParams,
+} from "shared/utils";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { BoardsList } from "./components/list/boards_list";
 
@@ -21,6 +25,7 @@ const perPageOptions = [10, 25, 50, 100, 500, 1000];
 
 const AgileBoardList = () => {
     const { t } = useTranslation();
+
     useCreateIssueNavbarSettings();
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
@@ -94,12 +99,12 @@ const AgileBoardList = () => {
                                 : null}
                         </Typography>
 
-                        <Stack direction="row" gap={1}>
+                        <Stack direction="row" alignItems="center" gap={1}>
+                            <Typography variant="subtitle2">
+                                {t("pagination.showRows")}:
+                            </Typography>
+
                             <Select
-                                variant="outlined"
-                                size="small"
-                                value={listQueryParams.limit}
-                                renderValue={() => listQueryParams.limit}
                                 sx={{
                                     ".MuiSelect-select": {
                                         py: 0.5,
@@ -107,12 +112,16 @@ const AgileBoardList = () => {
                                         pr: 2,
                                     },
                                 }}
+                                value={listQueryParams.limit}
+                                renderValue={() => listQueryParams.limit}
                                 onChange={(e) =>
                                     updateListQueryParams({
                                         limit: +e.target.value,
                                         offset: 0,
                                     })
                                 }
+                                variant="outlined"
+                                size="small"
                             >
                                 {perPageOptions.map((value) => (
                                     <MenuItem key={value} value={value}>

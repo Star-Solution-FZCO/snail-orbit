@@ -4,6 +4,8 @@ import { removeUndefined } from "./helpers/remove-undefined";
 
 export const defaultLimit = 25;
 
+export const perPageOptions = [10, 25, 50, 100, 500];
+
 export const initialListQueryParams: ListQueryParams = {
     limit: defaultLimit,
     offset: 0,

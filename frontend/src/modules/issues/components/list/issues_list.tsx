@@ -9,13 +9,11 @@ import {
 import type { FC } from "react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { perPageOptions } from "shared/utils";
 import { useLSState } from "shared/utils/helpers/local-storage";
 import IssueRow from "./issue_row/issue_row";
 import type { IssueRowViewParams } from "./issue_row/issue_row.types";
-import {
-    defaultIssueRowViewParams,
-    perPageOptions,
-} from "./issue_row/issues_list.utils";
+import { defaultIssueRowViewParams } from "./issue_row/issues_list.utils";
 import type { IssuesListProps } from "./issues_list.types";
 import { IssuesListSettings } from "./issues_list_settings";
 

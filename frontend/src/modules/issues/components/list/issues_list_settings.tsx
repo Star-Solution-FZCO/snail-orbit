@@ -35,7 +35,8 @@ export const IssuesListSettings = (props: IssueListProps) => {
                 <Button size="small" {...bindToggle(popupState)}>
                     {t("settings")}
                 </Button>
-                <Popper {...bindPopper(popupState)}>
+
+                <Popper {...bindPopper(popupState)} placement="bottom-end">
                     <Paper sx={{ px: 2, py: 1 }}>
                         <Stack direction="column" gap={1}>
                             <FormControlLabel
@@ -54,6 +55,7 @@ export const IssuesListSettings = (props: IssueListProps) => {
                                     />
                                 }
                             />
+
                             <FormControlLabel
                                 label={t("Show description")}
                                 control={
@@ -70,6 +72,7 @@ export const IssuesListSettings = (props: IssueListProps) => {
                                     />
                                 }
                             />
+
                             <FormControlLabel
                                 label={t("Show dividers")}
                                 control={

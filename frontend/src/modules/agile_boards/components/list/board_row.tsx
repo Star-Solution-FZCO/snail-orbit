@@ -1,6 +1,7 @@
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
 import { StarButton } from "shared/ui";
@@ -11,6 +12,8 @@ type BoardRowProps = {
 };
 
 export const BoardRow: FC<BoardRowProps> = ({ board }) => {
+    const { t } = useTranslation();
+
     const [favoriteBoard] = agileBoardApi.useFavoriteBoardMutation();
 
     const handleClickFavorite = useCallback(() => {
@@ -18,23 +21,29 @@ export const BoardRow: FC<BoardRowProps> = ({ board }) => {
     }, [board.id, board.is_favorite, favoriteBoard]);
 
     return (
-        <Stack
-            direction="row"
-            justifyContent="flex-start"
-            alignItems="flex-start"
-            gap={2}
-        >
+        <Stack direction="row" alignItems="center" gap={2}>
             <StarButton
-                size="small"
+                sx={{ p: 0 }}
                 starred={board.is_favorite}
-                sx={{ mt: 1 }}
                 onClick={handleClickFavorite}
             />
-            <Box sx={{ py: 1 }}>
+
+            <Box>
                 <IssueLink to="/agiles/$boardId" params={{ boardId: board.id }}>
                     {board.name}
                 </IssueLink>
-                <Box sx={{ fontSize: 14 }}>{board.description}</Box>
+
+                <Typography
+                    variant="subtitle2"
+                    color="textSecondary"
+                    sx={{
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {board.description || t("description.empty")}
+                </Typography>
             </Box>
         </Stack>
     );

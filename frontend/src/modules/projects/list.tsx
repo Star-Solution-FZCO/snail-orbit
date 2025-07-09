@@ -14,7 +14,11 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { projectApi } from "shared/model";
 import { QueryPagination } from "shared/ui";
-import { formatErrorMessages, useListQueryParams } from "shared/utils";
+import {
+    formatErrorMessages,
+    perPageOptions,
+    useListQueryParams,
+} from "shared/utils";
 import useDebouncedState from "../../shared/utils/hooks/use-debounced-state";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { ProjectCard } from "./components/project_card";
@@ -99,12 +103,12 @@ const ProjectList = () => {
                             {count ? `${count} projects` : null}
                         </Typography>
 
-                        <Stack direction="row" gap={1}>
+                        <Stack direction="row" alignItems="center" gap={1}>
+                            <Typography variant="subtitle2">
+                                {t("pagination.showRows")}:
+                            </Typography>
+
                             <Select
-                                variant="outlined"
-                                size="small"
-                                value={listQueryParams.limit}
-                                renderValue={() => listQueryParams.limit}
                                 sx={{
                                     ".MuiSelect-select": {
                                         py: 0.5,
@@ -112,12 +116,16 @@ const ProjectList = () => {
                                         pr: 2,
                                     },
                                 }}
+                                value={listQueryParams.limit}
+                                renderValue={() => listQueryParams.limit}
                                 onChange={(e) =>
                                     updateListQueryParams({
                                         limit: +e.target.value,
                                         offset: 0,
                                     })
                                 }
+                                variant="outlined"
+                                size="small"
                             >
                                 {perPageOptions.map((value) => (
                                     <MenuItem key={value} value={value}>

@@ -1,5 +1,6 @@
 import { Avatar, Stack, Tooltip, Typography } from "@mui/material";
 import type { FC } from "react";
+import { useTranslation } from "react-i18next";
 import type { ProjectT } from "shared/model/types";
 import { Link } from "shared/ui";
 import { ProjectSubscribeButton } from "./project_subscribe_button";
@@ -9,6 +10,8 @@ interface IProjectCardProps {
 }
 
 const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
+    const { t } = useTranslation();
+
     return (
         <Stack direction="row" alignItems="center">
             <ProjectSubscribeButton project={project} />
@@ -52,7 +55,7 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {project.description}
+                        {project.description || t("description.empty")}
                     </Typography>
                 </Tooltip>
             </Stack>

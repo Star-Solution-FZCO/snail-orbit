@@ -129,11 +129,11 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
                 onClose={handleCloseMenu}
                 anchorOrigin={{
                     vertical: "bottom",
-                    horizontal: "left",
+                    horizontal: "right",
                 }}
                 transformOrigin={{
                     vertical: "top",
-                    horizontal: "left",
+                    horizontal: "right",
                 }}
             >
                 {renderMenuItem(

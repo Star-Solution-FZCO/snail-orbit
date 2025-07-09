@@ -48,7 +48,7 @@ export const BottomSlot = styled("div")(({ theme }) => ({
     backgroundColor: theme.palette.background.board,
 }));
 
-export class PopperComponentProps {}
+export type PopperComponentProps = {};
 
 export function PopperComponent(props: PopperComponentProps) {
     // @ts-expect-error trash unused fields

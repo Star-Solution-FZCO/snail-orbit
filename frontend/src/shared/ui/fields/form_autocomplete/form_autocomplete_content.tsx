@@ -82,12 +82,12 @@ export const FormAutocompleteContent = <
                     return (
                         <Box component="li" key={key} {...optionProps}>
                             <Stack
-                                direction="row"
-                                justifyContent="space-between"
                                 sx={{
                                     width: 1,
                                     textDecoration: "none",
                                 }}
+                                direction="row"
+                                justifyContent="space-between"
                                 alignItems="center"
                                 component={getOptionLink ? Link : "div"}
                                 to={getOptionLink?.(option)}

@@ -24,6 +24,7 @@ type InnerOptionType = {
     id: string;
     original: TagT;
     leftAdornment: ReactNode;
+    rightAdornment: ReactNode;
 };
 
 export const TagListPopover = memo((props: TagListPopoverProps) => {
@@ -45,6 +46,7 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
 
     const options: InnerOptionType[] = useMemo(() => {
         if (!data || !data.payload || !data.payload.items.length) return [];
+
         return data.payload.items.map((el) => ({
             label: el.name,
             id: el.id,
@@ -66,10 +68,9 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
             rightAdornment: (
                 <IconButton
                     size="small"
-                    sx={{ p: 0 }}
                     onClick={(e) => handleEditButtonClick(e, el)}
                 >
-                    <EditIcon />
+                    <EditIcon fontSize="small" />
                 </IconButton>
             ),
         }));
@@ -89,14 +90,20 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
     return (
         <>
             <FormAutocompletePopover
-                onClose={onClose}
-                anchorEl={anchorEl}
                 id="tag-list"
                 open={open}
+                onClose={onClose}
+                anchorEl={anchorEl}
+                options={options}
+                getOptionKey={(option) => (option as InnerOptionType).id}
+                onChange={(_, value) => handleChange(value as InnerOptionType)}
+                getOptionLabel={(option) => (option as InnerOptionType).label}
+                getOptionDescription={(option) => option.original.description}
+                getOptionLeftAdornment={(option) => option.leftAdornment}
+                getOptionRightAdornment={(option) => option.rightAdornment}
                 inputProps={{
                     placeholder: t("tagList.placeholder"),
                 }}
-                loading={isLoading}
                 bottomSlot={
                     <Button
                         fullWidth
@@ -106,9 +113,7 @@ export const TagListPopover = memo((props: TagListPopoverProps) => {
                         {t("tagList.newTagButton")}
                     </Button>
                 }
-                getOptionKey={(option) => (option as InnerOptionType).id}
-                options={options}
-                onChange={(_, value) => handleChange(value as InnerOptionType)}
+                loading={isLoading}
             />
         </>
     );

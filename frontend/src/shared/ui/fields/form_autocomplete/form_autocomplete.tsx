@@ -34,8 +34,8 @@ export const FormAutocompletePopover = <
             id={id}
             open={open}
             anchorEl={anchorEl}
-            placement="bottom"
             modifiers={[defaultModifiers.preventOverflow]}
+            placement="bottom"
         >
             <ClickAwayListener onClickAway={handleClose}>
                 <div>

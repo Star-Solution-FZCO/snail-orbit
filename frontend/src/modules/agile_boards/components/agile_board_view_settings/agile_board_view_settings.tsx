@@ -36,7 +36,12 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
             <Button size="small" {...bindToggle(popupState)}>
                 {t("settings")}
             </Button>
-            <Popper {...bindPopper(popupState)} sx={{ zIndex: 9999 }}>
+
+            <Popper
+                {...bindPopper(popupState)}
+                sx={{ zIndex: 9999 }}
+                placement="bottom-end"
+            >
                 <Paper sx={{ px: 2, py: 1 }}>
                     <Stack direction="column" gap={1}>
                         <FormControlLabel
@@ -54,6 +59,7 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                                 />
                             }
                         />
+
                         <FormControlLabel
                             label={t("Show description")}
                             control={
@@ -69,10 +75,9 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                                 />
                             }
                         />
+
                         <FormLabel>{t("Collision strategy")}</FormLabel>
                         <Select
-                            variant="outlined"
-                            size="small"
                             value={value.collisionDetectionStrategy}
                             onChange={(e) =>
                                 onChange({
@@ -81,6 +86,8 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                                         .value as KanbanCollisionDetection,
                                 })
                             }
+                            variant="outlined"
+                            size="small"
                         >
                             <MenuItem value={KanbanCollisionDetection.Default}>
                                 {t("Default")}

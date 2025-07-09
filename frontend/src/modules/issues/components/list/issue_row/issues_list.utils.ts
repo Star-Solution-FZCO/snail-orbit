@@ -5,5 +5,3 @@ export const defaultIssueRowViewParams: IssueRowViewParams = {
     showDescription: false,
     showDividers: true,
 };
-
-export const perPageOptions = [10, 25, 50, 100, 500, 1000];

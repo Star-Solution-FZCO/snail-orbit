@@ -1,8 +1,7 @@
-import { Divider, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import type { FC } from "react";
 import { useMemo } from "react";
 import type { AgileBoardT } from "shared/model/types";
-import { interleave } from "shared/utils/helpers/interleave";
 import { BoardRow } from "./board_row";
 
 type BoardsListProps = {
@@ -13,12 +12,8 @@ export const BoardsList: FC<BoardsListProps> = (props) => {
     const { boards } = props;
 
     const rows = useMemo(() => {
-        const res = boards.map((board) => (
-            <BoardRow key={board.id} board={board} />
-        ));
-
-        return interleave(res, <Divider />);
+        return boards.map((board) => <BoardRow key={board.id} board={board} />);
     }, [boards]);
 
-    return <Stack>{rows}</Stack>;
+    return <Stack gap={2}>{rows}</Stack>;
 };

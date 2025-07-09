@@ -20,9 +20,9 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
     return (
         <Stack
             flexDirection="row"
-            gap={1}
-            position="relative"
             justifyContent="space-between"
+            position="relative"
+            gap={1}
         >
             {!hideSubscribeButton && (
                 <Box
@@ -49,6 +49,7 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
                 <Typography fontSize={24} fontWeight="bold" flex={1}>
                     {issue.subject}
                 </Typography>
+
                 {isEncrypted ? <LockIcon fontSize="small" /> : null}
             </Stack>
 
