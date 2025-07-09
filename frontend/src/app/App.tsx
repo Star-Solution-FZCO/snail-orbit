@@ -1,4 +1,4 @@
-import { CssBaseline, ThemeProvider, useColorScheme } from "@mui/material";
+import { CssBaseline, styled, ThemeProvider } from "@mui/material";
 import { RouterProvider } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Suspense } from "react";
@@ -10,13 +10,18 @@ import { Lightbox } from "shared/ui";
 import { router } from "./router";
 import "./sentry";
 
-const ToastContainerComp = () => {
-    const { mode } = useColorScheme();
+// TODO: Move somewhere
+const StyledContainer = styled(ToastContainer)(({ theme }) => ({
+    ".Toastify__toast": {
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+    },
+}));
 
+const ToastContainerComp = () => {
     return (
-        <ToastContainer
+        <StyledContainer
             position="bottom-right"
-            theme={mode}
             transition={Slide}
             closeOnClick
             stacked

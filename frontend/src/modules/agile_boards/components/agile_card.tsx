@@ -29,24 +29,31 @@ export type IssueCardProps = {
     cardSetting: TotalAgileBoardViewSettings;
     cardFields: AgileBoardCardFieldT[];
     cardColorFields: AgileBoardCardFieldT[];
+    onDoubleClick: () => void;
 } & ComponentProps<typeof IssueCard>;
 
 export const AgileCard: FC<IssueCardProps> = memo(
-    ({ issue, cardSetting, cardColorFields, cardFields, ...props }) => {
-        const { id_readable, subject } = issue;
+    ({
+        issue: outerIssue,
+        cardSetting,
+        cardColorFields,
+        cardFields,
+        onDoubleClick,
+        ...props
+    }) => {
+        const { id_readable, subject, project } = outerIssue;
         const { minCardHeight, showCustomFields, showDescription } =
             cardSetting;
 
         const { data: projectData, isLoading: isProjectLoading } =
-            projectApi.useGetProjectQuery(issue.project.id);
+            projectApi.useGetProjectQuery(project.id);
 
-        const { updateIssueCache, updateIssue, isLoading } = useIssueOperations(
-            { issueId: id_readable, issue },
-        );
+        const { updateIssueCache, updateIssue, isLoading, issue } =
+            useIssueOperations({ issueId: id_readable });
 
         const colors = useMemo(() => {
             return cardColorFields
-                .map(({ name }) => issue.fields[name])
+                .map(({ name }) => issue?.fields[name])
                 .map((field) =>
                     field &&
                     (field.type === "enum" || field.type === "state") &&
@@ -58,6 +65,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
         }, [cardColorFields, issue]);
 
         const fields: CustomFieldWithValueT[] = useMemo(() => {
+            if (!issue) return [];
             const projectFields = projectData?.payload.custom_fields || [];
             const projectFieldMap = new Map(
                 projectFields.map((el) => [el.gid, el]),
@@ -72,14 +80,18 @@ export const AgileCard: FC<IssueCardProps> = memo(
                     return { ...projectField, value: null };
                 })
                 .filter(notEmpty);
-        }, [cardFields, issue.fields, projectData?.payload.custom_fields]);
+        }, [cardFields, issue, projectData?.payload.custom_fields]);
 
         const onFieldUpdate = (field: CustomFieldWithValueT) => {
+            if (!issue) return;
             updateIssue?.({
                 fields: {
                     ...fieldsToFieldValueMap(Object.values(issue.fields)),
                     [field.name]: fieldToFieldValue(field),
                 },
+            }).catch(() => {
+                console.log("test");
+                onDoubleClick();
             });
             updateIssueCache?.({
                 fields: {
@@ -97,6 +109,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                             : 0,
                 }}
                 colors={colors}
+                onDoubleClick={onDoubleClick}
                 {...props}
             >
                 <IssueCardBody>
@@ -110,6 +123,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                         <span>{subject}</span>
                     </IssueCardHeader>
                     {showDescription &&
+                        issue &&
                         issue.text &&
                         !issue.text?.encryption?.length && (
                             <IssueCardDescription>

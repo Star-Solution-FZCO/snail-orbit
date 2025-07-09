@@ -9,6 +9,7 @@ import type {
     IssueLinkTypeT,
     IssueSpentTimeT,
     IssueT,
+    IssueWithErrorsT,
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
@@ -48,7 +49,7 @@ export const issueApi = createApi({
                 return tags;
             },
         }),
-        getIssue: build.query<ApiResponse<IssueT>, string>({
+        getIssue: build.query<ApiResponse<IssueWithErrorsT>, string>({
             query: (id) => `issue/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Issues", id }],
         }),
@@ -79,7 +80,22 @@ export const issueApi = createApi({
                         issueApi.util.upsertQueryData("getIssue", id, data),
                     );
                 } catch (e) {
-                    console.error(e);
+                    // @ts-expect-error Fuck this TODO: fix
+                    const data = e.error.data.payload as IssueT;
+                    // @ts-expect-error Fuck this TODO: fix
+                    const errorFields = e.error.data.error_fields as Record<
+                        string,
+                        string
+                    >;
+                    dispatch(
+                        issueApi.util.upsertQueryData("getIssue", id, {
+                            payload: {
+                                ...data,
+                                error_fields: errorFields,
+                            },
+                            success: false,
+                        }),
+                    );
                 }
             },
         }),

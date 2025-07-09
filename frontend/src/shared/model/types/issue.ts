@@ -21,6 +21,10 @@ export type CreateIssueT = IssueCreate;
 export type IssueT = IssueOutput;
 export type IssueDraftT = IssueDraftOutput;
 
+export type IssueWithErrorsT = IssueT & {
+    error_fields?: Record<string, string>;
+};
+
 export type IssueHistoryT = IssueHistoryOutput;
 
 export type IssueAttachmentBodyT = IssueAttachmentBody;

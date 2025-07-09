@@ -1,6 +1,6 @@
 import { skipToken } from "@reduxjs/toolkit/query";
 import deepmerge from "deepmerge";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { issueApi, useAppDispatch } from "shared/model";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
@@ -37,10 +37,8 @@ export const useIssueOperations = (params: Params) => {
         error: projectError,
     } = useProjectData({ projectId: issue?.project.id });
 
-    const [
-        updateIssue,
-        { isLoading: isIssueUpdateLoading, error: updateIssueError },
-    ] = issueApi.useUpdateIssueMutation();
+    const [updateIssue, { isLoading: isIssueUpdateLoading }] =
+        issueApi.useUpdateIssueMutation();
 
     const processIssueText = useCallback(
         async (inputText: string) => {
@@ -62,7 +60,10 @@ export const useIssueOperations = (params: Params) => {
 
             return updateIssue({ ...params, id: issueId })
                 .unwrap()
-                .catch(toastApiError);
+                .catch((e) => {
+                    toastApiError(e);
+                    throw e;
+                });
         },
         [issueId, processIssueText, updateIssue],
     );
@@ -71,18 +72,14 @@ export const useIssueOperations = (params: Params) => {
         (issueValue: Partial<IssueT>) => {
             if (!issue) return;
             dispatch(
-                issueApi.util.updateQueryData(
-                    "getIssue",
-                    issue.id_readable,
-                    (draft) => {
-                        draft.payload = deepmerge(draft.payload, issueValue, {
-                            arrayMerge: (_, sourceArray) => sourceArray,
-                        });
-                    },
-                ),
+                issueApi.util.updateQueryData("getIssue", issueId, (draft) => {
+                    draft.payload = deepmerge(draft.payload, issueValue, {
+                        arrayMerge: (_, sourceArray) => sourceArray,
+                    });
+                }),
             );
         },
-        [dispatch, issue],
+        [dispatch, issue, issueId],
     );
 
     const getIssueText = useCallback(async (issue: IssueT) => {
@@ -90,32 +87,16 @@ export const useIssueOperations = (params: Params) => {
         return await decryptObject(issue.text);
     }, []);
 
-    const customFieldsErrors = useMemo(() => {
-        if (
-            !!updateIssueError &&
-            "data" in updateIssueError &&
-            typeof updateIssueError.data === "object" &&
-            !!updateIssueError.data &&
-            "error_fields" in updateIssueError.data
-        ) {
-            return updateIssueError.data?.error_fields as Record<
-                string,
-                string
-            >;
-        }
-        return undefined;
-    }, [updateIssueError]);
-
     const isLoading = isIssueLoading || isProjectLoading;
     const error = issueError || projectError;
 
     return {
+        issue,
         updateIssue: handleUpdateIssue,
         updateIssueCache: handleUpdateCache,
         isIssueUpdateLoading,
         isLoading,
         error,
         getIssueText,
-        customFieldsErrors,
     };
 };

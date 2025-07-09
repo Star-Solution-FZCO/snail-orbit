@@ -10,7 +10,6 @@ import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link, PageTitle } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
-import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
 import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { useProjectData } from "widgets/issue/api/use_project_data";
@@ -42,16 +41,12 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
 
     const issue = issueData?.payload;
 
-    const {
-        updateIssue,
-        updateIssueCache,
-        isIssueUpdateLoading,
-        customFieldsErrors,
-    } = useIssueOperations({ issueId });
+    const { updateIssue, updateIssueCache, isIssueUpdateLoading } =
+        useIssueOperations({ issueId });
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            updateIssue({ ...formData }).catch(toastApiError);
+            updateIssue({ ...formData });
         },
         [updateIssue],
     );
@@ -120,7 +115,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                             onUpdateCache={updateIssueCache}
                             loading={isLoading || isIssueUpdateLoading}
                             isEncrypted={isEncrypted}
-                            customFieldsErrors={customFieldsErrors}
+                            customFieldsErrors={issue.error_fields}
                         />
                     </>
                 )

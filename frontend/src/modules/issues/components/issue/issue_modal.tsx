@@ -34,6 +34,7 @@ type IssueModalProps = {
     loading?: boolean;
     onClose?: () => void;
     isEncrypted?: boolean;
+    customFieldsErrors?: Record<string, string>;
 } & Pick<DialogProps, "open">;
 
 export const IssueModal: FC<IssueModalProps> = (props) => {
@@ -45,6 +46,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
         onUpdateCache,
         loading,
         isEncrypted,
+        customFieldsErrors,
     } = props;
 
     const { data: projectData } = projectApi.useGetProjectQuery(
@@ -120,7 +122,7 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                             onUpdateCache={onUpdateCache}
                         />
 
-                        <IssueActivities issueId={issue.id} />
+                        <IssueActivities issueId={issue.id_readable} />
                     </Stack>
                 </Stack>
 
@@ -149,11 +151,10 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                             project={projectData?.payload}
                             onUpdateIssue={onUpdateIssue}
                             onUpdateCache={onUpdateCache}
+                            customFieldsErrors={customFieldsErrors}
                         />
                     </FieldOffside>
                 </Stack>
-
-                {/*<FilePreview issue={issue} isDraft={isDraft} />*/}
             </DialogContent>
         </Dialog>
     );

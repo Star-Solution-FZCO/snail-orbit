@@ -9,6 +9,7 @@ import type {
     CreateAgileBoardT,
     CustomFieldGroupLinkT,
     GrantPermissionParams,
+    IssueT,
     ListQueryParams,
     ListResponse,
     MoveIssueT,
@@ -17,6 +18,7 @@ import type {
     UpdateAgileBoardT,
 } from "shared/model/types";
 import customFetchBase from "./custom_fetch_base";
+import { issueApi } from "./issue.api";
 
 const tagTypes = ["AgileBoards", "AgileBoardIssue", "AgileBoardIssues"];
 
@@ -213,6 +215,29 @@ export const agileBoardApi = createApi({
             providesTags: (_result, _error, { boardId }) => [
                 { type: "AgileBoardIssues", id: boardId },
             ],
+            async onQueryStarted(
+                _,
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    data.payload.issues.forEach((el) =>
+                        el.forEach((el) =>
+                            el.forEach((el) => {
+                                dispatch(
+                                    issueApi.util.upsertQueryData(
+                                        "getIssue",
+                                        el.id_readable,
+                                        { payload: el, success: true },
+                                    ),
+                                );
+                            }),
+                        ),
+                    );
+                } catch {
+                    // noop
+                }
+            },
         }),
         moveIssue: build.mutation<ApiResponse<{ id: string }>, MoveIssueT>({
             query: ({ issue_id, board_id, ...params }) => ({
@@ -220,9 +245,41 @@ export const agileBoardApi = createApi({
                 method: "PUT",
                 body: params,
             }),
-            invalidatesTags: (_result, _error, { board_id }) => [
-                { type: "AgileBoardIssues", id: board_id },
-            ],
+            async onQueryStarted(
+                { board_id },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    await queryFulfilled;
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoardIssues", id: board_id },
+                        ]),
+                    );
+                } catch (e) {
+                    // @ts-expect-error Fuck this TODO: fix
+                    const data = e.error.data.payload as IssueT;
+                    // @ts-expect-error Fuck this TODO: fix
+                    const errorFields = e.error.data.error_fields as Record<
+                        string,
+                        string
+                    >;
+                    console.log(data.id_readable);
+                    dispatch(
+                        issueApi.util.upsertQueryData(
+                            "getIssue",
+                            data.id_readable,
+                            {
+                                payload: {
+                                    ...data,
+                                    error_fields: errorFields,
+                                },
+                                success: false,
+                            },
+                        ),
+                    );
+                }
+            },
         }),
         getBoardPermissions: build.query<
             ListResponse<RolePermissionT>,

@@ -26,7 +26,7 @@ export const IssueForm: FC<IssueFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const { getIssueText } = useIssueOperations({ issueId: issue.id });
+    const { getIssueText } = useIssueOperations({ issueId: issue.id_readable });
 
     const [subject, setSubject] = useState<string>(issue?.subject || "");
     const [text, setText] = useState<string>("");

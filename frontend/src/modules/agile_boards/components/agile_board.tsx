@@ -80,7 +80,10 @@ export const AgileBoard: FC<AgileBoardProps> = ({
             after_issue: to.after?.id.toString() || null,
         })
             .unwrap()
-            .catch(toastApiError);
+            .catch((e) => {
+                toastApiError(e);
+                onCardDoubleClick?.(issue);
+            });
     };
 
     const inBlockColumns = useCalcColumns({

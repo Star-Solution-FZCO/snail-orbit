@@ -13,8 +13,13 @@ import { ModalViewLoader } from "./modal_view_loader";
 export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
     const { open, id, onClose } = props;
 
+    console.log("ModalViewIssue", id);
+
     const { data, isLoading, error } = issueApi.useGetIssueQuery(
         open && id ? id : skipToken,
+        {
+            refetchOnFocus: true,
+        },
     );
 
     const issue = data?.payload;
@@ -28,7 +33,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
-            updateIssue(formData).catch(toastApiError);
+            updateIssue(formData);
         },
         [updateIssue],
     );
@@ -54,6 +59,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
             open={open}
             onClose={onClose}
             isEncrypted={isEncrypted}
+            customFieldsErrors={issue?.error_fields}
         />
     );
 };

@@ -121,7 +121,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     };
 
     const handleCardDoubleClick = useCallback(
-        (issue: IssueT) => openIssueModal(issue.id),
+        (issue: IssueT) => openIssueModal(issue.id_readable),
         [openIssueModal],
     );
 

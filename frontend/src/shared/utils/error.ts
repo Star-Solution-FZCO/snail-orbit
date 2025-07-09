@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import i18n from "shared/i18n";
 
-export const formatErrorMessages = (error: any) => {
+export const formatErrorMessages = (error: unknown) => {
     const errorData = error?.data;
     const errorFields: Record<string, string> | undefined =
         error?.error_fields || errorData?.error_fields;
@@ -20,6 +20,6 @@ export const formatErrorMessages = (error: any) => {
         .join(". ");
 };
 
-export const toastApiError = (error: any) => {
+export const toastApiError = (error: unknown) => {
     toast.error(formatErrorMessages(error) || i18n.t("error.default"));
 };
