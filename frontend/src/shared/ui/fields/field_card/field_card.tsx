@@ -6,6 +6,7 @@ import { FieldCardWrapper } from "./field_card.styles";
 export type FieldCardProps = {
     label: string;
     value: string;
+    description?: string;
     onClick?: MouseEventHandler<HTMLDivElement>;
     sx?: SxProps;
     orientation?: "horizontal" | "vertical";
@@ -22,34 +23,50 @@ export const FieldCard: FC<FieldCardProps> = ({
     variant = "standard",
     rightAdornment,
     leftAdornment,
+    description,
     ...rest
 }) => {
     return (
         <FieldCardWrapper onClick={onClick} variant={variant} {...rest}>
             {leftAdornment}
-            <Stack
-                direction={orientation === "horizontal" ? "row" : "column"}
-                alignItems="baseline"
-            >
-                <Typography
-                    variant="body1"
-                    component="span"
-                    sx={{
-                        width: 1,
-                        color: "grey.500",
-                        fontSize: orientation === "horizontal" ? 16 : 14,
-                    }}
+            <Stack direction="column">
+                <Stack
+                    direction={orientation === "horizontal" ? "row" : "column"}
+                    alignItems="baseline"
                 >
-                    {label}
-                </Typography>
+                    <Typography
+                        variant="body1"
+                        component="span"
+                        sx={{
+                            width: 1,
+                            color: "grey.500",
+                            fontSize: orientation === "horizontal" ? 16 : 14,
+                        }}
+                    >
+                        {label}
+                    </Typography>
 
-                <Typography
-                    variant="body1"
-                    component="span"
-                    sx={{ width: 1, color: "primary.main" }}
-                >
-                    {value}
-                </Typography>
+                    <Typography
+                        variant="body1"
+                        component="span"
+                        sx={{ width: 1, color: "primary.main" }}
+                    >
+                        {value}
+                    </Typography>
+                </Stack>
+                {!!description && (
+                    <Typography
+                        variant="caption"
+                        component="span"
+                        sx={{
+                            color: "grey.500",
+                            fontSize: 12,
+                            textWrap: "wrap",
+                        }}
+                    >
+                        {description}
+                    </Typography>
+                )}
             </Stack>
             {rightAdornment}
         </FieldCardWrapper>

@@ -6,4 +6,5 @@ export type IssueCustomFieldsProps = {
     project?: ProjectT;
     onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
+    customFieldsErrors?: Record<string, string>;
 };

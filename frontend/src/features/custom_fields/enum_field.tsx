@@ -14,6 +14,7 @@ type EnumFieldProps = {
     id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
+    error?: string;
 };
 
 export const EnumField: FC<EnumFieldProps> = ({
@@ -23,6 +24,7 @@ export const EnumField: FC<EnumFieldProps> = ({
     id,
     multiple,
     rightAdornment,
+    error,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -81,6 +83,8 @@ export const EnumField: FC<EnumFieldProps> = ({
             getCardLabelString={(value) =>
                 cardLabelGetter(value, (el) => el.value)
             }
+            variant={error ? "error" : "standard"}
+            description={error}
         />
     );
 };

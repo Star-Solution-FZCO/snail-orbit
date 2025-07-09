@@ -25,14 +25,16 @@ export const CustomFieldsParserV2: FC<CustomFieldsParserV2Props> = ({
     fields,
     onChange,
     rightAdornmentRenderer,
+    customFieldsErrors,
 }) => {
     const baseCompProps = useCallback(
         (field: CustomFieldWithValueT) => ({
             id: field.id,
             label: field.name,
             rightAdornment: rightAdornmentRenderer?.(field),
+            error: customFieldsErrors?.[field.name],
         }),
-        [rightAdornmentRenderer],
+        [rightAdornmentRenderer, customFieldsErrors],
     );
 
     return (

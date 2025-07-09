@@ -14,6 +14,7 @@ type OwnedFieldProps = {
     id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
+    error?: string;
 };
 
 export const OwnedField: FC<OwnedFieldProps> = ({
@@ -23,6 +24,7 @@ export const OwnedField: FC<OwnedFieldProps> = ({
     id,
     multiple,
     rightAdornment,
+    error,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -81,6 +83,8 @@ export const OwnedField: FC<OwnedFieldProps> = ({
             getCardLabelString={(value) =>
                 cardLabelGetter(value, (el) => el.value)
             }
+            variant={error ? "error" : "standard"}
+            description={error}
         />
     );
 };

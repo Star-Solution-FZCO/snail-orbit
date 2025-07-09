@@ -14,6 +14,7 @@ type UserFieldProps = {
     multiple?: boolean;
     id: string;
     rightAdornment?: ReactNode;
+    error?: string;
 };
 
 export const UserField = ({
@@ -23,6 +24,7 @@ export const UserField = ({
     id,
     onChange,
     rightAdornment,
+    error,
 }: UserFieldProps) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -79,6 +81,8 @@ export const UserField = ({
             getCardLabelString={(value) =>
                 cardLabelGetter(value, (el) => el.name)
             }
+            variant={error ? "error" : "standard"}
+            description={error}
         />
     );
 };

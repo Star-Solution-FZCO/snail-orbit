@@ -42,8 +42,12 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
 
     const issue = issueData?.payload;
 
-    const { updateIssue, updateIssueCache, isIssueUpdateLoading } =
-        useIssueOperations({ issueId });
+    const {
+        updateIssue,
+        updateIssueCache,
+        isIssueUpdateLoading,
+        customFieldsErrors,
+    } = useIssueOperations({ issueId });
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
@@ -116,6 +120,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                             onUpdateCache={updateIssueCache}
                             loading={isLoading || isIssueUpdateLoading}
                             isEncrypted={isEncrypted}
+                            customFieldsErrors={customFieldsErrors}
                         />
                     </>
                 )

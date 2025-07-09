@@ -15,6 +15,7 @@ type SelectFieldProps<
 > & {
     label: string;
     cardValue?: string;
+    description?: string;
     onOpened?: () => unknown;
     loading?: boolean;
     variant?: "standard" | "error";
@@ -45,6 +46,7 @@ export const SelectField = <
         leftAdornment,
         rightAdornment,
         getCardLabelString,
+        description,
         ...rest
     } = props;
 
@@ -81,6 +83,7 @@ export const SelectField = <
                 leftAdornment={leftAdornment}
                 rightAdornment={rightAdornment}
                 data-field-card-id={id}
+                description={description}
             />
 
             <FormAutocompletePopover

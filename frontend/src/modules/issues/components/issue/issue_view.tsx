@@ -21,6 +21,7 @@ type IssueFormProps = {
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     loading?: boolean;
     isEncrypted?: boolean;
+    customFieldsErrors?: Record<string, string>;
 };
 
 export const IssueView: FC<IssueFormProps> = (props) => {
@@ -31,6 +32,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
         onUpdateCache,
         loading,
         isEncrypted,
+        customFieldsErrors,
     } = props;
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
@@ -87,6 +89,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                     project={project}
                     onUpdateIssue={onUpdateIssue}
                     onUpdateCache={onUpdateCache}
+                    customFieldsErrors={customFieldsErrors}
                 />
             </FieldContainer>
         </Box>

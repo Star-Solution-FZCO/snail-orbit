@@ -8,11 +8,20 @@ import FormDatePopover from "shared/ui/fields/form_date/form_date";
 type DateFieldProps = {
     label: string;
     rightAdornment?: ReactNode;
+    error?: string;
 } & Pick<FormDatePopoverProps, "value" | "onChange" | "id" | "type">;
 
 export const DateField = forwardRef(
     (
-        { value, onChange, label, id, type, rightAdornment }: DateFieldProps,
+        {
+            value,
+            onChange,
+            label,
+            id,
+            type,
+            rightAdornment,
+            error,
+        }: DateFieldProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -37,6 +46,8 @@ export const DateField = forwardRef(
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     data-field-card-id={id}
+                    variant={error ? "error" : "standard"}
+                    description={error}
                 />
                 <FormDatePopover
                     ref={ref}

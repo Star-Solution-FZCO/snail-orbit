@@ -15,6 +15,7 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
     project,
     onUpdateIssue,
     onUpdateCache,
+    customFieldsErrors,
 }) => {
     const { t } = useTranslation();
 
@@ -53,7 +54,11 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
                 }}
             />
 
-            <CustomFieldsParserV2 fields={fields} onChange={onFieldUpdate} />
+            <CustomFieldsParserV2
+                fields={fields}
+                onChange={onFieldUpdate}
+                customFieldsErrors={customFieldsErrors}
+            />
         </>
     );
 };

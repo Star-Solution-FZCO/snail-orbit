@@ -17,6 +17,7 @@ type VersionFieldProps = {
     id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
+    error?: string;
 };
 
 export const VersionField: FC<VersionFieldProps> = ({
@@ -26,6 +27,7 @@ export const VersionField: FC<VersionFieldProps> = ({
     id,
     multiple,
     rightAdornment,
+    error,
 }) => {
     const [fetchOptions, { data, isLoading }] =
         customFieldsApi.useLazyListSelectOptionsQuery();
@@ -65,6 +67,8 @@ export const VersionField: FC<VersionFieldProps> = ({
             getCardLabelString={(el) =>
                 cardLabelGetter(el, getVersionFieldLabel)
             }
+            variant={error ? "error" : "standard"}
+            description={error}
         />
     );
 };

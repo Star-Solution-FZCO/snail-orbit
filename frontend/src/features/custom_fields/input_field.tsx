@@ -7,6 +7,7 @@ import FormInputPopover from "shared/ui/fields/form_input/form_input";
 type InputFieldProps = {
     label: string;
     rightAdornment?: ReactNode;
+    error?: string;
 } & Pick<FormInputPopoverProps, "value" | "onChange" | "id" | "inputMode">;
 
 export const InputField = forwardRef(
@@ -18,6 +19,7 @@ export const InputField = forwardRef(
             id,
             inputMode,
             rightAdornment,
+            error,
         }: InputFieldProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
@@ -37,6 +39,8 @@ export const InputField = forwardRef(
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     data-field-card-id={id}
+                    variant={error ? "error" : "standard"}
+                    description={error}
                 />
                 <FormInputPopover
                     ref={ref}
