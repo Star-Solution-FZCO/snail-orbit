@@ -2,8 +2,10 @@ import { useCallback, useState } from "react";
 import type { ListQueryParams } from "shared/model/types";
 import { removeUndefined } from "./helpers/remove-undefined";
 
+export const defaultLimit = 25;
+
 export const initialListQueryParams: ListQueryParams = {
-    limit: 10,
+    limit: defaultLimit,
     offset: 0,
 };
 
@@ -53,7 +55,7 @@ export type PaginationParams = {
 
 export const usePaginationParams = createParamsHook<PaginationParams>({
     page: 1,
-    perPage: 10,
+    perPage: defaultLimit,
 });
 
 export const useListQueryParams = createParamsHook<ListQueryParams>(

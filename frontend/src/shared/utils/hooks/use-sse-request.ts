@@ -25,7 +25,7 @@ export const useSseRequest = <T>(params: UseSseRequestParams<T>) => {
         }
 
         setIsLoading(true);
-        
+
         const manager = SSESharedWorkerManager.getInstance();
 
         const handleWorkerMessage = (event: WorkerEvent) => {
