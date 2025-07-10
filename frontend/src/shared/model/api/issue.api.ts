@@ -22,6 +22,7 @@ import type {
     IssueDraftUpdate,
     IssueUpdate,
 } from "../types/backend-schema.gen";
+import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
@@ -56,6 +57,28 @@ export const issueApi = createApi({
         createIssue: build.mutation<ApiResponse<IssueT>, IssueCreate>({
             query: (body) => ({ url: "issue/", method: "POST", body }),
             invalidatesTags: [{ type: "Issues", id: "LIST" }],
+            async onQueryStarted(
+                _,
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        issueApi.util.upsertQueryData(
+                            "getIssue",
+                            data.payload.id_readable,
+                            data,
+                        ),
+                    );
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoardIssues" },
+                        ]),
+                    );
+                } catch {
+                    // noop
+                }
+            },
         }),
         updateIssue: build.mutation<
             ApiResponse<IssueT>,
@@ -78,6 +101,11 @@ export const issueApi = createApi({
                     const { data } = await queryFulfilled;
                     dispatch(
                         issueApi.util.upsertQueryData("getIssue", id, data),
+                    );
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoardIssues" },
+                        ]),
                     );
                 } catch (e) {
                     // @ts-expect-error Fuck this TODO: fix
@@ -231,6 +259,28 @@ export const issueApi = createApi({
                 method: "POST",
             }),
             invalidatesTags: () => [{ type: "Issues", id: "LIST" }],
+            async onQueryStarted(
+                _,
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        issueApi.util.upsertQueryData(
+                            "getIssue",
+                            data.payload.id_readable,
+                            data,
+                        ),
+                    );
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
+                            { type: "AgileBoardIssues" },
+                        ]),
+                    );
+                } catch {
+                    // noop
+                }
+            },
         }),
         listSelectLinkableIssues: build.query<
             ListResponse<IssueT>,
