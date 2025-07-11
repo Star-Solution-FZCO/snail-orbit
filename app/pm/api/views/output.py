@@ -26,6 +26,29 @@ __all__ = (
 class BaseOutput(BaseModel):
     success: bool
 
+    @classmethod
+    def get_openapi_content(cls) -> dict[str, Any]:
+        """Generate OpenAPI content for application/json."""
+        if not hasattr(cls, 'get_example'):
+            raise NotImplementedError(
+                f'{cls.__name__} must implement get_example() method'
+            )
+
+        example_instance = cls.get_example()
+        example_name = cls.__name__.lower().replace('output', '_example')
+        examples = {
+            example_name: {
+                'summary': f'{cls.__name__} Example',
+                'value': example_instance.model_dump(),
+            }
+        }
+        return {
+            'application/json': {
+                'schema': cls.model_json_schema(),
+                'examples': examples,
+            }
+        }
+
 
 class SuccessOutput(BaseOutput):
     success: bool = True
@@ -35,10 +58,20 @@ class ErrorOutput(BaseOutput):
     success: bool = False
     error_messages: list[str]
 
+    @classmethod
+    def get_example(cls) -> Self:
+        """Generate a canonical example for OpenAPI documentation."""
+        return cls(error_messages=['Operation failed'])
+
 
 class MFARequiredOutput(BaseOutput):
     success: bool = False
     mfa_required: bool = True
+
+    @classmethod
+    def get_example(cls) -> Self:
+        """Generate a canonical example for OpenAPI documentation."""
+        return cls()
 
 
 T = TypeVar('T')
@@ -55,6 +88,15 @@ class SuccessPayloadOutput(SuccessOutput, BasePayloadOutput, Generic[T]):
 
 class ErrorPayloadOutput(ErrorOutput, BasePayloadOutput, Generic[T]):
     error_fields: dict[str, str]
+
+    @classmethod
+    def get_example(cls) -> Self:
+        """Generate a canonical example for OpenAPI documentation."""
+        return cls(
+            error_messages=['Validation failed'],
+            error_fields={'field_name': 'Error description'},
+            payload={},
+        )
 
 
 class ModelIDPayload(BaseModel):
