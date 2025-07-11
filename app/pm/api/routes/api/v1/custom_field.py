@@ -24,7 +24,13 @@ from pm.api.views.custom_fields import (
     cf_group_output_cls_from_type,
     cf_output_from_obj,
 )
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import error_responses
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import ListParams
 from pm.api.views.select import (
     SelectParams,
@@ -41,6 +47,9 @@ router = APIRouter(
     prefix='/custom_field',
     tags=['custom_field'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
 )
 
 

@@ -10,12 +10,22 @@ from pm.api.views.encryption import (
     EncryptionKeyOut,
     EncryptionKeyUpdate,
 )
-from pm.api.views.output import BaseListOutput, SuccessOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    SuccessOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/encryption_key', tags=['encryption_key'])
+router = APIRouter(
+    prefix='/encryption_key',
+    tags=['encryption_key'],
+    responses=error_responses(*AUTH_ERRORS),
+)
 
 
 @router.get('/list')
@@ -37,7 +47,14 @@ async def list_encryption_keys(
     )
 
 
-@router.get('/{fingerprint}')
+@router.get(
+    '/{fingerprint}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def get_key(
     fingerprint: str,
 ) -> SuccessPayloadOutput[EncryptionKeyOut]:
@@ -55,7 +72,15 @@ async def get_key(
     return SuccessPayloadOutput(payload=EncryptionKeyOut.from_obj(obj))
 
 
-@router.post('/')
+@router.post(
+    '/',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def add_key(
     body: EncryptionKeyCreate,
 ) -> SuccessPayloadOutput[EncryptionKeyOut]:
@@ -82,7 +107,16 @@ async def add_key(
     return SuccessPayloadOutput(payload=EncryptionKeyOut.from_obj(obj))
 
 
-@router.put('/{fingerprint}')
+@router.put(
+    '/{fingerprint}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_key(
     fingerprint: str,
     body: EncryptionKeyUpdate,
@@ -107,7 +141,14 @@ async def update_key(
     return SuccessPayloadOutput(payload=EncryptionKeyOut.from_obj(obj))
 
 
-@router.delete('/{fingerprint}')
+@router.delete(
+    '/{fingerprint}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def delete_key(
     fingerprint: str,
 ) -> SuccessOutput:

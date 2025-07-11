@@ -7,8 +7,9 @@ from fastapi import Depends, HTTPException
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import error_responses
 from pm.api.views.issue import IssueHistoryOutput
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.output import BaseListOutput, ErrorOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.permissions import Permissions
 
@@ -47,7 +48,16 @@ async def list_history(
     )
 
 
-@router.put('/{history_id}/hide')
+@router.put(
+    '/{history_id}/hide',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def hide_history(
     issue_id_or_alias: PydanticObjectId | str,
     history_id: UUID,
@@ -71,7 +81,16 @@ async def hide_history(
     return SuccessPayloadOutput(payload=IssueHistoryOutput.from_obj(record))
 
 
-@router.put('/{history_id}/restore')
+@router.put(
+    '/{history_id}/restore',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def restore_history(
     issue_id_or_alias: PydanticObjectId | str,
     history_id: UUID,

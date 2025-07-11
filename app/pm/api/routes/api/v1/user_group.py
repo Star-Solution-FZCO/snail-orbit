@@ -1,12 +1,14 @@
 from enum import StrEnum
+from http import HTTPStatus
 
 from fastapi import Depends
 from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import error_responses
 from pm.api.views.group import GroupOutput
-from pm.api.views.output import BaseListOutput
+from pm.api.views.output import BaseListOutput, ErrorOutput
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
 
@@ -33,7 +35,12 @@ class UserGroupOutput(BaseModel):
         return self.data.name
 
 
-@router.get('/select')
+@router.get(
+    '/select',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
+)
 async def select_users_and_groups(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[UserGroupOutput]:

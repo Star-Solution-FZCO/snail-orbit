@@ -15,6 +15,8 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput
 from pm.api.views.user import UserOutput
+
+# No error responses needed for this public route
 from pm.utils.dateutils import utcfromtimestamp
 
 __all__ = ('router',)

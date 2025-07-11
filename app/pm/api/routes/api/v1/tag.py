@@ -11,8 +11,10 @@ from pm.api.context import (
     current_user_context_dependency,
 )
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import error_responses
 from pm.api.views.output import (
     BaseListOutput,
+    ErrorOutput,
     ModelIdOutput,
     SuccessPayloadOutput,
 )
@@ -26,6 +28,10 @@ router = APIRouter(
     prefix='/tag',
     tags=['tag'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+    ),
 )
 
 
@@ -86,7 +92,12 @@ async def list_tags(
     )
 
 
-@router.get('/{tag_id}')
+@router.get(
+    '/{tag_id}',
+    responses=error_responses(
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def get_tag(
     tag_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[TagOutput]:
@@ -114,7 +125,14 @@ async def create_tag(
     return SuccessPayloadOutput(payload=TagOutput.from_obj(tag))
 
 
-@router.put('/{tag_id}')
+@router.put(
+    '/{tag_id}',
+    responses=error_responses(
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_tag(
     tag_id: PydanticObjectId,
     tag_data: TagUpdate,

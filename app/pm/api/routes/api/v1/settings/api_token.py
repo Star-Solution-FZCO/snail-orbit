@@ -1,4 +1,5 @@
 from datetime import datetime
+from http import HTTPStatus
 from typing import Self
 
 from fastapi import Depends
@@ -7,12 +8,17 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import BaseListOutput, ErrorOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/api_token', tags=['api_token'])
+router = APIRouter(
+    prefix='/api_token',
+    tags=['api_token'],
+    responses=error_responses(*AUTH_ERRORS),
+)
 
 
 class ApiTokenOut(BaseModel):
@@ -75,7 +81,15 @@ async def list_api_tokens(
     )
 
 
-@router.post('/')
+@router.post(
+    '/',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def add_token(
     body: ApiTokenCreate,
 ) -> SuccessPayloadOutput[ApiTokenCreateOut]:

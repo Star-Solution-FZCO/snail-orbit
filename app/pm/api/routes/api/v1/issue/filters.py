@@ -15,7 +15,8 @@ from pm.api.issue_query.search import (
 )
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput
-from pm.api.views.output import SuccessPayloadOutput
+from pm.api.views.error_responses import error_responses
+from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
 
 __all__ = ('router',)
 
@@ -96,7 +97,15 @@ async def _get_custom_fields() -> dict[str, list[m.CustomField]]:
     return res
 
 
-@router.post('/parse-query')
+@router.post(
+    '/parse-query',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def parse_search_query(
     body: IssueQueryToFiltersBody,
 ) -> SuccessPayloadOutput[IssueQueryToFiltersOutput]:
@@ -154,7 +163,15 @@ async def parse_search_query(
     return SuccessPayloadOutput(payload=IssueQueryToFiltersOutput(filters=filters))
 
 
-@router.post('/build-query')
+@router.post(
+    '/build-query',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def build_search_query(
     body: IssueFiltersToQueryBody,
 ) -> SuccessPayloadOutput[IssueFiltersToQueryOutput]:

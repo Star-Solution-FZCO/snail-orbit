@@ -10,6 +10,13 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import (
+    AUTH_ERRORS,
+    CRUD_ERRORS,
+    READ_ERRORS,
+    WRITE_ERRORS,
+    error_responses,
+)
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
@@ -21,7 +28,10 @@ from pm.templates import TemplateT, render_template
 __all__ = ('router',)
 
 router = APIRouter(
-    prefix='/user', tags=['user'], dependencies=[Depends(admin_context_dependency)]
+    prefix='/user',
+    tags=['user'],
+    dependencies=[Depends(admin_context_dependency)],
+    responses=error_responses(*AUTH_ERRORS),
 )
 
 INVITE_PASSWORD_TOKEN_LIFETIME = timedelta(days=7)
@@ -65,7 +75,10 @@ class UserUpdate(BaseModel):
     is_admin: bool | None = None
 
 
-@router.get('/list')
+@router.get(
+    '/list',
+    responses=error_responses(*AUTH_ERRORS),
+)
 async def list_users(
     query: ListParams = Depends(),
 ) -> BaseListOutput[UserFullOutput]:
@@ -82,7 +95,10 @@ async def list_users(
     )
 
 
-@router.get('/select')
+@router.get(
+    '/select',
+    responses=error_responses(*AUTH_ERRORS),
+)
 async def select_users(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[UserOutput]:
@@ -97,7 +113,7 @@ async def select_users(
     )
 
 
-@router.get('/{user_id}')
+@router.get('/{user_id}', responses=error_responses(*READ_ERRORS))
 async def get_user(
     user_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[UserFullOutput]:
@@ -107,7 +123,7 @@ async def get_user(
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(user))
 
 
-@router.post('/')
+@router.post('/', responses=error_responses(*WRITE_ERRORS))
 async def create_user(
     body: UserCreate,
 ) -> SuccessPayloadOutput[UserFullOutput]:
@@ -153,7 +169,10 @@ async def create_user(
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
-@router.put('/{user_id}')
+@router.put(
+    '/{user_id}',
+    responses=error_responses(*CRUD_ERRORS),
+)
 async def update_user(
     user_id: PydanticObjectId,
     body: UserUpdate,

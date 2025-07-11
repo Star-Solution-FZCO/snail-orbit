@@ -32,6 +32,7 @@ from pm.api.views.custom_fields import (
     VersionCustomFieldGroupWithValuesOutput,
     custom_field_group_with_values_output_cls_from_type,
 )
+from pm.api.views.error_responses import error_responses
 from pm.api.views.issue import (
     CustomFieldValueOutT,
     IssueOutput,
@@ -39,6 +40,7 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import (
     BaseListOutput,
+    ErrorOutput,
     ModelIdOutput,
     SuccessPayloadOutput,
     UUIDOutput,
@@ -60,6 +62,9 @@ router = APIRouter(
     prefix='/board',
     tags=['board'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
 )
 
 

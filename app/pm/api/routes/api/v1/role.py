@@ -7,7 +7,13 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import ListParams
 from pm.api.views.role import RoleOutput
 from pm.permissions import Permissions
@@ -16,7 +22,10 @@ __all__ = ('router',)
 
 
 router = APIRouter(
-    prefix='/role', tags=['role'], dependencies=[Depends(admin_context_dependency)]
+    prefix='/role',
+    tags=['role'],
+    dependencies=[Depends(admin_context_dependency)],
+    responses=error_responses(*AUTH_ERRORS),
 )
 
 
@@ -30,7 +39,12 @@ class RoleUpdate(BaseModel):
     description: str | None = None
 
 
-@router.get('/list')
+@router.get(
+    '/list',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
+)
 async def list_roles(
     query: ListParams = Depends(),
 ) -> BaseListOutput[RoleOutput]:
@@ -47,7 +61,14 @@ async def list_roles(
     )
 
 
-@router.get('/{role_id}')
+@router.get(
+    '/{role_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def get_role(
     role_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[RoleOutput]:
@@ -66,7 +87,16 @@ async def create_role(
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
-@router.put('/{role_id}')
+@router.put(
+    '/{role_id}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_role(
     role_id: PydanticObjectId,
     body: RoleUpdate,
@@ -82,7 +112,14 @@ async def update_role(
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
-@router.delete('/{role_id}')
+@router.delete(
+    '/{role_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def delete_role(
     role_id: PydanticObjectId,
 ) -> ModelIdOutput:
@@ -94,7 +131,15 @@ async def delete_role(
     return ModelIdOutput.make(role_id)
 
 
-@router.post('/{role_id}/permission/{permission_key}')
+@router.post(
+    '/{role_id}/permission/{permission_key}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def grant_permission(
     role_id: PydanticObjectId,
     permission_key: Permissions,
@@ -110,7 +155,14 @@ async def grant_permission(
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
-@router.delete('/{role_id}/permission/{permission_key}')
+@router.delete(
+    '/{role_id}/permission/{permission_key}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def revoke_permission(
     role_id: PydanticObjectId,
     permission_key: Permissions,

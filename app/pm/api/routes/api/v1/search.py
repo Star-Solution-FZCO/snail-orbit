@@ -11,8 +11,10 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import error_responses
 from pm.api.views.output import (
     BaseListOutput,
+    ErrorOutput,
     ModelIdOutput,
     SuccessPayloadOutput,
     UUIDOutput,
@@ -27,6 +29,9 @@ router = APIRouter(
     prefix='/search',
     tags=['search'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
 )
 
 

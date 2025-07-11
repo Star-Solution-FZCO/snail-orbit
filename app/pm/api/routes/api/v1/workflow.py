@@ -9,7 +9,13 @@ from pydantic import BaseModel
 import pm.models as m
 from pm.api.context import admin_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import ListParams
 
 __all__ = ('router',)
@@ -19,6 +25,7 @@ router = APIRouter(
     prefix='/workflow',
     tags=['workflow'],
     dependencies=[Depends(admin_context_dependency)],
+    responses=error_responses(*AUTH_ERRORS),
 )
 
 
@@ -76,7 +83,12 @@ def output_from_obj(obj: m.Workflow) -> WorkflowOutput:
     return WorkflowOutput.from_obj(obj)
 
 
-@router.get('/list')
+@router.get(
+    '/list',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
+)
 async def list_workflow(
     query: ListParams = Depends(),
 ) -> BaseListOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
@@ -93,7 +105,14 @@ async def list_workflow(
     )
 
 
-@router.get('/{workflow_id}')
+@router.get(
+    '/{workflow_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def get_workflow(
     workflow_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
@@ -103,7 +122,14 @@ async def get_workflow(
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
-@router.delete('/{workflow_id}')
+@router.delete(
+    '/{workflow_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def delete_workflow(workflow_id: PydanticObjectId):
     obj = await m.Workflow.get(workflow_id, with_children=True)
     if not obj:
@@ -112,7 +138,15 @@ async def delete_workflow(workflow_id: PydanticObjectId):
     return ModelIdOutput.from_obj(obj)
 
 
-@router.post('/')
+@router.post(
+    '/',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def create_workflow(
     body: WorkflowCreate,
 ) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
@@ -134,7 +168,16 @@ async def create_workflow(
     return SuccessPayloadOutput(payload=output_from_obj(obj))
 
 
-@router.put('/{workflow_id}')
+@router.put(
+    '/{workflow_id}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_workflow(
     workflow_id: PydanticObjectId, body: WorkflowUpdate
 ) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:

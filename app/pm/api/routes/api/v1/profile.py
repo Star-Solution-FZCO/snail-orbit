@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Self
 
 from fastapi import Depends
@@ -5,7 +6,8 @@ from fastapi import Depends
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import SuccessPayloadOutput
+from pm.api.views.error_responses import error_responses
+from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -14,6 +16,9 @@ router = APIRouter(
     prefix='/profile',
     tags=['profile'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
 )
 
 

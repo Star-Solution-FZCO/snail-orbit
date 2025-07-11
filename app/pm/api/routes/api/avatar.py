@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi.responses import RedirectResponse, StreamingResponse
 
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import NOT_FOUND_RESPONSES
 from pm.services.avatars import AVATAR_STORAGE_DIR, PROJECT_AVATAR_STORAGE_DIR
 from pm.services.files import get_storage_client
 from pm.utils.file_storage import StorageFileNotFound
@@ -15,7 +16,7 @@ __all__ = ('router',)
 router = APIRouter(prefix='/avatar', tags=['avatar'])
 
 
-@router.get('/{email_hash}', response_model=None)
+@router.get('/{email_hash}', response_model=None, responses=NOT_FOUND_RESPONSES)
 async def get_avatar(
     email_hash: str,
 ) -> StreamingResponse | RedirectResponse:
@@ -39,7 +40,7 @@ async def get_avatar(
     )
 
 
-@router.get('/project/{project_id}')
+@router.get('/project/{project_id}', responses=NOT_FOUND_RESPONSES)
 async def get_project_avatar(
     project_id: PydanticObjectId,
 ) -> RedirectResponse:

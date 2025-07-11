@@ -25,9 +25,11 @@ from pm.api.views.encryption import (
     EncryptionKeyOut,
     EncryptionKeyPublicOut,
 )
+from pm.api.views.error_responses import error_responses
 from pm.api.views.group import GroupOutput
 from pm.api.views.output import (
     BaseListOutput,
+    ErrorOutput,
     ModelIdOutput,
     SuccessOutput,
     SuccessPayloadOutput,
@@ -52,6 +54,9 @@ router = APIRouter(
     prefix='/project',
     tags=['project'],
     dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+    ),
 )
 
 

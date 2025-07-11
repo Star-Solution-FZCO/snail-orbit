@@ -6,14 +6,19 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
 from pm.services.files import get_storage_client
 from pm.utils.file_storage import FileHeader, StorageFileNotFound
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/files', tags=['files'])
+router = APIRouter(
+    prefix='/files',
+    tags=['files'],
+    responses=error_responses(*AUTH_ERRORS),
+)
 
 
 class FileUploadOutput(BaseModel):
@@ -33,7 +38,14 @@ async def upload_attachment(
     return SuccessPayloadOutput(payload=FileUploadOutput(id=UUID(file_hash)))
 
 
-@router.get('/{file_id}')
+@router.get(
+    '/{file_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def get_attachment(file_id: UUID) -> RedirectResponse:
     file_id = str(file_id)
     client = get_storage_client()
@@ -48,7 +60,14 @@ async def get_attachment(file_id: UUID) -> RedirectResponse:
     )
 
 
-@router.get('/{file_id}/stream')
+@router.get(
+    '/{file_id}/stream',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def download_attachment(file_id: UUID) -> StreamingResponse:
     file_id = str(file_id)
     client = get_storage_client()

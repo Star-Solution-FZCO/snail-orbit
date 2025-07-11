@@ -11,6 +11,12 @@ from pm.api.context import current_user
 from pm.api.events_bus import send_task
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
+from pm.api.views.error_responses import (
+    CRUD_ERRORS,
+    READ_ERRORS,
+    WRITE_ERRORS,
+    error_responses,
+)
 from pm.api.views.issue import IssueAttachmentBody, IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
@@ -70,7 +76,7 @@ async def list_comments(
     )
 
 
-@router.get('/{comment_id}')
+@router.get('/{comment_id}', responses=error_responses(*READ_ERRORS))
 async def get_comment(
     issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
@@ -88,7 +94,7 @@ async def get_comment(
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
-@router.post('/')
+@router.post('/', responses=error_responses(*WRITE_ERRORS))
 async def create_comment(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueCommentCreate,
@@ -123,7 +129,7 @@ async def create_comment(
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
-@router.put('/{comment_id}')
+@router.put('/{comment_id}', responses=error_responses(*CRUD_ERRORS))
 async def update_comment(
     issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
@@ -175,7 +181,7 @@ async def update_comment(
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
-@router.delete('/{comment_id}')
+@router.delete('/{comment_id}', responses=error_responses(*READ_ERRORS))
 async def delete_comment(
     issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
@@ -202,7 +208,7 @@ async def delete_comment(
     return UUIDOutput.make(comment_id)
 
 
-@router.put('/{comment_id}/hide')
+@router.put('/{comment_id}/hide', responses=error_responses(*CRUD_ERRORS))
 async def hide_comment(
     issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,
@@ -227,7 +233,7 @@ async def hide_comment(
     return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
 
 
-@router.put('/{comment_id}/restore')
+@router.put('/{comment_id}/restore', responses=error_responses(*CRUD_ERRORS))
 async def restore_comment(
     issue_id_or_alias: PydanticObjectId | str,
     comment_id: UUID,

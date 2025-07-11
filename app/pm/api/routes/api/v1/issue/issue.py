@@ -19,8 +19,14 @@ from pm.api.issue_query import (
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
+from pm.api.views.error_responses import READ_ERRORS, WRITE_ERRORS, error_responses
 from pm.api.views.issue import IssueAttachmentBody, IssueDraftOutput, IssueOutput
-from pm.api.views.output import BaseListOutput, ModelIdOutput, SuccessPayloadOutput
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, Permissions
@@ -140,7 +146,7 @@ async def list_issues(
     )
 
 
-@router.post('/draft')
+@router.post('/draft', responses=error_responses(*WRITE_ERRORS))
 async def create_draft(
     body: IssueDraftCreate,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
@@ -220,7 +226,7 @@ async def select_draft(
     )
 
 
-@router.get('/draft/{draft_id}')
+@router.get('/draft/{draft_id}', responses=error_responses(*READ_ERRORS))
 async def get_draft(
     draft_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[IssueDraftOutput]:
@@ -235,7 +241,16 @@ async def get_draft(
     return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
 
 
-@router.put('/draft/{draft_id}')
+@router.put(
+    '/draft/{draft_id}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_draft(
     draft_id: PydanticObjectId,
     body: IssueDraftUpdate,
@@ -302,7 +317,7 @@ async def update_draft(
     return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
 
 
-@router.delete('/draft/{draft_id}')
+@router.delete('/draft/{draft_id}', responses=error_responses(*READ_ERRORS))
 async def delete_draft(
     draft_id: PydanticObjectId,
 ) -> ModelIdOutput:
@@ -318,7 +333,7 @@ async def delete_draft(
     return ModelIdOutput.from_obj(obj)
 
 
-@router.post('/draft/{draft_id}/create')
+@router.post('/draft/{draft_id}/create', responses=error_responses(*WRITE_ERRORS))
 async def create_issue_from_draft(
     draft_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -406,7 +421,7 @@ async def create_issue_from_draft(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.get('/{issue_id_or_alias}')
+@router.get('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
 async def get_issue(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -420,7 +435,7 @@ async def get_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.post('/')
+@router.post('/', responses=error_responses(*WRITE_ERRORS))
 async def create_issue(
     body: IssueCreate,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -489,7 +504,16 @@ async def create_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.put('/{issue_id_or_alias}')
+@router.put(
+    '/{issue_id_or_alias}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_issue(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueUpdate,
@@ -601,7 +625,7 @@ async def update_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.delete('/{issue_id_or_alias}')
+@router.delete('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
 async def delete_issue(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> ModelIdOutput:
@@ -638,7 +662,7 @@ async def delete_issue(
     return ModelIdOutput.from_obj(obj)
 
 
-@router.post('/{issue_id_or_alias}/subscribe')
+@router.post('/{issue_id_or_alias}/subscribe', responses=error_responses(*WRITE_ERRORS))
 async def subscribe_issue(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -655,7 +679,9 @@ async def subscribe_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.post('/{issue_id_or_alias}/unsubscribe')
+@router.post(
+    '/{issue_id_or_alias}/unsubscribe', responses=error_responses(*WRITE_ERRORS)
+)
 async def unsubscribe_issue(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessPayloadOutput[IssueOutput]:
@@ -672,7 +698,7 @@ async def unsubscribe_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.post('/{issue_id_or_alias}/link')
+@router.post('/{issue_id_or_alias}/link', responses=error_responses(*WRITE_ERRORS))
 async def link_issues(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueInterlinkCreate,
@@ -732,7 +758,9 @@ async def link_issues(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.get('/{issue_id_or_alias}/link/target/select')
+@router.get(
+    '/{issue_id_or_alias}/link/target/select', responses=error_responses(*READ_ERRORS)
+)
 async def select_linkable_issues(
     issue_id_or_alias: PydanticObjectId | str,
     query: SelectParams = Depends(),
@@ -768,7 +796,16 @@ async def select_linkable_issues(
     )
 
 
-@router.put('/{issue_id_or_alias}/link/{interlink_id}')
+@router.put(
+    '/{issue_id_or_alias}/link/{interlink_id}',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def update_link(
     issue_id_or_alias: PydanticObjectId | str,
     interlink_id: UUID,
@@ -814,7 +851,9 @@ async def update_link(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.delete('/{issue_id_or_alias}/link/{interlink_id}')
+@router.delete(
+    '/{issue_id_or_alias}/link/{interlink_id}', responses=error_responses(*READ_ERRORS)
+)
 async def unlink_issue(
     issue_id_or_alias: PydanticObjectId | str,
     interlink_id: UUID,
@@ -853,7 +892,16 @@ async def unlink_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.put('/{issue_id_or_alias}/tag')
+@router.put(
+    '/{issue_id_or_alias}/tag',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def tag_issue(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueTagCreate,
@@ -880,7 +928,16 @@ async def tag_issue(
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
 
 
-@router.put('/{issue_id_or_alias}/untag')
+@router.put(
+    '/{issue_id_or_alias}/untag',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def untag_issue(
     issue_id_or_alias: PydanticObjectId | str,
     body: IssueTagDelete,

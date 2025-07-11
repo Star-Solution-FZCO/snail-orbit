@@ -9,12 +9,17 @@ import pm.models as m
 from pm.api.context import current_user
 from pm.api.exceptions import MFARequiredException
 from pm.api.utils.router import APIRouter
-from pm.api.views.output import SuccessOutput, SuccessPayloadOutput
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
+from pm.api.views.output import ErrorOutput, SuccessOutput, SuccessPayloadOutput
 from pm.config import CONFIG
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/mfa', tags=['mfa'])
+router = APIRouter(
+    prefix='/mfa',
+    tags=['mfa'],
+    responses=error_responses(*AUTH_ERRORS),
+)
 
 
 class TOTPStatusOut(BaseModel):
@@ -80,7 +85,15 @@ async def update_two_fa_settings(
     return SuccessPayloadOutput(payload=MFASettingOut.from_obj(user_ctx.user))
 
 
-@router.post('/totp')
+@router.post(
+    '/totp',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
+    ),
+)
 async def create_otp() -> SuccessPayloadOutput[TOTPCreateOut]:
     user_ctx = current_user()
     if user_ctx.user.totp:
@@ -100,7 +113,14 @@ async def create_otp() -> SuccessPayloadOutput[TOTPCreateOut]:
     )
 
 
-@router.delete('/totp')
+@router.delete(
+    '/totp',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
 async def delete_otp(
     body: TOTPDeleteBody,
 ) -> SuccessOutput:
