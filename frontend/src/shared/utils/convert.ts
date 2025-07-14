@@ -11,8 +11,8 @@ export function formatSpentTime(
 ) {
     if (seconds === 0) return "0s";
 
-    const weekInSeconds = 5 * 8 * 60 * 60;
-    const dayInSeconds = 8 * 60 * 60;
+    const weekInSeconds = 7 * 24 * 60 * 60;
+    const dayInSeconds = 24 * 60 * 60;
     const hourInSeconds = 60 * 60;
     const minuteInSeconds = 60;
 

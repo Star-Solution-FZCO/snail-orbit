@@ -175,7 +175,7 @@
   "durationField.hour": "hour",
   "durationField.invalidFormat": "Invalid format. Input contains an expected sequence of symbols or characters.",
   "durationField.minute": "minute",
-  "durationField.tooltip": "1 week = 5 days, 1 day = 8 hours",
+  "durationField.tooltip": "1 week = 7 days, 1 day = 24 hours",
   "durationField.week": "week",
   "editor.error": "An error occurred while working with the editor",
   "editor.toolbar.format.bold": "Bold",

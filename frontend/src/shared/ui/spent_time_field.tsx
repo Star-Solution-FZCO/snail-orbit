@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 const minute = 60;
 const hour = minute * 60;
-const day = hour * 8;
+const day = hour * 24;
 const week = day * 5;
 
 const timeUnits = [
