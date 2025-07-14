@@ -155,7 +155,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     return (
         <Box
             component={PanelGroup}
-            sx={{ overflow: "visible" }}
+            sx={{ overflow: "visible!important" }}
             direction="horizontal"
             autoSaveId="agileBoardView"
             id="agileBoardView"
@@ -169,7 +169,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                 id="mainContent"
                 maxWidth="100dvw"
                 overflow="auto"
-                sx={{ overflow: "visible" }}
+                sx={{ overflow: "visible!important" }}
             >
                 <Box px={4}>
                     <Stack
