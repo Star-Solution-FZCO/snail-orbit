@@ -7,19 +7,19 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from beanie import Document
-    from beanie.odm.queries.find import AggregationQuery, FindMany
+    from beanie.odm.queries.find import FindMany
 
 __all__ = (
+    'BaseListOutput',
     'BaseOutput',
+    'BasePayloadOutput',
     'ErrorOutput',
     'ErrorPayloadOutput',
-    'SuccessOutput',
-    'BasePayloadOutput',
-    'SuccessPayloadOutput',
-    'BaseListOutput',
-    'ModelIdOutput',
-    'UUIDOutput',
     'MFARequiredOutput',
+    'ModelIdOutput',
+    'SuccessOutput',
+    'SuccessPayloadOutput',
+    'UUIDOutput',
 )
 
 
@@ -31,7 +31,7 @@ class BaseOutput(BaseModel):
         """Generate OpenAPI content for application/json."""
         if not hasattr(cls, 'get_example'):
             raise NotImplementedError(
-                f'{cls.__name__} must implement get_example() method'
+                f'{cls.__name__} must implement get_example() method',
             )
 
         example_instance = cls.get_example()
@@ -40,13 +40,13 @@ class BaseOutput(BaseModel):
             example_name: {
                 'summary': f'{cls.__name__} Example',
                 'value': example_instance.model_dump(),
-            }
+            },
         }
         return {
             'application/json': {
                 'schema': cls.model_json_schema(),
                 'examples': examples,
-            }
+            },
         }
 
 
@@ -148,12 +148,19 @@ class BaseListOutput(SuccessPayloadOutput, Generic[T]):
 
     @classmethod
     def make(
-        cls, items: list[T], count: int, limit: int, offset: int
+        cls,
+        items: list[T],
+        count: int,
+        limit: int,
+        offset: int,
     ) -> 'BaseListOutput[T]':
         return cls(
             payload=BaseListPayload(
-                count=count, limit=limit, offset=offset, items=items
-            )
+                count=count,
+                limit=limit,
+                offset=offset,
+                items=items,
+            ),
         )
 
     @classmethod

@@ -96,20 +96,24 @@ def gen_openapi_schema() -> dict:
 
 
 def gen_openapi(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
     openapi_schema = gen_openapi_schema()
-    with open(args.output, 'w', encoding='utf-8') as fp:
-        json.dump(openapi_schema, fp=fp, indent=args.indent)
-        fp.write('\n')
+    Path(args.output).write_text(
+        json.dumps(openapi_schema, indent=args.indent) + '\n',
+        encoding='utf-8',
+    )
 
 
 def check_openapi(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
     try:
         import deepdiff
     except ImportError:
         deepdiff = None
 
-    with open(args.file, 'r', encoding='utf-8') as in_file:
-        data = json.load(in_file)
+    data = json.loads(Path(args.file).read_text(encoding='utf-8'))
     openapi_schema = gen_openapi_schema()
 
     if not deepdiff:

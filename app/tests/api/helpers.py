@@ -54,7 +54,8 @@ def assert_success_response(
 
 
 def assert_error_response(
-    response: 'Response', expected_status: int = 400
+    response: 'Response',
+    expected_status: int = 400,
 ) -> dict[str, Any]:
     """Assert that API response is an error with expected status.
 
@@ -72,12 +73,16 @@ def assert_error_response(
     # Some error responses may not have JSON
     try:
         return response.json()
-    except Exception:
+    except (ValueError, TypeError):
         return {}
 
 
 def make_api_request(
-    client: 'TestClient', method: str, url: str, token: str, **kwargs
+    client: 'TestClient',
+    method: str,
+    url: str,
+    token: str,
+    **kwargs,
 ) -> 'Response':
     """Make an authenticated API request with standardized headers.
 

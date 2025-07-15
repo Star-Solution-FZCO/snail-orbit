@@ -11,11 +11,11 @@ from pm.constants import CONFIG_PATHS
 from pm.enums import EncryptionKeyAlgorithmT
 
 __all__ = (
-    'CONFIG',
-    'FileStorageModeT',
-    'APIServiceTokenKeyT',
     'API_SERVICE_TOKEN_KEYS',
+    'CONFIG',
     'DB_ENCRYPTION_KEY',
+    'APIServiceTokenKeyT',
+    'FileStorageModeT',
 )
 
 
@@ -79,12 +79,15 @@ CONFIG = Dynaconf(
         Validator('DEV_MODE', cast=bool, default=False),
         Validator('RO_MODE', cast=bool, default=False),
         Validator(
-            'DEV_PASSWORD', required=True, when=Validator('DEV_MODE', condition=bool)
+            'DEV_PASSWORD',
+            required=True,
+            when=Validator('DEV_MODE', condition=bool),
         ),
         Validator('DEBUG', cast=bool, default=False),
         Validator('ENABLE_PROFILING', cast=bool, default=False),
         Validator(
-            'DB_URI', default='mongodb://pm:pm@localhost:27017/pm?authSource=admin'
+            'DB_URI',
+            default='mongodb://pm:pm@localhost:27017/pm?authSource=admin',
         ),
         Validator('PUBLIC_BASE_URL', default='http://localhost:3000'),
         Validator('JWT_SECRET', required=True),
@@ -300,7 +303,8 @@ CONFIG = Dynaconf(
             default='/data/file_storage',
             description='Directory for file storage',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.LOCAL
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.LOCAL,
             ),
         ),
         Validator(
@@ -309,7 +313,8 @@ CONFIG = Dynaconf(
             must_exist=True,
             description='S3 access key ID',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -318,7 +323,8 @@ CONFIG = Dynaconf(
             must_exist=True,
             description='S3 access key secret',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -327,7 +333,8 @@ CONFIG = Dynaconf(
             must_exist=True,
             description='S3 endpoint',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -336,7 +343,8 @@ CONFIG = Dynaconf(
             must_exist=True,
             description='S3 region name',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -345,7 +353,8 @@ CONFIG = Dynaconf(
             default='snail-orbit',
             description='S3 bucket name',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -354,7 +363,8 @@ CONFIG = Dynaconf(
             default=True,
             description='Verify SSL for S3',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(
@@ -362,7 +372,8 @@ CONFIG = Dynaconf(
             default=None,
             description='Public S3 endpoint',
             when=Validator(
-                'FILE_STORAGE_MODE', condition=lambda v: v == FileStorageModeT.S3
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
             ),
         ),
         Validator(

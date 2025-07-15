@@ -6,6 +6,7 @@ __all__ = ('add_tasks_args',)
 
 
 # pylint: disable=unused-argument
+# ruff: noqa: ARG001
 def run_worker(args: argparse.Namespace) -> None:
     from taskiq.api import run_receiver_task
 
@@ -62,7 +63,8 @@ def run_scheduler(args: argparse.Namespace) -> None:
 
         logger.info('Starting taskiq scheduler...')
         logger.info(
-            'Registered tasks: %s', list(scheduler.broker.get_all_tasks().keys())
+            'Registered tasks: %s',
+            list(scheduler.broker.get_all_tasks().keys()),
         )
 
         sys.stdout.flush()
@@ -98,7 +100,9 @@ def run_notification_processor(args: argparse.Namespace) -> None:
             logger.info('Notification processor interrupted by user')
         except Exception as e:
             logger.error(
-                'Notification processor failed with error: %s', e, exc_info=True
+                'Notification processor failed with error: %s',
+                e,
+                exc_info=True,
             )
             raise
 

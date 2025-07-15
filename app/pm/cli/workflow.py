@@ -50,6 +50,7 @@ async def create_wf(args: argparse.Namespace) -> None:
 
 
 # pylint: disable=unused-argument
+# ruff: noqa: ARG001
 async def show_wf(args: argparse.Namespace) -> None:
     from pm.models import Workflow
 
@@ -66,7 +67,10 @@ def add_workflow_args(parser: argparse.ArgumentParser) -> None:
     create_parser.add_argument('name', type=str)
     create_parser.add_argument('script_path', type=str)
     create_parser.add_argument(
-        '-t', '--type', choices=['on_change', 'scheduled'], required=True
+        '-t',
+        '--type',
+        choices=['on_change', 'scheduled'],
+        required=True,
     )
     create_parser.add_argument('--description', type=str)
     create_parser.add_argument('-s', '--schedule', type=str)

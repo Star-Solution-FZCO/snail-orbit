@@ -19,7 +19,8 @@ def _check_same_minute(dt1: datetime, dt2: datetime) -> bool:
 async def _workflow_scheduler() -> None:
     now = utcnow()
     projects = await m.Project.find(
-        bo.Eq(m.Project.is_active, True), fetch_links=True
+        bo.Eq(m.Project.is_active, True),
+        fetch_links=True,
     ).to_list()
     workflow_ids_by_project = {pr.id: {wf.id for wf in pr.workflows} for pr in projects}
     workflows = await m.ScheduledWorkflow.all().to_list()

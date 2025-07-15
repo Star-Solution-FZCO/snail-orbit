@@ -14,8 +14,8 @@ def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
     try:
         bot.post_private_message_by_user_email(user_email, message)
         logger.info('Pararam message sent successfully to %s', user_email)
-    except Exception as e:
-        logger.error('Failed to send Pararam message to %s: %s', user_email, e)
+    except Exception:
+        logger.exception('Failed to send Pararam message to %s', user_email)
         raise  # Let taskiq handle retries
 
 
@@ -30,7 +30,7 @@ def task_send_pararam_message(
 ) -> None:
     if not CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN:
         logger.warning(
-            'Pararam notification bot token not configured, skipping message'
+            'Pararam notification bot token not configured, skipping message',
         )
         return
     bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)

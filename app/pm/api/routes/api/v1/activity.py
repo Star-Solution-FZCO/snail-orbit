@@ -57,30 +57,31 @@ class Activity(BaseModel):
 
 
 def _get_issue_activity_unsorted(
-    issue: m.Issue, start: datetime, end: datetime
+    issue: m.Issue,
+    start: datetime,
+    end: datetime,
 ) -> list[Activity]:
-    results = []
-    for history in issue.history:
-        if start <= history.time <= end:
-            results.append(
-                Activity(
-                    author=UserOutput.from_obj(history.author),
-                    action=ActionT.ISSUE_UPDATED,
-                    issue=IssueShortOutput.from_obj(issue),
-                    time=history.time,
-                    changes=[issue_change_output_from_obj(c) for c in history.changes],
-                )
-            )
-    for comment in issue.comments:
-        if start <= comment.created_at <= end:
-            results.append(
-                Activity(
-                    author=UserOutput.from_obj(comment.author),
-                    action=ActionT.ISSUE_COMMENTED,
-                    issue=IssueShortOutput.from_obj(issue),
-                    time=comment.created_at,
-                )
-            )
+    results = [
+        Activity(
+            author=UserOutput.from_obj(history.author),
+            action=ActionT.ISSUE_UPDATED,
+            issue=IssueShortOutput.from_obj(issue),
+            time=history.time,
+            changes=[issue_change_output_from_obj(c) for c in history.changes],
+        )
+        for history in issue.history
+        if start <= history.time <= end
+    ]
+    results.extend(
+        Activity(
+            author=UserOutput.from_obj(comment.author),
+            action=ActionT.ISSUE_COMMENTED,
+            issue=IssueShortOutput.from_obj(issue),
+            time=comment.created_at,
+        )
+        for comment in issue.comments
+        if start <= comment.created_at <= end
+    )
     if start <= issue.created_at <= end:
         results.append(
             Activity(
@@ -88,7 +89,7 @@ def _get_issue_activity_unsorted(
                 action=ActionT.ISSUE_CREATED,
                 issue=IssueShortOutput.from_obj(issue),
                 time=issue.created_at,
-            )
+            ),
         )
     return results
 
@@ -115,7 +116,7 @@ async def get_activity_list(
                 m.Issue.created_at >= start_dt,
                 m.Issue.created_at <= end_dt,
             ),
-        )
+        ),
     ]
     if user_id:
         flt.append(
@@ -123,7 +124,7 @@ async def get_activity_list(
                 m.Issue.created_by.id == user_id,
                 m.Issue.history.author.id == user_id,
                 m.Issue.comments.author.id == user_id,
-            )
+            ),
         )
     results = []
     async for issue in m.Issue.find(*flt):

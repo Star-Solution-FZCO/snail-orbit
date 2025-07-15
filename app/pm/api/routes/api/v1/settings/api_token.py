@@ -95,7 +95,8 @@ async def add_token(
 ) -> SuccessPayloadOutput[ApiTokenCreateOut]:
     user_ctx = current_user()
     token, token_obj = user_ctx.user.gen_new_api_token(
-        body.name, expires_at=body.expires_at
+        body.name,
+        expires_at=body.expires_at,
     )
     user_ctx.user.api_tokens.append(token_obj)
     if user_ctx.user.is_changed:

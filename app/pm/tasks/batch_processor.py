@@ -15,6 +15,8 @@ from pm.tasks.app import broker, import_all_tasks
 
 logger = get_logger(__name__)
 
+TIMER_KEY_PARTS_COUNT = 2
+
 
 async def process_expired_batch(timer_key: str) -> None:
     """Process a batch when its timer expires."""
@@ -23,7 +25,7 @@ async def process_expired_batch(timer_key: str) -> None:
             return
 
         key_parts = timer_key[len('notification_timer:') :].split(':', 1)
-        if len(key_parts) != 2:
+        if len(key_parts) != TIMER_KEY_PARTS_COUNT:
             logger.warning(
                 'Invalid timer key format',
                 extra={
@@ -87,7 +89,7 @@ async def process_expired_batch(timer_key: str) -> None:
             )
 
     except ValidationError as e:
-        logger.error(
+        logger.exception(
             'Invalid batch data for timer',
             exc_info=e,
             extra={
@@ -96,7 +98,7 @@ async def process_expired_batch(timer_key: str) -> None:
             },
         )
     except Exception as e:
-        logger.error(
+        logger.exception(
             'Failed to process expired batch',
             exc_info=e,
             extra={
@@ -160,7 +162,6 @@ async def listen_for_expiration_events() -> None:
                     'redis_url': CONFIG.REDIS_EVENT_BUS_URL,
                 },
             )
-            attempt = 0
 
             async for message in pubsub.listen():
                 if message['type'] == 'message':
@@ -170,7 +171,7 @@ async def listen_for_expiration_events() -> None:
                         try:
                             await process_expired_batch(expired_key)
                         except Exception as e:
-                            logger.error(
+                            logger.exception(
                                 'Error processing expired batch',
                                 exc_info=e,
                                 extra={
@@ -179,7 +180,7 @@ async def listen_for_expiration_events() -> None:
                                 },
                             )
 
-        except (ConnectionError, OSError, asyncio.TimeoutError) as e:
+        except (TimeoutError, ConnectionError, OSError) as e:
             logger.warning(
                 'Redis connection lost',
                 exc_info=e,
@@ -200,7 +201,7 @@ async def listen_for_expiration_events() -> None:
                 await asyncio.sleep(retry_delay)
                 retry_delay = min(retry_delay * 2, 60)
             else:
-                logger.error(
+                logger.exception(
                     'Max Redis connection retries reached',
                     extra={
                         'event': 'redis_connection_max_retries',
@@ -210,7 +211,7 @@ async def listen_for_expiration_events() -> None:
                 raise
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 'Unexpected error in pub/sub listener',
                 exc_info=e,
                 extra={
@@ -223,7 +224,7 @@ async def listen_for_expiration_events() -> None:
             if pubsub:
                 try:
                     await pubsub.unsubscribe('__keyevent@0__:expired')
-                except Exception as e:  # nosec B110
+                except (ConnectionError, TimeoutError, OSError) as e:  # nosec B110
                     logger.debug(
                         'Error unsubscribing from Redis pub/sub',
                         exc_info=e,
@@ -233,7 +234,7 @@ async def listen_for_expiration_events() -> None:
             if redis_client:
                 try:
                     await redis_client.close()
-                except Exception as e:  # nosec B110
+                except (ConnectionError, TimeoutError, OSError) as e:  # nosec B110
                     logger.debug(
                         'Error closing Redis connection',
                         exc_info=e,
@@ -244,7 +245,8 @@ async def listen_for_expiration_events() -> None:
 async def main() -> None:
     """Main batch processor."""
     with log_context(
-        task_name='batch_processor', component='notification_batch_processor'
+        task_name='batch_processor',
+        component='notification_batch_processor',
     ):
         logger.info(
             'Starting notification batch processor',
@@ -275,7 +277,7 @@ async def main() -> None:
                 extra={'event': 'batch_processor_interrupted'},
             )
         except Exception as e:
-            logger.error(
+            logger.exception(
                 'Fatal error in batch processor',
                 exc_info=e,
                 extra={'event': 'batch_processor_fatal_error'},
@@ -288,7 +290,7 @@ async def main() -> None:
                     'Batch processor broker shutdown complete',
                     extra={'event': 'batch_processor_shutdown'},
                 )
-            except Exception as e:
+            except (ConnectionError, TimeoutError, RuntimeError) as e:
                 logger.warning(
                     'Error during broker shutdown',
                     exc_info=e,

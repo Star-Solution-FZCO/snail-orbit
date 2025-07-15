@@ -24,7 +24,8 @@ router = APIRouter(
     tags=['report'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 
@@ -69,13 +70,13 @@ class MatrixReport:
     rows: set[Any] = dataclasses.field(default_factory=set)
     columns: set[Any] = dataclasses.field(default_factory=set)
     counts: dict = dataclasses.field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(int))
+        default_factory=lambda: defaultdict(lambda: defaultdict(int)),
     )
     column_totals: dict[Any, int] = dataclasses.field(
-        default_factory=lambda: defaultdict(int)
+        default_factory=lambda: defaultdict(int),
     )
     row_totals: dict[Any, int] = dataclasses.field(
-        default_factory=lambda: defaultdict(int)
+        default_factory=lambda: defaultdict(int),
     )
     grand_total: int = 0
 
@@ -95,7 +96,7 @@ class MatrixReport:
         for r in self.rows:
             values = [self.counts[r][c] for c in columns]
             matrix_rows.append(
-                MatrixRow(value=r, values=values, count=self.row_totals[r])
+                MatrixRow(value=r, values=values, count=self.row_totals[r]),
             )
         return MatrixReportOutput(
             columns=columns,
@@ -112,17 +113,20 @@ async def make_report_by_field(
     project_ids = set(body.projects)
     if not project_ids:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'At least one project must be specified'
+            HTTPStatus.BAD_REQUEST,
+            'At least one project must be specified',
         )
     user_ctx = current_user()
     projects = await m.Project.find(
-        bo.In(m.Project.id, project_ids), fetch_links=True
+        bo.In(m.Project.id, project_ids),
+        fetch_links=True,
     ).to_list()
     for p in project_ids - {p.id for p in projects}:
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
     for project in projects:
         user_ctx.validate_project_permission(
-            project, PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ)
+            project,
+            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
         )
     for project in projects:
         if not any(field.name == body.field for field in project.custom_fields):
@@ -133,7 +137,7 @@ async def make_report_by_field(
     q = m.Issue.find(
         bo.And(
             bo.In(m.Issue.project.id, project_ids),
-        )
+        ),
     )
     counts = defaultdict(int)
     issues = 0
@@ -162,14 +166,16 @@ async def make_report_by_project(
     project_ids = set(body.projects)
     if not project_ids:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'At least one project must be specified'
+            HTTPStatus.BAD_REQUEST,
+            'At least one project must be specified',
         )
     projects = await m.Project.find(bo.In(m.Project.id, project_ids)).to_list()
     for p in project_ids - {p.id for p in projects}:
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
     for project in projects:
         user_ctx.validate_project_permission(
-            project, PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ)
+            project,
+            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
         )
     items = []
     issues = 0
@@ -181,11 +187,14 @@ async def make_report_by_project(
     return SuccessPayloadOutput(payload=ReportOutput(values=items, count=issues))
 
 
+MATRIX_REPORT_REQUIRED_FIELDS_COUNT = 2
+
+
 @router.post('/matrix')
 async def make_matrix_report(
     body: MatrixReportCreate,
 ) -> SuccessPayloadOutput[MatrixReportOutput]:
-    if len(set(body.fields)) != 2:
+    if len(set(body.fields)) != MATRIX_REPORT_REQUIRED_FIELDS_COUNT:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
             'Exactly two different fields must be specified for matrix report',
@@ -193,17 +202,20 @@ async def make_matrix_report(
     project_ids = set(body.projects)
     if not project_ids:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'At least one project must be specified'
+            HTTPStatus.BAD_REQUEST,
+            'At least one project must be specified',
         )
     projects = await m.Project.find(
-        bo.In(m.Project.id, project_ids), fetch_links=True
+        bo.In(m.Project.id, project_ids),
+        fetch_links=True,
     ).to_list()
     for p in project_ids - {p.id for p in projects}:
         raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
     user_ctx = current_user()
     for project in projects:
         user_ctx.validate_project_permission(
-            project, PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ)
+            project,
+            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
         )
     for project in projects:
         project_fields = {field.name for field in project.custom_fields}

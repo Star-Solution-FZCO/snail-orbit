@@ -41,12 +41,13 @@ async def oidc(request: Request) -> RedirectResponse:
     tags=['oidc'],
 )
 async def oidc_callback(
-    request: Request, auth: AuthJWT = Depends()
+    request: Request,
+    auth: AuthJWT = Depends(),
 ) -> RedirectResponse:
     try:
         token: dict[str, Any] = await oauth.oidc.authorize_access_token(request)
         user_info: dict[str, Any] = token.get(
-            'userinfo'
+            'userinfo',
         ) or await oauth.oidc.get_userinfo(token)
         email: str | None = user_info.get('email') or user_info.get('sub')
         if not email:
@@ -118,9 +119,13 @@ def _create_auth_response(
 
     resp = RedirectResponse(redirect_url, status_code=HTTPStatus.FOUND)
     auth.set_access_cookies(
-        access_token, max_age=CONFIG.ACCESS_TOKEN_EXPIRES, response=resp
+        access_token,
+        max_age=CONFIG.ACCESS_TOKEN_EXPIRES,
+        response=resp,
     )
     auth.set_refresh_cookies(
-        refresh_token, max_age=CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES, response=resp
+        refresh_token,
+        max_age=CONFIG.REFRESH_TOKEN_REMEMBER_EXPIRES,
+        response=resp,
     )
     return resp

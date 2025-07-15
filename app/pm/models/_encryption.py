@@ -8,8 +8,8 @@ from pm.enums import EncryptionKeyAlgorithmT, EncryptionTargetTypeT
 from pm.utils.dateutils import utcnow
 
 __all__ = (
-    'EncryptionMeta',
     'EncryptionKey',
+    'EncryptionMeta',
 )
 
 

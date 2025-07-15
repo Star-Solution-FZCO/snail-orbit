@@ -14,49 +14,49 @@ from .project import ProjectShortOutput
 from .user import UserOutput
 
 __all__ = (
-    'EnumOptionOutput',
-    'StateOptionOutput',
-    'VersionOptionOutput',
-    'OwnedOptionOutput',
-    'StateCustomFieldOutput',
-    'EnumCustomFieldOutput',
-    'UserCustomFieldOutput',
-    'VersionCustomFieldOutput',
-    'OwnedCustomFieldOutput',
-    'OwnedMultiCustomFieldOutput',
-    'CustomFieldLinkOutput',
-    'CustomFieldGroupLinkOutput',
-    'CustomFieldOutputT',
-    'CustomFieldOutputRootModel',
-    'CustomFieldGroupOutputT',
-    'CustomFieldGroupOutputRootModel',
-    'CustomFieldOutput',
-    'CustomFieldSelectOptionsT',
-    'ShortOptionOutput',
-    'CustomFieldGroupSelectOptionsT',
-    'CustomFieldValueOutputRootModel',
-    'cf_output_from_obj',
-    'cf_group_output_cls_from_type',
-    'cf_value_output_cls_from_type',
-    'StringCustomFieldGroupWithValuesOutput',
-    'IntegerCustomFieldGroupWithValuesOutput',
-    'FloatCustomFieldGroupWithValuesOutput',
     'BooleanCustomFieldGroupWithValuesOutput',
+    'CustomFieldGroupLinkOutput',
+    'CustomFieldGroupOutputRootModel',
+    'CustomFieldGroupOutputT',
+    'CustomFieldGroupSelectOptionsT',
+    'CustomFieldLinkOutput',
+    'CustomFieldOutput',
+    'CustomFieldOutputRootModel',
+    'CustomFieldOutputT',
+    'CustomFieldSelectOptionsT',
+    'CustomFieldValueOutputRootModel',
     'DateCustomFieldGroupWithValuesOutput',
     'DateTimeCustomFieldGroupWithValuesOutput',
-    'DurationCustomFieldOutput',
     'DurationCustomFieldGroupWithValuesOutput',
-    'UserCustomFieldGroupWithValuesOutput',
-    'UserMultiCustomFieldGroupWithValuesOutput',
+    'DurationCustomFieldOutput',
     'EnumCustomFieldGroupWithValuesOutput',
+    'EnumCustomFieldOutput',
     'EnumMultiCustomFieldGroupWithValuesOutput',
-    'StateCustomFieldGroupWithValuesOutput',
-    'VersionCustomFieldGroupWithValuesOutput',
-    'VersionMultiCustomFieldGroupWithValuesOutput',
-    'OwnedCustomFieldGroupWithValuesOutput',
-    'OwnedMultiCustomFieldGroupWithValuesOutput',
+    'EnumOptionOutput',
+    'FloatCustomFieldGroupWithValuesOutput',
+    'IntegerCustomFieldGroupWithValuesOutput',
     'OwnedCustomFieldGroupOutput',
+    'OwnedCustomFieldGroupWithValuesOutput',
+    'OwnedCustomFieldOutput',
     'OwnedMultiCustomFieldGroupOutput',
+    'OwnedMultiCustomFieldGroupWithValuesOutput',
+    'OwnedMultiCustomFieldOutput',
+    'OwnedOptionOutput',
+    'ShortOptionOutput',
+    'StateCustomFieldGroupWithValuesOutput',
+    'StateCustomFieldOutput',
+    'StateOptionOutput',
+    'StringCustomFieldGroupWithValuesOutput',
+    'UserCustomFieldGroupWithValuesOutput',
+    'UserCustomFieldOutput',
+    'UserMultiCustomFieldGroupWithValuesOutput',
+    'VersionCustomFieldGroupWithValuesOutput',
+    'VersionCustomFieldOutput',
+    'VersionMultiCustomFieldGroupWithValuesOutput',
+    'VersionOptionOutput',
+    'cf_group_output_cls_from_type',
+    'cf_output_from_obj',
+    'cf_value_output_cls_from_type',
 )
 
 
@@ -512,7 +512,8 @@ class CustomFieldGroupLinkOutput(BaseModel):
 
     @classmethod
     def from_obj(
-        cls, obj: m.CustomField | m.CustomFieldLink | m.CustomFieldGroupLink
+        cls,
+        obj: m.CustomField | m.CustomFieldLink | m.CustomFieldGroupLink,
     ) -> Self:
         return cls(
             gid=obj.gid,
@@ -602,7 +603,7 @@ class UserCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.UserCustomField]):
 
 
 class UserMultiCustomFieldGroupOutput(
-    BaseCustomFieldGroupOutput[m.UserMultiCustomField]
+    BaseCustomFieldGroupOutput[m.UserMultiCustomField],
 ):
     type: Literal[m.CustomFieldTypeT.USER_MULTI] = m.CustomFieldTypeT.USER_MULTI
     fields: list[UserMultiCustomFieldOutput]
@@ -614,7 +615,7 @@ class EnumCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.EnumCustomField]):
 
 
 class EnumMultiCustomFieldGroupOutput(
-    BaseCustomFieldGroupOutput[m.EnumMultiCustomField]
+    BaseCustomFieldGroupOutput[m.EnumMultiCustomField],
 ):
     type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
     fields: list[EnumMultiCustomFieldOutput]
@@ -631,7 +632,7 @@ class VersionCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.VersionCustomFi
 
 
 class VersionMultiCustomFieldGroupOutput(
-    BaseCustomFieldGroupOutput[m.VersionMultiCustomField]
+    BaseCustomFieldGroupOutput[m.VersionMultiCustomField],
 ):
     type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = m.CustomFieldTypeT.VERSION_MULTI
     fields: list[VersionMultiCustomFieldOutput]
@@ -643,7 +644,7 @@ class OwnedCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.OwnedCustomField]
 
 
 class OwnedMultiCustomFieldGroupOutput(
-    BaseCustomFieldGroupOutput[m.OwnedMultiCustomField]
+    BaseCustomFieldGroupOutput[m.OwnedMultiCustomField],
 ):
     type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
     fields: list[OwnedMultiCustomFieldOutput]
@@ -947,7 +948,7 @@ class EnumCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput)
 class EnumMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
     type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
     values: list[list[m.EnumOption] | None] = Field(
-        description='Multiple enum option values'
+        description='Multiple enum option values',
     )
 
 
@@ -962,11 +963,11 @@ class VersionCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutp
 
 
 class VersionMultiCustomFieldGroupWithValuesOutput(
-    BaseCustomFieldGroupWithValuesOutput
+    BaseCustomFieldGroupWithValuesOutput,
 ):
     type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = m.CustomFieldTypeT.VERSION_MULTI
     values: list[list[m.VersionOption] | None] = Field(
-        description='Multiple version option values'
+        description='Multiple version option values',
     )
 
 
@@ -978,7 +979,7 @@ class OwnedCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput
 class OwnedMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
     type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
     values: list[list[m.OwnedOption] | None] = Field(
-        description='Multiple owned option values'
+        description='Multiple owned option values',
     )
 
 
@@ -1007,7 +1008,8 @@ class CustomFieldGroupWithValuesOutputRootModel(RootModel):
 
 
 CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP: dict[
-    m.CustomFieldTypeT, type[CustomFieldGroupWithValuesOutputT]
+    m.CustomFieldTypeT,
+    type[CustomFieldGroupWithValuesOutputT],
 ] = {
     m.CustomFieldTypeT.STRING: StringCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.INTEGER: IntegerCustomFieldGroupWithValuesOutput,

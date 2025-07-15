@@ -31,7 +31,9 @@ async def upload_attachment(
 ) -> SuccessPayloadOutput[FileUploadOutput]:
     file_hash = str(uuid4())
     file_header = FileHeader(
-        size=file.size, name=file.filename, content_type=file.content_type
+        size=file.size,
+        name=file.filename,
+        content_type=file.content_type,
     )
     client = get_storage_client()
     await client.upload_file(file_hash, file, file_header)
@@ -76,10 +78,12 @@ async def download_attachment(file_id: UUID) -> StreamingResponse:
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
-        content=client.get_file_stream(file_id),  # type: ignore
+        content=client.get_file_stream(file_id),  # type: ignore[arg-type]
         media_type=file_header.content_type,
         headers={
-            'Content-Disposition': f'attachment; {file_header.encode_filename_disposition()}',
+            'Content-Disposition': (
+                f'attachment; {file_header.encode_filename_disposition()}'
+            ),
             'Content-Length': str(file_header.size),
         },
     )

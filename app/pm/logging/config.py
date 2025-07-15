@@ -52,7 +52,7 @@ def get_logging_config() -> dict[str, Any]:
             'formatter': 'json' if use_json else 'simple',
             'level': log_level,
             'stream': 'ext://sys.stdout',
-        }
+        },
     }
 
     log_file = getattr(CONFIG, 'LOG_FILE', None)
@@ -88,7 +88,7 @@ def get_logging_config() -> dict[str, Any]:
             {
                 'uvicorn.access': {'level': 'INFO'},
                 'beanie': {'level': 'INFO'},
-            }
+            },
         )
 
     return {

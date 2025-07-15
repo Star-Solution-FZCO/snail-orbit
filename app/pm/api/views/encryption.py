@@ -8,11 +8,11 @@ import pm.models as m
 from pm.enums import EncryptionKeyAlgorithmT, EncryptionTargetTypeT
 
 __all__ = (
+    'EncryptedObject',
+    'EncryptionKeyCreate',
     'EncryptionKeyOut',
     'EncryptionKeyPublicOut',
-    'EncryptionKeyCreate',
     'EncryptionKeyUpdate',
-    'EncryptedObject',
 )
 
 

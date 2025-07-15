@@ -1,4 +1,5 @@
-import mock
+from unittest import mock
+
 import pytest
 
 
@@ -29,7 +30,7 @@ def _custom_fields() -> dict:
 @mock.patch('pm.api.issue_query.sort.get_custom_fields', new_callable=mock.AsyncMock)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'sort_expr, expected',
+    ('sort_expr', 'expected'),
     [
         pytest.param('', [], id='empty'),
         pytest.param('project', [{'$sort': {'project.name': 1}}], id='project_asc'),
@@ -53,24 +54,36 @@ def _custom_fields() -> dict:
         ),
         pytest.param('created_at', [{'$sort': {'created_at': 1}}], id='created_at_asc'),
         pytest.param(
-            'created_by', [{'$sort': {'created_by.email': 1}}], id='created_by_asc'
+            'created_by',
+            [{'$sort': {'created_by.email': 1}}],
+            id='created_by_asc',
         ),
         pytest.param(
-            'updated_by', [{'$sort': {'updated_by.email': 1}}], id='updated_by_asc'
+            'updated_by',
+            [{'$sort': {'updated_by.email': 1}}],
+            id='updated_by_asc',
         ),
         pytest.param(
-            'project asc', [{'$sort': {'project.name': 1}}], id='project_asc_explicit'
+            'project asc',
+            [{'$sort': {'project.name': 1}}],
+            id='project_asc_explicit',
         ),
         pytest.param(
-            'project desc', [{'$sort': {'project.name': -1}}], id='project_desc'
+            'project desc',
+            [{'$sort': {'project.name': -1}}],
+            id='project_desc',
         ),
         pytest.param('id desc', [{'$sort': {'_id': -1}}], id='id_desc'),
         pytest.param('subject desc', [{'$sort': {'subject': -1}}], id='subject_desc'),
         pytest.param(
-            'updated_at desc', [{'$sort': {'updated_at': -1}}], id='updated_at_desc'
+            'updated_at desc',
+            [{'$sort': {'updated_at': -1}}],
+            id='updated_at_desc',
         ),
         pytest.param(
-            'created_at desc', [{'$sort': {'created_at': -1}}], id='created_at_desc'
+            'created_at desc',
+            [{'$sort': {'created_at': -1}}],
+            id='created_at_desc',
         ),
         pytest.param(
             'state',
@@ -92,21 +105,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'state__sort': 1}},
                 {'$project': {'state__sort': 0}},
@@ -133,21 +146,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'state__sort': -1}},
                 {'$project': {'state__sort': 0}},
@@ -174,21 +187,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'priority__sort': 1}},
                 {'$project': {'priority__sort': 0}},
@@ -215,21 +228,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'priority__sort': -1}},
                 {'$project': {'priority__sort': 0}},
@@ -256,21 +269,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^integer$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'integer__sort': 1}},
                 {'$project': {'integer__sort': 0}},
@@ -297,21 +310,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^integer$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'integer__sort': -1}},
                 {'$project': {'integer__sort': 0}},
@@ -338,21 +351,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^float$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'float__sort': 1}},
                 {'$project': {'float__sort': 0}},
@@ -379,21 +392,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^float$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'float__sort': -1}},
                 {'$project': {'float__sort': 0}},
@@ -420,21 +433,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^date$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'date__sort': 1}},
                 {'$project': {'date__sort': 0}},
@@ -461,21 +474,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^date$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'date__sort': -1}},
                 {'$project': {'date__sort': 0}},
@@ -502,21 +515,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^datetime$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'datetime__sort': 1}},
                 {'$project': {'datetime__sort': 0}},
@@ -543,21 +556,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^datetime$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'datetime__sort': -1}},
                 {'$project': {'datetime__sort': 0}},
@@ -584,21 +597,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^string$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'string__sort': 1}},
                 {'$project': {'string__sort': 0}},
@@ -625,21 +638,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^string$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'string__sort': -1}},
                 {'$project': {'string__sort': 0}},
@@ -666,21 +679,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^assignee$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.email',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'assignee__sort': 1}},
                 {'$project': {'assignee__sort': 0}},
@@ -707,21 +720,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^assignee$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.email',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'assignee__sort': -1}},
                 {'$project': {'assignee__sort': 0}},
@@ -748,21 +761,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^version$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'version__sort': 1}},
                 {'$project': {'version__sort': 0}},
@@ -789,21 +802,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^version$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'version__sort': -1}},
                 {'$project': {'version__sort': 0}},
@@ -830,21 +843,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^boolean$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'boolean__sort': 1}},
                 {'$project': {'boolean__sort': 0}},
@@ -871,21 +884,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^boolean$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'boolean__sort': -1}},
                 {'$project': {'boolean__sort': 0}},
@@ -912,21 +925,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^h-state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'h-state__sort': 1}},
                 {'$project': {'h-state__sort': 0}},
@@ -953,21 +966,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^h-state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'h-state__sort': -1}},
                 {'$project': {'h-state__sort': 0}},
@@ -994,21 +1007,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^integer$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'integer__sort': 1}},
                 {'$project': {'integer__sort': 0}},
@@ -1049,21 +1062,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^string$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'string__sort': 1, 'project.name': -1}},
                 {'$project': {'string__sort': 0}},
@@ -1090,19 +1103,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^integer$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'string__sort': {
                             '$ifNull': [
@@ -1119,21 +1132,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^string$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
-                    }
+                    },
                 },
                 {'$sort': {'integer__sort': 1, 'string__sort': -1}},
                 {'$project': {'integer__sort': 0, 'string__sort': 0}},
@@ -1160,19 +1173,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'assignee__sort': {
                             '$ifNull': [
@@ -1189,28 +1202,28 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^assignee$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.email',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
-                    }
+                    },
                 },
                 {
                     '$sort': {
                         'priority__sort': -1,
                         'assignee__sort': 1,
                         'created_at': -1,
-                    }
+                    },
                 },
                 {'$project': {'priority__sort': 0, 'assignee__sort': 0}},
             ],
@@ -1236,21 +1249,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^field name$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'field name__sort': 1}},
                 {'$project': {'field name__sort': 0}},
@@ -1277,19 +1290,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'priority__sort': {
                             '$ifNull': [
@@ -1306,19 +1319,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'integer__sort': {
                             '$ifNull': [
@@ -1335,19 +1348,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^integer$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'float__sort': {
                             '$ifNull': [
@@ -1364,19 +1377,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^float$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'date__sort': {
                             '$ifNull': [
@@ -1393,19 +1406,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^date$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'string__sort': {
                             '$ifNull': [
@@ -1422,21 +1435,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^string$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
-                    }
+                    },
                 },
                 {
                     '$sort': {
@@ -1446,7 +1459,7 @@ def _custom_fields() -> dict:
                         'float__sort': -1,
                         'date__sort': 1,
                         'string__sort': -1,
-                    }
+                    },
                 },
                 {
                     '$project': {
@@ -1456,7 +1469,7 @@ def _custom_fields() -> dict:
                         'float__sort': 0,
                         'date__sort': 0,
                         'string__sort': 0,
-                    }
+                    },
                 },
             ],
             id='many_fields_sorting',
@@ -1481,19 +1494,19 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
                         'state__sort': {
                             '$ifNull': [
@@ -1510,21 +1523,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^state$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
+                            ],
                         },
-                    }
+                    },
                 },
                 {'$sort': {'priority__sort': -1, 'state__sort': 1}},
                 {'$project': {'priority__sort': 0, 'state__sort': 0}},
@@ -1542,7 +1555,9 @@ def _custom_fields() -> dict:
             id='extra_spaces',
         ),
         pytest.param(
-            'unknown_field', 'Field unknown_field not found', id='unknown_field_error'
+            'unknown_field',
+            'Field unknown_field not found',
+            id='unknown_field_error',
         ),
         pytest.param(',', 'Invalid sort expression', id='empty_comma_error'),
         pytest.param(
@@ -1558,10 +1573,14 @@ def _custom_fields() -> dict:
             id='invalid_direction_error',
         ),
         pytest.param(
-            'field ascc', 'Field field ascc not found', id='typo_in_direction_error'
+            'field ascc',
+            'Field field ascc not found',
+            id='typo_in_direction_error',
         ),
         pytest.param(
-            'field descc', 'Field field descc not found', id='typo_in_desc_error'
+            'field descc',
+            'Field field descc not found',
+            id='typo_in_desc_error',
         ),
         pytest.param(
             'priority multi',
@@ -1583,21 +1602,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'priority multi__sort': 1}},
                 {'$project': {'priority multi__sort': 0}},
@@ -1624,21 +1643,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^priority multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'priority multi__sort': -1}},
                 {'$project': {'priority multi__sort': 0}},
@@ -1665,21 +1684,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^version multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'version multi__sort': 1}},
                 {'$project': {'version multi__sort': 0}},
@@ -1706,21 +1725,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^version multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'version multi__sort': -1}},
                 {'$project': {'version multi__sort': 0}},
@@ -1747,21 +1766,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^assignee multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.email',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'assignee multi__sort': 1}},
                 {'$project': {'assignee multi__sort': 0}},
@@ -1788,21 +1807,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^assignee multi$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value.email',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'assignee multi__sort': -1}},
                 {'$project': {'assignee multi__sort': 0}},
@@ -1829,21 +1848,21 @@ def _custom_fields() -> dict:
                                                                 'input': '$$field.name',
                                                                 'regex': '^date$',
                                                                 'options': 'i',
-                                                            }
+                                                            },
                                                         },
-                                                    }
+                                                    },
                                                 },
                                                 'as': 'matchedField',
                                                 'in': '$$matchedField.value',
-                                            }
+                                            },
                                         },
                                         0,
-                                    ]
+                                    ],
                                 },
                                 None,
-                            ]
-                        }
-                    }
+                            ],
+                        },
+                    },
                 },
                 {'$sort': {'date__sort': 1}},
                 {'$project': {'date__sort': 0}},
@@ -1881,7 +1900,7 @@ async def test_sort_transformation(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'query, sort_expr, expected',
+    ('query', 'sort_expr', 'expected'),
     [
         pytest.param('', '', ({}, []), id='empty_query_and_sort'),
         pytest.param(
@@ -1891,7 +1910,10 @@ async def test_sort_transformation(
             id='sort_only_project',
         ),
         pytest.param(
-            '', 'id desc', ({}, [{'$sort': {'_id': -1}}]), id='sort_only_id_desc'
+            '',
+            'id desc',
+            ({}, [{'$sort': {'_id': -1}}]),
+            id='sort_only_id_desc',
         ),
         pytest.param(
             'subject: Test',
@@ -1910,7 +1932,7 @@ async def test_sort_transformation(
                     '$and': [
                         {'subject': {'$regex': 'Test', '$options': 'i'}},
                         {'resolved_at': {'$ne': None}},
-                    ]
+                    ],
                 },
                 [{'$sort': {'created_at': -1}}],
             ),
@@ -1925,8 +1947,8 @@ async def test_sort_transformation(
                         '$elemMatch': {
                             'name': {'$regex': '^state$', '$options': 'i'},
                             'value.value': 'open',
-                        }
-                    }
+                        },
+                    },
                 },
                 [
                     {
@@ -1946,21 +1968,21 @@ async def test_sort_transformation(
                                                                     'input': '$$field.name',
                                                                     'regex': '^priority$',
                                                                     'options': 'i',
-                                                                }
+                                                                },
                                                             },
-                                                        }
+                                                        },
                                                     },
                                                     'as': 'matchedField',
                                                     'in': '$$matchedField.value.value',
-                                                }
+                                                },
                                             },
                                             0,
-                                        ]
+                                        ],
                                     },
                                     None,
-                                ]
-                            }
-                        }
+                                ],
+                            },
+                        },
                     },
                     {'$sort': {'priority__sort': -1, 'created_at': 1}},
                     {'$project': {'priority__sort': 0}},
@@ -1977,10 +1999,12 @@ async def test_search_transformation_with_sort(
 ) -> None:
     with (
         mock.patch(
-            'pm.api.issue_query.search.get_custom_fields', new_callable=mock.AsyncMock
+            'pm.api.issue_query.search.get_custom_fields',
+            new_callable=mock.AsyncMock,
         ) as mock_search_cf,
         mock.patch(
-            'pm.api.issue_query.sort.get_custom_fields', new_callable=mock.AsyncMock
+            'pm.api.issue_query.sort.get_custom_fields',
+            new_callable=mock.AsyncMock,
         ) as mock_sort_cf,
     ):
         mock_search_cf.return_value = _custom_fields()

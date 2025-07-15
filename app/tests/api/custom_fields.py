@@ -69,7 +69,7 @@ async def __create_custom_field_group(
                     **expected_payload,
                     **options_payload,
                     'projects': [],
-                }
+                },
             ],
         },
     }, f'{data=}'
@@ -84,7 +84,9 @@ async def _create_custom_field_plain(
     if custom_field_payload['type'] not in CUSTOM_FIELDS_PLAIN_TYPES:
         pytest.xfail('Unsupported custom field type')
     return await __create_custom_field_group(
-        test_client, create_initial_admin, custom_field_payload
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
     )
 
 
@@ -278,7 +280,9 @@ async def _create_custom_field_owned(
                 }
                 # Create the user and store the mapping
                 user_id = await _create_user(
-                    test_client, create_initial_admin, user_payload
+                    test_client,
+                    create_initial_admin,
+                    user_payload,
                 )
                 user_mapping[owner_data['id']] = user_id
 
@@ -367,22 +371,32 @@ async def _create_custom_field(
 ) -> dict:
     if custom_field_payload['type'] in ('enum', 'enum_multi'):
         return await _create_custom_field_enum(
-            test_client, create_initial_admin, custom_field_payload
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
         )
     if custom_field_payload['type'] == 'state':
         return await _create_custom_field_state(
-            test_client, create_initial_admin, custom_field_payload
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
         )
     if custom_field_payload['type'] in ('version', 'version_multi'):
         return await _create_custom_field_version(
-            test_client, create_initial_admin, custom_field_payload
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
         )
     if custom_field_payload['type'] in ('owned', 'owned_multi'):
         return await _create_custom_field_owned(
-            test_client, create_initial_admin, custom_field_payload
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
         )
     return await _create_custom_field_plain(
-        test_client, create_initial_admin, custom_field_payload
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
     )
 
 
@@ -393,7 +407,9 @@ async def create_custom_field(
     custom_field_payload: dict,
 ) -> dict:
     return await _create_custom_field(
-        test_client, create_initial_admin, custom_field_payload
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
     )
 
 
@@ -406,7 +422,9 @@ async def create_custom_fields(
     res = []
     for custom_field_payload in custom_field_payloads:
         data = await _create_custom_field(
-            test_client, create_initial_admin, custom_field_payload
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
         )
         res.append(data)
     return res

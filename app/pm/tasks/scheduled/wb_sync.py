@@ -18,7 +18,8 @@ FIELDS_MAP = {
 
 async def wb_user_sync() -> None:
     wb_client = WbAPIClient(
-        CONFIG.WB_URL, (CONFIG.WB_API_TOKEN_KID, CONFIG.WB_API_TOKEN_SECRET)
+        CONFIG.WB_URL,
+        (CONFIG.WB_API_TOKEN_KID, CONFIG.WB_API_TOKEN_SECRET),
     )
     users = {u.email: u for u in await m.User.all().to_list()}
     async for user in wb_client.get_people():
@@ -31,7 +32,7 @@ async def wb_user_sync() -> None:
                     name=user.english_name,
                     is_active=user.active,
                     origin=m.UserOriginType.WB,
-                )
+                ),
             )
             await asyncio.gather(
                 m.UserMultiCustomField.add_option_predefined_scope(obj),
@@ -62,7 +63,8 @@ async def wb_user_sync() -> None:
 
 async def wb_team_sync() -> None:
     wb_client = WbAPIClient(
-        CONFIG.WB_URL, (CONFIG.WB_API_TOKEN_KID, CONFIG.WB_API_TOKEN_SECRET)
+        CONFIG.WB_URL,
+        (CONFIG.WB_API_TOKEN_KID, CONFIG.WB_API_TOKEN_SECRET),
     )
     groups = {g.name: g for g in await m.Group.all().to_list()}
     groups_by_external_id = {
@@ -131,7 +133,8 @@ async def wb_team_sync() -> None:
                     await asyncio.gather(
                         m.UserCustomField.update_user_group_membership(user, group),
                         m.UserMultiCustomField.update_user_group_membership(
-                            user, group
+                            user,
+                            group,
                         ),
                     )
 

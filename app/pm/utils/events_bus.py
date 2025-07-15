@@ -8,10 +8,10 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    'EventType',
     'Event',
-    'TaskType',
+    'EventType',
     'Task',
+    'TaskType',
 )
 
 
@@ -38,7 +38,7 @@ class Event:
             {
                 'type': self.type,
                 'data': self.data,
-            }
+            },
         ).encode()
 
     async def send(self, client: 'Redis') -> None:
@@ -63,7 +63,7 @@ class Task:
             {
                 'type': self.type,
                 'data': self.data,
-            }
+            },
         ).encode()
 
     async def send(self, client: 'Redis') -> None:

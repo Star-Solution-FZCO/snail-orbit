@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 from unittest import mock
 
-import mock
 import pytest
 from fastapi.testclient import TestClient
 
@@ -45,7 +44,7 @@ def _assign_admin_role(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -59,7 +58,7 @@ def _assign_admin_role(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -71,7 +70,7 @@ def _assign_admin_role(
                 'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -96,11 +95,13 @@ async def test_issue_attachments_crud(
 
     with (
         mock.patch(
-            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
         ) as mock_notify,
     ):
         attachment1 = _upload_attachment(
-            test_client, headers, filename='attachment1.txt'
+            test_client,
+            headers,
+            filename='attachment1.txt',
         )
         issue_payload['attachments'] = [{'id': attachment1}]
         resp = test_client.post(
@@ -125,11 +126,13 @@ async def test_issue_attachments_crud(
 
     with (
         mock.patch(
-            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
         ) as mock_notify,
     ):
         attachment2 = _upload_attachment(
-            test_client, headers, filename='attachment2.txt'
+            test_client,
+            headers,
+            filename='attachment2.txt',
         )
         resp = test_client.put(
             f'/api/v1/issue/{issue_id}',
@@ -144,7 +147,7 @@ async def test_issue_attachments_crud(
         assert resp.status_code == 200
         issue = resp.json()['payload']
         assert sorted([a['id'] for a in issue['attachments']]) == sorted(
-            [attachment1, attachment2]
+            [attachment1, attachment2],
         )
         mock_notify.assert_called_once()
 
@@ -158,7 +161,7 @@ async def test_issue_attachments_crud(
 
     with (
         mock.patch(
-            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
         ) as mock_notify,
     ):
         resp = test_client.put(
@@ -175,7 +178,7 @@ async def test_issue_attachments_crud(
 
     with (
         mock.patch(
-            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
         ) as mock_notify,
     ):
         resp = test_client.put(
@@ -206,7 +209,7 @@ async def test_issue_attachments_crud(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -220,7 +223,7 @@ async def test_issue_attachments_crud(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -232,7 +235,7 @@ async def test_issue_attachments_crud(
                 'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -256,7 +259,9 @@ async def test_issue_draft_attachments_crud(
     )
 
     draft_attachment1 = _upload_attachment(
-        test_client, headers, filename='draft_attachment1.txt'
+        test_client,
+        headers,
+        filename='draft_attachment1.txt',
     )
     issue_payload['attachments'] = [{'id': draft_attachment1}]
     resp = test_client.post(
@@ -279,7 +284,9 @@ async def test_issue_draft_attachments_crud(
     assert [a['id'] for a in draft['attachments']] == [draft_attachment1]
 
     draft_attachment2 = _upload_attachment(
-        test_client, headers, filename='draft_attachment2.txt'
+        test_client,
+        headers,
+        filename='draft_attachment2.txt',
     )
     resp = test_client.put(
         f'/api/v1/issue/draft/{draft_id}',
@@ -294,7 +301,7 @@ async def test_issue_draft_attachments_crud(
     assert resp.status_code == 200
     issue = resp.json()['payload']
     assert sorted([a['id'] for a in issue['attachments']]) == sorted(
-        [draft_attachment1, draft_attachment2]
+        [draft_attachment1, draft_attachment2],
     )
 
     response = test_client.get(
@@ -330,7 +337,7 @@ async def test_issue_draft_attachments_crud(
 
     with (
         mock.patch(
-            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
         ) as mock_notify,
     ):
         resp = test_client.post(
@@ -362,7 +369,7 @@ async def test_issue_draft_attachments_crud(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -376,7 +383,7 @@ async def test_issue_draft_attachments_crud(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -388,7 +395,7 @@ async def test_issue_draft_attachments_crud(
                 'text': {'value': 'Created via integration-test', 'encryption': None},
             },
             id='issue',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -424,7 +431,9 @@ async def test_issue_comment_attachments_crud(
         issue_id = resp.json()['payload']['id']
 
     comment_attachment1 = _upload_attachment(
-        test_client, headers, filename='comment_attachment1.txt'
+        test_client,
+        headers,
+        filename='comment_attachment1.txt',
     )
     resp = test_client.post(
         f'/api/v1/issue/{issue_id}/comment',
@@ -440,14 +449,17 @@ async def test_issue_comment_attachments_crud(
     assert [a['id'] for a in comment['attachments']] == [comment_attachment1]
 
     resp = test_client.get(
-        f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=headers
+        f'/api/v1/issue/{issue_id}/comment/{comment_id}',
+        headers=headers,
     )
     assert resp.status_code == 200
     comment = resp.json()['payload']
     assert [a['id'] for a in comment['attachments']] == [comment_attachment1]
 
     comment_attachment2 = _upload_attachment(
-        test_client, headers, filename='comment_attachment2.txt'
+        test_client,
+        headers,
+        filename='comment_attachment2.txt',
     )
     resp = test_client.put(
         f'/api/v1/issue/{issue_id}/comment/{comment_id}',
@@ -462,7 +474,7 @@ async def test_issue_comment_attachments_crud(
     assert resp.status_code == 200
     comment = resp.json()['payload']
     assert sorted([a['id'] for a in comment['attachments']]) == sorted(
-        [comment_attachment1, comment_attachment2]
+        [comment_attachment1, comment_attachment2],
     )
 
     resp = test_client.put(

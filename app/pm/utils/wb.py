@@ -73,11 +73,13 @@ async def http_request(
     if params:
         splitter = '&' if '?' in url else '?'
         url += splitter + '&'.join(f'{k}={quote(v)}' for k, v in params)
-    async with aiohttp.ClientSession(headers=headers) as session:
-        async with session.request(method, url, **data_kwargs) as resp:
-            if json:
-                return await resp.json()
-            return await resp.read()
+    async with (
+        aiohttp.ClientSession(headers=headers) as session,
+        session.request(method, url, **data_kwargs) as resp,
+    ):
+        if json:
+            return await resp.json()
+        return await resp.read()
 
 
 class WbAPIClient:
@@ -104,7 +106,7 @@ class WbAPIClient:
         data = {
             'iat': now - 10,
             'exp': now + 60,
-            'req_hash': sha1((method + related_url).encode('utf-8')).hexdigest(),  # nosec: hashlib
+            'req_hash': sha1((method + related_url).encode('utf-8')).hexdigest(),  # nosec: hashlib  # noqa: S324
         }
         token = jwt.encode(
             data,
@@ -135,7 +137,7 @@ class WbAPIClient:
             json=True,
         )
         if not isinstance(result, dict):
-            raise ValueError(f'Expected dict, got {type(result)}')
+            raise TypeError(f'Expected dict, got {type(result)}')
         if 'payload' not in result:
             raise ValueError(f'Expected payload in response from wb, got {result}')
         return result['payload']

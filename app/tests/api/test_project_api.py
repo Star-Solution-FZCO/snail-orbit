@@ -1,14 +1,12 @@
 from typing import TYPE_CHECKING
 
 import pytest
-import pytest_asyncio
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
 from .create import create_project
 from .helpers import (
-    assert_error_response,
     assert_success_response,
     make_auth_headers,
     run_crud_workflow,
@@ -28,7 +26,7 @@ from .test_api import create_initial_admin
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 async def test_project_crud_workflow(
@@ -80,7 +78,7 @@ async def test_project_crud_workflow(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 async def test_project_subscription_workflow(
@@ -108,14 +106,16 @@ async def test_project_subscription_workflow(
 
     # Test SUBSCRIBE
     response = test_client.post(
-        f'/api/v1/project/{create_project}/subscribe', headers=headers
+        f'/api/v1/project/{create_project}/subscribe',
+        headers=headers,
     )
     subscribed_payload = {**base_payload, 'is_subscribed': True}
     assert_success_response(response, subscribed_payload)
 
     # Test UNSUBSCRIBE
     response = test_client.post(
-        f'/api/v1/project/{create_project}/unsubscribe', headers=headers
+        f'/api/v1/project/{create_project}/unsubscribe',
+        headers=headers,
     )
     unsubscribed_payload = {**base_payload, 'is_subscribed': False}
     assert_success_response(response, unsubscribed_payload)

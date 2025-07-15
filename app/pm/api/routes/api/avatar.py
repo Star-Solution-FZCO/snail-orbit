@@ -31,7 +31,7 @@ async def get_avatar(
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
-        content=client.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore
+        content=client.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore[arg-type]
         media_type=file_header.content_type,
         headers={
             'Content-Disposition': file_header.encode_filename_disposition(),
@@ -40,21 +40,23 @@ async def get_avatar(
     )
 
 
-@router.get('/project/{project_id}', responses=NOT_FOUND_RESPONSES)
+@router.get('/project/{project_id}', response_model=None, responses=NOT_FOUND_RESPONSES)
 async def get_project_avatar(
     project_id: PydanticObjectId,
-) -> RedirectResponse:
+) -> RedirectResponse | StreamingResponse:
     client = get_storage_client()
     if isinstance(client, S3StorageClient):
         return RedirectResponse(
             url=await client.get_presigned_url(
-                project_id, folder=PROJECT_AVATAR_STORAGE_DIR
+                project_id,
+                folder=PROJECT_AVATAR_STORAGE_DIR,
             ),
             status_code=HTTPStatus.TEMPORARY_REDIRECT,
         )
     try:
         file_header = await client.get_file_info(
-            project_id, folder=PROJECT_AVATAR_STORAGE_DIR
+            project_id,
+            folder=PROJECT_AVATAR_STORAGE_DIR,
         )
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err

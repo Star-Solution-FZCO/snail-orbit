@@ -106,7 +106,8 @@ async def create_comment(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE)
+        issue,
+        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE),
     )
 
     comment = m.IssueComment(
@@ -142,7 +143,8 @@ async def update_comment(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_UPDATE)
+        issue,
+        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_UPDATE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
@@ -150,7 +152,8 @@ async def update_comment(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
     if comment.author.id != user_ctx.user.id:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You can only update your own comments'
+            HTTPStatus.FORBIDDEN,
+            'You can only update your own comments',
         )
     if comment.is_hidden:
         raise HTTPException(HTTPStatus.FORBIDDEN, 'You cannot update hidden comments')
@@ -158,12 +161,14 @@ async def update_comment(
     extra_attachment_ids = {
         a.id for a in body.attachments or [] if a.id not in comment_attachment_ids
     }
-    for k, v in body.model_dump(
-        exclude={'attachments', 'text'}, exclude_unset=True
+    for k, value in body.model_dump(
+        exclude={'attachments', 'text'},
+        exclude_unset=True,
     ).items():
         if k == 'spent_time':
-            v = v or 0
-        setattr(comment, k, v)
+            setattr(comment, k, value or 0)
+        else:
+            setattr(comment, k, value)
     if 'attachments' in body.model_fields_set:
         await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
     if 'text' in body.model_fields_set:
@@ -200,7 +205,8 @@ async def delete_comment(
     if comment.author.id != user_ctx.user.id:
         user_ctx.validate_issue_permission(issue, Permissions.COMMENT_DELETE)
     user_ctx.validate_issue_permission(
-        issue, PermOr(Permissions.COMMENT_DELETE_OWN, Permissions.COMMENT_DELETE)
+        issue,
+        PermOr(Permissions.COMMENT_DELETE_OWN, Permissions.COMMENT_DELETE),
     )
 
     issue.comments = [c for c in issue.comments if c.id != comment_id]
@@ -219,7 +225,8 @@ async def hide_comment(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_HIDE)
+        issue,
+        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_HIDE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
@@ -244,7 +251,8 @@ async def restore_comment(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        issue, PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_RESTORE)
+        issue,
+        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_RESTORE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)

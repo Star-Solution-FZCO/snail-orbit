@@ -18,17 +18,17 @@ from .tag import TagLinkOutput
 from .user import UserOutput
 
 __all__ = (
-    'IssueOutput',
-    'IssueDraftOutput',
+    'CustomFieldValueOutT',
     'IssueAttachmentBody',
     'IssueAttachmentOut',
     'IssueChangeOutputRootModel',
     'IssueCommentOutput',
+    'IssueDraftOutput',
     'IssueHistoryOutput',
+    'IssueOutput',
     'ProjectField',
-    'CustomFieldValueOutT',
-    'transform_custom_field_value',
     'issue_change_output_from_obj',
+    'transform_custom_field_value',
 )
 
 CustomFieldValueOutT = (
@@ -244,7 +244,7 @@ class IssueFieldChangeBaseOutput(IssueBaseChangeOutput, ABC):
     @classmethod
     def from_obj(cls, obj: m.IssueFieldChange) -> Self:
         if isinstance(obj.field, str):
-            raise ValueError(f'Unknown field type: {obj.field}')
+            raise TypeError(f'Unknown field type: {obj.field}')
         return cls(
             field_id=obj.field.id,
             field_gid=obj.field.gid,
@@ -405,7 +405,7 @@ def issue_field_change_output_from_obj(
     obj: m.IssueFieldChange,
 ) -> IssueFieldChangeOutputT:
     if isinstance(obj.field, str):
-        raise ValueError(f'Unknown field type: {obj.field}')
+        raise TypeError(f'Unknown field type: {obj.field}')
     if obj.field.type not in FIELD_CHANGE_OUTPUT_MAP:
         raise ValueError(f'Unknown field type: {obj.field.type}')
     return FIELD_CHANGE_OUTPUT_MAP[obj.field.type].from_obj(obj)

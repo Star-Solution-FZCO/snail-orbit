@@ -7,9 +7,9 @@ from pm.utils.file_storage.local import LocalStorageClient
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = (
+    'get_storage_client',
     'resolve_file',
     'resolve_files',
-    'get_storage_client',
 )
 
 
@@ -35,4 +35,4 @@ async def resolve_file(id_: FileIDT) -> FileHeader:
 
 async def resolve_files(ids: Collection[FileIDT]) -> dict[FileIDT, FileHeader]:
     results = await asyncio.gather(*(resolve_file(id_) for id_ in ids))
-    return dict(zip(ids, results))
+    return dict(zip(ids, results, strict=False))

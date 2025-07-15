@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
 
 __all__ = (
-    'StateOption',
     'StateCustomField',
+    'StateOption',
 )
 
 
@@ -41,6 +41,8 @@ class StateCustomField(CustomField):
         opts = {opt.value: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='option not found'
+                field=self,
+                value=value,
+                msg='option not found',
             )
         return opts[value]

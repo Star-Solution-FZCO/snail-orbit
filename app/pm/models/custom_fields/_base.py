@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 import beanie.operators as bo
 import pymongo
@@ -13,12 +13,12 @@ if TYPE_CHECKING:
     from pm.models.project import Project
 
 __all__ = (
-    'CustomFieldTypeT',
     'CustomField',
-    'CustomFieldLink',
-    'CustomFieldGroupLink',
-    'CustomFieldValidationError',
     'CustomFieldCanBeNoneError',
+    'CustomFieldGroupLink',
+    'CustomFieldLink',
+    'CustomFieldTypeT',
+    'CustomFieldValidationError',
 )
 
 
@@ -38,7 +38,10 @@ class CustomFieldValidationError(ValueError):
 
 class CustomFieldCanBeNoneError(CustomFieldValidationError):
     def __init__(
-        self, field: 'CustomField', value: Any = None, msg: str = 'cannot be None'
+        self,
+        field: 'CustomField',
+        value: Any = None,
+        msg: str = 'cannot be None',
     ):
         super().__init__(field, value, msg)
 
@@ -70,7 +73,7 @@ class CustomField(Document):
         use_state_management = True
         state_management_save_previous = True
         is_root = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('gid', 1)], name='gid_index'),
             pymongo.IndexModel([('type', 1)], name='type_index'),
             pymongo.IndexModel([('gid', 1), ('type', 1)], name='gid_type_index'),
@@ -143,7 +146,8 @@ class CustomFieldGroupLink(BaseModel):
 
     async def resolve(self) -> list[CustomField]:
         return await CustomField.find(
-            CustomField.gid == self.gid, with_children=True
+            CustomField.gid == self.gid,
+            with_children=True,
         ).to_list()
 
     def __hash__(self) -> int:

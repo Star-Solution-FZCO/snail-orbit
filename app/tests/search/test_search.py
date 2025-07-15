@@ -1,6 +1,6 @@
 from datetime import date, datetime
+from unittest import mock
 
-import mock
 import pytest
 from bson import ObjectId
 
@@ -57,7 +57,7 @@ TEST_VERSION_FIELD_PYTEST_PARAMS = [
     ]
 ] + [
     pytest.param(
-        f'Version: null',
+        'Version: null',
         {
             'fields': {
                 '$elemMatch': {
@@ -66,7 +66,7 @@ TEST_VERSION_FIELD_PYTEST_PARAMS = [
                 }
             }
         },
-        id=f'version field with null value',
+        id='version field with null value',
     ),
     pytest.param(
         'Version: 1.1..1.1.1',
@@ -730,7 +730,7 @@ TEST_STRING_FIELD_PYTEST_PARAMS = [
     for value in ['null', 'dddd', '2011-40-40', '200-11-11']
 ] + [
     pytest.param(
-        f'String: "0000"',
+        'String: "0000"',
         {
             'fields': {
                 '$elemMatch': {
@@ -739,7 +739,7 @@ TEST_STRING_FIELD_PYTEST_PARAMS = [
                 }
             }
         },
-        id=f'string field with value "0000"',
+        id='string field with value "0000"',
     ),
 ]
 TEST_ENUM_FIELD_PYTEST_PARAMS = [
@@ -2446,7 +2446,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
 @mock.patch('pm.api.issue_query.search.utcnow', new_callable=mock.Mock)
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'query, expected',
+    ('query', 'expected'),
     [
         pytest.param('', {}, id='empty'),
         pytest.param(' ', {}, id='only space'),

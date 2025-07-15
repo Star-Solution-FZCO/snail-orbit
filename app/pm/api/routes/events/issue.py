@@ -42,9 +42,7 @@ def _check_issue_filters(
         return True
     if issue_ids and issue_id in issue_ids:
         return True
-    if project_ids and project_id in project_ids:
-        return True
-    return False
+    return bool(project_ids and project_id in project_ids)
 
 
 @with_ping
@@ -71,7 +69,8 @@ async def issues_event_generator(
             if not _check_issue_filters(issue_id, project_id, issue_ids_, project_ids_):
                 continue
             yield SentEventOutput(
-                type=MAP_SENT_EVENT_TYPE[event.type], data={'issue_id': issue_id}
+                type=MAP_SENT_EVENT_TYPE[event.type],
+                data={'issue_id': issue_id},
             )
     finally:
         await client.unsubscribe('events')
@@ -81,7 +80,9 @@ async def issues_event_generator(
 @router.get('')
 async def get_issue_events(
     issue_ids: list[PydanticObjectId] | None = query_comma_separated_list_param(
-        'ids', required=False, single_value_validator=pydantic_object_id_validator
+        'ids',
+        required=False,
+        single_value_validator=pydantic_object_id_validator,
     ),
     project_ids: list[PydanticObjectId] | None = query_comma_separated_list_param(
         'project_ids',
@@ -110,5 +111,6 @@ async def get_issue_events(
                 break
             project_ids.extend([pr.id for pr in board.projects])
     return StreamingResponse(
-        issues_event_generator(issue_ids, project_ids), media_type='text/event-stream'
+        issues_event_generator(issue_ids, project_ids),
+        media_type='text/event-stream',
     )

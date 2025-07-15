@@ -1,9 +1,8 @@
 from collections.abc import Collection
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Unpack
 
 from beanie import Document
 from pydantic.config import ConfigDict
-from typing_extensions import Unpack
 
 __all__ = (
     'DocumentWithReadOnlyProjection',
@@ -16,7 +15,9 @@ class DocumentWithReadOnlyProjection(Document):
     __is_ro_projection_model_initialized__: ClassVar[bool] = False
 
     def __init_subclass__(
-        cls, is_ro_projection_model: bool = False, **kwargs: Unpack[ConfigDict]
+        cls,
+        is_ro_projection_model: bool = False,
+        **kwargs: Unpack[ConfigDict],
     ) -> None:
         super().__init_subclass__(**kwargs)
 
@@ -51,7 +52,7 @@ class DocumentWithReadOnlyProjection(Document):
     def get_ro_projection_model(cls) -> type[Self]:
         if not cls.__is_ro_projection_model_initialized__:
             raise RuntimeError(
-                f'{cls.__name__}: read-only projection model is not initialized'
+                f'{cls.__name__}: read-only projection model is not initialized',
             )
         return cls.__ro_projection_model__
 

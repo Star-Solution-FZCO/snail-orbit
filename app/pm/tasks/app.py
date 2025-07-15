@@ -14,7 +14,7 @@ def create_broker() -> AioPikaBroker:
     if not broker_url:
         raise ValueError(
             'TASKS_BROKER_URL must be configured. '
-            'Set it in settings.toml or environment variable SNAIL_ORBIT_TASKS_BROKER_URL'
+            'Set it in settings.toml or environment variable SNAIL_ORBIT_TASKS_BROKER_URL',
         )
 
     parsed = urlparse(broker_url)

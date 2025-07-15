@@ -17,7 +17,11 @@ __all__ = ('APIRouter',)
 
 class APIRouter(FastAPIRouter):
     def api_route(
-        self, path: str, *, include_in_schema: bool = True, **kwargs: Any
+        self,
+        path: str,
+        *,
+        include_in_schema: bool = True,
+        **kwargs: Any,
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
         # Handle trailing slash normalization
         if path.endswith('/') and len(self.prefix + path) > 1:
@@ -27,12 +31,16 @@ class APIRouter(FastAPIRouter):
         kwargs = self._merge_responses(kwargs)
 
         add_path = super().api_route(
-            path, include_in_schema=include_in_schema, **kwargs
+            path,
+            include_in_schema=include_in_schema,
+            **kwargs,
         )
 
         alternate_path = path + '/'
         add_alternate_path = super().api_route(
-            alternate_path, include_in_schema=False, **kwargs
+            alternate_path,
+            include_in_schema=False,
+            **kwargs,
         )
 
         def decorator(func: DecoratedCallable) -> DecoratedCallable:
@@ -70,7 +78,8 @@ class APIRouter(FastAPIRouter):
                 # Conflict detected - need intelligent merging
                 router_response = merged_responses[status_int]
                 merged_response = self._merge_conflicting_responses(
-                    router_response, route_response
+                    router_response,
+                    route_response,
                 )
                 merged_responses[status_int] = merged_response
 
@@ -140,6 +149,6 @@ class APIRouter(FastAPIRouter):
                 'application/json': {
                     'oneOf': one_of_schemas,
                     'examples': all_examples,
-                }
+                },
             },
         }

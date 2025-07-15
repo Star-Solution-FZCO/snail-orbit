@@ -40,7 +40,8 @@ def migrate_up(args: argparse.Namespace) -> None:
 
         if args.revision:
             manager.upgrade(
-                target_revision=args.revision, use_transactions=args.use_transactions
+                target_revision=args.revision,
+                use_transactions=args.use_transactions,
             )
             print(f'Upgraded to revision: {args.revision}')
         else:
@@ -59,7 +60,8 @@ def migrate_down(args: argparse.Namespace) -> None:
 
         if args.revision:
             manager.downgrade(
-                target_revision=args.revision, use_transactions=args.use_transactions
+                target_revision=args.revision,
+                use_transactions=args.use_transactions,
             )
             print(f'Downgraded to revision: {args.revision}')
         else:

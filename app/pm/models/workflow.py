@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import beanie.operators as bo
 import pymongo
@@ -15,10 +15,10 @@ if TYPE_CHECKING:
     from .issue import Issue
 
 __all__ = (
+    'OnChangeWorkflow',
+    'ScheduledWorkflow',
     'Workflow',
     'WorkflowType',
-    'ScheduledWorkflow',
-    'OnChangeWorkflow',
 )
 
 
@@ -35,7 +35,7 @@ class Workflow(Document):
         use_state_management = True
         state_management_save_previous = True
         is_root = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('type', 1)], name='type_index'),
             pymongo.IndexModel([('type', 1), ('name', 1)], name='type_name_index'),
         ]

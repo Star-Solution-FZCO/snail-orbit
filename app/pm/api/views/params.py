@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, TypeVar
 
 from fastapi import Query
 from pydantic import BaseModel

@@ -48,7 +48,8 @@ router = APIRouter(
     tags=['custom_field'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 
@@ -137,10 +138,14 @@ class CustomFieldUpdateBody(BaseModel):
     label: str | None = None
 
     def update_obj(self, obj: m.CustomField) -> None:
-        for k, v in self.model_dump(exclude_unset=True).items():
+        for k, value in self.model_dump(exclude_unset=True).items():
             if k == 'default_value':
-                v = obj.validate_value(v) if v is not None else None
-            setattr(obj, k, v)
+                processed_value = (
+                    obj.validate_value(value) if value is not None else None
+                )
+                setattr(obj, k, processed_value)
+            else:
+                setattr(obj, k, value)
 
 
 class CustomFieldGroupUpdateBody(BaseModel):
@@ -199,7 +204,7 @@ async def get_custom_field_group(
             description=objs[0].description,
             ai_description=objs[0].ai_description,
             fields=[cf_output_from_obj(obj) for obj in objs],
-        )
+        ),
     )
 
 
@@ -224,7 +229,8 @@ async def create_custom_field(
     body: CustomFieldCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
     existed_field = await m.CustomField.find_one(
-        m.CustomField.gid == custom_field_gid, with_children=True
+        m.CustomField.gid == custom_field_gid,
+        with_children=True,
     )
     if not existed_field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
@@ -256,7 +262,8 @@ async def create_custom_field_group(
     body: CustomFieldGroupCreateBody,
 ) -> SuccessPayloadOutput[CustomFieldGroupOutputRootModel]:
     if await m.CustomField.find(
-        m.CustomField.name == body.name, with_children=True
+        m.CustomField.name == body.name,
+        with_children=True,
     ).exists():
         raise HTTPException(HTTPStatus.CONFLICT, 'Custom field already exists')
     field_cls = m.get_cf_class(body.type)
@@ -282,7 +289,7 @@ async def create_custom_field_group(
             description=obj.description,
             ai_description=obj.ai_description,
             fields=[cf_output_from_obj(obj)],
-        )
+        ),
     )
 
 
@@ -340,7 +347,7 @@ async def update_custom_field_group(
             description=fields[0].description,
             ai_description=fields[0].ai_description,
             fields=[cf_output_from_obj(obj) for obj in fields],
-        )
+        ),
     )
 
 
@@ -350,7 +357,8 @@ async def delete_custom_field(
     custom_field_id: PydanticObjectId,
 ) -> ModelIdOutput:
     obj: m.CustomField | None = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -386,7 +394,7 @@ async def add_enum_option(
             value=body.value,
             color=body.color,
             is_archived=body.is_archived,
-        )
+        ),
     )
     if obj.is_changed:
         await obj.replace()
@@ -410,7 +418,7 @@ async def update_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
@@ -443,7 +451,7 @@ async def remove_enum_option(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if obj.type not in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not of type ENUM')
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     if in_use := await count_issues_with_option(custom_field_id, opt.id):
@@ -511,7 +519,7 @@ async def add_user_option(
 
 @router.delete('/{custom_field_id}/user-option/{option_id}')
 @router.delete(
-    '/group/{custom_field_gid}/field/{custom_field_id}/user-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/user-option/{option_id}',
 )
 async def remove_user_option(
     custom_field_id: PydanticObjectId,
@@ -557,7 +565,7 @@ async def add_state_option(
             is_closed=body.is_closed,
             color=body.color,
             is_archived=body.is_archived,
-        )
+        ),
     )
     if obj.is_changed:
         await obj.replace()
@@ -566,7 +574,7 @@ async def add_state_option(
 
 @router.put('/{custom_field_id}/state-option/{option_id}')
 @router.put(
-    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}',
 )
 async def update_state_option(
     custom_field_id: PydanticObjectId,
@@ -580,7 +588,7 @@ async def update_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     for k, v in body.dict(exclude_unset=True).items():
@@ -598,7 +606,7 @@ async def update_state_option(
 
 @router.delete('/{custom_field_id}/state-option/{option_id}')
 @router.delete(
-    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/state-option/{option_id}',
 )
 async def remove_state_option(
     custom_field_id: PydanticObjectId,
@@ -611,7 +619,7 @@ async def remove_state_option(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     if in_use := await count_issues_with_option(custom_field_id, opt.id):
@@ -665,7 +673,7 @@ async def add_version_option(
 
 @router.put('/{custom_field_id}/version-option/{option_id}')
 @router.put(
-    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}',
 )
 async def update_version_option(
     custom_field_id: PydanticObjectId,
@@ -685,13 +693,17 @@ async def update_version_option(
             HTTPStatus.BAD_REQUEST,
             'Custom field is not of type VERSION or VERSION_MULTI',
         )
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
-    for k, v in body.dict(exclude_unset=True).items():
+    for k, value in body.dict(exclude_unset=True).items():
         if k == 'release_date':
-            v = datetime.combine(v, datetime.min.time()) if v else None
-        setattr(opt, k, v)
+            processed_value = (
+                datetime.combine(value, datetime.min.time()) if value else None
+            )
+            setattr(opt, k, processed_value)
+        else:
+            setattr(opt, k, value)
     if obj.default_value and obj.default_value.id == opt.id:
         obj.default_value = opt
     if obj.is_changed:
@@ -705,7 +717,7 @@ async def update_version_option(
 
 @router.delete('/{custom_field_id}/version-option/{option_id}')
 @router.delete(
-    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/version-option/{option_id}',
 )
 async def remove_version_option(
     custom_field_id: PydanticObjectId,
@@ -724,7 +736,7 @@ async def remove_version_option(
             HTTPStatus.BAD_REQUEST,
             'Custom field is not of type VERSION or VERSION_MULTI',
         )
-    opt = next((opt for opt in obj.options if opt.id == option_id_))
+    opt = next(opt for opt in obj.options if opt.id == option_id_)
     if not opt:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
     if in_use := await count_issues_with_option(custom_field_id, opt.id):
@@ -774,7 +786,7 @@ async def add_owned_option(
             owner=owner,
             color=body.color,
             is_archived=body.is_archived,
-        )
+        ),
     )
     if obj.is_changed:
         await obj.replace()
@@ -783,7 +795,7 @@ async def add_owned_option(
 
 @router.put('/{custom_field_id}/owned-option/{option_id}')
 @router.put(
-    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}',
 )
 async def update_owned_option(
     custom_field_id: PydanticObjectId,
@@ -831,7 +843,7 @@ async def update_owned_option(
 
 @router.delete('/{custom_field_id}/owned-option/{option_id}')
 @router.delete(
-    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}'
+    '/group/{custom_field_gid}/field/{custom_field_id}/owned-option/{option_id}',
 )
 async def remove_owned_option(
     custom_field_id: PydanticObjectId,
@@ -873,7 +885,8 @@ async def select_options(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[CustomFieldSelectOptionsT]:
     obj = await m.CustomField.find_one(
-        m.CustomField.id == custom_field_id, with_children=True
+        m.CustomField.id == custom_field_id,
+        with_children=True,
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
@@ -926,7 +939,8 @@ async def select_options_group(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[CustomFieldGroupSelectOptionsT]:
     fields = await m.CustomField.find(
-        m.CustomField.gid == custom_field_gid, with_children=True
+        m.CustomField.gid == custom_field_gid,
+        with_children=True,
     ).to_list()
 
     if not fields:
@@ -936,11 +950,12 @@ async def select_options_group(
         select_fn = version_option_select
         output_fn = ShortOptionOutput.from_obj
         all_options = {opt for field in fields for opt in field.options}
-    elif fields[0].type in (m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.ENUM_MULTI):
-        select_fn = enum_option_select
-        output_fn = ShortOptionOutput.from_obj
-        all_options = {opt for field in fields for opt in field.options}
-    elif fields[0].type in (m.CustomFieldTypeT.OWNED, m.CustomFieldTypeT.OWNED_MULTI):
+    elif fields[0].type in (
+        m.CustomFieldTypeT.ENUM,
+        m.CustomFieldTypeT.ENUM_MULTI,
+        m.CustomFieldTypeT.OWNED,
+        m.CustomFieldTypeT.OWNED_MULTI,
+    ):
         select_fn = enum_option_select
         output_fn = ShortOptionOutput.from_obj
         all_options = {opt for field in fields for opt in field.options}
@@ -966,8 +981,9 @@ async def select_options_group(
 
 
 async def count_issues_with_option(
-    custom_field_id: PydanticObjectId, option_id: str
+    custom_field_id: PydanticObjectId,
+    option_id: str,
 ) -> int:
     return await m.Issue.find(
-        {'fields': {'$elemMatch': {'id': custom_field_id, 'value.id': option_id}}}
+        {'fields': {'$elemMatch': {'id': custom_field_id, 'value.id': option_id}}},
     ).count()

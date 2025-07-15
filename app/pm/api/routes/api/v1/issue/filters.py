@@ -140,8 +140,9 @@ async def parse_search_query(
                 )
             filters.append(
                 IssueFilterOutput(
-                    field='project', value=m.ProjectLinkField.from_obj(project)
-                )
+                    field='project',
+                    value=m.ProjectLinkField.from_obj(project),
+                ),
             )
             continue
         if field_name not in custom_fields:
@@ -158,7 +159,7 @@ async def parse_search_query(
                 detail=f'Invalid value for custom field "{field_name}": {err}',
             ) from err
         filters.append(
-            IssueFilterOutput(field=CustomFieldLinkOutput.from_obj(field), value=val)
+            IssueFilterOutput(field=CustomFieldLinkOutput.from_obj(field), value=val),
         )
     return SuccessPayloadOutput(payload=IssueQueryToFiltersOutput(filters=filters))
 
@@ -177,7 +178,7 @@ async def build_search_query(
 ) -> SuccessPayloadOutput[IssueFiltersToQueryOutput]:
     expressions = [await flt.to_query() for flt in body.filters]
     return SuccessPayloadOutput(
-        payload=IssueFiltersToQueryOutput(query=' and '.join(expressions))
+        payload=IssueFiltersToQueryOutput(query=' and '.join(expressions)),
     )
 
 

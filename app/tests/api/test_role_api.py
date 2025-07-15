@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import pytest
-import pytest_asyncio
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
@@ -22,7 +21,7 @@ from .test_api import create_initial_admin
                 'permissions': ['issue:create', 'issue:read'],
             },
             id='role',
-        )
+        ),
     ],
 )
 async def test_role_crud_workflow(

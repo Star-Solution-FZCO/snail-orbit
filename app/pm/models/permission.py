@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -8,7 +8,10 @@ from .group import GroupLinkField
 from .project import PermissionTargetType
 from .user import UserLinkField
 
-__all__ = ('_check_permissions', 'PermissionType', 'PermissionRecord')
+if TYPE_CHECKING:
+    from pm.api.context import UserContext
+
+__all__ = ('PermissionRecord', 'PermissionType', '_check_permissions')
 
 permission_levels = {'view': 1, 'edit': 2, 'admin': 3}
 
@@ -27,13 +30,13 @@ class PermissionRecord(BaseModel):
 
 
 def _check_permissions(
-    permissions,
-    user_ctx,
-    required_permission,
+    permissions: list[PermissionRecord],
+    user_ctx: 'UserContext',
+    required_permission: PermissionType,
 ) -> bool:
     user = user_ctx.user
     group_ids = {gr.id for gr in user.groups}.union(
-        {gr.id for gr in user_ctx.predefined_groups}
+        {gr.id for gr in user_ctx.predefined_groups},
     )
     required_value = permission_levels.get(required_permission.value, 0)
     max_level_value = 0
@@ -49,13 +52,13 @@ def _check_permissions(
     return max_level_value >= required_value
 
 
-def _filter_permissions(obj, user_ctx) -> list[PermissionRecord]:
+def _filter_permissions(obj: Any, user_ctx: 'UserContext') -> list[PermissionRecord]:
     user = user_ctx.user
     if obj.check_permissions(user_ctx, PermissionType.ADMIN):
         return obj.permissions
     perms_to_show = []
     user_group_ids = {gr.id for gr in user.groups}.union(
-        {gr.id for gr in user_ctx.predefined_groups}
+        {gr.id for gr in user_ctx.predefined_groups},
     )
     for perm in obj.permissions:
         if perm.target_type == PermissionTargetType.USER and perm.target.id == user.id:

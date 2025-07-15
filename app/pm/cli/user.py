@@ -40,6 +40,7 @@ async def create_user(args: argparse.Namespace) -> None:
 
 
 # pylint: disable=unused-argument
+# ruff: noqa: ARG001
 async def show_users(args: argparse.Namespace) -> None:
     from pm.models import User
 
@@ -102,7 +103,8 @@ def add_user_args(parser: argparse.ArgumentParser) -> None:
     show_parser.set_defaults(func=show_users)
 
     gen_api_token_parser = subparsers.add_parser(
-        'gen_api_token', help='Generate API token'
+        'gen_api_token',
+        help='Generate API token',
     )
     gen_api_token_parser.add_argument('user_id', type=str)
     gen_api_token_parser.add_argument('name', type=str)

@@ -1,5 +1,6 @@
-import os
 from enum import StrEnum
+from pathlib import Path
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -17,7 +18,7 @@ class TemplateT(StrEnum):
 
 
 JINJA_ENV = Environment(
-    loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
+    loader=FileSystemLoader(Path(__file__).parent / 'templates'),
     autoescape=True,
 )
 
@@ -31,7 +32,7 @@ TEMPLATES_MAP: dict[TemplateT, str] = {
 }
 
 
-def render_template(template_name: TemplateT, **kwargs) -> str:
+def render_template(template_name: TemplateT, **kwargs: Any) -> str:
     if not (template_file := TEMPLATES_MAP.get(template_name)):
         raise ValueError(f'Unknown template name: {template_name}')
     template = JINJA_ENV.get_template(template_file)

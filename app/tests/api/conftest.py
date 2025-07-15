@@ -1,7 +1,7 @@
 import asyncio
 import os
+from unittest import mock
 
-import mock
 import pytest
 import pytest_asyncio
 from beanie import init_beanie

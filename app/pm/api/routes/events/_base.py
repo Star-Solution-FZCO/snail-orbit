@@ -6,8 +6,8 @@ from typing import Any, ParamSpec
 from pydantic import BaseModel
 
 __all__ = (
-    'SentEventType',
     'SentEventOutput',
+    'SentEventType',
     'with_ping',
 )
 
@@ -39,11 +39,11 @@ def with_ping(
     async def task(*args: P.args, **kwargs: P.kwargs) -> AsyncGenerator[str, Any]:
         queue = asyncio.Queue()
 
-        async def wrapped_event_generator():
+        async def wrapped_event_generator() -> None:
             async for event in event_generator(*args, **kwargs):
                 await queue.put(event)
 
-        async def ping_generator():
+        async def ping_generator() -> None:
             while True:
                 event = SentEventOutput(type=SentEventType.PING)
                 await queue.put(event)

@@ -3,7 +3,7 @@ import secrets
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Annotated, Any, Self
+from typing import Annotated, Any, ClassVar, Self
 
 import bcrypt
 import beanie.operators as bo
@@ -22,11 +22,11 @@ from .group import Group, GroupLinkField
 
 __all__ = (
     'APIToken',
+    'TOTPSettings',
     'User',
+    'UserAvatarType',
     'UserLinkField',
     'UserOriginType',
-    'UserAvatarType',
-    'TOTPSettings',
 )
 
 
@@ -155,7 +155,7 @@ class User(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('groups.id', 1)], name='groups_id_index'),
             pymongo.IndexModel(
                 [('api_tokens.is_active', 1)], name='api_tokens_active_index'
@@ -219,7 +219,7 @@ class User(Document):
     ) -> tuple[str, APIToken]:
         secret = secrets.token_hex(32)
         token = base64.b64encode(
-            f'{self.id}:{secret}:{datetime.now().timestamp()}'.encode('utf-8'),
+            f'{self.id}:{secret}:{datetime.now().timestamp()}'.encode(),
             altchars=b'-:',
         ).decode('utf-8')
         api_token_obj = APIToken(
@@ -235,7 +235,7 @@ class User(Document):
         split_token = (
             base64.b64decode(token.encode(), altchars=b'-:').decode().split(':')
         )
-        if len(split_token) != 3:
+        if len(split_token) != 3:  # noqa: PLR2004
             return None
         user_id, secret, _ = split_token
         if not (user := await cls.find_one(cls.id == PydanticObjectId(user_id))):
@@ -256,7 +256,7 @@ class User(Document):
         secret = secrets.token_hex(32)
         now = utcnow()
         token = base64.b64encode(
-            f'{self.id}:{secret}:{timestamp_from_utc(now)}'.encode('utf-8'),
+            f'{self.id}:{secret}:{timestamp_from_utc(now)}'.encode(),
             altchars=b'-:',
         ).decode('utf-8')
         obj = PasswordResetToken(
@@ -271,7 +271,7 @@ class User(Document):
         split_token = (
             base64.b64decode(token.encode(), altchars=b'-:').decode().split(':')
         )
-        if len(split_token) != 3:
+        if len(split_token) != 3:  # noqa: PLR2004
             return None
         user_id, secret, _ = split_token
         if not (user := await cls.find_one(cls.id == PydanticObjectId(user_id))):

@@ -1,7 +1,7 @@
 import io
 from typing import TYPE_CHECKING
+from unittest import mock
 
-import mock
 import pytest
 import pytest_asyncio
 
@@ -12,16 +12,16 @@ if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
 __all__ = (
-    'create_project',
-    'create_projects',
-    'create_user',
-    'create_users',
-    'create_role',
-    'create_roles',
+    'ALL_PERMISSIONS',
+    'ROLE_PERMISSIONS_BY_CATEGORY',
     'create_group',
     'create_groups',
-    'ROLE_PERMISSIONS_BY_CATEGORY',
-    'ALL_PERMISSIONS',
+    'create_project',
+    'create_projects',
+    'create_role',
+    'create_roles',
+    'create_user',
+    'create_users',
 )
 
 
@@ -83,7 +83,9 @@ async def _create_project(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.post(
-        '/api/v1/project', headers=headers, json=project_payload
+        '/api/v1/project',
+        headers=headers,
+        json=project_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -125,7 +127,9 @@ async def create_projects(
     project_ids = []
     for project_payload in project_payloads:
         project_id = await _create_project(
-            test_client, create_initial_admin, project_payload
+            test_client,
+            create_initial_admin,
+            project_payload,
         )
         project_ids.append(project_id)
     return project_ids
@@ -206,7 +210,8 @@ async def grant_permission(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.post(
-        f'/api/v1/role/{role_id}/permission/{permission_key}', headers=headers
+        f'/api/v1/role/{role_id}/permission/{permission_key}',
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -248,7 +253,10 @@ async def _create_role(
 
     for perm in permissions:
         await grant_permission(
-            test_client, create_initial_admin, data['payload']['id'], perm
+            test_client,
+            create_initial_admin,
+            data['payload']['id'],
+            perm,
         )
 
     return data['payload']['id']

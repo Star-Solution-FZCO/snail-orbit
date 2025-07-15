@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Any, Self
+from typing import Annotated, Any, ClassVar, Self
 from uuid import UUID, uuid4
 
 import beanie.operators as bo
@@ -19,12 +19,12 @@ from .user import User, UserLinkField
 from .workflow import Workflow
 
 __all__ = (
-    'Project',
-    'ProjectLinkField',
-    'ProjectPermission',
     'PermissionTargetType',
+    'Project',
     'ProjectAvatarType',
     'ProjectEncryptionSettings',
+    'ProjectLinkField',
+    'ProjectPermission',
 )
 
 
@@ -69,7 +69,7 @@ class Project(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel(
                 [('permissions.target_type', 1), ('permissions.target.id', 1)],
                 name='permissions_target_index',
@@ -80,7 +80,8 @@ class Project(Document):
             pymongo.IndexModel([('is_active', 1)], name='is_active_index'),
             pymongo.IndexModel([('workflows', 1)], name='workflows_index'),
             pymongo.IndexModel(
-                [('encryption_settings.users.id', 1)], name='encryption_users_index'
+                [('encryption_settings.users.id', 1)],
+                name='encryption_users_index',
             ),
         ]
 
@@ -108,16 +109,20 @@ class Project(Document):
 
     async def get_new_issue_alias(self) -> str:
         await self.update(
-            {'$inc': {'issue_counter': 1}}, ignore_revision=True, skip_actions=[Update]
+            {'$inc': {'issue_counter': 1}},
+            ignore_revision=True,
+            skip_actions=[Update],
         )
         return f'{self.slug}-{self.issue_counter}'
 
     def get_user_permissions(
-        self, user: User, predefined_groups: list['m.Group']
+        self,
+        user: User,
+        predefined_groups: list['Group'],
     ) -> set[Permissions]:
         results = set()
         user_groups = {gr.id for gr in user.groups}.union(
-            {gr.id for gr in predefined_groups}
+            {gr.id for gr in predefined_groups},
         )
         for perm in self.permissions:
             if (
@@ -163,7 +168,7 @@ class Project(Document):
         ).update(
             {'$set': {'permissions.$[p].target': GroupLinkField.from_obj(group)}},
             array_filters=[
-                {'p.target.id': group.id, 'p.target_type': PermissionTargetType.GROUP}
+                {'p.target.id': group.id, 'p.target_type': PermissionTargetType.GROUP},
             ],
         )
 
@@ -181,8 +186,8 @@ class Project(Document):
                     'permissions': {
                         'target_type': PermissionTargetType.GROUP,
                         'target.id': group_id,
-                    }
-                }
+                    },
+                },
             },
         )
 
@@ -197,7 +202,7 @@ class Project(Document):
         ).update(
             {'$set': {'permissions.$[p].target': UserLinkField.from_obj(user)}},
             array_filters=[
-                {'p.target.id': user.id, 'p.target_type': PermissionTargetType.USER}
+                {'p.target.id': user.id, 'p.target_type': PermissionTargetType.USER},
             ],
         )
         await cls.find(
@@ -221,8 +226,8 @@ class Project(Document):
                     'permissions': {
                         'target_type': PermissionTargetType.USER,
                         'target.id': user_id,
-                    }
-                }
+                    },
+                },
             },
         )
         await cls.find(
@@ -232,8 +237,8 @@ class Project(Document):
                 '$pull': {
                     'encryption_settings.users': {
                         'id': user_id,
-                    }
-                }
+                    },
+                },
             },
         )
 
@@ -247,8 +252,8 @@ class Project(Document):
                 bo.Or(
                     cls.slug == slug,
                     cls.slug_history == slug,
-                )
-            )
+                ),
+            ),
         )
 
 

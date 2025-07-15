@@ -30,7 +30,8 @@ router = APIRouter(
     tags=['search'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 
@@ -86,7 +87,7 @@ async def list_searches(
     user_groups = [
         g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
     ]
-    permission_type = {'$in': [l.value for l in m.PermissionType]}
+    permission_type = {'$in': [perm.value for perm in m.PermissionType]}
     filter_query = {
         '$or': [
             {
@@ -95,8 +96,8 @@ async def list_searches(
                         'target_type': m.PermissionTargetType.USER,
                         'target.id': user_ctx.user.id,
                         'permission_type': permission_type,
-                    }
-                }
+                    },
+                },
             },
             {
                 'permissions': {
@@ -104,10 +105,10 @@ async def list_searches(
                         'target_type': m.PermissionTargetType.GROUP,
                         'target.id': {'$in': user_groups},
                         'permission_type': permission_type,
-                    }
-                }
+                    },
+                },
             },
-        ]
+        ],
     }
     q = m.Search.find(filter_query).sort(m.Search.name)
     if query.search:
@@ -126,7 +127,7 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
     try:
         await transform_query(body.query)
     except IssueQueryTransformError as err:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, err.message)  # pylint: disable=raise-missing-from
+        raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
     except Exception as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     permissions = [
@@ -134,7 +135,7 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
             target_type=m.PermissionTargetType.USER,
             target=m.UserLinkField.from_obj(user_ctx.user),
             permission_type=m.PermissionType.ADMIN,
-        )
+        ),
     ]
     if len(body.permissions) != len({perm.target for perm in body.permissions}):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
@@ -147,7 +148,7 @@ async def create_search(body: SearchCreate) -> SuccessPayloadOutput[SearchOutput
                 target_type=perm.target_type,
                 target=target,
                 permission_type=perm.permission_type,
-            )
+            ),
         )
     search = m.Search(
         name=body.name,
@@ -199,7 +200,8 @@ async def update_search(
     if body.permissions:
         if not search.check_permissions(user_ctx, m.PermissionType.ADMIN):
             raise HTTPException(
-                HTTPStatus.FORBIDDEN, 'You cannot modify permissions for this search'
+                HTTPStatus.FORBIDDEN,
+                'You cannot modify permissions for this search',
             )
         if len(body.permissions) != len({perm.target for perm in body.permissions}):
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
@@ -213,7 +215,8 @@ async def update_search(
         ]
         if all(perm.permission_type != m.PermissionType.ADMIN for perm in permissions):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Search must have at least one admin'
+                HTTPStatus.BAD_REQUEST,
+                'Search must have at least one admin',
             )
         search.permissions = permissions
     for k, v in body.model_dump(exclude_unset=True, exclude={'permissions'}).items():
@@ -225,7 +228,8 @@ async def update_search(
 
 @router.post('/{search_id}/permission')
 async def grant_permission(
-    search_id: PydanticObjectId, body: GrantPermissionBody
+    search_id: PydanticObjectId,
+    body: GrantPermissionBody,
 ) -> UUIDOutput:
     user_ctx = current_user()
     search = await m.Search.find_one(m.Search.id == search_id)
@@ -239,7 +243,8 @@ async def grant_permission(
     target = await resolve_grant_permission_target(body)
     if search.has_permission_for_target(target):
         raise HTTPException(
-            status_code=HTTPStatus.CONFLICT, detail='Permission already granted'
+            status_code=HTTPStatus.CONFLICT,
+            detail='Permission already granted',
         )
     permission = m.PermissionRecord(
         target_type=body.target_type,
@@ -253,7 +258,8 @@ async def grant_permission(
 
 @router.delete('/{search_id}/permission/{permission_id}')
 async def revoke_permission(
-    search_id: PydanticObjectId, permission_id: UUID
+    search_id: PydanticObjectId,
+    permission_id: UUID,
 ) -> UUIDOutput:
     user_ctx = current_user()
     search = await m.Search.find_one(m.Search.id == search_id)
@@ -279,7 +285,8 @@ async def revoke_permission(
         and not search.has_any_other_admin_target(perm.target)
     ):
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Search must have at least one admin'
+            HTTPStatus.BAD_REQUEST,
+            'Search must have at least one admin',
         )
     search.permissions.remove(perm)
     await search.save_changes()

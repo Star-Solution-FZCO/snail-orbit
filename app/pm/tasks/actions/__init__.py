@@ -5,9 +5,9 @@ from .send_pararam_message import task_send_pararam_message
 from .workflows import task_run_workflows
 
 __all__ = (
-    'task_notify_by_pararam',
     'schedule_batched_notification',
+    'task_notify_by_pararam',
+    'task_run_workflows',
     'task_send_email',
     'task_send_pararam_message',
-    'task_run_workflows',
 )

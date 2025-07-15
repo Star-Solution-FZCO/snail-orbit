@@ -5,6 +5,7 @@ __all__ = ('add_ocr_args',)
 
 
 # pylint: disable=unused-argument
+# ruff: noqa: ARG001
 def run_ocr(args: argparse.Namespace) -> None:
     from pm.ocr.app import run
 

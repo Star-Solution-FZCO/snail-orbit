@@ -1,14 +1,12 @@
 from typing import TYPE_CHECKING
 
 import pytest
-import pytest_asyncio
 
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
 from .create import create_groups
 from .helpers import (
-    assert_error_response,
     assert_success_response,
     make_auth_headers,
     run_crud_workflow,
@@ -32,7 +30,7 @@ from .test_api import create_initial_admin
                 },
             ],
             id='groups',
-        )
+        ),
     ],
 )
 async def test_group_crud_and_list_workflow(

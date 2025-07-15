@@ -19,7 +19,8 @@ router = APIRouter(
     tags=['settings'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 router.include_router(api_token_router)

@@ -6,9 +6,9 @@ from pydantic import BaseModel, Field
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
 
 __all__ = (
-    'VersionOption',
     'VersionCustomField',
     'VersionMultiCustomField',
+    'VersionOption',
 )
 
 
@@ -42,7 +42,9 @@ class VersionCustomField(CustomField):
         opts = {opt.value: opt for opt in self.options}
         if value not in opts:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='option not found'
+                field=self,
+                value=value,
+                msg='option not found',
             )
         return opts[value]
 
@@ -64,17 +66,23 @@ class VersionMultiCustomField(CustomField):
             return value
         if not isinstance(value, list):
             raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a list'
+                field=self,
+                value=value,
+                msg='must be a list',
             )
         if not self.is_nullable and not value:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='cannot be empty'
+                field=self,
+                value=value,
+                msg='cannot be empty',
             )
         value = [self.__transform_single_value(val) for val in value]
         opts = {opt.value: opt for opt in self.options}
         for val in value:
             if val not in opts:
                 raise CustomFieldValidationError(
-                    field=self, value=value, msg=f'option {val} not found'
+                    field=self,
+                    value=value,
+                    msg=f'option {val} not found',
                 )
         return [opts[val] for val in value]

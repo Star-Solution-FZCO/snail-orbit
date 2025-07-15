@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import beanie.operators as bo
 import pymongo
@@ -54,11 +54,12 @@ class Group(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('origin', 1)], name='origin_index'),
             pymongo.IndexModel([('external_id', 1)], name='external_id_index'),
             pymongo.IndexModel(
-                [('predefined_scope', 1)], name='predefined_scope_index'
+                [('predefined_scope', 1)],
+                name='predefined_scope_index',
             ),
         ]
 

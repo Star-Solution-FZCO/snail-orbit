@@ -14,6 +14,10 @@ from pm.tasks.app import broker
 
 __all__ = ('task_notify_by_pararam',)
 
+
+MAX_FIELD_VALUE_LENGTH = 50
+TRUNCATED_FIELD_VALUE_LENGTH = MAX_FIELD_VALUE_LENGTH - 3  # Reserve space for '...'
+
 logger = get_logger(__name__)
 
 
@@ -28,7 +32,7 @@ def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
             },
         )
     except Exception as e:
-        logger.error(
+        logger.exception(
             'Failed to send Pararam notification',
             exc_info=e,
             extra={
@@ -73,12 +77,16 @@ def _format_field_value(value: Any, field: m.CustomFieldLink) -> str:
     if field.type == m.CustomFieldTypeT.DATETIME:
         if isinstance(value, str):
             return datetime.fromisoformat(value.replace('Z', '+00:00')).strftime(
-                '%d %b %Y %H:%M:%S'
+                '%d %b %Y %H:%M:%S',
             )
         return value.strftime('%d %b %Y %H:%M:%S')
 
     val_str = str(value)
-    return val_str[:47] + '...' if len(val_str) > 50 else val_str
+    return (
+        val_str[:TRUNCATED_FIELD_VALUE_LENGTH] + '...'
+        if len(val_str) > MAX_FIELD_VALUE_LENGTH
+        else val_str
+    )
 
 
 def _format_field_name(field: m.CustomFieldLink | str) -> str:
@@ -118,7 +126,9 @@ async def notify_by_pararam(
     field_changes: list[m.IssueFieldChange] | None = None,
 ) -> None:
     with log_context(
-        issue_id=issue_id_readable, project_id=project_id, task_name='notify_by_pararam'
+        issue_id=issue_id_readable,
+        project_id=project_id,
+        task_name='notify_by_pararam',
     ):
         logger.info(
             'Starting Pararam notification task',
@@ -165,7 +175,7 @@ async def notify_by_pararam(
 
         recipients_ids = {PydanticObjectId(u) for u in issue_subscribers}
         if project := await m.Project.find_one(
-            m.Project.id == PydanticObjectId(project_id)
+            m.Project.id == PydanticObjectId(project_id),
         ):
             recipients_ids.update(set(project.subscribers))
         recipients = {
@@ -188,7 +198,7 @@ async def notify_by_pararam(
                 _send_message(pararam_bot, recipient, message)
                 sent_count += 1
             except Exception as e:
-                logger.error(
+                logger.exception(
                     'Failed to send notification to recipient',
                     exc_info=e,
                     extra={
@@ -259,7 +269,7 @@ async def task_notify_by_pararam(
                 },
             )
         except Exception as e:
-            logger.error(
+            logger.exception(
                 'Task failed',
                 exc_info=e,
                 extra={

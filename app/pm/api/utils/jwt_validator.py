@@ -6,8 +6,8 @@ import jwt
 
 __all__ = (
     'JWTValidationError',
-    'validate_jwt',
     'is_jwt',
+    'validate_jwt',
 )
 
 

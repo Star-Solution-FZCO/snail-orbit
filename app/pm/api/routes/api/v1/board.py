@@ -54,7 +54,7 @@ from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType
 from pm.utils.pydantic_uuid import UUIDStr
-from pm.workflows import WorkflowException
+from pm.workflows import WorkflowError
 
 __all__ = ('router',)
 
@@ -63,7 +63,8 @@ router = APIRouter(
     tags=['board'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 
@@ -132,16 +133,16 @@ class BoardOutput(BaseModel):
     query: str | None = Field(description='Board query filter')
     projects: list[ProjectField] = Field(description='Associated projects')
     columns: BoardColumnOutputRootModel = Field(
-        description='Column configuration with discriminated values'
+        description='Column configuration with discriminated values',
     )
     swimlanes: BoardSwimlaneOutputRootModel | None = Field(
-        description='Swimlane configuration with discriminated values'
+        description='Swimlane configuration with discriminated values',
     )
     card_fields: list[CustomFieldGroupLinkOutput] = Field(
-        description='Fields shown on cards'
+        description='Fields shown on cards',
     )
     card_colors_fields: list[CustomFieldGroupLinkOutput] = Field(
-        description='Fields used for card colors'
+        description='Fields used for card colors',
     )
     ui_settings: dict = Field(description='UI configuration settings')
     created_by: UserOutput = Field(description='Board creator')
@@ -158,10 +159,12 @@ class BoardOutput(BaseModel):
             query=obj.query,
             projects=[ProjectField.from_obj(p) for p in obj.projects],
             columns=transform_field_with_values_to_discriminated(
-                obj.columns, obj.column_field
+                obj.columns,
+                obj.column_field,
             ),
             swimlanes=transform_field_with_values_to_discriminated(
-                obj.swimlanes, obj.swimlane_field
+                obj.swimlanes,
+                obj.swimlane_field,
             )
             if obj.swimlane_field
             else None,
@@ -229,8 +232,8 @@ async def list_boards(
             {'$match': filter_query},
             {
                 '$addFields': {
-                    'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']}
-                }
+                    'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']},
+                },
             },
             {'$sort': {'is_favorite': -1, 'name': 1}},
             {'$skip': query.offset},
@@ -275,7 +278,8 @@ async def create_board(
     column_field = column_field_[0]
     if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
+            HTTPStatus.BAD_REQUEST,
+            'Column field must be of type STATE or ENUM',
         )
     _all_projects_has_custom_field(column_field, projects)
     columns = await validate_custom_field_values(column_field, body.columns)
@@ -292,7 +296,8 @@ async def create_board(
             m.CustomFieldTypeT.USER_MULTI,
         ):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
+                HTTPStatus.BAD_REQUEST,
+                'Swimlane field can not be of type MULTI',
             )
         _all_projects_has_custom_field(swimlane_field, projects)
         swimlanes = await validate_custom_field_values(swimlane_field, body.swimlanes)
@@ -315,7 +320,7 @@ async def create_board(
                 target_type=m.PermissionTargetType.USER,
                 target=m.UserLinkField.from_obj(user_ctx.user),
                 permission_type=m.PermissionType.ADMIN,
-            )
+            ),
         ],
     )
     await board.insert()
@@ -348,7 +353,8 @@ async def update_board(
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this board')
 
     data = body.model_dump(
-        exclude_unset=True, include={'name', 'description', 'query', 'ui_settings'}
+        exclude_unset=True,
+        include={'name', 'description', 'query', 'ui_settings'},
     )
     for k, v in data.items():
         setattr(board, k, v)
@@ -361,7 +367,8 @@ async def update_board(
         if len(projects) != len(body.projects):
             not_found = set(body.projects) - {p.id for p in projects}
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, f'Projects not found: {not_found}'
+                HTTPStatus.BAD_REQUEST,
+                f'Projects not found: {not_found}',
             )
         board.projects = [m.ProjectLinkField.from_obj(p) for p in projects]
     else:
@@ -377,7 +384,8 @@ async def update_board(
             m.CustomFieldTypeT.ENUM,
         ):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Column field must be of type STATE or ENUM'
+                HTTPStatus.BAD_REQUEST,
+                'Column field must be of type STATE or ENUM',
             )
 
     _all_projects_has_custom_field(board.column_field, projects)
@@ -397,7 +405,8 @@ async def update_board(
                 m.CustomFieldTypeT.USER_MULTI,
             ):
                 raise HTTPException(
-                    HTTPStatus.BAD_REQUEST, 'Swimlane field can not be of type MULTI'
+                    HTTPStatus.BAD_REQUEST,
+                    'Swimlane field can not be of type MULTI',
                 )
             board.swimlane_field = swimlane_field
     if board.swimlane_field:
@@ -406,7 +415,8 @@ async def update_board(
             body.swimlanes if 'swimlanes' in body.model_fields_set else board.swimlanes
         )
         board.swimlanes = await validate_custom_field_values(
-            board.swimlane_field, swimlanes
+            board.swimlane_field,
+            swimlanes,
         )
     else:
         board.swimlanes = []
@@ -418,7 +428,7 @@ async def update_board(
 
     if 'card_colors_fields' in body.model_fields_set:
         board.card_colors_fields = await _resolve_custom_field_groups(
-            body.card_colors_fields
+            body.card_colors_fields,
         )
     for cf in board.card_colors_fields:
         validate_custom_field_has_one_color(cf)
@@ -445,10 +455,10 @@ async def delete_board(
 
 class BoardIssuesOutput(BaseModel):
     columns: BoardColumnOutputRootModel = Field(
-        description='Column configuration with discriminated values'
+        description='Column configuration with discriminated values',
     )
     swimlanes: BoardSwimlaneOutputRootModel | None = Field(
-        description='Swimlane configuration with discriminated values'
+        description='Swimlane configuration with discriminated values',
     )
     issues: list[list[list[IssueOutput]]]
 
@@ -470,13 +480,14 @@ async def get_board_issues(
         bo.In(
             m.Issue.project.id,
             user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-        )
+        ),
     )
 
     if board.query:
         try:
             flt, _ = await transform_query(
-                board.query, current_user_email=user_ctx.user.email
+                board.query,
+                current_user_email=user_ctx.user.email,
             )
             q = q.find(flt)
         except IssueQueryTransformError as err:
@@ -488,7 +499,8 @@ async def get_board_issues(
     if query.q:
         try:
             flt, _ = await transform_query(
-                query.q, current_user_email=user_ctx.user.email
+                query.q,
+                current_user_email=user_ctx.user.email,
             )
             q = q.find(flt)
         except IssueQueryTransformError as err:
@@ -578,13 +590,13 @@ async def get_board_issues(
 
     issues_list = []
 
-    for sl, cols in swimlanes.items():
+    for cols in swimlanes.values():
         swimlane_columns = []
         for col_value in board.columns:
             if col_value in cols:
                 issues = cols[col_value]
                 swimlane_columns.append(
-                    [IssueOutput.from_obj(issue) for issue in issues]
+                    [IssueOutput.from_obj(issue) for issue in issues],
                 )
             else:
                 swimlane_columns.append([])
@@ -596,7 +608,7 @@ async def get_board_issues(
             if col_value in non_swimlane:
                 issues = non_swimlane[col_value]
                 non_swimlane_columns.append(
-                    [IssueOutput.from_obj(issue) for issue in issues]
+                    [IssueOutput.from_obj(issue) for issue in issues],
                 )
             else:
                 non_swimlane_columns.append([])
@@ -605,15 +617,17 @@ async def get_board_issues(
     return SuccessPayloadOutput(
         payload=BoardIssuesOutput(
             columns=transform_field_with_values_to_discriminated(
-                board.columns, board.column_field
+                board.columns,
+                board.column_field,
             ),
             swimlanes=transform_field_with_values_to_discriminated(
-                board.swimlanes, board.swimlane_field
+                board.swimlanes,
+                board.swimlane_field,
             )
             if board.swimlane_field
             else None,
             issues=issues_list,
-        )
+        ),
     )
 
 
@@ -641,7 +655,8 @@ async def move_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx.validate_issue_permission(
-        issue, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+        issue,
+        PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
     )
 
     data = body.dict(exclude_unset=True)
@@ -653,7 +668,8 @@ async def move_issue(
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid column')
         if not (issue_field := issue.get_field_by_gid(board.column_field.gid)):
             raise HTTPException(
-                HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no column field'
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                'Issue has no column field',
             )
         issue_field.value = column
     if 'swimlane' in data:
@@ -666,12 +682,13 @@ async def move_issue(
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid swimlane')
         if not (issue_field := issue.get_field_by_gid(board.swimlane_field.gid)):
             raise HTTPException(
-                HTTPStatus.INTERNAL_SERVER_ERROR, 'Issue has no swimlane field'
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                'Issue has no swimlane field',
             )
         issue_field.value = swimlane
     if body.after_issue:
         after_issue: m.Issue | None = await m.Issue.find_one(
-            m.Issue.id == body.after_issue
+            m.Issue.id == body.after_issue,
         )
         if not after_issue:
             raise HTTPException(HTTPStatus.NOT_FOUND, 'After issue not found')
@@ -682,7 +699,7 @@ async def move_issue(
         try:
             for wf in pr.workflows:
                 await wf.run(issue)
-        except WorkflowException as err:
+        except WorkflowError as err:
             raise ValidateModelError(
                 payload=IssueOutput.from_obj(issue),
                 error_messages=[err.msg],
@@ -708,7 +725,7 @@ async def move_issue(
             Event(
                 type=EventType.ISSUE_UPDATE,
                 data={'issue_id': str(issue.id), 'project_id': str(issue.project.id)},
-            )
+            ),
         )
     board.move_issue(issue.id, after_issue.id if after_issue else None)
     await board.save_changes()
@@ -868,7 +885,8 @@ async def change_permission(
         )
     if not (
         perm := next(
-            (obj for obj in board.permissions if obj.id == permission_id), None
+            (obj for obj in board.permissions if obj.id == permission_id),
+            None,
         )
     ):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
@@ -900,7 +918,8 @@ async def revoke_permission(
         )
     if not (
         perm := next(
-            (obj for obj in board.permissions if obj.id == permission_id), None
+            (obj for obj in board.permissions if obj.id == permission_id),
+            None,
         )
     ):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
@@ -979,7 +998,7 @@ def _intersect_custom_fields(
         *(
             {m.CustomFieldGroupLink.from_obj(cf) for cf in pr.custom_fields}
             for pr in projects
-        )
+        ),
     )
 
 
@@ -1005,9 +1024,10 @@ def _any_projects_has_custom_field(
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'No projects specified')
     for p in projects:
         if any(cf.gid == field.gid for cf in p.custom_fields):
-            return None
+            return
     raise HTTPException(
-        HTTPStatus.BAD_REQUEST, f'Projects does not have custom field {field.name}'
+        HTTPStatus.BAD_REQUEST,
+        f'Projects does not have custom field {field.name}',
     )
 
 
@@ -1017,7 +1037,8 @@ async def _resolve_custom_field_groups(
     if not field_gids:
         return []
     results = await m.CustomField.find(
-        bo.In(m.CustomField.gid, field_gids), with_children=True
+        bo.In(m.CustomField.gid, field_gids),
+        with_children=True,
     ).to_list()
 
     groups = {cf.gid: m.CustomFieldGroupLink.from_obj(cf) for cf in results}
@@ -1061,5 +1082,6 @@ def validate_custom_field_has_one_color(
         m.CustomFieldTypeT.STATE,
     ):
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Card color field must be of type ENUM or STATE'
+            HTTPStatus.BAD_REQUEST,
+            'Card color field must be of type ENUM or STATE',
         )

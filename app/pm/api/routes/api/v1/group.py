@@ -202,7 +202,8 @@ async def remove_group_member(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     if group.origin != m.GroupOriginType.LOCAL:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'Cannot remove member from external group'
+            HTTPStatus.FORBIDDEN,
+            'Cannot remove member from external group',
         )
     if group.predefined_scope:
         raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot remove member from group')

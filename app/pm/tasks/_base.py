@@ -7,7 +7,7 @@ _DB_INITIALIZED = False
 
 async def setup_database() -> None:
     """Initialize database connection for the worker process."""
-    global _DB_INITIALIZED  # pylint: disable=global-statement
+    global _DB_INITIALIZED  # pylint: disable=global-statement  # noqa: PLW0603
     if _DB_INITIALIZED:
         return
 
@@ -35,7 +35,6 @@ def run_task(task: Coroutine) -> None:
 
     try:
         loop = asyncio.get_running_loop()
-        task_obj = loop.create_task(_run())
-        return task_obj
+        return loop.create_task(_run())
     except RuntimeError:
         return asyncio.run(_run())

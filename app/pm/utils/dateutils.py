@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 
 __all__ = (
-    'utcnow',
-    'utcfromtimestamp',
     'timestamp_from_utc',
+    'utcfromtimestamp',
+    'utcnow',
 )
 
 

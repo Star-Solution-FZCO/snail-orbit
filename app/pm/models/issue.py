@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, ClassVar, Literal, Self
 from uuid import UUID, uuid4
 
 import beanie.operators as bo
@@ -31,13 +31,13 @@ from .user import User, UserLinkField
 
 __all__ = (
     'Issue',
-    'IssueComment',
     'IssueAttachment',
-    'IssueHistoryRecord',
-    'IssueFieldChange',
+    'IssueComment',
     'IssueDraft',
-    'IssueInterlinkTypeT',
+    'IssueFieldChange',
+    'IssueHistoryRecord',
     'IssueInterlink',
+    'IssueInterlinkTypeT',
     'IssueLinkField',
 )
 
@@ -146,7 +146,7 @@ class Issue(DocumentWithReadOnlyProjection):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel(
                 [
                     ('subject', pymongo.TEXT),
@@ -162,17 +162,20 @@ class Issue(DocumentWithReadOnlyProjection):
             pymongo.IndexModel([('updated_at', -1)], name='updated_at_index'),
             pymongo.IndexModel([('aliases', 1)], name='aliases_index'),
             pymongo.IndexModel(
-                [('project.id', 1), ('created_at', -1)], name='project_created_at_index'
+                [('project.id', 1), ('created_at', -1)],
+                name='project_created_at_index',
             ),
             pymongo.IndexModel(
-                [('project.id', 1), ('updated_at', -1)], name='project_updated_at_index'
+                [('project.id', 1), ('updated_at', -1)],
+                name='project_updated_at_index',
             ),
             pymongo.IndexModel(
                 [('project.id', 1), ('resolved_at', 1)],
                 name='project_resolved_at_index',
             ),
             pymongo.IndexModel(
-                [('fields.gid', 1), ('fields.value', 1)], name='fields_gid_value_index'
+                [('fields.gid', 1), ('fields.value', 1)],
+                name='fields_gid_value_index',
             ),
             pymongo.IndexModel([('fields.id', 1)], name='fields_id_index'),
             pymongo.IndexModel([('fields.name', 1)], name='fields_name_index'),
@@ -184,7 +187,8 @@ class Issue(DocumentWithReadOnlyProjection):
             pymongo.IndexModel([('tags.id', 1)], name='tags_id_index'),
             pymongo.IndexModel([('tags.name', 1)], name='tags_name_index'),
             pymongo.IndexModel(
-                [('interlinks.issue.id', 1)], name='interlinks_issue_id_index'
+                [('interlinks.issue.id', 1)],
+                name='interlinks_issue_id_index',
             ),
             pymongo.IndexModel(
                 [('created_by.id', 1), ('created_at', -1)],
@@ -308,7 +312,8 @@ class Issue(DocumentWithReadOnlyProjection):
 
     async def get_project(self, fetch_links: bool = False) -> Project:
         pr: Project | None = await Project.find_one(
-            Project.id == self.project.id, fetch_links=fetch_links
+            Project.id == self.project.id,
+            fetch_links=fetch_links,
         )
         if not pr:
             raise ValueError(f'Project {self.project.id} not found')
@@ -320,7 +325,7 @@ class Issue(DocumentWithReadOnlyProjection):
         project: Project,
     ) -> None:
         await cls.find(cls.project.id == project.id).update(
-            {'$set': {'project': ProjectLinkField.from_obj(project)}}
+            {'$set': {'project': ProjectLinkField.from_obj(project)}},
         )
 
     @classmethod
@@ -339,10 +344,10 @@ class Issue(DocumentWithReadOnlyProjection):
             array_filters=[{'a.author.id': user.id}],
         )
         await cls.find(cls.created_by.id == user.id).update(
-            {'$set': {'created_by': user}}
+            {'$set': {'created_by': user}},
         )
         await cls.find(cls.updated_by.id == user.id).update(
-            {'$set': {'updated_by': user}}
+            {'$set': {'updated_by': user}},
         )
         await cls.find(cls.history.author.id == user.id).update(
             {'$set': {'history.$[h].author': user}},
@@ -354,13 +359,13 @@ class Issue(DocumentWithReadOnlyProjection):
                     '$elemMatch': {
                         'type': CustomFieldTypeT.OWNED,
                         'value.owner.id': user.id,
-                    }
-                }
-            }
+                    },
+                },
+            },
         ).update(
             {'$set': {'fields.$[f].value.owner': user}},
             array_filters=[
-                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id}
+                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id},
             ],
         )
         await cls.find(
@@ -369,9 +374,9 @@ class Issue(DocumentWithReadOnlyProjection):
                     '$elemMatch': {
                         'type': CustomFieldTypeT.OWNED_MULTI,
                         'value.owner.id': user.id,
-                    }
-                }
-            }
+                    },
+                },
+            },
         ).update(
             {'$set': {'fields.$[f].value.$[v].owner': user}},
             array_filters=[
@@ -382,7 +387,8 @@ class Issue(DocumentWithReadOnlyProjection):
 
     @classmethod
     async def update_field_embedded_links(
-        cls, field: CustomFieldLink | CustomField
+        cls,
+        field: CustomFieldLink | CustomField,
     ) -> None:
         if isinstance(field, CustomField):
             field = CustomFieldLink.from_obj(field)
@@ -401,7 +407,9 @@ class Issue(DocumentWithReadOnlyProjection):
 
     @classmethod
     async def remove_field_embedded_links(
-        cls, field_id: PydanticObjectId, flt: dict | None = None
+        cls,
+        field_id: PydanticObjectId,
+        flt: dict | None = None,
     ) -> None:
         q = cls.find({'fields': {'$elemMatch': {'id': field_id}}})
         if flt:
@@ -462,22 +470,27 @@ class Issue(DocumentWithReadOnlyProjection):
     @classmethod
     async def remove_tag_embedded_links(cls, tag_id: PydanticObjectId) -> None:
         await cls.find({'tags': {'$elemMatch': {'id': tag_id}}}).update(
-            {'$pull': {'tags': {'id': tag_id}}}
+            {'$pull': {'tags': {'id': tag_id}}},
         )
 
     def get_alias_by_slug(self, slug: str) -> str | None:
         slug_pattern = re.compile(rf'^{slug}-\d+$')
         return next(
-            (alias for alias in self.aliases if slug_pattern.fullmatch(alias)), None
+            (alias for alias in self.aliases if slug_pattern.fullmatch(alias)),
+            None,
         )
 
     @classmethod
     async def update_project_slug(
-        cls, project_id: PydanticObjectId, old_slug: str, new_slug: str
+        cls,
+        project_id: PydanticObjectId,
+        old_slug: str,
+        new_slug: str,
     ) -> None:
         slug_pattern = re.compile(rf'^{old_slug}-\d+$')
         async for issue in cls.find(
-            cls.project.id == project_id, bo.RegEx(cls.aliases, f'^{old_slug}-\d+$')
+            cls.project.id == project_id,
+            bo.RegEx(cls.aliases, rf'^{old_slug}-\d+$'),
         ):
             current_alias = next(
                 (alias for alias in issue.aliases if slug_pattern.fullmatch(alias)),
@@ -549,7 +562,8 @@ class IssueDraft(Document):
         if not self.project:
             return None
         pr: Project | None = await Project.find_one(
-            Project.id == self.project.id, fetch_links=fetch_links
+            Project.id == self.project.id,
+            fetch_links=fetch_links,
         )
         if not pr:
             raise ValueError(f'Project {self.project.id} not found')
@@ -563,7 +577,7 @@ class IssueDraft(Document):
         if isinstance(project, Project):
             project = ProjectLinkField.from_obj(project)
         await cls.find(cls.project.id == project.id).update(
-            {'$set': {'project': project}}
+            {'$set': {'project': project}},
         )
 
     @classmethod
@@ -574,7 +588,7 @@ class IssueDraft(Document):
         if isinstance(user, User):
             user = UserLinkField.from_obj(user)
         await cls.find(cls.created_by.id == user.id).update(
-            {'$set': {'created_by': user}}
+            {'$set': {'created_by': user}},
         )
         await cls.find(cls.attachments.author.id == user.id).update(
             {'$set': {'attachments.$[a].author': user}},
@@ -586,13 +600,13 @@ class IssueDraft(Document):
                     '$elemMatch': {
                         'type': CustomFieldTypeT.OWNED,
                         'value.owner.id': user.id,
-                    }
-                }
-            }
+                    },
+                },
+            },
         ).update(
             {'$set': {'fields.$[f].value.owner': user}},
             array_filters=[
-                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id}
+                {'f.type': CustomFieldTypeT.OWNED, 'f.value.owner.id': user.id},
             ],
         )
         await cls.find(
@@ -601,9 +615,9 @@ class IssueDraft(Document):
                     '$elemMatch': {
                         'type': CustomFieldTypeT.OWNED_MULTI,
                         'value.owner.id': user.id,
-                    }
-                }
-            }
+                    },
+                },
+            },
         ).update(
             {'$set': {'fields.$[f].value.$[v].owner': user}},
             array_filters=[
@@ -614,7 +628,8 @@ class IssueDraft(Document):
 
     @classmethod
     async def update_field_embedded_links(
-        cls, field: CustomFieldLink | CustomField
+        cls,
+        field: CustomFieldLink | CustomField,
     ) -> None:
         if isinstance(field, CustomField):
             field = CustomFieldLink.from_obj(field)
@@ -627,7 +642,9 @@ class IssueDraft(Document):
 
     @classmethod
     async def remove_field_embedded_links(
-        cls, field_id: PydanticObjectId, flt: dict | None = None
+        cls,
+        field_id: PydanticObjectId,
+        flt: dict | None = None,
     ) -> None:
         q = cls.find({'fields': {'$elemMatch': {'id': field_id}}})
         if flt:

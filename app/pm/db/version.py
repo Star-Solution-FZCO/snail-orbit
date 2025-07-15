@@ -5,7 +5,7 @@ from starsol_mongo_migrate import MigrationManager
 
 from pm.config import CONFIG
 
-__all__ = ('check_database_version', 'DatabaseVersionMismatchError')
+__all__ = ('DatabaseVersionMismatchError', 'check_database_version')
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +57,10 @@ def check_database_version() -> None:
                 )
                 return
             except Exception as e:
-                logger.error('Auto-migration failed: %s', e)
+                logger.exception('Auto-migration failed')
                 raise DatabaseVersionMismatchError(
                     f'Auto-migration failed from {current_str} to {latest_revision}. '
-                    f'Error: {e}. Try running migrations manually: python3 manage.py db up'
+                    f'Error: {e}. Try running migrations manually: python3 manage.py db up',
                 ) from e
 
         # Build error message for manual intervention

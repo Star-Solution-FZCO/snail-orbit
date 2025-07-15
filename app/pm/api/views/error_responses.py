@@ -150,19 +150,20 @@ STATUS_DESCRIPTIONS = {
 }
 
 __all__ = (
-    'error_responses',
     'AUTH_ERRORS',
-    'READ_ERRORS',
-    'WRITE_ERRORS',
     'CRUD_ERRORS',
-    'WRITE_ERRORS_WITH_CONFLICT',
     'CRUD_ERRORS_WITH_CONFLICT',
     'NOT_FOUND_RESPONSES',
+    'READ_ERRORS',
+    'WRITE_ERRORS',
+    'WRITE_ERRORS_WITH_CONFLICT',
+    'error_responses',
 )
 
 
 def _generate_error_response_schema(
-    model_class: type[BaseModel], description: str
+    model_class: type[BaseModel],
+    description: str,
 ) -> dict[str, Any]:
     """Generate an OpenAPI error response schema from a Pydantic model."""
     return {
@@ -229,19 +230,22 @@ def error_responses(
             model_class = unique_models[0]
             description = STATUS_DESCRIPTIONS.get(status_int, f'Error {status_int}')
             responses[status_int] = _generate_error_response_schema(
-                model_class, description
+                model_class,
+                description,
             )
         else:
             # Multiple models - use oneOf schema
             responses[status_int] = _generate_multi_model_response_schema(
-                status_int, unique_models
+                status_int,
+                unique_models,
             )
 
     return responses
 
 
 def _generate_multi_model_response_schema(
-    status_int: int, model_classes: list[type[BaseModel]]
+    status_int: int,
+    model_classes: list[type[BaseModel]],
 ) -> dict[str, Any]:
     """Generate oneOf schema for multiple model classes."""
     # Get description from our mapping

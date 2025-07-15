@@ -1,12 +1,11 @@
 import base64
 import hashlib
-import secrets
 import uuid
 from datetime import datetime
 from http import HTTPStatus
 from typing import TYPE_CHECKING
+from unittest import mock
 
-import mock
 import pytest
 import pytest_asyncio
 from cryptography.hazmat.primitives import serialization
@@ -23,7 +22,6 @@ from tests.utils.encryption import (
 
 from .create import (
     ALL_PERMISSIONS,
-    ROLE_PERMISSIONS_BY_CATEGORY,
     _upload_attachment,
     create_group,
     create_groups,
@@ -91,7 +89,8 @@ async def test_api_v1_version_get(test_client: 'TestClient') -> None:
 
 @pytest.mark.asyncio
 async def test_api_v1_profile_and_ui_settings(
-    test_client: 'TestClient', create_initial_admin: tuple[str, str]
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
 ) -> None:
     admin_id, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
@@ -139,7 +138,8 @@ async def test_api_v1_profile_and_ui_settings(
 
 @pytest.mark.asyncio
 async def test_api_v1_settings(
-    test_client: 'TestClient', create_initial_admin: tuple[str, str]
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
 ) -> None:
     admin_id, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
@@ -155,7 +155,9 @@ async def test_api_v1_settings(
     }
 
     response = test_client.post(
-        '/api/v1/settings/encryption_key', headers=headers, json=encryption_key_payload
+        '/api/v1/settings/encryption_key',
+        headers=headers,
+        json=encryption_key_payload,
     )
     assert response.status_code == 200
     response_data = response.json()
@@ -167,7 +169,8 @@ async def test_api_v1_settings(
     }
 
     response = test_client.get(
-        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+        f'/api/v1/settings/encryption_key/{fingerprint}',
+        headers=headers,
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -195,13 +198,15 @@ async def test_api_v1_settings(
     }
 
     response = test_client.delete(
-        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+        f'/api/v1/settings/encryption_key/{fingerprint}',
+        headers=headers,
     )
     assert response.status_code == 200
     assert response.json() == {'success': True}
 
     response = test_client.get(
-        f'/api/v1/settings/encryption_key/{fingerprint}', headers=headers
+        f'/api/v1/settings/encryption_key/{fingerprint}',
+        headers=headers,
     )
     assert response.status_code == 404
 
@@ -220,7 +225,7 @@ async def test_api_v1_settings(
                 'untag_on_close': True,
             },
             id='tag',
-        )
+        ),
     ],
 )
 async def test_api_v1_tag(
@@ -582,7 +587,8 @@ async def test_api_v1_custom_field_get_list_update(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.get(
-        f'/api/v1/custom_field/{create_custom_field["id"]}', headers=headers
+        f'/api/v1/custom_field/{create_custom_field["id"]}',
+        headers=headers,
     )
     field_expected_payload = {
         'id': create_custom_field['id'],
@@ -623,7 +629,9 @@ async def test_api_v1_custom_field_get_list_update(
     }
 
     response = test_client.get(
-        '/api/v1/custom_field/group/list', params=[('limit', 50)], headers=headers
+        '/api/v1/custom_field/group/list',
+        params=[('limit', 50)],
+        headers=headers,
     )
     assert response.status_code == 200
     assert response.json() == {
@@ -640,7 +648,7 @@ async def test_api_v1_custom_field_get_list_update(
                     'description': custom_field_payload['description'],
                     'ai_description': custom_field_payload['ai_description'],
                     'fields': [field_expected_payload],
-                }
+                },
             ],
         },
     }
@@ -692,7 +700,7 @@ async def test_api_v1_custom_field_get_list_update(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 async def test_api_v1_custom_field_project_link(
@@ -721,7 +729,7 @@ async def test_api_v1_custom_field_project_link(
                     'gid': create_custom_field['gid'],
                     'label': 'default',
                     **custom_field_payload,
-                }
+                },
             ],
             'card_fields': [],
             'workflows': [],
@@ -751,7 +759,7 @@ async def test_api_v1_custom_field_project_link(
                     'gid': create_custom_field['gid'],
                     'label': 'default',
                     **custom_field_payload,
-                }
+                },
             ],
             'card_fields': [create_custom_field['id']],
             'workflows': [],
@@ -780,7 +788,7 @@ async def test_api_v1_custom_field_project_link(
                     'gid': create_custom_field['gid'],
                     'label': 'default',
                     **custom_field_payload,
-                }
+                },
             ],
             'card_fields': [create_custom_field['id']],
             'workflows': [],
@@ -825,7 +833,10 @@ async def create_project_with_custom_fields(
 ) -> dict:
     for cf in create_custom_fields:
         await link_custom_field_to_project(
-            test_client, create_initial_admin, create_project, cf['id']
+            test_client,
+            create_initial_admin,
+            create_project,
+            cf['id'],
         )
     return {
         'project_id': create_project,
@@ -871,15 +882,16 @@ async def create_project_with_custom_fields(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
     'role_payload',
     [
         pytest.param(
-            {'name': 'Test role', 'description': 'Test role description'}, id='role'
-        )
+            {'name': 'Test role', 'description': 'Test role description'},
+            id='role',
+        ),
     ],
 )
 async def test_api_v1_custom_field_project_link_multiple(
@@ -943,7 +955,7 @@ async def test_api_v1_custom_field_project_link_multiple(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -956,7 +968,7 @@ async def test_api_v1_custom_field_project_link_multiple(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -971,7 +983,7 @@ async def test_api_v1_custom_field_project_link_multiple(
                 },
             },
             id='issue',
-        )
+        ),
     ],
 )
 async def test_api_v1_issue(
@@ -998,10 +1010,10 @@ async def test_api_v1_issue(
     assert response.status_code == 200
 
     with mock.patch(
-        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
     ) as mock_notify:
         response = test_client.post(
-            f'/api/v1/issue',
+            '/api/v1/issue',
             headers=headers,
             json={
                 'project_id': project_id,
@@ -1023,7 +1035,8 @@ async def test_api_v1_issue(
     data = response.json()
     assert data['success']
     assert filter_dict(
-        data['payload'], excluded_keys={'created_at', 'created_by', 'fields', 'project'}
+        data['payload'],
+        excluded_keys={'created_at', 'created_by', 'fields', 'project'},
     ) == {
         'id': issue_id,
         'aliases': [issue_readable_id],
@@ -1075,7 +1088,7 @@ async def test_api_v1_issue(
                 'ai_description': 'Test project AI description',
             },
             id='project',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1088,7 +1101,7 @@ async def test_api_v1_issue(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1112,7 +1125,7 @@ async def test_api_v1_issue(
                 },
             ],
             id='issues',
-        )
+        ),
     ],
 )
 async def test_api_v1_issue_link(
@@ -1141,7 +1154,7 @@ async def test_api_v1_issue_link(
     with mock.patch('pm.api.routes.api.v1.issue.issue.schedule_batched_notification'):
         for issue_payload in issue_payloads:
             response = test_client.post(
-                f'/api/v1/issue',
+                '/api/v1/issue',
                 headers=headers,
                 json={
                     'project_id': project_id,
@@ -1270,7 +1283,8 @@ async def add_user_to_group(
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
     response = test_client.post(
-        f'/api/v1/group/{group_id}/members/{user_id}', headers=headers
+        f'/api/v1/group/{group_id}/members/{user_id}',
+        headers=headers,
     )
     assert response.status_code == 200
 
@@ -1302,7 +1316,7 @@ async def add_user_to_group(
                 'query': 'Test field: "test query"',
             },
             id='share_search',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -1327,14 +1341,14 @@ async def test_api_v1_search_create(
                     'description': 'Test field',
                     'default_value': None,
                     'ai_description': None,
-                }
+                },
             ],
             id='custom_fields',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
-    'search_payload,expected_status',
+    ('search_payload', 'expected_status'),
     [
         pytest.param(
             {
@@ -1423,7 +1437,7 @@ async def test_api_v1_search_create_test_body_params(
                 'query': 'Test field: "test query"',
             },
             id='share_search',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -1478,7 +1492,7 @@ async def test_api_v1_search_grant_permission_with_user_flow(
     )
     assert response.status_code == 409
     response = test_client.get(
-        f'/api/v1/search/list',
+        '/api/v1/search/list',
         headers=user_headers,
     )
     data = response.json()
@@ -1494,7 +1508,7 @@ async def test_api_v1_search_grant_permission_with_user_flow(
                 'description': 'Test group for search sharing',
             },
             id='share_group',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1506,7 +1520,7 @@ async def test_api_v1_search_grant_permission_with_user_flow(
                 'query': 'Test field: "test query"',
             },
             id='share_search',
-        )
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1569,7 +1583,7 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     assert data['success']
     id = data['payload']['id']
     response = test_client.get(
-        f'/api/v1/search/list',
+        '/api/v1/search/list',
         headers=user_headers,
     )
     data = response.json()
@@ -1578,7 +1592,7 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     )  # user doesn't see shared search list because it's not in same group as admin
     await add_user_to_group(test_client, create_initial_admin, user_id, create_group)
     response = test_client.get(
-        f'/api/v1/search/list',
+        '/api/v1/search/list',
         headers=user_headers,
     )
     data = response.json()
@@ -1606,7 +1620,7 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
     )
     assert response.status_code == 404
     response = test_client.get(
-        f'/api/v1/search/list',
+        '/api/v1/search/list',
         headers=user_headers,
     )
     assert response.json()['payload']['count'] == 0
@@ -1639,7 +1653,7 @@ async def test_api_v1_search_grant_and_revoke_permission_with_group_flow(
                 'query': 'Test field: "test query"',
             },
             id='share_search',
-        )
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -1657,13 +1671,15 @@ async def test_api_v1_search_delete(
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
     response = test_client.delete(
-        f'/api/v1/search/{create_search}', headers=user_headers
+        f'/api/v1/search/{create_search}',
+        headers=user_headers,
     )
     assert response.status_code == 403
     response = test_client.delete(f'/api/v1/search/{UNKNOWN_ID}', headers=admin_headers)
     assert response.status_code == 404
     response = test_client.delete(
-        f'/api/v1/search/{create_search}', headers=admin_headers
+        f'/api/v1/search/{create_search}',
+        headers=admin_headers,
     )
     data = response.json()
     assert data['success']
@@ -1681,7 +1697,7 @@ async def test_api_v1_search_delete(
                 'permissions': ALL_PERMISSIONS,
             },
             id='role',
-        )
+        ),
     ],
 )
 async def test_api_v1_encrypted_project(
@@ -1700,7 +1716,8 @@ async def test_api_v1_encrypted_project(
         encryption_algorithm=serialization.NoEncryption(),
     )
     project_public_key_bytes = project_public_key.public_bytes(
-        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
     )
     project_public_key_b64 = base64.b64encode(project_public_key_bytes).decode('utf-8')
     project_fingerprint = hashlib.sha256(project_private_key_bytes).hexdigest()[0:8]
@@ -1713,7 +1730,8 @@ async def test_api_v1_encrypted_project(
         encryption_algorithm=serialization.NoEncryption(),
     )
     admin_public_key_bytes = admin_public_key.public_bytes(
-        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
     )
     admin_public_key_b64 = base64.b64encode(admin_public_key_bytes).decode('utf-8')
     admin_fingerprint = hashlib.sha256(admin_private_key_bytes).hexdigest()[0:8]
@@ -1758,7 +1776,9 @@ async def test_api_v1_encrypted_project(
     }
 
     response = test_client.post(
-        '/api/v1/project', json=project_data, headers=admin_headers
+        '/api/v1/project',
+        json=project_data,
+        headers=admin_headers,
     )
     assert response.status_code == 200
     response_data = response.json()
@@ -1770,7 +1790,8 @@ async def test_api_v1_encrypted_project(
     project_id = project['id']
 
     response = test_client.get(
-        f'/api/v1/project/{project_id}/encryption_key/list', headers=admin_headers
+        f'/api/v1/project/{project_id}/encryption_key/list',
+        headers=admin_headers,
     )
     assert response.status_code == 200
     response_data = response.json()
@@ -1812,7 +1833,7 @@ async def test_api_v1_encrypted_project(
     }
 
     with mock.patch(
-        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
     ) as mock_notify:
         response = test_client.post(
             '/api/v1/issue',
@@ -1846,7 +1867,7 @@ async def test_api_v1_encrypted_project(
                     'algorithm': 'X25519',
                     'data': admin_enc['encrypted_key'],
                     'extras': {
-                        'ephemeral_public_key': admin_enc['ephemeral_public_key']
+                        'ephemeral_public_key': admin_enc['ephemeral_public_key'],
                     },
                 },
                 {
@@ -1856,7 +1877,7 @@ async def test_api_v1_encrypted_project(
                     'algorithm': 'X25519',
                     'data': project_enc['encrypted_key'],
                     'extras': {
-                        'ephemeral_public_key': project_enc['ephemeral_public_key']
+                        'ephemeral_public_key': project_enc['ephemeral_public_key'],
                     },
                 },
             ],
@@ -1864,7 +1885,9 @@ async def test_api_v1_encrypted_project(
     }
 
     response = test_client.post(
-        f'/api/v1/issue/{issue_id}/comment', json=comment_data, headers=admin_headers
+        f'/api/v1/issue/{issue_id}/comment',
+        json=comment_data,
+        headers=admin_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -1877,7 +1900,8 @@ async def test_api_v1_encrypted_project(
     }
 
     response = test_client.get(
-        f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=admin_headers
+        f'/api/v1/issue/{issue_id}/comment/{comment_id}',
+        headers=admin_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -1908,18 +1932,20 @@ async def test_api_v1_encrypted_project(
 
     # issue encryption meta
     issue_attachment = _upload_attachment(
-        test_client, admin_headers, filename='issue_attachment.txt'
+        test_client,
+        admin_headers,
+        filename='issue_attachment.txt',
     )
     encryption_meta = comment_data['text']['encryption']
     with mock.patch(
-        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification'
+        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
     ) as mock_notify:
         response = test_client.put(
             f'/api/v1/issue/{issue_id}',
             headers=admin_headers,
             json={
                 'attachments': [
-                    {'id': issue_attachment, 'encryption': encryption_meta}
+                    {'id': issue_attachment, 'encryption': encryption_meta},
                 ],
             },
         )
@@ -1940,7 +1966,9 @@ async def test_api_v1_encrypted_project(
 
     # issue draft encryption meta
     draft_attachment = _upload_attachment(
-        test_client, admin_headers, filename='draft_attachment.txt'
+        test_client,
+        admin_headers,
+        filename='draft_attachment.txt',
     )
     resp = test_client.post(
         '/api/v1/issue/draft',
@@ -1962,7 +1990,9 @@ async def test_api_v1_encrypted_project(
 
     # comment encryption meta
     comment_attachment = _upload_attachment(
-        test_client, admin_headers, filename='comment_attachment.txt'
+        test_client,
+        admin_headers,
+        filename='comment_attachment.txt',
     )
     resp = test_client.post(
         f'/api/v1/issue/{issue_id}/comment/',
@@ -1977,7 +2007,8 @@ async def test_api_v1_encrypted_project(
     comment_id = comment['id']
     assert comment['attachments'][0]['encryption'] == encryption_meta
     resp = test_client.get(
-        f'/api/v1/issue/{issue_id}/comment/{comment_id}', headers=admin_headers
+        f'/api/v1/issue/{issue_id}/comment/{comment_id}',
+        headers=admin_headers,
     )
     assert resp.status_code == 200
     comment = resp.json()['payload']

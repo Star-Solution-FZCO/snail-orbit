@@ -58,5 +58,5 @@ async def get_spent_time(
         payload=IssueSpentTimeOutput(
             total_spent_time=sum((c.spent_time for c in issue.comments), start=0),
             records=records,
-        )
+        ),
     )

@@ -139,7 +139,7 @@ async def create_user(
 
     if body.send_email_invite or body.send_pararam_invite:
         password_token, password_token_obj = obj.gen_new_password_reset_token(
-            INVITE_PASSWORD_TOKEN_LIFETIME
+            INVITE_PASSWORD_TOKEN_LIFETIME,
         )
         obj.password_reset_token = password_token_obj
         await obj.save_changes()
@@ -191,7 +191,8 @@ async def update_user(
         k not in ALLOW_EXTERNAL_USER_UPDATE_FIELDS for k in changes
     ):
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'Cannot update user with external origin'
+            HTTPStatus.FORBIDDEN,
+            'Cannot update user with external origin',
         )
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)

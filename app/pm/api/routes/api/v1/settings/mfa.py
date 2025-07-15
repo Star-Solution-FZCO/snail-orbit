@@ -109,7 +109,7 @@ async def create_otp() -> SuccessPayloadOutput[TOTPCreateOut]:
             period=settings_obj.period,
             digits=settings_obj.digits,
             digest=settings_obj.digest,
-        )
+        ),
     )
 
 

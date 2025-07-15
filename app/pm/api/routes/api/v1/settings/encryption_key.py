@@ -34,7 +34,9 @@ async def list_encryption_keys(
 ) -> BaseListOutput[EncryptionKeyOut]:
     user_ctx = current_user()
     objs = sorted(
-        user_ctx.user.encryption_keys, key=lambda x: x.created_at, reverse=True
+        user_ctx.user.encryption_keys,
+        key=lambda x: x.created_at,
+        reverse=True,
     )
     return BaseListOutput.make(
         count=len(user_ctx.user.encryption_keys),
@@ -91,7 +93,8 @@ async def add_key(
         if key.fingerprint == body.fingerprint
     ):
         raise HTTPException(
-            HTTPStatus.CONFLICT, 'Key with such fingerprint already exists'
+            HTTPStatus.CONFLICT,
+            'Key with such fingerprint already exists',
         )
     obj = m.EncryptionKey(
         name=body.name,

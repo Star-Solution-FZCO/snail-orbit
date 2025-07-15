@@ -35,38 +35,38 @@ from .user_cf import (
 from .version_cf import VersionCustomField, VersionMultiCustomField, VersionOption
 
 __all__ = (
-    'get_cf_class',
+    'BooleanCustomField',
     'CustomField',
-    'CustomFieldLink',
-    'CustomFieldGroupLink',
-    'CustomFieldTypeT',
     'CustomFieldCanBeNoneError',
+    'CustomFieldGroupLink',
+    'CustomFieldLink',
+    'CustomFieldTypeT',
     'CustomFieldValidationError',
     'CustomFieldValue',
     'CustomFieldValueT',
-    'StringCustomField',
-    'IntegerCustomField',
-    'FloatCustomField',
-    'BooleanCustomField',
     'DateCustomField',
     'DateTimeCustomField',
     'DurationCustomField',
     'EnumCustomField',
     'EnumMultiCustomField',
     'EnumOption',
+    'FloatCustomField',
+    'GroupOption',
+    'IntegerCustomField',
+    'OwnedCustomField',
+    'OwnedMultiCustomField',
+    'OwnedOption',
     'StateCustomField',
     'StateOption',
-    'VersionCustomField',
-    'VersionMultiCustomField',
-    'VersionOption',
+    'StringCustomField',
     'UserCustomField',
     'UserMultiCustomField',
     'UserOption',
     'UserOptionType',
-    'GroupOption',
-    'OwnedCustomField',
-    'OwnedMultiCustomField',
-    'OwnedOption',
+    'VersionCustomField',
+    'VersionMultiCustomField',
+    'VersionOption',
+    'get_cf_class',
 )
 
 MAPPING = {
@@ -91,7 +91,7 @@ MAPPING = {
 
 def rebuild_models() -> None:
     # pylint: disable=import-outside-toplevel, unused-import, cyclic-import
-    from pm.models.project import Project
+    from pm.models.project import Project  # noqa: F401
 
     CustomField.model_rebuild()
     for cf in MAPPING.values():

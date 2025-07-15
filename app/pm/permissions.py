@@ -4,10 +4,10 @@ from enum import StrEnum
 from typing import Self
 
 __all__ = (
-    'Permissions',
     'PermAnd',
     'PermOr',
     'PermissionT',
+    'Permissions',
 )
 
 
@@ -51,7 +51,7 @@ class PermAnd(PermBinOp):
     def check(self, permissions: Collection[Permissions]) -> bool:
         return all(p.check(permissions) for p in self._permissions)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '(' + ' and '.join(str(p) for p in self._permissions) + ')'
 
 
@@ -59,7 +59,7 @@ class PermOr(PermBinOp):
     def check(self, permissions: Collection[Permissions]) -> bool:
         return any(p.check(permissions) for p in self._permissions)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '(' + ' or '.join(str(p) for p in self._permissions) + ')'
 
 

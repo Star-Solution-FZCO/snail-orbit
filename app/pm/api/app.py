@@ -1,4 +1,5 @@
 # pylint: disable=wrong-import-position, import-outside-toplevel, ungrouped-imports, wrong-import-order
+# ruff: noqa: E402
 from pm.patches.beanie_links import patch_beanie_construct_query
 
 patch_beanie_construct_query()
@@ -49,7 +50,8 @@ if CONFIG.ENABLE_PROFILING:
 
     @app.middleware('http')
     async def profiling_middleware(
-        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         profiling = request.query_params.get('profiling', False)
         if not profiling:
@@ -79,14 +81,15 @@ if CONFIG.RO_MODE:
 
     @app.middleware('http')
     async def ro_mode_middleware(
-        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         if request.method in RO_METHODS:
             return await call_next(request)
         return JSONResponse(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             content=jsonable_encoder(
-                ErrorOutput(error_messages=['Server is in the read-only mode'])
+                ErrorOutput(error_messages=['Server is in the read-only mode']),
             ),
         )
 
@@ -130,7 +133,7 @@ def authjwt_exception_handler(_: Request, exc: AuthJWTException) -> JSONResponse
     )
 
 
-from pm.api.error_handlers import connect_error_handlers  # noqa
+from pm.api.error_handlers import connect_error_handlers
 
 connect_error_handlers(app)
 
@@ -143,7 +146,7 @@ async def app_shutdown() -> None:
     await broker.shutdown()
 
 
-from pm.api.routes import api_router, events_router  # noqa
+from pm.api.routes import api_router, events_router
 
 app.include_router(api_router)
 app.include_router(events_router)

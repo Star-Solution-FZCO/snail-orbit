@@ -4,19 +4,19 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 
 FONT_NAME = 'MontserratAlt1-Regular.ttf'
+MINIMUM_BACKGROUND_COLOR_BYTES = 3
 
 __all__ = (
-    'resize_image',
+    'bytes_to_image',
     'generate_initials_image',
     'image_to_bytes',
-    'bytes_to_image',
+    'resize_image',
 )
 
 
 def resize_image(img: Image.Image, size: int) -> Image.Image:
     result = img.copy()
-    result = result.resize((size, size), Image.Resampling.LANCZOS)
-    return result
+    return result.resize((size, size), Image.Resampling.LANCZOS)
 
 
 def generate_initials_image(
@@ -25,8 +25,11 @@ def generate_initials_image(
     background_color_bytes: bytes | None = None,
     mode: str = 'RGBA',
 ) -> Image.Image:
-    if not background_color_bytes or len(background_color_bytes) < 3:
-        background_color_bytes = random.randbytes(3)  # nosec: blacklist
+    if (
+        not background_color_bytes
+        or len(background_color_bytes) < MINIMUM_BACKGROUND_COLOR_BYTES
+    ):
+        background_color_bytes = random.randbytes(3)  # nosec: blacklist  # noqa: S311
     initials = ''.join(
         word[0].upper() for word in name.split() if word and word[0].isalpha()
     )

@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import beanie.operators as bo
 import pymongo
@@ -49,11 +49,12 @@ class Tag(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
             pymongo.IndexModel([('color', 1)], name='color_index'),
             pymongo.IndexModel(
-                [('untag_on_resolve', 1)], name='untag_on_resolve_index'
+                [('untag_on_resolve', 1)],
+                name='untag_on_resolve_index',
             ),
             pymongo.IndexModel([('untag_on_close', 1)], name='untag_on_close_index'),
         ]

@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from http import HTTPStatus
 from typing import Annotated, Self
 from uuid import UUID
@@ -55,7 +56,8 @@ router = APIRouter(
     tags=['project'],
     dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 
@@ -119,10 +121,11 @@ class ProjectPermissionOutput(BaseModel):
 
     @classmethod
     def from_obj(cls, obj: m.ProjectPermission) -> Self:
-        if obj.target_type == m.PermissionTargetType.USER:
-            target = UserOutput.from_obj(obj.target)
-        else:
-            target = GroupOutput.from_obj(obj.target)
+        target = (
+            UserOutput.from_obj(obj.target)
+            if obj.target_type == m.PermissionTargetType.USER
+            else GroupOutput.from_obj(obj.target)
+        )
         return cls(
             id=obj.id,
             target_type=obj.target_type,
@@ -172,7 +175,7 @@ class ProjectResolvedPermissionOutput(BaseModel):
                             role=RoleLinkOutput.from_obj(perm.role),
                             type=perm.target_type,
                             source_group=None,
-                        )
+                        ),
                     )
             if (
                 perm.target_type == m.PermissionTargetType.GROUP
@@ -185,7 +188,7 @@ class ProjectResolvedPermissionOutput(BaseModel):
                             role=RoleLinkOutput.from_obj(perm.role),
                             type=perm.target_type,
                             source_group=GroupOutput.from_obj(perm.target),
-                        )
+                        ),
                     )
         return cls(
             user=UserOutput.from_obj(user),
@@ -198,7 +201,7 @@ class ProjectResolvedPermissionOutput(BaseModel):
                             label=label,
                             granted=bool(resolved[key]),
                             sources=resolved[key],
-                        )
+                        ),
                     ],
                 )
                 for category, perms in PERMISSIONS_BY_CATEGORY.items()
@@ -328,7 +331,7 @@ async def list_projects(
             bo.In(
                 m.Project.id,
                 user_ctx.get_projects_with_permission(Permissions.PROJECT_READ),
-            )
+            ),
         )
     if query.search:
         q = q.find(m.Project.search_query(query.search))
@@ -376,7 +379,7 @@ async def create_project(
         users = []
         if body.encryption_settings.users:
             users = await m.User.find(
-                bo.In(m.User.id, body.encryption_settings.users)
+                bo.In(m.User.id, body.encryption_settings.users),
             ).to_list()
             if len(users) != len(body.encryption_settings.users):
                 raise HTTPException(
@@ -433,7 +436,7 @@ async def update_project(
         users = []
         if body.encryption_settings.users:
             users = await m.User.find(
-                bo.In(m.User.id, body.encryption_settings.users)
+                bo.In(m.User.id, body.encryption_settings.users),
             ).to_list()
             if len(users) != len(body.encryption_settings.users):
                 raise HTTPException(
@@ -450,7 +453,10 @@ async def update_project(
                 'Project slug already used',
             )
         background_tasks.add_task(
-            m.Issue.update_project_slug, obj.id, obj.slug, body.slug
+            m.Issue.update_project_slug,
+            obj.id,
+            obj.slug,
+            body.slug,
         )
         obj.slug_history.append(obj.slug)
         obj.slug = body.slug
@@ -514,7 +520,8 @@ async def add_field(
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     field = await m.CustomField.find_one(
-        m.CustomField.id == field_id, with_children=True
+        m.CustomField.id == field_id,
+        with_children=True,
     )
     if not field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found')
@@ -522,7 +529,8 @@ async def add_field(
         raise HTTPException(HTTPStatus.CONFLICT, 'Field already added to project')
     if any(field.name == f.name for f in project.custom_fields):
         raise HTTPException(
-            HTTPStatus.CONFLICT, 'Field with the same name already in project'
+            HTTPStatus.CONFLICT,
+            'Field with the same name already in project',
         )
     project.custom_fields.append(field)
     if project.is_changed:
@@ -539,24 +547,25 @@ async def remove_field(
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     field = await m.CustomField.find_one(
-        m.CustomField.id == field_id, with_children=True
+        m.CustomField.id == field_id,
+        with_children=True,
     )
     if not field:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found')
     if not any(cf.id == field_id for cf in project.custom_fields):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Field not found in project')
     project.custom_fields = [cf for cf in project.custom_fields if cf.id != field.id]
-    try:
+    with contextlib.suppress(ValueError):
         project.card_fields.remove(field.id)
-    except ValueError:
-        pass
     if project.is_changed:
         await project.save_changes()
         await m.Issue.remove_field_embedded_links(
-            field_id, flt={'project.id': project_id}
+            field_id,
+            flt={'project.id': project_id},
         )
         await m.IssueDraft.remove_field_embedded_links(
-            field_id, flt={'project.id': project_id}
+            field_id,
+            flt={'project.id': project_id},
         )
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
@@ -572,7 +581,8 @@ async def move_field(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     if body.after_id == field_id:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Field cannot be moved after itself'
+            HTTPStatus.BAD_REQUEST,
+            'Field cannot be moved after itself',
         )
     try:
         field_idx = next(
@@ -581,7 +591,8 @@ async def move_field(
         field = project.custom_fields.pop(field_idx)
     except StopIteration as err:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, f'Field {field_id} not found in project fields'
+            HTTPStatus.BAD_REQUEST,
+            f'Field {field_id} not found in project fields',
         ) from err
     after_field_idx = -1
     if body.after_id:
@@ -631,18 +642,18 @@ async def resolve_permissions(
     for project_permission in project.permissions:
         if project_permission.target_type == m.PermissionTargetType.GROUP:
             group_users = await m.User.find(
-                m.User.groups.id == project_permission.target.id
+                m.User.groups.id == project_permission.target.id,
             ).to_list()
-            for user in group_users:
-                results.append(
-                    ProjectResolvedPermissionOutput.resolve_from_project(project, user)
-                )
+            results.extend(
+                ProjectResolvedPermissionOutput.resolve_from_project(project, user)
+                for user in group_users
+            )
         else:
             user = await m.User.find_one(m.User.id == project_permission.target.id)
             if not user:
                 continue
             results.append(
-                ProjectResolvedPermissionOutput.resolve_from_project(project, user)
+                ProjectResolvedPermissionOutput.resolve_from_project(project, user),
             )
 
     return BaseListOutput.make(
@@ -715,7 +726,8 @@ async def add_workflow(
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     workflow = await m.Workflow.find_one(
-        m.Workflow.id == workflow_id, with_children=True
+        m.Workflow.id == workflow_id,
+        with_children=True,
     )
     if not workflow:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
@@ -736,7 +748,8 @@ async def remove_workflow(
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     workflow = await m.Workflow.find_one(
-        m.Workflow.id == workflow_id, with_children=True
+        m.Workflow.id == workflow_id,
+        with_children=True,
     )
     if not workflow:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
@@ -744,7 +757,8 @@ async def remove_workflow(
         project.workflows.remove(workflow)
     except ValueError as err:
         raise HTTPException(
-            HTTPStatus.CONFLICT, 'Workflow not found in project'
+            HTTPStatus.CONFLICT,
+            'Workflow not found in project',
         ) from err
     if project.is_changed:
         await project.save_changes()
@@ -788,7 +802,8 @@ async def get_encryption_keys(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     if not project.encryption_settings:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Project encryption settings not found'
+            HTTPStatus.BAD_REQUEST,
+            'Project encryption settings not found',
         )
     items = [
         EncryptionKeyPublicOut.from_obj(
@@ -801,7 +816,7 @@ async def get_encryption_keys(
     ]
     if project.encryption_settings.users:
         users = await m.User.find(
-            bo.In(m.User.id, [user.id for user in project.encryption_settings.users])
+            bo.In(m.User.id, [user.id for user in project.encryption_settings.users]),
         ).to_list()
         for user in users:
             items.extend(
@@ -821,7 +836,7 @@ async def get_encryption_keys(
                 target_id=None,
                 public_key=CONFIG.ENCRYPTION_GLOBAL_PUBLIC_KEY,
                 algorithm=CONFIG.ENCRYPTION_GLOBAL_ALGORITHM,
-            )
+            ),
         )
     return BaseListOutput.make(
         count=len(items),
@@ -838,13 +853,18 @@ async def upload_project_avatar(
 ) -> SuccessOutput:
     client = get_storage_client()
     file_header = FileHeader(
-        size=file.size, name=file.filename, content_type=file.content_type
+        size=file.size,
+        name=file.filename,
+        content_type=file.content_type,
     )
     await client.upload_file(
-        project_id, file, file_header, folder=PROJECT_AVATAR_STORAGE_DIR
+        project_id,
+        file,
+        file_header,
+        folder=PROJECT_AVATAR_STORAGE_DIR,
     )
     await m.Project.find_one(m.Project.id == project_id).update(
-        {'$set': {'avatar_type': m.ProjectAvatarType.LOCAL}}
+        {'$set': {'avatar_type': m.ProjectAvatarType.LOCAL}},
     )
     return SuccessOutput()
 
@@ -859,6 +879,6 @@ async def delete_project_avatar(
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     await m.Project.find_one(m.Project.id == project_id).update(
-        {'$set': {'avatar_type': m.ProjectAvatarType.DEFAULT}}
+        {'$set': {'avatar_type': m.ProjectAvatarType.DEFAULT}},
     )
     return SuccessOutput()

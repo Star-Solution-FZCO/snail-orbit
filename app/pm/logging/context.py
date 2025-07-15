@@ -1,36 +1,41 @@
 import contextvars
 import logging
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import Any
 
 from beanie import PydanticObjectId
 
 __all__ = (
     'LogContext',
     'get_correlation_id',
+    'get_logger',
+    'log_context',
     'set_correlation_id',
-    'set_user_context',
     'set_project_context',
     'set_task_context',
-    'log_context',
-    'get_logger',
+    'set_user_context',
 )
 
 
 _correlation_id: contextvars.ContextVar[str] = contextvars.ContextVar(
-    'correlation_id', default=''
+    'correlation_id',
+    default='',
 )
 _user_id: contextvars.ContextVar[str] = contextvars.ContextVar('user_id', default='')
 _user_email: contextvars.ContextVar[str] = contextvars.ContextVar(
-    'user_email', default=''
+    'user_email',
+    default='',
 )
 _project_id: contextvars.ContextVar[str] = contextvars.ContextVar(
-    'project_id', default=''
+    'project_id',
+    default='',
 )
 _task_id: contextvars.ContextVar[str] = contextvars.ContextVar('task_id', default='')
 _task_name: contextvars.ContextVar[str] = contextvars.ContextVar(
-    'task_name', default=''
+    'task_name',
+    default='',
 )
 
 
@@ -76,7 +81,8 @@ def set_correlation_id(correlation_id: str) -> None:
 
 
 def set_user_context(
-    user_id: str | PydanticObjectId, user_email: str | None = None
+    user_id: str | PydanticObjectId,
+    user_email: str | None = None,
 ) -> None:
     _user_id.set(str(user_id))
     if user_email:

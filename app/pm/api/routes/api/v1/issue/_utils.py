@@ -24,7 +24,7 @@ async def update_attachments(
     attachments_by_id = {a.id: a for a in attachments}
     try:
         extra_attachments = await resolve_files(
-            attachments_by_id.keys() - set(a.id for a in obj.attachments)
+            attachments_by_id.keys() - {a.id for a in obj.attachments},
         )
     except ValueError as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
@@ -47,7 +47,7 @@ async def update_attachments(
                 author=m.UserLinkField.from_obj(user),
                 created_at=now,
                 encryption=attachments_by_id[a_id].encryption,
-            )
+            ),
         )
 
     obj.attachments = results

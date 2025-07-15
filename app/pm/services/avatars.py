@@ -12,11 +12,11 @@ from pm.utils.image import (
 )
 
 __all__ = (
-    'external_avatar_url',
-    'local_avatar_url',
     'AVATAR_STORAGE_DIR',
-    'generate_default_avatar',
     'PROJECT_AVATAR_STORAGE_DIR',
+    'external_avatar_url',
+    'generate_default_avatar',
+    'local_avatar_url',
 )
 
 
@@ -48,7 +48,9 @@ def local_avatar_url(email: str) -> str:
 async def generate_default_avatar(user: m.User) -> None:
     email_hash = avatar_hash(user.email)
     img = generate_initials_image(
-        user.name, AVATAR_SIZE, background_color_bytes=bytes.fromhex(email_hash)
+        user.name,
+        AVATAR_SIZE,
+        background_color_bytes=bytes.fromhex(email_hash),
     )
     client = get_storage_client()
     data = image_to_bytes(img, format_=AVATAR_FORMAT.upper()).read()

@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Mapping, Sequence, get_args
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, Any, get_args
 
 import beanie.operators as bo
 import pyparsing as pp
@@ -95,7 +96,7 @@ class NotOp:
 
 
 FIELD_PART = pp.Group(
-    pp.Word(pp.alphanums) + pp.ZeroOrMore(pp.Char('_') + pp.Word(pp.alphanums))
+    pp.Word(pp.alphanums) + pp.ZeroOrMore(pp.Char('_') + pp.Word(pp.alphanums)),
 ).setResultsName('field_part')
 
 FIELD_NAME = FIELD_PART + pp.Optional(pp.OneOrMore(pp.Suppress('__') + FIELD_PART))
@@ -105,13 +106,13 @@ FILTER_EXPRESSION = pp.Group(
     FIELD_NAME
     + pp.Optional(
         pp.Group(
-            pp.Suppress('___') + pp.oneOf(AVAILABLE_OPERATORS_STRING)
-        ).setResultsName('operator')
+            pp.Suppress('___') + pp.oneOf(AVAILABLE_OPERATORS_STRING),
+        ).setResultsName('operator'),
     )
     + pp.Suppress(':')
     + pp.Group(
-        pp.DelimitedList(pp.QuotedString('"') | pp.Word(pp.alphanums + '.'))
-    ).setResultsName('value')
+        pp.DelimitedList(pp.QuotedString('"') | pp.Word(pp.alphanums + '.')),
+    ).setResultsName('value'),
 )
 
 
@@ -126,7 +127,7 @@ FILTER_STRING = pp.infixNotation(
 
 
 SORT_EXPRESSION = pp.Group(FIELD_NAME).setResultsName('asc_field') | pp.Group(
-    pp.Suppress('-') + FIELD_NAME
+    pp.Suppress('-') + FIELD_NAME,
 ).setResultsName('desc_field')
 
 SORT_STRING = pp.DelimitedList(SORT_EXPRESSION)
@@ -135,7 +136,7 @@ SORT_STRING = pp.DelimitedList(SORT_EXPRESSION)
 def convert_value(value: Any, inner_type: type) -> Any:
     if isinstance(value, list):
         return [convert_value(v, inner_type) for v in value]
-    if inner_type == bool:
+    if inner_type is bool:
         return str(value).lower() not in ('false', '0')
     try:
         return inner_type(value)
@@ -144,7 +145,10 @@ def convert_value(value: Any, inner_type: type) -> Any:
 
 
 def get_operator(
-    field_name: str, field_type: 'FieldInfo', value: Any, operator: str = None
+    field_name: str,
+    field_type: 'FieldInfo',
+    value: Any,
+    operator: str | None = None,
 ) -> 'BaseFindOperator':
     outer = field_type.annotation
     inner = args_[0] if (args_ := get_args(outer)) else outer
@@ -182,7 +186,7 @@ def get_available_field(
         field = model.model_fields[field_parts[0]]
     except KeyError as err:
         raise PermissionError(
-            f'you can not search by this field "{field_name}"'
+            f'you can not search by this field "{field_name}"',
         ) from err
     return field_name, field
 
@@ -201,10 +205,7 @@ def transform_filter_expression(
         if p.get_name() == 'operator':
             operator = ''.join(p)
         if p.get_name() == 'value':
-            if len(p) > 1:
-                value = list(p)
-            else:
-                value = ''.join(p)
+            value = list(p) if len(p) > 1 else ''.join(p)
     field_name, field = get_available_field(field_parts, model, available_fields)
     return get_operator(field_name, field, value, operator)
 
@@ -212,7 +213,7 @@ def transform_filter_expression(
 def transform_filter(
     parsed: pp.ParseResults,
     model: type[Document],
-    available_fields: Sequence[str] = None,
+    available_fields: Sequence[str] | None = None,
     not_: bool = False,
 ) -> Mapping[str, Any]:
     if isinstance(parsed, OrOp):
@@ -221,7 +222,7 @@ def transform_filter(
             *(
                 transform_filter(part, model, available_fields)
                 for part in parsed.operands
-            )
+            ),
         )
     if isinstance(parsed, AndOp):
         if not_:
@@ -229,13 +230,13 @@ def transform_filter(
                 *(
                     transform_filter(part, model, available_fields, not_=True)
                     for part in parsed.operands
-                )
+                ),
             )
         return bo.And(
             *(
                 transform_filter(part, model, available_fields)
                 for part in parsed.operands
-            )
+            ),
         )
     if isinstance(parsed, NotOp):
         return transform_filter(parsed.operand, model, available_fields, not_=not not_)
@@ -263,20 +264,28 @@ def transform_sort(
 
 
 def parse_filter(
-    model: type[Document], query: str, available_fields: Sequence[str] | None = None
+    model: type[Document],
+    query: str,
+    available_fields: Sequence[str] | None = None,
 ) -> Mapping[str, Any]:
     if not query:
         return {}
     return transform_filter(
-        FILTER_STRING.parse_string(query, False)[0], model, available_fields
+        FILTER_STRING.parse_string(query, False)[0],
+        model,
+        available_fields,
     )
 
 
 def parse_sort(
-    model: type[Document], query: str, available_fields: Sequence[str] | None = None
+    model: type[Document],
+    query: str,
+    available_fields: Sequence[str] | None = None,
 ) -> list[str]:
     if not query:
         return []
     return transform_sort(
-        SORT_STRING.parse_string(query, False), model, available_fields
+        SORT_STRING.parse_string(query, False),
+        model,
+        available_fields,
     )

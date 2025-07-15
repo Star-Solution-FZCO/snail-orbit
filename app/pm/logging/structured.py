@@ -1,7 +1,7 @@
 import json
 import logging
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pm.config import CONFIG
@@ -15,9 +15,7 @@ __all__ = (
 
 def get_structured_log_data(record: logging.LogRecord) -> dict[str, Any]:
     data = {
-        'timestamp': datetime.fromtimestamp(
-            record.created, tz=timezone.utc
-        ).isoformat(),
+        'timestamp': datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
         'level': record.levelname,
         'logger': record.name,
         'message': record.getMessage(),
@@ -84,8 +82,14 @@ def sanitize_log_data(data: dict[str, Any]) -> dict[str, Any]:
 
 
 class StructuredJSONFormatter(logging.Formatter):
+    # ruff: noqa: ARG002
     def __init__(
-        self, fmt=None, datefmt=None, style='%', validate=True, **_kwargs
+        self,
+        fmt: str | None = None,
+        datefmt: str | None = None,
+        style: str = '%',
+        validate: bool = True,
+        **_kwargs: Any,
     ) -> None:
         super().__init__()
 
@@ -95,10 +99,10 @@ class StructuredJSONFormatter(logging.Formatter):
             if not CONFIG.DEV_MODE:
                 data = sanitize_log_data(data)
             return json.dumps(data, default=str, ensure_ascii=False)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return json.dumps(
                 {
-                    'timestamp': datetime.now(tz=timezone.utc).isoformat(),
+                    'timestamp': datetime.now(tz=UTC).isoformat(),
                     'level': 'ERROR',
                     'logger': 'pm.logging.structured',
                     'message': f'Failed to format log record: {e}',

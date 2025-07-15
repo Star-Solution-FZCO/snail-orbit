@@ -11,11 +11,11 @@ from pm.models.user import User, UserLinkField
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
 
 __all__ = (
+    'GroupOption',
     'UserCustomField',
     'UserMultiCustomField',
-    'UserOptionType',
     'UserOption',
-    'GroupOption',
+    'UserOptionType',
 )
 
 
@@ -87,7 +87,7 @@ class UserCustomFieldMixin:
         ).update(
             {'$set': {'options.$[o].value.group': GroupLinkField.from_obj(group)}},
             array_filters=[
-                {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP}
+                {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP},
             ],
         )
 
@@ -105,8 +105,8 @@ class UserCustomFieldMixin:
                     'options': {
                         'value.group.id': group_id,
                         'type': UserOptionType.GROUP,
-                    }
-                }
+                    },
+                },
             },
         )
 
@@ -119,7 +119,7 @@ class UserCustomFieldMixin:
             ).update(
                 {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
                 array_filters=[
-                    {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP}
+                    {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP},
                 ],
             )
             return
@@ -142,16 +142,16 @@ class UserCustomFieldMixin:
                         'type': UserOptionType.GROUP,
                         'value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
                         'value.users.id': {'$ne': user.id},
-                    }
-                }
-            }
+                    },
+                },
+            },
         ).update(
             {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
             array_filters=[
                 {
                     'o.value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
                     'o.type': UserOptionType.GROUP,
-                }
+                },
             ],
         )
 
@@ -170,12 +170,16 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
             value = PydanticObjectId(value)
         except ValueError as err:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a valid ObjectId'
+                field=self,
+                value=value,
+                msg='must be a valid ObjectId',
             ) from err
         users = {u.id: u for opt in self.options for u in opt.users}
         if value not in users:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='user not found in options'
+                field=self,
+                value=value,
+                msg='user not found in options',
             )
         return users[value]
 
@@ -190,26 +194,35 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
             return value
         if not isinstance(value, list):
             raise CustomFieldValidationError(
-                field=self, value=value, msg='must be a list'
+                field=self,
+                value=value,
+                msg='must be a list',
             )
         if not self.is_nullable and not value:
             raise CustomFieldValidationError(
-                field=self, value=value, msg='cannot be empty'
+                field=self,
+                value=value,
+                msg='cannot be empty',
             )
         users = {u.id: u for opt in self.options for u in opt.users}
         results = []
         for val in value:
-            if isinstance(val, UserLinkField):
-                val = val.id
+            user_id = val
+            if isinstance(user_id, UserLinkField):
+                user_id = user_id.id
             try:
-                val = PydanticObjectId(val)
+                user_id = PydanticObjectId(user_id)
             except ValueError as err:
                 raise CustomFieldValidationError(
-                    field=self, value=value, msg='must be a valid ObjectId'
+                    field=self,
+                    value=value,
+                    msg='must be a valid ObjectId',
                 ) from err
-            if val not in users:
+            if user_id not in users:
                 raise CustomFieldValidationError(
-                    field=self, value=value, msg=f'user {val} not found'
+                    field=self,
+                    value=value,
+                    msg=f'user {user_id} not found',
                 )
-            results.append(users[val])
+            results.append(users[user_id])
         return results

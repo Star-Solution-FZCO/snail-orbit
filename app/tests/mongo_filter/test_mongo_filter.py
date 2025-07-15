@@ -21,26 +21,36 @@ class MockDocument(Document):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'filter_, expected',
+    ('filter_', 'expected'),
     [
         pytest.param('', {}, id='empty'),
         pytest.param('name: test', {'name': 'test'}, id='name'),
         pytest.param('int_field:10', {'int_field': 10}, id='int_field'),
         pytest.param('int_field___eq:10', {'int_field': 10}, id='int_field___eq'),
         pytest.param(
-            'int_field___ne:10', {'int_field': {'$ne': 10}}, id='int_field___ne'
+            'int_field___ne:10',
+            {'int_field': {'$ne': 10}},
+            id='int_field___ne',
         ),
         pytest.param(
-            'int_field___lt:10', {'int_field': {'$lt': 10}}, id='int_field___lt'
+            'int_field___lt:10',
+            {'int_field': {'$lt': 10}},
+            id='int_field___lt',
         ),
         pytest.param(
-            'int_field___lte:10', {'int_field': {'$lte': 10}}, id='int_field___lte'
+            'int_field___lte:10',
+            {'int_field': {'$lte': 10}},
+            id='int_field___lte',
         ),
         pytest.param(
-            'int_field___gt:10', {'int_field': {'$gt': 10}}, id='int_field___gt'
+            'int_field___gt:10',
+            {'int_field': {'$gt': 10}},
+            id='int_field___gt',
         ),
         pytest.param(
-            'int_field___gte:10', {'int_field': {'$gte': 10}}, id='int_field___gte'
+            'int_field___gte:10',
+            {'int_field': {'$gte': 10}},
+            id='int_field___gte',
         ),
         pytest.param(
             'int_field___in:10,20',
@@ -54,7 +64,9 @@ class MockDocument(Document):
         ),
         pytest.param('str_field:"test"', {'str_field': 'test'}, id='str_field___quote'),
         pytest.param(
-            'str_field:test', {'str_field': 'test'}, id='str_field___no_quote'
+            'str_field:test',
+            {'str_field': 'test'},
+            id='str_field___no_quote',
         ),
         pytest.param(
             'str_field___eq:"test test"',
@@ -62,7 +74,9 @@ class MockDocument(Document):
             id='str_field___eq',
         ),
         pytest.param(
-            'str_field___ne:"test"', {'str_field': {'$ne': 'test'}}, id='str_field___ne'
+            'str_field___ne:"test"',
+            {'str_field': {'$ne': 'test'}},
+            id='str_field___ne',
         ),
         pytest.param(
             'str_field___contains:"test"',
@@ -96,7 +110,9 @@ class MockDocument(Document):
         ),
         pytest.param('bool_field:True', {'bool_field': True}, id='bool_field___True'),
         pytest.param(
-            'bool_field:False', {'bool_field': False}, id='bool_field___False'
+            'bool_field:False',
+            {'bool_field': False},
+            id='bool_field___False',
         ),
         pytest.param('bool_field:1', {'bool_field': True}, id='bool_field___1'),
         pytest.param('bool_field:0', {'bool_field': False}, id='bool_field___0'),
@@ -105,13 +121,19 @@ class MockDocument(Document):
         pytest.param('float_field:122', {'float_field': 122.0}, id='float_field___0'),
         pytest.param('float_field:1.2', {'float_field': 1.2}, id='float_field___1.2'),
         pytest.param(
-            'float_field___eq:1.2', {'float_field': 1.2}, id='float_field___eq'
+            'float_field___eq:1.2',
+            {'float_field': 1.2},
+            id='float_field___eq',
         ),
         pytest.param(
-            'float_field___ne:1.2', {'float_field': {'$ne': 1.2}}, id='float_field___ne'
+            'float_field___ne:1.2',
+            {'float_field': {'$ne': 1.2}},
+            id='float_field___ne',
         ),
         pytest.param(
-            'float_field___lt:1.2', {'float_field': {'$lt': 1.2}}, id='float_field___lt'
+            'float_field___lt:1.2',
+            {'float_field': {'$lt': 1.2}},
+            id='float_field___lt',
         ),
         pytest.param(
             'float_field___lte:1.2',
@@ -119,7 +141,9 @@ class MockDocument(Document):
             id='float_field___lte',
         ),
         pytest.param(
-            'float_field___gt:1.2', {'float_field': {'$gt': 1.2}}, id='float_field___gt'
+            'float_field___gt:1.2',
+            {'float_field': {'$gt': 1.2}},
+            id='float_field___gt',
         ),
         pytest.param(
             'float_field___gte:1.2',
@@ -148,7 +172,9 @@ class MockDocument(Document):
             id='int_list_field___nin',
         ),
         pytest.param(
-            'str_list_field:"1"', {'str_list_field': '1'}, id='str_list_field'
+            'str_list_field:"1"',
+            {'str_list_field': '1'},
+            id='str_list_field',
         ),
         pytest.param(
             'str_list_field___in:"1","2","3"',
@@ -161,7 +187,9 @@ class MockDocument(Document):
             id='str_list_field___nin',
         ),
         pytest.param(
-            'float_list_field:1.0', {'float_list_field': 1.0}, id='float_list_field'
+            'float_list_field:1.0',
+            {'float_list_field': 1.0},
+            id='float_list_field',
         ),
         pytest.param(
             'float_list_field___in:1.0,2.0,3.0',
@@ -221,7 +249,9 @@ class MockDocument(Document):
             id='and_not',
         ),
         pytest.param(
-            'not str_field: test', {'str_field': {'$not': {'$eq': 'test'}}}, id='not'
+            'not str_field: test',
+            {'str_field': {'$not': {'$eq': 'test'}}},
+            id='not',
         ),
         pytest.param(
             'str_field: test and not int_field: 10',
@@ -234,7 +264,7 @@ class MockDocument(Document):
                 '$and': [
                     {'str_field': 'test'},
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
-                ]
+                ],
             },
             id='and_not_brackets',
         ),
@@ -249,7 +279,7 @@ class MockDocument(Document):
                 '$and': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'str_field': 'test'},
-                ]
+                ],
             },
             id='nor_and',
         ),
@@ -259,7 +289,7 @@ class MockDocument(Document):
                 '$or': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'str_field': 'test'},
-                ]
+                ],
             },
             id='nor_or',
         ),
@@ -269,7 +299,7 @@ class MockDocument(Document):
                 '$and': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'str_field': {'$not': {'$eq': 'test'}}},
-                ]
+                ],
             },
             id='nor_and_not',
         ),
@@ -279,7 +309,7 @@ class MockDocument(Document):
                 '$or': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'str_field': {'$not': {'$eq': 'test'}}},
-                ]
+                ],
             },
             id='nor_or_not',
         ),
@@ -289,7 +319,7 @@ class MockDocument(Document):
                 '$and': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'$nor': [{'str_field': 'test'}, {'float_field': 1.0}]},
-                ]
+                ],
             },
             id='nor_and_nor',
         ),
@@ -299,7 +329,7 @@ class MockDocument(Document):
                 '$or': [
                     {'$nor': [{'int_field': 10}, {'bool_field': True}]},
                     {'$nor': [{'str_field': 'test'}, {'float_field': 1.0}]},
-                ]
+                ],
             },
             id='nor_or_nor',
         ),
@@ -315,7 +345,7 @@ class MockDocument(Document):
                     {'int_field': {'$not': {'$eq': 10}}},
                     {'bool_field': {'$not': {'$eq': True}}},
                     {'str_field': {'$not': {'$eq': 'test'}}},
-                ]
+                ],
             },
             id='not_and',
         ),
@@ -330,7 +360,7 @@ async def test_mongo_filter(filter_: str, expected: dict) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    'sort_, expected',
+    ('sort_', 'expected'),
     [
         pytest.param('name', ['name'], id='name'),
         pytest.param('-name', ['-name'], id='-name'),

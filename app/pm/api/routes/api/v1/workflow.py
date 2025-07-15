@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Self, Union
+from typing import Self
 
 from beanie import PydanticObjectId
 from croniter import croniter
@@ -86,12 +86,13 @@ def output_from_obj(obj: m.Workflow) -> WorkflowOutput:
 @router.get(
     '/list',
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput), (HTTPStatus.FORBIDDEN, ErrorOutput)
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 async def list_workflow(
     query: ListParams = Depends(),
-) -> BaseListOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
+) -> BaseListOutput[WorkflowOutput | ScheduledWorkflowOutput]:
     q = m.Workflow.find(with_children=True)
     query.apply_filter(q, m.Workflow)
     query.apply_sort(q, m.Workflow, (m.Workflow.name,))
@@ -115,7 +116,7 @@ async def list_workflow(
 )
 async def get_workflow(
     workflow_id: PydanticObjectId,
-) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
+) -> SuccessPayloadOutput[WorkflowOutput | ScheduledWorkflowOutput]:
     obj = await m.Workflow.find_one(m.Workflow.id == workflow_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
@@ -130,7 +131,7 @@ async def get_workflow(
         (HTTPStatus.NOT_FOUND, ErrorOutput),
     ),
 )
-async def delete_workflow(workflow_id: PydanticObjectId):
+async def delete_workflow(workflow_id: PydanticObjectId) -> ModelIdOutput:
     obj = await m.Workflow.get(workflow_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
@@ -149,20 +150,22 @@ async def delete_workflow(workflow_id: PydanticObjectId):
 )
 async def create_workflow(
     body: WorkflowCreate,
-) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
+) -> SuccessPayloadOutput[WorkflowOutput | ScheduledWorkflowOutput]:
     if body.type == m.WorkflowType.SCHEDULED:
         if not body.schedule:
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Schedule is required for scheduled workflow'
+                HTTPStatus.BAD_REQUEST,
+                'Schedule is required for scheduled workflow',
             )
         if not croniter.is_valid(body.schedule):
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, 'Schedule should be valid cron expression'
+                HTTPStatus.BAD_REQUEST,
+                'Schedule should be valid cron expression',
             )
         obj = m.ScheduledWorkflow(**body.model_dump(exclude_unset=True))
     else:
         obj = m.OnChangeWorkflow(
-            **body.model_dump(exclude_unset=True, exclude={'schedule'})
+            **body.model_dump(exclude_unset=True, exclude={'schedule'}),
         )
     await obj.insert()
     return SuccessPayloadOutput(payload=output_from_obj(obj))
@@ -179,8 +182,9 @@ async def create_workflow(
     ),
 )
 async def update_workflow(
-    workflow_id: PydanticObjectId, body: WorkflowUpdate
-) -> SuccessPayloadOutput[Union[WorkflowOutput, ScheduledWorkflowOutput]]:
+    workflow_id: PydanticObjectId,
+    body: WorkflowUpdate,
+) -> SuccessPayloadOutput[WorkflowOutput | ScheduledWorkflowOutput]:
     obj = await m.Workflow.get(workflow_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Workflow not found')
@@ -189,7 +193,8 @@ async def update_workflow(
         if isinstance(obj, m.ScheduledWorkflow):
             if not body.schedule or not croniter.is_valid(body.schedule):
                 raise HTTPException(
-                    HTTPStatus.BAD_REQUEST, 'Schedule should be valid cron expression'
+                    HTTPStatus.BAD_REQUEST,
+                    'Schedule should be valid cron expression',
                 )
             obj.schedule = body.schedule
         del update_data['schedule']

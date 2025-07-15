@@ -7,8 +7,8 @@ import pm.models as m
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 
 __all__ = (
-    'RoleOutput',
     'RoleLinkOutput',
+    'RoleOutput',
 )
 
 

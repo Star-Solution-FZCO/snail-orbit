@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 import beanie.operators as bo
 import pymongo
@@ -7,7 +7,7 @@ from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 
 from ._audit import audited_model
-from .group import GroupLinkField
+from .group import Group, GroupLinkField
 from .permission import (
     PermissionRecord,
     PermissionTargetType,
@@ -16,6 +16,9 @@ from .permission import (
     _filter_permissions,
 )
 from .user import UserLinkField
+
+if TYPE_CHECKING:
+    from pm.api.context import UserContext
 
 __all__ = ('Search',)
 
@@ -27,7 +30,7 @@ class Search(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel(
                 [
                     ('permissions.target_type', 1),
@@ -53,7 +56,8 @@ class Search(Document):
         return any(p.target.id == target.id for p in self.permissions)
 
     def has_any_other_admin_target(
-        self, target: UserLinkField | GroupLinkField
+        self,
+        target: UserLinkField | GroupLinkField,
     ) -> bool:
         return (
             sum(
@@ -65,10 +69,12 @@ class Search(Document):
             > 0
         )
 
-    def filter_permissions(self, user_ctx) -> list[PermissionRecord]:
+    def filter_permissions(self, user_ctx: 'UserContext') -> list[PermissionRecord]:
         return _filter_permissions(self, user_ctx)
 
-    def check_permissions(self, user_ctx, required_permission: PermissionType) -> bool:
+    def check_permissions(
+        self, user_ctx: 'UserContext', required_permission: PermissionType
+    ) -> bool:
         return _check_permissions(
             permissions=self.permissions,
             user_ctx=user_ctx,
@@ -89,8 +95,8 @@ class Search(Document):
                     'permissions': {
                         'target_type': PermissionTargetType.GROUP.value,
                         'target.id': group_id,
-                    }
-                }
+                    },
+                },
             },
         )
 
@@ -108,6 +114,6 @@ class Search(Document):
                 {
                     'p.target.id': group.id,
                     'p.target_type': PermissionTargetType.GROUP.value,
-                }
+                },
             ],
         )

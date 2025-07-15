@@ -1,16 +1,16 @@
 import os
-from os.path import join as opj
+from pathlib import Path
 
 __all__ = (
-    'ROOT_DIR',
     'CONFIG_PATHS',
+    'ROOT_DIR',
     'SENTRY_PACKAGE_NAME',
 )
 
 
-ROOT_DIR = os.path.realpath(opj(os.path.dirname(__file__), '..'))
+ROOT_DIR = Path(__file__).parent.parent.resolve()
 CONFIG_PATHS = [
-    opj(ROOT_DIR, 'settings-' + os.environ.get('APP_ENV', 'production') + '.toml'),
-    opj(ROOT_DIR, 'settings.toml'),
+    ROOT_DIR / f'settings-{os.environ.get("APP_ENV", "production")}.toml',
+    ROOT_DIR / 'settings.toml',
 ]
 SENTRY_PACKAGE_NAME = 'snail-orbit'

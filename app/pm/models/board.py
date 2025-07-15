@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, ClassVar
 
 import pymongo
 from beanie import Document, Indexed, PydanticObjectId
@@ -12,7 +12,7 @@ from .custom_fields import (
     CustomFieldLink,
     CustomFieldValueT,
 )
-from .group import GroupLinkField
+from .group import Group, GroupLinkField
 from .permission import (
     PermissionRecord,
     PermissionType,
@@ -21,6 +21,10 @@ from .permission import (
 )
 from .project import PermissionTargetType, Project, ProjectLinkField
 from .user import UserLinkField
+
+if TYPE_CHECKING:
+    from pm.api.context import UserContext
+
 
 __all__ = ('Board',)
 
@@ -32,7 +36,7 @@ class Board(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel(
                 [
                     ('permissions.target_type', 1),
@@ -44,14 +48,17 @@ class Board(Document):
             pymongo.IndexModel([('projects.id', 1)], name='projects_id_index'),
             pymongo.IndexModel([('favorite_of', 1)], name='favorite_of_index'),
             pymongo.IndexModel(
-                [('column_field.gid', 1)], name='column_field_gid_index'
+                [('column_field.gid', 1)],
+                name='column_field_gid_index',
             ),
             pymongo.IndexModel(
-                [('swimlane_field.gid', 1)], name='swimlane_field_gid_index'
+                [('swimlane_field.gid', 1)],
+                name='swimlane_field_gid_index',
             ),
             pymongo.IndexModel([('card_fields.gid', 1)], name='card_fields_gid_index'),
             pymongo.IndexModel(
-                [('card_colors_fields.gid', 1)], name='card_colors_fields_gid_index'
+                [('card_colors_fields.gid', 1)],
+                name='card_colors_fields_gid_index',
             ),
             pymongo.IndexModel([('issues_order', 1)], name='issues_order_index'),
             pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
@@ -74,7 +81,8 @@ class Board(Document):
     ]
     card_fields: Annotated[list[CustomFieldGroupLink], Field(default_factory=list)]
     card_colors_fields: Annotated[
-        list[CustomFieldGroupLink], Field(default_factory=list)
+        list[CustomFieldGroupLink],
+        Field(default_factory=list),
     ]
     ui_settings: Annotated[dict, Field(default_factory=dict)]
     created_by: UserLinkField
@@ -85,7 +93,8 @@ class Board(Document):
         return any(p.target.id == target.id for p in self.permissions)
 
     def has_any_other_admin_target(
-        self, target: UserLinkField | GroupLinkField
+        self,
+        target: UserLinkField | GroupLinkField,
     ) -> bool:
         return (
             sum(
@@ -97,12 +106,12 @@ class Board(Document):
             > 0
         )
 
-    def filter_permissions(self, user_ctx) -> list[PermissionRecord]:
+    def filter_permissions(self, user_ctx: 'UserContext') -> list[PermissionRecord]:
         return _filter_permissions(self, user_ctx)
 
     @staticmethod
-    def get_filter_query(user_ctx) -> dict:
-        permission_type = {'$in': [l.value for l in PermissionType]}
+    def get_filter_query(user_ctx: 'UserContext') -> dict:
+        permission_type = {'$in': [perm.value for perm in PermissionType]}
         user_groups = [
             g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
         ]
@@ -114,8 +123,8 @@ class Board(Document):
                             'target_type': PermissionTargetType.USER,
                             'target.id': user_ctx.user.id,
                             'permission_type': permission_type,
-                        }
-                    }
+                        },
+                    },
                 },
                 {
                     'permissions': {
@@ -123,13 +132,15 @@ class Board(Document):
                             'target_type': PermissionTargetType.GROUP,
                             'target.id': {'$in': user_groups},
                             'permission_type': permission_type,
-                        }
-                    }
+                        },
+                    },
                 },
-            ]
+            ],
         }
 
-    def check_permissions(self, user_ctx, required_permission: PermissionType) -> bool:
+    def check_permissions(
+        self, user_ctx: 'UserContext', required_permission: PermissionType
+    ) -> bool:
         return _check_permissions(
             permissions=self.permissions,
             user_ctx=user_ctx,
@@ -140,7 +151,9 @@ class Board(Document):
         return user_id in self.favorite_of
 
     def move_issue(
-        self, issue_id: PydanticObjectId, after_id: PydanticObjectId | None = None
+        self,
+        issue_id: PydanticObjectId,
+        after_id: PydanticObjectId | None = None,
     ) -> None:
         self.issues_order = [
             (iss_id, after_iss_id)
@@ -152,14 +165,15 @@ class Board(Document):
 
     @classmethod
     async def update_field_embedded_links(
-        cls, field: CustomField | CustomFieldLink | CustomFieldGroupLink
+        cls,
+        field: CustomField | CustomFieldLink | CustomFieldGroupLink,
     ) -> None:
         field = CustomFieldGroupLink.from_obj(field)
         await cls.find(cls.column_field.gid == field.gid).update(
-            {'$set': {'column_field': field}}
+            {'$set': {'column_field': field}},
         )
         await cls.find(cls.swimlane_field.gid == field.gid).update(
-            {'$set': {'swimlane_field': field}}
+            {'$set': {'swimlane_field': field}},
         )
         await cls.find(cls.card_fields.gid == field.gid).update(
             {'$set': {'card_fields.$[f]': field}},
@@ -184,7 +198,7 @@ class Board(Document):
                 {
                     'p.target.id': group.id,
                     'p.target_type': PermissionTargetType.GROUP.value,
-                }
+                },
             ],
         )
 
@@ -202,8 +216,8 @@ class Board(Document):
                     'permissions': {
                         'target_type': PermissionTargetType.GROUP.value,
                         'target.id': group_id,
-                    }
-                }
+                    },
+                },
             },
         )
 

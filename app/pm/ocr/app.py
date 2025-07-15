@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import asyncio
 from uuid import UUID
 
@@ -56,7 +57,7 @@ async def _run() -> None:
                 bo.Or(
                     Issue.attachments.id == attachment_id,
                     Issue.comments.attachments.id == attachment_id,
-                )
+                ),
             ).to_list()
             if not issues:
                 continue
@@ -69,8 +70,16 @@ async def _run() -> None:
                     continue
                 attachment.ocr_text = text
                 await issue.save_changes()
-        except Exception as e:
-            print(f'Error: {e}')
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
+            # Handle data parsing and object access errors
+            print(f'Data processing error: {e}')
+        except (ConnectionError, TimeoutError, OSError, RuntimeError) as e:
+            # Handle database, file system, and OCR processing errors
+            print(f'System error in OCR processing: {e}')
+        except Exception as e:  # noqa: BLE001
+            # Catch any other unexpected errors to prevent worker crash
+            # This is necessary in a worker loop to maintain service availability
+            print(f'Unexpected error in OCR processing: {e}')
 
 
 def get_attachment_obj(issue: Issue, attachment_id: UUID) -> IssueAttachment | None:
@@ -84,5 +93,5 @@ def get_attachment_obj(issue: Issue, attachment_id: UUID) -> IssueAttachment | N
     return None
 
 
-def run():
+def run() -> None:
     asyncio.run(_run())

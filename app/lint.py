@@ -2,15 +2,16 @@
 import os
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
 from pylint.lint import Run as RunPylint
 
-PROJECT_DIR = os.path.join(os.path.dirname(__file__), 'pm')
+PROJECT_DIR = Path(__file__).parent / 'pm'
 
 
 @contextmanager
 def chdir(dir_: str) -> None:
-    old_dir = os.getcwd()
+    old_dir = Path.cwd()
     os.chdir(dir_)
     try:
         yield

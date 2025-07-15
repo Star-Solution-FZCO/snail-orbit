@@ -34,7 +34,7 @@ from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
-from pm.workflows import WorkflowException
+from pm.workflows import WorkflowError
 
 from ._utils import update_attachments
 
@@ -106,14 +106,15 @@ async def list_issues(
         bo.In(
             m.Issue.project.id,
             user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-        )
+        ),
     )
 
     pipeline = []
     if query.q:
         try:
             flt, sort_pipeline = await transform_query(
-                query.q, current_user_email=user_ctx.user.email
+                query.q,
+                current_user_email=user_ctx.user.email,
             )
             pipeline += sort_pipeline
         except IssueQueryTransformError as err:
@@ -154,13 +155,15 @@ async def create_draft(
     project: m.Project | None = None
     if body.project_id:
         project = await m.Project.find_one(
-            m.Project.id == body.project_id, fetch_links=True
+            m.Project.id == body.project_id,
+            fetch_links=True,
         )
         if not project:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
     if not project and body.fields:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
+            HTTPStatus.BAD_REQUEST,
+            'Fields can be specified without a project',
         )
     validated_fields, validation_errors = [], []
     if project:
@@ -199,7 +202,7 @@ async def list_drafts(
 ) -> BaseListOutput[IssueDraftOutput]:
     user_ctx = current_user()
     q = m.IssueDraft.find(m.IssueDraft.created_by.id == user_ctx.user.id).sort(
-        m.IssueDraft.id
+        m.IssueDraft.id,
     )
     return await BaseListOutput.make_from_query(
         q,
@@ -236,7 +239,8 @@ async def get_draft(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
     if obj.created_by.id != user_ctx.user.id:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You do not have permission to read this draft'
+            HTTPStatus.FORBIDDEN,
+            'You do not have permission to read this draft',
         )
     return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
 
@@ -261,7 +265,8 @@ async def update_draft(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
     if obj.created_by.id != user_ctx.user.id:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You do not have permission to update this draft'
+            HTTPStatus.FORBIDDEN,
+            'You do not have permission to update this draft',
         )
     if 'project_id' in body.model_fields_set:
         if obj.project is not None:
@@ -273,20 +278,21 @@ async def update_draft(
                 )
 
         project: m.Project | None = None
-        if body.project_id:
-            if not (
-                project := await m.Project.find_one(
-                    m.Project.id == body.project_id, fetch_links=True
-                )
-            ):
-                raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
+        if body.project_id and not (
+            project := await m.Project.find_one(
+                m.Project.id == body.project_id,
+                fetch_links=True,
+            )
+        ):
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
         obj.project = m.ProjectLinkField.from_obj(project) if project else None
         obj.fields = filter_valid_project_fields(obj.fields, project)
     else:
         project = await obj.get_project(fetch_links=True)
     if not project and body.fields:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Fields can be specified without a project'
+            HTTPStatus.BAD_REQUEST,
+            'Fields can be specified without a project',
         )
     validation_errors = []
     if project:
@@ -298,7 +304,8 @@ async def update_draft(
         )
         obj.fields = f_val
     for k, v in body.model_dump(
-        exclude={'project_id', 'fields', 'attachments', 'text'}, exclude_unset=True
+        exclude={'project_id', 'fields', 'attachments', 'text'},
+        exclude_unset=True,
     ).items():
         setattr(obj, k, v)
     if 'attachments' in body.model_fields_set:
@@ -327,7 +334,8 @@ async def delete_draft(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
     if obj.created_by.id != user_ctx.user.id:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN, 'You do not have permission to delete this draft'
+            HTTPStatus.FORBIDDEN,
+            'You do not have permission to delete this draft',
         )
     await obj.delete()
     return ModelIdOutput.from_obj(obj)
@@ -340,7 +348,7 @@ async def create_issue_from_draft(
     user_ctx = current_user()
     now = utcnow()
     draft: m.IssueDraft | None = await m.IssueDraft.find_one(
-        m.IssueDraft.id == draft_id
+        m.IssueDraft.id == draft_id,
     )
     if not draft:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Draft not found')
@@ -351,16 +359,19 @@ async def create_issue_from_draft(
         )
     if not draft.project:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without a project'
+            HTTPStatus.BAD_REQUEST,
+            'Cannot create issue from draft without a project',
         )
 
     user_ctx.validate_project_permission(
-        draft.project, PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ)
+        draft.project,
+        PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ),
     )
 
     if not draft.subject:
         raise HTTPException(
-            HTTPStatus.BAD_REQUEST, 'Cannot create issue from draft without subject'
+            HTTPStatus.BAD_REQUEST,
+            'Cannot create issue from draft without subject',
         )
     project = await draft.get_project(fetch_links=True)
 
@@ -390,7 +401,7 @@ async def create_issue_from_draft(
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
-    except WorkflowException as err:
+    except WorkflowError as err:
         raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
@@ -404,7 +415,7 @@ async def create_issue_from_draft(
         Event(
             type=EventType.ISSUE_CREATE,
             data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
-        )
+        ),
     )
     for a in obj.attachments:
         if a.encryption:
@@ -442,17 +453,20 @@ async def create_issue(
     user_ctx = current_user()
     now = utcnow()
     project: m.Project | None = await m.Project.find_one(
-        m.Project.id == body.project_id, fetch_links=True
+        m.Project.id == body.project_id,
+        fetch_links=True,
     )
     if not project:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
 
     user_ctx.validate_project_permission(
-        project, PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ)
+        project,
+        PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ),
     )
 
     validated_fields, validation_errors = await validate_custom_fields_values(
-        body.fields, project
+        body.fields,
+        project,
     )
     obj = m.Issue(
         subject=body.subject,
@@ -474,7 +488,7 @@ async def create_issue(
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
-    except WorkflowException as err:
+    except WorkflowError as err:
         raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
@@ -487,7 +501,7 @@ async def create_issue(
         Event(
             type=EventType.ISSUE_CREATE,
             data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
-        )
+        ),
     )
     for a in obj.attachments:
         if a.encryption:
@@ -525,7 +539,8 @@ async def update_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     move_to_another_project = (
@@ -540,12 +555,14 @@ async def update_issue(
             )
 
         project = await m.Project.find_one(
-            m.Project.id == body.project_id, fetch_links=True
+            m.Project.id == body.project_id,
+            fetch_links=True,
         )
         if not project:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
         user_ctx.validate_project_permission(
-            project, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_CREATE)
+            project,
+            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_CREATE),
         )
         obj.project = m.ProjectLinkField.from_obj(project)
         obj.fields = filter_valid_project_fields(obj.fields, project)
@@ -554,11 +571,14 @@ async def update_issue(
 
     validation_errors = []
     for k, v in body.model_dump(
-        exclude={'attachments', 'text'}, exclude_unset=True
+        exclude={'attachments', 'text'},
+        exclude_unset=True,
     ).items():
         if k == 'fields':
             f_val, validation_errors = await validate_custom_fields_values(
-                v, project, obj
+                v,
+                project,
+                obj,
             )
             obj.fields = f_val
             continue
@@ -582,7 +602,7 @@ async def update_issue(
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
-    except WorkflowException as err:
+    except WorkflowError as err:
         raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
@@ -615,7 +635,7 @@ async def update_issue(
             Event(
                 type=EventType.ISSUE_UPDATE,
                 data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
-            )
+            ),
         )
         for a in obj.attachments:
             if a.id not in extra_attachment_ids or a.encryption:
@@ -635,7 +655,8 @@ async def delete_issue(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_DELETE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_DELETE, Permissions.ISSUE_READ),
     )
 
     await obj.delete()
@@ -657,7 +678,7 @@ async def delete_issue(
         Event(
             type=EventType.ISSUE_DELETE,
             data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
-        )
+        ),
     )
     return ModelIdOutput.from_obj(obj)
 
@@ -680,7 +701,8 @@ async def subscribe_issue(
 
 
 @router.post(
-    '/{issue_id_or_alias}/unsubscribe', responses=error_responses(*WRITE_ERRORS)
+    '/{issue_id_or_alias}/unsubscribe',
+    responses=error_responses(*WRITE_ERRORS),
 )
 async def unsubscribe_issue(
     issue_id_or_alias: PydanticObjectId | str,
@@ -709,14 +731,15 @@ async def link_issues(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     target_issues: list[m.Issue] = await m.Issue.find(
         bo.Or(
             bo.In(m.Issue.id, body.target_issues),
             bo.In(m.Issue.aliases, body.target_issues),
-        )
+        ),
     ).to_list()
 
     if not target_issues:
@@ -724,7 +747,8 @@ async def link_issues(
 
     for target_issue in target_issues:
         user_ctx.validate_issue_permission(
-            target_issue, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+            target_issue,
+            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
         )
 
         if obj.id == target_issue.id:
@@ -732,7 +756,8 @@ async def link_issues(
 
         if any(il.issue.id == target_issue.id for il in obj.interlinks):
             raise HTTPException(
-                HTTPStatus.CONFLICT, f'Issue already linked to {target_issue.id}'
+                HTTPStatus.CONFLICT,
+                f'Issue already linked to {target_issue.id}',
             )
 
         il_id = uuid4()
@@ -742,7 +767,7 @@ async def link_issues(
                 id=il_id,
                 issue=m.IssueLinkField.from_obj(target_issue),
                 type=body.type,
-            )
+            ),
         )
 
         target_issue.interlinks.append(
@@ -750,7 +775,7 @@ async def link_issues(
                 id=il_id,
                 issue=m.IssueLinkField.from_obj(obj),
                 type=body.type.inverse(),
-            )
+            ),
         )
         await target_issue.replace()
 
@@ -759,7 +784,8 @@ async def link_issues(
 
 
 @router.get(
-    '/{issue_id_or_alias}/link/target/select', responses=error_responses(*READ_ERRORS)
+    '/{issue_id_or_alias}/link/target/select',
+    responses=error_responses(*READ_ERRORS),
 )
 async def select_linkable_issues(
     issue_id_or_alias: PydanticObjectId | str,
@@ -779,14 +805,14 @@ async def select_linkable_issues(
             bo.In(
                 m.Issue.project.id,
                 user_ctx.get_projects_with_permission(
-                    PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+                    PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
                 ),
             ),
             bo.Or(
                 bo.RegEx(m.Issue.subject, query.search, 'i'),
                 bo.RegEx(m.Issue.aliases, query.search, 'i'),
             ),
-        )
+        ),
     ).sort(m.Issue.id)
     return await BaseListOutput.make_from_query(
         q,
@@ -817,7 +843,8 @@ async def update_link(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
@@ -831,15 +858,18 @@ async def update_link(
     if not target_obj:
         raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Target issue not found')
     target_il = next(
-        (il for il in target_obj.interlinks if il.id == interlink_id), None
+        (il for il in target_obj.interlinks if il.id == interlink_id),
+        None,
     )
     if not target_il:
         raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR, 'Target interlink not found'
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            'Target interlink not found',
         )
 
     user_ctx.validate_issue_permission(
-        target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+        target_obj,
+        PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
     )
 
     src_il.type = body.type
@@ -852,7 +882,8 @@ async def update_link(
 
 
 @router.delete(
-    '/{issue_id_or_alias}/link/{interlink_id}', responses=error_responses(*READ_ERRORS)
+    '/{issue_id_or_alias}/link/{interlink_id}',
+    responses=error_responses(*READ_ERRORS),
 )
 async def unlink_issue(
     issue_id_or_alias: PydanticObjectId | str,
@@ -864,7 +895,8 @@ async def unlink_issue(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
@@ -876,10 +908,12 @@ async def unlink_issue(
 
     if target_obj:
         user_ctx.validate_issue_permission(
-            target_obj, PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE)
+            target_obj,
+            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
         )
         target_il = next(
-            (il for il in target_obj.interlinks if il.id == interlink_id), None
+            (il for il in target_obj.interlinks if il.id == interlink_id),
+            None,
         )
 
     obj.interlinks.remove(src_il)
@@ -912,7 +946,8 @@ async def tag_issue(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
@@ -948,7 +983,8 @@ async def untag_issue(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
-        obj, PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ)
+        obj,
+        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
     )
 
     tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
@@ -975,7 +1011,8 @@ async def validate_custom_fields_values(
     for f_name in fields:
         if f_name not in project_fields:
             raise HTTPException(
-                HTTPStatus.BAD_REQUEST, f'Field {f_name} is not allowed'
+                HTTPStatus.BAD_REQUEST,
+                f'Field {f_name} is not allowed',
             )
 
     results = []
@@ -1002,13 +1039,14 @@ async def validate_custom_fields_values(
                 name=f.name,
                 type=f.type,
                 value=val_,
-            )
+            ),
         )
     return results, errors
 
 
 def filter_valid_project_fields(
-    fields: list[m.CustomFieldValue], project: m.Project | None
+    fields: list[m.CustomFieldValue],
+    project: m.Project | None,
 ) -> list[m.CustomFieldValue]:
     if not project:
         return []

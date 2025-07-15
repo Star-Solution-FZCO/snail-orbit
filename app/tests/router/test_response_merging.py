@@ -9,8 +9,6 @@ Tests use real route registration to verify end-to-end functionality with pytest
 
 from typing import Any
 
-import pytest
-
 from pm.api.utils.router import APIRouter
 
 # Mock error response data for testing (avoiding full pm imports)
@@ -19,7 +17,9 @@ MOCK_ERROR_PAYLOAD_OUTPUT_SCHEMA = {'$ref': '#/components/schemas/ErrorPayloadOu
 
 
 def create_mock_error_response(
-    status_code: int, schema_ref: str, description: str
+    status_code: int,
+    schema_ref: str,
+    description: str,
 ) -> dict[str, Any]:
     """Create a mock error response for testing."""
     return {
@@ -32,11 +32,11 @@ def create_mock_error_response(
                         f'example_{status_code}': {
                             'summary': f'Example {status_code}',
                             'value': {'error_messages': [f'Error {status_code}']},
-                        }
+                        },
                     },
-                }
+                },
             },
-        }
+        },
     }
 
 
@@ -45,11 +45,15 @@ def create_mock_auth_responses() -> dict[int, dict[str, Any]]:
     responses = {}
     responses.update(
         create_mock_error_response(
-            401, '#/components/schemas/ErrorOutput', 'Unauthorized'
-        )
+            401,
+            '#/components/schemas/ErrorOutput',
+            'Unauthorized',
+        ),
     )
     responses.update(
-        create_mock_error_response(403, '#/components/schemas/ErrorOutput', 'Forbidden')
+        create_mock_error_response(
+            403, '#/components/schemas/ErrorOutput', 'Forbidden'
+        ),
     )
     return responses
 
@@ -58,7 +62,9 @@ def test_no_router_responses():
     """When router has no responses, route responses are used as-is."""
     router = APIRouter()
     route_responses = create_mock_error_response(
-        404, '#/components/schemas/ErrorOutput', 'Not Found'
+        404,
+        '#/components/schemas/ErrorOutput',
+        'Not Found',
     )
 
     @router.get('/test', responses=route_responses)
@@ -74,7 +80,9 @@ def test_no_router_responses():
 def test_no_route_responses():
     """When route has no responses, only router responses are used."""
     router_responses = create_mock_error_response(
-        401, '#/components/schemas/ErrorOutput', 'Unauthorized'
+        401,
+        '#/components/schemas/ErrorOutput',
+        'Unauthorized',
     )
     router = APIRouter(responses=router_responses)
 
@@ -97,12 +105,16 @@ def test_simple_addition_no_conflicts():
     # Route has different errors
     route_responses = {}
     route_responses.update(
-        create_mock_error_response(404, '#/components/schemas/ErrorOutput', 'Not Found')
+        create_mock_error_response(
+            404, '#/components/schemas/ErrorOutput', 'Not Found'
+        ),
     )
     route_responses.update(
         create_mock_error_response(
-            422, '#/components/schemas/ErrorOutput', 'Unprocessable Entity'
-        )
+            422,
+            '#/components/schemas/ErrorOutput',
+            'Unprocessable Entity',
+        ),
     )
 
     @router.get('/test', responses=route_responses)
@@ -125,12 +137,16 @@ def test_simple_addition_no_conflicts():
 def test_same_schema_route_wins():
     """When same status code + same schema, route should override router."""
     router_responses = create_mock_error_response(
-        403, '#/components/schemas/ErrorOutput', 'Router Forbidden'
+        403,
+        '#/components/schemas/ErrorOutput',
+        'Router Forbidden',
     )
     router = APIRouter(responses=router_responses)
 
     route_responses = create_mock_error_response(
-        403, '#/components/schemas/ErrorOutput', 'Route Forbidden'
+        403,
+        '#/components/schemas/ErrorOutput',
+        'Route Forbidden',
     )
     kwargs = {'responses': route_responses}
 
@@ -147,15 +163,19 @@ def test_same_schema_route_wins():
     assert response_403['description'] == 'Route Forbidden'
 
 
-def test_different_schemas_create_oneOf():
+def test_different_schemas_create_one_of():
     """When same status code + different schemas, should create oneOf."""
     router_responses = create_mock_error_response(
-        400, '#/components/schemas/ErrorOutput', 'Router Bad Request'
+        400,
+        '#/components/schemas/ErrorOutput',
+        'Router Bad Request',
     )
     router = APIRouter(responses=router_responses)
 
     route_responses = create_mock_error_response(
-        400, '#/components/schemas/ErrorPayloadOutput', 'Route Bad Request'
+        400,
+        '#/components/schemas/ErrorPayloadOutput',
+        'Route Bad Request',
     )
     kwargs = {'responses': route_responses}
 
@@ -189,11 +209,11 @@ def test_example_merging():
                         'router_example': {
                             'summary': 'Router',
                             'value': {'error': 'router'},
-                        }
+                        },
                     },
-                }
+                },
             },
-        }
+        },
     }
     router = APIRouter(responses=router_responses)
 
@@ -207,11 +227,11 @@ def test_example_merging():
                         'route_example': {
                             'summary': 'Route',
                             'value': {'error': 'route'},
-                        }
+                        },
                     },
-                }
+                },
             },
-        }
+        },
     }
     kwargs = {'responses': route_responses}
 
@@ -228,13 +248,17 @@ def test_different_schemas_integration():
     """Test end-to-end integration: router and route both define same status with different schemas."""
     # Router has 401 with ErrorOutput
     router_responses = create_mock_error_response(
-        401, '#/components/schemas/ErrorOutput', 'Router Auth Error'
+        401,
+        '#/components/schemas/ErrorOutput',
+        'Router Auth Error',
     )
     router = APIRouter(responses=router_responses)
 
     # Route also has 401 but with ErrorPayloadOutput (different schema)
     route_responses = create_mock_error_response(
-        401, '#/components/schemas/ErrorPayloadOutput', 'Route Validation Error'
+        401,
+        '#/components/schemas/ErrorPayloadOutput',
+        'Route Validation Error',
     )
 
     @router.get('/test', responses=route_responses)
@@ -243,7 +267,8 @@ def test_different_schemas_integration():
 
     # Find the registered route and check its responses
     route = next(
-        (r for r in router.routes if hasattr(r, 'path') and r.path == '/test'), None
+        (r for r in router.routes if hasattr(r, 'path') and r.path == '/test'),
+        None,
     )
     assert route is not None
 
@@ -267,13 +292,17 @@ def test_same_schema_route_overrides_router():
     """Test router and route both define same status with same schema (route should win)."""
     # Router has 403 with ErrorOutput
     router_responses = create_mock_error_response(
-        403, '#/components/schemas/ErrorOutput', 'Router Forbidden'
+        403,
+        '#/components/schemas/ErrorOutput',
+        'Router Forbidden',
     )
     router = APIRouter(responses=router_responses)
 
     # Route also has 403 with same ErrorOutput schema
     route_responses = create_mock_error_response(
-        403, '#/components/schemas/ErrorOutput', 'Route Forbidden'
+        403,
+        '#/components/schemas/ErrorOutput',
+        'Route Forbidden',
     )
 
     @router.put('/test/{item_id}', responses=route_responses)
@@ -313,18 +342,24 @@ def test_complex_real_world_scenario():
     router_responses = {}
     router_responses.update(
         create_mock_error_response(
-            401, '#/components/schemas/ErrorOutput', 'Unauthorized'
-        )
+            401,
+            '#/components/schemas/ErrorOutput',
+            'Unauthorized',
+        ),
     )
     router_responses.update(
-        create_mock_error_response(403, '#/components/schemas/ErrorOutput', 'Forbidden')
+        create_mock_error_response(
+            403, '#/components/schemas/ErrorOutput', 'Forbidden'
+        ),
     )
 
     router = APIRouter(prefix='/tag', responses=router_responses)
 
     # Add GET route
     get_responses = create_mock_error_response(
-        404, '#/components/schemas/ErrorOutput', 'Tag not found'
+        404,
+        '#/components/schemas/ErrorOutput',
+        'Tag not found',
     )
 
     @router.get('/{tag_id}', responses=get_responses)
@@ -335,18 +370,24 @@ def test_complex_real_world_scenario():
     put_responses = {}
     put_responses.update(
         create_mock_error_response(
-            404, '#/components/schemas/ErrorOutput', 'Tag not found'
-        )
+            404,
+            '#/components/schemas/ErrorOutput',
+            'Tag not found',
+        ),
     )
     put_responses.update(
         create_mock_error_response(
-            403, '#/components/schemas/ErrorOutput', 'Custom forbidden'
-        )
+            403,
+            '#/components/schemas/ErrorOutput',
+            'Custom forbidden',
+        ),
     )
     put_responses.update(
         create_mock_error_response(
-            422, '#/components/schemas/ErrorOutput', 'Validation error'
-        )
+            422,
+            '#/components/schemas/ErrorOutput',
+            'Validation error',
+        ),
     )
 
     @router.put('/{tag_id}', responses=put_responses)
@@ -362,7 +403,8 @@ def test_complex_real_world_scenario():
             elif route.methods == {'PUT'}:
                 routes['put'] = route
 
-    assert 'get' in routes and 'put' in routes
+    assert 'get' in routes
+    assert 'put' in routes
 
     # Verify GET route merging
     get_responses_dict = routes['get'].responses
@@ -381,12 +423,16 @@ def test_complex_real_world_scenario():
 def test_preserve_other_kwargs():
     """Test that other kwargs are preserved during merging."""
     router_responses = create_mock_error_response(
-        401, '#/components/schemas/ErrorOutput', 'Unauthorized'
+        401,
+        '#/components/schemas/ErrorOutput',
+        'Unauthorized',
     )
     router = APIRouter(responses=router_responses)
 
     route_responses = create_mock_error_response(
-        404, '#/components/schemas/ErrorOutput', 'Not Found'
+        404,
+        '#/components/schemas/ErrorOutput',
+        'Not Found',
     )
     kwargs = {
         'responses': route_responses,
@@ -409,12 +455,16 @@ def test_preserve_other_kwargs():
 def test_router_method_merging():
     """Test that _merge_responses method works correctly in isolation."""
     router_responses = create_mock_error_response(
-        401, '#/components/schemas/ErrorOutput', 'Unauthorized'
+        401,
+        '#/components/schemas/ErrorOutput',
+        'Unauthorized',
     )
     router = APIRouter(responses=router_responses)
 
     route_responses = create_mock_error_response(
-        404, '#/components/schemas/ErrorOutput', 'Not Found'
+        404,
+        '#/components/schemas/ErrorOutput',
+        'Not Found',
     )
     kwargs = {'responses': route_responses}
 

@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Annotated, Any, Self
+from typing import Annotated, Any, ClassVar, Self
 
 import beanie.operators as bo
 import pymongo
@@ -44,7 +44,7 @@ class Role(Document):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('permissions', 1)], name='permissions_index'),
         ]
 

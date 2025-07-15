@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from beanie import PydanticObjectId
 from pydantic import BaseModel, computed_field
@@ -6,7 +6,7 @@ from pydantic import BaseModel, computed_field
 from pm.services.avatars import external_avatar_url, local_avatar_url
 
 if TYPE_CHECKING:
-    pass
+    import pm.models as m
 
 
 __all__ = ('UserOutput',)
@@ -20,7 +20,7 @@ class UserOutput(BaseModel):
 
     _use_external_avatar: bool
 
-    def __init__(self, **data):
+    def __init__(self, **data: Any) -> None:
         super().__init__(**data)
         self._use_external_avatar = data.get('_use_external_avatar', False)
 

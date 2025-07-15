@@ -1,8 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
-from os.path import dirname as opd
-from os.path import join as opj
-from typing import Self, TypeVar
+from pathlib import Path
+from typing import ClassVar, Self, TypeVar
 from uuid import UUID
 
 import aiofiles
@@ -28,8 +27,8 @@ from pm.config import CONFIG
 from pm.utils.dateutils import utcnow
 
 __all__ = (
-    'AuditRecord',
     'AuditAuthorField',
+    'AuditRecord',
     'audited_model',
 )
 
@@ -51,7 +50,7 @@ class AuditAuthorField(BaseModel):
 class AuditRecord(Document):
     class Settings:
         name = 'audits'
-        indexes = [
+        indexes: ClassVar = [
             pymongo.IndexModel([('time', -1)], name='time_index'),
             pymongo.IndexModel([('author.id', 1)], name='author_id_index'),
             pymongo.IndexModel(
@@ -62,7 +61,8 @@ class AuditRecord(Document):
             pymongo.IndexModel([('revision', 1)], name='revision_index'),
             pymongo.IndexModel([('next_revision', 1)], name='next_revision_index'),
             pymongo.IndexModel(
-                [('author.id', 1), ('time', -1)], name='author_time_index'
+                [('author.id', 1), ('time', -1)],
+                name='author_time_index',
             ),
         ]
 
@@ -98,7 +98,7 @@ class AuditRecord(Document):
                     name=user_ctx.user.name,
                     email=user_ctx.user.email,
                 )
-        except ContextDoesNotExistError:
+        except ContextDoesNotExistError:  # nosec B110  # noqa: S110
             pass
         obj = cls(
             collection=collection,
@@ -113,15 +113,15 @@ class AuditRecord(Document):
         return obj
 
     async def _save_data(self, path: str) -> None:
-        await aio_os.makedirs(opd(path), exist_ok=True)
+        await aio_os.makedirs(Path(path).parent, exist_ok=True)
         async with aiofiles.open(path, 'wb') as f:
             await f.write(
                 bson.encode(
                     {
                         **self.model_dump(mode='json'),
                         'data': self.__data,
-                    }
-                )
+                    },
+                ),
             )
 
     async def save_data(self) -> None:
@@ -139,11 +139,11 @@ class AuditRecord(Document):
 
     @property
     def _data_path(self) -> str:
-        return opj(
-            CONFIG.AUDIT_STORAGE_DIR,
-            self.collection,
-            str(self.object_id),
-            f'{self.revision}.bson',
+        return str(
+            Path(CONFIG.AUDIT_STORAGE_DIR)
+            / self.collection
+            / str(self.object_id)
+            / f'{self.revision}.bson',
         )
 
 

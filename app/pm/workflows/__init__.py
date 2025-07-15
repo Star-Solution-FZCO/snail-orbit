@@ -1,11 +1,10 @@
 import importlib
 import inspect
-import os
 import tempfile
 from abc import ABC, abstractmethod
 from importlib import import_module
-from importlib.util import module_from_spec
-from typing import TYPE_CHECKING, Optional, Type, Union
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pm.models.issue import Issue
@@ -13,17 +12,17 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    'ScheduledWorkflowScript',
     'OnChangeWorkflowScript',
-    'WorkflowException',
+    'ScheduledWorkflowScript',
+    'WorkflowError',
     'get_on_change_script',
-    'get_scheduled_script',
     'get_on_change_script_from_string',
+    'get_scheduled_script',
     'get_scheduled_script_from_string',
 )
 
 
-class WorkflowException(Exception):
+class WorkflowError(Exception):
     fields_errors: dict[str, str]
     msg: str
 
@@ -41,7 +40,9 @@ class OnChangeWorkflowScript(ABC):
 
 class ScheduledWorkflowScript(ABC):
     @abstractmethod
-    async def run(self, project: 'Project'):  # todo: should run on the list of projects
+    async def run(
+        self, project: 'Project'
+    ) -> None:  # todo: should run on the list of projects
         pass
 
 
@@ -49,9 +50,9 @@ def _import_cls(path: str) -> type[OnChangeWorkflowScript | ScheduledWorkflowScr
     module_path, class_name = path.rsplit('.', 1)
     module = import_module(module_path)
     cls = getattr(module, class_name)
-    if not issubclass(cls, (OnChangeWorkflowScript, ScheduledWorkflowScript)):
+    if not issubclass(cls, OnChangeWorkflowScript | ScheduledWorkflowScript):
         raise TypeError(
-            f'Class {cls} must be a subclass of OnChangeWorkflowScript or ScheduledWorkflowScript'
+            f'Class {cls} must be a subclass of OnChangeWorkflowScript or ScheduledWorkflowScript',
         )
     return cls
 
@@ -78,7 +79,7 @@ def get_scheduled_script_from_string(script: str) -> ScheduledWorkflowScript | N
     return load_workflow_script(script, ScheduledWorkflowScript)
 
 
-def load_module_from_string(script: str, module_name: str = 'dynamic_module'):
+def load_module_from_string(script: str, module_name: str = 'dynamic_module') -> Any:
     with tempfile.NamedTemporaryFile('w', suffix='.py', delete=False) as tmp:
         tmp.write(script)
     try:
@@ -87,14 +88,15 @@ def load_module_from_string(script: str, module_name: str = 'dynamic_module'):
         spec.loader.exec_module(module)
         return module
     finally:
-        os.remove(tmp.name)
+        Path(tmp.name).unlink()
 
 
 def load_workflow_script(
-    script: str, base_class: Type
-) -> Optional[Union[OnChangeWorkflowScript, ScheduledWorkflowScript]]:
+    script: str,
+    base_class: type,
+) -> OnChangeWorkflowScript | ScheduledWorkflowScript | None:
     module = load_module_from_string(script)
-    for _, obj in vars(module).items():
+    for obj in vars(module).values():
         if (
             inspect.isclass(obj)
             and issubclass(obj, base_class)

@@ -9,6 +9,8 @@ from pm.api.context import current_user
 from pm.config import CONFIG
 from pm.logging.context import generate_correlation_id, log_context
 
+HTTP_BAD_REQUEST_THRESHOLD = 400
+
 __all__ = (
     'LoggingMiddleware',
     'create_logging_middleware',
@@ -44,7 +46,7 @@ class LoggingMiddleware:
                         )
 
                         set_user_context(user_ctx.id, user_ctx.email)
-                except Exception:  # nosec B110
+                except (AttributeError, ImportError, TypeError):  # nosec B110  # noqa: S110
                     pass
 
                 response = await call_next(request)
@@ -55,7 +57,7 @@ class LoggingMiddleware:
                     client_ip = self._get_client_ip(request)
                     message = f'{request.method} {request.url.path} {response.status_code} ({processing_time_ms}ms) [{client_ip}]'
 
-                    if response.status_code >= 400:
+                    if response.status_code >= HTTP_BAD_REQUEST_THRESHOLD:
                         self.logger.warning(message)
                     else:
                         self.logger.info(message)
@@ -70,7 +72,7 @@ class LoggingMiddleware:
                     processing_time_ms = round(processing_time * 1000, 2)
                     client_ip = self._get_client_ip(request)
                     message = f'{request.method} {request.url.path} failed with {type(exc).__name__} ({processing_time_ms}ms) [{client_ip}]'
-                    self.logger.error(message, exc_info=exc)
+                    self.logger.exception(message, exc_info=exc)
 
                 raise
 

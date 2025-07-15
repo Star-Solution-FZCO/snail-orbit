@@ -4,10 +4,8 @@ multiproject board creation, columns update, swimlanes, and access control.
 """
 
 import uuid
-from http import HTTPStatus
 from typing import TYPE_CHECKING
 
-import mock
 import pytest
 import pytest_asyncio
 
@@ -73,7 +71,10 @@ async def setup_projects_with_fields(
     for project_id in create_test_projects:
         for field_data in create_custom_fields:
             await link_custom_field_to_project(
-                test_client, create_initial_admin, project_id, field_data['id']
+                test_client,
+                create_initial_admin,
+                project_id,
+                field_data['id'],
             )
 
     return create_test_projects, create_custom_fields
@@ -219,7 +220,9 @@ async def test_board_crud_operations(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -337,7 +340,7 @@ async def test_multiproject_board_creation(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    board_id = data['payload']['id']
+    _board_id = data['payload']['id']
 
     # Verify all projects are included
     assert len(data['payload']['projects']) == 3
@@ -358,7 +361,9 @@ async def test_multiproject_board_creation(
     }
 
     response = test_client.post(
-        '/api/v1/board', headers=headers, json=board_with_query_payload
+        '/api/v1/board',
+        headers=headers,
+        json=board_with_query_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -372,13 +377,16 @@ async def test_multiproject_board_creation(
     }
 
     response = test_client.post(
-        '/api/v1/board', headers=headers, json=invalid_board_payload
+        '/api/v1/board',
+        headers=headers,
+        json=invalid_board_payload,
     )
     assert response.status_code == 400
     response_data = response.json()
     # Check if it's in 'detail' or 'message' field
     error_text = response_data.get(
-        'detail', response_data.get('message', str(response_data))
+        'detail',
+        response_data.get('message', str(response_data)),
     )
     assert 'Projects not found' in error_text
 
@@ -474,7 +482,9 @@ async def test_board_columns_update(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -487,7 +497,9 @@ async def test_board_columns_update(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -500,7 +512,9 @@ async def test_board_columns_update(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -513,12 +527,15 @@ async def test_board_columns_update(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 400
     response_data = response.json()
     error_text = response_data.get(
-        'detail', response_data.get('message', str(response_data))
+        'detail',
+        response_data.get('message', str(response_data)),
     )
     assert 'not valid for field' in error_text
 
@@ -529,7 +546,9 @@ async def test_board_columns_update(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -640,7 +659,9 @@ async def test_board_swimlanes_configuration(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -655,7 +676,9 @@ async def test_board_swimlanes_configuration(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -669,7 +692,9 @@ async def test_board_swimlanes_configuration(
     }
 
     response = test_client.put(
-        f'/api/v1/board/{board_id}', headers=headers, json=update_payload
+        f'/api/v1/board/{board_id}',
+        headers=headers,
+        json=update_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -765,7 +790,9 @@ async def test_board_access_control_and_permissions(
     }
 
     response = test_client.post(
-        f'/api/v1/board/{board_id}/permission', headers=headers, json=permission_payload
+        f'/api/v1/board/{board_id}/permission',
+        headers=headers,
+        json=permission_payload,
     )
     assert response.status_code == 200
     data = response.json()
@@ -787,7 +814,7 @@ async def test_board_access_control_and_permissions(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    group_permission_id = data['payload']['id']
+    _group_permission_id = data['payload']['id']
 
     # Test listing permissions
     response = test_client.get(f'/api/v1/board/{board_id}/permissions', headers=headers)
@@ -812,7 +839,8 @@ async def test_board_access_control_and_permissions(
 
     # Test revoking permission
     response = test_client.delete(
-        f'/api/v1/board/{board_id}/permission/{permission_id}', headers=headers
+        f'/api/v1/board/{board_id}/permission/{permission_id}',
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -1093,7 +1121,9 @@ async def test_board_validation_errors(
     }
 
     response = test_client.post(
-        '/api/v1/board', headers=headers, json=invalid_board_payload
+        '/api/v1/board',
+        headers=headers,
+        json=invalid_board_payload,
     )
     assert response.status_code == 422
 
@@ -1109,12 +1139,15 @@ async def test_board_validation_errors(
     }
 
     response = test_client.post(
-        '/api/v1/board', headers=headers, json=invalid_column_field_payload
+        '/api/v1/board',
+        headers=headers,
+        json=invalid_column_field_payload,
     )
     assert response.status_code == 400
     response_data = response.json()
     error_text = response_data.get(
-        'detail', response_data.get('message', str(response_data))
+        'detail',
+        response_data.get('message', str(response_data)),
     )
     assert 'Column field must be of type STATE or ENUM' in error_text
 
@@ -1130,12 +1163,15 @@ async def test_board_validation_errors(
     }
 
     response = test_client.post(
-        '/api/v1/board', headers=headers, json=invalid_field_payload
+        '/api/v1/board',
+        headers=headers,
+        json=invalid_field_payload,
     )
     assert response.status_code == 400
     response_data = response.json()
     error_text = response_data.get(
-        'detail', response_data.get('message', str(response_data))
+        'detail',
+        response_data.get('message', str(response_data)),
     )
     assert 'Fields not found' in error_text
 
@@ -1154,7 +1190,9 @@ async def test_board_error_handling(
     assert response.status_code == 404
 
     response = test_client.put(
-        f'/api/v1/board/{UNKNOWN_ID}', headers=headers, json={'name': 'Updated'}
+        f'/api/v1/board/{UNKNOWN_ID}',
+        headers=headers,
+        json={'name': 'Updated'},
     )
     assert response.status_code == 404
 
@@ -1167,6 +1205,8 @@ async def test_board_error_handling(
 
     # Test invalid request data
     response = test_client.post(
-        '/api/v1/board', headers=headers, json={'invalid': 'data'}
+        '/api/v1/board',
+        headers=headers,
+        json={'invalid': 'data'},
     )
     assert response.status_code == 422

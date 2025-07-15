@@ -1,11 +1,11 @@
 import smtplib
 from base64 import b64decode
+from collections.abc import Sequence
 from email.encoders import encode_base64
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from typing import Dict, Optional, Sequence
 
 from pm.config import CONFIG
 from pm.logging import get_logger, log_context
@@ -20,7 +20,7 @@ def _send_email(
     recipients: Sequence[str],
     subject: str,
     body: str,
-    attachments: Optional[Dict[str, str]] = None,
+    attachments: dict[str, str] | None = None,
 ) -> None:
     if not CONFIG.SMTP_HOST:
         logger.warning(
@@ -50,7 +50,8 @@ def _send_email(
     try:
         if CONFIG.SMTP_SSL_MODE and CONFIG.SMTP_SSL_MODE in ('tls', 'ssl'):
             mail_client: smtplib.SMTP | smtplib.SMTP_SSL = smtplib.SMTP_SSL(
-                CONFIG.SMTP_HOST, CONFIG.SMTP_PORT
+                CONFIG.SMTP_HOST,
+                CONFIG.SMTP_PORT,
             )
         else:
             mail_client = smtplib.SMTP(CONFIG.SMTP_HOST, CONFIG.SMTP_PORT)
@@ -68,7 +69,8 @@ def _send_email(
             attachment.set_payload(b64decode(data.encode()))
             encode_base64(attachment)
             attachment.add_header(
-                'Content-Disposition', f'attachment; filename="{name}"'
+                'Content-Disposition',
+                f'attachment; filename="{name}"',
             )
             msg.attach(attachment)
         mail_client.sendmail(CONFIG.SMTP_SENDER, recipients, msg.as_string())
@@ -83,7 +85,7 @@ def _send_email(
             },
         )
     except smtplib.SMTPAuthenticationError as e:
-        logger.error(
+        logger.exception(
             'SMTP authentication failed',
             exc_info=e,
             extra={
@@ -106,7 +108,7 @@ def _send_email(
         )
         raise  # Will be retried by taskiq
     except smtplib.SMTPRecipientsRefused as e:
-        logger.error(
+        logger.exception(
             'SMTP recipients refused',
             exc_info=e,
             extra={
@@ -117,7 +119,7 @@ def _send_email(
         )
         raise  # Don't retry invalid recipients
     except (smtplib.SMTPException, OSError) as e:
-        logger.error(
+        logger.exception(
             'SMTP error occurred',
             exc_info=e,
             extra={
@@ -128,7 +130,7 @@ def _send_email(
         )
         raise  # Will be retried by taskiq
     except Exception as e:
-        logger.error(
+        logger.exception(
             'Unexpected error sending email',
             exc_info=e,
             extra={
@@ -148,7 +150,7 @@ def task_send_email(
     recipients: Sequence[str],
     subject: str,
     body: str,
-    attachments: Optional[Dict[str, str]] = None,
+    attachments: dict[str, str] | None = None,
 ) -> None:
     with log_context(
         task_id='send_email',
@@ -178,7 +180,7 @@ def task_send_email(
                 },
             )
         except Exception as e:
-            logger.error(
+            logger.exception(
                 'Email task failed',
                 exc_info=e,
                 extra={

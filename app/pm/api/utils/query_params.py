@@ -7,8 +7,8 @@ from fastapi.exceptions import RequestValidationError
 from pydantic_core import PydanticUndefined
 
 __all__ = (
-    'query_comma_separated_list_param',
     'pydantic_object_id_validator',
+    'query_comma_separated_list_param',
 )
 
 
@@ -43,8 +43,8 @@ def query_comma_separated_list_param(
                         'loc': ['query', param_name],
                         'msg': str(err),
                         'type': 'value_error',
-                    }
-                ]
+                    },
+                ],
             ) from err
 
     return Depends(_parser)

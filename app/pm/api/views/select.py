@@ -10,9 +10,9 @@ import pm.models as m
 
 __all__ = (
     'SelectParams',
-    'user_link_select',
-    'state_option_select',
     'enum_option_select',
+    'state_option_select',
+    'user_link_select',
     'version_option_select',
 )
 
@@ -57,12 +57,13 @@ def _user_link_filter(obj: m.UserLinkField, search: str | None) -> bool:
         return True
     return bool(
         re.search(re.escape(search), obj.name, re.IGNORECASE)
-        or re.search(re.escape(search), obj.email, re.IGNORECASE)
+        or re.search(re.escape(search), obj.email, re.IGNORECASE),
     )
 
 
 def user_link_select(
-    objs: Sequence[m.UserLinkField], query: SelectParams
+    objs: Sequence[m.UserLinkField],
+    query: SelectParams,
 ) -> SelectResult[m.UserLinkField]:
     return _select(objs, query, _user_link_filter, lambda o: o.name)
 
@@ -76,7 +77,8 @@ def _state_filter(obj: m.StateOption, search: str | None) -> bool:
 
 
 def state_option_select(
-    objs: Sequence[m.StateOption], query: SelectParams
+    objs: Sequence[m.StateOption],
+    query: SelectParams,
 ) -> SelectResult[m.StateOption]:
     return _select(objs, query, _state_filter, lambda o: o.value)
 
@@ -90,7 +92,8 @@ def _enum_filter(obj: m.EnumOption, search: str | None) -> bool:
 
 
 def enum_option_select(
-    objs: Sequence[m.EnumOption], query: SelectParams
+    objs: Sequence[m.EnumOption],
+    query: SelectParams,
 ) -> SelectResult[m.EnumOption]:
     return _select(objs, query, _enum_filter, lambda o: o.value)
 
@@ -104,6 +107,7 @@ def _version_filter(obj: m.VersionOption, search: str | None) -> bool:
 
 
 def version_option_select(
-    objs: Sequence[m.VersionOption], query: SelectParams
+    objs: Sequence[m.VersionOption],
+    query: SelectParams,
 ) -> SelectResult[m.VersionOption]:
     return _select(objs, query, _version_filter, lambda o: o.value)
