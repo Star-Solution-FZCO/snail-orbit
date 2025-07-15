@@ -43,7 +43,7 @@ async def request_validation_exception_handler(
         content=jsonable_encoder(
             ErrorOutput(
                 error_messages=[
-                    f'{error["loc"][0]}: {error["loc"][1]}: {error.get("msg")}'
+                    f'{": ".join(str(loc) for loc in error["loc"])}: {error.get("msg")}'
                     for error in exc.errors()
                 ],
             ),
