@@ -34463,6 +34463,66 @@
         "type": "object",
         "title": "IssueDraftUpdate"
       },
+      "IssueDurationFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "duration",
+            "title": "Field Type",
+            "default": "duration"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueDurationFieldChangeOutput"
+      },
       "IssueEnumFieldChangeOutput": {
         "properties": {
           "type": {
@@ -34670,6 +34730,9 @@
           },
           {
             "$ref": "#/components/schemas/IssueVersionMultiFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueDurationFieldChangeOutput"
           }
         ],
         "title": "IssueFieldChangeOutputRootModel",
@@ -34679,6 +34742,7 @@
             "boolean": "#/components/schemas/IssueBooleanFieldChangeOutput",
             "date": "#/components/schemas/IssueDateFieldChangeOutput",
             "datetime": "#/components/schemas/IssueDateTimeFieldChangeOutput",
+            "duration": "#/components/schemas/IssueDurationFieldChangeOutput",
             "enum": "#/components/schemas/IssueEnumFieldChangeOutput",
             "enum_multi": "#/components/schemas/IssueEnumMultiFieldChangeOutput",
             "float": "#/components/schemas/IssueFloatFieldChangeOutput",

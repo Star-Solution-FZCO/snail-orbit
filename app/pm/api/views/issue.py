@@ -44,6 +44,8 @@ CustomFieldValueOutT = (
     | m.StateOption
     | m.VersionOption
     | list[m.VersionOption]
+    | m.OwnedOption
+    | list[m.OwnedOption]
     | PydanticObjectId
     | Any
     | None
@@ -347,6 +349,12 @@ class IssueVersionMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
     new_value: list[m.VersionOption] | None
 
 
+class IssueDurationFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    old_value: int | None
+    new_value: int | None
+
+
 class IssueSubjectChangeOutput(IssueBaseChangeOutput):
     type: Literal['subject'] = 'subject'
     old_value: str
@@ -375,6 +383,7 @@ IssueFieldChangeOutputT = (
     | IssueStateFieldChangeOutput
     | IssueVersionFieldChangeOutput
     | IssueVersionMultiFieldChangeOutput
+    | IssueDurationFieldChangeOutput
 )
 
 
@@ -398,6 +407,7 @@ FIELD_CHANGE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[IssueFieldChangeOutputT]]
     m.CustomFieldTypeT.STATE: IssueStateFieldChangeOutput,
     m.CustomFieldTypeT.VERSION: IssueVersionFieldChangeOutput,
     m.CustomFieldTypeT.VERSION_MULTI: IssueVersionMultiFieldChangeOutput,
+    m.CustomFieldTypeT.DURATION: IssueDurationFieldChangeOutput,
 }
 
 

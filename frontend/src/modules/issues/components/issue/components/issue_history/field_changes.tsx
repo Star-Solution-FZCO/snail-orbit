@@ -78,7 +78,8 @@ const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
         }
 
         case "integer":
-        case "float": {
+        case "float":
+        case "duration": {
             const target = type === "old" ? change.old_value : change.new_value;
             return target?.toString() || noValue;
         }
