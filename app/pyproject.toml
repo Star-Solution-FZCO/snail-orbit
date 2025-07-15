@@ -73,11 +73,120 @@ optional = true
 [tool.poetry.group.ocr.dependencies]
 easyocr = "*"
 
+[tool.ruff]
+target-version = "py312"
+exclude = [
+    "migrations",
+    "pm/patches/beanie_links.py",
+    "pm/importers",
+]
+
 [tool.ruff.lint]
-select = ["I"]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit
+    "N",   # pep8-naming
+    "UP",  # pyupgrade (excluding deprecated UP038)
+    "ANN", # flake8-annotations
+    "ASYNC", # flake8-async
+    "BLE", # flake8-blind-except
+    "COM", # flake8-commas
+    "C4",  # flake8-comprehensions
+    "EM",  # flake8-errmsg
+    "FA",  # flake8-future-annotations
+    "ICN", # flake8-import-conventions
+    "LOG", # flake8-logging
+    "PIE", # flake8-pie
+    "PT",  # flake8-pytest-style
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PD",  # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "PERF", # perflint
+    "FURB", # refurb
+    "RUF", # ruff-specific
+    "I",   # isort
+]
+
+ignore = [
+    # Formatter conflicts
+    "E501",  # Line too long
+    "COM812",  # Missing trailing comma
+    "ISC001",  # Single line implicit string concatenation
+    
+    # Exception handling style
+    "TRY003",  # Avoid specifying long messages outside the exception class
+    "TRY300",  # Return inside a try block
+    "EM101",   # Exception must not use a string literal, assign to variable first
+    "EM102",   # Exception must not use an f-string literal, assign to variable first
+    
+    # Deprecated rules
+    "UP038",   # Use X | Y in isinstance call
+    
+    # FastAPI patterns
+    "B008",    # Function call in argument defaults (FastAPI Depends pattern)
+    
+    # Star imports
+    "F403",    # Unable to detect undefined names from star import
+    "F405",    # Name may be undefined, or defined from star imports
+    
+    # Exception handling style (permanent) - opinionated rules
+    "TRY301",  # raise-within-try - abstracting raise is not always beneficial
+    
+    # Pylint specific
+    "PLR0912", # Too many branches
+    "PLR0913", # Too many arguments
+    "PLR0915", # Too many statements
+    "PLR0911", # Too many return statements
+
+    # other
+    "ANN401",  # Using Any type in function argument
+]
+
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG001",  # Unused argument
+    "ANN001",  # Missing type annotation for function argument
+    "ANN003",  # Missing type annotation for **kwargs
+    "ANN201",  # Missing return type annotation for public function
+    "ANN202",  # Missing return type annotation for private function
+    "ANN204",  # Missing return type annotation for special method
+    "S101",    # Use of assert
+    "PLR2004", # Magic value used in comparison
+    "F401",    # Module imported but unused
+    "F811",    # Redefinition of unused name
+]
+
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+suppress-dummy-args = true
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
+
+[tool.ruff.lint.pylint]
+max-args = 8
+max-branches = 15
+max-returns = 8
+max-statements = 60
 
 [tool.ruff.format]
 quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
 
 
 [tool.pylint.FORMAT]
@@ -101,6 +210,14 @@ disable = [
     "duplicate-code",
     "fixme",
 ]
+
+[tool.pylint.DESIGN]
+max-args = 8
+max-branches = 15
+max-returns = 8
+max-statements = 60
+max-attributes = 12
+max-locals = 20
 
 
 [tool.bandit.assert_used]
