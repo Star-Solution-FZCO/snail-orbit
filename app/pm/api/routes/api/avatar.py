@@ -8,7 +8,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import NOT_FOUND_RESPONSES
 from pm.services.avatars import AVATAR_STORAGE_DIR, PROJECT_AVATAR_STORAGE_DIR
 from pm.services.files import get_storage_client
-from pm.utils.file_storage import StorageFileNotFound
+from pm.utils.file_storage import StorageFileNotFoundError
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = ('router',)
@@ -28,7 +28,7 @@ async def get_avatar(
         )
     try:
         file_header = await client.get_file_info(email_hash, folder=AVATAR_STORAGE_DIR)
-    except StorageFileNotFound as err:
+    except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
         content=client.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore
@@ -56,7 +56,7 @@ async def get_project_avatar(
         file_header = await client.get_file_info(
             project_id, folder=PROJECT_AVATAR_STORAGE_DIR
         )
-    except StorageFileNotFound as err:
+    except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
         content=client.get_file_stream(project_id, folder=PROJECT_AVATAR_STORAGE_DIR),

@@ -9,10 +9,10 @@ if TYPE_CHECKING:
     from ._typing import AsyncReadable, AsyncWritable
 
 __all__ = (
-    'FileHeader',
     'BaseStorageClient',
+    'FileHeader',
     'FileIDT',
-    'StorageFileNotFound',
+    'StorageFileNotFoundError',
     'StorageInternalError',
 )
 
@@ -42,20 +42,31 @@ class BaseStorageClient(ABC):
 
     @abstractmethod
     async def download_file(
-        self, file_id: FileIDT, dst: 'AsyncWritable', folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        dst: 'AsyncWritable',
+        folder: str = 'storage',
     ) -> None:
         pass
 
     @abstractmethod
     async def get_file_stream(
-        self, file_id: FileIDT, folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
     ) -> AsyncGenerator[bytes]:
         pass
 
     @abstractmethod
     async def get_file_info(
-        self, file_id: FileIDT, folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
     ) -> FileHeader:
+        pass
+
+    @abstractmethod
+    async def delete_file(self, file_id: FileIDT, folder: str = 'storage') -> None:
         pass
 
 
@@ -71,7 +82,7 @@ class StorageError(Exception):
         return str(self)
 
 
-class StorageFileNotFound(StorageError):
+class StorageFileNotFoundError(StorageError):
     def __init__(self, file_id: FileIDT, message: str = 'File not found'):
         super().__init__(file_id, message)
 

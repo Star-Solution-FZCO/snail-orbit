@@ -1,5 +1,6 @@
-from os.path import join as opj
-from typing import TYPE_CHECKING, AsyncIterator
+from collections.abc import AsyncIterator
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import aiofiles
 from aiofiles import os as aio_os
@@ -8,7 +9,7 @@ from ._base import (
     BaseStorageClient,
     FileHeader,
     FileIDT,
-    StorageFileNotFound,
+    StorageFileNotFoundError,
     StorageInternalError,
 )
 
@@ -22,6 +23,7 @@ __all__ = ('LocalStorageClient',)
 FILE_CHUNK_SIZE = 1024 * 1024  # 1MB
 
 
+# ruff: noqa: ARG002
 class LocalStorageClient(BaseStorageClient):
     __storage_dir: str
 
@@ -29,13 +31,13 @@ class LocalStorageClient(BaseStorageClient):
         self.__storage_dir = storage_dir
 
     def get_dir_by_id(self, file_id: str) -> str:
-        return opj(self.__storage_dir, file_id[0:2], file_id[2:4])
+        return str(Path(self.__storage_dir) / file_id[0:2] / file_id[2:4])
 
     def get_file_path(self, file_id: str) -> str:
-        return opj(self.get_dir_by_id(file_id), file_id)
+        return str(Path(self.get_dir_by_id(file_id)) / file_id)
 
     def _get_tmp_file_path(self, file_id: str) -> str:
-        return opj(self.get_dir_by_id(file_id), f'{file_id}.tmp')
+        return str(Path(self.get_dir_by_id(file_id)) / f'{file_id}.tmp')
 
     async def upload_file(
         self,
@@ -59,11 +61,14 @@ class LocalStorageClient(BaseStorageClient):
             raise StorageInternalError(file_id, message='Failed to write file') from err
 
     async def download_file(
-        self, file_id: FileIDT, dst: 'AsyncWritable', folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        dst: 'AsyncWritable',
+        folder: str = 'storage',
     ) -> None:
         file_path = self.get_file_path(str(file_id))
         if not await aio_os.path.exists(file_path):
-            raise StorageFileNotFound(file_id)
+            raise StorageFileNotFoundError(file_id)
 
         out_file = await aiofiles.open(file_path, mode='rb')
         try:
@@ -75,25 +80,30 @@ class LocalStorageClient(BaseStorageClient):
             await out_file.close()
 
     async def get_file_info(
-        self, file_id: FileIDT, folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
     ) -> FileHeader:
         file_path = self.get_file_path(str(file_id))
         if not await aio_os.path.exists(file_path):
-            raise StorageFileNotFound(file_id)
+            raise StorageFileNotFoundError(file_id)
         try:
             async with aiofiles.open(file_path, 'rb') as file:
                 return await read_file_header(file)
         except Exception as err:
             raise StorageInternalError(
-                file_id, message='Failed to read file header'
+                file_id,
+                message='Failed to read file header',
             ) from err
 
     async def get_file_stream(
-        self, file_id: FileIDT, folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
     ) -> AsyncIterator[bytes]:
         file_path = self.get_file_path(str(file_id))
         if not await aio_os.path.exists(file_path):
-            raise StorageFileNotFound(file_id)
+            raise StorageFileNotFoundError(file_id)
         try:
             async with aiofiles.open(file_path, 'rb') as file:
                 await read_file_header(file)  # skip file header
@@ -105,11 +115,11 @@ class LocalStorageClient(BaseStorageClient):
     async def delete_file(
         self,
         file_id: FileIDT,
-        folder: str = 'storage',  # pylint: disable=unused-argument
+        folder: str = 'storage',
     ) -> None:
         file_path = self.get_file_path(str(file_id))
         if not await aio_os.path.exists(file_path):
-            raise StorageFileNotFound(file_id)
+            raise StorageFileNotFoundError(file_id)
         try:
             await aio_os.remove(file_path)
             dir_path = self.get_dir_by_id(str(file_id))
@@ -117,12 +127,14 @@ class LocalStorageClient(BaseStorageClient):
                 await aio_os.rmdir(dir_path)
         except Exception as err:
             raise StorageInternalError(
-                file_id, message='Failed to delete file'
+                file_id,
+                message='Failed to delete file',
             ) from err
 
 
 async def write_file_header(
-    file_header: FileHeader, dst: 'AsyncBufferedIOBase'
+    file_header: FileHeader,
+    dst: 'AsyncBufferedIOBase',
 ) -> None:
     await dst.write(file_header.size.to_bytes(8))
     name = file_header.name.encode('utf-8')

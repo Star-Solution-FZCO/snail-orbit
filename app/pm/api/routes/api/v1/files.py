@@ -9,7 +9,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import AUTH_ERRORS, error_responses
 from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
 from pm.services.files import get_storage_client
-from pm.utils.file_storage import FileHeader, StorageFileNotFound
+from pm.utils.file_storage import FileHeader, StorageFileNotFoundError
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = ('router',)
@@ -73,7 +73,7 @@ async def download_attachment(file_id: UUID) -> StreamingResponse:
     client = get_storage_client()
     try:
         file_header = await client.get_file_info(file_id)
-    except StorageFileNotFound as err:
+    except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
         content=client.get_file_stream(file_id),  # type: ignore

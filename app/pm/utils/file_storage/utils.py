@@ -1,15 +1,15 @@
 from io import BytesIO
 
 __all__ = (
-    'PseudoAsyncWriteBuffer',
     'PseudoAsyncReadBuffer',
+    'PseudoAsyncWriteBuffer',
 )
 
 
 class PseudoAsyncWriteBuffer:
     buffer: BytesIO
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.buffer = BytesIO()
 
     async def write(self, data: bytes) -> None:

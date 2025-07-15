@@ -44,7 +44,7 @@ from pm.enums import EncryptionTargetTypeT
 from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
 from pm.services.avatars import PROJECT_AVATAR_STORAGE_DIR
 from pm.services.files import get_storage_client
-from pm.utils.file_storage._base import FileHeader, StorageFileNotFound
+from pm.utils.file_storage._base import FileHeader, StorageFileNotFoundError
 
 __all__ = ('router',)
 
@@ -856,7 +856,7 @@ async def delete_project_avatar(
     client = get_storage_client()
     try:
         await client.delete_file(project_id, folder=PROJECT_AVATAR_STORAGE_DIR)
-    except StorageFileNotFound as err:
+    except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     await m.Project.find_one(m.Project.id == project_id).update(
         {'$set': {'avatar_type': m.ProjectAvatarType.DEFAULT}}

@@ -1,3 +1,4 @@
+# ruff: noqa: PTH118
 from collections.abc import AsyncGenerator
 from os.path import join as opj
 from typing import TYPE_CHECKING, Literal
@@ -5,7 +6,7 @@ from urllib.parse import quote, unquote
 
 import aioboto3
 
-from ._base import BaseStorageClient, FileHeader, FileIDT, StorageFileNotFound
+from ._base import BaseStorageClient, FileHeader, FileIDT, StorageFileNotFoundError
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3 import S3Client
@@ -78,7 +79,9 @@ class S3StorageClient(BaseStorageClient):
                 self.__bucket,
                 filepath,
                 ExtraArgs={
-                    'ContentDisposition': f'attachment; {encode_filename_disposition(file_header.name)}',
+                    'ContentDisposition': (
+                        f'attachment; {encode_filename_disposition(file_header.name)}'
+                    ),
                     'ContentType': file_header.content_type,
                 },
             )
@@ -103,7 +106,8 @@ class S3StorageClient(BaseStorageClient):
         async with self._get_client_ctx() as client:
             for chunk_start in range(0, file_header.size, STREAM_CHUNK_SIZE):
                 chunk_end = min(
-                    chunk_start + STREAM_CHUNK_SIZE - 1, file_header.size - 1
+                    chunk_start + STREAM_CHUNK_SIZE - 1,
+                    file_header.size - 1,
                 )
                 resp = await client.get_object(
                     Bucket=self.__bucket,
@@ -132,7 +136,9 @@ class S3StorageClient(BaseStorageClient):
             )
 
     async def get_file_info(
-        self, file_id: FileIDT, folder: str = 'storage'
+        self,
+        file_id: FileIDT,
+        folder: str = 'storage',
     ) -> FileHeader:
         filepath = opj(folder, str(file_id))
         async with self._get_client_ctx() as client:
@@ -145,7 +151,7 @@ class S3StorageClient(BaseStorageClient):
                 )
             except Exception as err:
                 if getattr(err, 'response', {}).get('Error', {}).get('Code') == '404':
-                    raise StorageFileNotFound(file_id) from err
+                    raise StorageFileNotFoundError(file_id) from err
                 raise
 
     async def delete_file(
