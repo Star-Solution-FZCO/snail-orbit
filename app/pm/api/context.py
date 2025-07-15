@@ -12,16 +12,17 @@ from starlette_context import context, request_cycle_context
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.api.exceptions import MFARequiredException
+from pm.api.exceptions import MFARequiredError
 from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
 from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
 from pm.permissions import Permissions, PermissionT
 
 __all__ = (
+    'UserContext',
+    'admin_context_dependency',
+    'current_user',
     'current_user_context_dependency',
     'user_dependency',
-    'current_user',
-    'admin_context_dependency',
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -34,12 +35,16 @@ class UserContext:
     predefined_groups: list = field(default_factory=list)
 
     def has_permission(
-        self, project_id: PydanticObjectId, permission: PermissionT
+        self,
+        project_id: PydanticObjectId,
+        permission: PermissionT,
     ) -> bool:
         return permission.check(self.permissions.get(project_id, set()))
 
     def validate_issue_permission(
-        self, issue: m.Issue, permission: PermissionT
+        self,
+        issue: m.Issue,
+        permission: PermissionT,
     ) -> None:
         if not self.has_permission(issue.project.id, permission):
             raise HTTPException(
@@ -48,7 +53,9 @@ class UserContext:
             )
 
     def validate_project_permission(
-        self, project: m.Project | m.ProjectLinkField, permission: PermissionT
+        self,
+        project: m.Project | m.ProjectLinkField,
+        permission: PermissionT,
     ) -> None:
         if not self.has_permission(project.id, permission):
             raise HTTPException(
@@ -57,11 +64,10 @@ class UserContext:
             )
 
     def get_projects_with_permission(
-        self, permission: PermissionT
+        self,
+        permission: PermissionT,
     ) -> set[PydanticObjectId]:
-        return {
-            pr for pr in self.permissions.keys() if self.has_permission(pr, permission)
-        }
+        return {pr for pr in self.permissions if self.has_permission(pr, permission)}
 
 
 def get_bearer_token(
@@ -88,7 +94,7 @@ async def user_dependency(
         mfa_passed = (jwt_auth.get_raw_jwt() or {}).get('mfa_passed', False)
         user = await m.User.find_one(m.User.email == user_login)
         if user and user.mfa_enabled and not mfa_passed:
-            raise MFARequiredException()
+            raise MFARequiredError()
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
     return user
@@ -96,13 +102,13 @@ async def user_dependency(
 
 async def resolve_predefined_groups() -> list['m.Group']:
     predefined_groups = await m.Group.find(
-        bo.NE(m.Group.predefined_scope, None)
+        bo.NE(m.Group.predefined_scope, None),
     ).to_list()
-    output = []
-    for group in predefined_groups:
-        if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
-            output.append(m.GroupLinkField.from_obj(group))
-    return output
+    return [
+        m.GroupLinkField.from_obj(group)
+        for group in predefined_groups
+        if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS
+    ]
 
 
 async def current_user_context_dependency(
@@ -135,7 +141,8 @@ async def admin_context_dependency(
 
 
 async def resolve_user_permissions(
-    user: m.User, predefined_groups: list['m.Group']
+    user: m.User,
+    predefined_groups: list['m.Group'],
 ) -> dict[PydanticObjectId, set[Permissions]]:
     projects = await m.Project.find_all().to_list()
     return {pr.id: pr.get_user_permissions(user, predefined_groups) for pr in projects}
@@ -161,7 +168,8 @@ async def get_user_from_service_token(token: str, request: Request) -> m.User | 
 
     url_path = request.url.path + ('?' + request.url.query if request.url.query else '')
     real_req_hash = sha1(
-        (request.method + url_path).encode('utf-8'), usedforsecurity=False
+        (request.method + url_path).encode('utf-8'),
+        usedforsecurity=False,
     ).hexdigest()
     if data['req_hash'] != real_req_hash:
         raise HTTPException(

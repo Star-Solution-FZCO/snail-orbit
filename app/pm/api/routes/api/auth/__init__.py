@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
-from pm.api.exceptions import MFARequiredException
+from pm.api.exceptions import MFARequiredError
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessOutput
 from pm.config import CONFIG
@@ -36,7 +36,7 @@ class PasswordResetSetBody(BaseModel):
     password: str
 
 
-class AuthException(Exception):
+class AuthError(Exception):
     detail: str
 
     def __init__(self, detail: str) -> None:
@@ -48,9 +48,9 @@ def _mfa_check(user: m.User, user_auth: UserAuth) -> bool:
     if not user.mfa_enabled:
         return False
     if not user_auth.mfa_totp_code:
-        raise MFARequiredException()
+        raise MFARequiredError()
     if not user.check_totp(user_auth.mfa_totp_code):
-        raise AuthException('MFA error')
+        raise AuthError('MFA error')
     return True
 
 
@@ -58,17 +58,17 @@ async def local_auth(
     user_auth: UserAuth,
 ) -> tuple[m.User, bool]:
     if not user_auth.password:
-        raise AuthException('Password is empty')
+        raise AuthError('Password is empty')
     user: m.User | None = await m.User.find_one(
         bo.And(
             bo.Eq(m.User.is_active, True),
             m.User.email == user_auth.login.strip().lower(),
-        )
+        ),
     )
     if not user:
-        raise AuthException('User not found')
+        raise AuthError('User not found')
     if not user.check_password(user_auth.password):
-        raise AuthException('Invalid password')
+        raise AuthError('Invalid password')
     mfa_passed = _mfa_check(user, user_auth)
     return user, mfa_passed
 
@@ -80,12 +80,12 @@ async def dev_auth(
         bo.And(
             bo.Eq(m.User.is_active, True),
             m.User.email == user_auth.login.strip().lower(),
-        )
+        ),
     )
     if not user:
-        raise AuthException('User not found')
+        raise AuthError('User not found')
     if user_auth.password != CONFIG.DEV_PASSWORD:
-        raise AuthException('Invalid password')
+        raise AuthError('Invalid password')
     mfa_passed = _mfa_check(user, user_auth)
     return user, mfa_passed
 
@@ -104,7 +104,7 @@ async def login(
     auth_fn = get_auth_func()
     try:
         user, mfa_passed = await auth_fn(user_auth)
-    except AuthException as err:
+    except AuthError as err:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, detail=err.detail) from err
     access_token = auth.create_access_token(
         subject=user.email,

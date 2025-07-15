@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 import pm.models as m
 from pm.api.context import current_user
-from pm.api.exceptions import MFARequiredException
+from pm.api.exceptions import MFARequiredError
 from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import AUTH_ERRORS, error_responses
 from pm.api.views.output import ErrorOutput, SuccessOutput, SuccessPayloadOutput
@@ -75,7 +75,7 @@ async def update_two_fa_settings(
     user_ctx = current_user()
     if user_ctx.user.mfa_enabled:
         if not body.mfa_totp_code:
-            raise MFARequiredException()
+            raise MFARequiredError()
         if not user_ctx.user.check_totp(body.mfa_totp_code):
             raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid MFA code')
 
@@ -129,7 +129,7 @@ async def delete_otp(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'OTP not found')
     if user_ctx.user.mfa_enabled:
         if not body.mfa_totp_code:
-            raise MFARequiredException()
+            raise MFARequiredError()
         if not user_ctx.user.check_totp(body.mfa_totp_code):
             raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid MFA code')
     user_ctx.user.totp = None

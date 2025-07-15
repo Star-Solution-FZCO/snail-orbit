@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, RootModel
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import send_event
-from pm.api.exceptions import ValidateModelException
+from pm.api.exceptions import ValidateModelError
 from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
@@ -683,7 +683,7 @@ async def move_issue(
             for wf in pr.workflows:
                 await wf.run(issue)
         except WorkflowException as err:
-            raise ValidateModelException(
+            raise ValidateModelError(
                 payload=IssueOutput.from_obj(issue),
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,

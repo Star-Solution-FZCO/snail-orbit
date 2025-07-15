@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_event, send_task
-from pm.api.exceptions import ValidateModelException
+from pm.api.exceptions import ValidateModelError
 from pm.api.issue_query import (
     IssueQueryTransformError,
     transform_query,
@@ -183,7 +183,7 @@ async def create_draft(
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueDraftOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
@@ -307,7 +307,7 @@ async def update_draft(
         obj.text = body.text.value if body.text else None
         obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueDraftOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
@@ -370,7 +370,7 @@ async def create_issue_from_draft(
         draft,
     )
     if validation_errors:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueDraftOutput.from_obj(draft),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
@@ -391,7 +391,7 @@ async def create_issue_from_draft(
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
@@ -465,7 +465,7 @@ async def create_issue(
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
@@ -475,7 +475,7 @@ async def create_issue(
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
@@ -573,7 +573,7 @@ async def update_issue(
         obj.text = body.text.value if body.text else None
         obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
@@ -583,7 +583,7 @@ async def update_issue(
             if isinstance(wf, m.OnChangeWorkflow):
                 await wf.run(obj)
     except WorkflowException as err:
-        raise ValidateModelException(
+        raise ValidateModelError(
             payload=IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
