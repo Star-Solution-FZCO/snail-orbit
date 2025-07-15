@@ -1,20 +1,33 @@
-import dataclasses
-from collections import defaultdict
 from http import HTTPStatus
-from typing import Any
+from typing import TYPE_CHECKING, Annotated, Literal
+from uuid import UUID
 
-import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, RootModel
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
+from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.utils.router import APIRouter
+from pm.api.views.custom_fields import CustomFieldGroupLinkOutput
 from pm.api.views.error_responses import error_responses
-from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
-from pm.models import CustomFieldTypeT
-from pm.permissions import PermAnd, Permissions
+from pm.api.views.issue import ProjectField
+from pm.api.views.output import (
+    BaseListOutput,
+    ErrorOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+    UUIDOutput,
+)
+from pm.api.views.params import ListParams
+from pm.api.views.permission import PermissionOutput
+from pm.api.views.user import UserOutput
+from pm.utils.pydantic_uuid import UUIDStr
+
+if TYPE_CHECKING:
+    from pm.api.context import UserContext
+
 
 __all__ = ('router',)
 
@@ -30,218 +43,676 @@ router = APIRouter(
 )
 
 
-class Projects(BaseModel):
-    projects: list[PydanticObjectId]
+# Base output model for common fields
+class BaseReportOutput(BaseModel):
+    id: str
+    name: str
+    description: str | None
+    query: str | None
+    projects: list[ProjectField]
+    type: m.ReportType
+    created_by: UserOutput
+    permissions: list[PermissionOutput]
+    is_favorite: bool = Field(description='Whether report is favorited by current user')
 
 
-class ReportCreate(Projects):
-    field: str
+class IssuesPerProjectReportOutput(BaseReportOutput):
+    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
 
 
-class ReportItem(BaseModel):
-    value: Any | None
-    count: int
+class IssuesPerFieldReportOutput(BaseReportOutput):
+    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
+    field: CustomFieldGroupLinkOutput
 
 
-class ReportOutput(BaseModel):
-    values: list[ReportItem]
-    count: int
-
-
-class MatrixReportCreate(Projects):
-    fields: list[str]
-
-
-class MatrixRow(BaseModel):
-    value: Any | None
-    values: list[int]
-    count: int
-
-
-class MatrixReportOutput(BaseModel):
-    columns: list[Any | None]
-    rows: list[MatrixRow]
-    totals: list[int]
-    grand_total: int
-
-
-@dataclasses.dataclass
-class MatrixReport:
-    rows: set[Any] = dataclasses.field(default_factory=set)
-    columns: set[Any] = dataclasses.field(default_factory=set)
-    counts: dict = dataclasses.field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(int)),
+class IssuesPerTwoFieldsReportOutput(BaseReportOutput):
+    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
+        m.ReportType.ISSUES_PER_TWO_FIELDS
     )
-    column_totals: dict[Any, int] = dataclasses.field(
-        default_factory=lambda: defaultdict(int),
+    row_field: CustomFieldGroupLinkOutput
+    column_field: CustomFieldGroupLinkOutput
+
+
+# Discriminated union for all report outputs
+ReportOutput = RootModel[
+    Annotated[
+        IssuesPerProjectReportOutput
+        | IssuesPerFieldReportOutput
+        | IssuesPerTwoFieldsReportOutput,
+        Field(discriminator='type'),
+    ]
+]
+
+
+# Report generation models
+class IssuesPerProjectReportDataItem(BaseModel):
+    """Single item in an issues-per-project report dataset."""
+
+    value: ProjectField = Field(description='Project information for this item')
+    count: int = Field(description='Number of issues for this project')
+
+
+class IssuesPerProjectReportDataOutput(BaseModel):
+    """Output model for generated issues-per-project report data."""
+
+    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
+    items: list[IssuesPerProjectReportDataItem] = Field(
+        description='List of project report data items'
     )
-    row_totals: dict[Any, int] = dataclasses.field(
-        default_factory=lambda: defaultdict(int),
-    )
-    grand_total: int = 0
-
-    def add(self, rows: list, columns: list) -> None:
-        self.rows.update(rows)
-        self.columns.update(columns)
-        for r in rows:
-            for c in columns:
-                self.counts[r][c] += 1
-                self.column_totals[c] += 1
-                self.row_totals[r] += 1
-                self.grand_total += 1
-
-    def build(self) -> MatrixReportOutput:
-        columns = list(self.columns)
-        matrix_rows = []
-        for r in self.rows:
-            values = [self.counts[r][c] for c in columns]
-            matrix_rows.append(
-                MatrixRow(value=r, values=values, count=self.row_totals[r]),
-            )
-        return MatrixReportOutput(
-            columns=columns,
-            rows=matrix_rows,
-            totals=[self.column_totals[c] for c in columns],
-            grand_total=self.grand_total,
-        )
+    total_count: int = Field(description='Total number of issues across all projects')
 
 
-@router.post('/by-field')
-async def make_report_by_field(
-    body: ReportCreate,
-) -> SuccessPayloadOutput[ReportOutput]:
-    project_ids = set(body.projects)
-    if not project_ids:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            'At least one project must be specified',
-        )
+# Discriminated union for all report data outputs (extensible for future report types)
+ReportDataOutput = RootModel[
+    Annotated[
+        IssuesPerProjectReportDataOutput,
+        Field(discriminator='type'),
+    ]
+]
+
+
+def create_report_output(obj: m.Report) -> ReportOutput:
+    """Create the appropriate report output based on the report type."""
     user_ctx = current_user()
-    projects = await m.Project.find(
-        bo.In(m.Project.id, project_ids),
-        fetch_links=True,
-    ).to_list()
-    for p in project_ids - {p.id for p in projects}:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
-    for project in projects:
-        user_ctx.validate_project_permission(
-            project,
-            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
-        )
-    for project in projects:
-        if not any(field.name == body.field for field in project.custom_fields):
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail=f'Field {body.field} not found in {project.id}',
+
+    base_data = {
+        'id': str(obj.id),
+        'name': obj.name,
+        'description': obj.description,
+        'query': obj.query,
+        'projects': [ProjectField.from_obj(p) for p in obj.projects],
+        'created_by': UserOutput.from_obj(obj.created_by),
+        'permissions': [
+            PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
+        ],
+        'is_favorite': obj.is_favorite_of(user_ctx.user.id),
+    }
+
+    if obj.type == m.ReportType.ISSUES_PER_PROJECT:
+        return ReportOutput(root=IssuesPerProjectReportOutput(**base_data))
+    if obj.type == m.ReportType.ISSUES_PER_FIELD:
+        return ReportOutput(
+            root=IssuesPerFieldReportOutput(
+                **base_data, field=CustomFieldGroupLinkOutput.from_obj(obj.field)
             )
-    q = m.Issue.find(
-        bo.And(
-            bo.In(m.Issue.project.id, project_ids),
+        )
+    if obj.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
+        return ReportOutput(
+            root=IssuesPerTwoFieldsReportOutput(
+                **base_data,
+                row_field=CustomFieldGroupLinkOutput.from_obj(obj.row_field),
+                column_field=CustomFieldGroupLinkOutput.from_obj(obj.column_field),
+            )
+        )
+    raise HTTPException(HTTPStatus.BAD_REQUEST, f'Unknown report type: {obj.type}')
+
+
+class GrantPermissionBody(BaseModel):
+    target_type: m.PermissionTargetType
+    target: PydanticObjectId
+    permission_type: m.PermissionType
+
+
+class BaseReportCreate(BaseModel):
+    name: str
+    type: m.ReportType
+    description: str | None = None
+    query: str | None = None
+    projects: list[PydanticObjectId] = Field(default_factory=list)
+    permissions: Annotated[list[GrantPermissionBody], Field(default_factory=list)]
+
+
+class IssuesPerProjectReportCreate(BaseReportCreate):
+    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
+
+
+class IssuesPerFieldReportCreate(BaseReportCreate):
+    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
+    field_gid: UUIDStr
+
+
+class IssuesPerTwoFieldsReportCreate(BaseReportCreate):
+    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
+        m.ReportType.ISSUES_PER_TWO_FIELDS
+    )
+    row_field_gid: UUIDStr
+    column_field_gid: UUIDStr
+
+
+ReportCreate = RootModel[
+    Annotated[
+        IssuesPerProjectReportCreate
+        | IssuesPerFieldReportCreate
+        | IssuesPerTwoFieldsReportCreate,
+        Field(discriminator='type'),
+    ]
+]
+
+
+# Base update model for common fields
+class BaseReportUpdate(BaseModel):
+    type: m.ReportType
+    name: str | None = None
+    description: str | None = None
+    query: str | None = None
+    projects: list[PydanticObjectId] | None = None
+    permissions: list[GrantPermissionBody] | None = None
+
+
+class IssuesPerProjectReportUpdate(BaseReportUpdate):
+    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
+
+
+class IssuesPerFieldReportUpdate(BaseReportUpdate):
+    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
+    field_gid: UUIDStr | None = None
+
+
+class IssuesPerTwoFieldsReportUpdate(BaseReportUpdate):
+    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
+        m.ReportType.ISSUES_PER_TWO_FIELDS
+    )
+    row_field_gid: UUIDStr | None = None
+    column_field_gid: UUIDStr | None = None
+
+
+# Discriminated union for all report updates
+ReportUpdate = RootModel[
+    Annotated[
+        IssuesPerProjectReportUpdate
+        | IssuesPerFieldReportUpdate
+        | IssuesPerTwoFieldsReportUpdate,
+        Field(discriminator='type'),
+    ]
+]
+
+
+@router.get('/list')
+async def list_reports(
+    query: ListParams = Depends(),
+) -> BaseListOutput[ReportOutput]:
+    user_ctx = current_user()
+    filter_query = m.Report.get_filter_query(user_ctx)
+    q = m.Report.find(filter_query, with_children=True).sort(m.Report.name)
+    if query.search:
+        q = q.find(m.Report.search_query(query.search))
+
+    count = await q.count()
+    reports = await q.limit(query.limit).skip(query.offset).to_list()
+    items = [create_report_output(report) for report in reports]
+
+    return BaseListOutput.make(
+        count=count,
+        limit=query.limit,
+        offset=query.offset,
+        items=items,
+    )
+
+
+async def _create_common_fields(
+    body_data: BaseReportCreate, user_ctx: 'UserContext'
+) -> dict:
+    """Create common fields for all report types."""
+    permissions = [
+        m.PermissionRecord(
+            target_type=m.PermissionTargetType.USER,
+            target=m.UserLinkField.from_obj(user_ctx.user),
+            permission_type=m.PermissionType.ADMIN,
         ),
+    ]
+    if len(body_data.permissions) != len(
+        {perm.target for perm in body_data.permissions}
+    ):
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
+    for perm in body_data.permissions:
+        if perm.target == user_ctx.user.id:
+            continue
+        target = await resolve_grant_permission_target(perm)
+        permissions.append(
+            m.PermissionRecord(
+                target_type=perm.target_type,
+                target=target,
+                permission_type=perm.permission_type,
+            ),
+        )
+
+    # Resolve project links
+    projects = []
+    if body_data.projects:
+        for project_id in body_data.projects:
+            project = await m.Project.find_one(m.Project.id == project_id)
+            if not project:
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST, f'Project {project_id} not found'
+                )
+            projects.append(m.ProjectLinkField.from_obj(project))
+
+    return {
+        'name': body_data.name,
+        'description': body_data.description,
+        'query': body_data.query,
+        'projects': projects,
+        'created_by': m.UserLinkField.from_obj(user_ctx.user),
+        'permissions': permissions,
+    }
+
+
+async def _create_issues_per_project_report(
+    body_data: IssuesPerProjectReportCreate, user_ctx: 'UserContext'
+) -> m.IssuesPerProjectReport:
+    """Create an IssuesPerProject report."""
+    common_fields = await _create_common_fields(body_data, user_ctx)
+    return m.IssuesPerProjectReport(**common_fields)
+
+
+async def _create_issues_per_field_report(
+    body_data: IssuesPerFieldReportCreate, user_ctx: 'UserContext'
+) -> m.IssuesPerFieldReport:
+    """Create an IssuesPerField report."""
+    common_fields = await _create_common_fields(body_data, user_ctx)
+
+    # Resolve field by gid
+    field = await m.CustomField.find_one(
+        m.CustomField.gid == body_data.field_gid, with_children=True
     )
-    counts = defaultdict(int)
-    issues = 0
-    async for obj in q:
-        field = obj.get_field_by_name(body.field)
-        if field is None or field.value is None:
-            counts[None] += 1
-            issues += 1
-            continue
-        issues += 1
-        if field.type in (CustomFieldTypeT.USER_MULTI, CustomFieldTypeT.ENUM_MULTI):
-            for val in field.value:
-                counts[val] += 1
-            continue
-        counts[field.value] += 1
-    items = [ReportItem(value=value, count=count) for value, count in counts.items()]
-    items.sort(key=lambda x: x.count, reverse=True)
-    return SuccessPayloadOutput(payload=ReportOutput(values=items, count=issues))
+    if not field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Custom field {body_data.field_gid} not found'
+        )
+
+    return m.IssuesPerFieldReport(
+        **common_fields,
+        field=m.CustomFieldGroupLink.from_obj(field),
+    )
 
 
-@router.post('/by-project')
-async def make_report_by_project(
-    body: Projects,
+async def _create_issues_per_two_fields_report(
+    body_data: IssuesPerTwoFieldsReportCreate, user_ctx: 'UserContext'
+) -> m.IssuesPerTwoFieldsReport:
+    """Create an IssuesPerTwoFields report."""
+    common_fields = await _create_common_fields(body_data, user_ctx)
+
+    row_field = await m.CustomField.find_one(
+        m.CustomField.gid == body_data.row_field_gid, with_children=True
+    )
+    if not row_field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            f'Custom field {body_data.row_field_gid} not found',
+        )
+
+    column_field = await m.CustomField.find_one(
+        m.CustomField.gid == body_data.column_field_gid, with_children=True
+    )
+    if not column_field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            f'Custom field {body_data.column_field_gid} not found',
+        )
+
+    return m.IssuesPerTwoFieldsReport(
+        **common_fields,
+        row_field=m.CustomFieldGroupLink.from_obj(row_field),
+        column_field=m.CustomFieldGroupLink.from_obj(column_field),
+    )
+
+
+@router.post('/')
+async def create_report(body: ReportCreate) -> SuccessPayloadOutput[ReportOutput]:
+    user_ctx = current_user()
+    body_data = body.root  # Access the discriminated union data
+
+    if body_data.type == m.ReportType.ISSUES_PER_PROJECT:
+        report = await _create_issues_per_project_report(body_data, user_ctx)
+    elif body_data.type == m.ReportType.ISSUES_PER_FIELD:
+        report = await _create_issues_per_field_report(body_data, user_ctx)
+    elif body_data.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
+        report = await _create_issues_per_two_fields_report(body_data, user_ctx)
+    else:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Unknown report type: {body_data.type}'
+        )
+
+    await report.insert()
+    return SuccessPayloadOutput(payload=create_report_output(report))
+
+
+@router.get('/{report_id}')
+async def get_report(
+    report_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ReportOutput]:
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    user_ctx = current_user()
+    if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
+    return SuccessPayloadOutput(payload=create_report_output(report))
+
+
+@router.delete('/{report_id}')
+async def delete_report(report_id: PydanticObjectId) -> ModelIdOutput:
+    user_ctx = current_user()
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this report')
+    await report.delete()
+    return ModelIdOutput.from_obj(report)
+
+
+async def _update_common_fields(
+    report: m.Report, body_data: BaseReportUpdate, user_ctx: 'UserContext'
+) -> None:
+    """Update common fields for all report types."""
+    if body_data.permissions:
+        if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                'You cannot modify permissions for this report',
+            )
+        if len(body_data.permissions) != len(
+            {perm.target for perm in body_data.permissions}
+        ):
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
+        permissions = [
+            m.PermissionRecord(
+                target_type=perm.target_type,
+                target=await resolve_grant_permission_target(perm),
+                permission_type=perm.permission_type,
+            )
+            for perm in body_data.permissions
+        ]
+        if all(perm.permission_type != m.PermissionType.ADMIN for perm in permissions):
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                'Report must have at least one admin',
+            )
+        report.permissions = permissions
+
+    if body_data.projects is not None:
+        projects = []
+        for project_id in body_data.projects:
+            project = await m.Project.find_one(m.Project.id == project_id)
+            if not project:
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST, f'Project {project_id} not found'
+                )
+            projects.append(m.ProjectLinkField.from_obj(project))
+        report.projects = projects
+
+    for k, v in body_data.model_dump(
+        exclude_unset=True, include={'name', 'description', 'query'}
+    ).items():
+        setattr(report, k, v)
+
+
+async def _update_issues_per_field_report(
+    report: m.IssuesPerFieldReport, body_data: IssuesPerFieldReportUpdate
+) -> None:
+    """Update type-specific fields for IssuesPerField report."""
+    if body_data.field_gid:
+        field = await m.CustomField.find_one(
+            m.CustomField.gid == body_data.field_gid, with_children=True
+        )
+        if not field:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST, f'Custom field {body_data.field_gid} not found'
+            )
+        report.field = m.CustomFieldGroupLink.from_obj(field)
+
+
+async def _update_issues_per_two_fields_report(
+    report: m.IssuesPerTwoFieldsReport, body_data: IssuesPerTwoFieldsReportUpdate
+) -> None:
+    """Update type-specific fields for IssuesPerTwoFields report."""
+    if body_data.row_field_gid:
+        row_field = await m.CustomField.find_one(
+            m.CustomField.gid == body_data.row_field_gid, with_children=True
+        )
+        if not row_field:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Custom field {body_data.row_field_gid} not found',
+            )
+        report.row_field = m.CustomFieldGroupLink.from_obj(row_field)
+
+    if body_data.column_field_gid:
+        column_field = await m.CustomField.find_one(
+            m.CustomField.gid == body_data.column_field_gid, with_children=True
+        )
+        if not column_field:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Custom field {body_data.column_field_gid} not found',
+            )
+        report.column_field = m.CustomFieldGroupLink.from_obj(column_field)
+
+
+@router.put('/{report_id}')
+async def update_report(
+    report_id: PydanticObjectId,
+    body: ReportUpdate,
+) -> SuccessPayloadOutput[ReportOutput]:
+    report: m.Report | None = await m.Report.find_one(
+        m.Report.id == report_id, with_children=True
+    )
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    user_ctx = current_user()
+    if not report.check_permissions(user_ctx, m.PermissionType.EDIT):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this report')
+
+    body_data = body.root  # Access the discriminated union data
+
+    if report.type != body_data.type:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Cannot change report type',
+        )
+
+    await _update_common_fields(report, body_data, user_ctx)
+
+    if report.type == m.ReportType.ISSUES_PER_FIELD:
+        await _update_issues_per_field_report(report, body_data)
+    elif report.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
+        await _update_issues_per_two_fields_report(report, body_data)
+
+    if report.is_changed:
+        await report.save_changes()
+    return SuccessPayloadOutput(payload=create_report_output(report))
+
+
+@router.post('/{report_id}/permission')
+async def grant_permission(
+    report_id: PydanticObjectId,
+    body: GrantPermissionBody,
+) -> UUIDOutput:
+    user_ctx = current_user()
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You cannot modify permissions for this report',
+        )
+    target = await resolve_grant_permission_target(body)
+    if report.has_permission_for_target(target):
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail='Permission already granted',
+        )
+    permission = m.PermissionRecord(
+        target_type=body.target_type,
+        target=target,
+        permission_type=body.permission_type,
+    )
+    report.permissions.append(permission)
+    await report.save_changes()
+    return UUIDOutput.make(permission.id)
+
+
+@router.delete('/{report_id}/permission/{permission_id}')
+async def revoke_permission(
+    report_id: PydanticObjectId,
+    permission_id: UUID,
+) -> UUIDOutput:
+    user_ctx = current_user()
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You cannot modify permissions for this report',
+        )
+    if not (
+        perm := next(
+            (obj for obj in report.permissions if obj.id == permission_id),
+            None,
+        )
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Permission not found',
+        )
+    if (
+        perm.permission_type == m.PermissionType.ADMIN
+        and not report.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            'Report must have at least one admin',
+        )
+    report.permissions.remove(perm)
+    await report.save_changes()
+    return UUIDOutput.make(perm.id)
+
+
+@router.post('/{report_id}/favorite')
+async def favorite_report(
+    report_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ReportOutput]:
     user_ctx = current_user()
-    project_ids = set(body.projects)
-    if not project_ids:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            'At least one project must be specified',
-        )
-    projects = await m.Project.find(bo.In(m.Project.id, project_ids)).to_list()
-    for p in project_ids - {p.id for p in projects}:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
-    for project in projects:
-        user_ctx.validate_project_permission(
-            project,
-            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
-        )
-    items = []
-    issues = 0
-    for project in projects:
-        count = await m.Issue.find(bo.Eq(m.Issue.project.id, project.id)).count()
-        items.append(ReportItem(value=project, count=count))
-        issues += count
-    items.sort(key=lambda x: x.count, reverse=True)
-    return SuccessPayloadOutput(payload=ReportOutput(values=items, count=issues))
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
+    if report.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Report already in favorites')
+    report.favorite_of.append(user_ctx.user.id)
+    await report.save_changes()
+    return SuccessPayloadOutput(payload=create_report_output(report))
 
 
-MATRIX_REPORT_REQUIRED_FIELDS_COUNT = 2
-
-
-@router.post('/matrix')
-async def make_matrix_report(
-    body: MatrixReportCreate,
-) -> SuccessPayloadOutput[MatrixReportOutput]:
-    if len(set(body.fields)) != MATRIX_REPORT_REQUIRED_FIELDS_COUNT:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            'Exactly two different fields must be specified for matrix report',
-        )
-    project_ids = set(body.projects)
-    if not project_ids:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            'At least one project must be specified',
-        )
-    projects = await m.Project.find(
-        bo.In(m.Project.id, project_ids),
-        fetch_links=True,
-    ).to_list()
-    for p in project_ids - {p.id for p in projects}:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Project {p} not found')
+@router.post('/{report_id}/unfavorite')
+async def unfavorite_report(
+    report_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ReportOutput]:
     user_ctx = current_user()
-    for project in projects:
-        user_ctx.validate_project_permission(
-            project,
-            PermAnd(Permissions.PROJECT_READ, Permissions.ISSUE_READ),
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
+    if not report.is_favorite_of(user_ctx.user.id):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Report is not in favorites')
+    report.favorite_of.remove(user_ctx.user.id)
+    await report.save_changes()
+    return SuccessPayloadOutput(payload=create_report_output(report))
+
+
+async def resolve_grant_permission_target(
+    body: GrantPermissionBody,
+) -> m.UserLinkField | m.GroupLinkField:
+    if body.target_type == m.PermissionTargetType.USER:
+        user: m.User | None = await m.User.find_one(m.User.id == body.target)
+        if not user:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
+        return m.UserLinkField.from_obj(user)
+    group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
+    if not group:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
+    return m.GroupLinkField.from_obj(group)
+
+
+async def generate_per_project_report_data(
+    report: m.Report,
+    user_ctx: 'UserContext',
+) -> IssuesPerProjectReportDataOutput:
+    """Generate data for a per-project report."""
+
+    flt = {
+        'project.id': {'$in': [p.id for p in report.projects]},
+    }
+
+    if report.query:
+        try:
+            query_filter, _sort_pipeline = await transform_query(
+                report.query, current_user_email=user_ctx.user.email
+            )
+            if query_filter:
+                flt = {'$and': [flt, query_filter]}
+        except IssueQueryTransformError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
+
+    pipeline = [
+        {'$match': flt},
+        {
+            '$group': {
+                '_id': '$project.id',
+                'count': {'$sum': 1},
+                'project_name': {'$first': '$project.name'},
+                'project_slug': {'$first': '$project.slug'},
+            }
+        },
+        {'$sort': {'project_name': 1}},
+    ]
+
+    aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+
+    count_lookup = {result['_id']: result['count'] for result in aggregation_result}
+
+    items = []
+    total_count = 0
+
+    for project in report.projects:
+        count = count_lookup.get(project.id, 0)
+        items.append(
+            IssuesPerProjectReportDataItem(
+                value=ProjectField.from_obj(project),
+                count=count,
+            )
         )
-    for project in projects:
-        project_fields = {field.name for field in project.custom_fields}
-        for field in body.fields:
-            if field not in project_fields:
-                raise HTTPException(
-                    status_code=HTTPStatus.NOT_FOUND,
-                    detail=f'Field {field} not found in {project.id}',
-                )
-    column_field, row_field = body.fields
-    matrix = MatrixReport()
-    async for issue in m.Issue.find(bo.In(m.Issue.project.id, project_ids)):
-        row = issue.get_field_by_name(row_field)
-        col = issue.get_field_by_name(column_field)
-        matrix.add(rows=process_field_value(row), columns=process_field_value(col))
-    matrix = matrix.build()
-    return SuccessPayloadOutput(payload=matrix)
+        total_count += count
+    return IssuesPerProjectReportDataOutput(items=items, total_count=total_count)
 
 
-def process_field_value(
-    field: m.CustomFieldValue | None,
-) -> list[Any]:
-    if not field:
-        return [None]
-    if field.value is None:
-        return [None]
-    if field.type in (CustomFieldTypeT.USER_MULTI, CustomFieldTypeT.ENUM_MULTI):
-        return field.value
-    return [field.value]
+@router.post('/{report_id}/generate')
+async def generate_report_data(
+    report_id: str,
+) -> SuccessPayloadOutput[ReportDataOutput]:
+    user_ctx = current_user()
+    try:
+        object_id = PydanticObjectId(report_id)
+        report = await m.Report.find_one(m.Report.id == object_id, with_children=True)
+        if not report:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
+    except ValueError as e:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Invalid report ID: {e!s}') from e
+
+    if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
+
+    if report.type == m.ReportType.ISSUES_PER_PROJECT:
+        data = await generate_per_project_report_data(report, user_ctx)
+    else:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            f'Report generation not implemented for type: {report.type}',
+        )
+
+    return SuccessPayloadOutput(payload=data)

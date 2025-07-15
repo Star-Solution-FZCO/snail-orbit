@@ -27834,20 +27834,202 @@
         }
       }
     },
-    "/api/v1/report/by-field": {
+    "/api/v1/report/list": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "List Reports",
+        "operationId": "list_reports_api_v1_report_list_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort By"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report": {
       "post": {
         "tags": [
           "api",
           "v1",
           "report"
         ],
-        "summary": "Make Report By Field",
-        "operationId": "make_report_by_field_api_v1_report_by_field_post",
+        "summary": "Create Report",
+        "operationId": "create_report_api_v1_report_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReportCreate"
+                "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportCreate__IssuesPerFieldReportCreate__IssuesPerTwoFieldsReportCreate___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
               }
             }
           },
@@ -27859,7 +28041,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
                 }
               }
             }
@@ -27960,32 +28142,42 @@
         ]
       }
     },
-    "/api/v1/report/by-project": {
-      "post": {
+    "/api/v1/report/{report_id}": {
+      "get": {
         "tags": [
           "api",
           "v1",
           "report"
         ],
-        "summary": "Make Report By Project",
-        "operationId": "make_report_by_project_api_v1_report_by_project_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Projects"
-              }
+        "summary": "Get Report",
+        "operationId": "get_report_api_v1_report__report_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
                 }
               }
             }
@@ -27997,23 +28189,23 @@
                 "schema": {
                   "properties": {
                     "success": {
-                      "type": "boolean",
+                      "default": false,
                       "title": "Success",
-                      "default": false
+                      "type": "boolean"
                     },
                     "error_messages": {
                       "items": {
                         "type": "string"
                       },
-                      "type": "array",
-                      "title": "Error Messages"
+                      "title": "Error Messages",
+                      "type": "array"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "error_messages"
                   ],
-                  "title": "ErrorOutput"
+                  "title": "ErrorOutput",
+                  "type": "object"
                 },
                 "examples": {
                   "error_example": {
@@ -28036,23 +28228,23 @@
                 "schema": {
                   "properties": {
                     "success": {
-                      "type": "boolean",
+                      "default": false,
                       "title": "Success",
-                      "default": false
+                      "type": "boolean"
                     },
                     "error_messages": {
                       "items": {
                         "type": "string"
                       },
-                      "type": "array",
-                      "title": "Error Messages"
+                      "title": "Error Messages",
+                      "type": "array"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "error_messages"
                   ],
-                  "title": "ErrorOutput"
+                  "title": "ErrorOutput",
+                  "type": "object"
                 },
                 "examples": {
                   "error_example": {
@@ -28078,32 +28270,315 @@
               }
             }
           }
-        },
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Delete Report",
+        "operationId": "delete_report_api_v1_report__report_id__delete",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelIdOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Update Report",
+        "operationId": "update_report_api_v1_report__report_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportUpdate__IssuesPerFieldReportUpdate__IssuesPerTwoFieldsReportUpdate___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/api/v1/report/matrix": {
+    "/api/v1/report/{report_id}/permission": {
       "post": {
         "tags": [
           "api",
           "v1",
           "report"
         ],
-        "summary": "Make Matrix Report",
-        "operationId": "make_matrix_report_api_v1_report_matrix_post",
+        "summary": "Grant Permission",
+        "operationId": "grant_permission_api_v1_report__report_id__permission_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MatrixReportCreate"
+                "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -28111,7 +28586,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_MatrixReportOutput_"
+                  "$ref": "#/components/schemas/UUIDOutput"
                 }
               }
             }
@@ -28123,23 +28598,23 @@
                 "schema": {
                   "properties": {
                     "success": {
-                      "type": "boolean",
+                      "default": false,
                       "title": "Success",
-                      "default": false
+                      "type": "boolean"
                     },
                     "error_messages": {
                       "items": {
                         "type": "string"
                       },
-                      "type": "array",
-                      "title": "Error Messages"
+                      "title": "Error Messages",
+                      "type": "array"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "error_messages"
                   ],
-                  "title": "ErrorOutput"
+                  "title": "ErrorOutput",
+                  "type": "object"
                 },
                 "examples": {
                   "error_example": {
@@ -28162,23 +28637,23 @@
                 "schema": {
                   "properties": {
                     "success": {
-                      "type": "boolean",
+                      "default": false,
                       "title": "Success",
-                      "default": false
+                      "type": "boolean"
                     },
                     "error_messages": {
                       "items": {
                         "type": "string"
                       },
-                      "type": "array",
-                      "title": "Error Messages"
+                      "title": "Error Messages",
+                      "type": "array"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "error_messages"
                   ],
-                  "title": "ErrorOutput"
+                  "title": "ErrorOutput",
+                  "type": "object"
                 },
                 "examples": {
                   "error_example": {
@@ -28204,12 +28679,537 @@
               }
             }
           }
-        },
+        }
+      }
+    },
+    "/api/v1/report/{report_id}/permission/{permission_id}": {
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Revoke Permission",
+        "operationId": "revoke_permission_api_v1_report__report_id__permission__permission_id__delete",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report/{report_id}/favorite": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Favorite Report",
+        "operationId": "favorite_report_api_v1_report__report_id__favorite_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report/{report_id}/unfavorite": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Unfavorite Report",
+        "operationId": "unfavorite_report_api_v1_report__report_id__unfavorite_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report/{report_id}/generate": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Generate Report Data",
+        "operationId": "generate_report_data_api_v1_report__report_id__generate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/user-group/select": {
@@ -29321,6 +30321,23 @@
         ],
         "title": "BaseListOutput[RoleOutput]"
       },
+      "BaseListOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BaseListPayload_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BaseListOutput[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
+      },
       "BaseListOutput_SearchOutput_": {
         "properties": {
           "success": {
@@ -30076,6 +31093,37 @@
           "items"
         ],
         "title": "BaseListPayload[RoleOutput]"
+      },
+      "BaseListPayload_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "BaseListPayload[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "BaseListPayload_SearchOutput_": {
         "properties": {
@@ -36088,6 +37136,764 @@
         ],
         "title": "IssueVersionMultiFieldChangeOutput"
       },
+      "IssuesPerFieldReportCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_field",
+            "title": "Type",
+            "default": "issues_per_field"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "type": "string",
+              "maxLength": 24,
+              "minLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "field_gid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "format": "uuid",
+            "title": "Field Gid",
+            "description": "UUID string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "field_gid"
+        ],
+        "title": "IssuesPerFieldReportCreate"
+      },
+      "IssuesPerFieldReportOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectField"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_field",
+            "title": "Type",
+            "default": "issues_per_field"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "title": "Is Favorite",
+            "description": "Whether report is favorited by current user"
+          },
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "query",
+          "projects",
+          "created_by",
+          "permissions",
+          "is_favorite",
+          "field"
+        ],
+        "title": "IssuesPerFieldReportOutput"
+      },
+      "IssuesPerFieldReportUpdate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_field",
+            "title": "Type",
+            "default": "issues_per_field"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 24,
+                  "minLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          },
+          "field_gid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Gid"
+          }
+        },
+        "type": "object",
+        "title": "IssuesPerFieldReportUpdate"
+      },
+      "IssuesPerProjectReportCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_project",
+            "title": "Type",
+            "default": "issues_per_project"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "type": "string",
+              "maxLength": 24,
+              "minLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "IssuesPerProjectReportCreate"
+      },
+      "IssuesPerProjectReportDataItem": {
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/ProjectField",
+            "description": "Project information for this item"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of issues for this project"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "IssuesPerProjectReportDataItem",
+        "description": "Single item in an issues-per-project report dataset."
+      },
+      "IssuesPerProjectReportDataOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_project",
+            "title": "Type",
+            "default": "issues_per_project"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IssuesPerProjectReportDataItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of project report data items"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of issues across all projects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_count"
+        ],
+        "title": "IssuesPerProjectReportDataOutput",
+        "description": "Output model for generated issues-per-project report data."
+      },
+      "IssuesPerProjectReportOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectField"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_project",
+            "title": "Type",
+            "default": "issues_per_project"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "title": "Is Favorite",
+            "description": "Whether report is favorited by current user"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "query",
+          "projects",
+          "created_by",
+          "permissions",
+          "is_favorite"
+        ],
+        "title": "IssuesPerProjectReportOutput"
+      },
+      "IssuesPerProjectReportUpdate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_project",
+            "title": "Type",
+            "default": "issues_per_project"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 24,
+                  "minLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "title": "IssuesPerProjectReportUpdate"
+      },
+      "IssuesPerTwoFieldsReportCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_two_fields",
+            "title": "Type",
+            "default": "issues_per_two_fields"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "type": "string",
+              "maxLength": 24,
+              "minLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "row_field_gid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "format": "uuid",
+            "title": "Row Field Gid",
+            "description": "UUID string"
+          },
+          "column_field_gid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "format": "uuid",
+            "title": "Column Field Gid",
+            "description": "UUID string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "row_field_gid",
+          "column_field_gid"
+        ],
+        "title": "IssuesPerTwoFieldsReportCreate"
+      },
+      "IssuesPerTwoFieldsReportOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectField"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "type": {
+            "type": "string",
+            "const": "issues_per_two_fields",
+            "title": "Type",
+            "default": "issues_per_two_fields"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "title": "Is Favorite",
+            "description": "Whether report is favorited by current user"
+          },
+          "row_field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "column_field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "query",
+          "projects",
+          "created_by",
+          "permissions",
+          "is_favorite",
+          "row_field",
+          "column_field"
+        ],
+        "title": "IssuesPerTwoFieldsReportOutput"
+      },
+      "IssuesPerTwoFieldsReportUpdate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_two_fields",
+            "title": "Type",
+            "default": "issues_per_two_fields"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 24,
+                  "minLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          },
+          "row_field_gid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row Field Gid"
+          },
+          "column_field_gid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Field Gid"
+          }
+        },
+        "type": "object",
+        "title": "IssuesPerTwoFieldsReportUpdate"
+      },
       "MFASettingOut": {
         "properties": {
           "is_enabled": {
@@ -36128,107 +37934,6 @@
           "is_enabled"
         ],
         "title": "MFASettingUpdate"
-      },
-      "MatrixReportCreate": {
-        "properties": {
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "fields": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Fields"
-          }
-        },
-        "type": "object",
-        "required": [
-          "projects",
-          "fields"
-        ],
-        "title": "MatrixReportCreate"
-      },
-      "MatrixReportOutput": {
-        "properties": {
-          "columns": {
-            "items": {
-              "anyOf": [
-                {},
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Columns"
-          },
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/MatrixRow"
-            },
-            "type": "array",
-            "title": "Rows"
-          },
-          "totals": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Totals"
-          },
-          "grand_total": {
-            "type": "integer",
-            "title": "Grand Total"
-          }
-        },
-        "type": "object",
-        "required": [
-          "columns",
-          "rows",
-          "totals",
-          "grand_total"
-        ],
-        "title": "MatrixReportOutput"
-      },
-      "MatrixRow": {
-        "properties": {
-          "value": {
-            "anyOf": [
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
-          },
-          "values": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Values"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "values",
-          "count"
-        ],
-        "title": "MatrixRow"
       },
       "ModelIDPayload": {
         "properties": {
@@ -37526,95 +39231,6 @@
         "type": "object",
         "title": "ProjectUpdate"
       },
-      "Projects": {
-        "properties": {
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          }
-        },
-        "type": "object",
-        "required": [
-          "projects"
-        ],
-        "title": "Projects"
-      },
-      "ReportCreate": {
-        "properties": {
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "field": {
-            "type": "string",
-            "title": "Field"
-          }
-        },
-        "type": "object",
-        "required": [
-          "projects",
-          "field"
-        ],
-        "title": "ReportCreate"
-      },
-      "ReportItem": {
-        "properties": {
-          "value": {
-            "anyOf": [
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "count"
-        ],
-        "title": "ReportItem"
-      },
-      "ReportOutput": {
-        "properties": {
-          "values": {
-            "items": {
-              "$ref": "#/components/schemas/ReportItem"
-            },
-            "type": "array",
-            "title": "Values"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "values",
-          "count"
-        ],
-        "title": "ReportOutput"
-      },
       "RoleCreate": {
         "properties": {
           "name": {
@@ -37736,6 +39352,86 @@
         },
         "type": "object",
         "title": "RoleUpdate"
+      },
+      "RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssuesPerProjectReportDataOutput"
+          }
+        ],
+        "title": "RootModel[Annotated[IssuesPerProjectReportDataOutput, FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issues_per_project": "#/components/schemas/IssuesPerProjectReportDataOutput"
+          }
+        }
+      },
+      "RootModel_Annotated_Union_IssuesPerProjectReportCreate__IssuesPerFieldReportCreate__IssuesPerTwoFieldsReportCreate___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssuesPerProjectReportCreate"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerFieldReportCreate"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportCreate"
+          }
+        ],
+        "title": "RootModel[Annotated[Union[IssuesPerProjectReportCreate, IssuesPerFieldReportCreate, IssuesPerTwoFieldsReportCreate], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issues_per_field": "#/components/schemas/IssuesPerFieldReportCreate",
+            "issues_per_project": "#/components/schemas/IssuesPerProjectReportCreate",
+            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportCreate"
+          }
+        }
+      },
+      "RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssuesPerProjectReportOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerFieldReportOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportOutput"
+          }
+        ],
+        "title": "RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issues_per_field": "#/components/schemas/IssuesPerFieldReportOutput",
+            "issues_per_project": "#/components/schemas/IssuesPerProjectReportOutput",
+            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportOutput"
+          }
+        }
+      },
+      "RootModel_Annotated_Union_IssuesPerProjectReportUpdate__IssuesPerFieldReportUpdate__IssuesPerTwoFieldsReportUpdate___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssuesPerProjectReportUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerFieldReportUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportUpdate"
+          }
+        ],
+        "title": "RootModel[Annotated[Union[IssuesPerProjectReportUpdate, IssuesPerFieldReportUpdate, IssuesPerTwoFieldsReportUpdate], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issues_per_field": "#/components/schemas/IssuesPerFieldReportUpdate",
+            "issues_per_project": "#/components/schemas/IssuesPerProjectReportUpdate",
+            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportUpdate"
+          }
+        }
       },
       "ScheduledWorkflowOutput": {
         "properties": {
@@ -38847,23 +40543,6 @@
         ],
         "title": "SuccessPayloadOutput[MFASettingOut]"
       },
-      "SuccessPayloadOutput_MatrixReportOutput_": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/MatrixReportOutput"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "SuccessPayloadOutput[MatrixReportOutput]"
-      },
       "SuccessPayloadOutput_Profile_": {
         "properties": {
           "success": {
@@ -38898,23 +40577,6 @@
         ],
         "title": "SuccessPayloadOutput[ProjectOutput]"
       },
-      "SuccessPayloadOutput_ReportOutput_": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/ReportOutput"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "SuccessPayloadOutput[ReportOutput]"
-      },
       "SuccessPayloadOutput_RoleOutput_": {
         "properties": {
           "success": {
@@ -38931,6 +40593,40 @@
           "payload"
         ],
         "title": "SuccessPayloadOutput[RoleOutput]"
+      },
+      "SuccessPayloadOutput_RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[RootModel[Annotated[IssuesPerProjectReportDataOutput, FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
+      },
+      "SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "SuccessPayloadOutput_SearchOutput_": {
         "properties": {
@@ -41030,6 +42726,31 @@
           "type"
         ],
         "title": "WorkflowOutput"
+      },
+      "pm__api__routes__api__v1__report__GrantPermissionBody": {
+        "properties": {
+          "target_type": {
+            "$ref": "#/components/schemas/PermissionTargetType"
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "pattern": "^[0-9a-f]{24}$",
+            "title": "Target",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "permission_type": {
+            "$ref": "#/components/schemas/PermissionType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_type",
+          "target",
+          "permission_type"
+        ],
+        "title": "GrantPermissionBody"
       },
       "pm__api__routes__api__v1__search__GrantPermissionBody": {
         "properties": {
