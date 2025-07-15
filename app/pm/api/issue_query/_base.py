@@ -27,7 +27,7 @@ async def get_custom_fields() -> dict[str, m.CustomFieldTypeT]:
                         'type': {'$first': '$type'},
                     },
                 },
-            ]
+            ],
         )
         .to_list()
     )

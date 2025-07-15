@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 import redis.asyncio as aioredis
@@ -27,17 +27,11 @@ def _merge_field_changes(
     merged_changes: dict[str, m.IssueFieldChange] = {}
 
     for change in existing_changes:
-        if isinstance(change.field, str):
-            key = change.field
-        else:
-            key = str(change.field.id)  # type: ignore[union-attr]
+        key = change.field if isinstance(change.field, str) else str(change.field.id)  # type: ignore[union-attr]
         merged_changes[key] = change
 
     for change in new_changes:
-        if isinstance(change.field, str):
-            key = change.field
-        else:
-            key = str(change.field.id)  # type: ignore[union-attr]
+        key = change.field if isinstance(change.field, str) else str(change.field.id)  # type: ignore[union-attr]
 
         if key in merged_changes:
             existing_change = merged_changes[key]
@@ -115,7 +109,7 @@ async def schedule_batched_notification(
 
         author_key = author or 'system'
         batch_key = f'notification_batch:{issue_id_readable}:{author_key}'
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         existing_batch_data = await redis_client.get(batch_key)
 
         if existing_batch_data:
@@ -154,8 +148,8 @@ async def schedule_batched_notification(
         timer_key = f'notification_timer:{issue_id_readable}:{author_key}'
         await redis_client.setex(timer_key, delay_seconds, '1')
 
-    except Exception as e:
-        logger.error('Failed to schedule notification batch: %s', e)
+    except Exception:
+        logger.exception('Failed to schedule notification batch')
         await notify_by_pararam(
             action,
             issue_subject,

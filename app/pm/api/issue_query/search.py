@@ -22,7 +22,7 @@ from pm.api.issue_query.parse_logical_expression import (
     Node,
     OperatorError,
     OperatorNode,
-    UnexpectedEndOfExpression,
+    UnexpectedEndOfExpressionError,
     check_brackets,
     parse_logical_expression,
 )
@@ -39,11 +39,11 @@ DURATION_UNIT_MULTIPLIERS = {
 }
 
 __all__ = (
-    'transform_search',
-    'transform_text_search',
-    'SearchTransformError',
     'HASHTAG_VALUES',
     'RESERVED_FIELDS',
+    'SearchTransformError',
+    'transform_search',
+    'transform_text_search',
 )
 
 HASHTAG_VALUES = {'#resolved', '#unresolved'}
@@ -108,7 +108,7 @@ EXPRESSION_GRAMMAR = """
     datetime_left_inf_range: INF_MINUS_VALUE _RANGE_DELIMITER DATETIME_VALUE
     datetime_right_inf_range: DATETIME_VALUE _RANGE_DELIMITER INF_PLUS_VALUE
     user_value: USER_ME | EMAIL
-    
+
     relative_dt: dt_period_with_offset | dt_period
     dt_period_with_offset: (NOW_VALUE | TODAY_VALUE) (dt_offset)*
     dt_period: DATETIME_PERIOD_PREFIX DATETIME_PERIOD_UNIT
@@ -144,6 +144,7 @@ EXPRESSION_GRAMMAR = """
 
 # pylint: disable=invalid-name, unused-argument
 # noinspection PyMethodMayBeStatic, PyUnusedLocal, PyPep8Naming
+# ruff: noqa: ANN001, ANN202, N802
 class MongoQueryTransformer(Transformer):
     __current_user: str | None
     __cached_fields: dict[str, m.CustomFieldTypeT]
@@ -228,7 +229,7 @@ class MongoQueryTransformer(Transformer):
                 return {'_id': None}
             try:
                 return {'_id': PydanticObjectId(value)}
-            except InvalidId:
+            except InvalidId:  # noqa: S110
                 pass
             if isinstance(value, str):
                 value = self.escape_regex(value)
@@ -356,7 +357,7 @@ class MongoQueryTransformer(Transformer):
     def attribute_values(self, args):
         return args[0]
 
-    def NULL_VALUE(self, token):
+    def NULL_VALUE(self, token):  # noqa: ARG002
         return None
 
     def NUMBER_VALUE(self, token):
@@ -519,7 +520,7 @@ def _check_mongo_text_exp_exceeded(query: dict) -> bool:
             count += 1
             if count > 1:
                 return True
-        for _, value in current.items():
+        for value in current.values():
             if isinstance(value, dict):
                 stack.append(value)
             elif isinstance(value, list):
@@ -571,13 +572,14 @@ async def _transform_tree_and_extract_context(
 async def _merge_nodes_with_context(
     left: dict, right: dict, operator: LogicalOperatorT
 ) -> dict:
-    ctx = []
-    for query in (left, right):
-        if '__context_search' in query:
-            ctx.append(query.pop('__context_search'))
+    context_terms = [
+        node.pop('__context_search')
+        for node in (left, right)
+        if '__context_search' in node
+    ]
     result = {OPERATOR_MAP[operator]: [left, right]}
-    if ctx:
-        result['__context_search'] = ' '.join(ctx)
+    if context_terms:
+        result['__context_search'] = ' '.join(context_terms)
     return result
 
 
@@ -602,6 +604,7 @@ async def transform_tree(
             current_user_email=current_user_email,
         )
         return await _merge_nodes_with_context(left, right, node.operator)
+    return {}
 
 
 async def transform_search(query: str, current_user_email: str | None = None) -> dict:
@@ -624,7 +627,7 @@ async def transform_search(query: str, current_user_email: str | None = None) ->
             position=err.pos,
             expected=err.expected,
         ) from err
-    except UnexpectedEndOfExpression as err:
+    except UnexpectedEndOfExpressionError as err:
         raise SearchTransformError(str(err)) from err
     if not tree:
         return {}

@@ -11,8 +11,8 @@ import pm.models as m
 from ._base import IssueQueryTransformError, get_custom_fields
 
 __all__ = (
-    'transform_sort',
     'SortTransformError',
+    'transform_sort',
 )
 
 
@@ -37,8 +37,9 @@ class SortTransformError(IssueQueryTransformError):
 
 # pylint: disable=invalid-name, unused-argument
 # noinspection PyMethodMayBeStatic, PyUnusedLocal, PyPep8Naming
+# ruff: noqa: ANN001, ANN202, N802
 class SortTransformer(Transformer):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def sort_expression(self, args):
@@ -96,19 +97,19 @@ def _gen_sort_field(
                                             'input': '$$field.name',
                                             'regex': f'^{field_name.lower()}$',
                                             'options': 'i',
-                                        }
+                                        },
                                     },
-                                }
+                                },
                             },
                             'as': 'matchedField',
                             'in': f'$$matchedField.{map_value_subfield(field_type)}',
-                        }
+                        },
                     },
                     0,
-                ]
+                ],
             },
             None,
-        ]
+        ],
     }
 
 
@@ -135,20 +136,21 @@ async def transform_sort(
     projection_stage = {}
 
     for field_name, is_descending in fields:
-        field_name = field_name.lower()
+        field_name_lower = field_name.lower()
 
-        if field_name == 'project':
+        if field_name_lower == 'project':
             sort_field = 'project.name'
-        elif field_name == 'id':
+        elif field_name_lower == 'id':
             sort_field = '_id'
-        elif field_name in {'subject', 'updated_at', 'created_at'}:
-            sort_field = field_name
-        elif field_name in {'created_by', 'updated_by'}:
-            sort_field = f'{field_name}.email'
+        elif field_name_lower in {'subject', 'updated_at', 'created_at'}:
+            sort_field = field_name_lower
+        elif field_name_lower in {'created_by', 'updated_by'}:
+            sort_field = f'{field_name_lower}.email'
         else:
-            sort_field = f'{field_name}__sort'
+            sort_field = f'{field_name_lower}__sort'
             add_field_stage[sort_field] = _gen_sort_field(
-                field_name, custom_fields=custom_fields
+                field_name_lower,
+                custom_fields=custom_fields,
             )
             projection_stage[sort_field] = 0
 
@@ -159,19 +161,19 @@ async def transform_sort(
         pipeline.append(
             {
                 '$addFields': add_field_stage,
-            }
+            },
         )
     if sort_stage:
         pipeline.append(
             {
                 '$sort': sort_stage,
-            }
+            },
         )
     if projection_stage:
         pipeline.append(
             {
                 '$project': projection_stage,
-            }
+            },
         )
 
     return pipeline

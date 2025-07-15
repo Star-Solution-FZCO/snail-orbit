@@ -4,15 +4,15 @@ from collections.abc import Callable
 from enum import StrEnum
 
 __all__ = (
-    'parse_logical_expression',
-    'check_brackets',
-    'OperatorError',
     'BracketError',
-    'UnexpectedEndOfExpression',
-    'OperatorNode',
-    'Node',
     'ExpressionNode',
     'LogicalOperatorT',
+    'Node',
+    'OperatorError',
+    'OperatorNode',
+    'UnexpectedEndOfExpressionError',
+    'check_brackets',
+    'parse_logical_expression',
 )
 
 OPERATOR_PATTERN = re.compile(r'\b(and|or)\b', re.IGNORECASE)
@@ -81,7 +81,10 @@ class OperatorError(ValueError):
     previous_token: str | None
 
     def __init__(
-        self, operator: str, pos: int, previous_token: str | None = None
+        self,
+        operator: str,
+        pos: int,
+        previous_token: str | None = None,
     ) -> None:
         self.operator = operator
         self.pos = pos
@@ -97,7 +100,7 @@ class OperatorError(ValueError):
             return {'(', 'expression'}
         if self.previous_token in ('and', 'or', '('):
             return {'(', 'expression'}
-        if self.previous_token == ')':  # nosec hardcoded_password_string
+        if self.previous_token == ')':  # nosec hardcoded_password_string  # noqa: S105
             return {'and', 'or', ')'}
         return {'and', 'or', ')', 'expression'}
 
@@ -109,14 +112,15 @@ class BracketError(ValueError):
     def __init__(self, value: str | None, pos: int) -> None:
         self.value = value
         self.pos = pos
-        if value:
-            msg = f'Invalid bracket "{value}" at position {pos}'
-        else:
-            msg = f'Missing bracket at position {pos}'
+        msg = (
+            f'Invalid bracket "{value}" at position {pos}'
+            if value
+            else f'Missing bracket at position {pos}'
+        )
         super().__init__(msg)
 
 
-class UnexpectedEndOfExpression(ValueError):
+class UnexpectedEndOfExpressionError(ValueError):
     previous_token: str
 
     def __init__(self, previous_token: str) -> None:
@@ -146,7 +150,7 @@ def parse_and(tokens: list[tuple[str, int, int]]) -> Node:
     return left
 
 
-def parse_primary(tokens: list[tuple[str, int, int]]):
+def parse_primary(tokens: list[tuple[str, int, int]]) -> Node:
     token = tokens.pop(0)
     if token[0] == '(':
         expr = parse_or(tokens)
@@ -235,7 +239,7 @@ def parse_logical_expression(query: str) -> Node | None:
     if not tokens:
         return None
     if tokens[-1][0] in ('and', 'or'):
-        raise UnexpectedEndOfExpression(tokens[-1][0])
+        raise UnexpectedEndOfExpressionError(tokens[-1][0])
     tree = parse_or(tokens)
     if tokens:
         raise OperatorError(tokens[0][0], tokens[0][1])
