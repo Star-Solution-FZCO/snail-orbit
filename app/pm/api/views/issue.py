@@ -164,6 +164,9 @@ class IssueOutput(BaseModel):
     closed_at: datetime | None
     interlinks: list[IssueInterlinkOutput]
     tags: list[TagLinkOutput]
+    permissions: list[m.ProjectPermission]
+    disable_project_permissions_inheritance: bool
+    has_custom_permissions: bool
 
     @classmethod
     def from_obj(cls, obj: m.Issue) -> Self:
@@ -195,6 +198,9 @@ class IssueOutput(BaseModel):
             closed_at=obj.closed_at,
             interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
             tags=[TagLinkOutput.from_obj(tag) for tag in obj.tags],
+            permissions=obj.permissions,
+            disable_project_permissions_inheritance=obj.disable_project_permissions_inheritance,
+            has_custom_permissions=obj.has_custom_permissions,
         )
 
 

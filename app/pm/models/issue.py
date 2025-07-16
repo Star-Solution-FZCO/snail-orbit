@@ -9,6 +9,7 @@ import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
+from pm.permissions import Permissions
 from pm.utils.dateutils import utcnow
 from pm.utils.document import DocumentWithReadOnlyProjection
 
@@ -25,7 +26,9 @@ from .custom_fields import (
     StateOption,
     VersionOption,
 )
-from .project import Project, ProjectLinkField
+from .group import Group, GroupLinkField
+from .project import PermissionTargetType, Project, ProjectLinkField, ProjectPermission
+from .role import Role, RoleLinkField
 from .tag import Tag, TagLinkField
 from .user import User, UserLinkField
 
@@ -198,6 +201,18 @@ class Issue(DocumentWithReadOnlyProjection):
                 [('subscribers', 1), ('updated_at', -1)],
                 name='subscribers_updated_at_index',
             ),
+            pymongo.IndexModel(
+                [('permissions.target_type', 1), ('permissions.target.id', 1)],
+                name='permissions_target_index',
+            ),
+            pymongo.IndexModel(
+                [('permissions.role.permissions', 1)],
+                name='permissions_role_permissions_index',
+            ),
+            pymongo.IndexModel(
+                [('disable_project_permissions_inheritance', 1)],
+                name='inheritance_flag_index',
+            ),
         ]
 
     class Config:
@@ -225,6 +240,9 @@ class Issue(DocumentWithReadOnlyProjection):
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]
     encryption: list[EncryptionMeta] | None = None
 
+    permissions: Annotated[list[ProjectPermission], Field(default_factory=list)]
+    disable_project_permissions_inheritance: bool = False
+
     resolved_at: datetime | None = None
     closed_at: datetime | None = None
 
@@ -239,6 +257,10 @@ class Issue(DocumentWithReadOnlyProjection):
     @property
     def is_closed(self) -> bool:
         return bool(self.closed_at)
+
+    @property
+    def has_custom_permissions(self) -> bool:
+        return len(self.permissions) > 0
 
     def get_field_by_name(self, name: str) -> CustomFieldValue | None:
         return next((field for field in self.fields if field.name == name), None)
@@ -385,6 +407,22 @@ class Issue(DocumentWithReadOnlyProjection):
             ],
         )
 
+        await cls.find(
+            {
+                'permissions': {
+                    '$elemMatch': {
+                        'target_type': 'user',
+                        'target.id': user.id,
+                    },
+                },
+            },
+        ).update(
+            {'$set': {'permissions.$[p].target': user}},
+            array_filters=[
+                {'p.target_type': 'user', 'p.target.id': user.id},
+            ],
+        )
+
     @classmethod
     async def update_field_embedded_links(
         cls,
@@ -473,12 +511,91 @@ class Issue(DocumentWithReadOnlyProjection):
             {'$pull': {'tags': {'id': tag_id}}},
         )
 
+    @classmethod
+    async def update_group_embedded_links(
+        cls,
+        group: Group,
+    ) -> None:
+        group_link = GroupLinkField.from_obj(group)
+        await cls.find(
+            {
+                'permissions': {
+                    '$elemMatch': {'target_type': 'group', 'target.id': group.id}
+                }
+            },
+        ).update(
+            {'$set': {'permissions.$[p].target': group_link}},
+            array_filters=[{'p.target_type': 'group', 'p.target.id': group.id}],
+        )
+
+    @classmethod
+    async def remove_group_permissions_embedded_links(
+        cls,
+        group_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            {
+                'permissions': {
+                    '$elemMatch': {'target_type': 'group', 'target.id': group_id}
+                }
+            },
+        ).update(
+            {'$pull': {'permissions': {'target_type': 'group', 'target.id': group_id}}},
+        )
+
+    @classmethod
+    async def update_role_permissions_embedded_links(
+        cls,
+        role: Role,
+    ) -> None:
+        role_link = RoleLinkField.from_obj(role)
+        await cls.find(
+            {'permissions': {'$elemMatch': {'role.id': role.id}}},
+        ).update(
+            {'$set': {'permissions.$[p].role': role_link}},
+            array_filters=[{'p.role.id': role.id}],
+        )
+
+    @classmethod
+    async def remove_role_permissions_embedded_links(
+        cls,
+        role_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            {'permissions': {'$elemMatch': {'role.id': role_id}}},
+        ).update(
+            {'$pull': {'permissions': {'role.id': role_id}}},
+        )
+
     def get_alias_by_slug(self, slug: str) -> str | None:
         slug_pattern = re.compile(rf'^{slug}-\d+$')
         return next(
             (alias for alias in self.aliases if slug_pattern.fullmatch(alias)),
             None,
         )
+
+    def get_user_permissions(
+        self,
+        user: User,
+        predefined_groups: list[Group],
+    ) -> set[Permissions]:
+        results = set()
+        user_groups = {gr.id for gr in user.groups}.union(
+            {gr.id for gr in predefined_groups},
+        )
+        for perm in self.permissions:
+            if (
+                perm.target_type == PermissionTargetType.USER
+                and perm.target.id == user.id
+            ):
+                results.update(perm.role.permissions)
+                continue
+            if (
+                perm.target_type == PermissionTargetType.GROUP
+                and perm.target.id in user_groups
+            ):
+                results.update(perm.role.permissions)
+        return results
 
     @classmethod
     async def update_project_slug(

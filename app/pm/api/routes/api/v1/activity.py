@@ -4,10 +4,13 @@ from typing import Self
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
+from fastapi import Depends
 from pydantic import BaseModel
 
 import pm.models as m
+from pm.api.context import current_user, current_user_context_dependency
 from pm.api.utils.router import APIRouter
+from pm.api.views.error_responses import AUTH_ERRORS, error_responses
 from pm.api.views.issue import (
     IssueChangeOutputRootModel,
     ProjectField,
@@ -15,13 +18,17 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput
 from pm.api.views.user import UserOutput
-
-# No error responses needed for this public route
+from pm.permissions import Permissions
 from pm.utils.dateutils import utcfromtimestamp
 
 __all__ = ('router',)
 
-router = APIRouter(prefix='/activity', tags=['activity'])
+router = APIRouter(
+    prefix='/activity',
+    tags=['activity'],
+    dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(*AUTH_ERRORS),
+)
 
 
 class ActionT(StrEnum):
@@ -102,7 +109,9 @@ async def get_activity_list(
 ) -> BaseListOutput[Activity]:
     start_dt = utcfromtimestamp(start)
     end_dt = utcfromtimestamp(end)
+    user_ctx = current_user()
     flt = [
+        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
         bo.Or(
             bo.And(
                 m.Issue.history.time >= start_dt,

@@ -477,10 +477,7 @@ async def get_board_issues(
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
 
     q = m.Issue.find(
-        bo.In(
-            m.Issue.project.id,
-            user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-        ),
+        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
     )
 
     if board.query:

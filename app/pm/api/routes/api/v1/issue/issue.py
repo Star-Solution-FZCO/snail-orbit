@@ -26,6 +26,7 @@ from pm.api.views.output import (
     ErrorOutput,
     ModelIdOutput,
     SuccessPayloadOutput,
+    UUIDOutput,
 )
 from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
@@ -57,6 +58,7 @@ class IssueUpdate(BaseModel):
     text: EncryptedObject | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
+    disable_project_permissions_inheritance: bool | None = None
 
 
 class IssueDraftCreate(BaseModel):
@@ -97,16 +99,26 @@ class IssueTagDelete(BaseModel):
     tag_id: PydanticObjectId
 
 
+class IssuePermissionCreate(BaseModel):
+    target_type: m.PermissionTargetType
+    target_id: PydanticObjectId
+    role_id: PydanticObjectId
+
+
+class IssuePermissionOutput(BaseModel):
+    id: UUID
+    target_type: m.PermissionTargetType
+    target: m.GroupLinkField | m.UserLinkField
+    role: m.RoleLinkField
+
+
 @router.get('/list')
 async def list_issues(
     query: IssueListParams = Depends(),
 ) -> BaseListOutput[IssueOutput]:
     user_ctx = current_user()
     q = m.Issue.find(
-        bo.In(
-            m.Issue.project.id,
-            user_ctx.get_projects_with_permission(Permissions.ISSUE_READ),
-        ),
+        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
     )
 
     pipeline = []
@@ -736,9 +748,12 @@ async def link_issues(
     )
 
     target_issues: list[m.Issue] = await m.Issue.find(
-        bo.Or(
-            bo.In(m.Issue.id, body.target_issues),
-            bo.In(m.Issue.aliases, body.target_issues),
+        bo.And(
+            bo.Or(
+                bo.In(m.Issue.id, body.target_issues),
+                bo.In(m.Issue.aliases, body.target_issues),
+            ),
+            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
         ),
     ).to_list()
 
@@ -802,11 +817,8 @@ async def select_linkable_issues(
         bo.And(
             bo.NE(m.Issue.id, obj.id),
             bo.NotIn(m.Issue.id, [il.issue.id for il in obj.interlinks]),
-            bo.In(
-                m.Issue.project.id,
-                user_ctx.get_projects_with_permission(
-                    PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
-                ),
+            user_ctx.get_issue_filter_for_permission(
+                PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
             ),
             bo.Or(
                 bo.RegEx(m.Issue.subject, query.search, 'i'),
@@ -998,6 +1010,149 @@ async def untag_issue(
     await obj.replace()
 
     return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+
+
+@router.get(
+    '/{issue_id_or_alias}/permissions',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def get_issue_permissions(
+    issue_id_or_alias: PydanticObjectId | str,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[IssuePermissionOutput]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
+    return BaseListOutput.make(
+        items=[
+            IssuePermissionOutput(
+                id=perm.id,
+                target_type=perm.target_type,
+                target=perm.target,
+                role=perm.role,
+            )
+            for perm in obj.permissions[query.offset : query.offset + query.limit]
+        ],
+        count=len(obj.permissions),
+        limit=query.limit,
+        offset=query.offset,
+    )
+
+
+@router.post(
+    '/{issue_id_or_alias}/permission',
+    responses=error_responses(
+        (HTTPStatus.BAD_REQUEST, ErrorOutput),
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+        (HTTPStatus.CONFLICT, ErrorOutput),
+    ),
+)
+async def grant_issue_permission(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssuePermissionCreate,
+) -> UUIDOutput:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_UPDATE)
+
+    role: m.Role | None = await m.Role.find_one(m.Role.id == body.role_id)
+    if not role:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
+
+    if body.target_type == m.PermissionTargetType.GROUP:
+        target: m.Group | None = await m.Group.find_one(m.Group.id == body.target_id)
+        if not target:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
+        permission = m.ProjectPermission(
+            target_type=body.target_type,
+            target=m.GroupLinkField.from_obj(target),
+            role=m.RoleLinkField.from_obj(role),
+        )
+    else:
+        target: m.User | None = await m.User.find_one(m.User.id == body.target_id)
+        if not target:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+        permission = m.ProjectPermission(
+            target_type=body.target_type,
+            target=m.UserLinkField.from_obj(target),
+            role=m.RoleLinkField.from_obj(role),
+        )
+
+    if any(perm == permission for perm in obj.permissions):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Permission already exists')
+    obj.permissions.append(permission)
+    await obj.replace()
+    return UUIDOutput.make(permission.id)
+
+
+@router.delete(
+    '/{issue_id_or_alias}/permission/{permission_id}',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def revoke_issue_permission(
+    issue_id_or_alias: PydanticObjectId | str,
+    permission_id: UUID,
+) -> UUIDOutput:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_UPDATE)
+
+    if not any(perm.id == permission_id for perm in obj.permissions):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+    obj.permissions = [perm for perm in obj.permissions if perm.id != permission_id]
+    await obj.replace()
+    return UUIDOutput.make(permission_id)
+
+
+@router.get(
+    '/{issue_id_or_alias}/permissions/resolve',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def resolve_issue_permissions(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessPayloadOutput[dict[str, bool]]:
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+
+    effective_permissions = obj.get_user_permissions(
+        user_ctx.user, user_ctx.predefined_groups
+    )
+
+    if not obj.disable_project_permissions_inheritance:
+        project_permissions = user_ctx.permissions.get(obj.project.id, set())
+        effective_permissions = effective_permissions.union(project_permissions)
+
+    result = {perm.value: perm in effective_permissions for perm in Permissions}
+
+    return SuccessPayloadOutput(payload=result)
 
 
 async def validate_custom_fields_values(

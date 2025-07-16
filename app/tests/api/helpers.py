@@ -143,3 +143,117 @@ def run_crud_workflow(
     # Verify DELETE worked
     response = make_api_request(client, 'GET', entity_url, token)
     assert_error_response(response, 404)
+
+
+async def grant_issue_permission(
+    client: 'TestClient',
+    admin_token: str,
+    issue_id: str,
+    target_id: str,
+    target_type: str,
+    role_id: str,
+) -> str:
+    """Grant permission to an issue and return the permission ID."""
+    response = client.post(
+        f'/api/v1/issue/{issue_id}/permission',
+        headers={'Authorization': f'Bearer {admin_token}'},
+        json={
+            'target_type': target_type,
+            'target_id': target_id,
+            'role_id': role_id,
+        },
+    )
+    assert_success_response(response)
+    return response.json()['payload']['id']
+
+
+async def revoke_issue_permission(
+    client: 'TestClient',
+    admin_token: str,
+    issue_id: str,
+    permission_id: str,
+) -> None:
+    """Revoke permission from an issue."""
+    response = client.delete(
+        f'/api/v1/issue/{issue_id}/permission/{permission_id}',
+        headers={'Authorization': f'Bearer {admin_token}'},
+    )
+    assert_success_response(response)
+
+
+async def set_issue_inheritance(
+    client: 'TestClient',
+    admin_token: str,
+    issue_id: str,
+    disable_inheritance: bool,
+) -> None:
+    """Set the inheritance flag for an issue."""
+    response = client.put(
+        f'/api/v1/issue/{issue_id}',
+        headers={'Authorization': f'Bearer {admin_token}'},
+        json={'disable_project_permissions_inheritance': disable_inheritance},
+    )
+    assert_success_response(response)
+
+
+async def check_issue_access(
+    client: 'TestClient',
+    user_token: str,
+    issue_id: str,
+    should_have_access: bool = True,
+) -> None:
+    """Check if a user has access to an issue."""
+    response = client.get(
+        f'/api/v1/issue/{issue_id}',
+        headers={'Authorization': f'Bearer {user_token}'},
+    )
+
+    if should_have_access:
+        assert_success_response(response)
+    else:
+        assert_error_response(response, 403)
+
+
+async def check_issue_in_listing(
+    client: 'TestClient',
+    user_token: str,
+    issue_id: str,
+    should_be_listed: bool = True,
+) -> None:
+    """Check if an issue appears in the user's issue listing."""
+    response = client.get(
+        '/api/v1/issue/list',
+        headers={'Authorization': f'Bearer {user_token}'},
+    )
+    assert_success_response(response)
+
+    issue_ids = [issue['id'] for issue in response.json()['results']]
+
+    if should_be_listed:
+        assert issue_id in issue_ids, (
+            f'Issue {issue_id} should be in listing but was not found'
+        )
+    else:
+        assert issue_id not in issue_ids, (
+            f'Issue {issue_id} should not be in listing but was found'
+        )
+
+
+async def assert_issue_permissions_resolved(
+    client: 'TestClient',
+    user_token: str,
+    issue_id: str,
+    expected_permissions: dict[str, bool],
+) -> None:
+    """Assert that resolved permissions match expected values."""
+    response = client.get(
+        f'/api/v1/issue/{issue_id}/permissions/resolve',
+        headers={'Authorization': f'Bearer {user_token}'},
+    )
+    assert_success_response(response)
+
+    actual_permissions = response.json()['payload']
+    for permission, expected_value in expected_permissions.items():
+        assert actual_permissions[permission] == expected_value, (
+            f'Permission {permission} should be {expected_value} but was {actual_permissions[permission]}'
+        )
