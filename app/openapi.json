@@ -29116,7 +29116,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
                 }
               }
             }
@@ -37203,6 +37203,118 @@
         ],
         "title": "IssuesPerFieldReportCreate"
       },
+      "IssuesPerFieldReportDataItem": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "$ref": "#/components/schemas/UserLinkField"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserLinkField"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Field value for this item (null for empty values)"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of issues for this field value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "IssuesPerFieldReportDataItem",
+        "description": "Single item in an issues-per-field report dataset."
+      },
+      "IssuesPerFieldReportDataOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_field",
+            "title": "Type",
+            "default": "issues_per_field"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IssuesPerFieldReportDataItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of field report data items"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of issues across all field values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_count"
+        ],
+        "title": "IssuesPerFieldReportDataOutput",
+        "description": "Output model for generated issues-per-field report data."
+      },
       "IssuesPerFieldReportOutput": {
         "properties": {
           "id": {
@@ -37632,6 +37744,88 @@
         "type": "object",
         "title": "IssuesPerProjectReportUpdate"
       },
+      "IssuesPerTwoFieldsReportColumnItem": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "$ref": "#/components/schemas/UserLinkField"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserLinkField"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Column field value"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of issues for this column in the current row"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "IssuesPerTwoFieldsReportColumnItem",
+        "description": "Single column item within a row in a two-fields report."
+      },
       "IssuesPerTwoFieldsReportCreate": {
         "properties": {
           "name": {
@@ -37706,6 +37900,36 @@
           "column_field_gid"
         ],
         "title": "IssuesPerTwoFieldsReportCreate"
+      },
+      "IssuesPerTwoFieldsReportDataOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "issues_per_two_fields",
+            "title": "Type",
+            "default": "issues_per_two_fields"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/IssuesPerTwoFieldsReportRowItem"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "List of row items with nested column data"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of issues across all field combinations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "total_count"
+        ],
+        "title": "IssuesPerTwoFieldsReportDataOutput",
+        "description": "Output model for generated issues-per-two-fields report data."
       },
       "IssuesPerTwoFieldsReportOutput": {
         "properties": {
@@ -37788,6 +38012,97 @@
           "column_field"
         ],
         "title": "IssuesPerTwoFieldsReportOutput"
+      },
+      "IssuesPerTwoFieldsReportRowItem": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "$ref": "#/components/schemas/UserLinkField"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/UserLinkField"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/EnumOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EnumOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/StateOption"
+              },
+              {
+                "$ref": "#/components/schemas/VersionOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VersionOption"
+                },
+                "type": "array"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedOption"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OwnedOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Row field value"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of issues for this row across all columns"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/IssuesPerTwoFieldsReportColumnItem"
+            },
+            "type": "array",
+            "title": "Columns",
+            "description": "List of column items for this row"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "total",
+          "columns"
+        ],
+        "title": "IssuesPerTwoFieldsReportRowItem",
+        "description": "Single row item in a two-fields report dataset."
       },
       "IssuesPerTwoFieldsReportUpdate": {
         "properties": {
@@ -39353,20 +39668,6 @@
         "type": "object",
         "title": "RoleUpdate"
       },
-      "RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/IssuesPerProjectReportDataOutput"
-          }
-        ],
-        "title": "RootModel[Annotated[IssuesPerProjectReportDataOutput, FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "issues_per_project": "#/components/schemas/IssuesPerProjectReportDataOutput"
-          }
-        }
-      },
       "RootModel_Annotated_Union_IssuesPerProjectReportCreate__IssuesPerFieldReportCreate__IssuesPerTwoFieldsReportCreate___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
           {
@@ -39386,6 +39687,28 @@
             "issues_per_field": "#/components/schemas/IssuesPerFieldReportCreate",
             "issues_per_project": "#/components/schemas/IssuesPerProjectReportCreate",
             "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportCreate"
+          }
+        }
+      },
+      "RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssuesPerProjectReportDataOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerFieldReportDataOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportDataOutput"
+          }
+        ],
+        "title": "RootModel[Annotated[Union[IssuesPerProjectReportDataOutput, IssuesPerFieldReportDataOutput, IssuesPerTwoFieldsReportDataOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issues_per_field": "#/components/schemas/IssuesPerFieldReportDataOutput",
+            "issues_per_project": "#/components/schemas/IssuesPerProjectReportDataOutput",
+            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportDataOutput"
           }
         }
       },
@@ -40594,7 +40917,7 @@
         ],
         "title": "SuccessPayloadOutput[RoleOutput]"
       },
-      "SuccessPayloadOutput_RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
+      "SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -40602,14 +40925,14 @@
             "default": true
           },
           "payload": {
-            "$ref": "#/components/schemas/RootModel_Annotated_IssuesPerProjectReportDataOutput__FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+            "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
           }
         },
         "type": "object",
         "required": [
           "payload"
         ],
-        "title": "SuccessPayloadOutput[RootModel[Annotated[IssuesPerProjectReportDataOutput, FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
+        "title": "SuccessPayloadOutput[RootModel[Annotated[Union[IssuesPerProjectReportDataOutput, IssuesPerFieldReportDataOutput, IssuesPerTwoFieldsReportDataOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
         "properties": {

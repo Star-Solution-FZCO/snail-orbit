@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from beanie import PydanticObjectId
@@ -23,6 +23,7 @@ from pm.api.views.output import (
 from pm.api.views.params import ListParams
 from pm.api.views.permission import PermissionOutput
 from pm.api.views.user import UserOutput
+from pm.models.custom_fields import CustomFieldValueT
 from pm.utils.pydantic_uuid import UUIDStr
 
 if TYPE_CHECKING:
@@ -102,10 +103,68 @@ class IssuesPerProjectReportDataOutput(BaseModel):
     total_count: int = Field(description='Total number of issues across all projects')
 
 
+class IssuesPerFieldReportDataItem(BaseModel):
+    """Single item in an issues-per-field report dataset."""
+
+    value: CustomFieldValueT = Field(
+        description='Field value for this item (null for empty values)'
+    )
+    count: int = Field(description='Number of issues for this field value')
+
+
+class IssuesPerFieldReportDataOutput(BaseModel):
+    """Output model for generated issues-per-field report data."""
+
+    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
+    items: list[IssuesPerFieldReportDataItem] = Field(
+        description='List of field report data items'
+    )
+    total_count: int = Field(
+        description='Total number of issues across all field values'
+    )
+
+
+class IssuesPerTwoFieldsReportColumnItem(BaseModel):
+    """Single column item within a row in a two-fields report."""
+
+    value: CustomFieldValueT = Field(description='Column field value')
+    count: int = Field(
+        description='Number of issues for this column in the current row'
+    )
+
+
+class IssuesPerTwoFieldsReportRowItem(BaseModel):
+    """Single row item in a two-fields report dataset."""
+
+    value: CustomFieldValueT = Field(description='Row field value')
+    total: int = Field(
+        description='Total number of issues for this row across all columns'
+    )
+    columns: list[IssuesPerTwoFieldsReportColumnItem] = Field(
+        description='List of column items for this row'
+    )
+
+
+class IssuesPerTwoFieldsReportDataOutput(BaseModel):
+    """Output model for generated issues-per-two-fields report data."""
+
+    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
+        m.ReportType.ISSUES_PER_TWO_FIELDS
+    )
+    rows: list[IssuesPerTwoFieldsReportRowItem] = Field(
+        description='List of row items with nested column data'
+    )
+    total_count: int = Field(
+        description='Total number of issues across all field combinations'
+    )
+
+
 # Discriminated union for all report data outputs (extensible for future report types)
 ReportDataOutput = RootModel[
     Annotated[
-        IssuesPerProjectReportDataOutput,
+        IssuesPerProjectReportDataOutput
+        | IssuesPerFieldReportDataOutput
+        | IssuesPerTwoFieldsReportDataOutput,
         Field(discriminator='type'),
     ]
 ]
@@ -639,28 +698,44 @@ async def resolve_grant_permission_target(
     return m.GroupLinkField.from_obj(group)
 
 
-async def generate_per_project_report_data(
-    report: m.Report,
-    user_ctx: 'UserContext',
-) -> IssuesPerProjectReportDataOutput:
-    """Generate data for a per-project report."""
+def _make_hashable_key(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return tuple(sorted(value.items()))
+    if isinstance(value, list):
+        return tuple(value)
+    return value
 
-    flt = {
-        'project.id': {'$in': [p.id for p in report.projects]},
-    }
 
+def _sort_key(value: Any) -> tuple:
+    return (value is None, str(value) if value is not None else '')
+
+
+async def _build_base_filter(
+    report: m.Report, user_ctx: 'UserContext'
+) -> dict[str, Any]:
+    base_filter = {'project.id': {'$in': [p.id for p in report.projects]}}
     if report.query:
         try:
             query_filter, _sort_pipeline = await transform_query(
                 report.query, current_user_email=user_ctx.user.email
             )
             if query_filter:
-                flt = {'$and': [flt, query_filter]}
+                base_filter = {'$and': [base_filter, query_filter]}
         except IssueQueryTransformError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
+    return base_filter
+
+
+async def generate_per_project_report_data(
+    report: m.Report,
+    user_ctx: 'UserContext',
+) -> IssuesPerProjectReportDataOutput:
+    base_filter = await _build_base_filter(report, user_ctx)
 
     pipeline = [
-        {'$match': flt},
+        {'$match': base_filter},
         {
             '$group': {
                 '_id': '$project.id',
@@ -673,12 +748,10 @@ async def generate_per_project_report_data(
     ]
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
-
     count_lookup = {result['_id']: result['count'] for result in aggregation_result}
 
     items = []
     total_count = 0
-
     for project in report.projects:
         count = count_lookup.get(project.id, 0)
         items.append(
@@ -689,6 +762,161 @@ async def generate_per_project_report_data(
         )
         total_count += count
     return IssuesPerProjectReportDataOutput(items=items, total_count=total_count)
+
+
+async def generate_per_field_report_data(
+    report: m.IssuesPerFieldReport,
+    user_ctx: 'UserContext',
+) -> IssuesPerFieldReportDataOutput:
+    base_filter = await _build_base_filter(report, user_ctx)
+
+    pipeline = [
+        {'$match': base_filter},
+        {
+            '$addFields': {
+                'field_value': {
+                    '$arrayElemAt': [
+                        {
+                            '$filter': {
+                                'input': '$fields',
+                                'as': 'field',
+                                'cond': {'$eq': ['$$field.gid', report.field.gid]},
+                            }
+                        },
+                        0,
+                    ]
+                }
+            }
+        },
+        {
+            '$group': {
+                '_id': '$field_value.value',
+                'count': {'$sum': 1},
+            }
+        },
+        {'$sort': {'_id': 1}},
+    ]
+
+    aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+
+    items = []
+    total_count = 0
+    for result in aggregation_result:
+        field_value = result['_id']
+        count = result['count']
+        items.append(
+            IssuesPerFieldReportDataItem(
+                value=field_value,
+                count=count,
+            )
+        )
+        total_count += count
+
+    return IssuesPerFieldReportDataOutput(items=items, total_count=total_count)
+
+
+async def generate_per_two_fields_report_data(
+    report: m.IssuesPerTwoFieldsReport,
+    user_ctx: 'UserContext',
+) -> IssuesPerTwoFieldsReportDataOutput:
+    base_filter = await _build_base_filter(report, user_ctx)
+
+    pipeline = [
+        {'$match': base_filter},
+        {
+            '$addFields': {
+                'row_field_value': {
+                    '$arrayElemAt': [
+                        {
+                            '$filter': {
+                                'input': '$fields',
+                                'as': 'field',
+                                'cond': {'$eq': ['$$field.gid', report.row_field.gid]},
+                            }
+                        },
+                        0,
+                    ]
+                },
+                'column_field_value': {
+                    '$arrayElemAt': [
+                        {
+                            '$filter': {
+                                'input': '$fields',
+                                'as': 'field',
+                                'cond': {
+                                    '$eq': ['$$field.gid', report.column_field.gid]
+                                },
+                            }
+                        },
+                        0,
+                    ]
+                },
+            }
+        },
+        {
+            '$group': {
+                '_id': {
+                    'row_value': '$row_field_value.value',
+                    'column_value': '$column_field_value.value',
+                },
+                'count': {'$sum': 1},
+            }
+        },
+        {'$sort': {'_id.row_value': 1, '_id.column_value': 1}},
+    ]
+
+    aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+
+    row_groups = {}
+    total_count = 0
+
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        row_value = result_id.get('row_value')
+        column_value = result_id.get('column_value')
+        count = result.get('count', 0)
+
+        row_key = _make_hashable_key(row_value)
+
+        if row_key not in row_groups:
+            row_groups[row_key] = {'original_value': row_value, 'columns': []}
+
+        row_groups[row_key]['columns'].append(
+            {
+                'column_value': column_value,
+                'count': count,
+            }
+        )
+        total_count += count
+
+    rows = []
+    for row_data in row_groups.values():
+        original_row_value = row_data['original_value']
+        columns_data = row_data['columns']
+
+        row_total = sum(col['count'] for col in columns_data)
+
+        columns = [
+            IssuesPerTwoFieldsReportColumnItem(
+                value=col['column_value'],
+                count=col['count'],
+            )
+            for col in columns_data
+        ]
+
+        columns.sort(key=lambda x: _sort_key(x.value))
+
+        rows.append(
+            IssuesPerTwoFieldsReportRowItem(
+                value=original_row_value,
+                total=row_total,
+                columns=columns,
+            )
+        )
+
+    rows.sort(key=lambda x: _sort_key(x.value))
+
+    return IssuesPerTwoFieldsReportDataOutput(rows=rows, total_count=total_count)
 
 
 @router.post('/{report_id}/generate')
@@ -709,6 +937,10 @@ async def generate_report_data(
 
     if report.type == m.ReportType.ISSUES_PER_PROJECT:
         data = await generate_per_project_report_data(report, user_ctx)
+    elif report.type == m.ReportType.ISSUES_PER_FIELD:
+        data = await generate_per_field_report_data(report, user_ctx)
+    elif report.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
+        data = await generate_per_two_fields_report_data(report, user_ctx)
     else:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
