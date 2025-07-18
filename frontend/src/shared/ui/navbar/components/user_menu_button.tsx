@@ -1,7 +1,6 @@
 import { Info, Logout } from "@mui/icons-material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Avatar, ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
 import { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useState } from "react";
@@ -16,10 +15,12 @@ import { About } from "../../about";
 import { Link } from "../../link";
 
 export const UserMenuButton = memo(() => {
-    const dispatch = useAppDispatch();
-    const user = useAppSelector((state) => state.profile.user);
-    const navigate = useNavigate();
     const { t } = useTranslation();
+
+    const dispatch = useAppDispatch();
+
+    const user = useAppSelector((state) => state.profile.user);
+
     const popupState = usePopupState({
         variant: "popover",
         popupId: "user-menu",
@@ -30,13 +31,6 @@ export const UserMenuButton = memo(() => {
     const handleLogout = async () => {
         logout();
         dispatch(logoutAction());
-    };
-
-    const handleClickMenuItem = (path: string) => {
-        navigate({
-            to: path,
-        });
-        popupState.close();
     };
 
     const handleClickAboutItem = () => {
@@ -71,20 +65,23 @@ export const UserMenuButton = memo(() => {
                 }}
                 {...bindMenu(popupState)}
             >
-                <MenuItem onClick={() => handleClickMenuItem("/profile")}>
-                    <ListItemIcon>
-                        <SettingsIcon fontSize="small" />
-                    </ListItemIcon>
-                    {t("navbar.settings")}
-                </MenuItem>
+                <Link to="/profile" underline="none" color="inherit">
+                    <MenuItem onClick={() => popupState.close()}>
+                        <ListItemIcon>
+                            <SettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        {t("navbar.settings")}
+                    </MenuItem>
+                </Link>
+
                 <MenuItem onClick={handleClickAboutItem}>
                     <ListItemIcon>
                         <Info fontSize="small" />
                     </ListItemIcon>
                     {t("navbar.about")}
                 </MenuItem>
+
                 <MenuItem onClick={handleLogout}>
-                    {" "}
                     <ListItemIcon>
                         <Logout fontSize="small" />
                     </ListItemIcon>

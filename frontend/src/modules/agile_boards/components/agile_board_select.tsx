@@ -40,6 +40,7 @@ export const AgileBoardSelect: FC<AgileBoardSelectProps> = (props) => {
                     {value.name}
                 </Typography>
             </Button>
+
             <AgileBoardListPopover
                 open={!!buttonRef}
                 anchorEl={buttonRef}
