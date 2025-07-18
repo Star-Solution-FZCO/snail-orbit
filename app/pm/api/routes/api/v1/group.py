@@ -118,6 +118,7 @@ async def update_group(
         await obj.save_changes()
         await asyncio.gather(
             m.Project.update_group_embedded_links(obj),
+            m.Issue.update_group_embedded_links(obj),
             m.UserCustomField.update_group_embedded_links(obj),
             m.UserMultiCustomField.update_group_embedded_links(obj),
             m.User.update_group_embedded_links(obj),

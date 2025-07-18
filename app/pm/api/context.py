@@ -46,11 +46,18 @@ class UserContext:
         issue: m.Issue,
         permission: PermissionT,
     ) -> None:
-        if not self.has_permission(issue.project.id, permission):
-            raise HTTPException(
-                HTTPStatus.FORBIDDEN,
-                f'Permission {permission} required for this operation',
-            )
+        if not issue.disable_project_permissions_inheritance and self.has_permission(
+            issue.project.id, permission
+        ):
+            return
+
+        if self.check_issue_permissions(issue, permission):
+            return
+
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            f'Permission {permission} required for this operation',
+        )
 
     def validate_project_permission(
         self,
@@ -68,6 +75,52 @@ class UserContext:
         permission: PermissionT,
     ) -> set[PydanticObjectId]:
         return {pr for pr in self.permissions if self.has_permission(pr, permission)}
+
+    def get_issue_filter_for_permission(self, permission: PermissionT) -> dict:
+        user_project_ids = list(self.get_projects_with_permission(permission))
+        user_group_ids = [group.id for group in self.predefined_groups]
+
+        return {
+            '$or': [
+                {
+                    '$and': [
+                        {'disable_project_permissions_inheritance': {'$ne': True}},
+                        {'project.id': {'$in': user_project_ids}},
+                    ]
+                },
+                {
+                    'permissions': {
+                        '$elemMatch': {
+                            '$and': [
+                                {
+                                    '$or': [
+                                        {
+                                            'target_type': 'user',
+                                            'target.id': self.user.id,
+                                        },
+                                        {
+                                            'target_type': 'group',
+                                            'target.id': {'$in': user_group_ids},
+                                        },
+                                    ]
+                                },
+                                {'role.permissions': permission.value},
+                            ]
+                        }
+                    }
+                },
+            ]
+        }
+
+    def check_issue_permissions(
+        self,
+        issue: m.Issue,
+        permission: PermissionT,
+    ) -> bool:
+        issue_permissions = issue.get_user_permissions(
+            self.user, self.predefined_groups
+        )
+        return permission.check(issue_permissions)
 
 
 def get_bearer_token(

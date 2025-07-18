@@ -1036,7 +1036,15 @@ async def test_api_v1_issue(
     assert data['success']
     assert filter_dict(
         data['payload'],
-        excluded_keys={'created_at', 'created_by', 'fields', 'project'},
+        excluded_keys={
+            'created_at',
+            'created_by',
+            'fields',
+            'project',
+            'permissions',
+            'disable_project_permissions_inheritance',
+            'has_custom_permissions',
+        },
     ) == {
         'id': issue_id,
         'aliases': [issue_readable_id],

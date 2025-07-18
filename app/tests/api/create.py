@@ -16,12 +16,15 @@ __all__ = (
     'ROLE_PERMISSIONS_BY_CATEGORY',
     'create_group',
     'create_groups',
+    'create_issue',
+    'create_issues',
     'create_project',
     'create_projects',
     'create_role',
     'create_roles',
     'create_user',
     'create_users',
+    'grant_issue_permission',
 )
 
 
@@ -382,3 +385,65 @@ def _upload_attachment(
     payload = response.json()
     assert payload['success']
     return payload['payload']['id']
+
+
+async def _create_issue(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    issue_payload: dict,
+) -> str:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post('/api/v1/issue', headers=headers, json=issue_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['payload']['id']
+    return data['payload']['id']
+
+
+@pytest_asyncio.fixture
+async def create_issue(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    issue_payload: dict,
+) -> str:
+    return await _create_issue(test_client, create_initial_admin, issue_payload)
+
+
+@pytest_asyncio.fixture
+async def create_issues(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    issue_payloads: list[dict],
+) -> list[str]:
+    issue_ids = []
+    for issue_payload in issue_payloads:
+        issue_id = await _create_issue(test_client, create_initial_admin, issue_payload)
+        issue_ids.append(issue_id)
+    return issue_ids
+
+
+async def grant_issue_permission(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    issue_id: str,
+    target_id: str,
+    target_type: str,
+    role_id: str,
+) -> str:
+    """Grant permission to an issue and return the permission ID."""
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        f'/api/v1/issue/{issue_id}/permission',
+        headers=headers,
+        json={
+            'target_type': target_type,
+            'target_id': target_id,
+            'role_id': role_id,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    return data['payload']['id']
