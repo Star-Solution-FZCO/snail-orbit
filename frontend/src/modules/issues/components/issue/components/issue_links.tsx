@@ -26,7 +26,7 @@ import type { IssueLinkT, IssueLinkTypeT } from "shared/model/types";
 import { linkTypes } from "shared/model/types";
 import { IssueLink } from "shared/ui/issue_link";
 import { toastApiError } from "shared/utils";
-import { slugify } from "transliteration";
+import { useIssueLinkProps } from "widgets/issue/issue_link/use_issue_link_props";
 
 const groupLinksByType = (links: IssueLinkT[]) => {
     return links.reduce<Record<IssueLinkTypeT, IssueLinkT[]>>(
@@ -55,6 +55,8 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
     const { t } = useTranslation();
 
     const { issue, id, type } = link;
+
+    const issueLinkProps = useIssueLinkProps(issue);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -108,24 +110,14 @@ const IssueLinkCard: FC<IIssueLinkCardProps> = ({
                 fontSize={14}
             >
                 <IssueLink
-                    to="/issues/$issueId/$subject"
-                    params={{
-                        issueId: issue.id_readable,
-                        subject: slugify(issue.subject),
-                    }}
+                    {...issueLinkProps}
                     resolved={issue.is_resolved}
                     lineThrough={issue.is_resolved}
                 >
                     {issue.id_readable}
                 </IssueLink>
-                <IssueLink
-                    to="/issues/$issueId/$subject"
-                    params={{
-                        issueId: issue.id_readable,
-                        subject: slugify(issue.subject),
-                    }}
-                    resolved={issue.is_resolved}
-                >
+
+                <IssueLink {...issueLinkProps} resolved={issue.is_resolved}>
                     {issue.subject}
                 </IssueLink>
             </Box>

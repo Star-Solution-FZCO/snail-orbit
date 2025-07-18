@@ -22,6 +22,7 @@ import { IssueLink } from "shared/ui/issue_link";
 import { notEmpty } from "shared/utils/helpers/notEmpty";
 import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser/custom_fields_chip_parser";
+import { useIssueLinkProps } from "widgets/issue/issue_link/use_issue_link_props";
 import type { TotalAgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
 
 export type IssueCardProps = {
@@ -44,6 +45,8 @@ export const AgileCard: FC<IssueCardProps> = memo(
         const { id_readable, subject, project } = outerIssue;
         const { minCardHeight, showCustomFields, showDescription } =
             cardSetting;
+
+        const issueLinkProps = useIssueLinkProps(outerIssue);
 
         const { data: projectData, isLoading: isProjectLoading } =
             projectApi.useGetProjectQuery(project.id);
@@ -114,14 +117,10 @@ export const AgileCard: FC<IssueCardProps> = memo(
             >
                 <IssueCardBody>
                     <IssueCardHeader>
-                        <IssueLink
-                            to="/issues/$issueId"
-                            params={{ issueId: id_readable }}
-                        >
-                            {id_readable}
-                        </IssueLink>
+                        <IssueLink {...issueLinkProps}>{id_readable}</IssueLink>
                         <span>{subject}</span>
                     </IssueCardHeader>
+
                     {showDescription &&
                         issue &&
                         issue.text &&
@@ -130,7 +129,9 @@ export const AgileCard: FC<IssueCardProps> = memo(
                                 {issue.text.value}
                             </IssueCardDescription>
                         )}
+
                     {isProjectLoading || isLoading ? <LinearProgress /> : null}
+
                     {projectData &&
                     !isProjectLoading &&
                     !isLoading &&

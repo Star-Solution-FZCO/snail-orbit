@@ -8,7 +8,12 @@ import {
     useColorScheme,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { setEditorMode, useAppDispatch, useAppSelector } from "shared/model";
+import {
+    setEditorMode,
+    setIssueLinkMode,
+    useAppDispatch,
+    useAppSelector,
+} from "shared/model";
 
 export const Workspace = () => {
     const { t } = useTranslation();
@@ -17,6 +22,9 @@ export const Workspace = () => {
     const { mode: themeMode, setMode } = useColorScheme();
 
     const editorMode = useAppSelector((state) => state.shared.editor.mode);
+    const issueLinkMode = useAppSelector(
+        (state) => state.shared.issueLinks.mode,
+    );
 
     return (
         <Stack spacing={2} height={1}>
@@ -79,6 +87,36 @@ export const Workspace = () => {
                         value="lexical"
                         control={<Radio />}
                         label={t("profile.workspace.editor.lexical")}
+                    />
+                </RadioGroup>
+            </FormControl>
+
+            <FormControl>
+                <FormLabel id="issue-link-toggle">
+                    {t("profile.workspace.issueLink")}
+                </FormLabel>
+                <RadioGroup
+                    name="issue-link-toggle"
+                    value={issueLinkMode}
+                    onChange={(event) =>
+                        dispatch(
+                            setIssueLinkMode(
+                                event.target.value as "long" | "short",
+                            ),
+                        )
+                    }
+                    aria-labelledby="issue-link-toggle"
+                    row
+                >
+                    <FormControlLabel
+                        value="long"
+                        control={<Radio />}
+                        label={t("profile.workspace.issueLink.long")}
+                    />
+                    <FormControlLabel
+                        value="short"
+                        control={<Radio />}
+                        label={t("profile.workspace.issueLink.short")}
                     />
                 </RadioGroup>
             </FormControl>

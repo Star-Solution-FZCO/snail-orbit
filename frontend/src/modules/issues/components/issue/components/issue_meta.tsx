@@ -4,7 +4,7 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueT } from "shared/model/types";
 import { IssueLink } from "shared/ui/issue_link";
-import { slugify } from "transliteration";
+import { useIssueLinkProps } from "widgets/issue/issue_link/use_issue_link_props";
 
 type IssueMetaProps = {
     issue: IssueT;
@@ -24,15 +24,13 @@ const renderTimestamp = (date: string) => (
 export const IssueMeta: FC<IssueMetaProps> = ({ issue }) => {
     const { t } = useTranslation();
 
+    const issueLinkProps = useIssueLinkProps(issue);
+
     return (
         <Box display="flex" alignItems="center" fontSize={14} flexWrap="wrap">
             <IssueLink
                 mr={1}
-                to="/issues/$issueId/$subject"
-                params={{
-                    issueId: issue.id,
-                    subject: slugify(issue.subject),
-                }}
+                {...issueLinkProps}
                 resolved={issue.is_resolved}
                 lineThrough={issue.is_resolved}
             >
