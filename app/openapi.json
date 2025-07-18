@@ -30143,6 +30143,11 @@
         ],
         "summary": "Select Users And Groups",
         "operationId": "select_users_and_groups_api_v1_user_group_select_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -30578,6 +30583,11 @@
         ],
         "summary": "Get Issue Events",
         "operationId": "get_issue_events_events_issue_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "ids",

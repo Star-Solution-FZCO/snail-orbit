@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.api.context import current_user
+from pm.api.context import current_user, current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueCommentOutput, IssueHistoryOutput
 from pm.api.views.output import BaseListOutput
@@ -21,6 +21,7 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/{issue_id_or_alias}/feed',
     tags=['comment', 'history', 'feed'],
+    dependencies=[Depends(current_user_context_dependency)],
 )
 
 

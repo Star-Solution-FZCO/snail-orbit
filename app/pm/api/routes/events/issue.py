@@ -5,10 +5,11 @@ from typing import Any
 import beanie.operators as bo
 import redis.asyncio as aioredis
 from beanie import PydanticObjectId
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 import pm.models as m
+from pm.api.context import current_user_context_dependency
 from pm.api.utils.query_params import (
     pydantic_object_id_validator,
     query_comma_separated_list_param,
@@ -22,7 +23,10 @@ from ._base import SentEventOutput, SentEventType, with_ping
 __all__ = ('router',)
 
 
-router = APIRouter(prefix='/issue')
+router = APIRouter(
+    prefix='/issue',
+    dependencies=[Depends(current_user_context_dependency)],
+)
 
 
 MAP_SENT_EVENT_TYPE = {

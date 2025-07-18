@@ -5,6 +5,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 import pm.models as m
+from pm.api.context import current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import error_responses
 from pm.api.views.group import GroupOutput
@@ -18,6 +19,7 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/user-group',
     tags=['user', 'group'],
+    dependencies=[Depends(current_user_context_dependency)],
 )
 
 
