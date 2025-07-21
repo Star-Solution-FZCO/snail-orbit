@@ -4,18 +4,18 @@ import { createLink } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
 
-type IssueLinkProps = {
+export type IssueLinkComponentProps = {
     variant?: "default" | "silent";
     lineThrough?: boolean;
     resolved?: boolean;
 } & Omit<ComponentProps<typeof Link>, "variant">;
 
 // @ts-expect-error Type mismatch meh
-const IssueLinkComp: StyledComponent<IssueLinkProps> = styled(Link, {
+const IssueLinkComp: StyledComponent<IssueLinkComponentProps> = styled(Link, {
     name: "IssueLink",
     shouldForwardProp: (name) =>
         !["lineThrough", "resolved", "variant"].includes(name.toString()),
-})<IssueLinkProps>(({ theme, variant, lineThrough, resolved }) => ({
+})<IssueLinkComponentProps>(({ theme, variant, lineThrough, resolved }) => ({
     color: resolved
         ? theme.palette.text.disabled
         : variant === "silent"
@@ -30,10 +30,10 @@ const IssueLinkComp: StyledComponent<IssueLinkProps> = styled(Link, {
     },
 }));
 
-const IssueLink = createLink(
-    forwardRef<HTMLAnchorElement, IssueLinkProps>((props, ref) => (
+const IssueLinkComponent = createLink(
+    forwardRef<HTMLAnchorElement, IssueLinkComponentProps>((props, ref) => (
         <IssueLinkComp {...props} ref={ref} />
     )),
 );
 
-export { IssueLink };
+export { IssueLinkComponent };

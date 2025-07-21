@@ -9,6 +9,7 @@ import type {
     EnumOptionOutput,
     OwnedCustomFieldOutput,
     OwnedMultiCustomFieldOutput,
+    OwnedOption,
     OwnedOptionOutput,
     StateOption,
     StateOptionOutput,

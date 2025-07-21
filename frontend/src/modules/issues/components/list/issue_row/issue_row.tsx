@@ -1,8 +1,7 @@
 import { Stack } from "@mui/material";
 import type { FC } from "react";
 import { memo, useCallback } from "react";
-import { IssueLink } from "shared/ui/issue_link";
-import { useIssueLinkProps } from "widgets/issue/issue_link/use_issue_link_props";
+import { IssueLink } from "widgets/issue/issue_link/issue_link";
 import { IssueSubscribeButton } from "../../issue/components/issue_subscribe_button";
 import { IssueTags } from "../../issue/components/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
@@ -13,8 +12,6 @@ import { UpdateTime } from "./update_time";
 export const IssueRow: FC<IssueRowProps> = memo(
     ({ issue, showCustomFields, showDescription, onIssueRowDoubleClick }) => {
         const { subject, id_readable, text } = issue;
-
-        const issueLinkProps = useIssueLinkProps(issue);
 
         const handleDoubleClick = useCallback(() => {
             onIssueRowDoubleClick?.(issue);
@@ -32,17 +29,14 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         <IssueSubscribeButton issue={issue} />
 
                         <IssueLink
-                            {...issueLinkProps}
+                            issue={issue}
                             lineThrough={issue.is_resolved}
                             resolved={issue.is_resolved}
                         >
                             {id_readable}
                         </IssueLink>
 
-                        <IssueLink
-                            {...issueLinkProps}
-                            resolved={issue.is_resolved}
-                        >
+                        <IssueLink issue={issue} resolved={issue.is_resolved}>
                             {subject}
                         </IssueLink>
 

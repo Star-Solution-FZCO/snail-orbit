@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
 import { StarButton } from "shared/ui";
-import { IssueLink } from "shared/ui/issue_link";
+import { IssueLinkComponent } from "shared/ui/issue_link";
 
 type BoardRowProps = {
     board: AgileBoardT;
@@ -29,9 +29,9 @@ export const BoardRow: FC<BoardRowProps> = ({ board }) => {
             />
 
             <Box>
-                <IssueLink to="/agiles/$boardId" params={{ boardId: board.id }}>
+                <IssueLinkComponent to="/agiles/$boardId" params={{ boardId: board.id }}>
                     {board.name}
-                </IssueLink>
+                </IssueLinkComponent>
 
                 <Typography
                     variant="subtitle2"
