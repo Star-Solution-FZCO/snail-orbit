@@ -54,8 +54,13 @@ export const AdminSettingsButton = memo(() => {
                 }}
                 {...bindMenu(popupState)}
             >
-                {links.map((link) => (
-                    <Link to={link.path} underline="none" color="inherit">
+                {links.map((link, index) => (
+                    <Link
+                        key={`admin-settings-button-${index + 1}`}
+                        to={link.path}
+                        underline="none"
+                        color="inherit"
+                    >
                         <MenuItem onClick={() => popupState.close()}>
                             {t(link.label)}
                         </MenuItem>

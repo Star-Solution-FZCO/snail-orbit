@@ -71,7 +71,7 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
                 <Box display="flex" flexDirection="column" gap={1} flex={1}>
                     <MDEditor
                         value={text}
-                        onChange={(value) => setText(value || "")}
+                        onChange={setText}
                         placeholder={t("issues.comments.write")}
                         autoFocus
                         autoHeight
