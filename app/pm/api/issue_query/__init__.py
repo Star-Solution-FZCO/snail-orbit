@@ -24,8 +24,11 @@ def split_query(query: str) -> tuple[str, str]:
 async def transform_query(
     query: str,
     current_user_email: str | None = None,
+    sort_by: str | None = None,
 ) -> tuple[dict, list]:
     search_part, sort_part = split_query(query)
+    if sort_by:
+        sort_part = sort_by
     return await transform_search(
         search_part,
         current_user_email,

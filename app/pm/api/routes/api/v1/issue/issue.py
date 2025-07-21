@@ -122,19 +122,21 @@ async def list_issues(
     )
 
     pipeline = []
-    if query.q:
+    if query.q or query.sort_by:
         try:
             flt, sort_pipeline = await transform_query(
-                query.q,
+                query.q or '',
                 current_user_email=user_ctx.user.email,
+                sort_by=query.sort_by,
             )
             pipeline += sort_pipeline
+            if flt:
+                q = q.find(flt)
         except IssueQueryTransformError as err:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 err.message,
             ) from err
-        q = q.find(flt)
     if query.search:
         q = q.find(transform_text_search(query.search))
     cnt = await q.count()

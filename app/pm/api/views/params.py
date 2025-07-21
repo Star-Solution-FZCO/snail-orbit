@@ -54,3 +54,4 @@ class ListParams(BaseModel):
 class IssueSearchParams(BaseModel):
     q: str | None = Query(None, description='search query')
     search: str | None = Query(None, description='context search')
+    sort_by: str | None = Query(None, description='sort criteria')
