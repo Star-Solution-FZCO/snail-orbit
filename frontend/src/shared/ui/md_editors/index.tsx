@@ -1,5 +1,10 @@
 import type { FC } from "react";
-import { useAppSelector } from "shared/model";
+import type { EditorMode } from "../../model/types/settings";
+import {
+    EDITOR_MODE_DEFAULT_VALUE,
+    EDITOR_MODE_KEY,
+} from "../../model/types/settings";
+import { useLSState } from "../../utils/helpers/local-storage";
 import { MDEditorV1 } from "./v1";
 import { MDEditorV2 } from "./v2";
 
@@ -15,7 +20,10 @@ export interface MDEditorProps {
 }
 
 export const MDEditor: FC<MDEditorProps> = (props) => {
-    const editorMode = useAppSelector((state) => state.shared.editor.mode);
+    const [editorMode] = useLSState<EditorMode>(
+        EDITOR_MODE_KEY,
+        EDITOR_MODE_DEFAULT_VALUE,
+    );
 
     switch (editorMode) {
         case "lexical":

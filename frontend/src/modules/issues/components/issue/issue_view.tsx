@@ -4,13 +4,12 @@ import { useState } from "react";
 import type { IssueT, ProjectT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { IssueCustomFields } from "widgets/issue/issue_custom_fields/issue_custom_fields";
-import { AddLinks } from "./components/add_links";
 import { FieldContainer } from "./components/field_container";
 import { IssueActivities } from "./components/issue_activities/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";
 import { IssueForm } from "./components/issue_form";
 import { IssueHeading } from "./components/issue_heading";
-import { IssueLinks } from "./components/issue_links";
+import { IssueLinks } from "./components/issue_links/issue_links";
 import { IssueMeta } from "./components/issue_meta";
 import { IssueTags } from "./components/issue_tags";
 
@@ -36,6 +35,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
     } = props;
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
+    const [isLinksAddOpen, setIsLinksAddOpen] = useState<boolean>(false);
 
     const handleChangeDisplayMode = () =>
         setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
@@ -54,6 +54,9 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                                 issue={issue}
                                 onEditClick={handleChangeDisplayMode}
                                 isEncrypted={isEncrypted}
+                                onLinkClick={() =>
+                                    setIsLinksAddOpen((prev) => !prev)
+                                }
                             />
                             <IssueTags issue={issue} />
                         </Stack>
@@ -68,9 +71,12 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                     loading={loading}
                 />
 
-                <AddLinks issueId={issueId} />
-
-                <IssueLinks issueId={issueId} links={issue.interlinks} />
+                <IssueLinks
+                    issueId={issueId}
+                    links={issue.interlinks}
+                    isAddLinksOpened={isLinksAddOpen}
+                    onIsLinksOpenedToggle={setIsLinksAddOpen}
+                />
 
                 <IssueAttachments
                     issue={issue}

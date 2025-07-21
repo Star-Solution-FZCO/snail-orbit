@@ -14,13 +14,12 @@ import {
     userApi,
     workflowApi,
 } from "./api";
-import { profileReducer, sharedReducer } from "./slices";
+import { profileReducer } from "./slices";
 
 export const store = configureStore({
     devTools: import.meta.env.DEV,
     reducer: {
         profile: profileReducer,
-        shared: sharedReducer,
         [projectApi.reducerPath]: projectApi.reducer,
         [customFieldsApi.reducerPath]: customFieldsApi.reducer,
         [issueApi.reducerPath]: issueApi.reducer,

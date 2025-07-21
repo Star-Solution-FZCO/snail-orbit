@@ -1,7 +1,12 @@
-import { useAppSelector } from "shared/model";
 import type { IssueT } from "shared/model/types";
+import type { IssueLinkMode } from "shared/model/types/settings";
+import {
+    ISSUE_LINK_MODE_DEFAULT_VALUE,
+    ISSUE_LINK_MODE_KEY,
+} from "shared/model/types/settings";
 import type { IssueLinkComponentProps } from "shared/ui/issue_link";
 import { IssueLinkComponent } from "shared/ui/issue_link";
+import { useLSState } from "shared/utils/helpers/local-storage";
 import { slugify } from "transliteration";
 
 type IssueLinkProps = {
@@ -11,8 +16,9 @@ type IssueLinkProps = {
 export const IssueLink = (props: IssueLinkProps) => {
     const { issue, ...rest } = props;
 
-    const issueLinkMode = useAppSelector(
-        (state) => state.shared.issueLinks.mode,
+    const [issueLinkMode] = useLSState<IssueLinkMode>(
+        ISSUE_LINK_MODE_KEY,
+        ISSUE_LINK_MODE_DEFAULT_VALUE,
     );
 
     return (

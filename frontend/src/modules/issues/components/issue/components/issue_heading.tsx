@@ -10,12 +10,19 @@ import { IssueSubscribeButton } from "./issue_subscribe_button";
 type IssueHeadingProps = {
     issue: IssueT;
     onEditClick?: () => unknown;
+    onLinkClick?: () => unknown;
     hideSubscribeButton?: boolean;
     isEncrypted?: boolean;
 };
 
 export const IssueHeading: FC<IssueHeadingProps> = (props) => {
-    const { issue, onEditClick, hideSubscribeButton, isEncrypted } = props;
+    const {
+        issue,
+        onEditClick,
+        hideSubscribeButton,
+        isEncrypted,
+        onLinkClick,
+    } = props;
 
     return (
         <Stack
@@ -60,7 +67,7 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
                     </IconButton>
                 </Tooltip>
 
-                <HeadingControls issue={issue} />
+                <HeadingControls issue={issue} onLinkClick={onLinkClick} />
             </Stack>
         </Stack>
     );

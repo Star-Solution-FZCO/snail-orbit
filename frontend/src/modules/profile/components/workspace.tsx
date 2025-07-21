@@ -8,22 +8,28 @@ import {
     useColorScheme,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import type { EditorMode, IssueLinkMode } from "shared/model/types/settings";
 import {
-    setEditorMode,
-    setIssueLinkMode,
-    useAppDispatch,
-    useAppSelector,
-} from "shared/model";
+    EDITOR_MODE_DEFAULT_VALUE,
+    EDITOR_MODE_KEY,
+    ISSUE_LINK_MODE_DEFAULT_VALUE,
+    ISSUE_LINK_MODE_KEY,
+} from "shared/model/types/settings";
+import { useLSState } from "shared/utils/helpers/local-storage";
 
 export const Workspace = () => {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
 
     const { mode: themeMode, setMode } = useColorScheme();
 
-    const editorMode = useAppSelector((state) => state.shared.editor.mode);
-    const issueLinkMode = useAppSelector(
-        (state) => state.shared.issueLinks.mode,
+    const [issueLinkMode, setIssueLinkMode] = useLSState<IssueLinkMode>(
+        ISSUE_LINK_MODE_KEY,
+        ISSUE_LINK_MODE_DEFAULT_VALUE,
+    );
+
+    const [editorMode, setEditorMode] = useLSState<EditorMode>(
+        EDITOR_MODE_KEY,
+        EDITOR_MODE_DEFAULT_VALUE,
     );
 
     return (
@@ -69,11 +75,7 @@ export const Workspace = () => {
                     name="editor-toggle"
                     value={editorMode}
                     onChange={(event) =>
-                        dispatch(
-                            setEditorMode(
-                                event.target.value as "ckeditor" | "lexical",
-                            ),
-                        )
+                        setEditorMode(event.target.value as EditorMode)
                     }
                     aria-labelledby="editor-toggle"
                     row
@@ -99,11 +101,7 @@ export const Workspace = () => {
                     name="issue-link-toggle"
                     value={issueLinkMode}
                     onChange={(event) =>
-                        dispatch(
-                            setIssueLinkMode(
-                                event.target.value as "long" | "short",
-                            ),
-                        )
+                        setIssueLinkMode(event.target.value as IssueLinkMode)
                     }
                     aria-labelledby="issue-link-toggle"
                     row

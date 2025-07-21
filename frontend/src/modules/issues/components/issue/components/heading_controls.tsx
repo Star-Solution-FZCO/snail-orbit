@@ -15,7 +15,7 @@ import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, toggleIssueLinks, useAppDispatch } from "shared/model";
+import { issueApi } from "shared/model";
 import { issueToCreateIssue } from "shared/model/mappers/issue";
 import type { IssueT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
@@ -23,13 +23,16 @@ import { slugify } from "transliteration";
 import { DeleteIssueDialog } from "./delete_dialog";
 import { HeadingTagButton } from "./heading_tag_button";
 
-interface IHeadingControlsProps {
+type HeadingControlsProps = {
     issue: IssueT;
-}
+    onLinkClick?: () => unknown;
+};
 
-export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
+export const HeadingControls: FC<HeadingControlsProps> = ({
+    issue,
+    onLinkClick,
+}) => {
     const { t } = useTranslation();
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,10 +40,6 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
     const menuOpen = Boolean(anchorEl);
 
     const [createIssue] = issueApi.useCreateIssueMutation();
-
-    const handleClickLinkButton = () => {
-        dispatch(toggleIssueLinks());
-    };
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -106,7 +105,7 @@ export const HeadingControls: FC<IHeadingControlsProps> = ({ issue }) => {
     return (
         <>
             <Tooltip title={t("issues.links.add.title")}>
-                <IconButton onClick={handleClickLinkButton} size="small">
+                <IconButton onClick={onLinkClick} size="small">
                     <LinkIcon />
                 </IconButton>
             </Tooltip>
