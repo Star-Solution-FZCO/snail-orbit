@@ -14,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { IMDEditorProps } from "../types";
 import "./editor.css";
 import { FocusBlurPlugin } from "./plugins/focus_blur_plugin";
-import { NewLineProcessorPlugin } from "./plugins/new_line_processor_plugin";
 import { ToolbarPlugin } from "./plugins/toolbar_plugin";
 import { theme } from "./theme";
 
@@ -91,7 +90,6 @@ export const MDEditorV2: FC<IMDEditorProps> = ({
                     onBlur={onBlur}
                     autoFocus={autoFocus}
                 />
-                <NewLineProcessorPlugin />
             </LexicalComposer>
         </Stack>
     );

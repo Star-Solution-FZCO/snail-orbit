@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import type { FC } from "react";
 import Markdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 
 export const MarkdownRenderer: FC<{ content: string | null }> = ({
@@ -22,7 +23,7 @@ export const MarkdownRenderer: FC<{ content: string | null }> = ({
         >
             <Markdown
                 className="markdown-body"
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                     a: ({ node: _, ...props }) => {
                         const maxLength = 50;
