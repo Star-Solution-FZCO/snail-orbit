@@ -31,8 +31,8 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
     const [spentTime, setSpentTime] = useState(0);
     const [files, setFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<IssueAttachmentBodyT[]>([]);
-    const [isFocused, setIsFocused] = useState(false);
 
+    const [isFocused, setIsFocused] = useState(false);
     const [discardChangesDialogOpen, setDiscardChangesDialogOpen] =
         useState(false);
 
@@ -56,6 +56,8 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
                 setMode("view");
                 setText("");
                 setSpentTime(0);
+                setFiles([]);
+                setAttachments([]);
             })
             .catch(toastApiError);
     };
@@ -98,6 +100,15 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
         else setMode("view");
     };
 
+    const handleDiscardChanges = () => {
+        setDiscardChangesDialogOpen(false);
+        setMode("view");
+        setText("");
+        setSpentTime(0);
+        setFiles([]);
+        setAttachments([]);
+    };
+
     const handlePaste = useCallback(
         async (event: ClipboardEvent) => {
             const clipboardItems = event.clipboardData?.items;
@@ -126,14 +137,6 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
             };
         }
     }, [handlePaste, isFocused]);
-
-    const handleDiscardChanges = () => {
-        setText("");
-        setSpentTime(0);
-        setFiles([]);
-        setDiscardChangesDialogOpen(false);
-        setMode("view");
-    };
 
     if (mode === "view")
         return (

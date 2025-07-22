@@ -32,18 +32,6 @@ export const IssueForm: FC<IssueFormProps> = ({
     const [text, setText] = useState<string>("");
     const [textLoading, setTextLoading] = useState(true);
 
-    useEffect(() => {
-        setTextLoading(true);
-        getIssueText(issue).then((res) => {
-            setText(res || issue.text?.value || "");
-            setTextLoading(false);
-        });
-    }, [issue, getIssueText]);
-
-    useEffect(() => {
-        setSubject(issue?.subject);
-    }, [issue?.subject]);
-
     const handleClickSave = useCallback(async () => {
         await onUpdateIssue({ text: { value: text }, subject });
 
@@ -52,7 +40,25 @@ export const IssueForm: FC<IssueFormProps> = ({
 
     const handleClickCancel = () => {
         onChangeDisplayMode?.("view");
+        getIssueText(issue).then((res) => {
+            setText(res || issue.text?.value || "");
+        });
     };
+
+    useEffect(() => {
+        setSubject(issue?.subject);
+    }, [issue?.subject]);
+
+    useEffect(() => {
+        setTextLoading(true);
+        getIssueText(issue)
+            .then((res) => {
+                setText(res || issue.text?.value || "");
+            })
+            .finally(() => {
+                setTextLoading(false);
+            });
+    }, [issue, getIssueText]);
 
     if (mode === "view") {
         return (

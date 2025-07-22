@@ -65,7 +65,7 @@ export const MDEditorV2: FC<IMDEditorProps> = ({
                                 <ContentEditable
                                     className={
                                         autoHeight
-                                            ? "content_editable__root auto-height"
+                                            ? "content_editable__root autoheight"
                                             : "content_editable__root"
                                     }
                                     placeholder={

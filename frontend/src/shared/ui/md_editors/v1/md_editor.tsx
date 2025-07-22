@@ -102,18 +102,18 @@ export const MDEditorV1: FC<IMDEditorProps> = ({
     const hasDefaultValue = typeof defaultValue !== "undefined";
 
     const editorStyles = useCKEditorStyles();
-    const [innerValue, setInnerValue] = useState<string>(
+    const [internalValue, setInternalValue] = useState<string>(
         hasDefaultValue ? defaultValue : "",
     );
 
     const isControlled = typeof value !== "undefined";
-    const editorValue = isControlled ? value : innerValue;
+    const editorValue = isControlled ? value : internalValue;
 
     const handleChange = useCallback(
         (_: EventInfo, editor: ClassicEditor) => {
             const res = editor.getData();
             if (onChange) onChange(res);
-            if (!isControlled) setInnerValue(res);
+            if (!isControlled) setInternalValue(res);
         },
         [isControlled, onChange],
     );
@@ -170,7 +170,7 @@ export const MDEditorV1: FC<IMDEditorProps> = ({
                         editor,
                         onChange,
                         isControlled,
-                        setInnerValue,
+                        setInternalValue,
                     );
                 }}
                 config={{
