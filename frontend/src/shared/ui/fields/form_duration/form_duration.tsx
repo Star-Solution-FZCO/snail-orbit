@@ -1,23 +1,23 @@
-import type { InputBaseProps } from "@mui/material";
 import { Button, ClickAwayListener, Stack } from "@mui/material";
 import type { ForwardedRef, SyntheticEvent } from "react";
-import { forwardRef, useMemo, useState } from "react";
+import { forwardRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SpentTimeField } from "shared/ui/spent_time_field";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
-import { StyledContainer, StyledInput } from "./form_input.styles";
+import { StyledContainer } from "./form_duration.styles";
 
-export type FormInputPopoverProps = {
+export type FormDurationPopoverProps = {
     onClose?: () => unknown;
     anchorEl: HTMLElement | null;
     id: string;
     open: boolean;
     submitButtonLabel?: string;
     cancelButtonLabel?: string;
-    value?: string;
-    onChange?: (value: string) => unknown;
-} & Omit<InputBaseProps, "value" | "onChange" | "type">;
+    value?: number;
+    onChange?: (value: number) => unknown;
+};
 
-export const FormInputPopover = forwardRef(
+export const FormDurationPopover = forwardRef(
     (
         {
             onClose,
@@ -28,32 +28,19 @@ export const FormInputPopover = forwardRef(
             cancelButtonLabel,
             value,
             onChange,
-            inputMode,
-            ...rest
-        }: FormInputPopoverProps,
+        }: FormDurationPopoverProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const { t } = useTranslation();
-
-        const [innerValue, setInnerValue] = useState<string>(value || "");
+        const [innerValue, setInnerValue] = useState<number>(value || 0);
 
         const handleClose = () => {
             if (onClose) onClose();
         };
 
-        const isSubmitDisabled = useMemo(() => {
-            if (inputMode === "numeric") {
-                return !/^-?[0-9]+$/.test(innerValue);
-            }
-            if (inputMode === "decimal") {
-                return !/^-?\d*\.?\d+$/.test(innerValue);
-            }
-            return false;
-        }, [innerValue, inputMode]);
-
         const handleSubmit = (e: SyntheticEvent) => {
             e.preventDefault();
-            if (!isSubmitDisabled) onChange?.(innerValue);
+            if (onChange) onChange(innerValue);
         };
 
         return (
@@ -67,12 +54,9 @@ export const FormInputPopover = forwardRef(
             >
                 <ClickAwayListener onClickAway={handleClose}>
                     <StyledContainer onSubmit={handleSubmit}>
-                        <StyledInput
-                            autoFocus
-                            inputMode={inputMode}
-                            {...rest}
-                            onChange={(e) => setInnerValue(e.target.value)}
-                            value={innerValue}
+                        <SpentTimeField
+                            onChange={setInnerValue}
+                            initialValue={innerValue}
                         />
                         <Stack direction="row" gap={1} justifyContent="center">
                             <Button
@@ -80,7 +64,6 @@ export const FormInputPopover = forwardRef(
                                 variant="contained"
                                 color="success"
                                 onClick={handleSubmit}
-                                disabled={isSubmitDisabled}
                             >
                                 {submitButtonLabel || t("submit")}
                             </Button>
@@ -100,4 +83,4 @@ export const FormInputPopover = forwardRef(
     },
 );
 
-export default FormInputPopover;
+export default FormDurationPopover;

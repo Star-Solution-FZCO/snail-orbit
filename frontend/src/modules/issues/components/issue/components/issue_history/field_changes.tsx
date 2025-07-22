@@ -7,6 +7,7 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "shared/i18n";
 import type { IssueChangeT, VersionFieldValueT } from "shared/model/types";
+import { formatSpentTime } from "shared/utils";
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -78,10 +79,14 @@ const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
         }
 
         case "integer":
-        case "float":
-        case "duration": {
+        case "float": {
             const target = type === "old" ? change.old_value : change.new_value;
             return target?.toString() || noValue;
+        }
+
+        case "duration": {
+            const target = type === "old" ? change.old_value : change.new_value;
+            return target ? formatSpentTime(target) : noValue;
         }
 
         case "string": {

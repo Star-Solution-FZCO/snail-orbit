@@ -9,8 +9,10 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import React, { FC, useEffect, useState } from "react";
+import type { FC } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatSpentTime } from "../utils";
 
 const minute = 60;
 const hour = minute * 60;
@@ -85,9 +87,9 @@ const PopperContentWrapper = styled(Box)(({ theme }) => ({
 }));
 
 interface ISpentTimeFieldProps {
-    label: string;
-    initialValue?: string;
-    onChange: (value: number) => void;
+    label?: string;
+    initialValue?: number;
+    onChange?: (value: number) => void;
 }
 
 const SpentTimeField: FC<ISpentTimeFieldProps> = ({
@@ -128,7 +130,7 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
         }
 
         if (isFullyValid) {
-            onChange(convertToSeconds(value));
+            onChange?.(convertToSeconds(value));
         }
 
         if (!isComplete && /^\d+$/.test(lastPart)) {
@@ -178,7 +180,7 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
 
         if (isValidDuration(newValue)) {
             const totalSeconds = convertToSeconds(newValue);
-            onChange(totalSeconds);
+            onChange?.(totalSeconds);
         }
     };
 
@@ -186,7 +188,7 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
         setInputValue("");
         setError(false);
         setErrorMessage("");
-        onChange(0);
+        onChange?.(0);
     };
 
     const trimmedValue = inputValue.trim();
@@ -203,7 +205,7 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
 
     useEffect(() => {
         if (initialValue) {
-            setInputValue(initialValue);
+            setInputValue(formatSpentTime(initialValue));
         }
     }, [initialValue]);
 

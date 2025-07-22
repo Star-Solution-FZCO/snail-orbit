@@ -1,29 +1,23 @@
 import type { ForwardedRef, ReactNode } from "react";
 import { forwardRef, useState } from "react";
 import FieldCard from "shared/ui/fields/field_card/field_card";
-import type { FormInputPopoverProps } from "shared/ui/fields/form_input/form_input";
-import FormInputPopover from "shared/ui/fields/form_input/form_input";
+import type { FormDurationPopoverProps } from "shared/ui/fields/form_duration/form_duration";
+import FormDurationPopover from "shared/ui/fields/form_duration/form_duration";
+import { formatSpentTime } from "../../shared/utils";
 
 type DurationFieldProps = {
     label: string;
     rightAdornment?: ReactNode;
-} & Pick<FormInputPopoverProps, "value" | "onChange" | "id" | "inputMode">;
+} & Pick<FormDurationPopoverProps, "value" | "onChange" | "id">;
 
 export const DurationField = forwardRef(
     (
-        {
-            value,
-            onChange,
-            label,
-            id,
-            inputMode,
-            rightAdornment,
-        }: DurationFieldProps,
+        { value, onChange, label, id, rightAdornment }: DurationFieldProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-        const handleChange = (value: string) => {
+        const handleChange = (value: number) => {
             onChange?.(value);
             setAnchorEl(null);
         };
@@ -32,13 +26,13 @@ export const DurationField = forwardRef(
             <>
                 <FieldCard
                     label={label}
-                    value={value ?? "?"}
+                    value={value ? formatSpentTime(value) : "?"}
                     rightAdornment={rightAdornment}
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     data-field-card-id={id}
                 />
-                <FormInputPopover
+                <FormDurationPopover
                     ref={ref}
                     anchorEl={anchorEl}
                     id={id}
@@ -46,7 +40,6 @@ export const DurationField = forwardRef(
                     onClose={() => setAnchorEl(null)}
                     onChange={handleChange}
                     value={value}
-                    inputMode={inputMode}
                 />
             </>
         );
