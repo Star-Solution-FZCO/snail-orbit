@@ -817,9 +817,8 @@ async def select_linkable_issues(
         bo.And(
             bo.NE(m.Issue.id, obj.id),
             bo.NotIn(m.Issue.id, [il.issue.id for il in obj.interlinks]),
-            user_ctx.get_issue_filter_for_permission(
-                PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
-            ),
+            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
+            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_UPDATE),
             bo.Or(
                 bo.RegEx(m.Issue.subject, query.search, 'i'),
                 bo.RegEx(m.Issue.aliases, query.search, 'i'),

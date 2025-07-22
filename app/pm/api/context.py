@@ -76,7 +76,7 @@ class UserContext:
     ) -> set[PydanticObjectId]:
         return {pr for pr in self.permissions if self.has_permission(pr, permission)}
 
-    def get_issue_filter_for_permission(self, permission: PermissionT) -> dict:
+    def get_issue_filter_for_permission(self, permission: Permissions) -> dict:
         user_project_ids = list(self.get_projects_with_permission(permission))
         user_group_ids = [group.id for group in self.predefined_groups]
 

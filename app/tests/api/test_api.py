@@ -1172,6 +1172,25 @@ async def test_api_v1_issue_link(
             assert response.status_code == 200
             issues.append(response.json()['payload'])
 
+    # Test link target selection endpoint (this was failing with PermAnd error)
+    response = test_client.get(
+        f'/api/v1/issue/{issues[0]["id"]}/link/target/select?limit=10&offset=0',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert 'payload' in data
+    assert 'items' in data['payload']
+    assert 'count' in data['payload']
+
+    # Should not include the current issue itself
+    target_issue_ids = [item['id'] for item in data['payload']['items']]
+    assert issues[0]['id'] not in target_issue_ids
+
+    # Should have other created issues as linkable targets
+    assert data['payload']['count'] == len(issues) - 1
+
     for link_type in INTERLINK_TYPES:
         response = test_client.post(
             f'/api/v1/issue/{issues[0]["id"]}/link',
