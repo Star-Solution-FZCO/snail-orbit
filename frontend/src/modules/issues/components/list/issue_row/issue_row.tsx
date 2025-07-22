@@ -22,9 +22,11 @@ export const IssueRow: FC<IssueRowProps> = memo(
                 <IssueRowHeader>
                     <Stack
                         direction="row"
-                        gap={1}
                         flexWrap="nowrap"
                         alignItems="center"
+                        gap={1}
+                        minWidth={0}
+                        flex={1}
                     >
                         <IssueSubscribeButton issue={issue} />
 
@@ -32,11 +34,19 @@ export const IssueRow: FC<IssueRowProps> = memo(
                             issue={issue}
                             lineThrough={issue.is_resolved}
                             resolved={issue.is_resolved}
+                            flexShrink={0}
                         >
                             {id_readable}
                         </IssueLink>
 
-                        <IssueLink issue={issue} resolved={issue.is_resolved}>
+                        <IssueLink
+                            issue={issue}
+                            title={subject}
+                            resolved={issue.is_resolved}
+                            overflow="hidden"
+                            whiteSpace="nowrap"
+                            textOverflow="ellipsis"
+                        >
                             {subject}
                         </IssueLink>
 
@@ -49,6 +59,7 @@ export const IssueRow: FC<IssueRowProps> = memo(
                 {showDescription && !text?.encryption?.length && (
                     <IssueRowBody>{text?.value}</IssueRowBody>
                 )}
+
                 {showCustomFields && <IssueRowFields issue={issue} />}
             </IssueRowRoot>
         );

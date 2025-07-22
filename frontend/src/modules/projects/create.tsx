@@ -13,7 +13,7 @@ import {
     exportPublicKey,
     generateKeyPair,
     getFingerprint,
-} from "../../shared/utils/crypto/crypto";
+} from "shared/utils/crypto/crypto";
 import type { CreateProjectFormData } from "./components/create_project_form";
 import { CreateProjectForm } from "./components/create_project_form";
 

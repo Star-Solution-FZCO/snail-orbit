@@ -29,7 +29,10 @@ export const BoardRow: FC<BoardRowProps> = ({ board }) => {
             />
 
             <Box>
-                <IssueLinkComponent to="/agiles/$boardId" params={{ boardId: board.id }}>
+                <IssueLinkComponent
+                    to="/agiles/$boardId"
+                    params={{ boardId: board.id }}
+                >
                     {board.name}
                 </IssueLinkComponent>
 

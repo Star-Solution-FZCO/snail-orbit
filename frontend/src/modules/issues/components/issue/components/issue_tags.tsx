@@ -15,7 +15,7 @@ export const IssueTags = memo((props: IssueTagsProps) => {
     const [untagIssue] = issueApi.useUntagIssueMutation();
 
     return (
-        <Stack direction="row" gap={1}>
+        <Stack direction="row" gap={1} flexShrink={0}>
             {tags.map(({ name, color, id }) => (
                 <Tag
                     key={id}

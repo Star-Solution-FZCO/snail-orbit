@@ -1,5 +1,5 @@
 import { skipToken } from "@reduxjs/toolkit/query";
-import { projectApi } from "../../../shared/model";
+import { projectApi } from "shared/model";
 
 export const useProjectData = (props: { projectId?: string }) => {
     const { projectId } = props;

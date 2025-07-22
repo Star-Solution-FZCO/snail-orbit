@@ -79,7 +79,7 @@ export const IssuesList: FC<IssuesListProps> = ({
                 </Stack>
             </Stack>
 
-            <Stack>
+            <Stack pb={1}>
                 {issues.map((issue, index) => (
                     <React.Fragment key={issue.id}>
                         <IssueRow
@@ -87,6 +87,7 @@ export const IssuesList: FC<IssuesListProps> = ({
                             onIssueRowDoubleClick={onIssueRowDoubleClick}
                             {...issueViewParams}
                         />
+
                         {issueViewParams?.showDividers &&
                             index !== issues.length - 1 && <Divider />}
                     </React.Fragment>
@@ -94,11 +95,11 @@ export const IssuesList: FC<IssuesListProps> = ({
 
                 {pageCount > 1 ? (
                     <Pagination
-                        size="small"
                         sx={{ mx: "auto", mt: 2 }}
-                        count={pageCount}
                         page={page}
+                        count={pageCount}
                         onChange={(_, newPage) => onChangePage?.(newPage)}
+                        size="small"
                     />
                 ) : null}
             </Stack>

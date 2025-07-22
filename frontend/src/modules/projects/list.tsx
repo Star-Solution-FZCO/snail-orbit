@@ -19,7 +19,7 @@ import {
     perPageOptions,
     useListQueryParams,
 } from "shared/utils";
-import useDebouncedState from "../../shared/utils/hooks/use-debounced-state";
+import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { ProjectCard } from "./components/project_card";
 

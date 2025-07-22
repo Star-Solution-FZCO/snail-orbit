@@ -10,7 +10,7 @@ import { IssueSubscribeButton } from "./issue_subscribe_button";
 type IssueHeadingProps = {
     issue: IssueT;
     onEditClick?: () => unknown;
-    onLinkClick?: () => unknown;
+    onAddLinkClick?: () => unknown;
     hideSubscribeButton?: boolean;
     isEncrypted?: boolean;
 };
@@ -19,9 +19,9 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
     const {
         issue,
         onEditClick,
-        hideSubscribeButton,
+        onAddLinkClick,
         isEncrypted,
-        onLinkClick,
+        hideSubscribeButton,
     } = props;
 
     return (
@@ -46,18 +46,30 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
 
             <Stack
                 direction="row"
-                alignItems="center"
                 gap={1}
                 sx={{
-                    wordBreak: "break-word",
                     color: issue.is_resolved ? "text.disabled" : "inherit",
                 }}
             >
-                <Typography fontSize={24} fontWeight="bold" flex={1}>
+                <Typography
+                    sx={{
+                        flex: 1,
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 3,
+                        wordBreak: "break-word",
+                    }}
+                    title={issue.subject}
+                >
                     {issue.subject}
                 </Typography>
 
-                {isEncrypted ? <LockIcon fontSize="small" /> : null}
+                {isEncrypted ? (
+                    <LockIcon sx={{ mt: "5px", mr: "5px" }} color="info" />
+                ) : null}
             </Stack>
 
             <Stack flexDirection="row" alignItems="flex-start" gap={1}>
@@ -67,7 +79,10 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
                     </IconButton>
                 </Tooltip>
 
-                <HeadingControls issue={issue} onLinkClick={onLinkClick} />
+                <HeadingControls
+                    issue={issue}
+                    onAddLinkClick={onAddLinkClick}
+                />
             </Stack>
         </Stack>
     );

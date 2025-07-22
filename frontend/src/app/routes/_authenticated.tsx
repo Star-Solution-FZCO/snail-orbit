@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
 import { useAppSelector } from "shared/model";
@@ -29,19 +29,19 @@ function Component() {
     return (
         <Box
             sx={{
-                minHeight: "100vh",
                 display: "flex",
+                minHeight: "100vh",
             }}
         >
             <PageTitle title="Snail Orbit" />
 
             <IssueModalViewContextProvider>
                 <NavbarSettingsContextProvider>
-                    <Box display="flex" flexDirection="column" flex={1}>
+                    <Stack flex={1}>
                         <NavBar />
 
                         <Outlet />
-                    </Box>
+                    </Stack>
                 </NavbarSettingsContextProvider>
             </IssueModalViewContextProvider>
         </Box>

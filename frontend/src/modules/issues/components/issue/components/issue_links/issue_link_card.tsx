@@ -81,11 +81,23 @@ export const IssueLinkCard: FC<IssueLinkCardProps> = ({
                     issue={issue}
                     resolved={issue.is_resolved}
                     lineThrough={issue.is_resolved}
+                    flexShrink={0}
                 >
                     {issue.id_readable}
                 </IssueLink>
 
-                <IssueLink issue={issue} resolved={issue.is_resolved}>
+                <IssueLink
+                    sx={{
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 1,
+                        textOverflow: "ellipsis",
+                    }}
+                    issue={issue}
+                    title={issue.subject}
+                    resolved={issue.is_resolved}
+                >
                     {issue.subject}
                 </IssueLink>
             </Box>

@@ -35,7 +35,7 @@ export const IssueView: FC<IssueFormProps> = (props) => {
     } = props;
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
-    const [isLinksAddOpen, setIsLinksAddOpen] = useState<boolean>(false);
+    const [isAddLinksOpen, setIsAddLinksOpen] = useState(false);
 
     const handleChangeDisplayMode = () =>
         setDisplayMode((prev) => (prev === "view" ? "edit" : "view"));
@@ -53,10 +53,10 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                             <IssueHeading
                                 issue={issue}
                                 onEditClick={handleChangeDisplayMode}
-                                isEncrypted={isEncrypted}
-                                onLinkClick={() =>
-                                    setIsLinksAddOpen((prev) => !prev)
+                                onAddLinkClick={() =>
+                                    setIsAddLinksOpen((prev) => !prev)
                                 }
+                                isEncrypted={isEncrypted}
                             />
                             <IssueTags issue={issue} />
                         </Stack>
@@ -72,10 +72,10 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                 />
 
                 <IssueLinks
+                    open={isAddLinksOpen}
                     issueId={issueId}
                     links={issue.interlinks}
-                    isAddLinksOpened={isLinksAddOpen}
-                    onIsLinksOpenedToggle={setIsLinksAddOpen}
+                    onToggle={setIsAddLinksOpen}
                 />
 
                 <IssueAttachments

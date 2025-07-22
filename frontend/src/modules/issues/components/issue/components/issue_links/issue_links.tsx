@@ -33,17 +33,17 @@ const groupLinksByType = (links: IssueLinkT[]) => {
 };
 
 type IssueLinksProps = {
+    open?: boolean;
     issueId: string;
     links: IssueLinkT[];
-    isAddLinksOpened?: boolean;
-    onIsLinksOpenedToggle?: (isOpened: boolean) => unknown;
+    onToggle?: (open: boolean) => unknown;
 };
 
 const IssueLinks: FC<IssueLinksProps> = ({
+    open,
     issueId,
     links,
-    isAddLinksOpened,
-    onIsLinksOpenedToggle,
+    onToggle,
 }) => {
     const { t } = useTranslation();
 
@@ -73,6 +73,7 @@ const IssueLinks: FC<IssueLinksProps> = ({
         })
             .unwrap()
             .then(() => {
+                onToggle?.(false);
                 const message = `${selectedIssues.join(", ")} ${t("issues.links.linkedAs")} "${linkType}" ${t("issues.links.to")} ${issueId}`;
                 toast.success(message);
             })
@@ -83,110 +84,129 @@ const IssueLinks: FC<IssueLinksProps> = ({
 
     const groupedLinks = groupLinksByType(links);
 
+    const linksExists = links.length > 0;
+
     return (
         <>
-            {isAddLinksOpened && (
+            {open && (
                 <AddLinks
                     issueId={issueId}
                     onLinkIssues={onLinkIssues}
                     isLoading={linkIssueLoading}
-                    onCancel={() => onIsLinksOpenedToggle?.(false)}
+                    onCancel={() => onToggle?.(false)}
                 />
             )}
 
-            <Box display="flex" flexDirection="column">
-                <Box display="flex" alignItems="center" gap={0.5}>
-                    <IconButton
-                        sx={{ p: 0 }}
-                        onClick={() => setLinksExpanded(!linksExpanded)}
-                        size="small"
-                    >
-                        <ExpandMoreIcon
-                            sx={{
-                                transform: linksExpanded
-                                    ? "rotate(180deg)"
-                                    : "rotate(0)",
-                                transition: "transform 0.2s",
-                            }}
-                            fontSize="small"
-                        />
-                    </IconButton>
+            {linksExists && (
+                <Box display="flex" flexDirection="column">
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                        <IconButton
+                            sx={{ p: 0 }}
+                            onClick={() => setLinksExpanded(!linksExpanded)}
+                            size="small"
+                        >
+                            <ExpandMoreIcon
+                                sx={{
+                                    transform: linksExpanded
+                                        ? "rotate(180deg)"
+                                        : "rotate(0)",
+                                    transition: "transform 0.2s",
+                                }}
+                                fontSize="small"
+                            />
+                        </IconButton>
 
-                    <Box display="flex" gap={1} width={1}>
-                        <Box display="flex" gap={2} overflow="auto" flex={1}>
+                        <Box display="flex" gap={1} width={1}>
+                            <Box
+                                display="flex"
+                                gap={2}
+                                overflow="auto"
+                                flex={1}
+                            >
+                                {Object.entries(groupedLinks).map(
+                                    ([type, linkItems]) => (
+                                        <Typography
+                                            key={type}
+                                            fontWeight="bold"
+                                        >
+                                            {t(`issues.links.type.${type}`)}{" "}
+                                            <Typography
+                                                component="span"
+                                                color="text.secondary"
+                                            >
+                                                {linkItems.length}
+                                            </Typography>
+                                        </Typography>
+                                    ),
+                                )}
+                            </Box>
+
+                            {!open && (
+                                <MuiLink
+                                    sx={{
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                    onClick={() => onToggle?.(true)}
+                                >
+                                    <LinkIcon />
+                                    {t("issues.links.add.title")}
+                                </MuiLink>
+                            )}
+                        </Box>
+                    </Box>
+
+                    <Collapse in={linksExpanded}>
+                        <Box
+                            display="flex"
+                            flexDirection="column"
+                            gap={1}
+                            mt={1}
+                        >
+                            <Divider flexItem />
+
                             {Object.entries(groupedLinks).map(
                                 ([type, linkItems]) => (
-                                    <Typography key={type} fontWeight="bold">
-                                        {t(`issues.links.type.${type}`)}{" "}
+                                    <Box
+                                        key={type}
+                                        display="flex"
+                                        flexDirection="column"
+                                    >
                                         <Typography
-                                            component="span"
                                             color="text.secondary"
+                                            fontSize={10}
+                                            fontWeight="bold"
+                                            textTransform="uppercase"
+                                            mb={0.5}
                                         >
-                                            {linkItems.length}
+                                            {t(`issues.links.type.${type}`)}
                                         </Typography>
-                                    </Typography>
+
+                                        <Box
+                                            display="flex"
+                                            flexDirection="column"
+                                            gap={0.5}
+                                        >
+                                            {linkItems.map((link) => (
+                                                <IssueLinkCard
+                                                    key={link.id}
+                                                    issueId={issueId}
+                                                    link={link}
+                                                    onRemove={
+                                                        handleClickRemoveLink
+                                                    }
+                                                />
+                                            ))}
+                                        </Box>
+                                    </Box>
                                 ),
                             )}
                         </Box>
-
-                        {!isAddLinksOpened && (
-                            <MuiLink
-                                sx={{
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                }}
-                                onClick={() => onIsLinksOpenedToggle?.(true)}
-                            >
-                                <LinkIcon />
-                                {t("issues.links.add.title")}
-                            </MuiLink>
-                        )}
-                    </Box>
+                    </Collapse>
                 </Box>
-
-                <Collapse in={linksExpanded}>
-                    <Box display="flex" flexDirection="column" gap={1} mt={1}>
-                        <Divider flexItem />
-
-                        {Object.entries(groupedLinks).map(
-                            ([type, linkItems]) => (
-                                <Box
-                                    key={type}
-                                    display="flex"
-                                    flexDirection="column"
-                                >
-                                    <Typography
-                                        color="text.secondary"
-                                        fontSize={10}
-                                        fontWeight="bold"
-                                        textTransform="uppercase"
-                                        mb={0.5}
-                                    >
-                                        {t(`issues.links.type.${type}`)}
-                                    </Typography>
-
-                                    <Box
-                                        display="flex"
-                                        flexDirection="column"
-                                        gap={0.5}
-                                    >
-                                        {linkItems.map((link) => (
-                                            <IssueLinkCard
-                                                key={link.id}
-                                                issueId={issueId}
-                                                link={link}
-                                                onRemove={handleClickRemoveLink}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            ),
-                        )}
-                    </Box>
-                </Collapse>
-            </Box>
+            )}
         </>
     );
 };

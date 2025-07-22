@@ -25,9 +25,9 @@ import type {
     ListQueryParams,
 } from "shared/model/types";
 import { linkTypes } from "shared/model/types";
-import { Link, QueryPagination } from "shared/ui";
+import { QueryPagination } from "shared/ui";
 import { initialListQueryParams, useListQueryParams } from "shared/utils";
-import { slugify } from "transliteration";
+import { IssueLink } from "widgets/issue/issue_link/issue_link";
 
 type IssueCardProps = {
     issue: IssueT;
@@ -44,25 +44,23 @@ const IssueCard: FC<IssueCardProps> = ({ issue, onSelect, selected }) => {
                 onChange={() => onSelect(issue)}
             />
 
-            <Link
-                to="/issues/$issueId/$subject"
-                params={{
-                    issueId: issue.id_readable,
-                    subject: slugify(issue.subject),
-                }}
-            >
+            <IssueLink issue={issue} flexShrink={0}>
                 {issue.id_readable}
-            </Link>
+            </IssueLink>
 
-            <Link
-                to="/issues/$issueId/$subject"
-                params={{
-                    issueId: issue.id_readable,
-                    subject: slugify(issue.subject),
+            <IssueLink
+                sx={{
+                    overflow: "hidden",
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 1,
+                    textOverflow: "ellipsis",
                 }}
+                issue={issue}
+                title={issue.subject}
             >
                 {issue.subject}
-            </Link>
+            </IssueLink>
         </Box>
     );
 };
@@ -204,7 +202,10 @@ const AddLinks: FC<AddLinksProps> = ({
                         size="small"
                     >
                         {linkTypes.map((linkType) => (
-                            <MenuItem value={linkType}>
+                            <MenuItem
+                                key={`link-type-${linkType}`}
+                                value={linkType}
+                            >
                                 {t(`issues.links.type.${linkType}`)}
                             </MenuItem>
                         ))}

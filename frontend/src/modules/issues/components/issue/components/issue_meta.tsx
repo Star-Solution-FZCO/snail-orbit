@@ -30,6 +30,7 @@ export const IssueMeta: FC<IssueMetaProps> = ({ issue }) => {
                 issue={issue}
                 resolved={issue.is_resolved}
                 lineThrough={issue.is_resolved}
+                flexShrink={0}
             >
                 {issue.id_readable}
             </IssueLink>

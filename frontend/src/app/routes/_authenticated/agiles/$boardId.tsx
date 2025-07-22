@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AgileBoardView } from "modules";
 import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
 import { useCallback } from "react";
-import type { AgileBoardT } from "../../../../shared/model/types";
+import type { AgileBoardT } from "shared/model/types";
 
 type BoardViewSearch = {
     query?: string;

@@ -15,7 +15,7 @@ import {
     usePopupState,
 } from "material-ui-popup-state/hooks";
 import { useTranslation } from "react-i18next";
-import { KanbanCollisionDetection } from "../../../../shared/ui/kanban/kanban.types";
+import { KanbanCollisionDetection } from "shared/ui/kanban/kanban.types";
 import type { AgileBoardViewSettings } from "./agile_board_view_settings.types";
 
 type Props = {

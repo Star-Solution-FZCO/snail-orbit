@@ -25,12 +25,12 @@ import { HeadingTagButton } from "./heading_tag_button";
 
 type HeadingControlsProps = {
     issue: IssueT;
-    onLinkClick?: () => unknown;
+    onAddLinkClick?: () => unknown;
 };
 
 export const HeadingControls: FC<HeadingControlsProps> = ({
     issue,
-    onLinkClick,
+    onAddLinkClick,
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -105,7 +105,7 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
     return (
         <>
             <Tooltip title={t("issues.links.add.title")}>
-                <IconButton onClick={onLinkClick} size="small">
+                <IconButton onClick={onAddLinkClick} size="small">
                     <LinkIcon />
                 </IconButton>
             </Tooltip>

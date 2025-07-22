@@ -5,13 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { issueApi } from "shared/model";
+import type { IssueT } from "shared/model/types";
 import {
     defaultLimit,
     formatErrorMessages,
     usePaginationParams,
 } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
-import type { IssueT } from "../../../shared/model/types";
 import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
 import { QueryBuilder } from "../components/query_builder/query_builder";
@@ -81,93 +81,90 @@ const IssueList: FC<IssueListProps> = (props) => {
     const rows = data?.payload.items || [];
 
     return (
-        <>
+        <Box
+            id="issueListPage"
+            autoSaveId="issueListPage"
+            component={PanelGroup}
+            direction="horizontal"
+            maxWidth="100vw"
+            px={4}
+        >
             <Box
-                component={PanelGroup}
-                px={4}
-                direction="horizontal"
-                autoSaveId="issueListPage"
-                id="issueListPage"
+                id="mainContent"
+                display="flex"
+                flexDirection="column"
+                gap={2}
+                height={1}
+                component={Panel}
+                order={5}
+                minSize={65}
             >
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    gap={2}
-                    height="100%"
-                    component={Panel}
-                    order={5}
-                    id="mainContent"
-                    minSize={65}
-                >
-                    <SearchField
-                        value={searchQuery}
-                        onChange={setSearch}
-                        queryBuilderActive={showQueryBuilder}
-                        onQueryBuilderClick={() =>
-                            setShowQueryBuilder((prev) => !prev)
+                <SearchField
+                    value={searchQuery}
+                    onChange={setSearch}
+                    queryBuilderActive={showQueryBuilder}
+                    onQueryBuilderClick={() =>
+                        setShowQueryBuilder((prev) => !prev)
+                    }
+                    loading={isFetching}
+                />
+
+                {error && (
+                    <Typography color="error" fontSize={16}>
+                        {formatErrorMessages(error) ||
+                            t("issues.list.fetch.error")}
+                        !
+                    </Typography>
+                )}
+
+                {isLoading ? (
+                    <CircularProgress />
+                ) : (
+                    <IssuesList
+                        issues={rows}
+                        page={listQueryParams.page}
+                        pageCount={Math.ceil(
+                            (data?.payload.count || 0) /
+                                listQueryParams.perPage,
+                        )}
+                        onChangePage={(page) => updateListQueryParams({ page })}
+                        onChangePerPage={(perPage) =>
+                            updateListQueryParams({ perPage, page: 1 })
                         }
-                        loading={isFetching}
+                        onIssueRowDoubleClick={handleIssueRowDoubleClick}
+                        totalCount={data?.payload.count}
+                        perPage={listQueryParams.perPage}
                     />
-
-                    {error && (
-                        <Typography color="error" fontSize={16}>
-                            {formatErrorMessages(error) ||
-                                t("issues.list.fetch.error")}
-                            !
-                        </Typography>
-                    )}
-
-                    {isLoading ? (
-                        <CircularProgress />
-                    ) : (
-                        <IssuesList
-                            issues={rows}
-                            page={listQueryParams.page}
-                            pageCount={Math.ceil(
-                                (data?.payload.count || 0) /
-                                    listQueryParams.perPage,
-                            )}
-                            onChangePage={(page) =>
-                                updateListQueryParams({ page })
-                            }
-                            totalCount={data?.payload.count}
-                            perPage={listQueryParams.perPage}
-                            onChangePerPage={(perPage) =>
-                                updateListQueryParams({ perPage, page: 1 })
-                            }
-                            onIssueRowDoubleClick={handleIssueRowDoubleClick}
-                        />
-                    )}
-                </Box>
-
-                {showQueryBuilder && (
-                    <>
-                        <Box
-                            id="queryBuilderResizer"
-                            component={PanelResizeHandle}
-                            pl={2}
-                            order={9}
-                        >
-                            <Divider orientation="vertical" />
-                        </Box>
-
-                        <Box
-                            id="queryBuilder"
-                            order={10}
-                            component={Panel}
-                            defaultSize={20}
-                            mr={-4}
-                            minSize={15}
-                        >
-                            <QueryBuilder
-                                onChangeQuery={setSearch}
-                                initialQuery={searchQuery}
-                            />
-                        </Box>
-                    </>
                 )}
             </Box>
-        </>
+
+            {showQueryBuilder && (
+                <>
+                    <Box
+                        id="queryBuilderResizer"
+                        component={PanelResizeHandle}
+                        pl={2}
+                        order={9}
+                    >
+                        <Divider orientation="vertical" />
+                    </Box>
+
+                    <Box
+                        id="queryBuilder"
+                        order={10}
+                        component={Panel}
+                        defaultSize={20}
+                        mr={-4}
+                        minSize={15}
+                    >
+                        <QueryBuilder
+                            onChangeQuery={setSearch}
+                            initialQuery={searchQuery}
+                        />
+                    </Box>
+                </>
+            )}
+        </Box>
     );
 };
 

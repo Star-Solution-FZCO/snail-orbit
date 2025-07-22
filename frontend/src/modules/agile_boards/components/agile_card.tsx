@@ -114,7 +114,9 @@ export const AgileCard: FC<IssueCardProps> = memo(
             >
                 <IssueCardBody>
                     <IssueCardHeader>
-                        <IssueLink issue={outerIssue}>{id_readable}</IssueLink>
+                        <IssueLink issue={outerIssue} flexShrink={0}>
+                            {id_readable}
+                        </IssueLink>
                         <span>{subject}</span>
                     </IssueCardHeader>
 
