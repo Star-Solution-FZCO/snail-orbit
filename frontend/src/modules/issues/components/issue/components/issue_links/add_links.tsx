@@ -26,7 +26,7 @@ import type {
 } from "shared/model/types";
 import { linkTypes } from "shared/model/types";
 import { QueryPagination } from "shared/ui";
-import { initialListQueryParams, useListQueryParams } from "shared/utils";
+import { useListQueryParams } from "shared/utils";
 import { IssueLink } from "widgets/issue/issue_link/issue_link";
 
 type IssueCardProps = {
@@ -44,7 +44,12 @@ const IssueCard: FC<IssueCardProps> = ({ issue, onSelect, selected }) => {
                 onChange={() => onSelect(issue)}
             />
 
-            <IssueLink issue={issue} flexShrink={0}>
+            <IssueLink
+                issue={issue}
+                resolved={issue.is_resolved}
+                lineThrough={issue.is_resolved}
+                flexShrink={0}
+            >
                 {issue.id_readable}
             </IssueLink>
 
@@ -58,6 +63,7 @@ const IssueCard: FC<IssueCardProps> = ({ issue, onSelect, selected }) => {
                 }}
                 issue={issue}
                 title={issue.subject}
+                resolved={issue.is_resolved}
             >
                 {issue.subject}
             </IssueLink>
@@ -106,9 +112,8 @@ const AddLinks: FC<AddLinksProps> = ({
     const [query, setQuery] = useState<string>("");
     const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
 
-    const [listQueryParams, updateListQueryParams] = useListQueryParams({
-        q: query,
-    });
+    const [listQueryParams, updateListQueryParams, resetListQueryParams] =
+        useListQueryParams();
 
     const {
         data: issuesData,
@@ -128,6 +133,7 @@ const AddLinks: FC<AddLinksProps> = ({
             updateListQueryParams((prev) => ({
                 ...prev,
                 search: searchValue.length > 0 ? searchValue : undefined,
+                offset: 0,
             }));
         }, 300),
         [],
@@ -143,7 +149,7 @@ const AddLinks: FC<AddLinksProps> = ({
 
     const handleClearSearchField = () => {
         setQuery("");
-        updateListQueryParams(initialListQueryParams);
+        resetListQueryParams();
     };
 
     const handleChangePagination = (params: Partial<ListQueryParams>) => {

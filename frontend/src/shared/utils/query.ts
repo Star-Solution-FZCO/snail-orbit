@@ -19,13 +19,18 @@ export const useParams = <T>(initialParams: T) => {
     const updateParams = useCallback(
         (value: Partial<T> | ((oldValues: T) => Partial<T>)) => {
             if (typeof value === "function") {
-                setParams((oldValues) => ({
-                    ...oldValues,
-                    ...removeUndefined(value(oldValues)),
-                }));
+                setParams(
+                    (oldValues) =>
+                        removeUndefined({
+                            ...oldValues,
+                            ...value(oldValues),
+                        }) as T,
+                );
                 return;
             } else {
-                setParams((prev) => ({ ...prev, ...removeUndefined(value) }));
+                setParams(
+                    (prev) => removeUndefined({ ...prev, ...value }) as T,
+                );
             }
         },
         [],
