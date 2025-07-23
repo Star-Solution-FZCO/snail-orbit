@@ -107,12 +107,11 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                                 <DurationChip
                                     {...baseCompProps(field)}
                                     key={field.id}
-                                    inputMode="numeric"
-                                    value={field.value?.toString() || ""}
+                                    value={field.value || undefined}
                                     onChange={(val) => {
                                         onChange?.({
                                             ...field,
-                                            value: Number(val),
+                                            value: val,
                                         });
                                     }}
                                 />

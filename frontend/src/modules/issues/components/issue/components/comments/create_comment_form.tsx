@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector } from "shared/model";
 import type { IssueAttachmentBodyT } from "shared/model/types";
 import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
-import { formatSpentTime, toastApiError } from "shared/utils";
+import { toastApiError } from "shared/utils";
 import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
 import { useCommentOperations } from "widgets/issue/api/use_comment_operations";
 import { BrowserFileCard } from "../attachment_cards";
@@ -199,11 +199,7 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
 
                             <SpentTimeField
                                 label={t("issues.spentTime")}
-                                initialValue={
-                                    spentTime
-                                        ? formatSpentTime(spentTime)
-                                        : undefined
-                                }
+                                initialValue={spentTime}
                                 onChange={setSpentTime}
                             />
 

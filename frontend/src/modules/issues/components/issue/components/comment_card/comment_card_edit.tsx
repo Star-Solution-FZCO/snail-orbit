@@ -9,7 +9,6 @@ import type {
 } from "shared/model/types";
 import type { IssueCommentUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
-import { formatSpentTime } from "shared/utils";
 import { AttachmentCard } from "../attachment_cards";
 import { HiddenInput } from "../hidden_input";
 
@@ -106,11 +105,7 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
 
                         <SpentTimeField
                             label={t("issues.spentTime")}
-                            initialValue={
-                                spentTime
-                                    ? formatSpentTime(spentTime)
-                                    : undefined
-                            }
+                            initialValue={spentTime}
                             onChange={setSpentTime}
                         />
 
