@@ -493,13 +493,15 @@ async def get_board_issues(
     if board.projects:
         q = q.find(bo.In(m.Issue.project.id, [p.id for p in board.projects]))
 
-    if query.q:
+    if query.q or query.sort_by:
         try:
             flt, _ = await transform_query(
-                query.q,
+                query.q or '',
                 current_user_email=user_ctx.user.email,
+                sort_by=query.sort_by,
             )
-            q = q.find(flt)
+            if flt:
+                q = q.find(flt)
         except IssueQueryTransformError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, err.message) from err
 
