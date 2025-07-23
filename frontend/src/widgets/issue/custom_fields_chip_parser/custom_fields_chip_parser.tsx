@@ -12,7 +12,7 @@ import { useCallback } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import type {
     EnumOption,
-    OwnedOptionOutput,
+    OwnedOption,
     StateOption,
     UserOutput,
     VersionOption,
@@ -279,7 +279,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                                     onChange={(value) => {
                                         onChange?.({
                                             ...field,
-                                            value: value as OwnedOptionOutput,
+                                            value: value as OwnedOption,
                                         });
                                     }}
                                 />
@@ -293,7 +293,7 @@ export const CustomFieldsChipParserV2: FC<CustomFieldsChipParserV2Props> = ({
                                     onChange={(value) => {
                                         onChange?.({
                                             ...field,
-                                            value: value as OwnedOptionOutput[],
+                                            value: value as OwnedOption[],
                                         });
                                     }}
                                     multiple
