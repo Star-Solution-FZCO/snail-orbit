@@ -43,6 +43,7 @@ class SearchOutput(BaseModel):
     description: str | None
     created_by: UserOutput
     permissions: list[PermissionOutput]
+    current_permission: m.PermissionType = Field(description='Current user permission')
 
     @classmethod
     def from_obj(cls, obj: m.Search) -> Self:
@@ -56,6 +57,7 @@ class SearchOutput(BaseModel):
             permissions=[
                 PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
             ],
+            current_permission=obj.user_permission(user_ctx),
         )
 
 

@@ -1,15 +1,15 @@
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Annotated, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import beanie.operators as bo
 import pymongo
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import Field
 
 from ._audit import audited_model
 from .group import Group, GroupLinkField
 from .permission import (
     PermissionRecord,
+    PermissionRecordMixin,
     PermissionTargetType,
     PermissionType,
     _check_permissions,
@@ -24,7 +24,7 @@ __all__ = ('Search',)
 
 
 @audited_model
-class Search(Document):
+class Search(Document, PermissionRecordMixin):
     class Settings:
         name = 'searches'
         use_revision = True
@@ -46,7 +46,6 @@ class Search(Document):
     query: str
     description: str | None
     created_by: UserLinkField
-    permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:

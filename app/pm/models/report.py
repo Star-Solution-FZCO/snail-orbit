@@ -13,6 +13,7 @@ from .custom_fields import CustomField, CustomFieldGroupLink
 from .group import Group, GroupLinkField
 from .permission import (
     PermissionRecord,
+    PermissionRecordMixin,
     PermissionTargetType,
     PermissionType,
     _check_permissions,
@@ -41,7 +42,7 @@ class ReportType(StrEnum):
 
 
 @audited_model
-class Report(Document):
+class Report(Document, PermissionRecordMixin):
     class Settings:
         name = 'reports'
         use_revision = True
@@ -78,13 +79,6 @@ class Report(Document):
     ]
     type: ReportType = Field(description='Type of report')
     created_by: UserLinkField = Field(description='User who created the report')
-    permissions: Annotated[
-        list[PermissionRecord],
-        Field(
-            default_factory=list,
-            description='List of permissions for accessing this report',
-        ),
-    ]
     favorite_of: Annotated[
         list[PydanticObjectId],
         Field(

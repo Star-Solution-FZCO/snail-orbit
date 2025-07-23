@@ -148,6 +148,7 @@ class BoardOutput(BaseModel):
     created_by: UserOutput = Field(description='Board creator')
     permissions: list[PermissionOutput] = Field(description='Board permissions')
     is_favorite: bool = Field(description='Whether board is favorited by current user')
+    current_permission: m.PermissionType = Field(description='Current user permission')
 
     @classmethod
     def from_obj(cls, obj: m.Board) -> 'BoardOutput':
@@ -180,6 +181,7 @@ class BoardOutput(BaseModel):
                 PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
             ],
             is_favorite=obj.is_favorite_of(user_ctx.user.id),
+            current_permission=obj.user_permission(user_ctx),
         )
 
 

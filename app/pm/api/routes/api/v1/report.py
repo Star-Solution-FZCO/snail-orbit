@@ -55,6 +55,7 @@ class BaseReportOutput(BaseModel):
     created_by: UserOutput
     permissions: list[PermissionOutput]
     is_favorite: bool = Field(description='Whether report is favorited by current user')
+    current_permission: m.PermissionType = Field(description='Current user permission')
 
 
 class IssuesPerProjectReportOutput(BaseReportOutput):
@@ -185,6 +186,7 @@ def create_report_output(obj: m.Report) -> ReportOutput:
             PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
         ],
         'is_favorite': obj.is_favorite_of(user_ctx.user.id),
+        'current_permission': obj.user_permission(user_ctx),
     }
 
     if obj.type == m.ReportType.ISSUES_PER_PROJECT:

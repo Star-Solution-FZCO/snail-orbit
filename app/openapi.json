@@ -32873,6 +32873,10 @@
             "type": "boolean",
             "title": "Is Favorite",
             "description": "Whether board is favorited by current user"
+          },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
           }
         },
         "type": "object",
@@ -32889,7 +32893,8 @@
           "ui_settings",
           "created_by",
           "permissions",
-          "is_favorite"
+          "is_favorite",
+          "current_permission"
         ],
         "title": "BoardOutput"
       },
@@ -39391,6 +39396,10 @@
             "title": "Is Favorite",
             "description": "Whether report is favorited by current user"
           },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
+          },
           "field": {
             "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
           }
@@ -39405,6 +39414,7 @@
           "created_by",
           "permissions",
           "is_favorite",
+          "current_permission",
           "field"
         ],
         "title": "IssuesPerFieldReportOutput"
@@ -39668,6 +39678,10 @@
             "type": "boolean",
             "title": "Is Favorite",
             "description": "Whether report is favorited by current user"
+          },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
           }
         },
         "type": "object",
@@ -39679,7 +39693,8 @@
           "projects",
           "created_by",
           "permissions",
-          "is_favorite"
+          "is_favorite",
+          "current_permission"
         ],
         "title": "IssuesPerProjectReportOutput"
       },
@@ -40007,6 +40022,10 @@
             "title": "Is Favorite",
             "description": "Whether report is favorited by current user"
           },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
+          },
           "row_field": {
             "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
           },
@@ -40024,6 +40043,7 @@
           "created_by",
           "permissions",
           "is_favorite",
+          "current_permission",
           "row_field",
           "column_field"
         ],
@@ -42403,6 +42423,10 @@
             },
             "type": "array",
             "title": "Permissions"
+          },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
           }
         },
         "type": "object",
@@ -42412,7 +42436,8 @@
           "query",
           "description",
           "created_by",
-          "permissions"
+          "permissions",
+          "current_permission"
         ],
         "title": "SearchOutput"
       },

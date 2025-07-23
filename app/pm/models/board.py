@@ -15,6 +15,7 @@ from .custom_fields import (
 from .group import Group, GroupLinkField
 from .permission import (
     PermissionRecord,
+    PermissionRecordMixin,
     PermissionType,
     _check_permissions,
     _filter_permissions,
@@ -30,7 +31,7 @@ __all__ = ('Board',)
 
 
 @audited_model
-class Board(Document):
+class Board(Document, PermissionRecordMixin):
     class Settings:
         name = 'boards'
         use_revision = True
@@ -86,7 +87,6 @@ class Board(Document):
     ]
     ui_settings: Annotated[dict, Field(default_factory=dict)]
     created_by: UserLinkField
-    permissions: Annotated[list[PermissionRecord], Field(default_factory=list)]
     favorite_of: Annotated[list[PydanticObjectId], Field(default_factory=list)]
 
     def has_permission_for_target(self, target: GroupLinkField | UserLinkField) -> bool:
