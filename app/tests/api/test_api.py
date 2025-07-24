@@ -2655,3 +2655,185 @@ async def test_tag_untag_permission_checks(
         json={'tag_id': restricted_tag_id},
     )
     assert untag_resp.status_code == 200
+
+
+@pytest.mark.parametrize(
+    'custom_field_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test String Field',
+                'type': 'string',
+                'description': 'A test string field',
+                'ai_description': None,
+                'is_nullable': True,
+                'default_value': None,
+            },
+            id='string',
+        ),
+        pytest.param(
+            {
+                'name': 'Test Int Field',
+                'type': 'integer',
+                'description': 'A test integer field',
+                'ai_description': 'some ai description',
+                'is_nullable': False,
+                'default_value': 3,
+            },
+            id='int_with_default',
+        ),
+        pytest.param(
+            {
+                'name': 'Test Enum Field',
+                'type': 'enum',
+                'description': 'A test enum field',
+                'ai_description': None,
+                'is_nullable': True,
+                'default_value': None,
+                'options': [
+                    {'value': 'option1', 'color': '#ff0000', 'is_archived': False},
+                    {'value': 'option2', 'color': '#00ff00', 'is_archived': False},
+                ],
+            },
+            id='enum',
+        ),
+        pytest.param(
+            {
+                'name': 'Test Enum Field with Default',
+                'type': 'enum',
+                'description': 'A test enum field with default value',
+                'ai_description': None,
+                'is_nullable': False,
+                'default_value': 'option1',
+                'options': [
+                    {'value': 'option1', 'color': '#ff0000', 'is_archived': False},
+                    {'value': 'option2', 'color': '#00ff00', 'is_archived': False},
+                ],
+            },
+            id='enum_with_default',
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_api_v1_custom_field_copy(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_custom_field: dict,
+    custom_field_payload: dict,
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Copy the custom field with a new label
+    copy_response = test_client.post(
+        f'/api/v1/custom_field/{create_custom_field["id"]}/copy',
+        headers=headers,
+        json={'label': 'copied_label'},
+    )
+    assert copy_response.status_code == 200
+    copy_data = copy_response.json()
+    assert copy_data['success'] is True
+
+    copied_field = copy_data['payload']
+
+    # Verify the copied field has the same group properties
+    assert copied_field['gid'] == create_custom_field['gid']
+    assert copied_field['name'] == custom_field_payload['name']
+    assert copied_field['type'] == custom_field_payload['type']
+    assert copied_field['description'] == custom_field_payload['description']
+    assert copied_field['ai_description'] == custom_field_payload['ai_description']
+
+    # Verify the copied field has the new label
+    assert copied_field['label'] == 'copied_label'
+
+    # Verify other field properties are copied
+    assert copied_field['is_nullable'] == custom_field_payload['is_nullable']
+
+    # For fields with default values, compare the processed default value
+    if custom_field_payload.get('default_value') is not None:
+        if custom_field_payload['type'] == 'enum' and isinstance(
+            copied_field['default_value'], dict
+        ):
+            # For enum fields, default_value becomes an option object with value property
+            assert (
+                copied_field['default_value']['value']
+                == custom_field_payload['default_value']
+            )
+        else:
+            assert (
+                copied_field['default_value'] == custom_field_payload['default_value']
+            )
+    else:
+        assert copied_field['default_value'] == custom_field_payload['default_value']
+
+    # Verify it has a different ID
+    assert copied_field['id'] != create_custom_field['id']
+
+    # Verify projects list is empty (not linked to any projects)
+    assert copied_field['projects'] == []
+
+    # Verify options are copied for enum type
+    if custom_field_payload['type'] == 'enum':
+        assert 'options' in copied_field
+        assert len(copied_field['options']) == len(custom_field_payload['options'])
+        # Options should have same values but different IDs
+        copied_values = {opt['value'] for opt in copied_field['options']}
+        original_values = {opt['value'] for opt in custom_field_payload['options']}
+        assert copied_values == original_values
+
+        # Get original field to compare option IDs
+        original_response = test_client.get(
+            f'/api/v1/custom_field/{create_custom_field["id"]}',
+            headers=headers,
+        )
+        original_field = original_response.json()['payload']
+
+        # Verify that option IDs are different (new UUIDs generated)
+        if 'options' in original_field:
+            original_option_ids = {opt['uuid'] for opt in original_field['options']}
+            copied_option_ids = {opt['uuid'] for opt in copied_field['options']}
+            assert original_option_ids.isdisjoint(copied_option_ids), (
+                'Option IDs should be different'
+            )
+
+    # Verify default value is properly copied and validated for enum fields with default values
+    if custom_field_payload['type'] == 'enum' and custom_field_payload.get(
+        'default_value'
+    ):
+        assert copied_field['default_value'] is not None
+        assert (
+            copied_field['default_value']['value']
+            == custom_field_payload['default_value']
+        )
+        # Verify the default value has an ID (it was validated and converted to an option object)
+        assert 'id' in copied_field['default_value']
+
+        # Verify the default value option has a new ID (different from original)
+        original_response = test_client.get(
+            f'/api/v1/custom_field/{create_custom_field["id"]}',
+            headers=headers,
+        )
+        original_field = original_response.json()['payload']
+        if original_field.get('default_value'):
+            assert (
+                copied_field['default_value']['id']
+                != original_field['default_value']['id']
+            ), 'Default value should have new ID'
+
+
+@pytest.mark.asyncio
+async def test_api_v1_custom_field_copy_not_found(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Try to copy a non-existent custom field
+    response = test_client.post(
+        '/api/v1/custom_field/507f1f77bcf86cd799439011/copy',
+        headers=headers,
+        json={'label': 'test_label'},
+    )
+    assert response.status_code == 404
+    assert response.json()['success'] is False
