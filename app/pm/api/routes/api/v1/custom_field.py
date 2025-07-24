@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 import asyncio
 from datetime import date, datetime
 from http import HTTPStatus
@@ -152,6 +153,10 @@ class CustomFieldGroupUpdateBody(BaseModel):
     name: str | None = Field(default=None, pattern=r'^[a-zA-Z_0-9][a-zA-Z0-9_ -]*$')
     description: str | None = None
     ai_description: str | None = None
+
+
+class CustomFieldCopyBody(BaseModel):
+    label: str = Field(description='Label for the copied field')
 
 
 @router.get('/group/list')
@@ -371,6 +376,49 @@ async def delete_custom_field(
         )
     await obj.delete()
     return ModelIdOutput.make(custom_field_id)
+
+
+@router.post('/{custom_field_id}/copy')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/copy')
+async def copy_custom_field(
+    custom_field_id: PydanticObjectId,
+    body: CustomFieldCopyBody,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    obj: m.CustomField | None = await m.CustomField.find_one(
+        m.CustomField.id == custom_field_id,
+        with_children=True,
+    )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+
+    field_cls = m.get_cf_class(obj.type)
+    copied_obj = field_cls(
+        gid=obj.gid,
+        name=obj.name,
+        type=obj.type,
+        description=obj.description,
+        ai_description=obj.ai_description,
+        label=body.label,
+        is_nullable=obj.is_nullable,
+        projects=[],
+    )
+
+    if hasattr(obj, 'options'):
+        copied_options = []
+        for option in obj.options:
+            copied_option = option.model_copy(update={'id': str(uuid4())})
+            copied_options.append(copied_option)
+        copied_obj.options = copied_options
+
+    if obj.default_value is not None:
+        try:
+            copied_obj.default_value = copied_obj.validate_value(obj.default_value)
+        except m.CustomFieldValidationError as err:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
+
+    await copied_obj.insert()
+
+    return SuccessPayloadOutput(payload=cf_output_from_obj(copied_obj))
 
 
 @router.post('/{custom_field_id}/option')

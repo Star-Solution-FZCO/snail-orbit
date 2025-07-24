@@ -100,8 +100,15 @@ async def _create_custom_field_enum(
     headers = {'Authorization': f'Bearer {admin_token}'}
     if custom_field_payload['type'] not in ('enum', 'enum_multi'):
         pytest.xfail('Unsupported custom field type')
-    if options := custom_field_payload.get('options', []):
+
+    options = custom_field_payload.get('options', [])
+    default_value = custom_field_payload.get('default_value')
+
+    # Remove options and default_value from payload for field creation
+    if options:
         del custom_field_payload['options']
+    if default_value:
+        custom_field_payload['default_value'] = None
 
     field_data = await __create_custom_field_group(
         test_client,
@@ -140,6 +147,17 @@ async def _create_custom_field_enum(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
+
+    if default_value:
+        default_option_uuid = option_ids.get(default_value)
+        if default_option_uuid:
+            update_resp = test_client.put(
+                f'/api/v1/custom_field/{field_data["id"]}',
+                headers=headers,
+                json={'default_value': default_value},
+            )
+            assert update_resp.status_code == 200
+
     return {**field_data, 'options': option_ids}
 
 
@@ -153,8 +171,14 @@ async def _create_custom_field_state(
     headers = {'Authorization': f'Bearer {admin_token}'}
     if custom_field_payload['type'] != 'state':
         pytest.xfail('Unsupported custom field type')
-    if options := custom_field_payload.get('options', []):
+
+    options = custom_field_payload.get('options', [])
+    default_value = custom_field_payload.get('default_value')
+
+    if options:
         del custom_field_payload['options']
+    if default_value:
+        custom_field_payload['default_value'] = None
 
     field_data = await __create_custom_field_group(
         test_client,
@@ -193,6 +217,17 @@ async def _create_custom_field_state(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
+
+    if default_value:
+        default_option_uuid = option_ids.get(default_value)
+        if default_option_uuid:
+            update_resp = test_client.put(
+                f'/api/v1/custom_field/{field_data["id"]}',
+                headers=headers,
+                json={'default_value': default_value},
+            )
+            assert update_resp.status_code == 200
+
     return {**field_data, 'options': option_ids}
 
 
@@ -206,8 +241,14 @@ async def _create_custom_field_version(
     headers = {'Authorization': f'Bearer {admin_token}'}
     if custom_field_payload['type'] not in ('version', 'version_multi'):
         pytest.xfail('Unsupported custom field type')
-    if options := custom_field_payload.get('options', []):
+
+    options = custom_field_payload.get('options', [])
+    default_value = custom_field_payload.get('default_value')
+
+    if options:
         del custom_field_payload['options']
+    if default_value:
+        custom_field_payload['default_value'] = None
 
     field_data = await __create_custom_field_group(
         test_client,
@@ -246,6 +287,17 @@ async def _create_custom_field_version(
     for option in options:
         opt_id, opt_val = await _add_option(option)
         option_ids[opt_val] = opt_id
+
+    if default_value:
+        default_option_uuid = option_ids.get(default_value)
+        if default_option_uuid:
+            update_resp = test_client.put(
+                f'/api/v1/custom_field/{field_data["id"]}',
+                headers=headers,
+                json={'default_value': default_value},
+            )
+            assert update_resp.status_code == 200
+
     return {**field_data, 'options': option_ids}
 
 
@@ -261,8 +313,14 @@ async def _create_custom_field_owned(
     headers = {'Authorization': f'Bearer {admin_token}'}
     if custom_field_payload['type'] not in ('owned', 'owned_multi'):
         pytest.xfail('Unsupported custom field type')
-    if options := custom_field_payload.get('options', []):
+
+    options = custom_field_payload.get('options', [])
+    default_value = custom_field_payload.get('default_value')
+
+    if options:
         del custom_field_payload['options']
+    if default_value:
+        custom_field_payload['default_value'] = None
 
     # Create users for options that have owners
     user_mapping = {}
@@ -359,6 +417,17 @@ async def _create_custom_field_owned(
         opt_id, opt_val, opt_data = await _add_option(option)
         option_ids[opt_val] = opt_id
         option_data[opt_val] = opt_data
+
+    # Set default value if specified
+    if default_value:
+        default_option_uuid = option_ids.get(default_value)
+        if default_option_uuid:
+            update_resp = test_client.put(
+                f'/api/v1/custom_field/{field_data["id"]}',
+                headers=headers,
+                json={'default_value': default_value},
+            )
+            assert update_resp.status_code == 200
 
     # Store the actual API response data for owned fields instead of original test data
     return {**field_data, 'options': option_ids, '_option_data': option_data}
