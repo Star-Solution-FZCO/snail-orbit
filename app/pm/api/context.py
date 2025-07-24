@@ -33,6 +33,7 @@ class UserContext:
     user: m.User
     permissions: dict[PydanticObjectId, set[Permissions]]
     predefined_groups: list = field(default_factory=list)
+    _accessible_tag_ids: set[PydanticObjectId] | None = field(default=None, init=False)
 
     def has_permission(
         self,
@@ -121,6 +122,13 @@ class UserContext:
             self.user, self.predefined_groups
         )
         return permission.check(issue_permissions)
+
+    async def get_accessible_tag_ids(self) -> set[PydanticObjectId]:
+        """Lazy load and cache accessible tag IDs for this request"""
+        if self._accessible_tag_ids is None:
+            accessible_tags = await m.Tag.find(m.Tag.get_filter_query(self)).to_list()
+            self._accessible_tag_ids = {tag.id for tag in accessible_tags}
+        return self._accessible_tag_ids
 
 
 def get_bearer_token(

@@ -2270,3 +2270,388 @@ async def test_api_v1_encrypted_project(
     assert resp.status_code == 200
     comment = resp.json()['payload']
     assert comment['attachments'][0]['encryption'] == encryption_meta
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Project',
+                'slug': 'test_project',
+                'description': 'Test project for tag filtering',
+                'ai_description': 'Test project AI description',
+            }
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Role',
+                'description': 'Role for testing tag permissions',
+                'permissions': ['issue:read', 'issue:create', 'issue:update'],
+            }
+        ),
+    ],
+)
+async def test_issue_tag_permission_filtering(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_initial_user: tuple[str, str],
+    create_project: str,
+    create_role: str,
+) -> None:
+    """Test that users only see tags they have permission to view in issue responses"""
+    admin_id, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    user_id, user_token = create_initial_user
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+
+    project_id = create_project
+    role_id = create_role
+
+    # Add admin user to project with the role (admin needs explicit project permissions)
+    admin_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': role_id,
+        },
+    )
+    assert admin_permission_resp.status_code == 200
+
+    # Add user to project with the role
+    user_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': user_id,
+            'role_id': role_id,
+        },
+    )
+    assert user_permission_resp.status_code == 200
+
+    # Create two tags - user will have permission to one but not the other
+    tag1_resp = test_client.post(
+        '/api/v1/tag/',
+        headers=admin_headers,
+        json={'name': 'accessible-tag', 'color': '#FF0000'},
+    )
+    assert tag1_resp.status_code == 200
+    accessible_tag_id = tag1_resp.json()['payload']['id']
+
+    tag2_resp = test_client.post(
+        '/api/v1/tag/',
+        headers=admin_headers,
+        json={'name': 'restricted-tag', 'color': '#00FF00'},
+    )
+    assert tag2_resp.status_code == 200
+    restricted_tag_id = tag2_resp.json()['payload']['id']
+
+    # Grant user permission to first tag only
+    tag_perm_resp = test_client.post(
+        f'/api/v1/tag/{accessible_tag_id}/permission',
+        headers=admin_headers,
+        json={'target_type': 'user', 'target': user_id, 'permission_type': 'view'},
+    )
+    assert tag_perm_resp.status_code == 200
+
+    # Create issue
+    issue_resp = test_client.post(
+        '/api/v1/issue/',
+        headers=admin_headers,
+        json={'project_id': project_id, 'subject': 'Test issue'},
+    )
+    assert issue_resp.status_code == 200
+    issue_id = issue_resp.json()['payload']['id']
+
+    # Add both tags to issue
+    test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=admin_headers,
+        json={'tag_id': accessible_tag_id},
+    )
+    test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=admin_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+
+    # Admin should see both tags
+    admin_resp = test_client.get(f'/api/v1/issue/{issue_id}', headers=admin_headers)
+    assert admin_resp.status_code == 200
+    admin_tags = admin_resp.json()['payload']['tags']
+    assert len(admin_tags) == 2
+    admin_tag_ids = {tag['id'] for tag in admin_tags}
+    assert accessible_tag_id in admin_tag_ids
+    assert restricted_tag_id in admin_tag_ids
+
+    # User should only see accessible tag
+    user_resp = test_client.get(f'/api/v1/issue/{issue_id}', headers=user_headers)
+    assert user_resp.status_code == 200
+    user_tags = user_resp.json()['payload']['tags']
+    assert len(user_tags) == 1
+    assert user_tags[0]['id'] == accessible_tag_id
+    assert user_tags[0]['name'] == 'accessible-tag'
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Project List',
+                'slug': 'test_project_list',
+                'description': 'Test project for issue list tag filtering',
+                'ai_description': 'Test project AI description',
+            }
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Role List',
+                'description': 'Role for testing tag list filtering',
+                'permissions': ['issue:read', 'issue:create', 'issue:update'],
+            }
+        ),
+    ],
+)
+async def test_issue_list_tag_filtering(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_initial_user: tuple[str, str],
+    create_project: str,
+    create_role: str,
+) -> None:
+    """Test that issue list endpoint filters tags based on permissions"""
+    admin_id, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    user_id, user_token = create_initial_user
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+
+    project_id = create_project
+    role_id = create_role
+
+    # Add admin user to project with the role (admin needs explicit project permissions)
+    admin_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': role_id,
+        },
+    )
+    assert admin_permission_resp.status_code == 200
+
+    # Add user to project with the role
+    user_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': user_id,
+            'role_id': role_id,
+        },
+    )
+    assert user_permission_resp.status_code == 200
+
+    # Create tag accessible to user
+    tag_resp = test_client.post(
+        '/api/v1/tag/',
+        headers=admin_headers,
+        json={'name': 'user-tag', 'color': '#FF0000'},
+    )
+    accessible_tag_id = tag_resp.json()['payload']['id']
+
+    # Grant user permission to tag
+    test_client.post(
+        f'/api/v1/tag/{accessible_tag_id}/permission',
+        headers=admin_headers,
+        json={'target_type': 'user', 'target': user_id, 'permission_type': 'view'},
+    )
+
+    # Create restricted tag
+    restricted_tag_resp = test_client.post(
+        '/api/v1/tag/',
+        headers=admin_headers,
+        json={'name': 'admin-only-tag', 'color': '#00FF00'},
+    )
+    restricted_tag_id = restricted_tag_resp.json()['payload']['id']
+
+    # Create issue with both tags
+    issue_resp = test_client.post(
+        '/api/v1/issue/',
+        headers=admin_headers,
+        json={'project_id': project_id, 'subject': 'Test issue for list'},
+    )
+    issue_id = issue_resp.json()['payload']['id']
+
+    test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=admin_headers,
+        json={'tag_id': accessible_tag_id},
+    )
+    test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=admin_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+
+    # User list should filter tags
+    user_list_resp = test_client.get('/api/v1/issue/list', headers=user_headers)
+    assert user_list_resp.status_code == 200
+    issues = user_list_resp.json()['payload']['items']
+
+    found_issue = None
+    for issue in issues:
+        if issue['id'] == issue_id:
+            found_issue = issue
+            break
+
+    assert found_issue is not None
+    assert len(found_issue['tags']) == 1
+    assert found_issue['tags'][0]['id'] == accessible_tag_id
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Project Untag',
+                'slug': 'test_project_untag',
+                'description': 'Test project for tag/untag permission checks',
+                'ai_description': 'Test project AI description',
+            }
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    'role_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Role Untag',
+                'description': 'Role for testing tag/untag permission checks',
+                'permissions': ['issue:read', 'issue:create', 'issue:update'],
+            }
+        ),
+    ],
+)
+async def test_tag_untag_permission_checks(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_initial_user: tuple[str, str],
+    create_project: str,
+    create_role: str,
+) -> None:
+    """Test that tag/untag operations require tag permissions"""
+    admin_id, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    user_id, user_token = create_initial_user
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+
+    project_id = create_project
+    role_id = create_role
+
+    # Add admin user to project with the role (admin needs explicit project permissions)
+    admin_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': admin_id,
+            'role_id': role_id,
+        },
+    )
+    assert admin_permission_resp.status_code == 200
+
+    # Add user to project with the role
+    user_permission_resp = test_client.post(
+        f'/api/v1/project/{project_id}/permission',
+        headers=admin_headers,
+        json={
+            'target_type': 'user',
+            'target_id': user_id,
+            'role_id': role_id,
+        },
+    )
+    assert user_permission_resp.status_code == 200
+
+    # Create restricted tag (user has no permission)
+    tag_resp = test_client.post(
+        '/api/v1/tag/',
+        headers=admin_headers,
+        json={'name': 'restricted-tag', 'color': '#FF0000'},
+    )
+    restricted_tag_id = tag_resp.json()['payload']['id']
+
+    # Create issue
+    issue_resp = test_client.post(
+        '/api/v1/issue/',
+        headers=admin_headers,
+        json={'project_id': project_id, 'subject': 'Test issue'},
+    )
+    issue_id = issue_resp.json()['payload']['id']
+
+    # User should not be able to tag issue with restricted tag
+    tag_resp = test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=user_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+    assert tag_resp.status_code == 403
+    response_json = tag_resp.json()
+    assert response_json['success'] is False
+    assert 'Tag access denied' in response_json['error_messages']
+
+    # Admin can tag the issue
+    admin_tag_resp = test_client.put(
+        f'/api/v1/issue/{issue_id}/tag',
+        headers=admin_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+    assert admin_tag_resp.status_code == 200
+
+    # User should not be able to untag either
+    untag_resp = test_client.put(
+        f'/api/v1/issue/{issue_id}/untag',
+        headers=user_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+    assert untag_resp.status_code == 403
+    untag_response_json = untag_resp.json()
+    assert untag_response_json['success'] is False
+    assert 'Tag access denied' in untag_response_json['error_messages']
+
+    # Grant user VIEW permission to tag
+    test_client.post(
+        f'/api/v1/tag/{restricted_tag_id}/permission',
+        headers=admin_headers,
+        json={'target_type': 'user', 'target': user_id, 'permission_type': 'view'},
+    )
+
+    # Now user should be able to untag
+    untag_resp = test_client.put(
+        f'/api/v1/issue/{issue_id}/untag',
+        headers=user_headers,
+        json={'tag_id': restricted_tag_id},
+    )
+    assert untag_resp.status_code == 200

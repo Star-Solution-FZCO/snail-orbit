@@ -169,7 +169,13 @@ class IssueOutput(BaseModel):
     has_custom_permissions: bool
 
     @classmethod
-    def from_obj(cls, obj: m.Issue) -> Self:
+    def from_obj(
+        cls, obj: m.Issue, accessible_tag_ids: set[PydanticObjectId] | None = None
+    ) -> Self:
+        filtered_tags = obj.tags
+        if accessible_tag_ids is not None:
+            filtered_tags = [tag for tag in obj.tags if tag.id in accessible_tag_ids]
+
         return cls(
             id=obj.id,
             id_readable=obj.id_readable,
@@ -197,7 +203,7 @@ class IssueOutput(BaseModel):
             is_closed=obj.is_closed,
             closed_at=obj.closed_at,
             interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
-            tags=[TagLinkOutput.from_obj(tag) for tag in obj.tags],
+            tags=[TagLinkOutput.from_obj(tag) for tag in filtered_tags],
             permissions=obj.permissions,
             disable_project_permissions_inheritance=obj.disable_project_permissions_inheritance,
             has_custom_permissions=obj.has_custom_permissions,

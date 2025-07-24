@@ -128,7 +128,6 @@ async def create_tag(
 ) -> SuccessPayloadOutput[TagOutput]:
     user_ctx = current_user()
 
-    # Create admin permission for the creator
     creator_permission = m.PermissionRecord(
         target_type=m.PermissionTargetType.USER,
         target=m.UserLinkField.from_obj(user_ctx.user),

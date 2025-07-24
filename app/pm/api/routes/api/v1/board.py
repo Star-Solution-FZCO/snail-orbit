@@ -478,6 +478,8 @@ async def get_board_issues(
     if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
 
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+
     q = m.Issue.find(
         user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
     )
@@ -597,7 +599,10 @@ async def get_board_issues(
             if col_value in cols:
                 issues = cols[col_value]
                 swimlane_columns.append(
-                    [IssueOutput.from_obj(issue) for issue in issues],
+                    [
+                        IssueOutput.from_obj(issue, accessible_tag_ids)
+                        for issue in issues
+                    ],
                 )
             else:
                 swimlane_columns.append([])
@@ -609,7 +614,10 @@ async def get_board_issues(
             if col_value in non_swimlane:
                 issues = non_swimlane[col_value]
                 non_swimlane_columns.append(
-                    [IssueOutput.from_obj(issue) for issue in issues],
+                    [
+                        IssueOutput.from_obj(issue, accessible_tag_ids)
+                        for issue in issues
+                    ],
                 )
             else:
                 non_swimlane_columns.append([])
@@ -651,6 +659,9 @@ async def move_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to use this board')
+
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+
     issue: m.Issue | None = await m.Issue.find_one(m.Issue.id == issue_id)
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -702,7 +713,7 @@ async def move_issue(
                 await wf.run(issue)
         except WorkflowError as err:
             raise ValidateModelError(
-                payload=IssueOutput.from_obj(issue),
+                payload=IssueOutput.from_obj(issue, accessible_tag_ids),
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             ) from err

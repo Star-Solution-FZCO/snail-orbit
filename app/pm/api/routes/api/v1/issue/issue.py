@@ -153,8 +153,10 @@ async def list_issues(
         pipeline,
         projection_model=m.Issue.get_ro_projection_model(),
     )
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+
     return BaseListOutput.make(
-        items=[IssueOutput.from_obj(obj) async for obj in q],
+        items=[IssueOutput.from_obj(obj, accessible_tag_ids) async for obj in q],
         count=cnt,
         limit=query.limit,
         offset=query.offset,
@@ -443,7 +445,8 @@ async def create_issue_from_draft(
         str(project.id),
         author=user_ctx.user.email,
     )
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.get('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
@@ -457,7 +460,9 @@ async def get_issue(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.post('/', responses=error_responses(*WRITE_ERRORS))
@@ -529,7 +534,8 @@ async def create_issue(
         str(project.id),
         author=user_ctx.user.email,
     )
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.put(
@@ -656,7 +662,8 @@ async def update_issue(
                 continue
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
         await m.Issue.update_issue_embedded_links(obj)
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.delete('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
@@ -711,7 +718,8 @@ async def subscribe_issue(
     if user_ctx.user.id not in obj.subscribers:
         obj.subscribers.append(user_ctx.user.id)
         await obj.replace()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.post(
@@ -731,7 +739,8 @@ async def unsubscribe_issue(
     if user_ctx.user.id in obj.subscribers:
         obj.subscribers.remove(user_ctx.user.id)
         await obj.replace()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.post('/{issue_id_or_alias}/link', responses=error_responses(*WRITE_ERRORS))
@@ -797,7 +806,8 @@ async def link_issues(
         await target_issue.replace()
 
     await obj.replace()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.get(
@@ -891,7 +901,8 @@ async def update_link(
     await obj.replace()
     await target_obj.replace()
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.delete(
@@ -936,7 +947,8 @@ async def unlink_issue(
         target_obj.interlinks.remove(target_il)
         await target_obj.replace()
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.put(
@@ -967,13 +979,17 @@ async def tag_issue(
     if not tag:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Tag not found')
 
+    if not tag.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Tag access denied')
+
     if tag.id in {t.id for t in obj.tags}:
         raise HTTPException(HTTPStatus.CONFLICT, 'Issue already tagged')
 
     obj.tags.append(m.TagLinkField.from_obj(tag))
     await obj.replace()
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.put(
@@ -1004,13 +1020,17 @@ async def untag_issue(
     if not tag:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Tag not found')
 
+    if not tag.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'Tag access denied')
+
     if tag.id not in {t.id for t in obj.tags}:
         raise HTTPException(HTTPStatus.CONFLICT, 'Issue not tagged')
 
     obj.tags = [t for t in obj.tags if t.id != tag.id]
     await obj.replace()
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj))
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
 
 
 @router.get(
