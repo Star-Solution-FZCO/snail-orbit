@@ -47,7 +47,7 @@ export const IssuesList: FC<IssuesListProps> = ({
                     color="textDisabled"
                     variant="subtitle2"
                 >
-                    {totalCount
+                    {totalCount !== undefined
                         ? t("issueList.totalCount", {
                               count: totalCount,
                           })
