@@ -340,7 +340,16 @@ async def _create_tag(
     data = response.json()
     assert data['payload']['id']
     assert data['payload']['created_by']['id'] == create_initial_admin[0]
+    # Verify permission fields are present
+    assert 'permissions' in data['payload']
+    assert 'current_permission' in data['payload']
+    assert data['payload']['current_permission'] == 'admin'
+    assert len(data['payload']['permissions']) == 1
+    assert data['payload']['permissions'][0]['permission_type'] == 'admin'
+    # Clean up permission fields and created_by for payload comparison
     del data['payload']['created_by']
+    del data['payload']['permissions']
+    del data['payload']['current_permission']
     assert data == {
         'success': True,
         'payload': {'id': data['payload']['id'], **tag_payload},

@@ -27993,6 +27993,633 @@
         ]
       }
     },
+    "/api/v1/tag/{tag_id}/permission": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "tag"
+        ],
+        "summary": "Grant Permission",
+        "description": "Grants one permission from set of permission types to a specified target (user or group) for a tag.",
+        "operationId": "grant_permission_api_v1_tag__tag_id__permission_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Tag Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/pm__api__routes__api__v1__tag__GrantPermissionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tag/{tag_id}/permission/{permission_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "tag"
+        ],
+        "summary": "Change Permission",
+        "operationId": "change_permission_api_v1_tag__tag_id__permission__permission_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermissionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "tag"
+        ],
+        "summary": "Revoke Permission",
+        "operationId": "revoke_permission_api_v1_tag__tag_id__permission__permission_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tag/{tag_id}/permissions": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "tag"
+        ],
+        "summary": "Get Tag Permissions",
+        "operationId": "get_tag_permissions_api_v1_tag__tag_id__permissions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort By"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_PermissionOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/search/list": {
       "get": {
         "tags": [
@@ -44127,6 +44754,17 @@
           },
           "created_by": {
             "$ref": "#/components/schemas/UserOutput"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
           }
         },
         "type": "object",
@@ -44138,7 +44776,9 @@
           "color",
           "untag_on_resolve",
           "untag_on_close",
-          "created_by"
+          "created_by",
+          "permissions",
+          "current_permission"
         ],
         "title": "TagOutput"
       },
@@ -46215,6 +46855,31 @@
         "title": "GrantPermissionBody"
       },
       "pm__api__routes__api__v1__search__GrantPermissionBody": {
+        "properties": {
+          "target_type": {
+            "$ref": "#/components/schemas/PermissionTargetType"
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "pattern": "^[0-9a-f]{24}$",
+            "title": "Target",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "permission_type": {
+            "$ref": "#/components/schemas/PermissionType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_type",
+          "target",
+          "permission_type"
+        ],
+        "title": "GrantPermissionBody"
+      },
+      "pm__api__routes__api__v1__tag__GrantPermissionBody": {
         "properties": {
           "target_type": {
             "$ref": "#/components/schemas/PermissionTargetType"

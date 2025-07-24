@@ -245,7 +245,16 @@ async def test_api_v1_tag(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
+    # Verify permission fields are present
+    assert 'permissions' in data['payload']
+    assert 'current_permission' in data['payload']
+    assert data['payload']['current_permission'] == 'admin'
+    assert len(data['payload']['permissions']) == 1
+    assert data['payload']['permissions'][0]['permission_type'] == 'admin'
+    # Clean up permission fields for payload comparison
     del data['payload']['created_by']
+    del data['payload']['permissions']
+    del data['payload']['current_permission']
     assert data['payload'] == {'id': tag_id, **tag_payload}
 
     response = test_client.put(
@@ -257,7 +266,13 @@ async def test_api_v1_tag(
     data = response.json()
     assert data['success']
     assert data['payload']['created_by']['id'] == admin_id
+    # Verify permission fields are still present after update
+    assert data['payload']['current_permission'] == 'admin'
+    assert len(data['payload']['permissions']) == 1
+    # Clean up permission fields for payload comparison
     del data['payload']['created_by']
+    del data['payload']['permissions']
+    del data['payload']['current_permission']
     assert data['payload'] == {
         'id': tag_id,
         **tag_payload,
@@ -277,6 +292,221 @@ async def test_api_v1_tag(
         f'/api/v1/tag/{tag_id}',
         headers=headers,
     )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_api_v1_tag_permissions(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test tag permission management endpoints."""
+    admin_id, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create a test user
+    user_payload = {
+        'name': 'Test User',
+        'email': 'testuser@example.com',
+        'is_active': True,
+    }
+    from .create import _create_user
+
+    user_id = await _create_user(test_client, create_initial_admin, user_payload)
+
+    # Create a test group
+    group_payload = {
+        'name': 'Test Group',
+        'description': 'Group for tag testing',
+    }
+    from .create import _create_group
+
+    group_id = await _create_group(test_client, create_initial_admin, group_payload)
+
+    # Create tag
+    tag_payload = {
+        'name': 'Permissions Test Tag',
+        'description': 'Tag for testing permissions',
+        'color': '#FF5733',
+    }
+
+    response = test_client.post('/api/v1/tag', headers=headers, json=tag_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    tag_id = data['payload']['id']
+
+    # Test granting user permission
+    permission_payload = {
+        'target_type': 'user',
+        'target': user_id,
+        'permission_type': 'view',
+    }
+
+    response = test_client.post(
+        f'/api/v1/tag/{tag_id}/permission',
+        headers=headers,
+        json=permission_payload,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    permission_id = data['payload']['id']
+
+    # Test granting group permission
+    group_permission_payload = {
+        'target_type': 'group',
+        'target': group_id,
+        'permission_type': 'edit',
+    }
+
+    response = test_client.post(
+        f'/api/v1/tag/{tag_id}/permission',
+        headers=headers,
+        json=group_permission_payload,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    # Test listing permissions
+    response = test_client.get(f'/api/v1/tag/{tag_id}/permissions', headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['count'] == 3  # admin + user + group permissions
+
+    # Test updating permission
+    update_permission_payload = {
+        'permission_type': 'edit',
+    }
+
+    response = test_client.put(
+        f'/api/v1/tag/{tag_id}/permission/{permission_id}',
+        headers=headers,
+        json=update_permission_payload,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    # Test revoking permission
+    response = test_client.delete(
+        f'/api/v1/tag/{tag_id}/permission/{permission_id}',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    # Verify permission was removed
+    response = test_client.get(f'/api/v1/tag/{tag_id}/permissions', headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert data['payload']['count'] == 2  # admin + group permissions
+
+
+@pytest.mark.asyncio
+async def test_api_v1_tag_access_control(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test tag access control based on permissions."""
+    admin_id, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create a test user
+    user_payload = {
+        'name': 'Test User',
+        'email': 'testuser@example.com',
+        'is_active': True,
+    }
+    from .create import _create_user
+
+    user_id = await _create_user(test_client, create_initial_admin, user_payload)
+
+    # Admin creates two tags
+    tag1_payload = {
+        'name': 'Admin Tag 1',
+        'description': 'First tag created by admin',
+        'color': '#FF5733',
+    }
+    response = test_client.post('/api/v1/tag', headers=admin_headers, json=tag1_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    tag1_id = data['payload']['id']
+
+    tag2_payload = {
+        'name': 'Admin Tag 2',
+        'description': 'Second tag created by admin',
+        'color': '#33FF57',
+    }
+    response = test_client.post('/api/v1/tag', headers=admin_headers, json=tag2_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    tag2_id = data['payload']['id']
+
+    # Grant view permission to user for tag1 only
+    permission_payload = {
+        'target_type': 'user',
+        'target': user_id,
+        'permission_type': 'view',
+    }
+    response = test_client.post(
+        f'/api/v1/tag/{tag1_id}/permission',
+        headers=admin_headers,
+        json=permission_payload,
+    )
+    assert response.status_code == 200
+
+    # Test filtering: admin should see both tags
+    response = test_client.get('/api/v1/tag/list', headers=admin_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    admin_tag_ids = [item['id'] for item in data['payload']['items']]
+    assert tag1_id in admin_tag_ids
+    assert tag2_id in admin_tag_ids
+
+    # Test that permissions affect which tags show correct current_permission
+    tag1_data = next(item for item in data['payload']['items'] if item['id'] == tag1_id)
+    tag2_data = next(item for item in data['payload']['items'] if item['id'] == tag2_id)
+    assert tag1_data['current_permission'] == 'admin'  # Admin created it
+    assert tag2_data['current_permission'] == 'admin'  # Admin created it
+
+    # Verify tag1 has 2 permissions (admin + user view)
+    assert len(tag1_data['permissions']) == 2
+    # Verify tag2 has 1 permission (admin only)
+    assert len(tag2_data['permissions']) == 1
+
+    # Test permission-based access checks
+    # Admin can access both tags
+    response = test_client.get(f'/api/v1/tag/{tag1_id}', headers=admin_headers)
+    assert response.status_code == 200
+    response = test_client.get(f'/api/v1/tag/{tag2_id}', headers=admin_headers)
+    assert response.status_code == 200
+
+    # Admin can update both tags
+    update_payload = {'name': 'Updated by admin'}
+    response = test_client.put(
+        f'/api/v1/tag/{tag1_id}', headers=admin_headers, json=update_payload
+    )
+    assert response.status_code == 200
+    response = test_client.put(
+        f'/api/v1/tag/{tag2_id}', headers=admin_headers, json=update_payload
+    )
+    assert response.status_code == 200
+
+    # Admin can delete both tags (will do this at the end)
+    # Test delete permission on tag2 first
+    response = test_client.delete(f'/api/v1/tag/{tag2_id}', headers=admin_headers)
+    assert response.status_code == 200
+
+    # Verify tag2 is deleted
+    response = test_client.get(f'/api/v1/tag/{tag2_id}', headers=admin_headers)
     assert response.status_code == 404
 
 
