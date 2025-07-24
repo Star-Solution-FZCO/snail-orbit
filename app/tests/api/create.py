@@ -24,6 +24,8 @@ __all__ = (
     'create_roles',
     'create_user',
     'create_users',
+    'create_workflow',
+    'create_workflows',
     'grant_issue_permission',
 )
 
@@ -456,3 +458,55 @@ async def grant_issue_permission(
     data = response.json()
     assert data['success']
     return data['payload']['id']
+
+
+async def _create_workflow(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    workflow_payload: dict,
+) -> str:
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    response = test_client.post(
+        '/api/v1/workflow', headers=headers, json=workflow_payload
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['payload']['id']
+
+    expected_payload = {
+        'id': data['payload']['id'],
+        **workflow_payload,
+    }
+
+    assert data == {
+        'success': True,
+        'payload': expected_payload,
+    }
+    return data['payload']['id']
+
+
+@pytest_asyncio.fixture
+async def create_workflow(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    workflow_payload: dict,
+) -> str:
+    return await _create_workflow(test_client, create_initial_admin, workflow_payload)
+
+
+@pytest_asyncio.fixture
+async def create_workflows(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    workflow_payloads: list[dict],
+) -> list[str]:
+    workflow_ids = []
+    for workflow_payload in workflow_payloads:
+        workflow_id = await _create_workflow(
+            test_client,
+            create_initial_admin,
+            workflow_payload,
+        )
+        workflow_ids.append(workflow_id)
+    return workflow_ids

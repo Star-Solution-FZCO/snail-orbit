@@ -765,6 +765,29 @@ async def remove_workflow(
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
 
+@router.get('/{project_id}/workflow/available/select')
+async def get_available_workflows_for_project(
+    project_id: PydanticObjectId,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[WorkflowOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    q = m.Workflow.find(
+        bo.NotIn(m.Workflow.id, [workflow.id for workflow in project.workflows]),
+        with_children=True,
+    ).sort(m.Workflow.name)
+    if query.search:
+        q = q.find(m.Workflow.search_query(query.search))
+    return await BaseListOutput.make_from_query(
+        q,
+        limit=query.limit,
+        offset=query.offset,
+        projection_fn=WorkflowOutput.from_obj,
+    )
+
+
 @router.post('/{project_id}/subscribe')
 async def subscribe_project(
     project_id: PydanticObjectId,

@@ -10,6 +10,7 @@ import type {
     ProjectT,
     TargetTypeT,
     UpdateProjectT,
+    WorkflowT,
 } from "shared/model/types";
 import customFetchBase from "./custom_fetch_base";
 
@@ -108,6 +109,18 @@ export const projectApi = createApi({
         >({
             query: ({ id, ...params }) => ({
                 url: `project/${id}/field/available/select`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "Projects", id },
+            ],
+        }),
+        listProjectAvailableWorkflows: build.query<
+            ListResponse<WorkflowT>,
+            { id: string } & ListQueryParams
+        >({
+            query: ({ id, ...params }) => ({
+                url: `project/${id}/workflow/available/select`,
                 params,
             }),
             providesTags: (_result, _error, { id }) => [

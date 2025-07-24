@@ -21,7 +21,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "shared/model";
-import { workflowApi } from "shared/model/api/workflow.api";
 import type { ProjectT, WorkflowT, WorkflowTypeT } from "shared/model/types";
 import { workflowTypeMap } from "shared/ui";
 import {
@@ -41,7 +40,10 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
         data: workflows,
         isLoading: workflowsLoading,
         error,
-    } = workflowApi.useListWorkflowQuery(noLimitListQueryParams);
+    } = projectApi.useListProjectAvailableWorkflowsQuery({
+        id: projectId,
+        ...noLimitListQueryParams,
+    });
 
     const [addProjectWorkflow, { isLoading: addProjectWorkflowLoading }] =
         projectApi.useAddProjectWorkflowMutation();
