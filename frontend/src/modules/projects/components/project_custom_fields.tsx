@@ -1,10 +1,12 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
     Box,
     Button,
     CircularProgress,
+    Collapse,
     Dialog,
     DialogActions,
     DialogContent,
@@ -12,6 +14,7 @@ import {
     DialogTitle,
     Divider,
     IconButton,
+    Stack,
     Typography,
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -28,6 +31,78 @@ import {
     noLimitListQueryParams,
     toastApiError,
 } from "shared/utils";
+import { groupCustomFields } from "../utils";
+
+const Bundle: FC<{
+    bundle: { gid: string; name: string; fields: CustomFieldT[] };
+    onAddCustomFieldClick: (id: string) => void;
+}> = ({ bundle, onAddCustomFieldClick }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <Stack>
+            <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+                <IconButton
+                    onClick={() => setExpanded((prev) => !prev)}
+                    size="small"
+                >
+                    <ExpandMoreIcon
+                        sx={{
+                            transform: expanded
+                                ? "rotate(180deg)"
+                                : "rotate(0)",
+                            transition: "transform 0.2s",
+                        }}
+                        fontSize="small"
+                    />
+                </IconButton>
+
+                <Link
+                    to="/custom-fields/$customFieldGroupId"
+                    params={{
+                        customFieldGroupId: bundle.gid,
+                    }}
+                    fontWeight="bold"
+                >
+                    {bundle.name}
+                </Link>
+            </Stack>
+
+            <Divider />
+
+            <Collapse in={expanded}>
+                <Stack pl={0.5} pt={0.5}>
+                    {bundle.fields.map((field) => (
+                        <Box
+                            key={field.id}
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            gap={1}
+                        >
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <IconButton
+                                    onClick={() =>
+                                        onAddCustomFieldClick(field.id)
+                                    }
+                                    size="small"
+                                >
+                                    <AddIcon fontSize="small" />
+                                </IconButton>
+
+                                <Typography flex={1} fontWeight="bold">
+                                    {field.label}
+                                </Typography>
+                            </Box>
+
+                            <Typography>{field.type}</Typography>
+                        </Box>
+                    ))}
+                </Stack>
+            </Collapse>
+        </Stack>
+    );
+};
 
 interface ICustomFieldListProps {
     project: ProjectT;
@@ -58,7 +133,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
             .catch(toastApiError);
     };
 
-    const fields = customFields?.payload.items || [];
+    const bundles = groupCustomFields(customFields?.payload.items || []);
 
     if (customFieldsLoading)
         return (
@@ -86,7 +161,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
         <Box display="flex" flexDirection="column" gap={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
-                    {fields.length} {t("projects.customFields.fields")}
+                    {bundles.length} {t("projects.customFields.fields")}
                 </Typography>
 
                 {addProjectCustomFieldLoading && (
@@ -103,38 +178,12 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
                 flex={1}
                 overflow="auto"
             >
-                {fields.map((field) => (
-                    <Box
-                        key={field.id}
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        gap={1}
-                    >
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <IconButton
-                                onClick={() =>
-                                    handleClickAddCustomField(field.id)
-                                }
-                                size="small"
-                            >
-                                <AddIcon />
-                            </IconButton>
-
-                            <Link
-                                to="/custom-fields/$customFieldGroupId"
-                                params={{
-                                    customFieldGroupId: field.gid,
-                                }}
-                                flex={1}
-                                fontWeight="bold"
-                            >
-                                {field.name} ({field.label})
-                            </Link>
-                        </Box>
-
-                        <Typography>{field.type}</Typography>
-                    </Box>
+                {bundles.map((bundle) => (
+                    <Bundle
+                        key={bundle.gid}
+                        bundle={bundle}
+                        onAddCustomFieldClick={handleClickAddCustomField}
+                    />
                 ))}
             </Box>
         </Box>

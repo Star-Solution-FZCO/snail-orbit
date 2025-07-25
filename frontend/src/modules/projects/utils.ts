@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CustomFieldT } from "shared/model/types";
 
 export const enum ProjectFormTabKey {
     GENERAL = "general",
@@ -79,4 +80,27 @@ export const generateSlug = (name: string): string => {
     }
 
     return slug;
+};
+
+export const groupCustomFields = (
+    fields: CustomFieldT[],
+): Array<{
+    gid: string;
+    name: string;
+    fields: CustomFieldT[];
+}> => {
+    const groups = new Map<string, CustomFieldT[]>();
+
+    for (const field of fields) {
+        if (!groups.has(field.gid)) {
+            groups.set(field.gid, []);
+        }
+        groups.get(field.gid)!.push(field);
+    }
+
+    return Array.from(groups.entries()).map(([gid, groupFields]) => ({
+        gid,
+        fields: groupFields,
+        name: groupFields[0]?.name || "",
+    }));
 };
