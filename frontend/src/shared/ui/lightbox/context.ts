@@ -5,6 +5,7 @@ export type LBFile = {
     src: string;
     name: string;
     size: number;
+    content_type: string;
 };
 
 export interface ILightboxContext {

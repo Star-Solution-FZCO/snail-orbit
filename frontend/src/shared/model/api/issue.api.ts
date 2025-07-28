@@ -145,37 +145,23 @@ export const issueApi = createApi({
                 url: `issue/${id}/comment/list`,
                 params,
             }),
-            providesTags: (result) => {
-                let tags = [{ type: "IssueComments", id: "LIST" }];
-                if (result) {
-                    tags = tags.concat(
-                        result.payload.items.map((comment) => ({
-                            type: "IssueComments",
-                            id: comment.id,
-                        })),
-                    );
-                }
-                return tags;
-            },
+            providesTags: (_result, _error, { id }) => [
+                { type: "IssueComments", id },
+            ],
         }),
         getIssueComment: build.query<
             ApiResponse<CommentT>,
             { id: string; commentId: string }
         >({
             query: ({ id, commentId }) => `issue/${id}/comment/${commentId}`,
-            providesTags: (_result, _error, { commentId }) => [
-                { type: "IssueComments", id: commentId },
-            ],
         }),
         createIssueComment: build.mutation<
             ApiResponse<CommentT>,
             { id: string } & IssueCommentCreate
         >({
-            query: ({ id, ...body }) => ({
-                url: `issue/${id}/comment/`,
-                method: "POST",
-                body,
-            }),
+            query: ({ id, ...body }) => {
+                return { url: `issue/${id}/comment/`, method: "POST", body };
+            },
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
             ],
@@ -190,7 +176,7 @@ export const issueApi = createApi({
                 body,
             }),
             invalidatesTags: (_result, _error, { id }) => [
-                { type: "IssueComments", id: id },
+                { type: "IssueComments", id },
             ],
         }),
         deleteIssueComment: build.mutation<
@@ -202,7 +188,7 @@ export const issueApi = createApi({
                 method: "DELETE",
             }),
             invalidatesTags: (_result, _error, { id }) => [
-                { type: "IssueComments", id: id },
+                { type: "IssueComments", id },
             ],
         }),
         listIssueHistory: build.query<

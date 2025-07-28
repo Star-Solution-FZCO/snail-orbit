@@ -247,6 +247,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
                 src: fileUrl,
                 name: attachment.name,
                 size: attachment.size,
+                content_type: attachment.content_type,
             });
         } else {
             onDownload(attachment);

@@ -56,13 +56,14 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
                             src: fileUrl,
                             name: attachment.name,
                             size: attachment.size,
+                            content_type: attachment.content_type,
                         })
                     }
                 />
             ) : (
                 <Stack
-                    width={64}
-                    height={64}
+                    width={40}
+                    height={40}
                     alignItems="center"
                     justifyContent="center"
                     border={1}

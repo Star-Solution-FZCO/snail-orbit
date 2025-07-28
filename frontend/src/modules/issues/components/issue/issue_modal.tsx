@@ -125,7 +125,10 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                             onUpdateCache={onUpdateCache}
                         />
 
-                        <IssueActivities issueId={issue.id_readable} />
+                        <IssueActivities
+                            issueId={issue.id_readable}
+                            issueSubject={issue.subject}
+                        />
                     </Stack>
                 </Stack>
 

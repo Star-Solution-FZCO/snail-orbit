@@ -10,6 +10,8 @@ import { AttachmentCard } from "../attachment_cards";
 import { CommentCardActionButtons } from "./comment_card_action_buttons";
 
 type CommentCardViewProps = {
+    issueId: string;
+    issueSubject: string;
     comment: CommentT;
     commentText: string;
     onEditClick: (comment: CommentT) => unknown;
@@ -21,6 +23,8 @@ type CommentCardViewProps = {
 
 export const CommentCardView = (props: CommentCardViewProps) => {
     const {
+        issueId,
+        issueSubject,
         comment,
         commentText,
         onDeleteClick,
@@ -43,7 +47,7 @@ export const CommentCardView = (props: CommentCardViewProps) => {
     useEffect(() => {
         const hash = location.hash;
 
-        if (hash === `comment-${comment.id}`) {
+        if (hash === `#comment-${comment.id}`) {
             const element = commentBoxRef.current;
             if (element) {
                 element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -56,7 +60,7 @@ export const CommentCardView = (props: CommentCardViewProps) => {
         <Box
             ref={commentBoxRef}
             id={`comment-${comment.id}`}
-            tabIndex={-1}
+            tabIndex={0}
             sx={{
                 display: "flex",
                 gap: 2,
@@ -115,10 +119,12 @@ export const CommentCardView = (props: CommentCardViewProps) => {
                     </Box>
 
                     <CommentCardActionButtons
+                        issueId={issueId}
+                        issueSubject={issueSubject}
                         comment={comment}
-                        isModifyActionsAvailable={isOwner && !isLoading}
                         onEdit={onEditClick}
                         onDelete={onDeleteClick}
+                        isModifyActionsAvailable={isOwner && !isLoading}
                     />
                 </Box>
 

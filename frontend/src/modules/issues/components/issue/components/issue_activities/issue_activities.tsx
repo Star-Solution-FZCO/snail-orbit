@@ -15,9 +15,13 @@ import { IssueActivitiesSettings } from "./issue_activities_settings";
 
 type IssueActivitiesProps = {
     issueId: string;
+    issueSubject: string;
 };
 
-const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
+const IssueActivities: FC<IssueActivitiesProps> = ({
+    issueId,
+    issueSubject,
+}) => {
     const { t } = useTranslation();
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         sort_by: "time",
@@ -127,6 +131,7 @@ const IssueActivities: FC<IssueActivitiesProps> = ({ issueId }) => {
                             <CommentCard
                                 key={comment.id}
                                 issueId={issueId}
+                                issueSubject={issueSubject}
                                 projectId={issueData?.payload.project.id}
                                 comment={comment}
                                 onEdit={setCurrentEditingComment}

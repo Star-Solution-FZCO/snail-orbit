@@ -59,6 +59,7 @@ export const DraftAttachments = (props: DraftAttachmentsProps) => {
                 src: makeFileUrl(a.id),
                 name: a.name,
                 size: a.size,
+                content_type: a.content_type,
             })),
         );
 

@@ -23,7 +23,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
         onUpdateCache,
     } = props;
 
-    const { data: commentsData } = issueApi.useListIssueCommentsQuery({
+    const { data: comments } = issueApi.useListIssueCommentsQuery({
         id: id_readable,
     });
 
@@ -63,19 +63,20 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             src: makeFileUrl(a.id),
             name: a.name,
             size: a.size,
+            content_type: a.content_type,
         }));
 
-        const commentsAttachments = commentsData
-            ? commentsData.payload.items
-                  .flatMap((comment) => comment.attachments)
-                  .reverse()
-                  .map((a) => ({
-                      id: a.id,
-                      src: makeFileUrl(a.id),
-                      name: a.name,
-                      size: a.size,
-                  }))
-            : [];
+        const commentsAttachments =
+            comments?.payload.items
+                .flatMap((comment) => comment.attachments)
+                .reverse()
+                .map((a) => ({
+                    id: a.id,
+                    src: makeFileUrl(a.id),
+                    name: a.name,
+                    size: a.size,
+                    content_type: a.content_type,
+                })) || [];
 
         loadLBFiles([...issueAttachments, ...commentsAttachments]);
 
@@ -83,7 +84,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             closeLB();
             clearLBFiles();
         };
-    }, [attachments, commentsData, loadLBFiles, closeLB, clearLBFiles]);
+    }, [attachments, comments, loadLBFiles, closeLB, clearLBFiles]);
 
     return (
         <AttachmentsList

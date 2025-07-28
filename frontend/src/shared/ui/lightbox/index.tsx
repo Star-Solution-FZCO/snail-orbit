@@ -7,6 +7,7 @@ const initialFile: LBFile = {
     src: "",
     name: "",
     size: 0,
+    content_type: "image/png",
 };
 
 export const Lightbox: FC<React.PropsWithChildren> = ({ children }) => {
@@ -16,7 +17,7 @@ export const Lightbox: FC<React.PropsWithChildren> = ({ children }) => {
     const [index, setIndex] = useState(0);
 
     const load = useCallback((files: LBFile[]) => {
-        setFiles(files);
+        setFiles(files.filter((f) => f.content_type.startsWith("image/")));
         setIndex(0);
         setCurrentFile(files[0] ?? initialFile);
     }, []);

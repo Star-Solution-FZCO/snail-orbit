@@ -85,7 +85,10 @@ export const IssueView: FC<IssueFormProps> = (props) => {
                 />
 
                 {displayMode === "view" && (
-                    <IssueActivities issueId={issue.id} />
+                    <IssueActivities
+                        issueId={issue.id_readable}
+                        issueSubject={issue.subject}
+                    />
                 )}
             </Stack>
 

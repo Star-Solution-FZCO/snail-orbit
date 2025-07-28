@@ -6,6 +6,13 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import type { CommentT } from "shared/model/types";
+import {
+    ISSUE_LINK_MODE_DEFAULT_VALUE,
+    ISSUE_LINK_MODE_KEY,
+    IssueLinkMode,
+} from "shared/model/types/settings";
+import { useLSState } from "shared/utils/helpers/local-storage";
+import { slugify } from "transliteration";
 
 const iconStyles = (hoverColor: string): SxProps<Theme> => ({
     "&:hover": {
@@ -15,22 +22,35 @@ const iconStyles = (hoverColor: string): SxProps<Theme> => ({
 });
 
 type ActionButtonsProps = {
+    issueId: string;
+    issueSubject: string;
     comment: CommentT;
-    isModifyActionsAvailable: boolean;
     onEdit: (comment: CommentT) => void;
     onDelete: (comment: CommentT) => void;
+    isModifyActionsAvailable: boolean;
 };
 
 export const CommentCardActionButtons: FC<ActionButtonsProps> = ({
+    issueId,
+    issueSubject,
     comment,
-    isModifyActionsAvailable,
     onEdit,
     onDelete,
+    isModifyActionsAvailable,
 }) => {
     const { t } = useTranslation();
 
+    const [issueLinkMode] = useLSState<IssueLinkMode>(
+        ISSUE_LINK_MODE_KEY,
+        ISSUE_LINK_MODE_DEFAULT_VALUE,
+    );
+
     const handleClickCopyLink = () => {
-        const commentUrl = `${window.location.href}#comment-${comment.id}`;
+        const path =
+            issueLinkMode === "long"
+                ? `/issues/${issueId}/${slugify(issueSubject)}#comment-${comment.id}`
+                : `/issues/${issueId}#comment-${comment.id}`;
+        const commentUrl = window.location.origin + path;
 
         navigator.clipboard
             .writeText(commentUrl)

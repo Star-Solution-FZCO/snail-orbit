@@ -19,6 +19,7 @@ dayjs.extend(utc);
 
 type CommentCardProps = {
     issueId: string;
+    issueSubject: string;
     projectId?: string;
     comment: CommentT;
     onEdit: (comment: CommentT) => void;
@@ -29,6 +30,7 @@ type CommentCardProps = {
 
 const CommentCard: FC<CommentCardProps> = ({
     issueId,
+    issueSubject,
     projectId,
     comment,
     onEdit,
@@ -96,6 +98,8 @@ const CommentCard: FC<CommentCardProps> = ({
         <>
             {!isEditing ? (
                 <CommentCardView
+                    issueId={issueId}
+                    issueSubject={issueSubject}
                     comment={comment}
                     commentText={
                         commentTextLoading
