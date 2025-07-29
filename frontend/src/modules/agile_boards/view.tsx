@@ -29,7 +29,7 @@ import { formatErrorMessages, toastApiError } from "shared/utils";
 import { saveToLS } from "shared/utils/helpers/local-storage";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
-import { QueryBuilder } from "../issues/components/query_builder/query_builder";
+import { QueryBuilder } from "../../widgets/query_builder/query_builder";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "../issues/widgets/modal_view/use_modal_view";
 import { AgileBoard } from "./components/agile_board";

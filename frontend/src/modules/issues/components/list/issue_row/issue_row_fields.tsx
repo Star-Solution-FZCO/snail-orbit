@@ -1,10 +1,10 @@
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useIssueOperations } from "entities/issue/api/use_issue_operations";
+import { IssueCustomFieldChips } from "modules/issues/components/issue/components/issue_custom_fields_chips";
 import type { FC } from "react";
 import { memo } from "react";
 import { projectApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
-import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
-import { IssueCustomFieldChips } from "widgets/issue/issue_custom_field_chips/issue_custom_fields_chips";
 import { IssueRowFieldsContainer } from "./issue_row.styles";
 
 type IssueRowFieldsProps = {

@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
+import { useAttachmentOperations } from "entities/issue/api/use_attachment_operations";
+import { useCommentOperations } from "entities/issue/api/use_comment_operations";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CommentT, SelectedAttachmentT } from "shared/model/types";
 import type { IssueCommentUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
-import { useCommentOperations } from "widgets/issue/api/use_comment_operations";
 import { initialSelectedAttachment } from "../../../../utils";
 import { DeleteAttachmentDialog } from "../delete_attachment_dialog";
 import { CommentCardEdit } from "./comment_card_edit";

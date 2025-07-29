@@ -1,9 +1,9 @@
 import { Box, Stack } from "@mui/material";
+import { IssueCustomFields } from "modules/issues/components/issue/components/issue_custom_fields";
 import type { FC } from "react";
 import { useState } from "react";
 import type { IssueT, ProjectT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { IssueCustomFields } from "widgets/issue/issue_custom_fields/issue_custom_fields";
 import { FieldContainer } from "./components/field_container";
 import { IssueActivities } from "./components/issue_activities/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";

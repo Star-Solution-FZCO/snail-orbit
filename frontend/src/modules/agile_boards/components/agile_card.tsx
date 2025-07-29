@@ -1,4 +1,7 @@
 import { LinearProgress } from "@mui/material";
+import { useIssueOperations } from "entities/issue/api/use_issue_operations";
+import { IssueLink } from "entities/issue/issue_link/issue_link";
+import { CustomFieldsChipParser } from "features/custom_fields/custom_fields_chip_parser";
 import type { ComponentProps, FC } from "react";
 import { memo, useMemo } from "react";
 import { projectApi } from "shared/model";
@@ -19,9 +22,6 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { notEmpty } from "shared/utils/helpers/notEmpty";
-import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
-import { CustomFieldsChipParserV2 } from "widgets/issue/custom_fields_chip_parser/custom_fields_chip_parser";
-import { IssueLink } from "widgets/issue/issue_link/issue_link";
 import type { TotalAgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
 
 export type IssueCardProps = {
@@ -136,11 +136,13 @@ export const AgileCard: FC<IssueCardProps> = memo(
                     !isLoading &&
                     showCustomFields ? (
                         <IssueCardBottom>
-                            <CustomFieldsChipParserV2
-                                fields={fields}
-                                onChange={onFieldUpdate}
-                                size="xsmall"
-                            />
+                            {fields.map((field) => (
+                                <CustomFieldsChipParser
+                                    field={field}
+                                    onChange={onFieldUpdate}
+                                    size="xsmall"
+                                />
+                            ))}
                         </IssueCardBottom>
                     ) : null}
                 </IssueCardBody>

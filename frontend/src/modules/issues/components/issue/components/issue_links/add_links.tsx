@@ -15,6 +15,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import { IssueLink } from "entities/issue/issue_link/issue_link";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +28,6 @@ import type {
 import { linkTypes } from "shared/model/types";
 import { QueryPagination } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
-import { IssueLink } from "widgets/issue/issue_link/issue_link";
 
 type IssueCardProps = {
     issue: IssueT;

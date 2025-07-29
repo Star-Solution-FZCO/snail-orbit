@@ -21,6 +21,8 @@ import type {
     IssueCreate,
     IssueDraftUpdate,
     IssueUpdate,
+    QueryBuilderInput,
+    QueryBuilderOutput,
 } from "../types/backend-schema.gen";
 import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
@@ -347,6 +349,16 @@ export const issueApi = createApi({
         >({
             query: (body) => ({
                 url: `issue/filters/parse-query`,
+                body,
+                method: "POST",
+            }),
+        }),
+        filterQueryBuilder: build.query<
+            ApiResponse<QueryBuilderOutput>,
+            QueryBuilderInput
+        >({
+            query: (body) => ({
+                url: `issue/filters/query-builder`,
                 body,
                 method: "POST",
             }),

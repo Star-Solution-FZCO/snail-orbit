@@ -1,6 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { useDraftOperations } from "entities/issue/api/use_draft_operations";
+import { useProjectData } from "entities/issue/api/use_project_data";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,8 +13,6 @@ import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
-import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
-import { useProjectData } from "widgets/issue/api/use_project_data";
 import { DraftView } from "../components/issue/draft_view";
 
 type IssueDraftProps = {

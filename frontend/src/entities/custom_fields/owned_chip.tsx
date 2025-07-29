@@ -2,7 +2,10 @@ import type { FC, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { customFieldsApi } from "shared/model";
 import type { OwnedFieldValueT, OwnedOptionT } from "shared/model/types";
-import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
+import {
+    ColorAdornment,
+    type ColorAdornmentProps,
+} from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
 import { cardLabelGetter, getOwnedColorAdornment } from "./utils";
@@ -13,6 +16,7 @@ type OwnedChipProps = {
     label: string;
     id: string;
     multiple?: boolean;
+    size?: ColorAdornmentProps["size"];
 };
 
 export const OwnedChip: FC<OwnedChipProps> = ({
@@ -21,6 +25,7 @@ export const OwnedChip: FC<OwnedChipProps> = ({
     label,
     id,
     multiple,
+    size,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -51,8 +56,8 @@ export const OwnedChip: FC<OwnedChipProps> = ({
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
         if (targetValue.color)
-            return <ColorAdornment color={targetValue.color} size="small" />;
-    }, [value]);
+            return <ColorAdornment color={targetValue.color} size={size} />;
+    }, [value, size]);
 
     return (
         <SelectChip<OwnedFieldValueT, typeof multiple, undefined>
@@ -67,7 +72,7 @@ export const OwnedChip: FC<OwnedChipProps> = ({
             multiple={multiple}
             getOptionRightAdornment={getOwnedColorAdornment}
             isOptionEqualToValue={(a, b) => a.value === b.value}
-            getOptionLabel={(el) => el.vlaue}
+            getOptionLabel={(el) => el.value}
             getCardLabelString={(value) =>
                 cardLabelGetter(value, (el) => el.value)
             }

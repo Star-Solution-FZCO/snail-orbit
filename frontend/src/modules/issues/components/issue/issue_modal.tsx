@@ -9,12 +9,12 @@ import {
     Stack,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { IssueCustomFields } from "modules/issues/components/issue/components/issue_custom_fields";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { projectApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { IssueCustomFields } from "widgets/issue/issue_custom_fields/issue_custom_fields";
 import { FieldOffside } from "./components/field_offside";
 import { IssueActivities } from "./components/issue_activities/issue_activities";
 import { IssueAttachments } from "./components/issue_attachments";

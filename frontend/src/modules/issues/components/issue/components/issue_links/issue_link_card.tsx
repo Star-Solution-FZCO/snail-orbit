@@ -1,6 +1,7 @@
 import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import { Box, IconButton, Menu, MenuItem } from "@mui/material";
+import { IssueLink } from "entities/issue/issue_link/issue_link";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,6 @@ import { issueApi } from "shared/model";
 import type { IssueLinkT, IssueLinkTypeT } from "shared/model/types";
 import { linkTypes } from "shared/model/types";
 import { toastApiError } from "shared/utils";
-import { IssueLink } from "widgets/issue/issue_link/issue_link";
 
 type IssueLinkCardProps = {
     issueId: string;

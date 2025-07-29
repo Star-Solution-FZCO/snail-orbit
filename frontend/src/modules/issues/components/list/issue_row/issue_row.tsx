@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
+import { IssueLink } from "entities/issue/issue_link/issue_link";
 import type { FC } from "react";
 import { memo, useCallback } from "react";
-import { IssueLink } from "widgets/issue/issue_link/issue_link";
 import { IssueSubscribeButton } from "../../issue/components/issue_subscribe_button";
 import { IssueTags } from "../../issue/components/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";

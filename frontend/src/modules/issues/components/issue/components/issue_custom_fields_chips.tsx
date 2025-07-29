@@ -1,12 +1,23 @@
+import { CustomFieldsChipParser } from "features/custom_fields/custom_fields_chip_parser";
 import type { FC } from "react";
 import { useMemo } from "react";
 import {
     fieldsToFieldValueMap,
     fieldToFieldValue,
 } from "shared/model/mappers/issue";
-import type { CustomFieldWithValueT } from "shared/model/types";
-import { CustomFieldsChipParserV2 } from "../custom_fields_chip_parser/custom_fields_chip_parser";
-import type { IssueCustomFieldChipsProps } from "./issue_custom_fields_chips.types";
+import type {
+    CustomFieldWithValueT,
+    IssueT,
+    ProjectT,
+} from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+
+export type IssueCustomFieldChipsProps = {
+    issue: IssueT;
+    project?: ProjectT;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<unknown>;
+    onUpdateCache: (issueValue: Partial<IssueT>) => unknown;
+};
 
 export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
     issue,
@@ -38,7 +49,11 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
         });
     };
 
-    return (
-        <CustomFieldsChipParserV2 fields={fields} onChange={onFieldUpdate} />
-    );
+    return fields.map((field) => (
+        <CustomFieldsChipParser
+            field={field}
+            onChange={onFieldUpdate}
+            size="xsmall"
+        />
+    ));
 };

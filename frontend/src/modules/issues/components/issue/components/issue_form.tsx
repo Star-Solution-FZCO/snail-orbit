@@ -1,11 +1,11 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
+import { useIssueOperations } from "entities/issue/api/use_issue_operations";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { MarkdownRenderer, MDEditor } from "shared/ui";
-import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
 import { HeadingControls } from "./heading_controls";
 import { MDPreview } from "./md_preview";
 

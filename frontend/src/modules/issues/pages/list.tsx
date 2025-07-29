@@ -12,9 +12,9 @@ import {
     usePaginationParams,
 } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
+import { QueryBuilder } from "../../../widgets/query_builder/query_builder";
 import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
-import { QueryBuilder } from "../components/query_builder/query_builder";
 import { useCreateIssueNavbarSettings } from "../hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "../widgets/modal_view/use_modal_view";
 

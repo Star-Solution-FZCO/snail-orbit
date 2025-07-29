@@ -1,11 +1,11 @@
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useIssueOperations } from "entities/issue/api/use_issue_operations";
+import { useProjectData } from "entities/issue/api/use_project_data";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { useIssueOperations } from "widgets/issue/api/use_issue_operations";
-import { useProjectData } from "widgets/issue/api/use_project_data";
 import { IssueModal } from "../../components/issue/issue_modal";
 import type { ModalViewIssueProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";

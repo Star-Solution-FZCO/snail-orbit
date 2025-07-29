@@ -6,13 +6,13 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
+import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
 import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { customFieldsApi, issueApi } from "shared/model";
 import { fieldToFieldValue } from "shared/model/mappers/issue";
 import type { CustomFieldT, CustomFieldWithValueT } from "shared/model/types";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 import { AddCustomFieldButton } from "./add_custom_field_button";
 
 type QueryBuilderProps = {
@@ -24,6 +24,12 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
     const { t } = useTranslation();
 
     const { data, isLoading } = customFieldsApi.useListCustomFieldGroupsQuery();
+
+    const [filterQueryBuilder] = issueApi.useLazyFilterQueryBuilderQuery();
+
+    useEffect(() => {
+        filterQueryBuilder({ query: "" }).unwrap().then(console.log);
+    }, []);
 
     const availableFields = useMemo(() => {
         return data?.payload.items.flatMap((el) => el.fields as CustomFieldT[]);
@@ -179,7 +185,7 @@ const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
         <>
             {Object.keys(selectedFields).length ? (
                 <Stack direction="column" gap={0} mx={-1} ref={stackRef}>
-                    <CustomFieldsParserV2
+                    <CustomFieldsParser
                         fields={Object.values(selectedFields)}
                         onChange={(field) =>
                             setSelectedFields((prev) => ({

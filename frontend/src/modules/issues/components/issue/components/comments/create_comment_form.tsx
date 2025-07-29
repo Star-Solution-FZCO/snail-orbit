@@ -1,5 +1,7 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { Box, Button, TextField } from "@mui/material";
+import { useAttachmentOperations } from "entities/issue/api/use_attachment_operations";
+import { useCommentOperations } from "entities/issue/api/use_comment_operations";
 import type { ChangeEvent, FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,8 +9,6 @@ import { useAppSelector } from "shared/model";
 import type { IssueAttachmentBodyT } from "shared/model/types";
 import { MDEditor, SpentTimeField, UserAvatar } from "shared/ui";
 import { toastApiError } from "shared/utils";
-import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
-import { useCommentOperations } from "widgets/issue/api/use_comment_operations";
 import { BrowserFileCard } from "../attachment_cards";
 import { HiddenInput } from "../hidden_input";
 import { UnsavedChangesDialog } from "./unsaved_changed_dialog";

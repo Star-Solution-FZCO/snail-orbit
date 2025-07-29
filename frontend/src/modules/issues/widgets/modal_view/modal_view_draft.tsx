@@ -1,4 +1,6 @@
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useDraftOperations } from "entities/issue/api/use_draft_operations";
+import { useProjectData } from "entities/issue/api/use_project_data";
 import type { FC } from "react";
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,8 +8,6 @@ import { toast } from "react-toastify";
 import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
-import { useProjectData } from "widgets/issue/api/use_project_data";
 import { DraftModal } from "../../components/issue/draft_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";

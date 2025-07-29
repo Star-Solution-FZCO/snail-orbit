@@ -1,4 +1,5 @@
-import { ProjectField } from "features/custom_fields/project_field";
+import { ProjectField } from "entities/custom_fields/project_field";
+import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
 import type { FC } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,9 +7,20 @@ import {
     fieldsToFieldValueMap,
     fieldToFieldValue,
 } from "shared/model/mappers/issue";
-import type { CustomFieldWithValueT } from "shared/model/types";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
-import type { IssueCustomFieldsProps } from "./issue_custom_fields.types";
+import type {
+    CustomFieldWithValueT,
+    IssueT,
+    ProjectT,
+} from "shared/model/types";
+import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+
+export type IssueCustomFieldsProps = {
+    issue: IssueT;
+    project?: ProjectT;
+    onUpdateIssue: (issueValues: IssueUpdate) => Promise<void>;
+    onUpdateCache: (issueValue: Partial<IssueT>) => void;
+    customFieldsErrors?: Record<string, string>;
+};
 
 export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
     issue,
@@ -54,11 +66,13 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
                 }}
             />
 
-            <CustomFieldsParserV2
-                fields={fields}
-                onChange={onFieldUpdate}
-                customFieldsErrors={customFieldsErrors}
-            />
+            {fields.map((field) => (
+                <CustomFieldsParser
+                    field={field}
+                    onChange={onFieldUpdate}
+                    customFieldsErrors={customFieldsErrors}
+                />
+            ))}
         </>
     );
 };

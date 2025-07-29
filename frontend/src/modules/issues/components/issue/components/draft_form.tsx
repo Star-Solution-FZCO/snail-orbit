@@ -1,11 +1,11 @@
 import { Box, Button, debounce, TextField } from "@mui/material";
+import { useDraftOperations } from "entities/issue/api/use_draft_operations";
 import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor } from "shared/ui";
-import { useDraftOperations } from "widgets/issue/api/use_draft_operations";
 import { MDPreview } from "./md_preview";
 
 export type DraftFormProps = {

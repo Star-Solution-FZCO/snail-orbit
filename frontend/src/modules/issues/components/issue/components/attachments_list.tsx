@@ -10,6 +10,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
+import { useAttachmentOperations } from "entities/issue/api/use_attachment_operations";
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -20,7 +21,6 @@ import type {
     SelectedAttachmentT,
 } from "shared/model/types";
 import { useLSState } from "shared/utils/helpers/local-storage";
-import { useAttachmentOperations } from "widgets/issue/api/use_attachment_operations";
 import { initialSelectedAttachment } from "../../../utils";
 import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
 import { AttachmentListItem } from "./attachment_list_item";

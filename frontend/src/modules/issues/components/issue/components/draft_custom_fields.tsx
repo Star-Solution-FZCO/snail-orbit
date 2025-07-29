@@ -1,4 +1,5 @@
-import { ProjectField } from "features/custom_fields/project_field";
+import { ProjectField } from "entities/custom_fields/project_field";
+import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
 import type { FC } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +13,6 @@ import type {
     ProjectT,
 } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
-import { CustomFieldsParserV2 } from "widgets/issue/custom_fields_parser/custom_fields_parser";
 
 type DraftCustomFieldsProps = {
     draft: IssueDraftT;
@@ -63,7 +63,9 @@ export const DraftCustomFields: FC<DraftCustomFieldsProps> = ({
                 }}
             />
 
-            <CustomFieldsParserV2 fields={fields} onChange={onFieldUpdate} />
+            {fields.map((field) => (
+                <CustomFieldsParser field={field} onChange={onFieldUpdate} />
+            ))}
         </>
     );
 };
