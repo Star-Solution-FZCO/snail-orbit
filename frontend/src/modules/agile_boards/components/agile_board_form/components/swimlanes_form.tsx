@@ -148,13 +148,13 @@ export const SwimlanesForm: FC = () => {
                     name="swimlanes.field"
                     render={({ field: { onChange, value } }) => (
                         <span>
-                            {t("Swimlanes described by")}:{" "}
+                            {t("swimlanes.describedBy")}:{" "}
                             <Button
                                 {...bindTrigger(swimlaneSelectPopoverState)}
                                 variant="text"
                                 size="small"
                             >
-                                {value?.name || t("None")}
+                                {value?.name || t("none")}
                             </Button>
                             <SwimlanesSelectPopover
                                 {...bindPopover(swimlaneSelectPopoverState)}
@@ -175,7 +175,7 @@ export const SwimlanesForm: FC = () => {
                     disabled={!field?.gid}
                     {...bindTrigger(swimlaneOptionsPopoverState)}
                 >
-                    {t("Add swimlane")}
+                    {t("swimlanes.add")}
                 </Button>
 
                 <OptionsSelectPopover

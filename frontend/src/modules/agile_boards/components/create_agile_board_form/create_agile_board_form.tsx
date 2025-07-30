@@ -93,7 +93,7 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
                 name="columns.field"
                 render={({ field: { onChange, value } }) => (
                     <span>
-                        {t("Columns described by")}:{" "}
+                        {t("columns.describedBy")}:{" "}
                         <Button
                             {...bindTrigger(columnSelectPopoverState)}
                             variant="text"

@@ -8,6 +8,7 @@ import type { CustomFieldGroupT, UpdateCustomFieldT } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
 import { toastApiError } from "shared/utils";
 import { ConfirmChangesDialog } from "./confirm_changes_dialog";
+import { CopyCustomFieldDialog } from "./copy_custom_field_dialog";
 import { CustomFieldForm } from "./custom_field_form";
 import { DeleteCustomFieldGroupDialog } from "./delete_custom_field_group_dialog";
 import { FieldTypeEditor } from "./options_editors/field_type_editor";
@@ -31,10 +32,13 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
 
     const [updateCustomField, { isLoading }] =
         customFieldsApi.useUpdateCustomFieldMutation();
+    const [copyCustomField, { isLoading: isCopying }] =
+        customFieldsApi.useCopyCustomFieldMutation();
     const [deleteCustomField, { isLoading: isDeleting }] =
         customFieldsApi.useDeleteCustomFieldMutation();
 
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [copyDialogOpen, setCopyDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
@@ -91,6 +95,22 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
             .catch(toastApiError);
     };
 
+    const handleCopy = (label: string) => {
+        if (label.length === 0) return;
+
+        copyCustomField({
+            gid: customFieldGroup.gid,
+            id: customField.id,
+            label,
+        })
+            .unwrap()
+            .then(() => {
+                toast.success(t("customFields.copy.success"));
+                setCopyDialogOpen(false);
+            })
+            .catch(toastApiError);
+    };
+
     const handleCloseConfirmDialog = () => {
         setConfirmDialogOpen(false);
         setFormData(null);
@@ -108,6 +128,7 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                     // @ts-expect-error TODO: fix this types
                     onSubmit={handleSubmit}
                     onDelete={() => setDeleteDialogOpen(true)}
+                    onCopy={() => setCopyDialogOpen(true)}
                     defaultValues={customField}
                     type={customFieldGroup.type}
                     loading={isLoading}
@@ -128,6 +149,13 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                 open={confirmDialogOpen}
                 onSubmit={handleConfirm}
                 onClose={handleCloseConfirmDialog}
+            />
+
+            <CopyCustomFieldDialog
+                open={copyDialogOpen}
+                onSubmit={handleCopy}
+                onClose={() => setCopyDialogOpen(false)}
+                loading={isCopying}
             />
 
             <DeleteCustomFieldGroupDialog

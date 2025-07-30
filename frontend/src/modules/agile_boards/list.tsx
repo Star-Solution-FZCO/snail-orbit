@@ -66,7 +66,7 @@ const AgileBoardList = () => {
                         variant="outlined"
                         sx={{ textWrap: "nowrap", height: "40px" }}
                     >
-                        {t("New board")}
+                        {t("agileBoards.create.title")}
                     </Button>
                 </Link>
             </Stack>

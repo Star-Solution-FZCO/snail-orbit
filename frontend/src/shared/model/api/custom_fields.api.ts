@@ -177,6 +177,20 @@ export const customFieldsApi = createApi({
                 { type: "CustomFieldGroups", id: gid },
             ],
         }),
+        copyCustomField: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { gid: string; id: string; label: string }
+        >({
+            query: ({ gid, id, label }) => ({
+                url: `custom_field/group/${gid}/field/${id}/copy`,
+                method: "POST",
+                body: { label },
+            }),
+            invalidatesTags: (_result, _error, { gid }) => [
+                { type: "CustomFields", id: "LIST" },
+                { type: "CustomFieldGroups", id: gid },
+            ],
+        }),
         // options
         createCustomFieldEnumOption: build.mutation<
             ApiResponse<CustomFieldT>,

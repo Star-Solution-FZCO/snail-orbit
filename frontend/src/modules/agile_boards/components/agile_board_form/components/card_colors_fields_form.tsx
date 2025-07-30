@@ -122,7 +122,7 @@ export const CardColorsFieldsForm: FC = () => {
                     variant="text"
                     {...bindTrigger(cardColorFieldsPopoverState)}
                 >
-                    {t("Add color field")}
+                    {t("cardColorFieldsForm.fields.add")}
                 </Button>
 
                 <CardColorFieldsSelectPopover

@@ -4,9 +4,9 @@ import { memo, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import type { AgileBoardT } from "shared/model/types";
+import { Link, StarButton } from "shared/ui";
 import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { useListQueryParams } from "shared/utils";
-import { Link, StarButton } from "../../../shared/ui";
 
 type TagListPopoverProps = {
     open: boolean;
@@ -70,12 +70,12 @@ export const AgileBoardListPopover = memo((props: TagListPopoverProps) => {
             <>
                 <Link to="/agiles/create">
                     <Button fullWidth size="small">
-                        {t("New board")}
+                        {t("agileBoards.create.title")}
                     </Button>
                 </Link>
                 <Link to="/agiles/list">
                     <Button fullWidth size="small">
-                        {t("View list")}
+                        {t("agileBoardListPopover.goToList")}
                     </Button>
                 </Link>
             </>

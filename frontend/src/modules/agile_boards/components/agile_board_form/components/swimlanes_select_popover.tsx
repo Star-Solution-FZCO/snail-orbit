@@ -39,7 +39,7 @@ export const SwimlanesSelectPopover: FC<SwimlanesSelectPopoverProps> = ({
         let res = searchInput
             ? data.payload.items.filter((el) => el.name.includes(searchInput))
             : data.payload.items;
-        res = [...res, { gid: "none", name: t("None"), type: "string" }];
+        res = [...res, { gid: "none", name: t("none"), type: "string" }];
 
         return res;
     }, [data, searchInput]);

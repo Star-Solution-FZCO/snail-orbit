@@ -40,7 +40,7 @@ export const IssuesListSettings = (props: IssueListProps) => {
                     <Paper sx={{ px: 2, py: 1 }}>
                         <Stack direction="column" gap={1}>
                             <FormControlLabel
-                                label={t("Show custom fields")}
+                                label={t("customFields.show")}
                                 control={
                                     <Switch
                                         size="small"
@@ -57,7 +57,7 @@ export const IssuesListSettings = (props: IssueListProps) => {
                             />
 
                             <FormControlLabel
-                                label={t("Show description")}
+                                label={t("description.show")}
                                 control={
                                     <Switch
                                         size="small"
@@ -74,7 +74,7 @@ export const IssuesListSettings = (props: IssueListProps) => {
                             />
 
                             <FormControlLabel
-                                label={t("Show dividers")}
+                                label={t("dividers.show")}
                                 control={
                                     <Switch
                                         size="small"

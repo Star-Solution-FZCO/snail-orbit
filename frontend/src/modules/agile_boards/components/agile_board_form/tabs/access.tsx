@@ -112,7 +112,7 @@ export const Access: FC = () => {
                     size="small"
                     {...bindTrigger(popupState)}
                 >
-                    {t("Add user")}
+                    {t("users.add")}
                 </Button>
                 <UserGroupSelectPopover
                     {...bindPopover(popupState)}

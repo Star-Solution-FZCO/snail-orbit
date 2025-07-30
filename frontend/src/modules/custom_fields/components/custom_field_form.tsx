@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
     Box,
@@ -31,6 +32,7 @@ interface ICustomFieldFormProps {
     onSubmit: (formData: CustomFieldFormData) => void;
     onDelete?: () => void;
     onCancel?: () => void;
+    onCopy?: () => void;
     type: CustomFieldTypeT;
     loading?: boolean;
 }
@@ -40,6 +42,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     onSubmit,
     onDelete,
     onCancel,
+    onCopy,
     type,
     loading,
 }) => {
@@ -137,6 +140,17 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 {onCancel && (
                     <Button onClick={onCancel} variant="outlined" color="error">
                         {t("cancel")}
+                    </Button>
+                )}
+
+                {onCopy && (
+                    <Button
+                        onClick={onCopy}
+                        variant="outlined"
+                        color="info"
+                        startIcon={<ContentCopyIcon />}
+                    >
+                        {t("copy")}
                     </Button>
                 )}
 

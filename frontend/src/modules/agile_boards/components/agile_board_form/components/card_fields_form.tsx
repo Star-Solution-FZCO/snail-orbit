@@ -121,7 +121,7 @@ export const CardFieldsForm: FC = () => {
                     variant="text"
                     {...bindTrigger(cardFieldsPopoverState)}
                 >
-                    {t("Add field")}
+                    {t("cardFieldsForm.fields.add")}
                 </Button>
 
                 <CardCustomFieldsSelectPopover

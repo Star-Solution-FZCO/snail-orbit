@@ -148,7 +148,7 @@ export const ColumnsForm: FC = () => {
                     name="columns.field"
                     render={({ field: { onChange, value } }) => (
                         <span>
-                            {t("Columns described by")}:{" "}
+                            {t("columns.describedBy")}:{" "}
                             <Button
                                 {...bindTrigger(columnSelectPopoverState)}
                                 variant="text"
@@ -170,7 +170,7 @@ export const ColumnsForm: FC = () => {
                     size="small"
                     {...bindTrigger(columnOptionsPopoverState)}
                 >
-                    {t("Add column")}
+                    {t("columns.add")}
                 </Button>
 
                 <OptionsSelectPopover

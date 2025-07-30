@@ -80,7 +80,7 @@ export const useFormatBoardIssues = (data?: BoardIssuesT | null) => {
                   {
                       id: defaultSwimLaneId,
                       value: defaultSwimLaneId,
-                      label: t("swimLane.defaultSwimLane"),
+                      label: t("swimlanes.defaultSwimlane"),
                   },
               ];
         const issues = data.issues;

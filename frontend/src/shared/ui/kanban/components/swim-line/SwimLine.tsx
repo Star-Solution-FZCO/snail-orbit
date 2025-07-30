@@ -34,7 +34,7 @@ export const SwimLine: FC<SwimLineProps> = ({
                 </span>
                 {issueCount !== undefined ? (
                     <Typography component="span" variant="caption">
-                        {`${t("Issues")} ${issueCount}`}
+                        {`${t("issues.title")} ${issueCount}`}
                     </Typography>
                 ) : null}
             </HeaderStyled>

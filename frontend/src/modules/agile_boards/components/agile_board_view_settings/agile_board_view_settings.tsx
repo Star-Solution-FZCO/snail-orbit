@@ -45,7 +45,7 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                 <Paper sx={{ px: 2, py: 1 }}>
                     <Stack direction="column" gap={1}>
                         <FormControlLabel
-                            label={t("Show custom fields")}
+                            label={t("columnsFields.show")}
                             control={
                                 <Switch
                                     size="small"
@@ -61,7 +61,7 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                         />
 
                         <FormControlLabel
-                            label={t("Show description")}
+                            label={t("description.show")}
                             control={
                                 <Switch
                                     size="small"
@@ -76,7 +76,7 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                             }
                         />
 
-                        <FormLabel>{t("Collision strategy")}</FormLabel>
+                        <FormLabel>{t("collisionStrategy")}</FormLabel>
                         <Select
                             value={value.collisionDetectionStrategy}
                             onChange={(e) =>
@@ -90,21 +90,21 @@ export const AgileBoardViewSettingsPopper = (props: Props) => {
                             size="small"
                         >
                             <MenuItem value={KanbanCollisionDetection.Default}>
-                                {t("Default")}
+                                {t("default")}
                             </MenuItem>
                             <MenuItem
                                 value={
                                     KanbanCollisionDetection.ShapeIntersection
                                 }
                             >
-                                {t("Shape Intersection")}
+                                {t("shapeIntersection")}
                             </MenuItem>
                             <MenuItem
                                 value={
                                     KanbanCollisionDetection.PointerIntersection
                                 }
                             >
-                                {t("Pointer Intersection")}
+                                {t("pointerIntersection")}
                             </MenuItem>
                         </Select>
                     </Stack>

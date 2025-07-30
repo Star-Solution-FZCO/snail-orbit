@@ -164,7 +164,7 @@ export const AgileBoard: FC<AgileBoardProps> = ({
                     color="textDisabled"
                     variant="subtitle2"
                 >
-                    {`${totalCount} ${t("total issues")}`}
+                    {`${totalCount} ${t("issues.total")}`}
                 </Typography>
 
                 <AgileBoardViewSettingsPopper
