@@ -237,13 +237,6 @@ CONFIG = Dynaconf(
             when=Validator('WB_SYNC_ENABLED', condition=bool),
         ),
         Validator(
-            'WB_TEAM_SYNC_LOCAL',
-            cast=bool,
-            default=False,
-            description='Sync local groups if they found in WB',
-            when=Validator('WB_SYNC_ENABLED', condition=bool),
-        ),
-        Validator(
             'WB_TEAM_SYNC_ADD_MISSED_ARCHIVED',
             cast=bool,
             default=False,

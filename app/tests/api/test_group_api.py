@@ -50,7 +50,7 @@ async def test_group_crud_and_list_workflow(
         'limit': 50,
         'offset': 0,
         'items': [
-            {'id': create_groups[idx], 'origin': 'local', **group_payloads[idx]}
+            {'id': create_groups[idx], 'type': 'local', **group_payloads[idx]}
             for idx in range(len(group_payloads))
         ],
     }
@@ -59,12 +59,12 @@ async def test_group_crud_and_list_workflow(
     # Use CRUD workflow helper for GET, UPDATE, DELETE operations
     expected_group_payload = {
         'id': create_groups[0],
-        'origin': 'local',
+        'type': 'local',
         **group_payloads[0],
     }
     expected_updated_payload = {
         'id': create_groups[0],
-        'origin': 'local',
+        'type': 'local',
         **group_payloads[0],
         'name': 'Test group updated',
     }

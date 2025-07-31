@@ -226,7 +226,7 @@
   "groups.create.title": "New group",
   "groups.empty": "No groups",
   "groups.fields.name": "Name",
-  "groups.fields.origin": "Origin",
+  "groups.fields.type": "Type",
   "groups.form.description": "Description",
   "groups.form.name": "Name",
   "groups.item.fetch.error": "Failed to fetch group",

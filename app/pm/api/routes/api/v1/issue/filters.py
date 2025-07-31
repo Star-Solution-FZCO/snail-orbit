@@ -817,8 +817,8 @@ async def _transform_val(field: m.CustomField, value: str) -> Any:
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail=f'User with email {user} not found',
             )
-        return field.validate_value(user.id)
-    return field.validate_value(value)
+        return await field.validate_value(user.id)
+    return await field.validate_value(value)
 
 
 @router.post(

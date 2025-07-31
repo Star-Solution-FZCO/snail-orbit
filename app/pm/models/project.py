@@ -118,12 +118,11 @@ class Project(Document):
     def get_user_permissions(
         self,
         user: User,
-        predefined_groups: list['Group'],
+        all_group_ids: set[PydanticObjectId] | None = None,
     ) -> set[Permissions]:
         results = set()
-        user_groups = {gr.id for gr in user.groups}.union(
-            {gr.id for gr in predefined_groups},
-        )
+        if all_group_ids is None:
+            all_group_ids = {gr.id for gr in user.groups}
         for perm in self.permissions:
             if (
                 perm.target_type == PermissionTargetType.USER
@@ -133,7 +132,7 @@ class Project(Document):
                 continue
             if (
                 perm.target_type == PermissionTargetType.GROUP
-                and perm.target.id in user_groups
+                and perm.target.id in all_group_ids
             ):
                 results.update(perm.role.permissions)
         return results

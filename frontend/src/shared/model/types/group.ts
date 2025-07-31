@@ -5,4 +5,7 @@ export type CreateGroupT = {
 
 export type UpdateGroupT = Partial<CreateGroupT>;
 
-export type GroupT = { id: string } & CreateGroupT;
+export type GroupT = {
+    id: string;
+    type: "local" | "wb" | "all_users";
+} & CreateGroupT;

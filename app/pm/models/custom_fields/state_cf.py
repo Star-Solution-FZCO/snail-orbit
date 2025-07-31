@@ -32,8 +32,8 @@ class StateCustomField(CustomField):
     options: Annotated[list[StateOption], Field(default_factory=list)]
     default_value: StateOption | None = None
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if isinstance(value, StateOption):

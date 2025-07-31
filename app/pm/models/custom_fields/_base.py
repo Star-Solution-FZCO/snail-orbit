@@ -100,7 +100,7 @@ class CustomField(Document):
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
         return bo.RegEx(cls.name, search, 'i')
 
-    def validate_value(self, value: Any) -> Any:
+    async def validate_value(self, value: Any) -> Any:
         if value is None and not self.is_nullable:
             raise CustomFieldCanBeNoneError(field=self)
         return value

@@ -5,7 +5,7 @@ from uuid import UUID
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field
 
-from pm.models.group import Group, GroupLinkField, PredefinedGroupScope
+from pm.models.group import Group, GroupLinkField
 from pm.models.user import User, UserLinkField
 
 from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
@@ -26,7 +26,13 @@ class UserOptionType(StrEnum):
 
 class GroupOption(BaseModel):
     group: GroupLinkField
-    users: list[UserLinkField]
+
+    async def resolve_users(self) -> list[UserLinkField]:
+        """Dynamically resolve group members."""
+        group = await Group.find_one(Group.id == self.group.id, with_children=True)
+        if not group:
+            return []
+        return await group.resolve_members()
 
 
 class UserOption(BaseModel):
@@ -34,19 +40,23 @@ class UserOption(BaseModel):
     type: UserOptionType
     value: UserLinkField | GroupOption
 
-    @property
-    def users(self) -> list[UserLinkField]:
+    async def resolve_users(self) -> list[UserLinkField]:
+        """Resolve users from this option."""
         if self.type == UserOptionType.USER:
             return [self.value]
-        return self.value.users
+        return await self.value.resolve_users()
 
 
 class UserCustomFieldMixin:
     options: Annotated[list[UserOption], Field(default_factory=list)]
 
-    @property
-    def users(self) -> set[UserLinkField]:
-        return {u for opt in self.options for u in opt.users}
+    async def resolve_available_users(self) -> set[UserLinkField]:
+        """Dynamically resolve all available users from options."""
+        all_users = set()
+        for option in self.options:
+            users = await option.resolve_users()
+            all_users.update(users)
+        return all_users
 
     @classmethod
     async def update_user_embedded_links(
@@ -61,16 +71,6 @@ class UserCustomFieldMixin:
             array_filters=[{'o.value.id': user.id}],
         )
         await cls.find(
-            cls.options.type == UserOptionType.GROUP,
-            cls.options.value.users.id == user.id,
-        ).update(
-            {'$set': {'options.$[o].value.users.$[u]': UserLinkField.from_obj(user)}},
-            array_filters=[
-                {'o.value.users.id': user.id, 'o.type': UserOptionType.GROUP},
-                {'u.id': user.id},
-            ],
-        )
-        await cls.find(
             {'default_value.id': user.id},
         ).update(
             {'$set': {'default_value': UserLinkField.from_obj(user)}},
@@ -79,7 +79,7 @@ class UserCustomFieldMixin:
     @classmethod
     async def update_group_embedded_links(
         cls,
-        group: Group,
+        group: 'Group',
     ) -> None:
         await cls.find(
             cls.options.type == UserOptionType.GROUP,
@@ -110,58 +110,13 @@ class UserCustomFieldMixin:
             },
         )
 
-    @classmethod
-    async def update_user_group_membership(cls, user: User, group: Group) -> None:
-        if any(gr.id == group.id for gr in user.groups):
-            await cls.find(
-                cls.options.type == UserOptionType.GROUP,
-                cls.options.value.group.id == group.id,
-            ).update(
-                {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
-                array_filters=[
-                    {'o.value.group.id': group.id, 'o.type': UserOptionType.GROUP},
-                ],
-            )
-            return
-        await cls.find(
-            cls.options.type == UserOptionType.GROUP,
-            cls.options.value.group.id == group.id,
-        ).update(
-            {'$pull': {'options.$[o].value.users': {'id': user.id}}},
-            array_filters=[
-                {'o.value.users.id': user.id, 'o.type': UserOptionType.GROUP},
-            ],
-        )
-
-    @classmethod
-    async def add_option_predefined_scope(cls, user: User) -> None:
-        await cls.find(
-            {
-                'options': {
-                    '$elemMatch': {
-                        'type': UserOptionType.GROUP,
-                        'value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
-                        'value.users.id': {'$ne': user.id},
-                    },
-                },
-            },
-        ).update(
-            {'$push': {'options.$[o].value.users': UserLinkField.from_obj(user)}},
-            array_filters=[
-                {
-                    'o.value.group.predefined_scope': PredefinedGroupScope.ALL_USERS,
-                    'o.type': UserOptionType.GROUP,
-                },
-            ],
-        )
-
 
 class UserCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER
     default_value: UserLinkField | None = None
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if isinstance(value, UserLinkField):
@@ -174,22 +129,25 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
                 value=value,
                 msg='must be a valid ObjectId',
             ) from err
-        users = {u.id: u for opt in self.options for u in opt.users}
-        if value not in users:
+
+        available_users = await self.resolve_available_users()
+        users_dict = {u.id: u for u in available_users}
+
+        if value not in users_dict:
             raise CustomFieldValidationError(
                 field=self,
                 value=value,
                 msg='user not found in options',
             )
-        return users[value]
+        return users_dict[value]
 
 
 class UserMultiCustomField(CustomField, UserCustomFieldMixin):
     type: CustomFieldTypeT = CustomFieldTypeT.USER_MULTI
     default_value: list[UserLinkField] | None = None
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if not isinstance(value, list):
@@ -204,7 +162,10 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
                 value=value,
                 msg='cannot be empty',
             )
-        users = {u.id: u for opt in self.options for u in opt.users}
+
+        available_users = await self.resolve_available_users()
+        users_dict = {u.id: u for u in available_users}
+
         results = []
         for val in value:
             user_id = val
@@ -218,11 +179,11 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
                     value=value,
                     msg='must be a valid ObjectId',
                 ) from err
-            if user_id not in users:
+            if user_id not in users_dict:
                 raise CustomFieldValidationError(
                     field=self,
                     value=value,
                     msg=f'user {user_id} not found',
                 )
-            results.append(users[user_id])
+            results.append(users_dict[user_id])
         return results

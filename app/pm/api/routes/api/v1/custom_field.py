@@ -138,11 +138,11 @@ class CustomFieldUpdateBody(BaseModel):
     default_value: Any | None = None
     label: str | None = None
 
-    def update_obj(self, obj: m.CustomField) -> None:
+    async def update_obj(self, obj: m.CustomField) -> None:
         for k, value in self.model_dump(exclude_unset=True).items():
             if k == 'default_value':
                 processed_value = (
-                    obj.validate_value(value) if value is not None else None
+                    await obj.validate_value(value) if value is not None else None
                 )
                 setattr(obj, k, processed_value)
             else:
@@ -180,7 +180,7 @@ async def list_custom_field_groups(
                 ai_description=field.ai_description,
                 fields=[],
             )
-        results[field.gid].fields.append(cf_output_from_obj(field))
+        results[field.gid].fields.append(await cf_output_from_obj(field))
 
     return BaseListOutput.make(
         count=len(results),
@@ -208,7 +208,7 @@ async def get_custom_field_group(
             type=objs[0].type,
             description=objs[0].description,
             ai_description=objs[0].ai_description,
-            fields=[cf_output_from_obj(obj) for obj in objs],
+            fields=[await cf_output_from_obj(obj) for obj in objs],
         ),
     )
 
@@ -225,7 +225,7 @@ async def get_custom_field(
     )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/group/{custom_field_gid}/field')
@@ -254,12 +254,12 @@ async def create_custom_field(
 
     if body.default_value is not None:
         try:
-            obj.default_value = obj.validate_value(body.default_value)
+            obj.default_value = await obj.validate_value(body.default_value)
         except m.CustomFieldValidationError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
 
     await obj.insert()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/group')
@@ -283,7 +283,7 @@ async def create_custom_field_group(
         projects=[],
     )
     if body.default_value is not None:
-        obj.default_value = obj.validate_value(body.default_value)
+        obj.default_value = await obj.validate_value(body.default_value)
 
     await obj.insert()
     return SuccessPayloadOutput(
@@ -293,7 +293,7 @@ async def create_custom_field_group(
             type=obj.type,
             description=obj.description,
             ai_description=obj.ai_description,
-            fields=[cf_output_from_obj(obj)],
+            fields=[await cf_output_from_obj(obj)],
         ),
     )
 
@@ -312,12 +312,12 @@ async def update_custom_field(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     try:
-        body.update_obj(obj)
+        await body.update_obj(obj)
     except m.CustomFieldValidationError as err:
         raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.put('/group/{custom_field_gid}')
@@ -353,7 +353,7 @@ async def update_custom_field_group(
             type=fields[0].type,
             description=fields[0].description,
             ai_description=fields[0].ai_description,
-            fields=[cf_output_from_obj(obj) for obj in fields],
+            fields=[await cf_output_from_obj(obj) for obj in fields],
         ),
     )
 
@@ -412,13 +412,15 @@ async def copy_custom_field(
 
     if obj.default_value is not None:
         try:
-            copied_obj.default_value = copied_obj.validate_value(obj.default_value)
+            copied_obj.default_value = await copied_obj.validate_value(
+                obj.default_value
+            )
         except m.CustomFieldValidationError as err:
             raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
 
     await copied_obj.insert()
 
-    return SuccessPayloadOutput(payload=cf_output_from_obj(copied_obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(copied_obj))
 
 
 @router.post('/{custom_field_id}/option')
@@ -448,7 +450,7 @@ async def add_enum_option(
     )
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/option/{option_id}')
@@ -482,7 +484,7 @@ async def update_enum_option(
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
 
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/option/{option_id}')
@@ -514,7 +516,7 @@ async def remove_enum_option(
     obj.options.remove(opt)
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/user-option')
@@ -545,16 +547,13 @@ async def add_user_option(
     ):
         raise HTTPException(HTTPStatus.CONFLICT, 'User already added')
     if body.type == m.UserOptionType.GROUP:
-        gr: m.Group | None = await m.Group.find_one(m.Group.id == body.value)
+        gr: m.Group | None = await m.Group.find_one(
+            m.Group.id == body.value, with_children=True
+        )
         if not gr:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
-        if gr.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
-            users = await m.User.find().to_list()
-        else:
-            users = await m.User.find(m.User.groups.id == gr.id).to_list()
         value = m.GroupOption(
             group=m.GroupLinkField.from_obj(gr),
-            users=[m.UserLinkField.from_obj(user) for user in users],
         )
     else:
         user: m.User | None = await m.User.find_one(m.User.id == body.value)
@@ -564,7 +563,7 @@ async def add_user_option(
     obj.options.append(m.UserOption(id=uuid4(), type=body.type, value=value))
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/user-option/{option_id}')
@@ -590,7 +589,7 @@ async def remove_user_option(
     obj.options.remove(opt)
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/state-option')
@@ -619,7 +618,7 @@ async def add_state_option(
     )
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/state-option/{option_id}')
@@ -651,7 +650,7 @@ async def update_state_option(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/state-option/{option_id}')
@@ -682,7 +681,7 @@ async def remove_state_option(
         obj.default_value = None
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/version-option')
@@ -718,7 +717,7 @@ async def add_version_option(
     )
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/version-option/{option_id}')
@@ -762,7 +761,7 @@ async def update_version_option(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/version-option/{option_id}')
@@ -799,7 +798,7 @@ async def remove_version_option(
         obj.default_value = None
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.post('/{custom_field_id}/owned-option')
@@ -840,7 +839,7 @@ async def add_owned_option(
     )
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.put('/{custom_field_id}/owned-option/{option_id}')
@@ -888,7 +887,7 @@ async def update_owned_option(
             m.IssueDraft.update_field_option_embedded_links(obj, opt),
             m.Issue.update_field_option_embedded_links(obj, opt),
         )
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.delete('/{custom_field_id}/owned-option/{option_id}')
@@ -925,7 +924,7 @@ async def remove_owned_option(
         obj.default_value = None
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=cf_output_from_obj(obj))
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 @router.get('/{custom_field_id}/select')
@@ -941,7 +940,8 @@ async def select_options(
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if isinstance(obj, m.UserCustomField | m.UserMultiCustomField):
-        selected = user_link_select(obj.users, query)
+        available_users = await obj.resolve_available_users()
+        selected = user_link_select(list(available_users), query)
         return BaseListOutput.make(
             count=selected.total,
             limit=selected.limit,
@@ -1016,7 +1016,10 @@ async def select_options_group(
     elif fields[0].type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
         select_fn = user_link_select
         output_fn = UserOutput.from_obj
-        all_options = {opt for field in fields for opt in field.users}
+        all_options = set()
+        for field in fields:
+            field_users = await field.resolve_available_users()
+            all_options.update(field_users)
     else:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
 

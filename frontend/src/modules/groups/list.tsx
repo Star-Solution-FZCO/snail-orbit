@@ -54,8 +54,8 @@ const GroupList = () => {
                 ),
             },
             {
-                field: "origin",
-                headerName: t("groups.fields.origin"),
+                field: "type",
+                headerName: t("groups.fields.type"),
                 flex: 1,
             },
             {

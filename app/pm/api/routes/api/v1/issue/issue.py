@@ -1094,7 +1094,9 @@ async def grant_issue_permission(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
 
     if body.target_type == m.PermissionTargetType.GROUP:
-        target: m.Group | None = await m.Group.find_one(m.Group.id == body.target_id)
+        target: m.Group | None = await m.Group.find_one(
+            m.Group.id == body.target_id, with_children=True
+        )
         if not target:
             raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
         permission = m.ProjectPermission(
@@ -1163,9 +1165,7 @@ async def resolve_issue_permissions(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
 
-    effective_permissions = obj.get_user_permissions(
-        user_ctx.user, user_ctx.predefined_groups
-    )
+    effective_permissions = obj.get_user_permissions(user_ctx.user)
 
     if not obj.disable_project_permissions_inheritance:
         project_permissions = user_ctx.permissions.get(obj.project.id, set())
@@ -1200,7 +1200,7 @@ async def validate_custom_fields_values(
                 issue_field_val.value if issue_field_val else f.default_value
             )
         try:
-            val_ = f.validate_value(fields[f.name])
+            val_ = await f.validate_value(fields[f.name])
         except m.CustomFieldCanBeNoneError as err:
             val_ = None
             if not ignore_none_errors:

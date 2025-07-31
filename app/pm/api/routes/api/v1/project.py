@@ -158,11 +158,17 @@ class ProjectResolvedPermissionOutput(BaseModel):
     permissions: list[PermissionCategoryResolvedOutput]
 
     @classmethod
-    def resolve_from_project(cls, project: m.Project, user: m.User) -> Self:
+    def resolve_from_project(
+        cls,
+        project: m.Project,
+        user: m.User,
+        all_group_ids: set[PydanticObjectId] | None = None,
+    ) -> Self:
         resolved: dict[Permissions, list[PermissionSourceOutput]] = {
             Permissions(perm): [] for perm in Permissions
         }
-        user_groups = {gr.id for gr in user.groups}
+        if all_group_ids is None:
+            all_group_ids = {gr.id for gr in user.groups}
         for perm in project.permissions:
             if (
                 perm.target_type == m.PermissionTargetType.USER
@@ -179,7 +185,7 @@ class ProjectResolvedPermissionOutput(BaseModel):
                     )
             if (
                 perm.target_type == m.PermissionTargetType.GROUP
-                and perm.target.id in user_groups
+                and perm.target.id in all_group_ids
             ):
                 for p in perm.role.permissions:
                     resolved[p].append(
@@ -685,7 +691,9 @@ async def grant_permission(
             role=m.RoleLinkField.from_obj(role),
         )
     else:  # m.PermissionTargetType.GROUP
-        group: m.Group | None = await m.Group.find_one(m.Group.id == body.target_id)
+        group: m.Group | None = await m.Group.find_one(
+            m.Group.id == body.target_id, with_children=True
+        )
         if not group:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
         permission = m.ProjectPermission(

@@ -4,7 +4,6 @@ from hashlib import sha1
 from http import HTTPStatus
 from typing import cast
 
-import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -32,7 +31,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 class UserContext:
     user: m.User
     permissions: dict[PydanticObjectId, set[Permissions]]
-    predefined_groups: list = field(default_factory=list)
+    all_group_ids: set[PydanticObjectId] = field(default_factory=set)
     _accessible_tag_ids: set[PydanticObjectId] | None = field(default=None, init=False)
 
     def has_permission(
@@ -79,7 +78,6 @@ class UserContext:
 
     def get_issue_filter_for_permission(self, permission: Permissions) -> dict:
         user_project_ids = list(self.get_projects_with_permission(permission))
-        user_group_ids = [group.id for group in self.predefined_groups]
 
         return {
             '$or': [
@@ -101,7 +99,9 @@ class UserContext:
                                         },
                                         {
                                             'target_type': 'group',
-                                            'target.id': {'$in': user_group_ids},
+                                            'target.id': {
+                                                '$in': list(self.all_group_ids)
+                                            },
                                         },
                                     ]
                                 },
@@ -119,7 +119,8 @@ class UserContext:
         permission: PermissionT,
     ) -> bool:
         issue_permissions = issue.get_user_permissions(
-            self.user, self.predefined_groups
+            self.user,
+            self.all_group_ids,
         )
         return permission.check(issue_permissions)
 
@@ -161,25 +162,14 @@ async def user_dependency(
     return user
 
 
-async def resolve_predefined_groups() -> list['m.Group']:
-    predefined_groups = await m.Group.find(
-        bo.NE(m.Group.predefined_scope, None),
-    ).to_list()
-    return [
-        m.GroupLinkField.from_obj(group)
-        for group in predefined_groups
-        if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS
-    ]
-
-
 async def current_user_context_dependency(
     user: 'm.User' = Depends(user_dependency),
 ) -> AsyncGenerator:
-    predefined_groups = await resolve_predefined_groups()
+    all_group_ids = await resolve_all_user_groups(user)
     ctx = UserContext(
         user=user,
-        permissions=await resolve_user_permissions(user, predefined_groups),
-        predefined_groups=predefined_groups,
+        permissions=await resolve_user_permissions(user, all_group_ids),
+        all_group_ids=all_group_ids,
     )
     data = {'current_user': ctx}
     with request_cycle_context(data):
@@ -201,12 +191,25 @@ async def admin_context_dependency(
     yield
 
 
+async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
+    """Resolve all group IDs for user (stored + dynamic)"""
+    group_ids = {gr.id for gr in user.groups}  # Stored groups (LOCAL, WB)
+
+    all_users_groups = await m.AllUsersGroup.find_all().to_list()
+    if all_users_groups:
+        group_ids.update({gr.id for gr in all_users_groups})
+
+    return group_ids
+
+
 async def resolve_user_permissions(
     user: m.User,
-    predefined_groups: list['m.Group'],
+    all_group_ids: set[PydanticObjectId] | None = None,
 ) -> dict[PydanticObjectId, set[Permissions]]:
+    if all_group_ids is None:
+        all_group_ids = await resolve_all_user_groups(user)
     projects = await m.Project.find_all().to_list()
-    return {pr.id: pr.get_user_permissions(user, predefined_groups) for pr in projects}
+    return {pr.id: pr.get_user_permissions(user, all_group_ids) for pr in projects}
 
 
 async def get_user_from_service_token(token: str, request: Request) -> m.User | None:

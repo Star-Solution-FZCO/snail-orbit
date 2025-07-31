@@ -1,6 +1,5 @@
 from collections.abc import Mapping
 from enum import StrEnum
-from itertools import chain
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 import beanie.operators as bo
@@ -123,9 +122,7 @@ class Report(Document, PermissionRecordMixin):
     @staticmethod
     def get_filter_query(user_ctx: 'UserContext') -> dict:
         permission_type = {'$in': [perm.value for perm in PermissionType]}
-        user_groups = [
-            g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
-        ]
+        user_groups = list(user_ctx.all_group_ids)
         return {
             '$or': [
                 {

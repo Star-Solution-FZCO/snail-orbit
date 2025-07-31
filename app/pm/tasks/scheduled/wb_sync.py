@@ -26,17 +26,13 @@ async def wb_user_sync() -> None:
         if user.email not in users:
             if not user.active and not CONFIG.WB_USER_SYNC_ADD_MISSED_INACTIVE:
                 continue
-            obj = await m.User.insert_one(
+            await m.User.insert_one(
                 m.User(
                     email=user.email,
                     name=user.english_name,
                     is_active=user.active,
                     origin=m.UserOriginType.WB,
                 ),
-            )
-            await asyncio.gather(
-                m.UserMultiCustomField.add_option_predefined_scope(obj),
-                m.UserCustomField.add_option_predefined_scope(obj),
             )
             continue
         if (
@@ -66,15 +62,9 @@ async def wb_team_sync() -> None:
         CONFIG.WB_URL,
         (CONFIG.WB_API_TOKEN_KID, CONFIG.WB_API_TOKEN_SECRET),
     )
-    groups = {g.name: g for g in await m.Group.all().to_list()}
-    groups_by_external_id = {
-        g.external_id: g
-        for g in groups.values()
-        if g.origin == m.GroupOriginType.WB and g.external_id
-    }
+    groups_by_wb_id = {g.wb_id: g for g in await m.WBGroup.all().to_list()}
     async for team in wb_client.get_teams():
-        if str(team.id) in groups_by_external_id:
-            group = groups_by_external_id[str(team.id)]
+        if group := groups_by_wb_id.get(team.id):
             group.name = team.name
             group.description = team.description
             if group.is_changed:
@@ -85,39 +75,17 @@ async def wb_team_sync() -> None:
                     m.UserMultiCustomField.update_group_embedded_links(group),
                 )
             continue
-        if team.name in groups:
-            if (
-                not CONFIG.WB_TEAM_SYNC_LOCAL
-                and groups[team.name].origin == m.GroupOriginType.LOCAL
-            ):
-                continue
-            group = groups[team.name]
-            group.origin = m.GroupOriginType.WB
-            group.external_id = str(team.id)
-            update_links = group.description != team.description
-            group.description = team.description
-            await group.save_changes()
-            if update_links:
-                await asyncio.gather(
-                    m.Project.update_group_embedded_links(group),
-                    m.UserCustomField.update_group_embedded_links(group),
-                    m.UserMultiCustomField.update_group_embedded_links(group),
-                )
-            continue
-        new_group = m.Group(
+        new_group = m.WBGroup(
             name=team.name,
             description=team.description,
-            origin=m.GroupOriginType.WB,
-            external_id=str(team.id),
+            wb_id=team.id,
         )
-        await m.Group.insert_one(new_group)
-        groups[new_group.name] = new_group
-        groups_by_external_id[new_group.external_id] = new_group
+        await new_group.insert()
+        groups_by_wb_id[new_group.wb_id] = new_group
     users = await m.User.all().to_list()
-    for group in groups_by_external_id.values():
+    for group in groups_by_wb_id.values():
         members = {
-            member.email
-            for member in await wb_client.get_team_members(int(group.external_id))
+            member.email for member in await wb_client.get_team_members(group.wb_id)
         }
         for user in users:
             if user.email in members:
@@ -130,13 +98,6 @@ async def wb_team_sync() -> None:
                 await user.save_changes()
                 if user.is_changed:
                     await user.save_changes()
-                    await asyncio.gather(
-                        m.UserCustomField.update_user_group_membership(user, group),
-                        m.UserMultiCustomField.update_user_group_membership(
-                            user,
-                            group,
-                        ),
-                    )
 
 
 async def _wb_sync() -> None:

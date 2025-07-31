@@ -94,6 +94,18 @@ if CONFIG.RO_MODE:
         )
 
 
+async def _init_system_groups() -> None:
+    """Initialize default system groups that should always exist."""
+    import pm.models as m
+
+    existing_all_users = await m.AllUsersGroup.find_one()
+    if not existing_all_users:
+        all_users_group = m.AllUsersGroup(
+            name='All Users', description='System group containing all users'
+        )
+        await all_users_group.insert()
+
+
 @app.on_event('startup')
 async def app_init() -> None:
     from pm.db import check_database_version
@@ -106,6 +118,8 @@ async def app_init() -> None:
     db = client.get_default_database()
     await init_beanie(db, document_models=__beanie_models__)
     init_read_only_projection_models(__beanie_models__)
+
+    await _init_system_groups()
 
     # Initialize taskiq broker for task kicking
     await broker.startup()

@@ -17,8 +17,8 @@ __all__ = (
 class StringCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.STRING
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is not None and not isinstance(value, str):
             raise CustomFieldValidationError(
                 field=self,
@@ -31,8 +31,8 @@ class StringCustomField(CustomField):
 class IntegerCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.INTEGER
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is not None and not isinstance(value, int):
             raise CustomFieldValidationError(
                 field=self,
@@ -45,8 +45,8 @@ class IntegerCustomField(CustomField):
 class FloatCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.FLOAT
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is not None:
             try:
                 value = float(value)
@@ -62,8 +62,8 @@ class FloatCustomField(CustomField):
 class BooleanCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.BOOLEAN
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is not None and not isinstance(value, bool):
             raise CustomFieldValidationError(
                 field=self,
@@ -76,8 +76,8 @@ class BooleanCustomField(CustomField):
 class DateCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.DATE
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if isinstance(value, datetime):
@@ -108,8 +108,8 @@ class DateCustomField(CustomField):
 class DateTimeCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.DATETIME
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if isinstance(value, datetime):
@@ -133,8 +133,8 @@ class DateTimeCustomField(CustomField):
 class DurationCustomField(CustomField):
     type: CustomFieldTypeT = CustomFieldTypeT.DURATION
 
-    def validate_value(self, value: Any) -> Any:
-        value = super().validate_value(value)
+    async def validate_value(self, value: Any) -> Any:
+        value = await super().validate_value(value)
         if value is None:
             return value
         if not isinstance(value, int):

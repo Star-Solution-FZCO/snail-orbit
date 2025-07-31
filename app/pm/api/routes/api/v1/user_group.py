@@ -48,7 +48,7 @@ async def select_users_and_groups(
     query: SelectParams = Depends(),
 ) -> BaseListOutput[UserGroupOutput]:
     q_user = m.User.find().sort(m.User.name)
-    q_group = m.Group.find().sort(m.Group.name)
+    q_group = m.Group.find(with_children=True).sort(m.Group.name)
 
     if query.search:
         q_user = q_user.find(m.User.search_query(query.search))

@@ -46,9 +46,7 @@ def _find_max_permission(
     user_ctx: 'UserContext',
 ) -> PermissionType | None:
     user = user_ctx.user
-    group_ids = {gr.id for gr in user.groups}.union(
-        {gr.id for gr in user_ctx.predefined_groups},
-    )
+    group_ids = user_ctx.all_group_ids
     max_level_value = 0
     for perm in permissions:
         if (
@@ -80,9 +78,7 @@ def _filter_permissions(obj: Any, user_ctx: 'UserContext') -> list[PermissionRec
     if obj.check_permissions(user_ctx, PermissionType.ADMIN):
         return obj.permissions
     perms_to_show = []
-    user_group_ids = {gr.id for gr in user.groups}.union(
-        {gr.id for gr in user_ctx.predefined_groups},
-    )
+    user_group_ids = user_ctx.all_group_ids
     for perm in obj.permissions:
         if perm.target_type == PermissionTargetType.USER and perm.target.id == user.id:
             perms_to_show.append(perm)

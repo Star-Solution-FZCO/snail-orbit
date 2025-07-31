@@ -1,3 +1,4 @@
+from asyncio import iscoroutinefunction
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID
@@ -171,9 +172,18 @@ class BaseListOutput(SuccessPayloadOutput, Generic[T]):
         offset: int,
         projection_fn: Callable[[DocT], T],
     ) -> 'BaseListOutput[T]':
+        is_async_fn = iscoroutinefunction(projection_fn)
+
+        if is_async_fn:
+            items = [
+                await projection_fn(obj) async for obj in q.limit(limit).skip(offset)
+            ]
+        else:
+            items = [projection_fn(obj) async for obj in q.limit(limit).skip(offset)]
+
         return cls.make(
             count=await q.count(),
             limit=limit,
             offset=offset,
-            items=[projection_fn(obj) async for obj in q.limit(limit).skip(offset)],
+            items=items,
         )

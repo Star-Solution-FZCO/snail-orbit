@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from itertools import chain
 from typing import Annotated, Self
 from uuid import UUID
 
@@ -86,9 +85,7 @@ async def list_searches(
     query: ListParams = Depends(),
 ) -> BaseListOutput[SearchOutput]:
     user_ctx = current_user()
-    user_groups = [
-        g.id for g in chain(user_ctx.user.groups, user_ctx.predefined_groups)
-    ]
+    user_groups = list(user_ctx.all_group_ids)
     permission_type = {'$in': [perm.value for perm in m.PermissionType]}
     filter_query = {
         '$or': [
@@ -303,7 +300,9 @@ async def resolve_grant_permission_target(
         if not user:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'User not found')
         return m.UserLinkField.from_obj(user)
-    group: m.Group | None = await m.Group.find_one(m.Group.id == body.target)
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == body.target, with_children=True
+    )
     if not group:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Group not found')
     return m.GroupLinkField.from_obj(group)

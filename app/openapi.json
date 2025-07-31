@@ -37388,16 +37388,6 @@
               }
             ],
             "title": "Description"
-          },
-          "predefined_scope": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PredefinedGroupScope"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "type": "object",
@@ -37428,8 +37418,8 @@
             ],
             "title": "Description"
           },
-          "origin": {
-            "$ref": "#/components/schemas/GroupOriginType"
+          "type": {
+            "$ref": "#/components/schemas/GroupType"
           }
         },
         "type": "object",
@@ -37437,7 +37427,7 @@
           "id",
           "name",
           "description",
-          "origin"
+          "type"
         ],
         "title": "GroupFullOutput"
       },
@@ -37463,32 +37453,18 @@
             ],
             "title": "Description"
           },
-          "predefined_scope": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PredefinedGroupScope"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "type": {
+            "$ref": "#/components/schemas/GroupType"
           }
         },
         "type": "object",
         "required": [
           "id",
           "name",
-          "description"
+          "description",
+          "type"
         ],
         "title": "GroupLinkField"
-      },
-      "GroupOriginType": {
-        "type": "string",
-        "enum": [
-          "local",
-          "wb"
-        ],
-        "title": "GroupOriginType"
       },
       "GroupOutput": {
         "properties": {
@@ -37511,15 +37487,28 @@
               }
             ],
             "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/GroupType"
           }
         },
         "type": "object",
         "required": [
           "id",
           "name",
-          "description"
+          "description",
+          "type"
         ],
         "title": "GroupOutput"
+      },
+      "GroupType": {
+        "type": "string",
+        "enum": [
+          "local",
+          "wb",
+          "all_users"
+        ],
+        "title": "GroupType"
       },
       "GroupUpdate": {
         "properties": {
@@ -42334,13 +42323,6 @@
           "history:restore"
         ],
         "title": "Permissions"
-      },
-      "PredefinedGroupScope": {
-        "type": "string",
-        "enum": [
-          "all_users"
-        ],
-        "title": "PredefinedGroupScope"
       },
       "Profile": {
         "properties": {

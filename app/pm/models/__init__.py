@@ -21,6 +21,9 @@ report_rebuild_models()
 __beanie_models__ = [
     AuditRecord,
     Group,
+    LocalGroup,
+    WBGroup,
+    AllUsersGroup,
     User,
     Project,
     Issue,

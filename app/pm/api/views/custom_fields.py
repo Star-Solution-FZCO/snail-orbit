@@ -224,7 +224,8 @@ class UserCustomFieldOutput(BaseCustomFieldOutput[m.UserCustomField]):
     users: list[UserOutput]
 
     @classmethod
-    def from_obj(cls, obj: m.UserCustomField) -> Self:
+    async def from_obj(cls, obj: m.UserCustomField) -> Self:
+        available_users = await obj.resolve_available_users()
         return cls(
             id=obj.id,
             gid=obj.gid,
@@ -244,7 +245,7 @@ class UserCustomFieldOutput(BaseCustomFieldOutput[m.UserCustomField]):
             ],
             default_value=obj.default_value,
             label=obj.label,
-            users=[UserOutput.from_obj(u) for u in obj.users],
+            users=[UserOutput.from_obj(u) for u in available_users],
             projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
@@ -256,7 +257,8 @@ class UserMultiCustomFieldOutput(BaseCustomFieldOutput[m.UserMultiCustomField]):
     users: list[UserOutput]
 
     @classmethod
-    def from_obj(cls, obj: m.UserMultiCustomField) -> Self:
+    async def from_obj(cls, obj: m.UserMultiCustomField) -> Self:
+        available_users = await obj.resolve_available_users()
         return cls(
             id=obj.id,
             gid=obj.gid,
@@ -276,7 +278,7 @@ class UserMultiCustomFieldOutput(BaseCustomFieldOutput[m.UserMultiCustomField]):
             ],
             default_value=obj.default_value,
             label=obj.label,
-            users=[UserOutput.from_obj(u) for u in obj.users],
+            users=[UserOutput.from_obj(u) for u in available_users],
             projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
         )
 
@@ -546,10 +548,14 @@ class CustomFieldOutputRootModel(RootModel):
     root: Annotated[CustomFieldOutputT, Field(..., discriminator='type')]
 
 
-def cf_output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
+async def cf_output_from_obj(obj: m.CustomField) -> CustomFieldOutputT:
     output_class = CF_OUTPUT_MAP.get(obj.type)
     if not output_class:
         raise ValueError(f'Unsupported custom field type: {obj.type}')
+
+    # Handle async from_obj methods for User custom fields
+    if obj.type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
+        return await output_class.from_obj(obj)
     return output_class.from_obj(obj)
 
 

@@ -3,7 +3,7 @@ import secrets
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Annotated, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self
 
 import bcrypt
 import beanie.operators as bo
@@ -18,7 +18,10 @@ from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
 from ._encryption import EncryptionKey
-from .group import Group, GroupLinkField
+from .group import GroupLinkField
+
+if TYPE_CHECKING:
+    from .group import Group
 
 __all__ = (
     'APIToken',
@@ -299,7 +302,7 @@ class User(Document):
     @classmethod
     async def update_group_embedded_links(
         cls,
-        group: Group,
+        group: 'Group',
     ) -> None:
         await cls.find(
             cls.groups.id == group.id,

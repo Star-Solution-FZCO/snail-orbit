@@ -39,7 +39,7 @@ class GroupFullOutput(BaseModel):
     id: PydanticObjectId
     name: str
     description: str | None
-    origin: m.GroupOriginType
+    type: m.GroupType
 
     @classmethod
     def from_obj(cls, obj: m.Group) -> Self:
@@ -47,14 +47,13 @@ class GroupFullOutput(BaseModel):
             id=obj.id,
             name=obj.name,
             description=obj.description,
-            origin=obj.origin,
+            type=obj.type,
         )
 
 
 class GroupCreate(BaseModel):
     name: str
     description: str | None = None
-    predefined_scope: m.PredefinedGroupScope | None = None
 
 
 class GroupUpdate(BaseModel):
@@ -66,7 +65,7 @@ class GroupUpdate(BaseModel):
 async def list_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[GroupFullOutput]:
-    q = m.Group.find()
+    q = m.Group.find(with_children=True)
     query.apply_filter(q, m.Group)
     query.apply_sort(q, m.Group, (m.Group.name,))
     if query.search:
@@ -83,7 +82,7 @@ async def list_groups(
 async def get_group(
     group_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[GroupFullOutput]:
-    obj = await m.Group.find_one(m.Group.id == group_id)
+    obj = await m.Group.find_one(m.Group.id == group_id, with_children=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     return SuccessPayloadOutput(payload=GroupFullOutput.from_obj(obj))
@@ -93,10 +92,9 @@ async def get_group(
 async def create_group(
     body: GroupCreate,
 ) -> SuccessPayloadOutput[GroupFullOutput]:
-    obj = m.Group(
+    obj = m.LocalGroup(
         name=body.name,
         description=body.description,
-        predefined_scope=body.predefined_scope,
     )
     await obj.insert()
     return SuccessPayloadOutput(payload=GroupFullOutput.from_obj(obj))
@@ -107,13 +105,22 @@ async def update_group(
     group_id: PydanticObjectId,
     body: GroupUpdate,
 ) -> SuccessPayloadOutput[GroupFullOutput]:
-    obj: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
+    obj: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    if obj.origin != m.GroupOriginType.LOCAL:
+
+    # Only allow updates for certain group types
+    if isinstance(obj, m.WBGroup):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot update external group')
-    for k, v in body.model_dump(exclude_unset=True).items():
-        setattr(obj, k, v)
+
+    # Update fields based on group type
+    update_data = body.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        if hasattr(obj, key):
+            setattr(obj, key, value)
+
     if obj.is_changed:
         await obj.save_changes()
         await asyncio.gather(
@@ -132,7 +139,9 @@ async def update_group(
 async def delete_group(
     group_id: PydanticObjectId,
 ) -> ModelIdOutput:
-    obj: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
+    obj: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
     await obj.delete()
@@ -152,18 +161,35 @@ async def list_group_members(
     group_id: PydanticObjectId,
     query: ListParams = Depends(),
 ) -> BaseListOutput[UserOutput]:
-    group = await m.Group.find_one(m.Group.id == group_id)
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    if group.predefined_scope == m.PredefinedGroupScope.ALL_USERS:
-        q = m.User.find().sort(m.User.name)
-    else:
-        q = m.User.find(m.User.groups.id == group.id).sort(m.User.name)
-    return await BaseListOutput.make_from_query(
-        q,
+
+    members = await group.resolve_members()
+
+    # todo: replace with regex search
+    if query.search:
+        search_lower = query.search.lower()
+        members = [
+            member
+            for member in members
+            if search_lower in member.name.lower()
+            or (member.email and search_lower in member.email.lower())
+        ]
+
+    # Sort by name
+    members = sorted(members, key=lambda u: u.name)
+
+    return BaseListOutput.make(
+        count=len(members),
         limit=query.limit,
         offset=query.offset,
-        projection_fn=UserOutput.from_obj,
+        items=[
+            UserOutput.from_obj(member)
+            for member in members[query.offset : query.offset + query.limit]
+        ],
     )
 
 
@@ -172,24 +198,25 @@ async def add_group_member(
     group_id: PydanticObjectId,
     user_id: PydanticObjectId,
 ) -> ModelIdOutput:
-    group: m.Group | None = await m.Group.find_one(m.Group.id == group_id)
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    if group.origin != m.GroupOriginType.LOCAL:
-        raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot add member to external group')
-    if group.predefined_scope:
-        raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot add member to group')
-    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+
+    if group.type != m.GroupType.LOCAL:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Cannot add members to external group'
+        )
+
+    user = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     if any(gr.id == group.id for gr in user.groups):
         raise HTTPException(HTTPStatus.CONFLICT, 'User already in group')
+
     user.groups.append(m.GroupLinkField.from_obj(group))
     await user.save_changes()
-    await asyncio.gather(
-        m.UserCustomField.update_user_group_membership(user, group),
-        m.UserMultiCustomField.update_user_group_membership(user, group),
-    )
     return ModelIdOutput.from_obj(group)
 
 
@@ -198,25 +225,21 @@ async def remove_group_member(
     group_id: PydanticObjectId,
     user_id: PydanticObjectId,
 ) -> ModelIdOutput:
-    group = await m.Group.find_one(m.Group.id == group_id)
+    group = await m.Group.find_one(m.Group.id == group_id, with_children=True)
     if not group:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
-    if group.origin != m.GroupOriginType.LOCAL:
+
+    if group.type != m.GroupType.LOCAL:
         raise HTTPException(
-            HTTPStatus.FORBIDDEN,
-            'Cannot remove member from external group',
+            HTTPStatus.BAD_REQUEST, 'Cannot remove member from this group type'
         )
-    if group.predefined_scope:
-        raise HTTPException(HTTPStatus.FORBIDDEN, 'Cannot remove member from group')
+
     user = await m.User.find_one(m.User.id == user_id)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     if not any(gr.id == group.id for gr in user.groups):
         raise HTTPException(HTTPStatus.CONFLICT, 'User not in group')
+
     user.groups = [gr for gr in user.groups if gr.id != group.id]
     await user.save_changes()
-    await asyncio.gather(
-        m.UserCustomField.update_user_group_membership(user, group),
-        m.UserMultiCustomField.update_user_group_membership(user, group),
-    )
     return ModelIdOutput.from_obj(group)

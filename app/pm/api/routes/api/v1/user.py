@@ -162,10 +162,6 @@ async def create_user(
                 register_token=password_token,
             ),
         )
-    await asyncio.gather(
-        m.UserMultiCustomField.add_option_predefined_scope(obj),
-        m.UserCustomField.add_option_predefined_scope(obj),
-    )
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
