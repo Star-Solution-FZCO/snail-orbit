@@ -37506,7 +37506,8 @@
         "enum": [
           "local",
           "wb",
-          "all_users"
+          "all_users",
+          "system_admins"
         ],
         "title": "GroupType"
       },

@@ -105,6 +105,14 @@ async def _init_system_groups() -> None:
         )
         await all_users_group.insert()
 
+    existing_system_admins = await m.SystemAdminsGroup.find_one()
+    if not existing_system_admins:
+        system_admins_group = m.SystemAdminsGroup(
+            name='System Admins',
+            description='System group containing all administrators',
+        )
+        await system_admins_group.insert()
+
 
 @app.on_event('startup')
 async def app_init() -> None:

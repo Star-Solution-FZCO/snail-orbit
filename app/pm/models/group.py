@@ -19,6 +19,7 @@ __all__ = (
     'GroupLinkField',
     'GroupType',
     'LocalGroup',
+    'SystemAdminsGroup',
     'WBGroup',
 )
 
@@ -27,6 +28,7 @@ class GroupType(StrEnum):
     LOCAL = 'local'
     WB = 'wb'
     ALL_USERS = 'all_users'
+    SYSTEM_ADMINS = 'system_admins'
 
 
 class GroupLinkField(BaseModel):
@@ -110,4 +112,16 @@ class AllUsersGroup(Group):
         from .user import User, UserLinkField  # pylint: disable=import-outside-toplevel
 
         users = await User.find(bo.Eq(User.is_active, True)).to_list()
+        return [UserLinkField.from_obj(user) for user in users]
+
+
+class SystemAdminsGroup(Group):
+    """Dynamic group containing all system administrators."""
+
+    type: Literal[GroupType.SYSTEM_ADMINS] = GroupType.SYSTEM_ADMINS
+
+    async def resolve_members(self) -> list['UserLinkField']:
+        from .user import User, UserLinkField  # pylint: disable=import-outside-toplevel
+
+        users = await User.find(bo.Eq(User.is_admin, True)).to_list()
         return [UserLinkField.from_obj(user) for user in users]
