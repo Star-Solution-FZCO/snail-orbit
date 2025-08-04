@@ -18,16 +18,25 @@ import type {
     TagT,
 } from "shared/model/types";
 import type {
+    BaseListOutputIssuePermissionOutput,
     IssueCommentCreate,
     IssueCommentUpdate,
     IssueCreate,
     IssueDraftUpdate,
+    IssuePermissionCreate,
     IssueUpdate,
+    UUIDOutput,
 } from "../types/backend-schema.gen";
 import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Issues", "IssueComments", "IssueHistories", "IssueDrafts"];
+const tagTypes = [
+    "Issues",
+    "IssueComments",
+    "IssueHistories",
+    "IssueDrafts",
+    "IssuePermissions",
+];
 
 export const issueApi = createApi({
     reducerPath: "issuesApi",
@@ -471,6 +480,49 @@ export const issueApi = createApi({
                 { type: "Issues", id: "LIST" },
                 { type: "Issues", id },
             ],
+        }),
+        listIssuePermissions: build.query<
+            BaseListOutputIssuePermissionOutput,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `issue/${id}/permissions`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "IssuePermissions", id },
+            ],
+        }),
+        grantIssuePermission: build.mutation<
+            ApiResponse<UUIDOutput>,
+            { id: string } & IssuePermissionCreate
+        >({
+            query: ({ id, ...body }) => ({
+                url: `issue/${id}/permission`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssuePermissions", id },
+            ],
+        }),
+        revokeIssuePermission: build.mutation<
+            ApiResponse<UUIDOutput>,
+            { id: string; permissionId: string }
+        >({
+            query: ({ id, permissionId }) => ({
+                url: `issue/${id}/permission/${permissionId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssuePermissions", id },
+            ],
+        }),
+        resolveIssuePermissions: build.query<
+            ApiResponse<{ [key: string]: boolean }>,
+            string
+        >({
+            query: (id) => `issue/${id}/permissions/resolve`,
         }),
     }),
 });

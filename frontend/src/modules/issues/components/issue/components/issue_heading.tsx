@@ -6,6 +6,7 @@ import type { FC } from "react";
 import type { IssueT } from "shared/model/types";
 import { HeadingControls } from "./heading_controls";
 import { IssueSubscribeButton } from "./issue_subscribe_button";
+import { ShareIssueButton } from "./share_issue_button";
 
 type IssueHeadingProps = {
     issue: IssueT;
@@ -78,6 +79,8 @@ export const IssueHeading: FC<IssueHeadingProps> = (props) => {
                         <EditIcon />
                     </IconButton>
                 </Tooltip>
+
+                <ShareIssueButton issue={issue} />
 
                 <HeadingControls
                     issue={issue}

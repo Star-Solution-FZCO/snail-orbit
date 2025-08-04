@@ -582,5 +582,7 @@
   "workflows.title": "Workflows",
   "workflows.types.on_change": "On change",
   "workflows.types.scheduled": "Scheduled",
-  "workflows.update.success": "Workflow updated successfully"
+  "workflows.update.success": "Workflow updated successfully",
+  "issues.permissions.share.title": "Share issue",
+  "issues.permissions.dialog.title": "Issue permissions: {{issueId}}"
 }
