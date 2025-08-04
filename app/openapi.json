@@ -42268,6 +42268,13 @@
           "has_custom_permissions": {
             "type": "boolean",
             "title": "Has Custom Permissions"
+          },
+          "access_claims": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectPermissions"
+            },
+            "type": "array",
+            "title": "Access Claims"
           }
         },
         "type": "object",
@@ -42293,7 +42300,8 @@
           "tags",
           "permissions",
           "disable_project_permissions_inheritance",
-          "has_custom_permissions"
+          "has_custom_permissions",
+          "access_claims"
         ],
         "title": "IssueOutput"
       },

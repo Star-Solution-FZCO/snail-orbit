@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, RootModel
 
 import pm.models as m
 from pm.api.context import current_user
+from pm.permissions import ProjectPermissions
 
 from .custom_fields import (
     CustomFieldValueOutputRootModel,
@@ -167,11 +168,22 @@ class IssueOutput(BaseModel):
     permissions: list[m.ProjectPermission]
     disable_project_permissions_inheritance: bool
     has_custom_permissions: bool
+    access_claims: list[ProjectPermissions]
 
     @classmethod
     def from_obj(
         cls, obj: m.Issue, accessible_tag_ids: set[PydanticObjectId] | None = None
     ) -> Self:
+        user_ctx = current_user()
+        user_permissions = obj.get_user_permissions(
+            user_ctx.user, user_ctx.all_group_ids
+        )
+
+        # Inherit project permissions unless explicitly disabled
+        if not obj.disable_project_permissions_inheritance:
+            project_permissions = user_ctx.permissions.get(obj.project.id, set())
+            user_permissions.update(project_permissions)
+
         filtered_tags = obj.tags
         if accessible_tag_ids is not None:
             filtered_tags = [tag for tag in obj.tags if tag.id in accessible_tag_ids]
@@ -207,6 +219,7 @@ class IssueOutput(BaseModel):
             permissions=obj.permissions,
             disable_project_permissions_inheritance=obj.disable_project_permissions_inheritance,
             has_custom_permissions=obj.has_custom_permissions,
+            access_claims=list(user_permissions),
         )
 
 

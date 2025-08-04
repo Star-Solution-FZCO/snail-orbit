@@ -1290,6 +1290,7 @@ async def test_api_v1_issue(
             'permissions',
             'disable_project_permissions_inheritance',
             'has_custom_permissions',
+            'access_claims',
         },
     ) == {
         'id': issue_id,
@@ -1312,6 +1313,9 @@ async def test_api_v1_issue(
     assert data['payload']['fields'].keys() == {
         cf['name'] for cf in custom_field_payloads
     }
+    # Verify access_claims field is present and contains expected permissions
+    assert 'access_claims' in data['payload']
+    assert 'issue:manage_permissions' in data['payload']['access_claims']
 
     response = test_client.get(
         f'/api/v1/issue/{issue_readable_id}',
