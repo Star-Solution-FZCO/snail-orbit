@@ -4,6 +4,7 @@ export * from "./attachment";
 export * from "./comment";
 export * from "./custom_fields";
 export * from "./encryption";
+export * from "./global_role";
 export * from "./group";
 export * from "./issue";
 export * from "./permission";

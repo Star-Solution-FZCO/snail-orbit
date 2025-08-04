@@ -4,6 +4,7 @@ import type {
     APITokenT,
     BasicUserT,
     CreateUserT,
+    GlobalRoleT,
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
@@ -16,7 +17,7 @@ import type {
 } from "shared/model/types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Users"];
+const tagTypes = ["Users", "UserGlobalRoles"];
 
 export const userApi = createApi({
     reducerPath: "userApi",
@@ -169,6 +170,45 @@ export const userApi = createApi({
                 );
             },
             providesTags: () => [{ type: "Users", id: "LIST" }],
+        }),
+        // User Global Role Management
+        listUserGlobalRoles: build.query<
+            ListResponse<GlobalRoleT>,
+            { userId: string } & (ListQueryParams | void)
+        >({
+            query: ({ userId, ...params }) => ({
+                url: `user/${userId}/global-roles`,
+                params: params ?? undefined,
+            }),
+            providesTags: (_result, _error, { userId }) => [
+                { type: "UserGlobalRoles", id: userId },
+            ],
+        }),
+        assignGlobalRoleToUser: build.mutation<
+            ApiResponse<{ id: string }>,
+            { userId: string; roleId: string }
+        >({
+            query: ({ userId, roleId }) => ({
+                url: `user/${userId}/global-role/${roleId}`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, { userId }) => [
+                { type: "UserGlobalRoles", id: userId },
+                { type: "Users", id: userId },
+            ],
+        }),
+        removeGlobalRoleFromUser: build.mutation<
+            ApiResponse<{ id: string }>,
+            { userId: string; roleId: string }
+        >({
+            query: ({ userId, roleId }) => ({
+                url: `user/${userId}/global-role/${roleId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { userId }) => [
+                { type: "UserGlobalRoles", id: userId },
+                { type: "Users", id: userId },
+            ],
         }),
     }),
 });

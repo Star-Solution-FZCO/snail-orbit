@@ -30,12 +30,17 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
     const { setAction } = useNavbarSettings();
 
     const { data, error } = projectApi.useGetProjectQuery(projectId);
+    const isAdmin = useAppSelector(
+        (state) => state.profile.user?.is_admin || false,
+    );
 
-    const isAdmin =
-        useAppSelector((state) => state.profile.user?.is_admin) || false;
+    const canUpdateProject =
+        isAdmin ||
+        data?.payload?.access_claims?.includes("project:update") ||
+        false;
 
     const tabs = useProjectFormTabs(
-        isAdmin,
+        canUpdateProject,
         data?.payload?.is_encrypted || false,
     );
 

@@ -12,6 +12,10 @@ const links: { label: string; path: string }[] = [
         path: "/custom-fields",
     },
     {
+        label: "navbar.globalRoles",
+        path: "/global-roles",
+    },
+    {
         label: "navbar.groups",
         path: "/groups",
     },

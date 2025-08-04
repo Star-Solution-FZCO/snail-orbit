@@ -14,8 +14,12 @@ interface IProjectGeneralInfoProps {
 
 const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
     const { t } = useTranslation();
+    const isAdmin = useAppSelector(
+        (state) => state.profile.user?.is_admin || false,
+    );
 
-    const isAdmin = useAppSelector((state) => state.profile.user?.is_admin);
+    const canUpdateProject =
+        isAdmin || project.access_claims?.includes("project:update") || false;
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +42,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
     };
 
     const handleClickAvatar = () => {
-        if (!isAdmin) return;
+        if (!canUpdateProject) return;
         fileInputRef.current?.click();
     };
 
@@ -95,7 +99,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
                             height: 40,
                             fontSize: 16,
                             fontWeight: "bold",
-                            cursor: isAdmin ? "pointer" : "default",
+                            cursor: canUpdateProject ? "pointer" : "default",
                         }}
                         src={project.avatar}
                         onClick={handleClickAvatar}
@@ -104,7 +108,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
                         {project.slug.slice(0, 3).toUpperCase()}
                     </Avatar>
 
-                    {project.avatar && isAdmin && (
+                    {project.avatar && canUpdateProject && (
                         <Button
                             onClick={handleClickDelete}
                             variant="outlined"
@@ -131,7 +135,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
                 defaultValues={project}
                 onSubmit={onSubmit}
                 loading={isLoading}
-                readOnly={!isAdmin}
+                readOnly={!canUpdateProject}
                 hideCancel
             />
         </Stack>

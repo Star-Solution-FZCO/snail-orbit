@@ -3,23 +3,23 @@ import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { userApi } from "shared/model";
+import { globalRoleApi } from "shared/model";
 import { ErrorHandler, Link, TabPanel } from "shared/ui";
-import { UserGlobalRoles } from "./components/user_global_roles";
-import { UserSettings } from "./components/user_settings";
+import { GlobalRolePermissions } from "./components/global_role_permissions";
+import { GlobalRoleSettings } from "./components/global_role_settings";
 import { tabs } from "./utils";
 
-const routeApi = getRouteApi("/_authenticated/users/$userId");
+const routeApi = getRouteApi("/_authenticated/global-roles/$globalRoleId");
 
-const UserView = () => {
+const GlobalRoleView = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { userId } = routeApi.useParams();
+    const { globalRoleId } = routeApi.useParams();
     const search = routeApi.useSearch();
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "settings");
 
-    const { data, error } = userApi.useGetUserQuery(userId);
+    const { data, error } = globalRoleApi.useGetGlobalRoleQuery(globalRoleId);
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
@@ -28,12 +28,17 @@ const UserView = () => {
     };
 
     if (error) {
-        return <ErrorHandler error={error} message="users.item.fetch.error" />;
+        return (
+            <ErrorHandler
+                error={error}
+                message="global-roles.item.fetch.error"
+            />
+        );
     }
 
     if (!data) return null;
 
-    const user = data.payload;
+    const role = data.payload;
 
     return (
         <Box
@@ -45,13 +50,13 @@ const UserView = () => {
             flex={1}
         >
             <Breadcrumbs>
-                <Link to="/users" underline="hover">
+                <Link to="/global-roles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
-                        {t("users.title")}
+                        {t("global-roles.title")}
                     </Typography>
                 </Link>
                 <Typography fontSize={24} fontWeight="bold">
-                    {user.name}
+                    {role.name}
                 </Typography>
             </Breadcrumbs>
 
@@ -70,11 +75,11 @@ const UserView = () => {
                     </Box>
 
                     <TabPanel value="settings">
-                        <UserSettings user={user} />
+                        <GlobalRoleSettings role={role} />
                     </TabPanel>
 
-                    <TabPanel value="globalRoles" sx={{ flex: 1 }}>
-                        <UserGlobalRoles userId={user.id} />
+                    <TabPanel value="permissions">
+                        <GlobalRolePermissions role={role} />
                     </TabPanel>
                 </TabContext>
             </Box>
@@ -82,4 +87,4 @@ const UserView = () => {
     );
 };
 
-export { UserView };
+export { GlobalRoleView };

@@ -12,7 +12,7 @@ export const enum ProjectFormTabKey {
 }
 
 export const useProjectFormTabs = (
-    isAdmin: boolean,
+    canUpdateProject: boolean,
     isProjectEncrypted: boolean,
 ) => {
     const { t } = useTranslation();
@@ -25,7 +25,7 @@ export const useProjectFormTabs = (
             },
         ];
 
-        if (isAdmin) {
+        if (canUpdateProject) {
             tabs.push(
                 ...[
                     {
@@ -48,7 +48,7 @@ export const useProjectFormTabs = (
             );
         }
 
-        if (isAdmin && isProjectEncrypted) {
+        if (canUpdateProject && isProjectEncrypted) {
             tabs.push({
                 label: t("projects.sections.encryption"),
                 value: ProjectFormTabKey.ENCRYPTION,
@@ -56,7 +56,7 @@ export const useProjectFormTabs = (
         }
 
         return tabs;
-    }, [isAdmin, isProjectEncrypted, t]);
+    }, [canUpdateProject, isProjectEncrypted, t]);
 };
 
 export const generateSlug = (name: string): string => {
