@@ -23,6 +23,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import ListParams
 from pm.api.views.user import UserOutput
+from pm.permissions import GLOBAL_PERMISSIONS_BY_CATEGORY, GlobalPermissions
 
 __all__ = ('router',)
 
@@ -59,6 +60,61 @@ class GroupCreate(BaseModel):
 class GroupUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+
+
+class GlobalPermissionOutput(BaseModel):
+    key: GlobalPermissions
+    label: str
+    granted: bool
+
+
+class GlobalPermissionCategoryOutput(BaseModel):
+    label: str
+    permissions: list[GlobalPermissionOutput]
+
+
+class GlobalRoleLinkOutput(BaseModel):
+    id: PydanticObjectId
+    name: str
+    description: str | None
+
+    @classmethod
+    def from_obj(cls, obj: m.GlobalRole | m.GlobalRoleLinkField) -> Self:
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            description=obj.description,
+        )
+
+
+class GlobalRoleOutput(BaseModel):
+    id: PydanticObjectId
+    name: str
+    description: str | None
+    permissions: list[GlobalPermissionCategoryOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.GlobalRole | m.GlobalRoleLinkField) -> Self:
+        role_permissions = set(obj.permissions)
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            description=obj.description,
+            permissions=[
+                GlobalPermissionCategoryOutput(
+                    label=category,
+                    permissions=[
+                        GlobalPermissionOutput(
+                            key=key,
+                            label=label,
+                            granted=key in role_permissions,
+                        )
+                        for key, label in permissions.items()
+                    ],
+                )
+                for category, permissions in GLOBAL_PERMISSIONS_BY_CATEGORY.items()
+            ],
+        )
 
 
 @router.get('/list', responses=error_responses(*AUTH_ERRORS))
@@ -243,3 +299,84 @@ async def remove_group_member(
     user.groups = [gr for gr in user.groups if gr.id != group.id]
     await user.save_changes()
     return ModelIdOutput.from_obj(group)
+
+
+@router.get('/{group_id}/global-roles', responses=error_responses(*READ_ERRORS))
+async def list_group_global_roles(
+    group_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[GlobalRoleOutput]:
+    """List global roles assigned to a group."""
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
+    if not group:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
+
+    return BaseListOutput.make(
+        count=len(group.global_roles),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            GlobalRoleOutput.from_obj(role)
+            for role in group.global_roles[query.offset : query.offset + query.limit]
+        ],
+    )
+
+
+@router.post(
+    '/{group_id}/global-role/{role_id}', responses=error_responses(*WRITE_ERRORS)
+)
+async def assign_global_role_to_group(
+    group_id: PydanticObjectId,
+    role_id: PydanticObjectId,
+) -> ModelIdOutput:
+    """Assign a global role to a group."""
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
+    if not group:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
+
+    global_role: m.GlobalRole | None = await m.GlobalRole.find_one(
+        m.GlobalRole.id == role_id
+    )
+    if not global_role:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Global role not found')
+
+    # Check if role is already assigned
+    if any(role.id == role_id for role in group.global_roles):
+        raise HTTPException(
+            HTTPStatus.CONFLICT, 'Global role already assigned to group'
+        )
+
+    # Add the global role
+    group.global_roles.append(m.GlobalRoleLinkField.from_obj(global_role))
+    await group.save_changes()
+
+    return ModelIdOutput.make(role_id)
+
+
+@router.delete(
+    '/{group_id}/global-role/{role_id}', responses=error_responses(*READ_ERRORS)
+)
+async def remove_global_role_from_group(
+    group_id: PydanticObjectId,
+    role_id: PydanticObjectId,
+) -> ModelIdOutput:
+    """Remove a global role from a group."""
+    group: m.Group | None = await m.Group.find_one(
+        m.Group.id == group_id, with_children=True
+    )
+    if not group:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Group not found')
+
+    # Check if role is assigned
+    if not any(role.id == role_id for role in group.global_roles):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Global role not assigned to group')
+
+    # Remove the global role
+    group.global_roles = [role for role in group.global_roles if role.id != role_id]
+    await group.save_changes()
+
+    return ModelIdOutput.make(role_id)

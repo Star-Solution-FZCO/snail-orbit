@@ -16,7 +16,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import ListParams
 from pm.api.views.role import RoleOutput
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 
 __all__ = ('router',)
 
@@ -49,11 +49,11 @@ class RoleUpdate(BaseModel):
 async def list_roles(
     query: ListParams = Depends(),
 ) -> BaseListOutput[RoleOutput]:
-    q = m.Role.find()
-    query.apply_filter(q, m.Role)
-    query.apply_sort(q, m.Role, (m.Role.name,))
+    q = m.ProjectRole.find()
+    query.apply_filter(q, m.ProjectRole)
+    query.apply_sort(q, m.ProjectRole, (m.ProjectRole.name,))
     if query.search:
-        q = q.find(m.Role.search_query(query.search))
+        q = q.find(m.ProjectRole.search_query(query.search))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
@@ -73,7 +73,7 @@ async def list_roles(
 async def get_role(
     role_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj = await m.Role.find_one(m.Role.id == role_id)
+    obj = await m.ProjectRole.find_one(m.ProjectRole.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
@@ -83,7 +83,7 @@ async def get_role(
 async def create_role(
     body: RoleCreate,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj = m.Role(name=body.name, description=body.description)
+    obj = m.ProjectRole(name=body.name, description=body.description)
     await obj.insert()
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
@@ -102,9 +102,19 @@ async def update_role(
     role_id: PydanticObjectId,
     body: RoleUpdate,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj: m.Role | None = await m.Role.find_one(m.Role.id == role_id)
+    obj: m.ProjectRole | None = await m.ProjectRole.find_one(
+        m.ProjectRole.id == role_id
+    )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
+
+    # Prevent modification of system roles
+    if obj.is_system_role:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            f'System role "{obj.name}" cannot be modified or deleted',
+        )
+
     for k, v in body.dict(exclude_unset=True).items():
         setattr(obj, k, v)
     if obj.is_changed:
@@ -124,9 +134,16 @@ async def update_role(
 async def delete_role(
     role_id: PydanticObjectId,
 ) -> ModelIdOutput:
-    obj = await m.Role.find_one(m.Role.id == role_id)
+    obj = await m.ProjectRole.find_one(m.ProjectRole.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
+
+    if obj.is_system_role:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            f'System role "{obj.name}" cannot be modified or deleted',
+        )
+
     await obj.delete()
     await m.Project.remove_role_embedded_links(role_id)
     return ModelIdOutput.make(role_id)
@@ -143,11 +160,20 @@ async def delete_role(
 )
 async def grant_permission(
     role_id: PydanticObjectId,
-    permission_key: Permissions,
+    permission_key: ProjectPermissions,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj: m.Role | None = await m.Role.find_one(m.Role.id == role_id)
+    obj: m.ProjectRole | None = await m.ProjectRole.find_one(
+        m.ProjectRole.id == role_id
+    )
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
+
+    if obj.is_system_role:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            f'System role "{obj.name}" cannot be modified or deleted',
+        )
+
     if permission_key in obj.permissions:
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')
     obj.permissions.append(permission_key)
@@ -166,11 +192,18 @@ async def grant_permission(
 )
 async def revoke_permission(
     role_id: PydanticObjectId,
-    permission_key: Permissions,
+    permission_key: ProjectPermissions,
 ) -> SuccessPayloadOutput[RoleOutput]:
-    obj = await m.Role.find_one(m.Role.id == role_id)
+    obj = await m.ProjectRole.find_one(m.ProjectRole.id == role_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
+
+    if obj.is_system_role:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            f'System role "{obj.name}" cannot be modified or deleted',
+        )
+
     if permission_key not in obj.permissions:
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission not granted')
     obj.permissions.remove(permission_key)

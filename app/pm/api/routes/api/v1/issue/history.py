@@ -11,7 +11,7 @@ from pm.api.views.error_responses import error_responses
 from pm.api.views.issue import IssueHistoryOutput
 from pm.api.views.output import BaseListOutput, ErrorOutput, SuccessPayloadOutput
 from pm.api.views.params import ListParams
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 
 __all__ = ('router',)
 
@@ -32,7 +32,7 @@ async def list_history(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.ISSUE_READ)
 
     items = sorted(
         [IssueHistoryOutput.from_obj(record) for record in issue.history],
@@ -67,7 +67,7 @@ async def hide_history(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.HISTORY_HIDE)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.HISTORY_HIDE)
 
     record = next((r for r in issue.history if r.id == history_id), None)
     if not record:
@@ -100,7 +100,7 @@ async def restore_history(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.HISTORY_RESTORE)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.HISTORY_RESTORE)
 
     record = next((r for r in issue.history if r.id == history_id), None)
     if not record:

@@ -18,7 +18,7 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import BaseListOutput
 from pm.api.views.user import UserOutput
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 from pm.utils.dateutils import utcfromtimestamp
 
 __all__ = ('router',)
@@ -111,7 +111,7 @@ async def get_activity_list(
     end_dt = utcfromtimestamp(end)
     user_ctx = current_user()
     flt = [
-        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
+        user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
         bo.Or(
             bo.And(
                 m.Issue.history.time >= start_dt,

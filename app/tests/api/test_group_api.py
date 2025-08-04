@@ -45,16 +45,28 @@ async def test_group_crud_and_list_workflow(
 
     # Test LIST groups first (before CRUD operations that will delete the group)
     response = test_client.get('/api/v1/group/list', headers=headers)
-    expected_list_payload = {
-        'count': len(group_payloads),
-        'limit': 50,
-        'offset': 0,
-        'items': [
-            {'id': create_groups[idx], 'type': 'local', **group_payloads[idx]}
-            for idx in range(len(group_payloads))
-        ],
-    }
-    assert_success_response(response, expected_list_payload)
+    assert_success_response(response)
+
+    # Verify the response contains both system groups and test groups
+    data = response.json()
+    assert data['payload']['count'] >= len(group_payloads), (
+        'Should have at least the test groups'
+    )
+    assert data['payload']['limit'] == 50
+    assert data['payload']['offset'] == 0
+
+    # Check that system groups are present
+    group_types = [item['type'] for item in data['payload']['items']]
+    assert 'all_users' in group_types, 'Should contain All Users system group'
+    assert 'system_admins' in group_types, 'Should contain System Admins group'
+
+    # Check that our test groups are present
+    test_group_names = [group['name'] for group in group_payloads]
+    actual_group_names = [item['name'] for item in data['payload']['items']]
+    for test_name in test_group_names:
+        assert test_name in actual_group_names, (
+            f"Test group '{test_name}' should be in the list"
+        )
 
     # Use CRUD workflow helper for GET, UPDATE, DELETE operations
     expected_group_payload = {

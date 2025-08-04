@@ -4,6 +4,7 @@ from hashlib import sha1
 from http import HTTPStatus
 from typing import cast
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -14,7 +15,12 @@ import pm.models as m
 from pm.api.exceptions import MFARequiredError
 from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
 from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
-from pm.permissions import Permissions, PermissionT
+from pm.permissions import (
+    GlobalPermissions,
+    GlobalPermissionT,
+    ProjectPermissions,
+    ProjectPermissionT,
+)
 
 __all__ = (
     'UserContext',
@@ -30,22 +36,46 @@ bearer_scheme = HTTPBearer(auto_error=False)
 @dataclass
 class UserContext:
     user: m.User
-    permissions: dict[PydanticObjectId, set[Permissions]]
+    permissions: dict[PydanticObjectId, set[ProjectPermissions]]
+    global_permissions: set[GlobalPermissions] = field(default_factory=set)
     all_group_ids: set[PydanticObjectId] = field(default_factory=set)
     _accessible_tag_ids: set[PydanticObjectId] | None = field(default=None, init=False)
 
     def has_permission(
         self,
         project_id: PydanticObjectId,
-        permission: PermissionT,
+        permission: ProjectPermissionT,
     ) -> bool:
+        """Check if user has a project-scoped permission."""
         return permission.check(self.permissions.get(project_id, set()))
+
+    def has_global_permission(self, permission: GlobalPermissionT) -> bool:
+        """Check if user has a global permission."""
+        return permission.check(self.global_permissions)
+
+    def validate_global_permission(
+        self, permission: GlobalPermissionT, admin_override: bool = False
+    ) -> None:
+        """Validate that user has a global permission."""
+        if admin_override and self.user.is_admin:
+            return
+
+        if not self.has_global_permission(permission):
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                f'Global permission {permission} required for this operation',
+            )
 
     def validate_issue_permission(
         self,
         issue: m.Issue,
-        permission: PermissionT,
+        permission: ProjectPermissionT,
+        admin_override: bool = False,
     ) -> None:
+        """Validate user has permission on issue, with inheritance."""
+        if admin_override and self.user.is_admin:
+            return
+
         if not issue.disable_project_permissions_inheritance and self.has_permission(
             issue.project.id, permission
         ):
@@ -62,8 +92,13 @@ class UserContext:
     def validate_project_permission(
         self,
         project: m.Project | m.ProjectLinkField,
-        permission: PermissionT,
+        permission: ProjectPermissionT,
+        admin_override: bool = False,
     ) -> None:
+        """Validate user has permission on project."""
+        if admin_override and self.user.is_admin:
+            return
+
         if not self.has_permission(project.id, permission):
             raise HTTPException(
                 HTTPStatus.FORBIDDEN,
@@ -72,11 +107,12 @@ class UserContext:
 
     def get_projects_with_permission(
         self,
-        permission: PermissionT,
+        permission: ProjectPermissionT,
     ) -> set[PydanticObjectId]:
+        """Get all project IDs where user has the specified permission."""
         return {pr for pr in self.permissions if self.has_permission(pr, permission)}
 
-    def get_issue_filter_for_permission(self, permission: Permissions) -> dict:
+    def get_issue_filter_for_permission(self, permission: ProjectPermissions) -> dict:
         user_project_ids = list(self.get_projects_with_permission(permission))
 
         return {
@@ -116,8 +152,9 @@ class UserContext:
     def check_issue_permissions(
         self,
         issue: m.Issue,
-        permission: PermissionT,
+        permission: ProjectPermissionT,
     ) -> bool:
+        """Check if user has permission on specific issue."""
         issue_permissions = issue.get_user_permissions(
             self.user,
             self.all_group_ids,
@@ -169,6 +206,7 @@ async def current_user_context_dependency(
     ctx = UserContext(
         user=user,
         permissions=await resolve_user_permissions(user, all_group_ids),
+        global_permissions=await resolve_user_global_permissions(user, all_group_ids),
         all_group_ids=all_group_ids,
     )
     data = {'current_user': ctx}
@@ -195,9 +233,16 @@ async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
     """Resolve all group IDs for user (stored + dynamic)"""
     group_ids = {gr.id for gr in user.groups}  # Stored groups (LOCAL, WB)
 
+    # Add ALL_USERS dynamic group
     all_users_groups = await m.AllUsersGroup.find_all().to_list()
     if all_users_groups:
         group_ids.update({gr.id for gr in all_users_groups})
+
+    # Add SYSTEM_ADMINS dynamic group for admin users
+    if user.is_admin:
+        system_admin_groups = await m.SystemAdminsGroup.find_all().to_list()
+        if system_admin_groups:
+            group_ids.update({gr.id for gr in system_admin_groups})
 
     return group_ids
 
@@ -205,11 +250,37 @@ async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
 async def resolve_user_permissions(
     user: m.User,
     all_group_ids: set[PydanticObjectId] | None = None,
-) -> dict[PydanticObjectId, set[Permissions]]:
+) -> dict[PydanticObjectId, set[ProjectPermissions]]:
+    """Resolve project permissions for user across all projects."""
     if all_group_ids is None:
         all_group_ids = await resolve_all_user_groups(user)
     projects = await m.Project.find_all().to_list()
     return {pr.id: pr.get_user_permissions(user, all_group_ids) for pr in projects}
+
+
+async def resolve_user_global_permissions(
+    user: m.User,
+    all_group_ids: set[PydanticObjectId] | None = None,
+) -> set[GlobalPermissions]:
+    """Resolve global permissions for user from direct global roles and group global roles."""
+    global_permissions: set[GlobalPermissions] = set()
+
+    # Direct global roles assigned to user
+    for global_role_link in user.global_roles:
+        global_permissions.update(global_role_link.permissions)
+
+    # Group-based global roles
+    if all_group_ids is None:
+        all_group_ids = await resolve_all_user_groups(user)
+
+    if all_group_ids:
+        groups = await m.Group.find(bo.In(m.Group.id, all_group_ids)).to_list()
+
+        for group in groups:
+            for global_role_link in group.global_roles:
+                global_permissions.update(global_role_link.permissions)
+
+    return global_permissions
 
 
 async def get_user_from_service_token(token: str, request: Request) -> m.User | None:

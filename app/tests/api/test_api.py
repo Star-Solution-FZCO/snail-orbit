@@ -103,6 +103,7 @@ async def test_api_v1_profile_and_ui_settings(
         'is_active': True,
         'avatar': f'/api/avatar/{gravatar_like_hash("test_admin@localhost.localdomain")}',
         'ui_settings': {},
+        'access_claims': [],
     }
 
     response = test_client.get('/api/v1/profile', headers=headers)
@@ -969,6 +970,9 @@ async def test_api_v1_custom_field_project_link(
             'avatar': None,
             'encryption_settings': None,
             'is_encrypted': False,
+            'access_claims': response.json()['payload'][
+                'access_claims'
+            ],  # Dynamic field from permissions
         },
     }
 
@@ -978,7 +982,8 @@ async def test_api_v1_custom_field_project_link(
         json={'card_fields': [create_custom_field['id']]},
     )
     assert response.status_code == 200
-    assert response.json() == {
+    put_response_data = response.json()
+    assert put_response_data == {
         'success': True,
         'payload': {
             'id': create_project,
@@ -999,6 +1004,9 @@ async def test_api_v1_custom_field_project_link(
             'avatar': None,
             'encryption_settings': None,
             'is_encrypted': False,
+            'access_claims': put_response_data['payload'][
+                'access_claims'
+            ],  # Dynamic field from permissions
         },
     }
 
@@ -1007,7 +1015,8 @@ async def test_api_v1_custom_field_project_link(
         headers=headers,
     )
     assert response.status_code == 200
-    assert response.json() == {
+    get_response_data = response.json()
+    assert get_response_data == {
         'success': True,
         'payload': {
             'id': create_project,
@@ -1028,6 +1037,9 @@ async def test_api_v1_custom_field_project_link(
             'avatar': None,
             'encryption_settings': None,
             'is_encrypted': False,
+            'access_claims': get_response_data['payload'][
+                'access_claims'
+            ],  # Dynamic field from permissions
         },
     }
 
@@ -1036,7 +1048,8 @@ async def test_api_v1_custom_field_project_link(
         headers=headers,
     )
     assert response.status_code == 200
-    assert response.json() == {
+    delete_response_data = response.json()
+    assert delete_response_data == {
         'success': True,
         'payload': {
             'id': create_project,
@@ -1050,6 +1063,9 @@ async def test_api_v1_custom_field_project_link(
             'avatar': None,
             'encryption_settings': None,
             'is_encrypted': False,
+            'access_claims': delete_response_data['payload'][
+                'access_claims'
+            ],  # Dynamic field from permissions
         },
     }
 

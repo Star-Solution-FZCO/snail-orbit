@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
+from pm.permissions import PROJECT_PERMISSIONS_BY_CATEGORY, ProjectPermissions
 
 __all__ = (
     'RoleLinkOutput',
@@ -13,7 +13,7 @@ __all__ = (
 
 
 class PermissionOutput(BaseModel):
-    key: Permissions
+    key: ProjectPermissions
     label: str
     granted: bool
 
@@ -29,7 +29,7 @@ class RoleLinkOutput(BaseModel):
     description: str | None
 
     @classmethod
-    def from_obj(cls, obj: m.Role | m.RoleLinkField) -> Self:
+    def from_obj(cls, obj: m.ProjectRole | m.ProjectRoleLinkField) -> Self:
         return cls(
             id=obj.id,
             name=obj.name,
@@ -44,7 +44,7 @@ class RoleOutput(BaseModel):
     permissions: list[PermissionCategoryOutput]
 
     @classmethod
-    def from_obj(cls, obj: m.Role | m.RoleLinkField) -> Self:
+    def from_obj(cls, obj: m.ProjectRole | m.ProjectRoleLinkField) -> Self:
         role_permissions = set(obj.permissions)
         return cls(
             id=obj.id,
@@ -62,6 +62,6 @@ class RoleOutput(BaseModel):
                         for key, label in permissions.items()
                     ],
                 )
-                for category, permissions in PERMISSIONS_BY_CATEGORY.items()
+                for category, permissions in PROJECT_PERMISSIONS_BY_CATEGORY.items()
             ],
         )

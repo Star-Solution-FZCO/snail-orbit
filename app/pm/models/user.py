@@ -18,9 +18,11 @@ from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
 from ._encryption import EncryptionKey
+from .global_role import GlobalRoleLinkField
 from .group import GroupLinkField
 
 if TYPE_CHECKING:
+    from .global_role import GlobalRole
     from .group import Group
 
 __all__ = (
@@ -160,6 +162,7 @@ class User(Document):
         state_management_save_previous = True
         indexes: ClassVar = [
             pymongo.IndexModel([('groups.id', 1)], name='groups_id_index'),
+            pymongo.IndexModel([('global_roles.id', 1)], name='global_roles_id_index'),
             pymongo.IndexModel(
                 [('api_tokens.is_active', 1)], name='api_tokens_active_index'
             ),
@@ -187,6 +190,9 @@ class User(Document):
     is_admin: bool = False
     api_tokens: Annotated[list[APIToken], Field(default_factory=list)]
     groups: Annotated[list[GroupLinkField], Field(default_factory=list)]
+    global_roles: Annotated[list[GlobalRoleLinkField], Field(default_factory=list)] = (
+        Field(description='Global roles assigned to this user')
+    )
     origin: UserOriginType = UserOriginType.LOCAL
     avatar_type: UserAvatarType = UserAvatarType.DEFAULT
     ui_settings: Annotated[dict, Field(default_factory=dict)]
@@ -309,4 +315,33 @@ class User(Document):
         ).update_many(
             {'$set': {'groups.$[g]': GroupLinkField.from_obj(group).model_dump()}},
             array_filters=[{'g.id': group.id}],
+        )
+
+    @classmethod
+    async def remove_global_role_embedded_links(
+        cls,
+        global_role_id: PydanticObjectId,
+    ) -> None:
+        """Remove global role links when a global role is deleted."""
+        await cls.find({'global_roles.id': global_role_id}).update_many(
+            {'$pull': {'global_roles': {'id': global_role_id}}}
+        )
+
+    @classmethod
+    async def update_global_role_embedded_links(
+        cls,
+        global_role: 'GlobalRole',
+    ) -> None:
+        """Update global role links when a global role is modified."""
+        await cls.find(
+            {'global_roles.id': global_role.id},
+        ).update_many(
+            {
+                '$set': {
+                    'global_roles.$[gr]': GlobalRoleLinkField.from_obj(
+                        global_role
+                    ).model_dump()
+                }
+            },
+            array_filters=[{'gr.id': global_role.id}],
         )

@@ -13,7 +13,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.issue import IssueCommentOutput, IssueHistoryOutput
 from pm.api.views.output import BaseListOutput
 from pm.api.views.params import ListParams
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 
 __all__ = ('router',)
 
@@ -71,9 +71,9 @@ async def list_issue_feed(
     records: list[IssueFeedRecordOutput] = []
 
     user_ctx = current_user()
-    if user_ctx.has_permission(issue.project.id, Permissions.COMMENT_READ):
+    if user_ctx.has_permission(issue.project.id, ProjectPermissions.COMMENT_READ):
         records.extend([IssueFeedRecordOutput.from_obj(c) for c in issue.comments])
-    if user_ctx.has_permission(issue.project.id, Permissions.ISSUE_READ):
+    if user_ctx.has_permission(issue.project.id, ProjectPermissions.ISSUE_READ):
         records.extend([IssueFeedRecordOutput.from_obj(h) for h in issue.history])
 
     sort_by = query.sort_by

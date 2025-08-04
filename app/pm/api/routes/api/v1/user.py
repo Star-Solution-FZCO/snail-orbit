@@ -17,7 +17,14 @@ from pm.api.views.error_responses import (
     WRITE_ERRORS,
     error_responses,
 )
-from pm.api.views.output import BaseListOutput, SuccessPayloadOutput
+from pm.api.views.global_role import (
+    GlobalRoleOutput,
+)
+from pm.api.views.output import (
+    BaseListOutput,
+    ModelIdOutput,
+    SuccessPayloadOutput,
+)
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
@@ -206,3 +213,76 @@ async def update_user(
         )
         await generate_default_avatar(obj)
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
+
+
+@router.get('/{user_id}/global-roles', responses=error_responses(*READ_ERRORS))
+async def list_user_global_roles(
+    user_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[GlobalRoleOutput]:
+    """List global roles assigned to a user."""
+    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    if not user:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+
+    return BaseListOutput.make(
+        count=len(user.global_roles),
+        limit=query.limit,
+        offset=query.offset,
+        items=[
+            GlobalRoleOutput.from_obj(role)
+            for role in user.global_roles[query.offset : query.offset + query.limit]
+        ],
+    )
+
+
+@router.post(
+    '/{user_id}/global-role/{role_id}', responses=error_responses(*WRITE_ERRORS)
+)
+async def assign_global_role_to_user(
+    user_id: PydanticObjectId,
+    role_id: PydanticObjectId,
+) -> ModelIdOutput:
+    """Assign a global role to a user."""
+    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    if not user:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+
+    global_role: m.GlobalRole | None = await m.GlobalRole.find_one(
+        m.GlobalRole.id == role_id
+    )
+    if not global_role:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Global role not found')
+
+    # Check if role is already assigned
+    if any(role.id == role_id for role in user.global_roles):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Global role already assigned to user')
+
+    # Add the global role
+    user.global_roles.append(m.GlobalRoleLinkField.from_obj(global_role))
+    await user.save_changes()
+
+    return ModelIdOutput.make(role_id)
+
+
+@router.delete(
+    '/{user_id}/global-role/{role_id}', responses=error_responses(*READ_ERRORS)
+)
+async def remove_global_role_from_user(
+    user_id: PydanticObjectId,
+    role_id: PydanticObjectId,
+) -> ModelIdOutput:
+    """Remove a global role from a user."""
+    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    if not user:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
+
+    # Check if role is assigned
+    if not any(role.id == role_id for role in user.global_roles):
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Global role not assigned to user')
+
+    # Remove the global role
+    user.global_roles = [role for role in user.global_roles if role.id != role_id]
+    await user.save_changes()
+
+    return ModelIdOutput.make(role_id)

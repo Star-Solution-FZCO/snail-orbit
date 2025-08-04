@@ -8,13 +8,13 @@ import pymongo
 from beanie import Document, Indexed, Link, PydanticObjectId, Update
 from pydantic import BaseModel, Field
 
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 
 from ._audit import audited_model
 from ._encryption import EncryptionKey
 from .custom_fields import CustomField
 from .group import Group, GroupLinkField
-from .role import Role, RoleLinkField
+from .role import ProjectRole, ProjectRoleLinkField
 from .user import User, UserLinkField
 from .workflow import Workflow
 
@@ -42,7 +42,7 @@ class ProjectPermission(BaseModel):
     id: Annotated[UUID, Field(default_factory=uuid4)]
     target_type: PermissionTargetType
     target: GroupLinkField | UserLinkField
-    role: RoleLinkField
+    role: ProjectRoleLinkField
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ProjectPermission):
@@ -119,7 +119,7 @@ class Project(Document):
         self,
         user: User,
         all_group_ids: set[PydanticObjectId] | None = None,
-    ) -> set[Permissions]:
+    ) -> set[ProjectPermissions]:
         results = set()
         if all_group_ids is None:
             all_group_ids = {gr.id for gr in user.groups}
@@ -140,10 +140,10 @@ class Project(Document):
     @classmethod
     async def update_role_embedded_links(
         cls,
-        role: Role,
+        role: ProjectRole,
     ) -> None:
         await cls.find(cls.permissions.role.id == role.id).update(
-            {'$set': {'permissions.$[p].role': RoleLinkField.from_obj(role)}},
+            {'$set': {'permissions.$[p].role': ProjectRoleLinkField.from_obj(role)}},
             array_filters=[{'p.role.id': role.id}],
         )
 

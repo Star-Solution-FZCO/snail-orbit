@@ -4,6 +4,7 @@ from .activity import router as activity_router
 from .board import router as board_router
 from .custom_field import router as custom_field_router
 from .files import router as files_router
+from .global_role import router as global_role_router
 from .group import router as group_router
 from .issue import router as issue_router
 from .profile import router as profile_router
@@ -31,6 +32,7 @@ router.include_router(profile_router)
 router.include_router(custom_field_router)
 router.include_router(board_router)
 router.include_router(files_router)
+router.include_router(global_role_router)
 router.include_router(group_router)
 router.include_router(role_router)
 router.include_router(workflow_router)

@@ -25,6 +25,7 @@ def fs_session():
 @pytest_asyncio.fixture(autouse=True)
 async def init_db():
     import pm.models as m
+    from pm.api.app import _init_default_roles, _init_system_groups
     from pm.config import CONFIG
     from pm.utils.document import init_read_only_projection_models
 
@@ -35,6 +36,8 @@ async def init_db():
     db = client.get_default_database()
     await init_beanie(db, document_models=m.__beanie_models__)
     init_read_only_projection_models(m.__beanie_models__)
+    await _init_system_groups()
+    await _init_default_roles()
     yield
     await client.drop_database(db)
 

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, Self
 
 import beanie.operators as bo
 import pymongo
@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from ._audit import audited_model
 
 if TYPE_CHECKING:
+    from .global_role import GlobalRole, GlobalRoleLinkField
     from .user import UserLinkField
 
 __all__ = (
@@ -67,6 +68,9 @@ class Group(Document):
     name: str = Indexed(str, unique=True)
     description: str | None = None
     type: GroupType
+    global_roles: Annotated[
+        list['GlobalRoleLinkField'], Field(default_factory=list)
+    ] = Field(description='Global roles assigned to this group')
 
     @abstractmethod
     async def resolve_members(self) -> list['UserLinkField']:
@@ -76,6 +80,34 @@ class Group(Document):
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:
         return bo.RegEx(cls.name, search, 'i')
+
+    @classmethod
+    async def update_global_role_embedded_links(
+        cls,
+        global_role: 'GlobalRole',
+    ) -> None:
+        """Update embedded global role links when a global role is modified."""
+        from .global_role import (  # pylint: disable=import-outside-toplevel
+            GlobalRoleLinkField,
+        )
+
+        global_role_link = GlobalRoleLinkField.from_obj(global_role)
+        await cls.find(
+            {'global_roles': {'$elemMatch': {'id': global_role.id}}},
+        ).update(
+            {'$set': {'global_roles.$[gr]': global_role_link}},
+            array_filters=[{'gr.id': global_role.id}],
+        )
+
+    @classmethod
+    async def remove_global_role_embedded_links(
+        cls,
+        global_role_id: PydanticObjectId,
+    ) -> None:
+        """Remove embedded global role links when a global role is deleted."""
+        await cls.find().update(
+            {'$pull': {'global_roles': {'id': global_role_id}}},
+        )
 
 
 class LocalGroup(Group):
@@ -125,3 +157,23 @@ class SystemAdminsGroup(Group):
 
         users = await User.find(bo.Eq(User.is_admin, True)).to_list()
         return [UserLinkField.from_obj(user) for user in users]
+
+
+def rebuild_models() -> None:
+    """Rebuild models to resolve forward references."""
+    from .global_role import (  # pylint: disable=import-outside-toplevel
+        GlobalRoleLinkField,
+    )
+    from .user import UserLinkField  # pylint: disable=import-outside-toplevel
+
+    # Create a types namespace with the required classes for forward reference resolution
+    types_namespace = {
+        'GlobalRoleLinkField': GlobalRoleLinkField,
+        'UserLinkField': UserLinkField,
+    }
+
+    Group.model_rebuild(_types_namespace=types_namespace)
+    LocalGroup.model_rebuild(_types_namespace=types_namespace)
+    WBGroup.model_rebuild(_types_namespace=types_namespace)
+    AllUsersGroup.model_rebuild(_types_namespace=types_namespace)
+    SystemAdminsGroup.model_rebuild(_types_namespace=types_namespace)

@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, computed_field
 
 import pm.models as m
 from pm.api.context import (
-    admin_context_dependency,
     current_user,
     current_user_context_dependency,
 )
@@ -42,7 +41,11 @@ from pm.api.views.select import SelectParams
 from pm.api.views.user import UserOutput
 from pm.config import CONFIG
 from pm.enums import EncryptionTargetTypeT
-from pm.permissions import PERMISSIONS_BY_CATEGORY, Permissions
+from pm.permissions import (
+    PROJECT_PERMISSIONS_BY_CATEGORY,
+    GlobalPermissions,
+    ProjectPermissions,
+)
 from pm.services.avatars import PROJECT_AVATAR_STORAGE_DIR
 from pm.services.files import get_storage_client
 from pm.utils.file_storage._base import FileHeader, StorageFileNotFoundError
@@ -88,6 +91,7 @@ class ProjectListItemOutput(BaseModel):
     is_subscribed: bool
     avatar_type: m.ProjectAvatarType
     is_encrypted: bool
+    access_claims: list[ProjectPermissions]
 
     @computed_field
     @property
@@ -100,6 +104,11 @@ class ProjectListItemOutput(BaseModel):
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> Self:
+        user_ctx = current_user()
+        user_permissions = obj.get_user_permissions(
+            user_ctx.user, user_ctx.all_group_ids
+        )
+
         return cls(
             id=obj.id,
             name=obj.name,
@@ -107,9 +116,10 @@ class ProjectListItemOutput(BaseModel):
             description=obj.description,
             ai_description=obj.ai_description,
             is_active=obj.is_active,
-            is_subscribed=current_user().user.id in obj.subscribers,
+            is_subscribed=user_ctx.user.id in obj.subscribers,
             avatar_type=obj.avatar_type,
             is_encrypted=bool(obj.encryption_settings),
+            access_claims=list(user_permissions),
         )
 
 
@@ -142,7 +152,7 @@ class PermissionSourceOutput(BaseModel):
 
 
 class PermissionResolvedOutput(BaseModel):
-    key: Permissions
+    key: ProjectPermissions
     label: str
     granted: bool
     sources: list[PermissionSourceOutput]
@@ -164,8 +174,8 @@ class ProjectResolvedPermissionOutput(BaseModel):
         user: m.User,
         all_group_ids: set[PydanticObjectId] | None = None,
     ) -> Self:
-        resolved: dict[Permissions, list[PermissionSourceOutput]] = {
-            Permissions(perm): [] for perm in Permissions
+        resolved: dict[ProjectPermissions, list[PermissionSourceOutput]] = {
+            ProjectPermissions(perm): [] for perm in ProjectPermissions
         }
         if all_group_ids is None:
             all_group_ids = {gr.id for gr in user.groups}
@@ -210,7 +220,7 @@ class ProjectResolvedPermissionOutput(BaseModel):
                         ),
                     ],
                 )
-                for category, perms in PERMISSIONS_BY_CATEGORY.items()
+                for category, perms in PROJECT_PERMISSIONS_BY_CATEGORY.items()
                 for key, label in perms.items()
             ],
         )
@@ -249,6 +259,7 @@ class ProjectOutput(BaseModel):
     is_subscribed: bool = False
     avatar_type: m.ProjectAvatarType
     encryption_settings: EncryptionSettingsOutput | None
+    access_claims: list[ProjectPermissions]
 
     @computed_field
     @property
@@ -266,6 +277,11 @@ class ProjectOutput(BaseModel):
 
     @classmethod
     def from_obj(cls, obj: m.Project) -> 'ProjectOutput':
+        user_ctx = current_user()
+        user_permissions = obj.get_user_permissions(
+            user_ctx.user, user_ctx.all_group_ids
+        )
+
         return cls(
             id=obj.id,
             name=obj.name,
@@ -276,13 +292,14 @@ class ProjectOutput(BaseModel):
             custom_fields=[CustomFieldOutput.from_obj(v) for v in obj.custom_fields],
             card_fields=obj.card_fields,
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
-            is_subscribed=current_user().user.id in obj.subscribers,
+            is_subscribed=user_ctx.user.id in obj.subscribers,
             avatar_type=obj.avatar_type,
             encryption_settings=(
                 EncryptionSettingsOutput.from_obj(obj.encryption_settings)
                 if obj.encryption_settings
                 else None
             ),
+            access_claims=list(user_permissions),
         )
 
 
@@ -336,7 +353,7 @@ async def list_projects(
         q = q.find(
             bo.In(
                 m.Project.id,
-                user_ctx.get_projects_with_permission(Permissions.PROJECT_READ),
+                user_ctx.get_projects_with_permission(ProjectPermissions.PROJECT_READ),
             ),
         )
     if query.search:
@@ -362,8 +379,13 @@ async def get_project(
 @router.post('/')
 async def create_project(
     body: ProjectCreate,
-    _=Depends(admin_context_dependency),
+    _=Depends(current_user_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
+    # Check PROJECT_CREATE global permission (admins can always create projects)
+    user_ctx = current_user()
+    user_ctx.validate_global_permission(
+        GlobalPermissions.PROJECT_CREATE, admin_override=True
+    )
     if await m.Project.check_slug_used(body.slug):
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
@@ -409,6 +431,27 @@ async def create_project(
             encrypt_description=body.encryption_settings.encrypt_description,
         )
     await obj.insert()
+
+    # Auto-assign creator as Project Owner
+    # Find the default Project Owner role (created at startup)
+    project_owner_role = await m.ProjectRole.find_one(
+        m.ProjectRole.system_role_type == m.SystemRoleType.PROJECT_OWNER
+    )
+
+    if not project_owner_role:
+        raise HTTPException(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            'Project Owner system role not found. Please restart the application.',
+        )
+
+    owner_permission = m.ProjectPermission(
+        target_type=m.PermissionTargetType.USER,
+        target=m.UserLinkField.from_obj(user_ctx.user),
+        role=m.ProjectRoleLinkField.from_obj(project_owner_role),
+    )
+    obj.permissions.append(owner_permission)
+    await obj.save_changes()
+
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
@@ -417,11 +460,16 @@ async def update_project(
     project_id: PydanticObjectId,
     body: ProjectUpdate,
     background_tasks: BackgroundTasks,
-    _=Depends(admin_context_dependency),
+    _=Depends(current_user_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_project_permission(
+        obj, ProjectPermissions.PROJECT_UPDATE, admin_override=True
+    )
     data = body.model_dump(exclude_unset=True, exclude={'encryption_settings'})
     if 'card_fields' in data:
         project_field_ids = {field.id for field in obj.custom_fields}
@@ -483,11 +531,16 @@ async def update_project(
 @router.delete('/{project_id}')
 async def delete_project(
     project_id: PydanticObjectId,
-    _=Depends(admin_context_dependency),
+    _=Depends(current_user_context_dependency),
 ) -> ModelIdOutput:
     obj = await m.Project.find_one(m.Project.id == project_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_project_permission(
+        obj, ProjectPermissions.PROJECT_DELETE, admin_override=True
+    )
     await obj.delete()
     await m.Issue.find(m.Issue.project.id == project_id).delete()
     return ModelIdOutput.make(project_id)
@@ -678,7 +731,9 @@ async def grant_permission(
     project: m.Project | None = await m.Project.find_one(m.Project.id == project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
-    role: m.Role | None = await m.Role.find_one(m.Role.id == body.role_id)
+    role: m.ProjectRole | None = await m.ProjectRole.find_one(
+        m.ProjectRole.id == body.role_id
+    )
     if not role:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Role not found')
     if body.target_type == m.PermissionTargetType.USER:
@@ -688,7 +743,7 @@ async def grant_permission(
         permission = m.ProjectPermission(
             target_type=body.target_type,
             target=m.UserLinkField.from_obj(user),
-            role=m.RoleLinkField.from_obj(role),
+            role=m.ProjectRoleLinkField.from_obj(role),
         )
     else:  # m.PermissionTargetType.GROUP
         group: m.Group | None = await m.Group.find_one(
@@ -699,7 +754,7 @@ async def grant_permission(
         permission = m.ProjectPermission(
             target_type=body.target_type,
             target=m.GroupLinkField.from_obj(group),
-            role=m.RoleLinkField.from_obj(role),
+            role=m.ProjectRoleLinkField.from_obj(role),
         )
     if any(perm == permission for perm in project.permissions):
         raise HTTPException(HTTPStatus.CONFLICT, 'Permission already granted')

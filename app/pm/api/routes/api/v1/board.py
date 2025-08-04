@@ -48,7 +48,7 @@ from pm.api.views.output import (
 from pm.api.views.params import IssueSearchParams, ListParams
 from pm.api.views.permission import PermissionOutput
 from pm.api.views.user import UserOutput
-from pm.permissions import PermAnd, Permissions
+from pm.permissions import PermAnd, ProjectPermissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
@@ -481,7 +481,7 @@ async def get_board_issues(
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
     q = m.Issue.find(
-        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
+        user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
     )
 
     if board.query:
@@ -668,7 +668,7 @@ async def move_issue(
 
     user_ctx.validate_issue_permission(
         issue,
-        PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
+        PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE),
     )
 
     data = body.dict(exclude_unset=True)

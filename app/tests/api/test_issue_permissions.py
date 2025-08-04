@@ -166,7 +166,7 @@ async def test_issue_permissions_inheritance(
     create_initial_admin: tuple[str, str],
 ) -> None:
     """Test permission inheritance from project to issue."""
-    from pm.permissions import Permissions
+    from pm.permissions import ProjectPermissions
 
     admin_user, admin_token = create_initial_admin
     headers = make_auth_headers(admin_token)
@@ -273,7 +273,7 @@ async def test_issue_permissions_inheritance(
     permissions = response.json()['payload']
     # Admin should have all permissions
     assert len(permissions) >= 3
-    assert Permissions.ISSUE_READ in permissions
+    assert ProjectPermissions.ISSUE_READ in permissions
 
     # Grant direct issue permission to user
     response = test_client.post(
@@ -296,7 +296,7 @@ async def test_issue_permissions_inheritance(
     permissions = response.json()['payload']
     # Admin should have all permissions
     assert len(permissions) >= 3
-    assert Permissions.ISSUE_READ in permissions
+    assert ProjectPermissions.ISSUE_READ in permissions
 
 
 @pytest.mark.asyncio
@@ -305,7 +305,7 @@ async def test_issue_permissions_resolve(
     create_initial_admin: tuple[str, str],
 ) -> None:
     """Test permission resolution endpoint."""
-    from pm.permissions import Permissions
+    from pm.permissions import ProjectPermissions
 
     admin_user, admin_token = create_initial_admin
     headers = make_auth_headers(admin_token)
@@ -415,8 +415,8 @@ async def test_issue_permissions_resolve(
     assert_success_response(response)
     permissions = response.json()['payload']
     assert len(permissions) >= 3  # Admin has all permissions
-    assert Permissions.ISSUE_READ in permissions
-    assert Permissions.ISSUE_UPDATE in permissions
+    assert ProjectPermissions.ISSUE_READ in permissions
+    assert ProjectPermissions.ISSUE_UPDATE in permissions
 
     # Grant direct issue permission (different role)
     different_role_payload = {
@@ -454,9 +454,9 @@ async def test_issue_permissions_resolve(
     assert_success_response(response)
     permissions = response.json()['payload']
     assert len(permissions) >= 3  # Admin has all permissions
-    assert Permissions.ISSUE_READ in permissions
-    assert Permissions.ISSUE_UPDATE in permissions
-    assert Permissions.ISSUE_DELETE in permissions
+    assert ProjectPermissions.ISSUE_READ in permissions
+    assert ProjectPermissions.ISSUE_UPDATE in permissions
+    assert ProjectPermissions.ISSUE_DELETE in permissions
 
     # Test that admin permissions are properly resolved
     response = test_client.get(
@@ -466,9 +466,9 @@ async def test_issue_permissions_resolve(
     assert_success_response(response)
     permissions = response.json()['payload']
     assert len(permissions) >= 3  # Admin has all permissions
-    assert Permissions.ISSUE_READ in permissions
-    assert Permissions.ISSUE_UPDATE in permissions
-    assert Permissions.ISSUE_DELETE in permissions
+    assert ProjectPermissions.ISSUE_READ in permissions
+    assert ProjectPermissions.ISSUE_UPDATE in permissions
+    assert ProjectPermissions.ISSUE_DELETE in permissions
 
 
 @pytest.mark.asyncio

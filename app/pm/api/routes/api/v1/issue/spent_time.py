@@ -11,7 +11,7 @@ from pm.api.context import current_user
 from pm.api.utils.router import APIRouter
 from pm.api.views.output import SuccessPayloadOutput
 from pm.api.views.user import UserOutput
-from pm.permissions import PermAnd, Permissions
+from pm.permissions import PermAnd, ProjectPermissions
 
 __all__ = ('router',)
 
@@ -42,7 +42,7 @@ async def get_spent_time(
     if not issue:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, PermAnd(Permissions.ISSUE_READ))
+    user_ctx.validate_issue_permission(issue, PermAnd(ProjectPermissions.ISSUE_READ))
     all_authors = {c.author.id: c.author for c in issue.comments}
     records = [
         IssueSpentTimeRecordOutput(

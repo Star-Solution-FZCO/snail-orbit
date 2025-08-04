@@ -35,12 +35,14 @@ ROLE_PERMISSIONS_BY_CATEGORY = {
         'project:read': 'Read project',
         'project:update': 'Update project',
         'project:delete': 'Delete project',
+        'project:manage_permissions': 'Manage project permissions',
     },
     'Issue': {
         'issue:create': 'Create issue',
         'issue:read': 'Read issue',
         'issue:update': 'Update issue',
         'issue:delete': 'Delete issue',
+        'issue:manage_permissions': 'Manage issue permissions',
     },
     'Comment': {
         'comment:create': 'Create comment',
@@ -66,6 +68,9 @@ EMPTY_ROLE_PERMISSIONS = [
         ],
     }
     for cat, perms in ROLE_PERMISSIONS_BY_CATEGORY.items()
+]
+FULL_ROLE_PERMISSION_CLAIMS = [
+    perm for perms in ROLE_PERMISSIONS_BY_CATEGORY.values() for perm in perms
 ]
 
 ALL_PERMISSIONS = {
@@ -95,6 +100,13 @@ async def _create_project(
     assert response.status_code == 200
     data = response.json()
     assert data['payload']['id']
+    # Admin should have all project permissions
+    assert set(data['payload']['access_claims']) == set(FULL_ROLE_PERMISSION_CLAIMS), (
+        f'Admin should have all permissions. '
+        f'Missing: {set(FULL_ROLE_PERMISSION_CLAIMS) - set(data["payload"]["access_claims"])}, '
+        f'Extra: {set(data["payload"]["access_claims"]) - set(FULL_ROLE_PERMISSION_CLAIMS)}'
+    )
+
     assert data == {
         'success': True,
         'payload': {
@@ -109,6 +121,9 @@ async def _create_project(
             'avatar': None,
             'encryption_settings': None,
             'is_encrypted': False,
+            'access_claims': data['payload'][
+                'access_claims'
+            ],  # Use actual returned permissions (verified above)
         },
     }
     return data['payload']['id']

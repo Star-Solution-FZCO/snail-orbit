@@ -9,7 +9,7 @@ import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
-from pm.permissions import Permissions
+from pm.permissions import ProjectPermissions
 from pm.utils.dateutils import utcnow
 from pm.utils.document import DocumentWithReadOnlyProjection
 
@@ -28,7 +28,7 @@ from .custom_fields import (
 )
 from .group import Group, GroupLinkField
 from .project import PermissionTargetType, Project, ProjectLinkField, ProjectPermission
-from .role import Role, RoleLinkField
+from .role import ProjectRole, ProjectRoleLinkField
 from .tag import Tag, TagLinkField
 from .user import User, UserLinkField
 
@@ -546,9 +546,9 @@ class Issue(DocumentWithReadOnlyProjection):
     @classmethod
     async def update_role_permissions_embedded_links(
         cls,
-        role: Role,
+        role: ProjectRole,
     ) -> None:
-        role_link = RoleLinkField.from_obj(role)
+        role_link = ProjectRoleLinkField.from_obj(role)
         await cls.find(
             {'permissions': {'$elemMatch': {'role.id': role.id}}},
         ).update(
@@ -578,7 +578,7 @@ class Issue(DocumentWithReadOnlyProjection):
         self,
         user: User,
         all_group_ids: set[PydanticObjectId] | None = None,
-    ) -> set[Permissions]:
+    ) -> set[ProjectPermissions]:
         results = set()
         if all_group_ids is None:
             all_group_ids = {gr.id for gr in user.groups}

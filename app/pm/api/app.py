@@ -114,6 +114,43 @@ async def _init_system_groups() -> None:
         await system_admins_group.insert()
 
 
+async def _init_default_roles() -> None:
+    """Initialize default project roles that should always exist."""
+    import pm.models as m
+    from pm.permissions import ProjectPermissions
+
+    existing_project_owner = await m.ProjectRole.find_one(
+        m.ProjectRole.system_role_type == m.SystemRoleType.PROJECT_OWNER
+    )
+    if not existing_project_owner:
+        project_owner_role = m.ProjectRole(
+            name='Project Owner',
+            description='Full access to project and all its content',
+            system_role_type=m.SystemRoleType.PROJECT_OWNER,
+            permissions=[
+                ProjectPermissions.PROJECT_READ,
+                ProjectPermissions.PROJECT_UPDATE,
+                ProjectPermissions.PROJECT_DELETE,
+                ProjectPermissions.PROJECT_MANAGE_PERMISSIONS,
+                ProjectPermissions.ISSUE_CREATE,
+                ProjectPermissions.ISSUE_READ,
+                ProjectPermissions.ISSUE_UPDATE,
+                ProjectPermissions.ISSUE_DELETE,
+                ProjectPermissions.ISSUE_MANAGE_PERMISSIONS,
+                ProjectPermissions.COMMENT_CREATE,
+                ProjectPermissions.COMMENT_READ,
+                ProjectPermissions.COMMENT_UPDATE,
+                ProjectPermissions.COMMENT_DELETE_OWN,
+                ProjectPermissions.COMMENT_DELETE,
+                ProjectPermissions.COMMENT_HIDE,
+                ProjectPermissions.COMMENT_RESTORE,
+                ProjectPermissions.HISTORY_HIDE,
+                ProjectPermissions.HISTORY_RESTORE,
+            ],
+        )
+        await project_owner_role.insert()
+
+
 @app.on_event('startup')
 async def app_init() -> None:
     from pm.db import check_database_version
@@ -128,6 +165,7 @@ async def app_init() -> None:
     init_read_only_projection_models(__beanie_models__)
 
     await _init_system_groups()
+    await _init_default_roles()
 
     # Initialize taskiq broker for task kicking
     await broker.startup()

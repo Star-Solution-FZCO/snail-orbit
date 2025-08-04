@@ -30,7 +30,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import IssueSearchParams
 from pm.api.views.select import SelectParams
-from pm.permissions import PermAnd, Permissions
+from pm.permissions import PermAnd, ProjectPermissions
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
@@ -109,7 +109,7 @@ class IssuePermissionOutput(BaseModel):
     id: UUID
     target_type: m.PermissionTargetType
     target: m.GroupLinkField | m.UserLinkField
-    role: m.RoleLinkField
+    role: m.ProjectRoleLinkField
 
 
 @router.get('/list')
@@ -118,7 +118,7 @@ async def list_issues(
 ) -> BaseListOutput[IssueOutput]:
     user_ctx = current_user()
     q = m.Issue.find(
-        user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
+        user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
     )
 
     pipeline = []
@@ -381,7 +381,7 @@ async def create_issue_from_draft(
 
     user_ctx.validate_project_permission(
         draft.project,
-        PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_CREATE, ProjectPermissions.ISSUE_READ),
     )
 
     if not draft.subject:
@@ -458,7 +458,7 @@ async def get_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
@@ -480,7 +480,7 @@ async def create_issue(
 
     user_ctx.validate_project_permission(
         project,
-        PermAnd(Permissions.ISSUE_CREATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_CREATE, ProjectPermissions.ISSUE_READ),
     )
 
     validated_fields, validation_errors = await validate_custom_fields_values(
@@ -560,7 +560,7 @@ async def update_issue(
 
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     move_to_another_project = (
@@ -582,7 +582,7 @@ async def update_issue(
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Project not found')
         user_ctx.validate_project_permission(
             project,
-            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_CREATE),
+            PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_CREATE),
         )
         obj.project = m.ProjectLinkField.from_obj(project)
         obj.fields = filter_valid_project_fields(obj.fields, project)
@@ -677,7 +677,7 @@ async def delete_issue(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_DELETE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_DELETE, ProjectPermissions.ISSUE_READ),
     )
 
     await obj.delete()
@@ -713,7 +713,7 @@ async def subscribe_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     if user_ctx.user.id not in obj.subscribers:
         obj.subscribers.append(user_ctx.user.id)
@@ -734,7 +734,7 @@ async def unsubscribe_issue(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     if user_ctx.user.id in obj.subscribers:
         obj.subscribers.remove(user_ctx.user.id)
@@ -755,7 +755,7 @@ async def link_issues(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     target_issues: list[m.Issue] = await m.Issue.find(
@@ -764,7 +764,7 @@ async def link_issues(
                 bo.In(m.Issue.id, body.target_issues),
                 bo.In(m.Issue.aliases, body.target_issues),
             ),
-            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
+            user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
         ),
     ).to_list()
 
@@ -774,7 +774,7 @@ async def link_issues(
     for target_issue in target_issues:
         user_ctx.validate_issue_permission(
             target_issue,
-            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
+            PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE),
         )
 
         if obj.id == target_issue.id:
@@ -823,14 +823,14 @@ async def select_linkable_issues(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     q = m.Issue.find(
         bo.And(
             bo.NE(m.Issue.id, obj.id),
             bo.NotIn(m.Issue.id, [il.issue.id for il in obj.interlinks]),
-            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_READ),
-            user_ctx.get_issue_filter_for_permission(Permissions.ISSUE_UPDATE),
+            user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
+            user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_UPDATE),
             bo.Or(
                 bo.RegEx(m.Issue.subject, query.search, 'i'),
                 bo.RegEx(m.Issue.aliases, query.search, 'i'),
@@ -867,7 +867,7 @@ async def update_link(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
@@ -892,7 +892,7 @@ async def update_link(
 
     user_ctx.validate_issue_permission(
         target_obj,
-        PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
+        PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE),
     )
 
     src_il.type = body.type
@@ -920,7 +920,7 @@ async def unlink_issue(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     src_il = next((il for il in obj.interlinks if il.id == interlink_id), None)
@@ -933,7 +933,7 @@ async def unlink_issue(
     if target_obj:
         user_ctx.validate_issue_permission(
             target_obj,
-            PermAnd(Permissions.ISSUE_READ, Permissions.ISSUE_UPDATE),
+            PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE),
         )
         target_il = next(
             (il for il in target_obj.interlinks if il.id == interlink_id),
@@ -972,7 +972,7 @@ async def tag_issue(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
@@ -1013,7 +1013,7 @@ async def untag_issue(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         obj,
-        PermAnd(Permissions.ISSUE_UPDATE, Permissions.ISSUE_READ),
+        PermAnd(ProjectPermissions.ISSUE_UPDATE, ProjectPermissions.ISSUE_READ),
     )
 
     tag: m.Tag | None = await m.Tag.find_one(m.Tag.id == body.tag_id)
@@ -1050,7 +1050,7 @@ async def get_issue_permissions(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     return BaseListOutput.make(
         items=[
@@ -1087,9 +1087,11 @@ async def grant_issue_permission(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_UPDATE)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_UPDATE)
 
-    role: m.Role | None = await m.Role.find_one(m.Role.id == body.role_id)
+    role: m.ProjectRole | None = await m.ProjectRole.find_one(
+        m.ProjectRole.id == body.role_id
+    )
     if not role:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Role not found')
 
@@ -1102,7 +1104,7 @@ async def grant_issue_permission(
         permission = m.ProjectPermission(
             target_type=body.target_type,
             target=m.GroupLinkField.from_obj(target),
-            role=m.RoleLinkField.from_obj(role),
+            role=m.ProjectRoleLinkField.from_obj(role),
         )
     else:
         target: m.User | None = await m.User.find_one(m.User.id == body.target_id)
@@ -1111,7 +1113,7 @@ async def grant_issue_permission(
         permission = m.ProjectPermission(
             target_type=body.target_type,
             target=m.UserLinkField.from_obj(target),
-            role=m.RoleLinkField.from_obj(role),
+            role=m.ProjectRoleLinkField.from_obj(role),
         )
 
     if any(perm == permission for perm in obj.permissions):
@@ -1138,7 +1140,7 @@ async def revoke_issue_permission(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_UPDATE)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_UPDATE)
 
     if not any(perm.id == permission_id for perm in obj.permissions):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
@@ -1163,7 +1165,7 @@ async def resolve_issue_permissions(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, Permissions.ISSUE_READ)
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
     effective_permissions = obj.get_user_permissions(user_ctx.user)
 
@@ -1171,7 +1173,7 @@ async def resolve_issue_permissions(
         project_permissions = user_ctx.permissions.get(obj.project.id, set())
         effective_permissions = effective_permissions.union(project_permissions)
 
-    result = {perm.value: perm in effective_permissions for perm in Permissions}
+    result = {perm.value: perm in effective_permissions for perm in ProjectPermissions}
 
     return SuccessPayloadOutput(payload=result)
 

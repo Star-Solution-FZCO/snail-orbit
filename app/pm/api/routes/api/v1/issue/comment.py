@@ -20,7 +20,7 @@ from pm.api.views.error_responses import (
 from pm.api.views.issue import IssueAttachmentBody, IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
-from pm.permissions import PermAnd, Permissions, PermOr
+from pm.permissions import PermAnd, PermOr, ProjectPermissions
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
 
@@ -57,7 +57,7 @@ async def list_comments(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.COMMENT_READ)
 
     items = sorted(
         [
@@ -86,7 +86,7 @@ async def get_comment(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.COMMENT_READ)
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
@@ -107,7 +107,7 @@ async def create_comment(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         issue,
-        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_CREATE),
+        PermAnd(ProjectPermissions.COMMENT_READ, ProjectPermissions.COMMENT_CREATE),
     )
 
     comment = m.IssueComment(
@@ -144,7 +144,7 @@ async def update_comment(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         issue,
-        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_UPDATE),
+        PermAnd(ProjectPermissions.COMMENT_READ, ProjectPermissions.COMMENT_UPDATE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
@@ -196,17 +196,19 @@ async def delete_comment(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(issue, Permissions.COMMENT_READ)
+    user_ctx.validate_issue_permission(issue, ProjectPermissions.COMMENT_READ)
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
 
     if comment.author.id != user_ctx.user.id:
-        user_ctx.validate_issue_permission(issue, Permissions.COMMENT_DELETE)
+        user_ctx.validate_issue_permission(issue, ProjectPermissions.COMMENT_DELETE)
     user_ctx.validate_issue_permission(
         issue,
-        PermOr(Permissions.COMMENT_DELETE_OWN, Permissions.COMMENT_DELETE),
+        PermOr(
+            ProjectPermissions.COMMENT_DELETE_OWN, ProjectPermissions.COMMENT_DELETE
+        ),
     )
 
     issue.comments = [c for c in issue.comments if c.id != comment_id]
@@ -226,7 +228,7 @@ async def hide_comment(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         issue,
-        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_HIDE),
+        PermAnd(ProjectPermissions.COMMENT_READ, ProjectPermissions.COMMENT_HIDE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)
@@ -252,7 +254,7 @@ async def restore_comment(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(
         issue,
-        PermAnd(Permissions.COMMENT_READ, Permissions.COMMENT_RESTORE),
+        PermAnd(ProjectPermissions.COMMENT_READ, ProjectPermissions.COMMENT_RESTORE),
     )
 
     comment = next((c for c in issue.comments if c.id == comment_id), None)

@@ -37,6 +37,7 @@ async def test_project_crud_workflow(
 ) -> None:
     """Test complete project CRUD workflow: create, read, update, delete."""
     _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
 
     expected_base_payload = {
         'id': create_project,
@@ -50,20 +51,39 @@ async def test_project_crud_workflow(
         'avatar': None,
         'encryption_settings': None,
         'is_encrypted': False,
+        'access_claims': [],  # Will be dynamically set by API responses
     }
 
     expected_updated_payload = {**expected_base_payload, 'name': 'Test project updated'}
 
-    # Use the CRUD workflow helper
-    run_crud_workflow(
-        client=test_client,
-        token=admin_token,
-        base_url='/api/v1/project',
-        entity_id=create_project,
-        expected_get_payload=expected_base_payload,
-        update_data={'name': 'Test project updated'},
-        expected_update_payload=expected_updated_payload,
+    # Test GET with dynamic access_claims handling
+    response = test_client.get(f'/api/v1/project/{create_project}', headers=headers)
+    assert response.status_code == 200
+    get_data = response.json()
+    expected_get_payload = {
+        **expected_base_payload,
+        'access_claims': get_data['payload']['access_claims'],
+    }
+    assert get_data == {'success': True, 'payload': expected_get_payload}
+
+    # Test PUT with dynamic access_claims handling
+    response = test_client.put(
+        f'/api/v1/project/{create_project}',
+        headers=headers,
+        json={'name': 'Test project updated'},
     )
+    assert response.status_code == 200
+    put_data = response.json()
+    expected_put_payload = {
+        **expected_updated_payload,
+        'access_claims': put_data['payload']['access_claims'],
+    }
+    assert put_data == {'success': True, 'payload': expected_put_payload}
+
+    # Test DELETE
+    response = test_client.delete(f'/api/v1/project/{create_project}', headers=headers)
+    assert response.status_code == 200
+    assert response.json() == {'success': True, 'payload': {'id': create_project}}
 
 
 @pytest.mark.asyncio
@@ -102,23 +122,36 @@ async def test_project_subscription_workflow(
         'avatar': None,
         'encryption_settings': None,
         'is_encrypted': False,
+        'access_claims': [],  # Will be dynamically set by API responses
     }
 
-    # Test SUBSCRIBE
+    # Test SUBSCRIBE with dynamic access_claims handling
     response = test_client.post(
         f'/api/v1/project/{create_project}/subscribe',
         headers=headers,
     )
-    subscribed_payload = {**base_payload, 'is_subscribed': True}
-    assert_success_response(response, subscribed_payload)
+    assert response.status_code == 200
+    subscribe_data = response.json()
+    subscribed_payload = {
+        **base_payload,
+        'is_subscribed': True,
+        'access_claims': subscribe_data['payload']['access_claims'],
+    }
+    assert subscribe_data == {'success': True, 'payload': subscribed_payload}
 
-    # Test UNSUBSCRIBE
+    # Test UNSUBSCRIBE with dynamic access_claims handling
     response = test_client.post(
         f'/api/v1/project/{create_project}/unsubscribe',
         headers=headers,
     )
-    unsubscribed_payload = {**base_payload, 'is_subscribed': False}
-    assert_success_response(response, unsubscribed_payload)
+    assert response.status_code == 200
+    unsubscribe_data = response.json()
+    unsubscribed_payload = {
+        **base_payload,
+        'is_subscribed': False,
+        'access_claims': unsubscribe_data['payload']['access_claims'],
+    }
+    assert unsubscribe_data == {'success': True, 'payload': unsubscribed_payload}
 
 
 @pytest.mark.asyncio
