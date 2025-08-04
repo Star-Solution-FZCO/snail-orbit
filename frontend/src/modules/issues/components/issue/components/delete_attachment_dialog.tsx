@@ -16,6 +16,7 @@ interface IDeleteAttachmentDialogProps {
     filename: string;
     onClose: () => void;
     onDelete: () => void;
+    deleteMode?: "single" | "multi" | "all";
     loading?: boolean;
 }
 
@@ -24,6 +25,7 @@ const DeleteAttachmentDialog: FC<IDeleteAttachmentDialogProps> = ({
     filename,
     onClose,
     onDelete,
+    deleteMode = "single",
     loading,
 }) => {
     const { t } = useTranslation();
@@ -44,7 +46,18 @@ const DeleteAttachmentDialog: FC<IDeleteAttachmentDialogProps> = ({
 
             <DialogContent>
                 <DialogContentText>
-                    {t("issues.attachments.delete.confirmation")} "{filename}"?
+                    {deleteMode === "single" && (
+                        <>
+                            {t("issues.attachments.delete.confirmation")} "
+                            {filename}"?
+                        </>
+                    )}
+                    {deleteMode === "multi" && (
+                        <>{t("issues.attachments.delete.confirmationMulti")}</>
+                    )}
+                    {deleteMode === "all" && (
+                        <>{t("issues.attachments.delete.confirmationAll")}</>
+                    )}
                 </DialogContentText>
             </DialogContent>
 

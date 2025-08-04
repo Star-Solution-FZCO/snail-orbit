@@ -1,6 +1,6 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, Tooltip, Typography } from "@mui/material";
+import { Box, Checkbox, Tooltip, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "shared/model";
@@ -15,7 +15,10 @@ type BaseAttachmentCardProps = {
     onClick?: () => void;
     onDownload?: () => void;
     onDelete: () => void;
+    onSelect?: () => void;
     canDelete?: boolean;
+    selectionEnabled?: boolean;
+    selected?: boolean;
 };
 
 const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
@@ -25,7 +28,10 @@ const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
     onClick,
     onDownload,
     onDelete,
+    onSelect,
     canDelete = true,
+    selectionEnabled = false,
+    selected = false,
 }) => {
     const extension = filename.split(".").pop();
 
@@ -72,9 +78,21 @@ const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
                         fontSize="small"
                     />
                 )}
+
+                <Box flex={1} />
+
+                {selectionEnabled && (
+                    <Checkbox
+                        sx={{ flexShrink: 0, p: 0, borderRadius: 1 }}
+                        checked={selected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={onSelect}
+                        size="small"
+                    />
+                )}
             </>
         );
-    }, [onDownload, canDelete, onDelete]);
+    }, [onDownload, canDelete, onDelete, onSelect, selectionEnabled, selected]);
 
     return (
         <Tooltip title={filename} placement="bottom-start">
@@ -226,12 +244,18 @@ interface IAttachmentCardProps {
     attachment: IssueAttachmentT;
     onDelete: () => void;
     onDownload: (attachment: IssueAttachmentT) => void;
+    onSelect: (id: string) => void;
+    selectionEnabled: boolean;
+    selected: boolean;
 }
 
 const AttachmentCard: FC<IAttachmentCardProps> = ({
     attachment,
     onDelete,
     onDownload,
+    onSelect,
+    selectionEnabled,
+    selected,
 }) => {
     const user = useAppSelector((state) => state.profile.user);
 
@@ -266,7 +290,10 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
             onClick={handleClick}
             onDownload={handleDownload}
             onDelete={onDelete}
+            onSelect={() => onSelect(attachment.id)}
             canDelete={user?.id === attachment.author.id}
+            selectionEnabled={selectionEnabled}
+            selected={selected}
         />
     );
 };

@@ -1,7 +1,7 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { Box, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Checkbox, IconButton, Stack, Typography } from "@mui/material";
 import dayjs from "dayjs";
 import type { FC } from "react";
 import { useAppSelector } from "shared/model";
@@ -12,14 +12,20 @@ import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 
 interface IAttachmentListItemProps {
     attachment: IssueAttachmentT;
+    onSelect: (id: string) => void;
     onDelete: () => void;
     onDownload: (attachment: IssueAttachmentT) => void;
+    selectionEnabled: boolean;
+    selected: boolean;
 }
 
 export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
     attachment,
+    onSelect,
     onDelete,
     onDownload,
+    selectionEnabled = false,
+    selected = false,
 }) => {
     const { open } = useLightbox();
 
@@ -34,12 +40,22 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
     return (
         <Stack
             direction="row"
+            alignItems="center"
             p={1}
             border={1}
             borderColor="divider"
             borderRadius={1}
-            gap={2}
+            gap={1}
         >
+            {selectionEnabled && (
+                <Checkbox
+                    sx={{ flexShrink: 0 }}
+                    checked={selected}
+                    onChange={() => onSelect(attachment.id)}
+                    size="small"
+                />
+            )}
+
             {isImage ? (
                 <Box
                     component="img"

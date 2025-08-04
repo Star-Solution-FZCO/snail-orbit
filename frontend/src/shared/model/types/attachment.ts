@@ -13,5 +13,4 @@ export type AttachmentT = {
 export type SelectedAttachmentT = {
     id: string | number;
     filename: string;
-    type: "browser" | "server";
 };

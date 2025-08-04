@@ -28,17 +28,19 @@ export const DraftAttachments = (props: DraftAttachmentsProps) => {
         close: closeLB,
     } = useLightbox();
 
-    const handleDelete = async (attachmentToDelete: IssueAttachmentT) => {
+    const handleDelete = async (attachmentsToDelete: IssueAttachmentT[]) => {
+        const attachmentIdsToDelete = attachmentsToDelete.map((a) => a.id);
+
+        const remainingAttachments = attachments.filter(
+            (attachment) => !attachmentIdsToDelete.includes(attachment.id),
+        );
+
         onUpdateCache({
-            attachments: attachments.filter(
-                (attachment) => attachment.id !== attachmentToDelete.id,
-            ),
+            attachments: remainingAttachments,
         });
 
         await onUpdateDraft({
-            attachments: attachments.filter(
-                (attachment) => attachment.id !== attachmentToDelete.id,
-            ),
+            attachments: remainingAttachments,
         });
     };
 

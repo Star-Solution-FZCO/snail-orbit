@@ -1,12 +1,20 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
+import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GridViewIcon from "@mui/icons-material/GridView";
+import HighlightAltIcon from "@mui/icons-material/HighlightAlt";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import ListIcon from "@mui/icons-material/List";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import {
     Box,
     Collapse,
+    Divider,
     IconButton,
+    Menu,
+    MenuItem,
     Stack,
+    styled,
     Tooltip,
     Typography,
 } from "@mui/material";
@@ -22,9 +30,15 @@ import type {
 } from "shared/model/types";
 import { useLSState } from "shared/utils/helpers/local-storage";
 import { initialSelectedAttachment } from "../../../utils";
-import { AttachmentCard, BrowserFileCard } from "./attachment_cards";
+import { AttachmentCard } from "./attachment_cards";
 import { AttachmentListItem } from "./attachment_list_item";
 import { DeleteAttachmentDialog } from "./delete_attachment_dialog";
+
+const CustomMenuItem = styled(MenuItem)(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+}));
 
 type AttachmentsListProps = {
     attachments: IssueAttachmentT[];
@@ -32,14 +46,14 @@ type AttachmentsListProps = {
     onUpload: (
         attachment: IssueAttachmentBodyT[],
     ) => Promise<unknown> | unknown;
-    onDelete: (attachment: IssueAttachmentT) => Promise<unknown> | unknown;
+    onDelete: (attachments: IssueAttachmentT[]) => Promise<unknown> | unknown;
 };
 
 const AttachmentsList: FC<AttachmentsListProps> = ({
     projectId,
     attachments,
-    onDelete,
     onUpload,
+    onDelete,
 }) => {
     const { t } = useTranslation();
 
@@ -51,11 +65,19 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
         "ISSUES_ATTACHMENTS_DISPLAY_MODE",
         "card",
     );
-    const [files, setFiles] = useState<File[]>([]);
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
     const [selectedAttachment, setSelectedAttachment] =
         useState<SelectedAttachmentT>(initialSelectedAttachment);
+    const [selectedAttachmentIdList, setSelectedAttachmentIdList] = useState<
+        string[]
+    >([]);
+    const [selectionEnabled, setSelectionEnabled] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [deleteMode, setDeleteMode] = useState<"single" | "multi" | "all">(
+        "single",
+    );
+
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
@@ -67,6 +89,33 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
         },
         [uploadAttachment, onUpload],
     );
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+    });
+
+    const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+    };
+
+    const handleToggleSelection = () => {
+        if (selectionEnabled) {
+            setSelectedAttachmentIdList([]);
+        }
+        setSelectionEnabled((prev) => !prev);
+        handleCloseMenu();
+    };
+
+    const handleToggleSelectAttachment = (id: string) => {
+        setSelectedAttachmentIdList((prev) =>
+            prev.includes(id)
+                ? prev.filter((selectedId) => selectedId !== id)
+                : [...prev, id],
+        );
+    };
 
     const handlePaste = useCallback(
         async (event: ClipboardEvent) => {
@@ -99,41 +148,51 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
         [uploadAttachment, onUpload],
     );
 
-    const handleClickDeleteBrowserFile = (index: number, filename: string) => {
-        setSelectedAttachment({ id: index, filename, type: "browser" });
-        setOpenDeleteDialog(true);
-    };
-
     const handleClickDeleteIssueAttachment = (id: string, filename: string) => {
-        setSelectedAttachment({ id, filename, type: "server" });
+        setDeleteMode("single");
+        setSelectedAttachment({ id, filename });
         setOpenDeleteDialog(true);
     };
 
-    const deleteBrowserFile = () => {
-        if (!selectedAttachment) return;
-        if (selectedAttachment.type !== "browser") return;
+    const deleteAttachments = () => {
+        let attachmentsToDelete: IssueAttachmentT[] = [];
 
-        setFiles((prevFiles) =>
-            prevFiles.filter((_, i) => i !== selectedAttachment.id),
-        );
+        if (deleteMode === "single") {
+            if (!selectedAttachment.id) return;
+
+            const targetAttachment = attachments.find(
+                (el) => el.id === selectedAttachment.id,
+            );
+            if (targetAttachment) attachmentsToDelete = [targetAttachment];
+        } else if (deleteMode === "multi") {
+            attachmentsToDelete = attachments.filter((attachment) =>
+                selectedAttachmentIdList.includes(attachment.id),
+            );
+        } else if (deleteMode === "all") {
+            attachmentsToDelete = [...attachments];
+        }
+
+        if (attachmentsToDelete.length > 0) {
+            onDelete(attachmentsToDelete);
+        }
+
         setOpenDeleteDialog(false);
+        setSelectedAttachmentIdList([]);
+        setSelectionEnabled(false);
     };
 
-    const deleteAttachment = () => {
-        if (!selectedAttachment) return;
-        if (selectedAttachment.type !== "server") return;
-
-        const targetAttachment = attachments.find(
-            (el) => el.id === selectedAttachment.id,
-        );
-        if (targetAttachment) onDelete(targetAttachment);
-
-        setOpenDeleteDialog(false);
+    const handleClickDeleteSelectedAttachments = () => {
+        setDeleteMode("multi");
+        setSelectedAttachment({ id: "", filename: "" });
+        setOpenDeleteDialog(true);
     };
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-    });
+    const handleClickDeleteAllIssueAttachments = () => {
+        setDeleteMode("all");
+        setSelectedAttachment({ id: "", filename: "" });
+        setOpenDeleteDialog(true);
+        handleCloseMenu();
+    };
 
     useEffect(() => {
         window.addEventListener("paste", handlePaste);
@@ -143,7 +202,7 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
         };
     }, [handlePaste]);
 
-    const attachmentsExists = files.length > 0 || attachments.length > 0;
+    const attachmentsExists = attachments.length > 0;
 
     return (
         <Box display="flex" flexDirection="column">
@@ -178,33 +237,95 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
                         <Typography fontWeight="bold">
                             {t("issues.form.attachments.title")}{" "}
                             <Typography component="span" color="text.secondary">
-                                ({files.length + attachments.length})
+                                ({attachments.length})
                             </Typography>
                         </Typography>
                     </Box>
 
-                    <Tooltip
-                        title={t(
-                            displayMode === "card"
-                                ? "issues.form.attachments.listView"
-                                : "issues.form.attachments.cardView",
+                    <Stack direction="row" alignItems="center" gap={1}>
+                        {selectedAttachmentIdList.length > 0 && (
+                            <Tooltip
+                                title={t("issues.attachments.deleteSelected")}
+                            >
+                                <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={
+                                        handleClickDeleteSelectedAttachments
+                                    }
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
                         )}
+
+                        <IconButton onClick={handleClickMenu} size="small">
+                            <MoreHorizIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+
+                    <Menu
+                        open={Boolean(anchorEl)}
+                        anchorEl={anchorEl}
+                        onClose={handleCloseMenu}
+                        anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right",
+                        }}
+                        transformOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
+                        }}
                     >
-                        <IconButton
-                            onClick={() =>
+                        <CustomMenuItem
+                            onClick={() => {
                                 setDisplayMode(
                                     displayMode === "card" ? "list" : "card",
-                                )
-                            }
-                            size="small"
+                                );
+                                handleCloseMenu();
+                            }}
                         >
                             {displayMode === "card" ? (
                                 <ListIcon fontSize="small" />
                             ) : (
                                 <GridViewIcon fontSize="small" />
                             )}
-                        </IconButton>
-                    </Tooltip>
+
+                            <Typography>
+                                {t(
+                                    displayMode === "card"
+                                        ? "issues.form.attachments.listView"
+                                        : "issues.form.attachments.thumbnailView",
+                                )}
+                            </Typography>
+                        </CustomMenuItem>
+
+                        <CustomMenuItem onClick={handleToggleSelection}>
+                            {selectionEnabled ? (
+                                <HighlightOffIcon fontSize="small" />
+                            ) : (
+                                <HighlightAltIcon fontSize="small" />
+                            )}
+
+                            <Typography>
+                                {selectionEnabled
+                                    ? t("issues.attachments.disableSelection")
+                                    : t("issues.attachments.enableSelection")}
+                            </Typography>
+                        </CustomMenuItem>
+
+                        <Divider />
+
+                        <CustomMenuItem
+                            onClick={handleClickDeleteAllIssueAttachments}
+                        >
+                            <DeleteIcon fontSize="small" />
+
+                            <Typography>
+                                {t("issues.attachments.deleteAll")}
+                            </Typography>
+                        </CustomMenuItem>
+                    </Menu>
                 </Box>
             )}
 
@@ -249,19 +370,11 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
                                         )
                                     }
                                     onDownload={downloadAttachment}
-                                />
-                            ))}
-
-                            {files.map((file, index) => (
-                                <BrowserFileCard
-                                    key={`${file.name}-${index}`}
-                                    file={file}
-                                    onDelete={() =>
-                                        handleClickDeleteBrowserFile(
-                                            index,
-                                            file.name,
-                                        )
-                                    }
+                                    onSelect={handleToggleSelectAttachment}
+                                    selectionEnabled={selectionEnabled}
+                                    selected={selectedAttachmentIdList.includes(
+                                        attachment.id,
+                                    )}
                                 />
                             ))}
                         </Box>
@@ -273,6 +386,7 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
                                 <AttachmentListItem
                                     key={attachment.id}
                                     attachment={attachment}
+                                    onSelect={handleToggleSelectAttachment}
                                     onDelete={() =>
                                         handleClickDeleteIssueAttachment(
                                             attachment.id,
@@ -280,6 +394,10 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
                                         )
                                     }
                                     onDownload={downloadAttachment}
+                                    selectionEnabled={selectionEnabled}
+                                    selected={selectedAttachmentIdList.includes(
+                                        attachment.id,
+                                    )}
                                 />
                             ))}
                         </Stack>
@@ -291,11 +409,8 @@ const AttachmentsList: FC<AttachmentsListProps> = ({
                 open={openDeleteDialog}
                 filename={selectedAttachment.filename}
                 onClose={() => setOpenDeleteDialog(false)}
-                onDelete={
-                    selectedAttachment.type === "browser"
-                        ? deleteBrowserFile
-                        : deleteAttachment
-                }
+                onDelete={deleteAttachments}
+                deleteMode={deleteMode}
             />
         </Box>
     );
