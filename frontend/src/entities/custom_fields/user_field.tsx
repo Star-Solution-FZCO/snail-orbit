@@ -1,6 +1,6 @@
 import type { ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
-import { customFieldsApi } from "shared/model";
+import { customFieldsApi, userApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
 import { useListQueryParams } from "shared/utils";
@@ -13,6 +13,7 @@ type UserFieldProps = {
     label: string;
     multiple?: boolean;
     id: string;
+    type?: "field" | "users";
     rightAdornment?: ReactNode;
     error?: string;
 };
@@ -25,20 +26,30 @@ export const UserField = ({
     onChange,
     rightAdornment,
     error,
+    type = "field",
 }: UserFieldProps) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
-    const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+    const [
+        fetchOptions,
+        { data: customFieldOptions, isLoading: isCustomFieldOptionsLoading },
+    ] = customFieldsApi.useLazyListSelectOptionsQuery();
+    const [
+        fetchUsers,
+        { data: userOptions, isLoading: isUsersOptionsLoading },
+    ] = userApi.useLazyListSelectUserQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id, ...listQueryParams });
+        if (type === "field") fetchOptions({ id, ...listQueryParams });
+        else fetchUsers(listQueryParams);
     };
 
     const options = useMemo(() => {
-        return (data?.payload.items || []) as BasicUserT[];
-    }, [data?.payload.items]);
+        return (customFieldOptions?.payload.items ||
+            userOptions?.payload.items ||
+            []) as BasicUserT[];
+    }, [customFieldOptions?.payload.items, userOptions?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent,
@@ -64,7 +75,7 @@ export const UserField = ({
 
     return (
         <SelectField
-            loading={isLoading}
+            loading={isCustomFieldOptionsLoading || isUsersOptionsLoading}
             options={options}
             value={value}
             label={label}

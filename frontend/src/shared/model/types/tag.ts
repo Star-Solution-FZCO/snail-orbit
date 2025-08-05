@@ -1,17 +1,7 @@
-import type { BasicUserT } from "./user";
+import type { TagLinkOutput, TagOutput, TagUpdate } from "./backend-schema.gen";
 
-export type TagBaseT = {
-    name: string;
-    description: string;
-    ai_description: string;
-    color: string;
-    untag_on_resolve: boolean;
-    untag_on_close: boolean;
-};
+export type TagT = TagOutput;
 
-export type TagT = {
-    id: string;
-    created_by: BasicUserT;
-} & TagBaseT;
+export type TagDto = TagUpdate;
 
-export type TagShortT = Pick<TagT, "id" | "name" | "color">;
+export type TagLinkT = TagLinkOutput;

@@ -34,7 +34,7 @@ export const InputField = forwardRef(
             <>
                 <FieldCard
                     label={label}
-                    value={value ?? "?"}
+                    value={value || "?"}
                     rightAdornment={rightAdornment}
                     orientation="vertical"
                     onClick={(e) => setAnchorEl(e.currentTarget)}

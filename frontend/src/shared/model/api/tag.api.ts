@@ -2,7 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
     ListQueryParams,
     ListResponse,
-    TagBaseT,
+    TagDto,
     TagT,
 } from "shared/model/types";
 import { type ApiResponse } from "shared/model/types";
@@ -34,24 +34,23 @@ export const tagApi = createApi({
                 return tags;
             },
         }),
-        createTag: build.mutation<ApiResponse<TagT>, TagBaseT>({
+        createTag: build.mutation<ApiResponse<TagT>, TagDto>({
             query: (body) => ({ url: "tag/", method: "POST", body }),
             invalidatesTags: [{ type: "Tags", id: "LIST" }],
         }),
-        updateTag: build.mutation<
-            ApiResponse<TagT>,
-            TagBaseT & Pick<TagT, "id">
-        >({
-            query: ({ id, ...body }) => ({
-                url: `tag/${id}`,
-                method: "PUT",
-                body,
-            }),
-            invalidatesTags: [{ type: "Tags", id: "LIST" }],
-            async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                await queryFulfilled;
-                dispatch(issueApi.util.invalidateTags(["Issues"]));
+        updateTag: build.mutation<ApiResponse<TagT>, TagDto & Pick<TagT, "id">>(
+            {
+                query: ({ id, ...body }) => ({
+                    url: `tag/${id}`,
+                    method: "PUT",
+                    body,
+                }),
+                invalidatesTags: [{ type: "Tags", id: "LIST" }],
+                async onQueryStarted(_, { dispatch, queryFulfilled }) {
+                    await queryFulfilled;
+                    dispatch(issueApi.util.invalidateTags(["Issues"]));
+                },
             },
-        }),
+        ),
     }),
 });

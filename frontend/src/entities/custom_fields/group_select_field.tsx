@@ -1,51 +1,45 @@
-import type { FC, ReactNode, SyntheticEvent } from "react";
-import { useMemo } from "react";
+import { type ReactNode, type SyntheticEvent, useMemo } from "react";
 import { customFieldsApi } from "shared/model";
-import type { OwnedFieldValueT, OwnedOptionT } from "shared/model/types";
+import type { EnumOptionT } from "shared/model/types";
+import type { ShortOptionOutput } from "shared/model/types/backend-schema.gen";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
 import { cardLabelGetter, getOptionColorAdornment } from "./utils";
 
-type OwnedFieldProps = {
-    value?: OwnedFieldValueT | OwnedFieldValueT[];
-    onChange: (value: OwnedFieldValueT | OwnedFieldValueT[]) => void;
+type GroupSelectFieldProps = {
+    value?: ShortOptionOutput | ShortOptionOutput[];
+    onChange: (value: ShortOptionOutput | ShortOptionOutput[]) => void;
     label: string;
-    id: string;
+    gid: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
     error?: string;
 };
 
-export const OwnedField: FC<OwnedFieldProps> = ({
-    value,
-    onChange,
-    label,
-    id,
-    multiple,
-    rightAdornment,
-    error,
-}) => {
+export const GroupSelectField = (props: GroupSelectFieldProps) => {
+    const { gid, label, multiple, rightAdornment, error, value, onChange } =
+        props;
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
 
     const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+        customFieldsApi.useLazyListGroupSelectOptionsQuery();
 
     const handleOpened = () => {
-        fetchOptions({ id: id, ...listQueryParams });
+        fetchOptions({ gid: gid, ...listQueryParams });
     };
 
     const items = useMemo(() => {
-        return ((data?.payload.items || []) as OwnedOptionT[]).map(
+        return ((data?.payload.items || []) as EnumOptionT[]).map(
             ({ uuid, ...rest }) => ({ ...rest, id: uuid }),
         );
     }, [data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent,
-        value: OwnedFieldValueT | OwnedFieldValueT[] | null,
+        value: ShortOptionOutput | ShortOptionOutput[] | null,
     ) => {
         if (!value) return undefined;
         onChange?.(value);
@@ -66,7 +60,7 @@ export const OwnedField: FC<OwnedFieldProps> = ({
     }, [value, rightAdornment]);
 
     return (
-        <SelectField<OwnedFieldValueT, typeof multiple, true>
+        <SelectField<ShortOptionOutput, typeof multiple, true>
             loading={isLoading}
             options={items}
             value={value}
@@ -74,7 +68,7 @@ export const OwnedField: FC<OwnedFieldProps> = ({
             onChange={handleChange}
             label={label}
             onOpened={handleOpened}
-            id={id}
+            id={gid}
             multiple={multiple}
             getOptionRightAdornment={getOptionColorAdornment}
             getOptionLabel={(el) => el.value}

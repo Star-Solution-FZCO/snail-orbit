@@ -1,19 +1,17 @@
-import DeleteIcon from "@mui/icons-material/Delete";
-import {
-    Box,
-    CircularProgress,
-    IconButton,
-    Stack,
-    Typography,
-} from "@mui/material";
-import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
-import type { FC, SyntheticEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Box, CircularProgress, Stack, Typography } from "@mui/material";
+import type { FC } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { customFieldsApi, issueApi } from "shared/model";
-import { fieldToFieldValue } from "shared/model/mappers/issue";
-import type { CustomFieldT, CustomFieldWithValueT } from "shared/model/types";
-import { AddCustomFieldButton } from "./add_custom_field_button";
+import { issueApi } from "shared/model";
+import type {
+    QueryBuilderDataAvailableFieldT,
+    QueryBuilderDataFilterT,
+    QueryBuilderDto,
+} from "shared/model/types";
+import { AddFieldButton } from "./add_field_button";
+import { QueryBuilderFieldsParser } from "./query_builder_fields_parser";
+import { getDefaultValueForField } from "./utils";
+import { getOptionId, isSameOption } from "./utils/is-same-option";
 
 type QueryBuilderProps = {
     onChangeQuery?: (queryString: string) => void;
@@ -21,19 +19,58 @@ type QueryBuilderProps = {
 };
 
 export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
+    const { onChangeQuery, initialQuery = "" } = props;
     const { t } = useTranslation();
 
-    const { data, isLoading } = customFieldsApi.useListCustomFieldGroupsQuery();
-
-    const [filterQueryBuilder] = issueApi.useLazyFilterQueryBuilderQuery();
-
-    useEffect(() => {
-        filterQueryBuilder({ query: "" }).unwrap().then(console.log);
-    }, []);
+    const [filterQueryBuilder, { data: queryBuilderData, isLoading }] =
+        issueApi.useLazyFilterQueryBuilderQuery();
 
     const availableFields = useMemo(() => {
-        return data?.payload.items.flatMap((el) => el.fields as CustomFieldT[]);
-    }, [data]);
+        return queryBuilderData?.payload.available_fields || [];
+    }, [queryBuilderData]);
+
+    const activeFilters = useMemo(() => {
+        return queryBuilderData?.payload.filters || [];
+    }, [queryBuilderData]);
+
+    useEffect(() => {
+        if (initialQuery !== queryBuilderData?.payload.query)
+            filterQueryBuilder({ query: initialQuery });
+    }, [filterQueryBuilder, initialQuery, queryBuilderData]);
+
+    const requestNewQuery = useCallback(
+        (filters: QueryBuilderDto["filters"]) => {
+            filterQueryBuilder({ filters })
+                .unwrap()
+                .then((res) => {
+                    onChangeQuery?.(res.payload.query);
+                });
+        },
+        [filterQueryBuilder, onChangeQuery],
+    );
+
+    const handleNewFieldSelected = useCallback(
+        (field: QueryBuilderDataAvailableFieldT) => {
+            const newFilters: QueryBuilderDto["filters"] = [...activeFilters];
+            newFilters.push(getDefaultValueForField(field));
+            requestNewQuery(newFilters);
+        },
+        [activeFilters, requestNewQuery],
+    );
+
+    const handleFieldValueChanged = useCallback(
+        (filter: QueryBuilderDataFilterT, value: string | number | boolean) => {
+            const newFilters: QueryBuilderDto["filters"] = [
+                ...activeFilters.filter((el) => !isSameOption(el, filter)),
+            ];
+            const newFilter = { ...filter, value };
+            newFilters.push(newFilter);
+            requestNewQuery(newFilters);
+        },
+        [activeFilters, requestNewQuery],
+    );
+
+    console.log(queryBuilderData);
 
     return (
         <Stack direction="column" gap={2} px={1} height="100%">
@@ -57,159 +94,24 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
                     )}
                 </Box>
             ) : (
-                <QueryBuilderContent
-                    {...props}
-                    availableFields={availableFields}
-                />
+                <>
+                    <AddFieldButton
+                        availableFields={availableFields}
+                        loading={isLoading}
+                        onSelected={handleNewFieldSelected}
+                    />
+
+                    <Stack>
+                        {activeFilters.map((filter) => (
+                            <QueryBuilderFieldsParser
+                                filter={filter}
+                                onChange={handleFieldValueChanged}
+                                key={getOptionId(filter)}
+                            />
+                        ))}
+                    </Stack>
+                </>
             )}
         </Stack>
-    );
-};
-
-type QueryBuilderContentProps = {
-    availableFields: CustomFieldT[];
-} & QueryBuilderProps;
-
-const QueryBuilderContent: FC<QueryBuilderContentProps> = ({
-    onChangeQuery,
-    initialQuery,
-    availableFields,
-}) => {
-    const stackRef = useRef<HTMLDivElement>(null);
-
-    const [newField, setNewField] = useState<CustomFieldWithValueT | undefined>(
-        undefined,
-    );
-
-    const [buildQuery] = issueApi.useLazyFilterBuildQueryStringQuery();
-    const [parseQuery] = issueApi.useLazyFilterParseQueryStringQuery();
-
-    const [selectedFields, setSelectedFields] = useState<
-        Record<string, CustomFieldWithValueT>
-    >({});
-
-    const syncQuery = useCallback(
-        (query: string) => {
-            if (!query) return setSelectedFields({});
-            parseQuery({ query })
-                .unwrap()
-                .then((res) => {
-                    const fieldValueMap = new Map(
-                        res.payload.filters.map((el) => [
-                            el.field.name,
-                            el.value,
-                        ]),
-                    );
-                    const presentedFields = availableFields
-                        .filter((el) => fieldValueMap.has(el.name))
-                        .map(
-                            (el) =>
-                                ({
-                                    ...el,
-                                    value: fieldValueMap.get(el.name),
-                                }) as CustomFieldWithValueT,
-                        );
-
-                    setSelectedFields(
-                        Object.fromEntries(
-                            presentedFields.map((el) => [el.name, el]),
-                        ),
-                    );
-                });
-        },
-        [availableFields, parseQuery],
-    );
-
-    useEffect(() => {
-        if (initialQuery) syncQuery(initialQuery);
-    }, []); // Intentionally left blank
-
-    useEffect(() => {
-        if (newField && selectedFields[newField.name] && stackRef.current) {
-            const element = stackRef.current.querySelector(
-                `[data-field-card-id="${newField.id}"]`,
-            );
-            setNewField(undefined);
-            if (
-                element &&
-                "click" in element &&
-                typeof element.click === "function"
-            )
-                element.click();
-        }
-    }, [selectedFields, newField]);
-
-    const availableToAddFields = useMemo(() => {
-        if (!availableFields) return [];
-        return availableFields.filter(
-            (field) => selectedFields[field.name] === undefined,
-        );
-    }, [availableFields, selectedFields]);
-
-    const handleDeleteField = useCallback((e: SyntheticEvent, name: string) => {
-        e.stopPropagation();
-        e.preventDefault();
-        setSelectedFields((fields) => {
-            const copy = { ...fields };
-            delete copy[name];
-            return copy;
-        });
-    }, []);
-
-    const handleAddField = useCallback(
-        (field: CustomFieldT) => {
-            const addedField: CustomFieldWithValueT = { ...field, value: null };
-            setSelectedFields((prev) => ({
-                ...prev,
-                [field.name]: addedField,
-            }));
-            setNewField(addedField);
-        },
-        [setSelectedFields],
-    );
-
-    useEffect(() => {
-        if (!onChangeQuery || !selectedFields) return;
-        const mappedFields = Object.values(selectedFields)
-            .filter((el) => el.value !== undefined)
-            .map((el) => ({
-                field: el.name,
-                value: fieldToFieldValue(el),
-            }));
-        buildQuery({ filters: mappedFields })
-            .unwrap()
-            .then((data) => onChangeQuery(data.payload.query));
-    }, [buildQuery, selectedFields, onChangeQuery]);
-
-    return (
-        <>
-            {Object.keys(selectedFields).length ? (
-                <Stack direction="column" gap={0} mx={-1} ref={stackRef}>
-                    <CustomFieldsParser
-                        fields={Object.values(selectedFields)}
-                        onChange={(field) =>
-                            setSelectedFields((prev) => ({
-                                ...prev,
-                                [field.name]: field,
-                            }))
-                        }
-                        rightAdornmentRenderer={(field) => (
-                            <IconButton
-                                onClick={(e) =>
-                                    handleDeleteField(e, field.name)
-                                }
-                            >
-                                <DeleteIcon color="error" />
-                            </IconButton>
-                        )}
-                    />
-                </Stack>
-            ) : null}
-
-            <AddCustomFieldButton
-                fields={availableToAddFields}
-                onSelected={handleAddField}
-            />
-        </>
     );
 };

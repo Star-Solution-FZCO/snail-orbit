@@ -1,14 +1,12 @@
 import { LocalOffer } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
+import { TagManagerPopover } from "entities/tag/tag_manager_popover";
 import type { MouseEventHandler } from "react";
 import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-import { issueApi, tagApi } from "shared/model";
-import { IssueT } from "shared/model/types";
-import { TagBaseT, TagT } from "shared/model/types/tag";
-import { TagFormDialog } from "../../../../tags/components/tag_form_dialog/tag_form_dialog";
-import { TagListPopover } from "../../../../tags/components/tag_list/tag_list_popover";
+import { issueApi } from "shared/model";
+import type { IssueT } from "shared/model/types";
+import type { TagT } from "shared/model/types/tag";
 
 type HeadingTagButtonProps = {
     issue: IssueT;
@@ -18,22 +16,9 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
     const { issue } = props;
     const { t } = useTranslation();
 
-    const [createTag, { isLoading: isTagCreateLoading }] =
-        tagApi.useCreateTagMutation();
-    const [updateTag, { isLoading: isTagUpdateLoading }] =
-        tagApi.useUpdateTagMutation();
-
     const [tagIssue] = issueApi.useTagIssueMutation();
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-    const [isTagFormDialogOpen, setIsTagFormDialogOpen] =
-        useState<boolean>(false);
-    const [editTag, setEditTag] = useState<TagT | null>(null);
-
-    const handleAddNewButtonClick = useCallback(() => {
-        setAnchorEl(null);
-        setIsTagFormDialogOpen(true);
-    }, []);
 
     const handleButtonClick: MouseEventHandler<HTMLButtonElement> = useCallback(
         (e) => {
@@ -44,37 +29,16 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
     );
 
     const handleTagSelect = useCallback(
-        (tag: TagT, type: "tag" | "untag" | "edit") => {
-            if (type === "tag") tagIssue({ issueId: issue.id_readable, tag });
-            if (type === "edit") {
-                setEditTag(tag);
-                setIsTagFormDialogOpen(true);
-            }
+        (tag: TagT) => {
+            tagIssue({ issueId: issue.id_readable, tag });
+            setAnchorEl(null);
         },
-        [issue.id],
+        [issue.id_readable, tagIssue],
     );
 
-    const handleTagFormSubmit = useCallback(
-        (data: TagBaseT) => {
-            if (!editTag)
-                createTag(data)
-                    .unwrap()
-                    .then((resp) => {
-                        toast.success(t("createTag.successMessage"));
-                        handleTagSelect(resp.payload, "tag");
-                        setIsTagFormDialogOpen(false);
-                    });
-            else
-                updateTag({ ...data, id: editTag.id })
-                    .unwrap()
-                    .then(() => {
-                        toast.success(t("updateTag.successMessage"));
-                        setEditTag(null);
-                        setIsTagFormDialogOpen(false);
-                    });
-        },
-        [editTag],
-    );
+    const handleClose = useCallback(() => {
+        setAnchorEl(null);
+    }, []);
 
     return (
         <>
@@ -84,20 +48,11 @@ export const HeadingTagButton = memo((props: HeadingTagButtonProps) => {
                 </IconButton>
             </Tooltip>
 
-            <TagListPopover
+            <TagManagerPopover
                 open={!!anchorEl}
                 anchorEl={anchorEl}
-                onClose={() => setAnchorEl(null)}
-                onAddNewClick={handleAddNewButtonClick}
+                onClose={handleClose}
                 onSelect={handleTagSelect}
-            />
-
-            <TagFormDialog
-                open={isTagFormDialogOpen}
-                onClose={() => setIsTagFormDialogOpen(false)}
-                onSubmit={handleTagFormSubmit}
-                isLoading={isTagCreateLoading || isTagUpdateLoading}
-                defaultValues={editTag || undefined}
             />
         </>
     );

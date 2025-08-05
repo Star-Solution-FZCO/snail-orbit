@@ -1,24 +1,13 @@
 import dayjs from "dayjs";
 import type {
     BasicUserT,
-    EnumFieldValueT,
-    OwnedOptionT,
     VersionFieldValueT,
     VersionOptionT,
 } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 
-export const getEnumColorAdornment = (option: EnumFieldValueT) =>
-    option.color ? (
-        <ColorAdornment
-            color={option.color}
-            size="medium"
-            sx={{ mr: 1, my: "auto" }}
-        />
-    ) : null;
-
-export const getOwnedColorAdornment = (option: OwnedOptionT) =>
+export const getOptionColorAdornment = (option: { color?: string | null }) =>
     option.color ? (
         <ColorAdornment
             color={option.color}

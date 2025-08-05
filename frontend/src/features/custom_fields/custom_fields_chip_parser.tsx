@@ -9,13 +9,6 @@ import { OwnedChip } from "entities/custom_fields/owned_chip";
 import UserChip from "entities/custom_fields/user_chip";
 import type { FC, ReactNode } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
-import type {
-    EnumOption,
-    OwnedOption,
-    StateOption,
-    UserOutput,
-    VersionOption,
-} from "shared/model/types/backend-schema.gen";
 import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
 
 dayjs.extend(utc);
@@ -42,30 +35,17 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
 
     switch (field.type) {
         case "enum":
-            return (
-                <EnumChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as EnumOption,
-                        });
-                    }}
-                />
-            );
         case "enum_multi":
             return (
                 <EnumChip
                     {...baseCompProps}
                     key={field.id}
                     value={field.value || undefined}
-                    multiple
+                    multiple={field.type === "enum_multi"}
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value as EnumOption[],
+                            value: value as never,
                         });
                     }}
                 />
@@ -86,11 +66,12 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                 />
             );
         case "integer":
+        case "float":
             return (
                 <InputChip
                     {...baseCompProps}
                     key={field.id}
-                    inputMode="numeric"
+                    inputMode={field.type === "integer" ? "numeric" : "decimal"}
                     value={field.value?.toString() || ""}
                     onChange={(val) => {
                         onChange?.({
@@ -114,22 +95,6 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                     }}
                 />
             );
-        case "float": {
-            return (
-                <InputChip
-                    {...baseCompProps}
-                    key={field.id}
-                    inputMode="decimal"
-                    value={field.value?.toString() || ""}
-                    onChange={(val) => {
-                        onChange?.({
-                            ...field,
-                            value: Number(val),
-                        });
-                    }}
-                />
-            );
-        }
         case "boolean":
             return (
                 <Tooltip
@@ -152,52 +117,22 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                 </Tooltip>
             );
         case "user":
+        case "user_multi":
             return (
                 <UserChip
                     {...baseCompProps}
                     key={field.id}
                     value={field?.value || undefined}
+                    multiple={field.type === "user_multi"}
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value as UserOutput,
+                            value: value as never,
                         });
                     }}
                 />
             );
-        case "user_multi": {
-            return (
-                <UserChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as UserOutput[],
-                        });
-                    }}
-                    multiple
-                />
-            );
-        }
-        case "date": {
-            const parsedValue = dayjs(field.value);
-            return (
-                <DateChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={parsedValue.isValid() ? parsedValue : undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value.format("YYYY-MM-DD"),
-                        });
-                    }}
-                    type="date"
-                />
-            );
-        }
+        case "date":
         case "datetime": {
             const parsedValue = dayjs(field.value);
             return (
@@ -208,10 +143,14 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value.format("YYYY-MM-DDTHH:mm:ss"),
+                            value: value.format(
+                                field.type === "datetime"
+                                    ? "YYYY-MM-DDTHH:mm:ss"
+                                    : "YYYY-MM-DD",
+                            ),
                         });
                     }}
-                    type="datetime"
+                    type={field.type === "datetime" ? "datetime" : "date"}
                 />
             );
         }
@@ -224,67 +163,41 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value as StateOption,
+                            value: value as never,
                         });
                     }}
                 />
             );
         case "version":
-            return (
-                <EnumChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as VersionOption,
-                        });
-                    }}
-                />
-            );
         case "version_multi":
             return (
                 <EnumChip
                     {...baseCompProps}
                     key={field.id}
                     value={field?.value || undefined}
+                    multiple={field.type === "version_multi"}
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value as VersionOption[],
+                            value: value as never,
                         });
                     }}
-                    multiple
                 />
             );
         case "owned":
-            return (
-                <OwnedChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as OwnedOption,
-                        });
-                    }}
-                />
-            );
         case "owned_multi":
             return (
                 <OwnedChip
                     {...baseCompProps}
                     key={field.id}
                     value={field?.value || undefined}
+                    multiple={field.type === "owned_multi"}
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value as OwnedOption[],
+                            value: value as never,
                         });
                     }}
-                    multiple
                 />
             );
         default:

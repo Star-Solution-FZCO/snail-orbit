@@ -13,6 +13,8 @@ import type {
     ListQueryParams,
     ListResponse,
     ListSelectQueryParams,
+    QueryBuilderDataT,
+    QueryBuilderDto,
     TagT,
 } from "shared/model/types";
 import type {
@@ -21,8 +23,6 @@ import type {
     IssueCreate,
     IssueDraftUpdate,
     IssueUpdate,
-    QueryBuilderInput,
-    QueryBuilderOutput,
 } from "../types/backend-schema.gen";
 import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
@@ -354,14 +354,15 @@ export const issueApi = createApi({
             }),
         }),
         filterQueryBuilder: build.query<
-            ApiResponse<QueryBuilderOutput>,
-            QueryBuilderInput
+            ApiResponse<QueryBuilderDataT>,
+            QueryBuilderDto
         >({
             query: (body) => ({
                 url: `issue/filters/query-builder`,
                 body,
                 method: "POST",
             }),
+            keepUnusedDataFor: 0,
         }),
         listIssueFeed: build.query<
             ListResponse<IssueFeedRecordT>,

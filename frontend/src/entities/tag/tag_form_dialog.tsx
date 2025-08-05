@@ -1,4 +1,3 @@
-import { yupResolver } from "@hookform/resolvers/yup";
 import { LocalOfferOutlined } from "@mui/icons-material";
 import {
     Button,
@@ -17,45 +16,62 @@ import { memo, useCallback, useEffect } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import type { TagDto, TagT } from "shared/model/types/tag";
 import { ColorPickerAdornment } from "shared/ui/color_picker/color_picker_adornment";
-import { useSchema } from "shared/utils/hooks/use-schema";
-import { formDataToTag, tagToFormData } from "./tag_form_dialog.helpers";
-import type { TagFormData, TagFormDialogProps } from "./tag_form_dialog.types";
-import { getTagFormSchema } from "./tag_form_dialog.types";
+
+type TagFormDialogProps = {
+    open: boolean;
+    onClose?: () => void;
+    onBackToList?: () => void;
+    onTagCreate?: (data: TagDto) => void;
+    onTagUpdate?: (data: TagDto & { id: string }) => void;
+    isLoading?: boolean;
+    initialData?: TagT | null;
+};
 
 export const TagFormDialog = memo((props: TagFormDialogProps) => {
     const {
         open,
         onClose,
-        onSubmit: submitHandler,
-        defaultValues,
-        isLoading,
+        onBackToList,
+        onTagCreate,
+        onTagUpdate,
+        isLoading = false,
+        initialData,
     } = props;
+
     const { t } = useTranslation();
-    const schema = useSchema(getTagFormSchema);
+
     const {
         control,
         register,
         formState: { errors, isValid },
         handleSubmit,
         reset,
-    } = useForm<TagFormData>({
-        resolver: yupResolver(schema),
-        disabled: isLoading || false,
-        mode: "onChange",
-        defaultValues: defaultValues ? tagToFormData(defaultValues) : undefined,
+    } = useForm<TagDto>({
+        disabled: isLoading,
+        mode: "all",
+        defaultValues: initialData || {},
     });
 
     useEffect(() => {
-        if (open)
-            reset(defaultValues ? tagToFormData(defaultValues) : undefined);
-    }, [open, defaultValues]);
+        if (!open) return;
+        if (initialData) {
+            reset(initialData);
+        } else {
+            reset();
+        }
+    }, [initialData, open, reset]);
 
-    const onSubmit: SubmitHandler<TagFormData> = useCallback(
+    const onSubmit: SubmitHandler<TagDto> = useCallback(
         (data) => {
-            if (submitHandler) submitHandler(formDataToTag(data));
+            if (initialData) {
+                onTagUpdate?.({ ...data, id: initialData.id });
+            } else {
+                onTagCreate?.(data);
+            }
         },
-        [submitHandler],
+        [initialData, onTagCreate, onTagUpdate],
     );
 
     return (
@@ -64,13 +80,12 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
             maxWidth="xs"
             fullWidth
             onClose={onClose}
-            PaperProps={{
-                component: "form",
-                onSubmit: handleSubmit(onSubmit),
+            slotProps={{
+                paper: { component: "form", onSubmit: handleSubmit(onSubmit) },
             }}
         >
             <DialogTitle sx={{ pb: 0 }}>
-                {defaultValues
+                {initialData
                     ? t("tagFormDialog.title.editTag")
                     : t("tagFormDialog.title.createTag")}
                 {isLoading ? (
@@ -127,10 +142,10 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
                     />
 
                     <TextField
-                        {...register("aiDescription")}
+                        {...register("ai_description")}
                         label={t("tagFormDialog.aiDescription.label")}
-                        error={!!errors.aiDescription}
-                        helperText={t(errors.aiDescription?.message || "")}
+                        error={!!errors.ai_description}
+                        helperText={t(errors.ai_description?.message || "")}
                         variant="outlined"
                         size="small"
                         multiline
@@ -141,14 +156,14 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
                     <FormGroup>
                         <Controller
                             control={control}
-                            name="untagOnClose"
+                            name="untag_on_close"
                             render={({
                                 field: { value, onChange, disabled },
                             }) => (
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={value}
+                                            checked={!!value}
                                             onChange={onChange}
                                             disabled={disabled}
                                         />
@@ -162,14 +177,14 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
 
                         <Controller
                             control={control}
-                            name="untagOnResolve"
+                            name="untag_on_resolve"
                             render={({
                                 field: { value, onChange, disabled },
                             }) => (
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={value}
+                                            checked={!!value}
                                             onChange={onChange}
                                             disabled={disabled}
                                         />
@@ -184,6 +199,17 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
                 </Stack>
             </DialogContent>
             <DialogActions>
+                {onBackToList && (
+                    <Button
+                        type="button"
+                        variant="text"
+                        color="inherit"
+                        disabled={isLoading}
+                        onClick={onBackToList}
+                    >
+                        {t("back")}
+                    </Button>
+                )}
                 <Button
                     type="button"
                     variant="text"

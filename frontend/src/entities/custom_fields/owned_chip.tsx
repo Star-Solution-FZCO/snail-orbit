@@ -8,7 +8,7 @@ import {
 } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
-import { cardLabelGetter, getOwnedColorAdornment } from "./utils";
+import { cardLabelGetter, getOptionColorAdornment } from "./utils";
 
 type OwnedChipProps = {
     value?: OwnedFieldValueT | OwnedFieldValueT[];
@@ -70,7 +70,7 @@ export const OwnedChip: FC<OwnedChipProps> = ({
             onOpened={handleOpened}
             id={id}
             multiple={multiple}
-            getOptionRightAdornment={getOwnedColorAdornment}
+            getOptionRightAdornment={getOptionColorAdornment}
             isOptionEqualToValue={(a, b) => a.value === b.value}
             getOptionLabel={(el) => el.value}
             getCardLabelString={(value) =>

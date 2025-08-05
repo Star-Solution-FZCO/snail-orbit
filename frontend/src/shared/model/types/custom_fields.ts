@@ -11,6 +11,8 @@ import type {
     OwnedMultiCustomFieldOutput,
     OwnedOption,
     OwnedOptionOutput,
+    QueryBuilderInput,
+    QueryBuilderOutput,
     StateOption,
     StateOptionOutput,
     UserOptionOutput,
@@ -138,6 +140,15 @@ export type EnumCustomFieldWithValueT = EnumCustomFieldValueOutput;
 export type OwnedCustomFieldT = OwnedCustomFieldOutput;
 
 export type OwnedMultiCustomFieldT = OwnedMultiCustomFieldOutput;
+
+export type QueryBuilderDataT = QueryBuilderOutput;
+
+export type QueryBuilderDataAvailableFieldT =
+    QueryBuilderOutput["available_fields"][number];
+
+export type QueryBuilderDataFilterT = QueryBuilderOutput["filters"][number];
+
+export type QueryBuilderDto = QueryBuilderInput;
 
 export type CustomFieldValueT =
     | string

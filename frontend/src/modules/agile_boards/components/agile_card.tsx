@@ -141,6 +141,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                                     field={field}
                                     onChange={onFieldUpdate}
                                     size="xsmall"
+                                    key={field.id}
                                 />
                             ))}
                         </IssueCardBottom>

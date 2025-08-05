@@ -6,7 +6,7 @@ import type { ColorAdornmentProps } from "shared/ui/fields/adornments/color_ador
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
-import { cardLabelGetter, getEnumColorAdornment } from "./utils";
+import { cardLabelGetter, getOptionColorAdornment } from "./utils";
 
 type EnumChipProps = {
     value?: EnumFieldValueT | EnumFieldValueT[];
@@ -68,7 +68,7 @@ export const EnumChip: FC<EnumChipProps> = ({
             onOpened={handleOpened}
             id={id}
             multiple={multiple}
-            getOptionRightAdornment={getEnumColorAdornment}
+            getOptionRightAdornment={getOptionColorAdornment}
             isOptionEqualToValue={(a, b) => a.value === b.value}
             getOptionLabel={(el) => el.value}
             getCardLabelString={(value) =>

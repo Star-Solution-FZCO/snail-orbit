@@ -54,6 +54,7 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
             field={field}
             onChange={onFieldUpdate}
             size="xsmall"
+            key={field.id}
         />
     ));
 };

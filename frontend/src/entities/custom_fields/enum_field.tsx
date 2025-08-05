@@ -5,7 +5,7 @@ import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
-import { cardLabelGetter, getEnumColorAdornment } from "./utils";
+import { cardLabelGetter, getOptionColorAdornment } from "./utils";
 
 type EnumFieldProps = {
     value?: EnumFieldValueT | EnumFieldValueT[];
@@ -76,7 +76,7 @@ export const EnumField: FC<EnumFieldProps> = ({
             onOpened={handleOpened}
             id={id}
             multiple={multiple}
-            getOptionRightAdornment={getEnumColorAdornment}
+            getOptionRightAdornment={getOptionColorAdornment}
             getOptionLabel={(el) => el.value}
             getOptionKey={(el) => el.value}
             isOptionEqualToValue={(a, b) => a.value === b.value}
