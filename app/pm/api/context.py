@@ -274,7 +274,9 @@ async def resolve_user_global_permissions(
         all_group_ids = await resolve_all_user_groups(user)
 
     if all_group_ids:
-        groups = await m.Group.find(bo.In(m.Group.id, all_group_ids)).to_list()
+        groups = await m.Group.find(
+            bo.In(m.Group.id, all_group_ids), with_children=True
+        ).to_list()
 
         for group in groups:
             for global_role_link in group.global_roles:
