@@ -1,7 +1,8 @@
-import { Box, Breadcrumbs, Typography } from "@mui/material";
+import { Breadcrumbs, Container, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { globalRoleApi } from "shared/model";
+import { toast } from "react-toastify";
+import { roleApi } from "shared/model";
 import type { CreateGlobalRoleT } from "shared/model/types";
 import { Link } from "shared/ui";
 import { toastApiError } from "shared/utils";
@@ -12,39 +13,36 @@ const GlobalRoleCreate = () => {
     const navigate = useNavigate();
 
     const [createGlobalRole, { isLoading }] =
-        globalRoleApi.useCreateGlobalRoleMutation();
+        roleApi.useCreateGlobalRoleMutation();
 
-    const handleSubmit = async (data: CreateGlobalRoleT) => {
-        try {
-            const result = await createGlobalRole(data).unwrap();
-            navigate({
-                to: "/global-roles/$globalRoleId",
-                params: { globalRoleId: result.payload.id },
-            });
-        } catch (error) {
-            toastApiError(error);
-        }
+    const handleSubmit = (data: CreateGlobalRoleT) => {
+        createGlobalRole(data)
+            .unwrap()
+            .then((response) => {
+                navigate({
+                    to: "/global-roles/$globalRoleId",
+                    params: { globalRoleId: response.payload.id },
+                });
+                toast.success(t("globalRoles.create.success"));
+            })
+            .catch(toastApiError);
     };
 
     return (
-        <Box display="flex" flexDirection="column" px={4} pb={4} gap={2}>
-            <Breadcrumbs>
+        <Container sx={{ px: 4, pb: 4 }} disableGutters>
+            <Breadcrumbs sx={{ mb: 2 }}>
                 <Link to="/global-roles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
-                        {t("global-roles.title")}
+                        {t("globalRoles.title")}
                     </Typography>
                 </Link>
                 <Typography fontSize={24} fontWeight="bold">
-                    {t("global-roles.create.title")}
+                    {t("globalRoles.create.title")}
                 </Typography>
             </Breadcrumbs>
 
-            <GlobalRoleForm
-                onSubmit={handleSubmit}
-                isSubmitting={isLoading}
-                submitText={t("global-roles.create.submit")}
-            />
-        </Box>
+            <GlobalRoleForm onSubmit={handleSubmit} loading={isLoading} />
+        </Container>
     );
 };
 

@@ -1,4 +1,4 @@
 export const tabs = [
-    { value: "settings", label: "users.sections.settings" },
+    { value: "general", label: "users.sections.general" },
     { value: "globalRoles", label: "users.sections.globalRoles" },
 ];

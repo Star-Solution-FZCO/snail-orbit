@@ -16,7 +16,7 @@ import {
 import type { FC } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { globalRoleApi, userApi } from "shared/model";
+import { roleApi, userApi } from "shared/model";
 import type {
     GlobalRoleSimpleT,
     ListSelectQueryParams,
@@ -48,7 +48,7 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
         data,
         isLoading: rolesLoading,
         isFetching: rolesFetching,
-    } = globalRoleApi.useListSelectGlobalRoleQuery(queryParams, {
+    } = roleApi.useListSelectGlobalRoleQuery(queryParams, {
         skip: !autocompleteOpen,
     });
 
@@ -90,14 +90,19 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
         debouncedSearch(value);
     };
 
+    const handleCloseDialog = () => {
+        onClose();
+        setSearchQuery("");
+        setRole(null);
+    };
+
     const handleClickAdd = () => {
         if (!role) return;
 
         assignGlobalRoleToUser({ userId, roleId: role.id })
             .unwrap()
             .then(() => {
-                onClose();
-                setRole(null);
+                handleCloseDialog();
             })
             .catch(toastApiError);
     };
@@ -114,7 +119,7 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
     }, [data]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
             <DialogTitle
                 display="flex"
                 justifyContent="space-between"
@@ -122,14 +127,12 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
             >
                 {t("users.globalRoles.add")}
 
-                <IconButton onClick={onClose} size="small">
+                <IconButton onClick={handleCloseDialog} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent
-                sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-            >
+            <DialogContent>
                 <Autocomplete
                     value={role}
                     inputValue={searchQuery}
@@ -139,8 +142,10 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
                     onClose={() => setAutocompleteOpen(false)}
                     onChange={(_, value) => setRole(value)}
                     onInputChange={handleSearchInputChange}
-                    ListboxProps={{
-                        onScroll: handleScroll,
+                    slotProps={{
+                        listbox: {
+                            onScroll: handleScroll,
+                        },
                     }}
                     renderInput={(params) => (
                         <TextField
@@ -198,7 +203,7 @@ export const AddUserGlobalRoleDialog: FC<AddUserGlobalRoleDialogProps> = ({
 
             <DialogActions>
                 <Button
-                    onClick={onClose}
+                    onClick={handleCloseDialog}
                     variant="outlined"
                     color="error"
                     disabled={isLoading}

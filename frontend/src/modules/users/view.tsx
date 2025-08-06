@@ -5,8 +5,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userApi } from "shared/model";
 import { ErrorHandler, Link, TabPanel } from "shared/ui";
+import { UserSettings } from "./components/user_general_settings";
 import { UserGlobalRoles } from "./components/user_global_roles";
-import { UserSettings } from "./components/user_settings";
 import { tabs } from "./utils";
 
 const routeApi = getRouteApi("/_authenticated/users/$userId");
@@ -17,7 +17,7 @@ const UserView = () => {
     const { userId } = routeApi.useParams();
     const search = routeApi.useSearch();
 
-    const [currentTab, setCurrentTab] = useState(search?.tab || "settings");
+    const [currentTab, setCurrentTab] = useState(search?.tab || "general");
 
     const { data, error } = userApi.useGetUserQuery(userId);
 
@@ -69,7 +69,7 @@ const UserView = () => {
                         </TabList>
                     </Box>
 
-                    <TabPanel value="settings">
+                    <TabPanel value="general">
                         <UserSettings user={user} />
                     </TabPanel>
 

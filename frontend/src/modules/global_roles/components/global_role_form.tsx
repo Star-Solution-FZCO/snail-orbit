@@ -1,28 +1,31 @@
-import { LoadingButton } from "@mui/lab";
-import { Box, Stack, TextField } from "@mui/material";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Box, Button, TextField } from "@mui/material";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type {
-    CreateGlobalRoleT,
-    GlobalRoleT,
-    UpdateGlobalRoleT,
-} from "shared/model/types";
+import type { CreateGlobalRoleT, GlobalRoleT } from "shared/model/types";
+import { Link } from "shared/ui";
+import * as yup from "yup";
+
+const globalRoleSchema = yup.object().shape({
+    name: yup.string().required("form.validation.required"),
+    description: yup.string().nullable().default(null),
+});
+
+type GlobalRoleFormData = yup.InferType<typeof globalRoleSchema>;
 
 interface IGlobalRoleFormProps {
     role?: GlobalRoleT;
-    onSubmit: (
-        data: CreateGlobalRoleT | UpdateGlobalRoleT,
-    ) => void | Promise<void>;
-    isSubmitting?: boolean;
-    submitText?: string;
+    onSubmit: (data: GlobalRoleFormData) => void | Promise<void>;
+    loading?: boolean;
+    hideCancel?: boolean;
 }
 
 const GlobalRoleForm: FC<IGlobalRoleFormProps> = ({
-    role,
+    role: defaultValues,
     onSubmit,
-    isSubmitting = false,
-    submitText,
+    loading,
+    hideCancel = false,
 }) => {
     const { t } = useTranslation();
 
@@ -31,48 +34,57 @@ const GlobalRoleForm: FC<IGlobalRoleFormProps> = ({
         handleSubmit,
         formState: { errors },
     } = useForm<CreateGlobalRoleT>({
-        defaultValues: {
-            name: role?.name || "",
-            description: role?.description || null,
-        },
+        defaultValues,
+        resolver: yupResolver(globalRoleSchema),
     });
 
-    const onFormSubmit = async (data: CreateGlobalRoleT) => {
-        await onSubmit(data);
-    };
-
     return (
-        <Box component="form" onSubmit={handleSubmit(onFormSubmit)}>
-            <Stack gap={2}>
-                <TextField
-                    label={t("global-roles.fields.name")}
-                    {...register("name", {
-                        required: t("global-roles.validation.name.required"),
-                    })}
-                    error={!!errors.name}
-                    helperText={errors.name?.message}
-                    fullWidth
-                />
+        <Box
+            component="form"
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            onSubmit={handleSubmit(onSubmit)}
+            maxWidth="md"
+        >
+            <TextField
+                {...register("name")}
+                label={t("globalRoles.fields.name")}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                size="small"
+                fullWidth
+            />
 
-                <TextField
-                    label={t("description")}
-                    {...register("description")}
-                    error={!!errors.description}
-                    helperText={errors.description?.message}
-                    multiline
-                    rows={3}
-                    fullWidth
-                />
+            <TextField
+                {...register("description")}
+                label={t("description")}
+                error={!!errors.description}
+                helperText={errors.description?.message}
+                size="small"
+                fullWidth
+                multiline
+                rows={3}
+            />
 
-                <LoadingButton
+            <Box display="flex" gap={1}>
+                <Button
                     type="submit"
-                    variant="contained"
-                    loading={isSubmitting}
-                    sx={{ alignSelf: "flex-start" }}
+                    variant="outlined"
+                    size="small"
+                    loading={loading}
                 >
-                    {submitText || t("save")}
-                </LoadingButton>
-            </Stack>
+                    {t("save")}
+                </Button>
+
+                {!hideCancel && (
+                    <Link to="..">
+                        <Button variant="outlined" color="error" size="small">
+                            {t("cancel")}
+                        </Button>
+                    </Link>
+                )}
+            </Box>
         </Box>
     );
 };

@@ -71,8 +71,8 @@ const UserGlobalRoles: FC<IUserGlobalRolesProps> = ({ userId }) => {
                 flex: 1,
                 renderCell: ({ row }) => (
                     <Link
-                        to="/global-roles/$roleId"
-                        params={{ roleId: row.id }}
+                        to="/global-roles/$globalRoleId"
+                        params={{ globalRoleId: row.id }}
                     >
                         {row.name}
                     </Link>
@@ -82,7 +82,6 @@ const UserGlobalRoles: FC<IUserGlobalRolesProps> = ({ userId }) => {
                 field: "description",
                 headerName: t("users.globalRoles.description"),
                 flex: 1,
-                renderCell: ({ row }) => row.description || "—",
             },
             {
                 field: "permissions",
@@ -98,7 +97,13 @@ const UserGlobalRoles: FC<IUserGlobalRolesProps> = ({ userId }) => {
                     );
 
                     return (
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            gap={1}
+                            flexWrap="wrap"
+                            height={1}
+                        >
                             {row.permissions.map((group) =>
                                 group.permissions
                                     .filter((permission) => permission.granted)
@@ -111,6 +116,7 @@ const UserGlobalRoles: FC<IUserGlobalRolesProps> = ({ userId }) => {
                                         />
                                     )),
                             )}
+
                             {permissionCount === 0 && (
                                 <Chip
                                     label={t("users.globalRoles.noPermissions")}
@@ -172,7 +178,6 @@ const UserGlobalRoles: FC<IUserGlobalRolesProps> = ({ userId }) => {
                 loading={isLoading || isFetching}
                 paginationMode="server"
                 density="compact"
-                getRowHeight={() => "auto"}
             />
 
             <AddUserGlobalRoleDialog

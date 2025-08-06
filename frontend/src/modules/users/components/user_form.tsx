@@ -98,12 +98,14 @@ const UserForm: FC<IUserFormProps> = ({
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <FormControlLabel
+                        sx={{ m: 0 }}
                         control={
                             <Checkbox
+                                sx={{ p: 0, pr: 1, borderRadius: 1 }}
                                 checked={value}
+                                onChange={(e) => onChange(e.target.checked)}
                                 size="small"
                                 disableRipple
-                                onChange={(e) => onChange(e.target.checked)}
                             />
                         }
                         label={t("users.form.active")}
@@ -116,12 +118,14 @@ const UserForm: FC<IUserFormProps> = ({
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <FormControlLabel
+                        sx={{ m: 0 }}
                         control={
                             <Checkbox
+                                sx={{ p: 0, pr: 1, borderRadius: 1 }}
                                 checked={value}
+                                onChange={(e) => onChange(e.target.checked)}
                                 size="small"
                                 disableRipple
-                                onChange={(e) => onChange(e.target.checked)}
                             />
                         }
                         label={t("users.form.admin")}

@@ -3,7 +3,7 @@ import { Box, Breadcrumbs, Tab, Typography } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { globalRoleApi } from "shared/model";
+import { roleApi } from "shared/model";
 import { ErrorHandler, Link, TabPanel } from "shared/ui";
 import { GlobalRolePermissions } from "./components/global_role_permissions";
 import { GlobalRoleSettings } from "./components/global_role_settings";
@@ -19,7 +19,7 @@ const GlobalRoleView = () => {
 
     const [currentTab, setCurrentTab] = useState(search?.tab || "settings");
 
-    const { data, error } = globalRoleApi.useGetGlobalRoleQuery(globalRoleId);
+    const { data, error } = roleApi.useGetGlobalRoleQuery(globalRoleId);
 
     const handleChangeTab = (_: React.SyntheticEvent, value: string) => {
         setCurrentTab(value);
@@ -31,7 +31,7 @@ const GlobalRoleView = () => {
         return (
             <ErrorHandler
                 error={error}
-                message="global-roles.item.fetch.error"
+                message="globalRoles.item.fetch.error"
             />
         );
     }
@@ -52,7 +52,7 @@ const GlobalRoleView = () => {
             <Breadcrumbs>
                 <Link to="/global-roles" underline="hover">
                     <Typography fontSize={24} fontWeight="bold">
-                        {t("global-roles.title")}
+                        {t("globalRoles.title")}
                     </Typography>
                 </Link>
                 <Typography fontSize={24} fontWeight="bold">

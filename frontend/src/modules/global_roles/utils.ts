@@ -1,10 +1,10 @@
 export const tabs = [
     {
         value: "settings",
-        label: "global-roles.tabs.settings",
+        label: "globalRoles.tabs.settings",
     },
     {
         value: "permissions",
-        label: "global-roles.tabs.permissions",
+        label: "globalRoles.tabs.permissions",
     },
 ];

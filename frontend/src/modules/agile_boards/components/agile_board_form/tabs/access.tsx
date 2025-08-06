@@ -105,8 +105,8 @@ export const Access: FC = () => {
                 justifyContent="space-between"
                 alignItems="center"
             >
-                <span>{t("Grant access to board for this users")}</span>
-
+                "Grant access to board for this users"
+                <span>{t("agileBoards.access.grant")}</span>
                 <Button
                     variant="text"
                     size="small"

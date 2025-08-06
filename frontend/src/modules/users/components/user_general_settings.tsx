@@ -6,11 +6,11 @@ import type { UpdateUserT, UserT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { UserForm } from "./user_form";
 
-interface IUserSettingsProps {
+interface IUserGeneralSettingsProps {
     user: UserT;
 }
 
-const UserSettings: FC<IUserSettingsProps> = ({ user }) => {
+const UserGeneralSettings: FC<IUserGeneralSettingsProps> = ({ user }) => {
     const { t } = useTranslation();
 
     const [updateUser, { isLoading }] = userApi.useUpdateUserMutation();
@@ -37,4 +37,4 @@ const UserSettings: FC<IUserSettingsProps> = ({ user }) => {
     );
 };
 
-export { UserSettings };
+export { UserGeneralSettings as UserSettings };

@@ -1,7 +1,6 @@
 export * from "./agile_board.api";
 export * from "./custom_fields.api";
 export * from "./encryption_keys.api";
-export * from "./global_role.api";
 export * from "./group.api";
 export * from "./issue.api";
 export * from "./project.api";

@@ -11,10 +11,7 @@ const links: { label: string; path: string }[] = [
         label: "navbar.customFields",
         path: "/custom-fields",
     },
-    {
-        label: "navbar.globalRoles",
-        path: "/global-roles",
-    },
+
     {
         label: "navbar.groups",
         path: "/groups",
@@ -22,6 +19,10 @@ const links: { label: string; path: string }[] = [
     {
         label: "navbar.roles",
         path: "/roles",
+    },
+    {
+        label: "navbar.globalRoles",
+        path: "/global-roles",
     },
     {
         label: "navbar.users",

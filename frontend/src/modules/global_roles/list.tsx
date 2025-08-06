@@ -18,7 +18,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { globalRoleApi } from "shared/model";
+import { roleApi } from "shared/model";
 import type { GlobalRoleT, ListQueryParams } from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
@@ -39,13 +39,13 @@ const GlobalRoleList = () => {
         useListQueryParams<ListQueryParams>(initialQueryParams);
 
     const { data, isLoading, isFetching, error } =
-        globalRoleApi.useListGlobalRoleQuery(listQueryParams);
+        roleApi.useListGlobalRoleQuery(listQueryParams);
 
     const columns: GridColDef<GlobalRoleT>[] = useMemo(
         () => [
             {
                 field: "name",
-                headerName: t("global-roles.fields.name"),
+                headerName: t("globalRoles.fields.name"),
                 flex: 1,
                 renderCell: ({ row }) => (
                     <Link
@@ -128,7 +128,7 @@ const GlobalRoleList = () => {
         return (
             <ErrorHandler
                 error={error}
-                message="global-roles.list.fetch.error"
+                message="globalRoles.list.fetch.error"
             />
         );
     }
@@ -150,7 +150,7 @@ const GlobalRoleList = () => {
                 gap={1}
             >
                 <TextField
-                    placeholder={t("global-roles.search.placeholder")}
+                    placeholder={t("globalRoles.search.placeholder")}
                     value={query}
                     onChange={handleSearchTextField}
                     size="small"
@@ -187,7 +187,7 @@ const GlobalRoleList = () => {
                         variant="outlined"
                         size="small"
                     >
-                        {t("global-roles.new")}
+                        {t("globalRoles.new")}
                     </Button>
                 </Link>
             </Stack>

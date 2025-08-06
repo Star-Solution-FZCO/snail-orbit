@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { globalRoleApi } from "shared/model";
+import { roleApi } from "shared/model";
 import type {
     GlobalPermissionGroupT,
     GlobalPermissionKeyT,
@@ -72,9 +72,8 @@ interface IGlobalRolePermissionsProps {
 const GlobalRolePermissions: FC<IGlobalRolePermissionsProps> = ({ role }) => {
     const { t } = useTranslation();
 
-    const [grantPermission] = globalRoleApi.useGrantGlobalPermissionMutation();
-    const [revokePermission] =
-        globalRoleApi.useRevokeGlobalPermissionMutation();
+    const [grantPermission] = roleApi.useGrantGlobalPermissionMutation();
+    const [revokePermission] = roleApi.useRevokeGlobalPermissionMutation();
 
     const handlePermissionChange = (
         permissionKey: GlobalPermissionKeyT,
@@ -95,10 +94,10 @@ const GlobalRolePermissions: FC<IGlobalRolePermissionsProps> = ({ role }) => {
             <TableHead>
                 <TableRow>
                     <TableCell width="400px">
-                        {t("global-roles.sections.permissions")}
+                        {t("globalRoles.sections.permissions")}
                     </TableCell>
                     <TableCell>
-                        {t("global-roles.permissions.enabled")}
+                        {t("globalRoles.permissions.enabled")}
                     </TableCell>
                 </TableRow>
             </TableHead>
