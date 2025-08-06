@@ -10,6 +10,7 @@ import type {
     IssueInterlinkTypeT,
     IssueLinkFieldOutput,
     IssueOutput,
+    IssuePermissionOutput,
     IssueSpentTimeOutput,
 } from "./backend-schema.gen";
 import { issueInterlinkTypeTValues } from "./backend-schema.gen";
@@ -50,3 +51,5 @@ export type IssueLinkT = {
 export type IssueSpentTimeT = IssueSpentTimeOutput;
 
 export type IssueFeedRecordT = IssueFeedRecordOutput;
+
+export type IssuePermissionT = IssuePermissionOutput;

@@ -1,8 +1,10 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import {
+    Divider,
     IconButton,
     Link,
     Menu,
@@ -22,6 +24,7 @@ import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
 import { DeleteIssueDialog } from "./delete_dialog";
 import { HeadingTagButton } from "./heading_tag_button";
+import { IssuePermissionsDialog } from "./permissions/issue_permissions_dialog";
 
 type HeadingControlsProps = {
     issue: IssueT;
@@ -37,7 +40,12 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+
     const menuOpen = Boolean(anchorEl);
+
+    const canManagePermissions =
+        issue.access_claims?.includes("issue:manage_permissions") || false;
 
     const [createIssue] = issueApi.useCreateIssueMutation();
 
@@ -102,6 +110,13 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
             .catch(toastApiError);
     };
 
+    const handleManageIssueAccess = () => {
+        if (!canManagePermissions) return;
+
+        handleCloseMenu();
+        setPermissionsDialogOpen(true);
+    };
+
     return (
         <>
             <Tooltip title={t("issues.links.add.title")}>
@@ -140,6 +155,13 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
                     t("issues.clone"),
                     handleCloneIssue,
                 )}
+                {canManagePermissions &&
+                    renderMenuItem(
+                        <ManageAccountsIcon />,
+                        t("issues.access.manage"),
+                        handleManageIssueAccess,
+                    )}
+                <Divider />
                 {renderMenuItem(
                     <DeleteIcon color="error" />,
                     t("issues.delete.title"),
@@ -147,6 +169,14 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
                     "error",
                 )}
             </Menu>
+
+            {canManagePermissions && (
+                <IssuePermissionsDialog
+                    issue={issue}
+                    open={permissionsDialogOpen}
+                    onClose={() => setPermissionsDialogOpen(false)}
+                />
+            )}
 
             <DeleteIssueDialog
                 id={issue.id}
