@@ -25,6 +25,7 @@ from pm.api.views.output import (
     BaseListOutput,
     ErrorOutput,
     ModelIdOutput,
+    SuccessOutput,
     SuccessPayloadOutput,
     UUIDOutput,
 )
@@ -58,7 +59,6 @@ class IssueUpdate(BaseModel):
     text: EncryptedObject | None = None
     fields: dict[str, Any] | None = None
     attachments: list[IssueAttachmentBody] | None = None
-    disable_project_permissions_inheritance: bool | None = None
 
 
 class IssueDraftCreate(BaseModel):
@@ -1140,10 +1140,58 @@ async def revoke_issue_permission(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
 
     user_ctx = current_user()
-    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_UPDATE)
+    user_ctx.validate_issue_permission(
+        obj,
+        PermAnd(
+            ProjectPermissions.ISSUE_READ,
+            ProjectPermissions.ISSUE_MANAGE_PERMISSIONS,
+        ),
+    )
 
     if not any(perm.id == permission_id for perm in obj.permissions):
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+
+    permission_to_delete = next(
+        (perm for perm in obj.permissions if perm.id == permission_id), None
+    )
+    if not permission_to_delete:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Permission not found')
+
+    is_user_permission = (
+        permission_to_delete.target_type == 'user'
+        and permission_to_delete.target.id == user_ctx.user.id
+    )
+    is_user_group_permission = (
+        permission_to_delete.target_type == 'group'
+        and permission_to_delete.target.id in user_ctx.all_group_ids
+    )
+
+    if is_user_permission or is_user_group_permission:
+        remaining_permissions = [
+            perm for perm in obj.permissions if perm.id != permission_id
+        ]
+        temp_obj = m.Issue(
+            **obj.model_dump(exclude={'permissions'}), permissions=remaining_permissions
+        )
+
+        remaining_permission_claims = temp_obj.get_user_permissions(
+            user_ctx.user, user_ctx.all_group_ids
+        )
+        if not obj.disable_project_permissions_inheritance:
+            remaining_permission_claims.update(
+                user_ctx.permissions.get(obj.project.id, set())
+            )
+
+        still_has_permissions = ProjectPermissions.ISSUE_MANAGE_PERMISSIONS.check(
+            remaining_permission_claims
+        ) and ProjectPermissions.ISSUE_READ.check(remaining_permission_claims)
+
+        if not still_has_permissions:
+            raise HTTPException(
+                HTTPStatus.FORBIDDEN,
+                'You would lose management permissions on this issue. Add another management permission first.',
+            )
+
     obj.permissions = [perm for perm in obj.permissions if perm.id != permission_id]
     await obj.replace()
     return UUIDOutput.make(permission_id)
@@ -1176,6 +1224,134 @@ async def resolve_issue_permissions(
     result = {perm.value: perm in effective_permissions for perm in ProjectPermissions}
 
     return SuccessPayloadOutput(payload=result)
+
+
+@router.post(
+    '/{issue_id_or_alias}/permissions/copy-from-project',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def copy_project_permissions_to_issue(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessOutput:
+    """Copy all project permissions to issue level"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj,
+        PermAnd(
+            ProjectPermissions.ISSUE_MANAGE_PERMISSIONS, ProjectPermissions.ISSUE_READ
+        ),
+    )
+
+    project: m.Project | None = await obj.get_project(fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+
+    copied_count = 0
+    for project_permission in project.permissions:
+        equivalent_exists = any(
+            perm.target_type == project_permission.target_type
+            and perm.target.id == project_permission.target.id
+            and perm.role.id == project_permission.role.id
+            for perm in obj.permissions
+        )
+
+        if not equivalent_exists:
+            new_permission = m.ProjectPermission(
+                target_type=project_permission.target_type,
+                target=project_permission.target,
+                role=project_permission.role,
+            )
+            obj.permissions.append(new_permission)
+            copied_count += 1
+
+    if copied_count > 0:
+        await obj.replace()
+
+    return SuccessOutput()
+
+
+@router.post(
+    '/{issue_id_or_alias}/permissions/disable-inheritance',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.CONFLICT, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def disable_project_permissions_inheritance(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessOutput:
+    """Disable project permission inheritance for this issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj,
+        PermAnd(
+            ProjectPermissions.ISSUE_MANAGE_PERMISSIONS, ProjectPermissions.ISSUE_READ
+        ),
+    )
+    if obj.disable_project_permissions_inheritance:
+        return SuccessOutput()
+
+    issue_permissions = obj.get_user_permissions(user_ctx.user, user_ctx.all_group_ids)
+    has_manage_permissions = ProjectPermissions.ISSUE_MANAGE_PERMISSIONS.check(
+        issue_permissions
+    ) and ProjectPermissions.ISSUE_READ.check(issue_permissions)
+
+    if not has_manage_permissions:
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            'You would lose management permissions on this issue. '
+            'First copy project permissions or create direct issue permissions.',
+        )
+
+    obj.disable_project_permissions_inheritance = True
+    await obj.replace()
+
+    return SuccessOutput()
+
+
+@router.post(
+    '/{issue_id_or_alias}/permissions/enable-inheritance',
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.NOT_FOUND, ErrorOutput),
+    ),
+)
+async def enable_project_permissions_inheritance(
+    issue_id_or_alias: PydanticObjectId | str,
+) -> SuccessOutput:
+    """Enable project permission inheritance for this issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj,
+        PermAnd(
+            ProjectPermissions.ISSUE_MANAGE_PERMISSIONS, ProjectPermissions.ISSUE_READ
+        ),
+    )
+
+    if not obj.disable_project_permissions_inheritance:
+        return SuccessOutput()
+
+    obj.disable_project_permissions_inheritance = False
+    await obj.replace()
+
+    return SuccessOutput()
 
 
 async def validate_custom_fields_values(

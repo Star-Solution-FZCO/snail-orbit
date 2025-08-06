@@ -9741,6 +9741,579 @@
         }
       }
     },
+    "/api/v1/issue/{issue_id_or_alias}/permissions/copy-from-project": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Copy Project Permissions To Issue",
+        "description": "Copy all project permissions to issue level",
+        "operationId": "copy_project_permissions_to_issue_api_v1_issue__issue_id_or_alias__permissions_copy_from_project_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id_or_alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Issue Id Or Alias"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issue/{issue_id_or_alias}/permissions/disable-inheritance": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Disable Project Permissions Inheritance",
+        "description": "Disable project permission inheritance for this issue",
+        "operationId": "disable_project_permissions_inheritance_api_v1_issue__issue_id_or_alias__permissions_disable_inheritance_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id_or_alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Issue Id Or Alias"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - Resource already exists or is in conflicting state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issue/{issue_id_or_alias}/permissions/enable-inheritance": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Enable Project Permissions Inheritance",
+        "description": "Enable project permission inheritance for this issue",
+        "operationId": "enable_project_permissions_inheritance_api_v1_issue__issue_id_or_alias__permissions_enable_inheritance_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id_or_alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Issue Id Or Alias"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/issue/{issue_id_or_alias}/comment/list": {
       "get": {
         "tags": [
@@ -42892,17 +43465,6 @@
               }
             ],
             "title": "Attachments"
-          },
-          "disable_project_permissions_inheritance": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Disable Project Permissions Inheritance"
           }
         },
         "type": "object",
