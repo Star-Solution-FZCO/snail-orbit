@@ -524,5 +524,41 @@ export const issueApi = createApi({
         >({
             query: (id) => `issue/${id}/permissions/resolve`,
         }),
+        copyProjectPermissionsToIssue: build.mutation<
+            ApiResponse<{ success: boolean }>,
+            string
+        >({
+            query: (id) => ({
+                url: `issue/${id}/permissions/copy-from-project`,
+                method: "POST",
+                body: {},
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "IssuePermissions", id },
+                { type: "Issues", id },
+            ],
+        }),
+        disableProjectPermissionsInheritance: build.mutation<
+            ApiResponse<{ success: boolean }>,
+            string
+        >({
+            query: (id) => ({
+                url: `issue/${id}/permissions/disable-inheritance`,
+                method: "POST",
+                body: {},
+            }),
+            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+        }),
+        enableProjectPermissionsInheritance: build.mutation<
+            ApiResponse<{ success: boolean }>,
+            string
+        >({
+            query: (id) => ({
+                url: `issue/${id}/permissions/enable-inheritance`,
+                method: "POST",
+                body: {},
+            }),
+            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+        }),
     }),
 });

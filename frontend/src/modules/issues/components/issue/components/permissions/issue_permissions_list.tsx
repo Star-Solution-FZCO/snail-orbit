@@ -1,9 +1,13 @@
-import AddIcon from "@mui/icons-material/Add";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import {
     Box,
     Button,
     capitalize,
+    Chip,
     IconButton,
     Stack,
     Typography,
@@ -42,6 +46,24 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
     });
 
     const [revokeIssuePermission] = issueApi.useRevokeIssuePermissionMutation();
+    const [copyProjectPermissions] =
+        issueApi.useCopyProjectPermissionsToIssueMutation();
+    const [disableInheritance] =
+        issueApi.useDisableProjectPermissionsInheritanceMutation();
+    const [enableInheritance] =
+        issueApi.useEnableProjectPermissionsInheritanceMutation();
+
+    const handleCopyProjectPermissions = () => {
+        copyProjectPermissions(issue.id_readable).unwrap().catch(toastApiError);
+    };
+
+    const handleDisableInheritance = () => {
+        disableInheritance(issue.id_readable).unwrap().catch(toastApiError);
+    };
+
+    const handleEnableInheritance = () => {
+        enableInheritance(issue.id_readable).unwrap().catch(toastApiError);
+    };
 
     const handleClickRemovePermission = (permission: IssuePermissionT) => {
         revokeIssuePermission({
@@ -101,9 +123,57 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
     );
 
     const permissionsList = permissions?.payload?.items || [];
+    const loading = isLoading || isFetching;
+    const inheritanceDisabled = issue.disable_project_permissions_inheritance;
 
     return (
         <Stack gap={1}>
+            <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="text.secondary">
+                    {t("issues.projectPermissionsInheritance")}:
+                </Typography>
+
+                <Chip
+                    label={t(inheritanceDisabled ? "disabled" : "enabled")}
+                    icon={inheritanceDisabled ? <LockIcon /> : <LockOpenIcon />}
+                    color={inheritanceDisabled ? "error" : "success"}
+                    size="small"
+                />
+            </Box>
+
+            <Box display="flex" gap={1} flexWrap="wrap">
+                <Button
+                    onClick={handleCopyProjectPermissions}
+                    startIcon={<CopyAllIcon />}
+                    variant="outlined"
+                    size="small"
+                    disabled={loading}
+                >
+                    {t("permissions.project.copy")}
+                </Button>
+
+                <Button
+                    onClick={
+                        inheritanceDisabled
+                            ? handleEnableInheritance
+                            : handleDisableInheritance
+                    }
+                    startIcon={
+                        inheritanceDisabled ? <LockOpenIcon /> : <LockIcon />
+                    }
+                    color={inheritanceDisabled ? "success" : "error"}
+                    variant="outlined"
+                    size="small"
+                    disabled={loading}
+                >
+                    {t(
+                        inheritanceDisabled
+                            ? "permissions.inheritance.enable"
+                            : "permissions.inheritance.disable",
+                    )}
+                </Button>
+            </Box>
+
             <Box
                 display="flex"
                 justifyContent="space-between"
@@ -115,18 +185,18 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
 
                 <Button
                     onClick={() => setAddPermissionDialogOpen(true)}
-                    startIcon={<AddIcon />}
+                    startIcon={<VpnKeyIcon />}
                     variant="outlined"
                     size="small"
                 >
-                    {t("add")}
+                    {t("issues.permissions.access.grant")}
                 </Button>
             </Box>
 
             <DataGrid
                 rows={permissionsList}
                 columns={columns}
-                loading={isLoading || isFetching}
+                loading={loading}
                 density="compact"
                 disableRowSelectionOnClick
                 disableColumnMenu
