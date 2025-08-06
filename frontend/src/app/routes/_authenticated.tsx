@@ -4,6 +4,7 @@ import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view
 import { useAppSelector } from "shared/model";
 import { NavBar, PageTitle } from "shared/ui";
 import { NavbarSettingsContextProvider } from "shared/ui/navbar/navbar_settings";
+import { QueryBuilderProvider } from "../../widgets/query_builder/query_builder_provider";
 
 export const Route = createFileRoute("/_authenticated")({
     component: Component,
@@ -40,7 +41,9 @@ function Component() {
                     <Stack flex={1}>
                         <NavBar />
 
-                        <Outlet />
+                        <QueryBuilderProvider>
+                            <Outlet />
+                        </QueryBuilderProvider>
                     </Stack>
                 </NavbarSettingsContextProvider>
             </IssueModalViewContextProvider>

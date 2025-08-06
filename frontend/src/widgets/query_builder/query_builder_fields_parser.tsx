@@ -107,7 +107,7 @@ export const QueryBuilderFieldsParser = (
                         label={filter.name}
                         value={filter?.value || undefined}
                         onChange={(value) => {
-                            onChange?.(filter, (value as BasicUserT).id);
+                            onChange?.(filter, (value as BasicUserT).name);
                         }}
                     />
                 );
@@ -169,7 +169,7 @@ export const QueryBuilderFieldsParser = (
                     onChange={(value) => {
                         onChange?.(
                             filter,
-                            Array.isArray(value) ? value[0]?.id : value.id,
+                            Array.isArray(value) ? value[0]?.name : value.name,
                         );
                     }}
                     type="users"

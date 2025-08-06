@@ -10,27 +10,25 @@ import {
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC, SyntheticEvent } from "react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SearchT } from "shared/model/types/search";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
+import { useQueryBuilder } from "../../../../../widgets/query_builder/query_builder_provider";
 
 type SearchFieldProps = {
     value: string;
     onChange: (value: string) => void;
     loading?: boolean;
-    onQueryBuilderClick?: () => void;
-    queryBuilderActive?: boolean;
 };
 
 export const SearchField: FC<SearchFieldProps> = (props) => {
-    const {
-        value,
-        onChange,
-        loading,
-        queryBuilderActive,
-        onQueryBuilderClick,
-    } = props;
+    const { value, onChange, loading } = props;
+
+    const { showQueryBuilder, setShowQueryBuilder, setQuery, query } =
+        useQueryBuilder();
+
+    const [innerValue, setInnerValue] = useState<string>(value || "");
 
     const searchSelectPopoverState = usePopupState({
         variant: "popover",
@@ -47,13 +45,29 @@ export const SearchField: FC<SearchFieldProps> = (props) => {
         [onChange],
     );
 
+    useEffect(() => {
+        setInnerValue(value);
+        setQuery(value);
+    }, [setQuery, value]);
+
+    useEffect(() => {
+        setInnerValue(query);
+        onChange?.(query);
+    }, [onChange, query]);
+
+    const syncValue = () => {
+        onChange?.(innerValue);
+    };
+
     return (
         <TextField
             fullWidth
             size="small"
             placeholder={t("placeholder.search")}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
+            value={innerValue}
+            onBlur={syncValue}
+            onSubmit={syncValue}
+            onChange={(e) => setInnerValue(e.target.value)}
             slotProps={{
                 input: {
                     endAdornment: (
@@ -85,12 +99,12 @@ export const SearchField: FC<SearchFieldProps> = (props) => {
                             </>
                             <Tooltip title={t("queryBuilderIcon.tooltip")}>
                                 <IconButton
-                                    onClick={onQueryBuilderClick}
+                                    onClick={() =>
+                                        setShowQueryBuilder(!showQueryBuilder)
+                                    }
                                     size="small"
                                     color={
-                                        queryBuilderActive
-                                            ? "primary"
-                                            : "default"
+                                        showQueryBuilder ? "primary" : "default"
                                     }
                                 >
                                     <FilterAltIcon />

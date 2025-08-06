@@ -70,8 +70,6 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
         [activeFilters, requestNewQuery],
     );
 
-    console.log(queryBuilderData);
-
     return (
         <Stack direction="column" gap={2} px={1} height="100%">
             <Typography fontSize={24} fontWeight="bold">
@@ -115,3 +113,5 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
         </Stack>
     );
 };
+
+export default QueryBuilder;
