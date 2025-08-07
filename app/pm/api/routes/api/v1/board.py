@@ -449,7 +449,7 @@ async def delete_board(
     if not board:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
     user_ctx = current_user()
-    if not board.check_permissions(user_ctx, m.PermissionType.EDIT):
+    if not board.check_permissions(user_ctx, m.PermissionType.ADMIN):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to delete this board')
     await board.delete()
     return ModelIdOutput.make(board_id)
