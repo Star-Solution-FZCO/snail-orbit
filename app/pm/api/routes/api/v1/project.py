@@ -373,6 +373,10 @@ async def get_project(
     obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    user_ctx = current_user()
+    user_ctx.validate_project_permission(
+        obj, ProjectPermissions.PROJECT_READ, admin_override=True
+    )
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(obj))
 
 
