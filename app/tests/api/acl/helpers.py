@@ -306,6 +306,22 @@ def assert_permission_denied(response, operation_name: str = 'operation') -> Non
     )
 
 
+def assert_conflict(response, operation_name: str = 'operation') -> None:
+    """Assert that an API operation resulted in a conflict (status 409)
+
+    Args:
+        response: HTTP response object
+        operation_name: Name of operation for error message
+
+    Raises:
+        AssertionError: If operation did not result in expected conflict
+    """
+    assert response.status_code == 409, (
+        f'{operation_name} should result in conflict (409) but got {response.status_code}: '
+        f'{response.json() if hasattr(response, "json") else response.text}'
+    )
+
+
 def assert_not_found(response, resource_name: str = 'resource') -> None:
     """Assert that a resource was not found (status 404)
 
