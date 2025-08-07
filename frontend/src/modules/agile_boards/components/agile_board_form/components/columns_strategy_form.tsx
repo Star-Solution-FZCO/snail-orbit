@@ -13,7 +13,9 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { AgileBoardT } from "shared/model/types";
 
-export const ColumnsStrategyForm: FC = () => {
+export const ColumnsStrategyForm: FC<{ controlsDisabled?: boolean }> = ({
+    controlsDisabled = false,
+}) => {
     const { t } = useTranslation();
 
     const { control } = useFormContext<AgileBoardT>();
@@ -22,9 +24,7 @@ export const ColumnsStrategyForm: FC = () => {
 
     return (
         <Stack gap={1} component={Paper} sx={{ p: 1 }}>
-            <Box component="span" mb={1}>
-                {t("ui_settings.columnsStrategy.label")}
-            </Box>
+            <Box component="span">{t("ui_settings.columnsStrategy.label")}</Box>
 
             <Controller
                 control={control}
@@ -35,10 +35,11 @@ export const ColumnsStrategyForm: FC = () => {
                         label={t("agileBoards.form.minCardHeight")}
                         error={invalid}
                         helperText={error?.message || ""}
+                        slotProps={{ input: { readOnly: controlsDisabled } }}
+                        type="number"
                         variant="outlined"
                         size="small"
                         fullWidth
-                        type="number"
                     />
                 )}
             />
@@ -48,15 +49,18 @@ export const ColumnsStrategyForm: FC = () => {
                     control={control}
                     name={"ui_settings.columnsStrategy"}
                     render={({ field }) => (
-                        <FormControl fullWidth>
+                        <FormControl size="small" fullWidth>
                             <InputLabel id="columnsStrategy-label">
                                 {t("agileBoards.form.columnsStrategy")}
                             </InputLabel>
+
                             <Select
                                 {...field}
-                                labelId="columnsStrategy-label"
                                 id="columnsStrategy"
+                                labelId="columnsStrategy-label"
+                                label={t("agileBoards.form.columnsStrategy")}
                                 size="small"
+                                readOnly={controlsDisabled}
                             >
                                 <MenuItem value="column">
                                     {t(
@@ -83,10 +87,13 @@ export const ColumnsStrategyForm: FC = () => {
                                 label={t("agileBoards.form.columns")}
                                 error={invalid}
                                 helperText={error?.message || ""}
+                                slotProps={{
+                                    input: { readOnly: controlsDisabled },
+                                }}
+                                type="number"
                                 variant="outlined"
                                 size="small"
                                 fullWidth
-                                type="number"
                             />
                         )}
                     />
@@ -102,10 +109,13 @@ export const ColumnsStrategyForm: FC = () => {
                                 label={t("agileBoards.form.columnMaxWidth")}
                                 error={invalid}
                                 helperText={error?.message || ""}
+                                slotProps={{
+                                    input: { readOnly: controlsDisabled },
+                                }}
+                                type="number"
                                 variant="outlined"
                                 size="small"
                                 fullWidth
-                                type="number"
                             />
                         )}
                     />

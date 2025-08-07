@@ -164,7 +164,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                     <Box mb={2}>
                         <AgileBoardForm
                             onSubmit={onSubmit}
-                            defaultValues={agileBoard}
+                            board={agileBoard}
                         />
                     </Box>
                 ) : null}

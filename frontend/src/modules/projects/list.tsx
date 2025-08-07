@@ -95,45 +95,43 @@ const ProjectList = () => {
                         alignItems="center"
                         justifyContent="space-between"
                     >
-                        <Typography
-                            fontSize={12}
-                            color="textDisabled"
-                            variant="subtitle2"
-                        >
-                            {count ? `${count} projects` : null}
+                        <Typography color="textDisabled" variant="subtitle2">
+                            {t("projects.count", { count })}
                         </Typography>
 
-                        <Stack direction="row" alignItems="center" gap={1}>
-                            <Typography variant="subtitle2">
-                                {t("pagination.showRows")}:
-                            </Typography>
+                        {count ? (
+                            <Stack direction="row" alignItems="center" gap={1}>
+                                <Typography variant="subtitle2">
+                                    {t("pagination.showRows")}:
+                                </Typography>
 
-                            <Select
-                                sx={{
-                                    ".MuiSelect-select": {
-                                        py: 0.5,
-                                        pl: 1,
-                                        pr: 2,
-                                    },
-                                }}
-                                value={listQueryParams.limit}
-                                renderValue={() => listQueryParams.limit}
-                                onChange={(e) =>
-                                    updateListQueryParams({
-                                        limit: +e.target.value,
-                                        offset: 0,
-                                    })
-                                }
-                                variant="outlined"
-                                size="small"
-                            >
-                                {perPageOptions.map((value) => (
-                                    <MenuItem key={value} value={value}>
-                                        {value}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </Stack>
+                                <Select
+                                    sx={{
+                                        ".MuiSelect-select": {
+                                            py: 0.5,
+                                            pl: 1,
+                                            pr: 2,
+                                        },
+                                    }}
+                                    value={listQueryParams.limit}
+                                    renderValue={() => listQueryParams.limit}
+                                    onChange={(e) =>
+                                        updateListQueryParams({
+                                            limit: +e.target.value,
+                                            offset: 0,
+                                        })
+                                    }
+                                    variant="outlined"
+                                    size="small"
+                                >
+                                    {perPageOptions.map((value) => (
+                                        <MenuItem key={value} value={value}>
+                                            {value}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </Stack>
+                        ) : null}
                     </Stack>
 
                     <Box
@@ -143,10 +141,6 @@ const ProjectList = () => {
                         flex={1}
                         overflow="auto"
                     >
-                        {projects.length === 0 && (
-                            <Typography>{t("projects.no_projects")}</Typography>
-                        )}
-
                         {projects.map((project) => (
                             <ProjectCard key={project.id} project={project} />
                         ))}

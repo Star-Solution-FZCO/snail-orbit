@@ -62,7 +62,9 @@ const ColumnTableRow: FC<{
     );
 };
 
-export const ColumnsForm: FC = () => {
+export const ColumnsForm: FC<{ controlsDisabled?: boolean }> = ({
+    controlsDisabled = false,
+}) => {
     const { t } = useTranslation();
 
     const columnSelectPopoverState = usePopupState({
@@ -141,7 +143,7 @@ export const ColumnsForm: FC = () => {
     );
 
     return (
-        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+        <Stack component={Paper} sx={{ p: 1 }}>
             <Stack direction="row" justifyContent="space-between">
                 <Controller
                     control={control}
@@ -150,9 +152,16 @@ export const ColumnsForm: FC = () => {
                         <span>
                             {t("columns.describedBy")}:{" "}
                             <Button
-                                {...bindTrigger(columnSelectPopoverState)}
+                                {...(!controlsDisabled &&
+                                    bindTrigger(columnSelectPopoverState))}
+                                sx={{
+                                    cursor: controlsDisabled
+                                        ? "auto"
+                                        : "pointer",
+                                }}
                                 variant="text"
                                 size="small"
+                                disableRipple={controlsDisabled}
                             >
                                 {value.name}
                             </Button>
@@ -165,13 +174,15 @@ export const ColumnsForm: FC = () => {
                     )}
                 />
 
-                <Button
-                    variant="text"
-                    size="small"
-                    {...bindTrigger(columnOptionsPopoverState)}
-                >
-                    {t("columns.add")}
-                </Button>
+                {!controlsDisabled && (
+                    <Button
+                        variant="text"
+                        size="small"
+                        {...bindTrigger(columnOptionsPopoverState)}
+                    >
+                        {t("columns.add")}
+                    </Button>
+                )}
 
                 <OptionsSelectPopover
                     {...bindPopover(columnOptionsPopoverState)}

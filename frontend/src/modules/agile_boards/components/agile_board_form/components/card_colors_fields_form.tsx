@@ -28,33 +28,51 @@ const ColumnTableRow: FC<{
     field: CustomFieldGroupLinkT;
     onRemove?: () => void;
     idx: number;
+    controlsDisabled?: boolean;
 }> = (data) => {
-    const { onRemove, field, idx } = data;
+    const { onRemove, field, idx, controlsDisabled = false } = data;
 
     const { handleRef, ref } = useSortable({
         id: field.gid,
         index: idx,
         data: { field, idx },
+        disabled: controlsDisabled,
     });
 
     return (
         <TableRow ref={ref}>
             <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
-                <IconButton size="medium" ref={handleRef}>
-                    <DragHandle fontSize="inherit" />
+                <IconButton
+                    ref={handleRef}
+                    sx={{ cursor: controlsDisabled ? "default" : "grab" }}
+                    size="medium"
+                    disabled={controlsDisabled}
+                >
+                    <DragHandle
+                        sx={{
+                            color: controlsDisabled
+                                ? "action.disabled"
+                                : "inherit",
+                        }}
+                        fontSize="inherit"
+                    />
                 </IconButton>
             </TableCell>
             <TableCell>{field.name}</TableCell>
             <TableCell align="right">
-                <IconButton size="small" color="error" onClick={onRemove}>
-                    <DeleteIcon fontSize="inherit" />
-                </IconButton>
+                {!controlsDisabled && (
+                    <IconButton size="small" color="error" onClick={onRemove}>
+                        <DeleteIcon fontSize="inherit" />
+                    </IconButton>
+                )}
             </TableCell>
         </TableRow>
     );
 };
 
-export const CardColorsFieldsForm: FC = () => {
+export const CardColorsFieldsForm: FC<{ controlsDisabled?: boolean }> = ({
+    controlsDisabled = false,
+}) => {
     const { t } = useTranslation();
 
     const cardColorFieldsPopoverState = usePopupState({
@@ -109,7 +127,7 @@ export const CardColorsFieldsForm: FC = () => {
     );
 
     return (
-        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+        <Stack component={Paper} sx={{ p: 1 }}>
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -117,13 +135,15 @@ export const CardColorsFieldsForm: FC = () => {
             >
                 <span>{t("cardColorFieldsForm.form.fields")}</span>
 
-                <Button
-                    size="small"
-                    variant="text"
-                    {...bindTrigger(cardColorFieldsPopoverState)}
-                >
-                    {t("cardColorFieldsForm.fields.add")}
-                </Button>
+                {!controlsDisabled && (
+                    <Button
+                        size="small"
+                        variant="text"
+                        {...bindTrigger(cardColorFieldsPopoverState)}
+                    >
+                        {t("cardColorFieldsForm.fields.add")}
+                    </Button>
+                )}
 
                 <CardColorFieldsSelectPopover
                     {...bindPopover(cardColorFieldsPopoverState)}
@@ -145,6 +165,7 @@ export const CardColorsFieldsForm: FC = () => {
                                             field={field}
                                             idx={idx}
                                             onRemove={() => remove(idx)}
+                                            controlsDisabled={controlsDisabled}
                                         />
                                     ),
                             )}

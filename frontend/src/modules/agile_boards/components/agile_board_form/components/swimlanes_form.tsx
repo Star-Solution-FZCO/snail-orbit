@@ -36,33 +36,51 @@ const SwimlaneTableRow: FC<{
     swimlane: OptionT;
     onRemove?: () => void;
     idx: number;
+    controlsDisabled?: boolean;
 }> = (data) => {
-    const { onRemove, swimlane, idx } = data;
+    const { onRemove, swimlane, idx, controlsDisabled } = data;
 
     const { handleRef, ref } = useSortable({
         id: getOptionKey(swimlane),
         index: idx,
         data: { swimlane, idx },
+        disabled: controlsDisabled,
     });
 
     return (
         <TableRow ref={ref}>
             <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
-                <IconButton size="medium" ref={handleRef}>
-                    <DragHandle fontSize="inherit" />
+                <IconButton
+                    ref={handleRef}
+                    sx={{ cursor: controlsDisabled ? "default" : "grab" }}
+                    size="medium"
+                    disabled={controlsDisabled}
+                >
+                    <DragHandle
+                        sx={{
+                            color: controlsDisabled
+                                ? "action.disabled"
+                                : "inherit",
+                        }}
+                        fontSize="inherit"
+                    />
                 </IconButton>
             </TableCell>
             <TableCell>{getOptionValue(swimlane)}</TableCell>
             <TableCell align="right">
-                <IconButton size="small" color="error" onClick={onRemove}>
-                    <DeleteIcon fontSize="inherit" />
-                </IconButton>
+                {!controlsDisabled && (
+                    <IconButton size="small" color="error" onClick={onRemove}>
+                        <DeleteIcon fontSize="inherit" />
+                    </IconButton>
+                )}
             </TableCell>
         </TableRow>
     );
 };
 
-export const SwimlanesForm: FC = () => {
+export const SwimlanesForm: FC<{ controlsDisabled?: boolean }> = ({
+    controlsDisabled = false,
+}) => {
     const { t } = useTranslation();
 
     const swimlaneSelectPopoverState = usePopupState({
@@ -141,7 +159,7 @@ export const SwimlanesForm: FC = () => {
     );
 
     return (
-        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+        <Stack component={Paper} sx={{ p: 1 }}>
             <Stack direction="row" justifyContent="space-between">
                 <Controller
                     control={control}
@@ -150,9 +168,16 @@ export const SwimlanesForm: FC = () => {
                         <span>
                             {t("swimlanes.describedBy")}:{" "}
                             <Button
-                                {...bindTrigger(swimlaneSelectPopoverState)}
+                                {...(!controlsDisabled &&
+                                    bindTrigger(swimlaneSelectPopoverState))}
+                                sx={{
+                                    cursor: controlsDisabled
+                                        ? "auto"
+                                        : "pointer",
+                                }}
                                 variant="text"
                                 size="small"
+                                disableRipple={controlsDisabled}
                             >
                                 {value?.name || t("none")}
                             </Button>
@@ -169,14 +194,16 @@ export const SwimlanesForm: FC = () => {
                     )}
                 />
 
-                <Button
-                    variant="text"
-                    size="small"
-                    disabled={!field?.gid}
-                    {...bindTrigger(swimlaneOptionsPopoverState)}
-                >
-                    {t("swimlanes.add")}
-                </Button>
+                {!controlsDisabled && (
+                    <Button
+                        variant="text"
+                        size="small"
+                        disabled={!field?.gid}
+                        {...bindTrigger(swimlaneOptionsPopoverState)}
+                    >
+                        {t("swimlanes.add")}
+                    </Button>
+                )}
 
                 <OptionsSelectPopover
                     {...bindPopover(swimlaneOptionsPopoverState)}
@@ -199,6 +226,9 @@ export const SwimlanesForm: FC = () => {
                                                 swimlane={swimlane}
                                                 idx={idx}
                                                 onRemove={() => remove(idx)}
+                                                controlsDisabled={
+                                                    controlsDisabled
+                                                }
                                             />
                                         ),
                                 )}

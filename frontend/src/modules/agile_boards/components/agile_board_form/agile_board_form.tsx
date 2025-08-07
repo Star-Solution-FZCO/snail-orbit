@@ -12,7 +12,7 @@ import { ColumnSwimlanes } from "./tabs/column_swimlanes";
 import { MainInfo } from "./tabs/main_info";
 
 interface IAgileBoardFormProps {
-    defaultValues?: AgileBoardT;
+    board: AgileBoardT;
     onSubmit: (formData: AgileBoardT) => void;
 }
 
@@ -23,10 +23,7 @@ const enum tabs {
     access = "access",
 }
 
-const AgileBoardForm: FC<IAgileBoardFormProps> = ({
-    defaultValues,
-    onSubmit,
-}) => {
+const AgileBoardForm: FC<IAgileBoardFormProps> = ({ board, onSubmit }) => {
     const { t } = useTranslation();
     const [currentTab, setTab] = useState<tabs>(tabs.main);
 
@@ -40,8 +37,8 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
     } = form;
 
     useEffect(() => {
-        reset(defaultValues);
-    }, [defaultValues, reset]);
+        reset(board);
+    }, [board, reset]);
 
     const fieldValues = useWatch({ control });
 
@@ -55,6 +52,9 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
             debouncedSubmit();
         }
     }, [debouncedSubmit, dirtyFields, fieldValues]);
+
+    const isBoardViewer = board.current_permission === "view";
+    const isBoardAdmin = board.current_permission === "admin";
 
     return (
         <FormProvider {...form}>
@@ -85,28 +85,32 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({
                                 label={t("agileBoardForm.tab.card")}
                                 value={tabs.card}
                             />
-                            <Tab
-                                label={t("agileBoardForm.tab.access")}
-                                value={tabs.access}
-                            />
+                            {isBoardAdmin && (
+                                <Tab
+                                    label={t("agileBoardForm.tab.access")}
+                                    value={tabs.access}
+                                />
+                            )}
                         </Tabs>
                     </Box>
 
                     <TabPanel value={tabs.main}>
-                        <MainInfo />
+                        <MainInfo readOnly={isBoardViewer} />
                     </TabPanel>
 
                     <TabPanel value={tabs.column_and_swim_lines}>
-                        <ColumnSwimlanes />
+                        <ColumnSwimlanes controlsDisabled={isBoardViewer} />
                     </TabPanel>
 
                     <TabPanel value={tabs.card}>
-                        <Card />
+                        <Card controlsDisabled={isBoardViewer} />
                     </TabPanel>
 
-                    <TabPanel value={tabs.access}>
-                        <Access />
-                    </TabPanel>
+                    {isBoardAdmin && (
+                        <TabPanel value={tabs.access}>
+                            <Access />
+                        </TabPanel>
+                    )}
                 </Box>
             </TabContext>
         </FormProvider>

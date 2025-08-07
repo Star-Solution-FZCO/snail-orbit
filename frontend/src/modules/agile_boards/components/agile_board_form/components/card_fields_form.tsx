@@ -27,33 +27,53 @@ const ColumnTableRow: FC<{
     field: CustomFieldGroupLinkT;
     onRemove?: () => void;
     idx: number;
+    controlsDisabled?: boolean;
 }> = (data) => {
-    const { onRemove, field, idx } = data;
+    const { onRemove, field, idx, controlsDisabled = false } = data;
 
     const { handleRef, ref } = useSortable({
         id: field.gid,
         index: idx,
         data: { field, idx },
+        disabled: controlsDisabled,
     });
 
     return (
         <TableRow ref={ref}>
             <TableCell align="left" sx={{ flexGrow: 0 }} padding="checkbox">
-                <IconButton size="medium" ref={handleRef}>
-                    <DragHandle fontSize="inherit" />
+                <IconButton
+                    ref={handleRef}
+                    sx={{ cursor: controlsDisabled ? "default" : "grab" }}
+                    size="medium"
+                    disabled={controlsDisabled}
+                >
+                    <DragHandle
+                        sx={{
+                            color: controlsDisabled
+                                ? "action.disabled"
+                                : "inherit",
+                        }}
+                        fontSize="inherit"
+                    />
                 </IconButton>
             </TableCell>
+
             <TableCell>{field.name}</TableCell>
+
             <TableCell align="right">
-                <IconButton size="small" color="error" onClick={onRemove}>
-                    <DeleteIcon fontSize="inherit" />
-                </IconButton>
+                {!controlsDisabled && (
+                    <IconButton size="small" color="error" onClick={onRemove}>
+                        <DeleteIcon fontSize="inherit" />
+                    </IconButton>
+                )}
             </TableCell>
         </TableRow>
     );
 };
 
-export const CardFieldsForm: FC = () => {
+export const CardFieldsForm: FC<{ controlsDisabled?: boolean }> = ({
+    controlsDisabled = false,
+}) => {
     const { t } = useTranslation();
 
     const cardFieldsPopoverState = usePopupState({
@@ -108,7 +128,7 @@ export const CardFieldsForm: FC = () => {
     );
 
     return (
-        <Stack gap={1} component={Paper} sx={{ p: 1 }}>
+        <Stack component={Paper} sx={{ p: 1 }}>
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -116,13 +136,15 @@ export const CardFieldsForm: FC = () => {
             >
                 <span>{t("cardFieldsForm.form.fields")}</span>
 
-                <Button
-                    size="small"
-                    variant="text"
-                    {...bindTrigger(cardFieldsPopoverState)}
-                >
-                    {t("cardFieldsForm.fields.add")}
-                </Button>
+                {!controlsDisabled && (
+                    <Button
+                        size="small"
+                        variant="text"
+                        {...bindTrigger(cardFieldsPopoverState)}
+                    >
+                        {t("cardFieldsForm.fields.add")}
+                    </Button>
+                )}
 
                 <CardCustomFieldsSelectPopover
                     {...bindPopover(cardFieldsPopoverState)}
@@ -135,7 +157,11 @@ export const CardFieldsForm: FC = () => {
             <TableContainer>
                 <Table size="small">
                     <TableBody>
-                        <DragDropProvider onDragEnd={handleDragEnd}>
+                        <DragDropProvider
+                            onDragEnd={
+                                controlsDisabled ? undefined : handleDragEnd
+                            }
+                        >
                             {customFields.map(
                                 (field, idx) =>
                                     field && (
@@ -144,6 +170,7 @@ export const CardFieldsForm: FC = () => {
                                             field={field}
                                             idx={idx}
                                             onRemove={() => remove(idx)}
+                                            controlsDisabled={controlsDisabled}
                                         />
                                     ),
                             )}

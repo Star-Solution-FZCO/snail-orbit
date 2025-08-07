@@ -428,6 +428,8 @@
   "projectEncryptionTab.usersTable.noUsers": "No users added",
   "projectEncryptionTab.usersTable.user": "User",
   "projects.access.grant": "Grant",
+  "projects.count": "{{count}} projects",
+  "projects.count_zero": "No projects",
   "projects.access.grant.success": "Permission granted successfully",
   "projects.access.grantPermission": "Grant permission",
   "projects.access.permissions.revoke": "Revoke",

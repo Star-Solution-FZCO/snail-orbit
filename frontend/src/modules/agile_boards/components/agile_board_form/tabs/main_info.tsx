@@ -6,7 +6,7 @@ import type { AgileBoardT } from "shared/model/types";
 import { MDEditor } from "shared/ui";
 import { ProjectSelect } from "../components/project_select";
 
-export const MainInfo: FC = () => {
+export const MainInfo: FC<{ readOnly?: boolean }> = ({ readOnly = false }) => {
     const { t } = useTranslation();
 
     const { control } = useFormContext<AgileBoardT>();
@@ -24,6 +24,11 @@ export const MainInfo: FC = () => {
                         helperText={error?.message || ""}
                         variant="outlined"
                         size="small"
+                        slotProps={{
+                            input: {
+                                readOnly,
+                            },
+                        }}
                         fullWidth
                     />
                 )}
@@ -37,6 +42,7 @@ export const MainInfo: FC = () => {
                         value={value || ""}
                         onBlur={onChange}
                         placeholder={t("agileBoards.form.description")}
+                        readOnly={readOnly}
                     />
                 )}
             />
@@ -45,7 +51,11 @@ export const MainInfo: FC = () => {
                 control={control}
                 name="projects"
                 render={({ field, fieldState: { error: fieldError } }) => (
-                    <ProjectSelect {...field} error={fieldError} />
+                    <ProjectSelect
+                        {...field}
+                        error={fieldError}
+                        readOnly={readOnly}
+                    />
                 )}
             />
 
@@ -61,6 +71,11 @@ export const MainInfo: FC = () => {
                         variant="outlined"
                         size="small"
                         fullWidth
+                        slotProps={{
+                            input: {
+                                readOnly,
+                            },
+                        }}
                     />
                 )}
             />

@@ -4,14 +4,14 @@ import { CardColorsFieldsForm } from "../components/card_colors_fields_form";
 import { CardFieldsForm } from "../components/card_fields_form";
 import { ColumnsStrategyForm } from "../components/columns_strategy_form";
 
-export const Card: FC = () => {
+export const Card: FC<{ controlsDisabled?: boolean }> = (props) => {
     return (
         <Stack direction="column" gap={1}>
-            <CardFieldsForm />
+            <CardFieldsForm {...props} />
 
-            <ColumnsStrategyForm />
+            <ColumnsStrategyForm {...props} />
 
-            <CardColorsFieldsForm />
+            <CardColorsFieldsForm {...props} />
         </Stack>
     );
 };

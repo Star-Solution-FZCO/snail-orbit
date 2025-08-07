@@ -11,10 +11,11 @@ export type ProjectSelectProps = {
     value?: BasicProjectT[];
     onChange?: (projects: BasicProjectT[]) => void;
     error?: Merge<FieldError, (FieldError | undefined)[]>;
+    readOnly?: boolean;
 };
 
 export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
-    ({ value, onChange, error }, ref) => {
+    ({ value, onChange, error, readOnly = false }, ref) => {
         const { t } = useTranslation();
 
         const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +49,7 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
 
         return (
             <Autocomplete
+                ref={ref}
                 value={value || []}
                 options={options}
                 open={isOpen}
@@ -60,19 +62,21 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
                     <TextField
                         {...params}
                         label={t("agileBoards.form.projects")}
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {isLoading ? (
-                                        <CircularProgress
-                                            color="inherit"
-                                            size={12}
-                                        />
-                                    ) : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
+                        slotProps={{
+                            input: {
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {isLoading ? (
+                                            <CircularProgress
+                                                color="inherit"
+                                                size={12}
+                                            />
+                                        ) : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            },
                         }}
                         error={!!error}
                         helperText={t(error?.message || "")}
@@ -80,9 +84,9 @@ export const ProjectSelect = forwardRef<HTMLElement, ProjectSelectProps>(
                     />
                 )}
                 loading={isLoading}
+                readOnly={readOnly}
                 filterSelectedOptions
                 multiple
-                ref={ref}
             />
         );
     },
