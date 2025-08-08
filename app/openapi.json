@@ -41414,6 +41414,11 @@
               }
             ],
             "title": "Encryption"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Download URL"
           }
         },
         "type": "object",
@@ -41425,7 +41430,8 @@
           "author",
           "created_at",
           "ocr_text",
-          "encryption"
+          "encryption",
+          "url"
         ],
         "title": "IssueAttachmentOut"
       },

@@ -61,7 +61,7 @@ async def list_comments(
 
     items = sorted(
         [
-            IssueCommentOutput.from_obj(c)
+            await IssueCommentOutput.from_obj(c)
             for c in issue.comments[query.offset : query.offset + query.limit]
         ],
         key=lambda comment: comment.created_at,
@@ -91,7 +91,7 @@ async def get_comment(
     comment = next((c for c in issue.comments if c.id == comment_id), None)
     if not comment:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Comment not found')
-    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+    return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
 @router.post('/', responses=error_responses(*WRITE_ERRORS))
@@ -127,7 +127,7 @@ async def create_comment(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+    return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
 @router.put('/{comment_id}', responses=error_responses(*CRUD_ERRORS))
@@ -183,7 +183,7 @@ async def update_comment(
             if a.id not in extra_attachment_ids or a.encryption:
                 continue
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
-    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+    return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
 @router.delete('/{comment_id}', responses=error_responses(*READ_ERRORS))
@@ -239,7 +239,7 @@ async def hide_comment(
 
     comment.is_hidden = True
     await issue.save_changes()
-    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+    return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
 @router.put('/{comment_id}/restore', responses=error_responses(*CRUD_ERRORS))
@@ -265,4 +265,4 @@ async def restore_comment(
 
     comment.is_hidden = False
     await issue.save_changes()
-    return SuccessPayloadOutput(payload=IssueCommentOutput.from_obj(comment))
+    return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))

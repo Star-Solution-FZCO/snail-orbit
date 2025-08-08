@@ -156,7 +156,7 @@ async def list_issues(
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
     return BaseListOutput.make(
-        items=[IssueOutput.from_obj(obj, accessible_tag_ids) async for obj in q],
+        items=[await IssueOutput.from_obj(obj, accessible_tag_ids) async for obj in q],
         count=cnt,
         limit=query.limit,
         offset=query.offset,
@@ -203,12 +203,12 @@ async def create_draft(
     await update_attachments(obj, body.attachments, user=user_ctx.user)
     if validation_errors:
         raise ValidateModelError(
-            payload=IssueDraftOutput.from_obj(obj),
+            payload=await IssueDraftOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
     await obj.insert()
-    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+    return SuccessPayloadOutput(payload=await IssueDraftOutput.from_obj(obj))
 
 
 @router.get('/draft/list')
@@ -258,7 +258,7 @@ async def get_draft(
             HTTPStatus.FORBIDDEN,
             'You do not have permission to read this draft',
         )
-    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+    return SuccessPayloadOutput(payload=await IssueDraftOutput.from_obj(obj))
 
 
 @router.put(
@@ -331,13 +331,13 @@ async def update_draft(
         obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
         raise ValidateModelError(
-            payload=IssueDraftOutput.from_obj(obj),
+            payload=await IssueDraftOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
     if obj.is_changed:
         await obj.replace()
-    return SuccessPayloadOutput(payload=IssueDraftOutput.from_obj(obj))
+    return SuccessPayloadOutput(payload=await IssueDraftOutput.from_obj(obj))
 
 
 @router.delete('/draft/{draft_id}', responses=error_responses(*READ_ERRORS))
@@ -419,7 +419,7 @@ async def create_issue_from_draft(
                 await wf.run(obj)
     except WorkflowError as err:
         raise ValidateModelError(
-            payload=IssueOutput.from_obj(obj),
+            payload=await IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         ) from err
@@ -446,7 +446,9 @@ async def create_issue_from_draft(
         author=user_ctx.user.email,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.get('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
@@ -462,7 +464,9 @@ async def get_issue(
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.post('/', responses=error_responses(*WRITE_ERRORS))
@@ -499,7 +503,7 @@ async def create_issue(
     await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
     if validation_errors:
         raise ValidateModelError(
-            payload=IssueOutput.from_obj(obj),
+            payload=await IssueOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
@@ -509,7 +513,7 @@ async def create_issue(
                 await wf.run(obj)
     except WorkflowError as err:
         raise ValidateModelError(
-            payload=IssueOutput.from_obj(obj),
+            payload=await IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         ) from err
@@ -535,7 +539,9 @@ async def create_issue(
         author=user_ctx.user.email,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.put(
@@ -614,7 +620,7 @@ async def update_issue(
         obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
         raise ValidateModelError(
-            payload=IssueOutput.from_obj(obj),
+            payload=await IssueOutput.from_obj(obj),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
@@ -624,7 +630,7 @@ async def update_issue(
                 await wf.run(obj)
     except WorkflowError as err:
         raise ValidateModelError(
-            payload=IssueOutput.from_obj(obj),
+            payload=await IssueOutput.from_obj(obj),
             error_messages=[err.msg],
             error_fields=err.fields_errors,
         ) from err
@@ -663,7 +669,9 @@ async def update_issue(
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
         await m.Issue.update_issue_embedded_links(obj)
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.delete('/{issue_id_or_alias}', responses=error_responses(*READ_ERRORS))
@@ -719,7 +727,9 @@ async def subscribe_issue(
         obj.subscribers.append(user_ctx.user.id)
         await obj.replace()
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.post(
@@ -740,7 +750,9 @@ async def unsubscribe_issue(
         obj.subscribers.remove(user_ctx.user.id)
         await obj.replace()
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.post('/{issue_id_or_alias}/link', responses=error_responses(*WRITE_ERRORS))
@@ -807,7 +819,9 @@ async def link_issues(
 
     await obj.replace()
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.get(
@@ -902,7 +916,9 @@ async def update_link(
     await target_obj.replace()
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.delete(
@@ -948,7 +964,9 @@ async def unlink_issue(
         await target_obj.replace()
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.put(
@@ -989,7 +1007,9 @@ async def tag_issue(
     await obj.replace()
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.put(
@@ -1030,7 +1050,9 @@ async def untag_issue(
     await obj.replace()
 
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
-    return SuccessPayloadOutput(payload=IssueOutput.from_obj(obj, accessible_tag_ids))
+    return SuccessPayloadOutput(
+        payload=await IssueOutput.from_obj(obj, accessible_tag_ids)
+    )
 
 
 @router.get(

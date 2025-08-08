@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, RootModel
 import pm.models as m
 from pm.api.context import current_user
 from pm.permissions import ProjectPermissions
+from pm.services.files import get_storage_client
+from pm.utils.file_storage.s3 import S3StorageClient
 
 from .custom_fields import (
     CustomFieldValueOutputRootModel,
@@ -81,9 +83,16 @@ class IssueAttachmentOut(BaseModel):
     created_at: datetime
     ocr_text: str | None
     encryption: list[m.EncryptionMeta] | None
+    url: str = Field(description='Download URL')
 
     @classmethod
-    def from_obj(cls, obj: m.IssueAttachment) -> Self:
+    async def from_obj(cls, obj: m.IssueAttachment) -> Self:
+        client = get_storage_client()
+        if isinstance(client, S3StorageClient):
+            url = await client.get_presigned_url(str(obj.id))
+        else:
+            url = f'/api/v1/files/{obj.id}'
+
         return cls(
             id=obj.id,
             name=obj.name,
@@ -93,6 +102,7 @@ class IssueAttachmentOut(BaseModel):
             created_at=obj.created_at,
             ocr_text=obj.ocr_text,
             encryption=obj.encryption,
+            url=url,
         )
 
 
@@ -171,7 +181,7 @@ class IssueOutput(BaseModel):
     access_claims: list[ProjectPermissions]
 
     @classmethod
-    def from_obj(
+    async def from_obj(
         cls, obj: m.Issue, accessible_tag_ids: set[PydanticObjectId] | None = None
     ) -> Self:
         user_ctx = current_user()
@@ -204,7 +214,9 @@ class IssueOutput(BaseModel):
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields
             },
-            attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
+            attachments=[
+                await IssueAttachmentOut.from_obj(att) for att in obj.attachments
+            ],
             is_subscribed=current_user().user.id in obj.subscribers,
             created_by=UserOutput.from_obj(obj.created_by),
             created_at=obj.created_at,
@@ -234,7 +246,7 @@ class IssueDraftOutput(BaseModel):
     created_by: UserOutput
 
     @classmethod
-    def from_obj(cls, obj: m.IssueDraft) -> Self:
+    async def from_obj(cls, obj: m.IssueDraft) -> Self:
         return cls(
             id=obj.id,
             project=ProjectField.from_obj(obj.project) if obj.project else None,
@@ -249,7 +261,9 @@ class IssueDraftOutput(BaseModel):
                 field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
                 for field in obj.fields
             },
-            attachments=[IssueAttachmentOut.from_obj(att) for att in obj.attachments],
+            attachments=[
+                await IssueAttachmentOut.from_obj(att) for att in obj.attachments
+            ],
             created_at=obj.created_at,
             created_by=UserOutput.from_obj(obj.created_by),
         )
@@ -502,7 +516,7 @@ class IssueCommentOutput(BaseModel):
     spent_time: int
 
     @classmethod
-    def from_obj(cls, obj: m.IssueComment) -> Self:
+    async def from_obj(cls, obj: m.IssueComment) -> Self:
         text = (
             EncryptedObject(
                 value=obj.text,
@@ -518,7 +532,7 @@ class IssueCommentOutput(BaseModel):
             author=UserOutput.from_obj(obj.author),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
-            attachments=[IssueAttachmentOut.from_obj(a) for a in obj.attachments]
+            attachments=[await IssueAttachmentOut.from_obj(a) for a in obj.attachments]
             if not obj.is_hidden
             else [],
             is_hidden=obj.is_hidden,

@@ -45,11 +45,11 @@ class IssueFeedRecordOutput(BaseModel):
         return self.data.time
 
     @classmethod
-    def from_obj(cls, obj: m.IssueComment | m.IssueHistoryRecord) -> Self:
+    async def from_obj(cls, obj: m.IssueComment | m.IssueHistoryRecord) -> Self:
         if isinstance(obj, m.IssueComment):
             return cls(
                 type=IssueFeedRecordType.COMMENT,
-                data=IssueCommentOutput.from_obj(obj),
+                data=await IssueCommentOutput.from_obj(obj),
                 time=obj.created_at,
             )
         return cls(
@@ -72,9 +72,11 @@ async def list_issue_feed(
 
     user_ctx = current_user()
     if user_ctx.has_permission(issue.project.id, ProjectPermissions.COMMENT_READ):
-        records.extend([IssueFeedRecordOutput.from_obj(c) for c in issue.comments])
+        records.extend(
+            [await IssueFeedRecordOutput.from_obj(c) for c in issue.comments]
+        )
     if user_ctx.has_permission(issue.project.id, ProjectPermissions.ISSUE_READ):
-        records.extend([IssueFeedRecordOutput.from_obj(h) for h in issue.history])
+        records.extend([await IssueFeedRecordOutput.from_obj(h) for h in issue.history])
 
     sort_by = query.sort_by
 
