@@ -34,6 +34,7 @@ class S3StorageClient(BaseStorageClient):
     __access_key_id: str
     __access_key_secret: str
     __region: str
+    __presigned_url_expiration: int
 
     def __init__(
         self,
@@ -44,6 +45,7 @@ class S3StorageClient(BaseStorageClient):
         region: str,
         verify: bool = True,
         public_endpoint: str | None = None,
+        presigned_url_expiration: int = 3600,
     ) -> None:
         self.__access_key_id = access_key_id
         self.__access_key_secret = access_key_secret
@@ -52,6 +54,7 @@ class S3StorageClient(BaseStorageClient):
         self.__endpoint = endpoint
         self.__public_endpoint = public_endpoint or endpoint
         self.__verify = verify
+        self.__presigned_url_expiration = presigned_url_expiration
 
     def _get_client_ctx(self, public: bool = False) -> 'S3Client':
         session = aioboto3.Session(
@@ -122,7 +125,7 @@ class S3StorageClient(BaseStorageClient):
         file_id: FileIDT,
         method: Literal['get_object', 'put_object'] = 'get_object',
         folder: str = 'storage',
-        expiration: int = 3600,
+        expiration: int | None = None,
     ) -> str:
         filepath = opj(folder, str(file_id))
         async with self._get_client_ctx(public=True) as client:
@@ -132,7 +135,7 @@ class S3StorageClient(BaseStorageClient):
                     'Bucket': self.__bucket,
                     'Key': filepath,
                 },
-                ExpiresIn=expiration,
+                ExpiresIn=expiration or self.__presigned_url_expiration,
             )
 
     async def get_file_info(

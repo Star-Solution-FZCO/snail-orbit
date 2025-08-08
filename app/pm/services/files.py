@@ -24,6 +24,7 @@ def get_storage_client() -> BaseStorageClient:
         region=CONFIG.S3_REGION,
         verify=CONFIG.S3_VERIFY,
         public_endpoint=CONFIG.S3_PUBLIC_ENDPOINT,
+        presigned_url_expiration=CONFIG.S3_PRESIGNED_URL_EXPIRATION,
     )
 
 

@@ -370,6 +370,16 @@ CONFIG = Dynaconf(
             ),
         ),
         Validator(
+            'S3_PRESIGNED_URL_EXPIRATION',
+            cast=int,
+            default=24 * 60 * 60,
+            description='S3 presigned URL expiration time in seconds (default: 24 * 60 * 60 = 1 day)',
+            when=Validator(
+                'FILE_STORAGE_MODE',
+                condition=lambda v: v == FileStorageModeT.S3,
+            ),
+        ),
+        Validator(
             'API_SERVICE_TOKEN_MAX_AGE',
             cast=int,
             default=2 * 60,
