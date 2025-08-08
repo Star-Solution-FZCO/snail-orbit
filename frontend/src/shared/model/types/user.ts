@@ -1,4 +1,4 @@
-import type { UserOutput } from "./backend-schema.gen";
+import type { Profile, UserOutput } from "./backend-schema.gen";
 import type { GroupT } from "./group";
 
 export type BasicUserT = UserOutput;
@@ -9,6 +9,8 @@ export type UserT = BasicUserT & {
     origin: string;
     mfa_enabled: boolean;
 };
+
+export type ProfileT = Profile;
 
 export type CreateUserT = {
     name: string;

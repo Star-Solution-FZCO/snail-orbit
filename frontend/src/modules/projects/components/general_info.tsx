@@ -101,7 +101,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
                             fontWeight: "bold",
                             cursor: canUpdateProject ? "pointer" : "default",
                         }}
-                        src={project.avatar}
+                        src={project.avatar || ""}
                         onClick={handleClickAvatar}
                         variant="rounded"
                     >

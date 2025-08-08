@@ -15,7 +15,7 @@ import { ProjectEncryptionTab } from "./components/project_encryption_tab/projec
 import { ProjectListView } from "./components/project_list_view";
 import { ProjectSubscribeButton } from "./components/project_subscribe_button";
 import { ProjectWorkflows } from "./components/project_workflows";
-import { ProjectFormTabKey, useProjectFormTabs } from "./utils";
+import { ProjectFormTabKey, useProjectViewTabs } from "./utils";
 
 type ProjectViewProps = {
     tab?: ProjectFormTabKey;
@@ -29,23 +29,23 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
     const { t } = useTranslation();
     const { setAction } = useNavbarSettings();
 
-    const { data, error } = projectApi.useGetProjectQuery(projectId);
-    const isAdmin = useAppSelector(
-        (state) => state.profile.user?.is_admin || false,
-    );
-
-    const canUpdateProject =
-        isAdmin ||
-        data?.payload?.access_claims?.includes("project:update") ||
-        false;
-
-    const tabs = useProjectFormTabs(
-        canUpdateProject,
-        data?.payload?.is_encrypted || false,
-    );
-
     const [currentTab, setCurrentTab] = useState(
         tab || ProjectFormTabKey.GENERAL,
+    );
+
+    const { data, error } = projectApi.useGetProjectQuery(projectId);
+    const user = useAppSelector((state) => state.profile.user);
+
+    const isAdmin = user?.is_admin || false;
+    const userAccessClaims = user?.access_claims || [];
+
+    const projectAccessClaims = data?.payload?.access_claims || [];
+    const projectEncrypted = data?.payload?.is_encrypted || false;
+
+    const tabs = useProjectViewTabs(
+        isAdmin,
+        projectAccessClaims,
+        projectEncrypted,
     );
 
     const handleChangeTab = (_: SyntheticEvent, value: ProjectFormTabKey) => {
@@ -54,16 +54,20 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
     };
 
     useEffect(() => {
+        const canCreateProject = userAccessClaims.includes(
+            "global:project_create",
+        );
+        const path = canCreateProject ? "/projects/create" : "/issues/create";
         setAction(
-            <Link to="/projects/create">
+            <Link to={path}>
                 <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("projects.new")}
+                    {t(canCreateProject ? "projects.new" : "issues.new")}
                 </NavbarActionButton>
             </Link>,
         );
 
         return () => setAction(null);
-    }, [setAction, t]);
+    }, [t, userAccessClaims, setAction]);
 
     useEffect(() => {
         setCurrentTab(tab || ProjectFormTabKey.GENERAL);

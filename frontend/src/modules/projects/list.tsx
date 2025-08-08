@@ -12,13 +12,9 @@ import {
 } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { projectApi } from "shared/model";
+import { projectApi, useAppSelector } from "shared/model";
 import { QueryPagination } from "shared/ui";
-import {
-    formatErrorMessages,
-    perPageOptions,
-    useListQueryParams,
-} from "shared/utils";
+import { formatErrorMessages, useListQueryParams } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 import { useCreateIssueNavbarSettings } from "../issues/hooks/use-create-issue-navbar-settings";
 import { ProjectCard } from "./components/project_card";
@@ -32,6 +28,9 @@ const ProjectList = () => {
     const [debouncedSearch, setSearch] = useDebouncedState<string>("");
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
+    const userAccessClaims =
+        useAppSelector((state) => state.profile.user?.access_claims) || [];
+
     const { data, isLoading, error } = projectApi.useListProjectQuery({
         ...listQueryParams,
         search: debouncedSearch,
@@ -39,6 +38,7 @@ const ProjectList = () => {
 
     const projects = data?.payload?.items || [];
     const count = data?.payload?.count || 0;
+    const canCreateProject = userAccessClaims.includes("global:project_create");
 
     return (
         <Container
@@ -65,16 +65,18 @@ const ProjectList = () => {
                     onChange={(event) => setSearch(event.target.value)}
                 />
 
-                <Link to="/projects/create">
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<AddIcon />}
-                        sx={{ textWrap: "nowrap", height: "40px" }}
-                    >
-                        {t("projects.new")}
-                    </Button>
-                </Link>
+                {canCreateProject && (
+                    <Link to="/projects/create">
+                        <Button
+                            sx={{ textWrap: "nowrap", height: "40px" }}
+                            size="small"
+                            variant="outlined"
+                            startIcon={<AddIcon />}
+                        >
+                            {t("projects.new")}
+                        </Button>
+                    </Link>
+                )}
             </Stack>
 
             {error && (

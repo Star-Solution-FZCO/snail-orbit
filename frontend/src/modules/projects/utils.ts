@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CustomFieldT } from "shared/model/types";
+import { CustomFieldT, ProjectT } from "shared/model/types";
 
 export const enum ProjectFormTabKey {
     GENERAL = "general",
@@ -11,8 +11,9 @@ export const enum ProjectFormTabKey {
     ENCRYPTION = "encryption",
 }
 
-export const useProjectFormTabs = (
-    canUpdateProject: boolean,
+export const useProjectViewTabs = (
+    isAdmin: boolean,
+    accessClaims: ProjectT["access_claims"],
     isProjectEncrypted: boolean,
 ) => {
     const { t } = useTranslation();
@@ -25,13 +26,21 @@ export const useProjectFormTabs = (
             },
         ];
 
+        const canManagePermissions =
+            isAdmin || accessClaims.includes("project:manage_permissions");
+        const canUpdateProject =
+            isAdmin || accessClaims.includes("project:update");
+
+        if (canManagePermissions) {
+            tabs.push({
+                label: t("projects.sections.access"),
+                value: ProjectFormTabKey.ACCESS,
+            });
+        }
+
         if (canUpdateProject) {
             tabs.push(
                 ...[
-                    {
-                        label: t("projects.sections.access"),
-                        value: ProjectFormTabKey.ACCESS,
-                    },
                     {
                         label: t("projects.sections.customFields"),
                         value: ProjectFormTabKey.CUSTOM_FIELDS,
@@ -56,7 +65,7 @@ export const useProjectFormTabs = (
         }
 
         return tabs;
-    }, [canUpdateProject, isProjectEncrypted, t]);
+    }, [isAdmin, accessClaims, isProjectEncrypted, t]);
 };
 
 export const generateSlug = (name: string): string => {

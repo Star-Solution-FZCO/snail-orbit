@@ -4,8 +4,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { projectApi } from "shared/model";
-import { Link } from "shared/ui";
+import { projectApi, useAppSelector } from "shared/model";
+import { Link, NotFound } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
@@ -21,6 +21,10 @@ const ProjectCreate = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { setAction } = useNavbarSettings();
+
+    const userAccessClaims =
+        useAppSelector((state) => state.profile.user?.access_claims) || [];
+    const canCreateProject = userAccessClaims.includes("global:project_create");
 
     const [createProject, { isLoading }] =
         projectApi.useCreateProjectMutation();
@@ -62,16 +66,19 @@ const ProjectCreate = () => {
     };
 
     useEffect(() => {
+        const path = canCreateProject ? "/projects/create" : "/issues/create";
         setAction(
-            <Link to="/projects/create">
+            <Link to={path}>
                 <NavbarActionButton startIcon={<AddIcon />}>
-                    {t("projects.new")}
+                    {t(canCreateProject ? "projects.new" : "issues.new")}
                 </NavbarActionButton>
             </Link>,
         );
 
         return () => setAction(null);
     }, [setAction, t]);
+
+    if (!canCreateProject) return <NotFound />;
 
     return (
         <Container

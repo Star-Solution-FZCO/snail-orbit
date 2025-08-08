@@ -1,9 +1,9 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import type { UserT } from "shared/model/types";
+import type { ProfileT } from "shared/model/types";
 
 export interface ProfileState {
-    user: UserT | null;
+    user: ProfileT | null;
 }
 
 const initialState: ProfileState = {
@@ -22,7 +22,7 @@ const profileSlice = createSlice({
     name: "profile",
     initialState: loadStateFromLocalStorage(),
     reducers: {
-        setUser(state, action: PayloadAction<UserT>) {
+        setUser(state, action: PayloadAction<ProfileT>) {
             state.user = action.payload;
             localStorage.setItem("profile", JSON.stringify(state));
         },

@@ -10,6 +10,7 @@ import type {
     ListSelectQueryParams,
     MFASettingsT,
     NewApiTokenT,
+    ProfileT,
     TOTPDataT,
     UpdateUserT,
     UserOrGroupT,
@@ -24,7 +25,7 @@ export const userApi = createApi({
     baseQuery: customFetchBase,
     tagTypes,
     endpoints: (build) => ({
-        getProfile: build.query<ApiResponse<UserT>, void>({
+        getProfile: build.query<ApiResponse<ProfileT>, void>({
             query: () => "profile",
             providesTags: (result, _error) => [
                 { type: "Users", id: result?.payload.id },

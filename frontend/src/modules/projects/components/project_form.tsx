@@ -117,15 +117,16 @@ const ProjectForm: FC<IProjectFormProps> = ({
             </Box>
 
             <Box display="flex" gap={1}>
-                <Button
-                    type="submit"
-                    variant="outlined"
-                    size="small"
-                    loading={loading}
-                    disabled={readOnly}
-                >
-                    {t("save")}
-                </Button>
+                {!readOnly && (
+                    <Button
+                        type="submit"
+                        variant="outlined"
+                        size="small"
+                        loading={loading}
+                    >
+                        {t("save")}
+                    </Button>
+                )}
 
                 {!hideCancel && (
                     <Link to="..">
