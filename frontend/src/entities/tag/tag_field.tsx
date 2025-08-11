@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { TagLinkT, TagT } from "shared/model/types";
 import FieldCard from "shared/ui/fields/field_card/field_card";
 import { TagManagerPopover } from "./tag_manager_popover";
@@ -8,10 +8,11 @@ type TagFieldProps = {
     label: string;
     variant?: "standard" | "error";
     onChange?: (value: TagT) => void;
+    rightAdornment?: ReactNode;
 };
 
 export const TagField = (props: TagFieldProps) => {
-    const { variant, onChange, value, label } = props;
+    const { variant, onChange, value, label, rightAdornment } = props;
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -23,6 +24,7 @@ export const TagField = (props: TagFieldProps) => {
                 onClick={(e) => setAnchorEl(e.currentTarget)}
                 variant={variant}
                 orientation="vertical"
+                rightAdornment={rightAdornment}
             />
 
             <TagManagerPopover

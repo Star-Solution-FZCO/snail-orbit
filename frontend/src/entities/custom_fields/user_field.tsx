@@ -1,5 +1,5 @@
 import type { ReactNode, SyntheticEvent } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { customFieldsApi, userApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
@@ -28,21 +28,23 @@ export const UserField = ({
     error,
     type = "field",
 }: UserFieldProps) => {
+    const [wasOpened, setWasOpened] = useState(false);
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
-    const [
-        fetchOptions,
-        { data: customFieldOptions, isLoading: isCustomFieldOptionsLoading },
-    ] = customFieldsApi.useLazyListSelectOptionsQuery();
-    const [
-        fetchUsers,
-        { data: userOptions, isLoading: isUsersOptionsLoading },
-    ] = userApi.useLazyListSelectUserQuery();
+    const { data: customFieldOptions, isLoading: isCustomFieldOptionsLoading } =
+        customFieldsApi.useListSelectOptionsQuery(
+            { id, ...listQueryParams },
+            { skip: type !== "field" || !wasOpened },
+        );
+    const { data: userOptions, isLoading: isUsersOptionsLoading } =
+        userApi.useListSelectUserQuery(
+            { ...listQueryParams },
+            { skip: type !== "users" || !wasOpened },
+        );
 
     const handleOpened = () => {
-        if (type === "field") fetchOptions({ id, ...listQueryParams });
-        else fetchUsers(listQueryParams);
+        setWasOpened(true);
     };
 
     const options = useMemo(() => {

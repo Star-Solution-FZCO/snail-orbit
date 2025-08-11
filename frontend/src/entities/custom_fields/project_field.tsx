@@ -1,4 +1,4 @@
-import type { FC, SyntheticEvent } from "react";
+import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { projectApi } from "shared/model";
 import type { IssueProjectT } from "shared/model/types";
@@ -10,7 +10,7 @@ type ProjectFieldProps = {
     label: string;
     onChange: (project: IssueProjectT) => void;
     error?: boolean;
-    rightAdornment?: boolean;
+    rightAdornment?: ReactNode;
 };
 
 export const ProjectField: FC<ProjectFieldProps> = ({

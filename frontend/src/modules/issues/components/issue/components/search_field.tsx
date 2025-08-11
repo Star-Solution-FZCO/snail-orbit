@@ -13,8 +13,8 @@ import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SearchT } from "shared/model/types/search";
+import { useQueryBuilder } from "widgets/query_builder/query_builder_provider";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
-import { useQueryBuilder } from "../../../../../widgets/query_builder/query_builder_provider";
 
 type SearchFieldProps = {
     value: string;
