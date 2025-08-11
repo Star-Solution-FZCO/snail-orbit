@@ -210,7 +210,7 @@ export const QueryBuilderFieldsParser = (
                     label={getQueryBuilderFilterName(filter.name)}
                     value={filter.value || undefined}
                     onChange={(project) => {
-                        onChange?.(filter, project.name);
+                        onChange?.(filter, project.slug);
                     }}
                     rightAdornment={adornment}
                 />
