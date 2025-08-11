@@ -24,8 +24,13 @@ export const getDefaultValueForField = (
             ...field,
             value: new Date().toISOString(),
         };
+    if (field.type === "string")
+        return {
+            ...field,
+            value: "",
+        };
     return {
         ...field,
-        value: "",
+        value: null,
     };
 };

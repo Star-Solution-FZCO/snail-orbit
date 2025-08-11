@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
-import { IssueLink } from "../../../../entities/issue/issue_link/issue_link";
 import { DraftModal } from "../../components/issue/draft_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
@@ -60,7 +59,6 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                     if (!openIssue) {
                         toast.success(
                             <span>
-                                <IssueLink issue={res.payload} />{" "}
                                 {t("issues.draft.issueCreateSuccessToast")}
                             </span>,
                         );

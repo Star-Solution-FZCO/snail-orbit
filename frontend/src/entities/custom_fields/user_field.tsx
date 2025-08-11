@@ -13,7 +13,7 @@ type UserFieldProps = {
     label: string;
     multiple?: boolean;
     id: string;
-    type?: "field" | "users";
+    type?: "field" | "group_field" | "users";
     rightAdornment?: ReactNode;
     error?: string;
 };
@@ -42,6 +42,13 @@ export const UserField = ({
             { ...listQueryParams },
             { skip: type !== "users" || !wasOpened },
         );
+    const {
+        data: customFieldGroupOptions,
+        isLoading: isCustomFieldGroupOptionsLoading,
+    } = customFieldsApi.useListGroupSelectOptionsQuery(
+        { gid: id, ...listQueryParams },
+        { skip: type !== "group_field" || !wasOpened },
+    );
 
     const handleOpened = () => {
         setWasOpened(true);
@@ -50,8 +57,13 @@ export const UserField = ({
     const options = useMemo(() => {
         return (customFieldOptions?.payload.items ||
             userOptions?.payload.items ||
+            customFieldGroupOptions?.payload.items ||
             []) as BasicUserT[];
-    }, [customFieldOptions?.payload.items, userOptions?.payload.items]);
+    }, [
+        customFieldGroupOptions?.payload.items,
+        customFieldOptions?.payload.items,
+        userOptions?.payload.items,
+    ]);
 
     const handleChange = (
         _: SyntheticEvent,
@@ -77,7 +89,11 @@ export const UserField = ({
 
     return (
         <SelectField
-            loading={isCustomFieldOptionsLoading || isUsersOptionsLoading}
+            loading={
+                isCustomFieldOptionsLoading ||
+                isUsersOptionsLoading ||
+                isCustomFieldGroupOptionsLoading
+            }
             options={options}
             value={value}
             label={label}

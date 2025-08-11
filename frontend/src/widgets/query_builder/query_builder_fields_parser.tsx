@@ -130,6 +130,7 @@ export const QueryBuilderFieldsParser = (
                         onChange={(value) => {
                             onChange?.(filter, (value as BasicUserT).email);
                         }}
+                        type="group_field"
                         rightAdornment={adornment}
                     />
                 );
