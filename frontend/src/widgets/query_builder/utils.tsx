@@ -19,11 +19,6 @@ export const getDefaultValueForField = (
             ...field,
             value: false,
         };
-    if (field.type === "datetime" || field.type === "date")
-        return {
-            ...field,
-            value: new Date().toISOString(),
-        };
     if (field.type === "string")
         return {
             ...field,
