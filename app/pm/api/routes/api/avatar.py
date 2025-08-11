@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import NOT_FOUND_RESPONSES
 from pm.services.avatars import AVATAR_STORAGE_DIR, PROJECT_AVATAR_STORAGE_DIR
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.file_storage import StorageFileNotFoundError
 from pm.utils.file_storage.s3 import S3StorageClient
 
@@ -20,18 +20,21 @@ router = APIRouter(prefix='/avatar', tags=['avatar'])
 async def get_avatar(
     email_hash: str,
 ) -> StreamingResponse | RedirectResponse:
-    client = get_storage_client()
-    if isinstance(client, S3StorageClient):
+    if isinstance(STORAGE_CLIENT, S3StorageClient):
         return RedirectResponse(
-            url=await client.get_presigned_url(email_hash, folder=AVATAR_STORAGE_DIR),
+            url=await STORAGE_CLIENT.get_presigned_url(
+                email_hash, folder=AVATAR_STORAGE_DIR
+            ),
             status_code=HTTPStatus.TEMPORARY_REDIRECT,
         )
     try:
-        file_header = await client.get_file_info(email_hash, folder=AVATAR_STORAGE_DIR)
+        file_header = await STORAGE_CLIENT.get_file_info(
+            email_hash, folder=AVATAR_STORAGE_DIR
+        )
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
-        content=client.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore[arg-type]
+        content=STORAGE_CLIENT.get_file_stream(email_hash, folder=AVATAR_STORAGE_DIR),  # type: ignore[arg-type]
         media_type=file_header.content_type,
         headers={
             'Content-Disposition': file_header.encode_filename_disposition(),
@@ -44,24 +47,25 @@ async def get_avatar(
 async def get_project_avatar(
     project_id: PydanticObjectId,
 ) -> RedirectResponse | StreamingResponse:
-    client = get_storage_client()
-    if isinstance(client, S3StorageClient):
+    if isinstance(STORAGE_CLIENT, S3StorageClient):
         return RedirectResponse(
-            url=await client.get_presigned_url(
+            url=await STORAGE_CLIENT.get_presigned_url(
                 project_id,
                 folder=PROJECT_AVATAR_STORAGE_DIR,
             ),
             status_code=HTTPStatus.TEMPORARY_REDIRECT,
         )
     try:
-        file_header = await client.get_file_info(
+        file_header = await STORAGE_CLIENT.get_file_info(
             project_id,
             folder=PROJECT_AVATAR_STORAGE_DIR,
         )
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
-        content=client.get_file_stream(project_id, folder=PROJECT_AVATAR_STORAGE_DIR),
+        content=STORAGE_CLIENT.get_file_stream(
+            project_id, folder=PROJECT_AVATAR_STORAGE_DIR
+        ),
         media_type=file_header.content_type,
         headers={
             'Content-Disposition': file_header.encode_filename_disposition(),

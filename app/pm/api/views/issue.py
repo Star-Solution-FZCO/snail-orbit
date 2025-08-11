@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, RootModel
 import pm.models as m
 from pm.api.context import current_user
 from pm.permissions import ProjectPermissions
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.file_storage.s3 import S3StorageClient
 
 from .custom_fields import (
@@ -87,9 +87,8 @@ class IssueAttachmentOut(BaseModel):
 
     @classmethod
     async def from_obj(cls, obj: m.IssueAttachment) -> Self:
-        client = get_storage_client()
-        if isinstance(client, S3StorageClient):
-            url = await client.get_presigned_url(str(obj.id))
+        if isinstance(STORAGE_CLIENT, S3StorageClient):
+            url = await STORAGE_CLIENT.get_presigned_url(str(obj.id))
         else:
             url = f'/api/v1/files/{obj.id}'
 

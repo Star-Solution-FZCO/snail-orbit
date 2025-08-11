@@ -7,13 +7,13 @@ from pm.utils.file_storage.local import LocalStorageClient
 from pm.utils.file_storage.s3 import S3StorageClient
 
 __all__ = (
-    'get_storage_client',
+    'STORAGE_CLIENT',
     'resolve_file',
     'resolve_files',
 )
 
 
-def get_storage_client() -> BaseStorageClient:
+def _get_storage_client() -> BaseStorageClient:
     if CONFIG.FILE_STORAGE_MODE == FileStorageModeT.LOCAL:
         return LocalStorageClient(CONFIG.FILE_STORAGE_DIR)
     return S3StorageClient(
@@ -28,10 +28,12 @@ def get_storage_client() -> BaseStorageClient:
     )
 
 
+STORAGE_CLIENT = _get_storage_client()
+
+
 async def resolve_file(id_: FileIDT) -> FileHeader:
     id_ = str(id_)
-    client = get_storage_client()
-    return await client.get_file_info(id_)
+    return await STORAGE_CLIENT.get_file_info(id_)
 
 
 async def resolve_files(ids: Collection[FileIDT]) -> dict[FileIDT, FileHeader]:

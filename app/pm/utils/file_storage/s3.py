@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING, Literal
 from urllib.parse import quote, unquote
 
 import aioboto3
+from boto3 import client as boto3_client
 
 from ._base import BaseStorageClient, FileHeader, FileIDT, StorageFileNotFoundError
 
 if TYPE_CHECKING:
+    from botocore.client import BaseClient as Boto3BaseClient
     from types_aiobotocore_s3 import S3Client
 
     from ._typing import AsyncReadable, AsyncWritable
@@ -36,6 +38,8 @@ class S3StorageClient(BaseStorageClient):
     __region: str
     __presigned_url_expiration: int
 
+    __signer_client: 'Boto3BaseClient'
+
     def __init__(
         self,
         access_key_id: str,
@@ -55,6 +59,15 @@ class S3StorageClient(BaseStorageClient):
         self.__public_endpoint = public_endpoint or endpoint
         self.__verify = verify
         self.__presigned_url_expiration = presigned_url_expiration
+
+        self.__signer_client = boto3_client(
+            's3',
+            aws_access_key_id=self.__access_key_id,
+            aws_secret_access_key=self.__access_key_secret,
+            region_name=self.__region,
+            endpoint_url=self.__public_endpoint,
+            verify=self.__verify,
+        )
 
     def _get_client_ctx(self, public: bool = False) -> 'S3Client':
         session = aioboto3.Session(
@@ -128,15 +141,15 @@ class S3StorageClient(BaseStorageClient):
         expiration: int | None = None,
     ) -> str:
         filepath = opj(folder, str(file_id))
-        async with self._get_client_ctx(public=True) as client:
-            return await client.generate_presigned_url(
-                method,
-                Params={
-                    'Bucket': self.__bucket,
-                    'Key': filepath,
-                },
-                ExpiresIn=expiration or self.__presigned_url_expiration,
-            )
+
+        return self.__signer_client.generate_presigned_url(
+            method,
+            Params={
+                'Bucket': self.__bucket,
+                'Key': filepath,
+            },
+            ExpiresIn=expiration or self.__presigned_url_expiration,
+        )
 
     async def get_file_info(
         self,

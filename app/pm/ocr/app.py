@@ -16,7 +16,7 @@ _db_audit._DB_AUDIT = False  # pylint: disable=protected-access
 from pm.config import CONFIG
 from pm.models import Issue, IssueAttachment, __beanie_models__
 from pm.ocr.config import OCR_CONFIG
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.events_bus import Task, TaskType
 from pm.utils.file_storage.utils import PseudoAsyncWriteBuffer
 
@@ -30,12 +30,11 @@ async def init_db() -> None:
 
 
 async def get_file_text(file_id: str, reader: easyocr.Reader) -> str | None:
-    client = get_storage_client()
-    file_header = await client.get_file_info(file_id)
+    file_header = await STORAGE_CLIENT.get_file_info(file_id)
     if file_header.content_type not in IMAGE_TYPES:
         return None
     buffer = PseudoAsyncWriteBuffer()
-    await client.download_file(file_id, buffer)
+    await STORAGE_CLIENT.download_file(file_id, buffer)
     res = reader.readtext(buffer.buffer.getvalue())
     return ' '.join([text for _, text, __ in res])
 

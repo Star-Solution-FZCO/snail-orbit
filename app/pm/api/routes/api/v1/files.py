@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import AUTH_ERRORS, error_responses
 from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.file_storage import FileHeader, StorageFileNotFoundError
 from pm.utils.file_storage.s3 import S3StorageClient
 
@@ -35,8 +35,7 @@ async def upload_attachment(
         name=file.filename,
         content_type=file.content_type,
     )
-    client = get_storage_client()
-    await client.upload_file(file_hash, file, file_header)
+    await STORAGE_CLIENT.upload_file(file_hash, file, file_header)
     return SuccessPayloadOutput(payload=FileUploadOutput(id=UUID(file_hash)))
 
 
@@ -50,10 +49,9 @@ async def upload_attachment(
 )
 async def get_attachment(file_id: UUID) -> RedirectResponse:
     file_id = str(file_id)
-    client = get_storage_client()
-    if isinstance(client, S3StorageClient):
+    if isinstance(STORAGE_CLIENT, S3StorageClient):
         return RedirectResponse(
-            url=await client.get_presigned_url(file_id),
+            url=await STORAGE_CLIENT.get_presigned_url(file_id),
             status_code=HTTPStatus.TEMPORARY_REDIRECT,
         )
     return RedirectResponse(
@@ -72,13 +70,12 @@ async def get_attachment(file_id: UUID) -> RedirectResponse:
 )
 async def download_attachment(file_id: UUID) -> StreamingResponse:
     file_id = str(file_id)
-    client = get_storage_client()
     try:
-        file_header = await client.get_file_info(file_id)
+        file_header = await STORAGE_CLIENT.get_file_info(file_id)
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     return StreamingResponse(
-        content=client.get_file_stream(file_id),  # type: ignore[arg-type]
+        content=STORAGE_CLIENT.get_file_stream(file_id),  # type: ignore[arg-type]
         media_type=file_header.content_type,
         headers={
             'Content-Disposition': (

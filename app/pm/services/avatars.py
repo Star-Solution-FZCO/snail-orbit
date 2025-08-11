@@ -3,7 +3,7 @@ from hashlib import sha256
 
 import pm.models as m
 from pm.config import CONFIG
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.file_storage import FileHeader
 from pm.utils.file_storage.utils import PseudoAsyncReadBuffer
 from pm.utils.image import (
@@ -52,7 +52,6 @@ async def generate_default_avatar(user: m.User) -> None:
         AVATAR_SIZE,
         background_color_bytes=bytes.fromhex(email_hash),
     )
-    client = get_storage_client()
     data = image_to_bytes(img, format_=AVATAR_FORMAT.upper()).read()
     buffer = PseudoAsyncReadBuffer(data)
     file_header = FileHeader(
@@ -60,4 +59,6 @@ async def generate_default_avatar(user: m.User) -> None:
         name=f'{email_hash}.{AVATAR_FORMAT}',
         content_type=f'image/{AVATAR_FORMAT}',
     )
-    await client.upload_file(email_hash, buffer, file_header, folder=AVATAR_STORAGE_DIR)
+    await STORAGE_CLIENT.upload_file(
+        email_hash, buffer, file_header, folder=AVATAR_STORAGE_DIR
+    )

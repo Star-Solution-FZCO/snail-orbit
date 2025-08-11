@@ -47,7 +47,7 @@ from pm.permissions import (
     ProjectPermissions,
 )
 from pm.services.avatars import PROJECT_AVATAR_STORAGE_DIR
-from pm.services.files import get_storage_client
+from pm.services.files import STORAGE_CLIENT
 from pm.utils.file_storage._base import FileHeader, StorageFileNotFoundError
 
 __all__ = ('router',)
@@ -941,13 +941,12 @@ async def upload_project_avatar(
     project_id: PydanticObjectId,
     file: UploadFile = File(...),
 ) -> SuccessOutput:
-    client = get_storage_client()
     file_header = FileHeader(
         size=file.size,
         name=file.filename,
         content_type=file.content_type,
     )
-    await client.upload_file(
+    await STORAGE_CLIENT.upload_file(
         project_id,
         file,
         file_header,
@@ -963,9 +962,8 @@ async def upload_project_avatar(
 async def delete_project_avatar(
     project_id: PydanticObjectId,
 ) -> SuccessOutput:
-    client = get_storage_client()
     try:
-        await client.delete_file(project_id, folder=PROJECT_AVATAR_STORAGE_DIR)
+        await STORAGE_CLIENT.delete_file(project_id, folder=PROJECT_AVATAR_STORAGE_DIR)
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
     await m.Project.find_one(m.Project.id == project_id).update(
