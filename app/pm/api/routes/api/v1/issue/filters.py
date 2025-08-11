@@ -523,6 +523,9 @@ async def _build_query_from_filters(
             field_name = filter_obj.get('name', '')
             field_value = filter_obj.get('value')
 
+            if not field_name:
+                continue
+
             if field_value is None:
                 field_value = 'null'
 
@@ -539,9 +542,6 @@ async def _build_query_from_filters(
                     value_str = str(field_value)
             else:
                 value_str = str(field_value)
-
-            if ' ' in field_name:
-                field_name = f'"{field_name}"'
 
             if not value_str or ' ' in value_str or ':' in value_str:
                 value_str = f'"{value_str}"'
