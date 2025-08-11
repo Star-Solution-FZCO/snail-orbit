@@ -11,7 +11,7 @@ import { MDPreview } from "./md_preview";
 export type DraftFormProps = {
     draft: IssueDraftT;
     onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
-    onCreateIssue?: () => Promise<void>;
+    onCreateIssue?: (openIssue?: boolean) => Promise<void>;
     onCancel?: () => void;
     loading?: boolean;
 };
@@ -75,13 +75,23 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
 
             <Box display="flex" gap={1}>
                 <Button
-                    onClick={onCreateIssue}
+                    onClick={() => onCreateIssue?.(true)}
                     variant="outlined"
                     size="small"
                     loading={loading || textLoading}
                     disabled={loading || textLoading || !subject}
                 >
                     {t("save")}
+                </Button>
+
+                <Button
+                    onClick={() => onCreateIssue?.(false)}
+                    variant="outlined"
+                    size="small"
+                    loading={loading || textLoading}
+                    disabled={loading || textLoading || !subject}
+                >
+                    {t("save and close")}
                 </Button>
 
                 <Button

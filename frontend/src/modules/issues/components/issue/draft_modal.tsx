@@ -21,7 +21,7 @@ type DraftModalProps = {
     draft: IssueDraftT;
     onUpdateDraft: (issueValues: IssueDraftUpdate) => Promise<void>;
     onUpdateCache: (issueValue: Partial<IssueDraftT>) => void;
-    onCreateIssue?: () => Promise<void>;
+    onCreateIssue?: (openIssue?: boolean) => Promise<void>;
     loading?: boolean;
     onClose?: () => void;
 } & Pick<DialogProps, "open">;
@@ -87,6 +87,7 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
                         })}
                         justifyContent="space-between"
                     >
+                        <div />
                         <IconButton size="small" onClick={onClose}>
                             <Close fontSize="small" />
                         </IconButton>

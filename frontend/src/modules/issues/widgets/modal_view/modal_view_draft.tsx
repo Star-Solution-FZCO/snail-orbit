@@ -8,14 +8,18 @@ import { toast } from "react-toastify";
 import { issueApi } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
+import { IssueLink } from "../../../../entities/issue/issue_link/issue_link";
 import { DraftModal } from "../../components/issue/draft_modal";
 import type { ModalViewDraftProps } from "./modal_view.types";
 import { ModalViewLoader } from "./modal_view_loader";
+import { useIssueModalView } from "./use_modal_view";
 
 export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     const { open, id, onClose } = props;
 
     const { t } = useTranslation();
+
+    const { openIssueModal } = useIssueModalView();
 
     const { data, isLoading, error } = issueApi.useGetDraftQuery(
         open && id ? id : skipToken,
@@ -43,20 +47,33 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
 
     const draft = data?.payload;
 
-    const handleCreateIssue = useCallback(async () => {
-        if (!draft?.project) {
-            toast.error(t("issues.project.required"));
-            throw new Error(t("issues.project.required"));
-        }
+    const handleCreateIssue = useCallback(
+        async (openIssue: boolean = false) => {
+            if (!draft?.project) {
+                toast.error(t("issues.project.required"));
+                throw new Error(t("issues.project.required"));
+            }
 
-        await createIssue(id)
-            .unwrap()
-            .then(onClose)
-            .catch((error) => {
-                toastApiError(error);
-                return Promise.reject(error);
-            });
-    }, [createIssue, id, draft?.project, onClose, t]);
+            await createIssue(id)
+                .unwrap()
+                .then((res) => {
+                    if (!openIssue) {
+                        toast.success(
+                            <span>
+                                <IssueLink issue={res.payload} />{" "}
+                                {t("issues.draft.issueCreateSuccessToast")}
+                            </span>,
+                        );
+                        onClose?.();
+                    } else openIssueModal(res.payload.id);
+                })
+                .catch((error) => {
+                    toastApiError(error);
+                    return Promise.reject(error);
+                });
+        },
+        [draft?.project, createIssue, id, t, onClose, openIssueModal],
+    );
 
     useEffect(() => {
         if (error) {
