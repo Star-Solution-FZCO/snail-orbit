@@ -1,3 +1,5 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import { IconButton } from "@mui/material";
 import dayjs from "dayjs";
 import { DateField } from "entities/custom_fields/date_field";
 import { DurationField } from "entities/custom_fields/duration_field";
@@ -18,14 +20,28 @@ type QueryBuilderFieldsParserProps = {
         filter: QueryBuilderDataFilterT,
         newValue: string | number | boolean,
     ) => unknown;
+    onDelete: (filter: QueryBuilderDataFilterT) => unknown;
 };
 
 export const QueryBuilderFieldsParser = (
     props: QueryBuilderFieldsParserProps,
 ) => {
-    const { filter, onChange } = props;
+    const { filter, onChange, onDelete } = props;
     const getQueryBuilderFilterName = useGetQueryBuilderFilterName();
     const { t } = useTranslation();
+
+    const adornment = (
+        <IconButton
+            size="small"
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(filter);
+            }}
+        >
+            <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+    );
 
     // If it has GID that this is a custom field
     if ("gid" in filter && filter.gid) {
@@ -33,11 +49,12 @@ export const QueryBuilderFieldsParser = (
             case "string":
                 return (
                     <InputField
-                        value={filter.value || ""}
                         label={filter.name}
                         id={filter.gid}
+                        value={filter.value || ""}
                         inputMode="text"
                         onChange={(value) => onChange(filter, value)}
+                        rightAdornment={adornment}
                     />
                 );
             case "date":
@@ -59,6 +76,7 @@ export const QueryBuilderFieldsParser = (
                             );
                         }}
                         type={filter.type === "datetime" ? "datetime" : "date"}
+                        rightAdornment={adornment}
                     />
                 );
             }
@@ -71,6 +89,7 @@ export const QueryBuilderFieldsParser = (
                         onClick={() => {
                             onChange?.(filter, !filter.value);
                         }}
+                        rightAdornment={adornment}
                     />
                 );
             case "duration":
@@ -82,6 +101,7 @@ export const QueryBuilderFieldsParser = (
                         onChange={(val) => {
                             onChange?.(filter, val);
                         }}
+                        rightAdornment={adornment}
                     />
                 );
             case "integer":
@@ -97,6 +117,7 @@ export const QueryBuilderFieldsParser = (
                         onChange={(val) => {
                             onChange?.(filter, Number(val));
                         }}
+                        rightAdornment={adornment}
                     />
                 );
             case "user":
@@ -107,8 +128,9 @@ export const QueryBuilderFieldsParser = (
                         label={filter.name}
                         value={filter?.value || undefined}
                         onChange={(value) => {
-                            onChange?.(filter, (value as BasicUserT).name);
+                            onChange?.(filter, (value as BasicUserT).email);
                         }}
+                        rightAdornment={adornment}
                     />
                 );
             case "version":
@@ -129,6 +151,7 @@ export const QueryBuilderFieldsParser = (
                                 (value as ShortOptionOutput).value,
                             );
                         }}
+                        rightAdornment={adornment}
                     />
                 );
         }
@@ -144,6 +167,7 @@ export const QueryBuilderFieldsParser = (
                     id={filter.name}
                     inputMode="text"
                     onChange={(value) => onChange(filter, value)}
+                    rightAdornment={adornment}
                 />
             );
         case "datetime": {
@@ -157,6 +181,7 @@ export const QueryBuilderFieldsParser = (
                         onChange?.(filter, value.format("YYYY-MM-DDTHH:mm:ss"));
                     }}
                     type="datetime"
+                    rightAdornment={adornment}
                 />
             );
         }
@@ -169,10 +194,13 @@ export const QueryBuilderFieldsParser = (
                     onChange={(value) => {
                         onChange?.(
                             filter,
-                            Array.isArray(value) ? value[0]?.name : value.name,
+                            Array.isArray(value)
+                                ? value[0]?.email
+                                : value.email,
                         );
                     }}
                     type="users"
+                    rightAdornment={adornment}
                 />
             );
         case "project":
@@ -183,6 +211,7 @@ export const QueryBuilderFieldsParser = (
                     onChange={(project) => {
                         onChange?.(filter, project.name);
                     }}
+                    rightAdornment={adornment}
                 />
             );
         case "hashtag":
@@ -191,6 +220,7 @@ export const QueryBuilderFieldsParser = (
                     label={t("Hashtag")}
                     value={getQueryBuilderFilterName(filter.name)}
                     orientation="vertical"
+                    rightAdornment={adornment}
                 />
             );
         case "tag":
@@ -201,6 +231,7 @@ export const QueryBuilderFieldsParser = (
                     onChange={(tag) => {
                         onChange?.(filter, tag.name);
                     }}
+                    rightAdornment={adornment}
                 />
             );
         default:

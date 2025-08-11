@@ -70,6 +70,16 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
         [activeFilters, requestNewQuery],
     );
 
+    const handleFieldDelete = useCallback(
+        (filter: QueryBuilderDataFilterT) => {
+            const newFilters: QueryBuilderDto["filters"] = [
+                ...activeFilters.filter((el) => !isSameOption(el, filter)),
+            ];
+            requestNewQuery(newFilters);
+        },
+        [activeFilters, requestNewQuery],
+    );
+
     return (
         <Stack direction="column" gap={2} px={1} height="100%">
             <Typography fontSize={24} fontWeight="bold">
@@ -104,6 +114,7 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
                             <QueryBuilderFieldsParser
                                 filter={filter}
                                 onChange={handleFieldValueChanged}
+                                onDelete={handleFieldDelete}
                                 key={getOptionId(filter)}
                             />
                         ))}

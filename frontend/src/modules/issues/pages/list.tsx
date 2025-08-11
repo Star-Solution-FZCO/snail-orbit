@@ -1,7 +1,7 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import type { FC } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
@@ -35,12 +35,10 @@ const IssueList: FC<IssueListProps> = (props) => {
 
     useCreateIssueNavbarSettings();
 
-    const [search, setSearch] = useState<string>(queryParams?.query || "");
-
     const [listQueryParams, updateListQueryParams] = usePaginationParams({
         perPage: queryParams?.perPage ?? defaultLimit,
         page: queryParams?.page ?? 1,
-        query: search,
+        query: queryParams?.query || "",
     });
 
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
@@ -49,9 +47,15 @@ const IssueList: FC<IssueListProps> = (props) => {
         q: listQueryParams.query,
     });
 
-    useEffect(() => {
-        updateListQueryParams({ query: search });
-    }, [search, updateListQueryParams]);
+    const handleSearchUpdate = useCallback(
+        (search: string) => {
+            updateListQueryParams((prev) => ({
+                ...prev,
+                query: search,
+            }));
+        },
+        [updateListQueryParams],
+    );
 
     useEffect(() => {
         onQueryParamsChanged?.(listQueryParams);
@@ -62,7 +66,7 @@ const IssueList: FC<IssueListProps> = (props) => {
             ...prev,
             ...queryParams,
         }));
-    }, [queryParams, setSearch, updateListQueryParams]);
+    }, [queryParams, updateListQueryParams]);
 
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {
@@ -83,8 +87,8 @@ const IssueList: FC<IssueListProps> = (props) => {
             px={4}
         >
             <SearchField
-                value={search}
-                onChange={setSearch}
+                value={listQueryParams?.query || ""}
+                onChange={handleSearchUpdate}
                 loading={isFetching}
             />
 

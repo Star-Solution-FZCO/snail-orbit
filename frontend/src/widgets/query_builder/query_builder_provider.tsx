@@ -1,6 +1,7 @@
 import { Box, Divider } from "@mui/material";
+import { useLocation } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import QueryBuilder from "./query_builder";
 
@@ -17,6 +18,11 @@ export const QueryBuilderProvider = (props: PropsWithChildren) => {
     const { children } = props;
     const [showQueryBuilder, setShowQueryBuilder] = useState(false);
     const [innerQuery, setInnerQuery] = useState<string>("");
+    const location = useLocation();
+
+    useEffect(() => {
+        setShowQueryBuilder(false);
+    }, [location.pathname]);
 
     const contextValues = useMemo<QueryBuilderContextType>(
         () => ({
