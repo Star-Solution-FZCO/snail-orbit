@@ -19,6 +19,7 @@ export const Tag = memo((props: TagProps) => {
             onDelete={onDelete}
             size="small"
             sx={{
+                boxShadow: 3,
                 backgroundColor: color,
                 color: contrastColor,
                 ".MuiChip-deleteIcon": {
