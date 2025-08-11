@@ -524,7 +524,7 @@ async def _build_query_from_filters(
             field_value = filter_obj.get('value')
 
             if field_value is None:
-                continue
+                field_value = 'null'
 
             if isinstance(field_value, dict):
                 if 'email' in field_value:
@@ -543,7 +543,7 @@ async def _build_query_from_filters(
             if ' ' in field_name:
                 field_name = f'"{field_name}"'
 
-            if ' ' in value_str or ':' in value_str:
+            if not value_str or ' ' in value_str or ':' in value_str:
                 value_str = f'"{value_str}"'
 
             query_parts.append(f'{field_name}: {value_str}')
