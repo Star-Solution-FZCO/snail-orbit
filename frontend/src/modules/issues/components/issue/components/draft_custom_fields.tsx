@@ -64,7 +64,11 @@ export const DraftCustomFields: FC<DraftCustomFieldsProps> = ({
             />
 
             {fields.map((field) => (
-                <CustomFieldsParser field={field} onChange={onFieldUpdate} />
+                <CustomFieldsParser
+                    key={field.id}
+                    field={field}
+                    onChange={onFieldUpdate}
+                />
             ))}
         </>
     );
