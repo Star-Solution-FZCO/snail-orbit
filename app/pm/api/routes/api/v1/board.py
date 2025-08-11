@@ -600,7 +600,7 @@ async def get_board_issues(
                 issues = cols[col_value]
                 swimlane_columns.append(
                     [
-                        IssueOutput.from_obj(issue, accessible_tag_ids)
+                        await IssueOutput.from_obj(issue, accessible_tag_ids)
                         for issue in issues
                     ],
                 )
@@ -615,7 +615,7 @@ async def get_board_issues(
                 issues = non_swimlane[col_value]
                 non_swimlane_columns.append(
                     [
-                        IssueOutput.from_obj(issue, accessible_tag_ids)
+                        await IssueOutput.from_obj(issue, accessible_tag_ids)
                         for issue in issues
                     ],
                 )
@@ -713,7 +713,7 @@ async def move_issue(
                 await wf.run(issue)
         except WorkflowError as err:
             raise ValidateModelError(
-                payload=IssueOutput.from_obj(issue, accessible_tag_ids),
+                payload=await IssueOutput.from_obj(issue, accessible_tag_ids),
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             ) from err
