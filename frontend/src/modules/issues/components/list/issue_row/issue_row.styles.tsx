@@ -4,21 +4,33 @@ import { theme } from "shared/theme";
 export const IssueRowRoot = styled("div", {
     name: "IssueRow",
     slot: "root",
-})(({ theme }) => ({
-    display: "flex",
-    flexDirection: "column",
-    padding: theme.spacing(0.5),
-    fontSize: theme.typography.pxToRem(14),
-    minWidth: theme.typography.pxToRem(200),
+})(({ theme }) => [
+    {
+        display: "flex",
+        flexDirection: "column",
+        padding: theme.spacing(0.5),
+        fontSize: theme.typography.pxToRem(14),
+        minWidth: theme.typography.pxToRem(200),
 
-    "&:focus": {
-        outline: "none",
-    },
+        "&:focus": {
+            outline: "none",
+        },
 
-    "&:hover, &:focus": {
-        backgroundColor: alpha(theme.palette.background.paper, 0.5),
+        transition: theme.transitions.create(["background-color"], {
+            duration: "0.05s",
+        }),
     },
-}));
+    theme.applyStyles("dark", {
+        "&:hover, &:focus": {
+            backgroundColor: alpha(theme.palette.background.paper, 0.5),
+        },
+    }),
+    theme.applyStyles("light", {
+        "&:hover, &:focus": {
+            backgroundColor: alpha(theme.palette.primary.light, 0.3),
+        },
+    }),
+]);
 
 export const IssueRowHeader = styled("div", {
     name: "IssueRow",
