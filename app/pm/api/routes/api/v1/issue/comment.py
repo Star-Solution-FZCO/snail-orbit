@@ -21,6 +21,8 @@ from pm.api.views.issue import IssueAttachmentBody, IssueCommentOutput
 from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.permissions import PermAnd, PermOr, ProjectPermissions
+from pm.tasks.actions.notification_batch import schedule_batched_notification
+from pm.tasks.types import CommentChange
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
 
@@ -127,6 +129,23 @@ async def create_comment(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+
+    await schedule_batched_notification(
+        'update',
+        issue.subject,
+        issue.id_readable,
+        [str(s) for s in issue.subscribers],
+        str(issue.project.id),
+        author=user_ctx.user.email,
+        field_changes=[],
+        comment_changes=[
+            CommentChange(
+                comment_id=comment.id,
+                action='create',
+            )
+        ],
+    )
+
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
@@ -183,6 +202,23 @@ async def update_comment(
             if a.id not in extra_attachment_ids or a.encryption:
                 continue
             await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+
+        await schedule_batched_notification(
+            'update',
+            issue.subject,
+            issue.id_readable,
+            [str(s) for s in issue.subscribers],
+            str(issue.project.id),
+            author=user_ctx.user.email,
+            field_changes=[],
+            comment_changes=[
+                CommentChange(
+                    comment_id=comment.id,
+                    action='update',
+                )
+            ],
+        )
+
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
@@ -213,6 +249,23 @@ async def delete_comment(
 
     issue.comments = [c for c in issue.comments if c.id != comment_id]
     await issue.replace()
+
+    await schedule_batched_notification(
+        'update',
+        issue.subject,
+        issue.id_readable,
+        [str(s) for s in issue.subscribers],
+        str(issue.project.id),
+        author=user_ctx.user.email,
+        field_changes=[],
+        comment_changes=[
+            CommentChange(
+                comment_id=comment_id,
+                action='delete',
+            )
+        ],
+    )
+
     return UUIDOutput.make(comment_id)
 
 
@@ -239,6 +292,7 @@ async def hide_comment(
 
     comment.is_hidden = True
     await issue.save_changes()
+
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
 
 
@@ -265,4 +319,5 @@ async def restore_comment(
 
     comment.is_hidden = False
     await issue.save_changes()
+
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))

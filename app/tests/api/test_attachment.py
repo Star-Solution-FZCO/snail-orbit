@@ -435,14 +435,18 @@ async def test_issue_comment_attachments_crud(
         headers,
         filename='comment_attachment1.txt',
     )
-    resp = test_client.post(
-        f'/api/v1/issue/{issue_id}/comment',
-        headers=headers,
-        json={
-            'text': {'value': 'Comment with attachment', 'encryption': None},
-            'attachments': [{'id': comment_attachment1}],
-        },
-    )
+    with mock.patch(
+        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+    ) as mock_comment_notify:
+        resp = test_client.post(
+            f'/api/v1/issue/{issue_id}/comment',
+            headers=headers,
+            json={
+                'text': {'value': 'Comment with attachment', 'encryption': None},
+                'attachments': [{'id': comment_attachment1}],
+            },
+        )
+        mock_comment_notify.assert_called_once()
     assert resp.status_code == 200, resp.text
     comment = resp.json()['payload']
     comment_id = comment['id']
@@ -461,29 +465,37 @@ async def test_issue_comment_attachments_crud(
         headers,
         filename='comment_attachment2.txt',
     )
-    resp = test_client.put(
-        f'/api/v1/issue/{issue_id}/comment/{comment_id}',
-        headers=headers,
-        json={
-            'attachments': [
-                {'id': comment_attachment1},
-                {'id': comment_attachment2},
-            ],
-        },
-    )
+    with mock.patch(
+        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+    ) as mock_comment_notify:
+        resp = test_client.put(
+            f'/api/v1/issue/{issue_id}/comment/{comment_id}',
+            headers=headers,
+            json={
+                'attachments': [
+                    {'id': comment_attachment1},
+                    {'id': comment_attachment2},
+                ],
+            },
+        )
+        mock_comment_notify.assert_called_once()
     assert resp.status_code == 200
     comment = resp.json()['payload']
     assert sorted([a['id'] for a in comment['attachments']]) == sorted(
         [comment_attachment1, comment_attachment2],
     )
 
-    resp = test_client.put(
-        f'/api/v1/issue/{issue_id}/comment/{comment_id}',
-        headers=headers,
-        json={
-            'attachments': [{'id': comment_attachment2}],
-        },
-    )
+    with mock.patch(
+        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+    ) as mock_comment_notify:
+        resp = test_client.put(
+            f'/api/v1/issue/{issue_id}/comment/{comment_id}',
+            headers=headers,
+            json={
+                'attachments': [{'id': comment_attachment2}],
+            },
+        )
+        mock_comment_notify.assert_called_once()
     assert resp.status_code == 200
     comment = resp.json()['payload']
     assert [a['id'] for a in comment['attachments']] == [comment_attachment2]

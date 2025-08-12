@@ -11,6 +11,7 @@ from pm.config import CONFIG
 from pm.logging import get_logger, log_context
 from pm.tasks._base import setup_database
 from pm.tasks.app import broker
+from pm.tasks.types import CommentChange
 
 __all__ = ('task_notify_by_pararam',)
 
@@ -116,6 +117,28 @@ def _generate_field_changes_message(field_changes: list[m.IssueFieldChange]) -> 
     return '\n' + '\n'.join(changes_lines) if changes_lines else ''
 
 
+def _generate_comment_changes_message(
+    comment_changes: list[CommentChange], issue_id_readable: str
+) -> str:
+    if not comment_changes:
+        return ''
+
+    changes_lines = []
+    for change in comment_changes:
+        comment_url = urljoin(
+            CONFIG.PUBLIC_BASE_URL,
+            f'/issues/{issue_id_readable}#comment-{change.comment_id}',
+        )
+        if change.action == 'create':
+            changes_lines.append(f'  💬 [Added comment]({comment_url})')
+        elif change.action == 'update':
+            changes_lines.append(f'  ✏️ [Updated comment]({comment_url})')
+        elif change.action == 'delete':
+            changes_lines.append('  🗑️ Deleted comment')
+
+    return '\n' + '\n'.join(changes_lines) if changes_lines else ''
+
+
 async def notify_by_pararam(
     action: Literal['create', 'update', 'delete'],
     issue_subject: str,
@@ -124,6 +147,7 @@ async def notify_by_pararam(
     project_id: str,
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
+    comment_changes: list[CommentChange] | None = None,
 ) -> None:
     with log_context(
         issue_id=issue_id_readable,
@@ -163,6 +187,13 @@ async def notify_by_pararam(
             changes_message = _generate_field_changes_message(field_changes)
             if changes_message:
                 message += changes_message
+
+        if comment_changes:
+            comment_message = _generate_comment_changes_message(
+                comment_changes, issue_id_readable
+            )
+            if comment_message:
+                message += comment_message
 
         logger.debug(
             'Generated notification message',
@@ -232,6 +263,7 @@ async def task_notify_by_pararam(
     project_id: str,
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
+    comment_changes: list[CommentChange] | None = None,
 ) -> None:
     with log_context(
         task_id='notify_by_pararam',
@@ -258,6 +290,7 @@ async def task_notify_by_pararam(
                 project_id,
                 author=author,
                 field_changes=field_changes,
+                comment_changes=comment_changes,
             )
 
             logger.info(

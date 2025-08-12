@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime
 from typing import Literal
+from uuid import UUID
 
 import redis.asyncio as aioredis
 from pydantic import BaseModel, Field
@@ -8,6 +9,7 @@ from pydantic import BaseModel, Field
 import pm.models as m
 from pm.config import CONFIG
 from pm.tasks.actions.notify import notify_by_pararam
+from pm.tasks.types import CommentChange
 
 __all__ = ('schedule_batched_notification',)
 
@@ -46,6 +48,27 @@ def _merge_field_changes(
     return list(merged_changes.values())
 
 
+def _merge_comment_changes(
+    existing_changes: list[CommentChange], new_changes: list[CommentChange]
+) -> list[CommentChange]:
+    """Merge comment changes, keeping the latest change for each comment."""
+    if not new_changes:
+        return existing_changes
+
+    if not existing_changes:
+        return new_changes[:]
+
+    merged_changes: dict[UUID, CommentChange] = {}
+
+    for change in existing_changes:
+        merged_changes[change.comment_id] = change
+
+    for change in new_changes:
+        merged_changes[change.comment_id] = change
+
+    return list(merged_changes.values())
+
+
 class NotificationBatch(BaseModel):
     """Model for batched notification data stored in Redis."""
 
@@ -64,6 +87,9 @@ class NotificationBatch(BaseModel):
     field_changes: list[m.IssueFieldChange] = Field(
         default_factory=list, description='Accumulated field changes in this batch'
     )
+    comment_changes: list[CommentChange] = Field(
+        default_factory=list, description='Accumulated comment changes in this batch'
+    )
 
 
 async def schedule_batched_notification(
@@ -74,9 +100,11 @@ async def schedule_batched_notification(
     project_id: str,
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
+    comment_changes: list[CommentChange] | None = None,
 ) -> None:
     """Schedule a notification for batching instead of sending immediately."""
     field_changes = field_changes or []
+    comment_changes = comment_changes or []
 
     delay_seconds = CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS
     if delay_seconds <= 0:
@@ -88,6 +116,7 @@ async def schedule_batched_notification(
             project_id,
             author,
             field_changes,
+            comment_changes,
         )
         return
 
@@ -101,6 +130,7 @@ async def schedule_batched_notification(
             project_id,
             author,
             field_changes,
+            comment_changes,
         )
         return
 
@@ -117,6 +147,9 @@ async def schedule_batched_notification(
             merged_field_changes = _merge_field_changes(
                 existing_batch.field_changes, field_changes
             )
+            merged_comment_changes = _merge_comment_changes(
+                existing_batch.comment_changes, comment_changes
+            )
             batch = NotificationBatch(
                 issue_id_readable=issue_id_readable,
                 issue_subject=issue_subject,
@@ -128,6 +161,7 @@ async def schedule_batched_notification(
                 first_timestamp=existing_batch.first_timestamp,
                 last_timestamp=now,
                 field_changes=merged_field_changes,
+                comment_changes=merged_comment_changes,
             )
         else:
             batch = NotificationBatch(
@@ -141,6 +175,7 @@ async def schedule_batched_notification(
                 first_timestamp=now,
                 last_timestamp=now,
                 field_changes=field_changes,
+                comment_changes=comment_changes,
             )
 
         await redis_client.set(batch_key, batch.model_dump_json())
@@ -158,4 +193,5 @@ async def schedule_batched_notification(
             project_id,
             author,
             field_changes,
+            comment_changes,
         )

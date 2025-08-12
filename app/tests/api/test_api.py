@@ -2161,11 +2161,15 @@ async def test_api_v1_encrypted_project(
         },
     }
 
-    response = test_client.post(
-        f'/api/v1/issue/{issue_id}/comment',
-        json=comment_data,
-        headers=admin_headers,
-    )
+    with mock.patch(
+        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+    ) as mock_comment_notify:
+        response = test_client.post(
+            f'/api/v1/issue/{issue_id}/comment',
+            json=comment_data,
+            headers=admin_headers,
+        )
+        mock_comment_notify.assert_called_once()
     assert response.status_code == 200
     data = response.json()
     assert data['success']
@@ -2271,14 +2275,20 @@ async def test_api_v1_encrypted_project(
         admin_headers,
         filename='comment_attachment.txt',
     )
-    resp = test_client.post(
-        f'/api/v1/issue/{issue_id}/comment/',
-        headers=admin_headers,
-        json={
-            'text': {'value': 'Comment with attachment', 'encryption': None},
-            'attachments': [{'id': comment_attachment, 'encryption': encryption_meta}],
-        },
-    )
+    with mock.patch(
+        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+    ) as mock_comment_notify:
+        resp = test_client.post(
+            f'/api/v1/issue/{issue_id}/comment/',
+            headers=admin_headers,
+            json={
+                'text': {'value': 'Comment with attachment', 'encryption': None},
+                'attachments': [
+                    {'id': comment_attachment, 'encryption': encryption_meta}
+                ],
+            },
+        )
+        mock_comment_notify.assert_called_once()
     assert resp.status_code == 200
     comment = resp.json()['payload']
     comment_id = comment['id']
