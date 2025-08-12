@@ -398,7 +398,7 @@ async def create_issue_from_draft(
     )
     if validation_errors:
         raise ValidateModelError(
-            payload=IssueDraftOutput.from_obj(draft),
+            payload=await IssueDraftOutput.from_obj(draft),
             error_messages=['Custom field validation error'],
             error_fields={e.field.name: e.msg for e in validation_errors},
         )
