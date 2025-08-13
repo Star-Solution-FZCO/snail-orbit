@@ -851,3 +851,264 @@ async def test_search_direct_sharing(
         f'/api/v1/search/{search_id}', headers=creator_headers
     )
     assert_permission_granted(response, 'Creator can delete search (ADMIN permission)')
+
+
+@pytest.mark.asyncio
+async def test_dashboard_direct_sharing(
+    test_client: 'TestClient',
+) -> None:
+    """Test 6.5: Dashboard Direct Sharing
+
+    Verify that dashboards can be shared directly using VIEW/EDIT/ADMIN permissions,
+    enabling flexible team collaboration independent of any other system permissions
+    """
+    import pm.models as m
+
+    # Create groups
+    groups = await prepare_acl_groups(
+        {
+            'stakeholders': {'description': 'Stakeholders group', 'global_roles': []},
+            'team_members': {'description': 'Team members group', 'global_roles': []},
+        }
+    )
+
+    # Create users
+    users = await prepare_acl_users(
+        {
+            'admin': {
+                'email': 'admin@example.com',
+                'is_admin': True,
+                'global_roles': [],
+                'groups': [],
+            },
+            'creator': {
+                'email': 'creator@example.com',
+                'is_admin': False,
+                'global_roles': [],
+                'groups': [],
+            },
+            'stakeholder': {
+                'email': 'stakeholder@example.com',
+                'is_admin': False,
+                'global_roles': [],
+                'groups': [groups['stakeholders'].id],
+            },
+            'team_member': {
+                'email': 'member@example.com',
+                'is_admin': False,
+                'global_roles': [],
+                'groups': [groups['team_members'].id],
+            },
+            'no_access_user': {
+                'email': 'noaccess@example.com',
+                'is_admin': False,
+                'global_roles': [],
+                'groups': [],
+            },
+        }
+    )
+
+    # Get user credentials
+    admin_user, admin_token = users['admin']
+    admin_headers = make_user_headers(admin_token)  # noqa: F841
+
+    creator_user, creator_token = users['creator']
+    creator_headers = make_user_headers(creator_token)
+
+    stakeholder_user, stakeholder_token = users['stakeholder']
+    stakeholder_headers = make_user_headers(stakeholder_token)
+
+    team_member_user, team_member_token = users['team_member']
+    team_member_headers = make_user_headers(team_member_token)
+
+    no_access_user, no_access_token = users['no_access_user']
+    no_access_headers = make_user_headers(no_access_token)
+
+    # Test dashboard creation and ownership
+    response = test_client.post(
+        '/api/v1/dashboard/',
+        headers=creator_headers,
+        json={
+            'name': 'Team Dashboard',
+            'description': 'Dashboard for team collaboration and metrics',
+            'tiles': [
+                {
+                    'type': 'issue_list',
+                    'name': 'Open Issues',
+                    'query': '#unresolved',
+                },
+                {
+                    'type': 'issue_list',
+                    'name': 'Recent Updates',
+                    'query': '',
+                },
+            ],
+        },
+    )
+    assert_permission_granted(response, 'Creator dashboard creation')
+    dashboard_id = response.json()['payload']['id']
+
+    # Verify creator automatically gets ADMIN permission on dashboard
+    response = test_client.get(
+        f'/api/v1/dashboard/{dashboard_id}', headers=creator_headers
+    )
+    assert_permission_granted(response, 'Creator dashboard access')
+    dashboard_data = response.json()['payload']
+    assert dashboard_data['current_permission'] == m.PermissionType.ADMIN, (
+        'Creator should have ADMIN permission on created dashboard'
+    )
+
+    # Test hierarchical sharing - Give VIEW permission to stakeholders group
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/permission',
+        headers=creator_headers,
+        json={
+            'target_type': 'group',
+            'target': str(groups['stakeholders'].id),
+            'permission_type': 'view',
+        },
+    )
+    assert_permission_granted(response, 'Creator grant VIEW to stakeholders')
+
+    # Give EDIT permission to team_members group
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/permission',
+        headers=creator_headers,
+        json={
+            'target_type': 'group',
+            'target': str(groups['team_members'].id),
+            'permission_type': 'edit',
+        },
+    )
+    assert_permission_granted(response, 'Creator grant EDIT to team_members')
+
+    # Test VIEW permission capabilities - Verify stakeholder can view dashboard content
+    response = test_client.get(
+        f'/api/v1/dashboard/{dashboard_id}', headers=stakeholder_headers
+    )
+    assert_permission_granted(response, 'Stakeholder dashboard view access')
+    stakeholder_dashboard_data = response.json()['payload']
+    assert stakeholder_dashboard_data['current_permission'] == m.PermissionType.VIEW, (
+        'Stakeholder should have VIEW permission on dashboard'
+    )
+
+    # Verify stakeholder can see dashboard in list
+    response = test_client.get('/api/v1/dashboard/list', headers=stakeholder_headers)
+    assert_permission_granted(response, 'Stakeholder can access dashboard list')
+    dashboard_list = response.json()['payload']['items']
+    dashboard_ids = [d['id'] for d in dashboard_list]
+    assert dashboard_id in dashboard_ids, (
+        'Stakeholder should see shared dashboard in list'
+    )
+
+    # Verify stakeholder cannot modify dashboard
+    response = test_client.put(
+        f'/api/v1/dashboard/{dashboard_id}',
+        headers=stakeholder_headers,
+        json={
+            'name': 'Modified Team Dashboard',
+            'description': 'Modified description',
+        },
+    )
+    assert_permission_denied(
+        response, 'Stakeholder cannot modify dashboard (VIEW only)'
+    )
+
+    # Verify stakeholder cannot manage permissions
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/permission',
+        headers=stakeholder_headers,
+        json={
+            'target_type': 'user',
+            'target': str(stakeholder_user.id),
+            'permission_type': 'admin',
+        },
+    )
+    assert_permission_denied(
+        response, 'Stakeholder cannot manage permissions (VIEW only)'
+    )
+
+    # Test EDIT permission capabilities - Verify team_member can view and edit dashboard content
+    response = test_client.get(
+        f'/api/v1/dashboard/{dashboard_id}', headers=team_member_headers
+    )
+    assert_permission_granted(response, 'Team member dashboard view access')
+    team_member_dashboard_data = response.json()['payload']
+    assert team_member_dashboard_data['current_permission'] == m.PermissionType.EDIT, (
+        'Team member should have EDIT permission on dashboard'
+    )
+
+    # Verify team_member can modify dashboard content
+    response = test_client.put(
+        f'/api/v1/dashboard/{dashboard_id}',
+        headers=team_member_headers,
+        json={
+            'name': 'Updated Team Dashboard',
+            'description': 'Updated description by team member',
+            'tiles': [
+                {
+                    'type': 'issue_list',
+                    'name': 'High Priority Issues',
+                    'query': '#resolved',
+                },
+            ],
+        },
+    )
+    assert_permission_granted(
+        response, 'Team member can modify dashboard (EDIT permission)'
+    )
+
+    # Verify team_member cannot delete dashboard
+    response = test_client.delete(
+        f'/api/v1/dashboard/{dashboard_id}', headers=team_member_headers
+    )
+    assert_permission_denied(
+        response, 'Team member cannot delete dashboard (EDIT only, needs ADMIN)'
+    )
+
+    # Verify team_member cannot manage sharing permissions
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/permission',
+        headers=team_member_headers,
+        json={
+            'target_type': 'user',
+            'target': str(team_member_user.id),
+            'permission_type': 'admin',
+        },
+    )
+    assert_permission_denied(
+        response, 'Team member cannot manage permissions (EDIT only, needs ADMIN)'
+    )
+
+    # Test no-access user cannot access shared dashboard and has empty dashboard list
+    response = test_client.get(
+        f'/api/v1/dashboard/{dashboard_id}', headers=no_access_headers
+    )
+    assert_permission_denied(response, 'No-access user cannot view dashboard')
+
+    response = test_client.get('/api/v1/dashboard/list', headers=no_access_headers)
+    assert_permission_granted(
+        response, 'No-access user can access dashboard list endpoint'
+    )
+    dashboard_list = response.json()['payload']['items']
+    assert len(dashboard_list) == 0, 'No-access user should see empty dashboard list'
+
+    # Test ADMIN permission capabilities - Verify creator can manage all aspects
+    response = test_client.get(
+        f'/api/v1/dashboard/{dashboard_id}/permissions', headers=creator_headers
+    )
+    assert_permission_granted(
+        response, 'Creator can view dashboard permissions (ADMIN)'
+    )
+    permissions_list = response.json()['payload']['items']
+    assert len(permissions_list) >= 3, (
+        'Should have permissions for creator, stakeholders, and team_members'
+    )
+
+    # Verify creator can delete dashboard
+    response = test_client.delete(
+        f'/api/v1/dashboard/{dashboard_id}', headers=creator_headers
+    )
+    assert_permission_granted(
+        response, 'Creator can delete dashboard (ADMIN permission)'
+    )

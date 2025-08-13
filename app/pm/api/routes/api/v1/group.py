@@ -187,6 +187,7 @@ async def update_group(
             m.User.update_group_embedded_links(obj),
             m.Board.update_group_embedded_links(obj),
             m.Search.update_group_embedded_links(obj),
+            m.Dashboard.update_group_embedded_links(obj),
         )
     return SuccessPayloadOutput(payload=GroupFullOutput.from_obj(obj))
 
@@ -208,6 +209,7 @@ async def delete_group(
         m.User.remove_group_embedded_links(group_id),
         m.Board.remove_group_embedded_links(group_id),
         m.Search.remove_group_embedded_links(group_id),
+        m.Dashboard.remove_group_embedded_links(group_id),
     )
     return ModelIdOutput.make(group_id)
 
