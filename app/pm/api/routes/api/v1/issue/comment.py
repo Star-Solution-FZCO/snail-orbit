@@ -40,13 +40,17 @@ router = APIRouter(
 class IssueCommentCreate(BaseModel):
     text: EncryptedObject | None = None
     attachments: Annotated[list[IssueAttachmentBody], Field(default_factory=list)]
-    spent_time: int = 0
+    spent_time: Annotated[
+        int, Field(default=0, ge=0, description='Time spent in seconds')
+    ]
 
 
 class IssueCommentUpdate(BaseModel):
     text: EncryptedObject | None = None
     attachments: list[IssueAttachmentBody] | None = None
-    spent_time: int | None = None
+    spent_time: Annotated[
+        int | None, Field(default=None, ge=0, description='Time spent in seconds')
+    ]
 
 
 @router.get('/list')

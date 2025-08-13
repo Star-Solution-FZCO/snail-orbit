@@ -43061,7 +43061,9 @@
           },
           "spent_time": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Spent Time",
+            "description": "Time spent in seconds",
             "default": 0
           }
         },
@@ -43156,13 +43158,15 @@
           "spent_time": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 0.0
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Spent Time"
+            "title": "Spent Time",
+            "description": "Time spent in seconds"
           }
         },
         "type": "object",
