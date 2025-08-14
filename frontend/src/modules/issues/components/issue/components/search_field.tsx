@@ -66,7 +66,9 @@ export const SearchField: FC<SearchFieldProps> = (props) => {
             placeholder={t("placeholder.search")}
             value={innerValue}
             onBlur={syncValue}
-            onSubmit={syncValue}
+            onKeyUp={(event) => {
+                if (event.key === "Enter") syncValue();
+            }}
             onChange={(e) => setInnerValue(e.target.value)}
             slotProps={{
                 input: {
