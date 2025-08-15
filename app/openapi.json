@@ -44676,25 +44676,11 @@
             "title": "Created At"
           },
           "updated_by": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserOutput"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/UserOutput"
           },
           "updated_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "Updated At"
           },
           "is_resolved": {

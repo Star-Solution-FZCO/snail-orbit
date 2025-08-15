@@ -233,8 +233,8 @@ class Issue(DocumentWithReadOnlyProjection):
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]
 
-    updated_by: UserLinkField | None = None
-    updated_at: datetime | None = None
+    updated_by: UserLinkField
+    updated_at: Annotated[datetime, Field(default_factory=utcnow)]
 
     interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
     tags: Annotated[list[TagLinkField], Field(default_factory=list)]

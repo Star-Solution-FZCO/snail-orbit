@@ -166,8 +166,8 @@ class IssueOutput(BaseModel):
     id_readable: str
     created_by: UserOutput
     created_at: datetime
-    updated_by: UserOutput | None
-    updated_at: datetime | None
+    updated_by: UserOutput
+    updated_at: datetime
     is_resolved: bool
     resolved_at: datetime | None
     is_closed: bool
@@ -219,7 +219,7 @@ class IssueOutput(BaseModel):
             is_subscribed=current_user().user.id in obj.subscribers,
             created_by=UserOutput.from_obj(obj.created_by),
             created_at=obj.created_at,
-            updated_by=UserOutput.from_obj(obj.updated_by) if obj.updated_by else None,
+            updated_by=UserOutput.from_obj(obj.updated_by),
             updated_at=obj.updated_at,
             is_resolved=obj.is_resolved,
             resolved_at=obj.resolved_at,

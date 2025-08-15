@@ -122,16 +122,18 @@ async def list_issues(
     )
 
     pipeline = []
+    sort_pipeline = [{'$sort': {'updated_at': -1}}]
     if query.q or query.sort_by:
         try:
-            flt, sort_pipeline = await transform_query(
+            flt, sort_pipeline_ = await transform_query(
                 query.q or '',
                 current_user_email=user_ctx.user.email,
                 sort_by=query.sort_by,
             )
-            pipeline += sort_pipeline
             if flt:
                 q = q.find(flt)
+            if sort_pipeline_:
+                sort_pipeline = sort_pipeline_
         except IssueQueryTransformError as err:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
@@ -141,6 +143,7 @@ async def list_issues(
         q = q.find(transform_text_search(query.search))
     cnt = await q.count()
 
+    pipeline += sort_pipeline
     pipeline += [
         {
             '$skip': query.offset,
@@ -410,6 +413,9 @@ async def create_issue_from_draft(
         fields=draft.fields,
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
+        created_at=now,
+        updated_by=m.UserLinkField.from_obj(user_ctx.user),
+        updated_at=now,
         encryption=draft.encryption,
     )
     await update_attachments(obj, draft.attachments, user=user_ctx.user, now=now)
@@ -498,6 +504,9 @@ async def create_issue(
         fields=validated_fields,
         subscribers=[user_ctx.user.id],
         created_by=m.UserLinkField.from_obj(user_ctx.user),
+        created_at=now,
+        updated_by=m.UserLinkField.from_obj(user_ctx.user),
+        updated_at=now,
         encryption=body.text.encryption if body.text else None,
     )
     await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
