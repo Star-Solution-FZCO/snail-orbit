@@ -32,9 +32,7 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
     const [addPermissionDialogOpen, setAddPermissionDialogOpen] =
         useState(false);
 
-    const [listQueryParams] = useListQueryParams({
-        limit: 50,
-    });
+    const [listQueryParams] = useListQueryParams();
 
     const {
         data: permissions,
@@ -99,7 +97,6 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
             {
                 field: "target_type",
                 headerName: t("type"),
-                width: 100,
                 valueFormatter: (_, row) => capitalize(row.target_type),
             },
             {
@@ -108,7 +105,7 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
                 flex: 1,
                 valueGetter: (_, row) => {
                     return "name" in row.target
-                        ? row.target.name
+                        ? `${row.target.name}${"email" in row.target ? ` (${row.target.email})` : ""}`
                         : t("unknown");
                 },
             },

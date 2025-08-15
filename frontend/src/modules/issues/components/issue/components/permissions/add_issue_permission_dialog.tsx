@@ -1,6 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
+import GroupIcon from "@mui/icons-material/Group";
 import {
     Autocomplete,
+    Box,
     Button,
     CircularProgress,
     Dialog,
@@ -17,12 +19,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi, roleApi, userApi } from "shared/model";
 import type {
+    BasicUserT,
     IssueT,
     ListQueryParams,
     ListSelectQueryParams,
     RoleT,
     UserOrGroupT,
 } from "shared/model/types";
+import { UserAvatar } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
 import { IssueRolePermissions } from "./issue_role_permissions";
 
@@ -99,29 +103,28 @@ export const AddIssuePermissionDialog: FC<AddIssuePermissionDialogProps> = ({
         });
     };
 
-    const handleClickAdd = async () => {
-        if (!selectedTarget || !selectedRole) return;
-
-        try {
-            await grantIssuePermission({
-                id: issue.id_readable,
-                target_type: selectedTarget.type,
-                target_id: selectedTarget.data.id,
-                role_id: selectedRole.id,
-            }).unwrap();
-
-            handleClose();
-        } catch (error) {
-            toastApiError(error);
-        }
-    };
-
     const handleClose = () => {
         onClose();
         setSelectedTarget(null);
         setSelectedRole(null);
         resetUserGroupQueryParams();
         resetRoleQueryParams();
+    };
+
+    const handleClickAdd = async () => {
+        if (!selectedTarget || !selectedRole) return;
+
+        grantIssuePermission({
+            id: issue.id_readable,
+            target_type: selectedTarget.type,
+            target_id: selectedTarget.data.id,
+            role_id: selectedRole.id,
+        })
+            .unwrap()
+            .then(() => {
+                handleClose();
+            })
+            .catch(toastApiError);
     };
 
     const userGroupOptions = userGroupData?.payload?.items || [];
@@ -193,6 +196,34 @@ export const AddIssuePermissionDialog: FC<AddIssuePermissionDialogProps> = ({
                                     }}
                                 />
                             )}
+                            renderOption={(props, option) => {
+                                const { key: _, ...optionProps } = props;
+                                return (
+                                    <li {...optionProps} key={option.data.id}>
+                                        <Box
+                                            display="flex"
+                                            alignItems="center"
+                                            gap={1}
+                                        >
+                                            {option.type === "user" ? (
+                                                <UserAvatar
+                                                    src={
+                                                        (
+                                                            option.data as BasicUserT
+                                                        ).avatar || ""
+                                                    }
+                                                />
+                                            ) : (
+                                                <GroupIcon />
+                                            )}
+                                            {option.data.name}{" "}
+                                            {option.type === "user"
+                                                ? `(${(option.data as BasicUserT).email})`
+                                                : null}
+                                        </Box>
+                                    </li>
+                                );
+                            }}
                         />
 
                         <Autocomplete

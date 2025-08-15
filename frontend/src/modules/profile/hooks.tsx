@@ -9,6 +9,7 @@ export const useProfilePageTabs = () => {
             { value: "api_tokens", label: t("profile.sections.apiTokens") },
             { value: "security", label: t("profile.sections.security") },
             { value: "workspace", label: t("profile.sections.workspace") },
+            { value: "tags", label: t("profile.sections.tags") },
             { value: "keys", label: t("profile.sections.keys") },
         ],
         [t],

@@ -152,25 +152,10 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
             </DialogTitle>
 
             <DialogContent
-                sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                sx={{ display: "flex", flexDirection: "column", gap: 1 }}
             >
                 <Autocomplete
                     sx={{ mt: 1 }}
-                    value={role}
-                    options={roles?.payload.items || []}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            label={t("projects.access.role")}
-                            placeholder={t("projects.access.selectRole")}
-                            size="small"
-                        />
-                    )}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(_, value) => setRole(value)}
-                />
-
-                <Autocomplete
                     value={target}
                     inputValue={searchQuery}
                     options={options}
@@ -223,6 +208,9 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                                         <GroupIcon />
                                     )}
                                     {option.data.name}
+                                    {option.type === "user"
+                                        ? ` (${(option.data as BasicUserT).email})`
+                                        : null}
                                 </Box>
                             </li>
                         );
@@ -232,6 +220,21 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     }
                     clearOnBlur={false}
                 />
+
+                <Autocomplete
+                    value={role}
+                    options={roles?.payload.items || []}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label={t("projects.access.role")}
+                            placeholder={t("projects.access.selectRole")}
+                            size="small"
+                        />
+                    )}
+                    getOptionLabel={(option) => option.name}
+                    onChange={(_, value) => setRole(value)}
+                />
             </DialogContent>
 
             <DialogActions>
@@ -239,6 +242,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                     onClick={onClose}
                     variant="outlined"
                     color="error"
+                    size="small"
                     disabled={isLoading}
                 >
                     {t("cancel")}
@@ -247,6 +251,7 @@ const GrantPermissionDialog: FC<IPGrantPermissionDialogProps> = ({
                 <Button
                     onClick={handleClickGrant}
                     variant="outlined"
+                    size="small"
                     disabled={!target || !role}
                     loading={isLoading}
                 >
@@ -385,6 +390,12 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
                 ),
             },
             {
+                field: "target_type",
+                headerName: t("projects.access.target.type"),
+                valueGetter: (_, row) =>
+                    t(`projects.access.target.${row.target_type}`),
+            },
+            {
                 field: "target_name",
                 headerName: t("projects.access.target.name"),
                 valueGetter: (_, row) => row.target.name,
@@ -399,16 +410,13 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
                             <GroupIcon />
                         )}
                         {row.target.name}
+                        {row.target_type === "user"
+                            ? ` (${(row.target as BasicUserT).email})`
+                            : null}
                     </Box>
                 ),
             },
-            {
-                field: "target_type",
-                headerName: t("projects.access.target.type"),
-                valueGetter: (_, row) =>
-                    t(`projects.access.target.${row.target_type}`),
-                flex: 1,
-            },
+
             {
                 field: "role",
                 headerName: t("projects.access.role"),
@@ -464,6 +472,8 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
                 loading={isLoading || isFetching}
                 paginationMode="server"
                 density="compact"
+                disableRowSelectionOnClick
+                disableColumnMenu
             />
 
             <GrantPermissionDialog

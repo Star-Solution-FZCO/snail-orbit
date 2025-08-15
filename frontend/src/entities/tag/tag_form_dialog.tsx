@@ -1,4 +1,5 @@
 import { LocalOfferOutlined } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
     Button,
     CircularProgress,
@@ -25,8 +26,10 @@ type TagFormDialogProps = {
     onBackToList?: () => void;
     onTagCreate?: (data: TagDto) => void;
     onTagUpdate?: (data: TagDto & { id: string }) => void;
+    onTagDelete?: (tag: TagT) => void;
     isLoading?: boolean;
     initialData?: TagT | null;
+    showDeleteButton?: boolean;
 };
 
 export const TagFormDialog = memo((props: TagFormDialogProps) => {
@@ -36,8 +39,10 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
         onBackToList,
         onTagCreate,
         onTagUpdate,
+        onTagDelete,
         isLoading = false,
         initialData,
+        showDeleteButton = false,
     } = props;
 
     const { t } = useTranslation();
@@ -51,15 +56,28 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
     } = useForm<TagDto>({
         disabled: isLoading,
         mode: "all",
-        defaultValues: initialData || {},
+        defaultValues: {
+            name: "",
+            description: "",
+            ai_description: "",
+            color: "",
+            untag_on_close: false,
+            untag_on_resolve: false,
+        },
     });
 
     useEffect(() => {
-        if (!open) return;
-        if (initialData) {
-            reset(initialData);
-        } else {
-            reset();
+        if (open) {
+            reset(
+                initialData || {
+                    name: "",
+                    description: "",
+                    ai_description: "",
+                    color: "",
+                    untag_on_close: false,
+                    untag_on_resolve: false,
+                },
+            );
         }
     }, [initialData, open, reset]);
 
@@ -92,6 +110,7 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
                     <CircularProgress sx={{ ml: 1 }} size={14} />
                 ) : undefined}
             </DialogTitle>
+
             <DialogContent sx={{ pt: "16px !important" }}>
                 <Stack direction="column" gap={2}>
                     <TextField
@@ -198,31 +217,49 @@ export const TagFormDialog = memo((props: TagFormDialogProps) => {
                     </FormGroup>
                 </Stack>
             </DialogContent>
+
             <DialogActions>
                 {onBackToList && (
                     <Button
-                        type="button"
-                        variant="text"
-                        color="inherit"
-                        disabled={isLoading}
                         onClick={onBackToList}
+                        type="button"
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        disabled={isLoading}
                     >
                         {t("back")}
                     </Button>
                 )}
+
+                {showDeleteButton && initialData && (
+                    <Button
+                        sx={{ mr: "auto" }}
+                        onClick={() => onTagDelete?.(initialData)}
+                        startIcon={<DeleteIcon />}
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        disabled={isLoading}
+                    >
+                        {t("delete")}
+                    </Button>
+                )}
+
                 <Button
-                    type="button"
-                    variant="text"
-                    color="inherit"
-                    disabled={isLoading}
                     onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    disabled={isLoading}
                 >
                     {t("cancel")}
                 </Button>
+
                 <Button
                     type="submit"
-                    variant="contained"
-                    color="primary"
+                    variant="outlined"
+                    size="small"
                     disabled={!isValid || isLoading}
                 >
                     {t("save")}

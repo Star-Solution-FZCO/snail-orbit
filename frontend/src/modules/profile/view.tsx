@@ -7,6 +7,7 @@ import { userApi } from "shared/model";
 import { ErrorHandler, TabPanel } from "shared/ui";
 import { AccountSecurity } from "./components/account_security";
 import { APITokenList } from "./components/api_tokens";
+import { Tags } from "./components/tags";
 import { Workspace } from "./components/workspace";
 import { useProfilePageTabs } from "./hooks";
 import { Keys } from "./tabs/keys/keys";
@@ -73,6 +74,10 @@ export const ProfileView = (props: ProfileViewProps) => {
 
                     <TabPanel value="workspace">
                         <Workspace />
+                    </TabPanel>
+
+                    <TabPanel value="tags">
+                        <Tags />
                     </TabPanel>
 
                     <TabPanel value="keys">
