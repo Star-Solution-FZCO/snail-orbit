@@ -343,8 +343,7 @@ async def update_custom_field_group(
                 m.Issue.update_field_embedded_links(field),
                 m.IssueDraft.update_field_embedded_links(field),
                 m.Board.update_field_embedded_links(field),
-                m.IssuesPerFieldReport.update_field_embedded_links(field),
-                m.IssuesPerTwoFieldsReport.update_field_embedded_links(field),
+                m.Report.update_field_embedded_links(field),
             )
     return SuccessPayloadOutput(
         payload=cf_group_output_cls_from_type(fields[0].type)(

@@ -34732,7 +34732,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/BaseListOutput_ReportOutput_"
                 }
               }
             }
@@ -34841,7 +34841,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportCreate__IssuesPerFieldReportCreate__IssuesPerTwoFieldsReportCreate___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+                "$ref": "#/components/schemas/ReportCreate"
               }
             }
           },
@@ -34853,7 +34853,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
                 }
               }
             }
@@ -34989,7 +34989,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
                 }
               }
             }
@@ -35246,7 +35246,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportUpdate__IssuesPerFieldReportUpdate__IssuesPerTwoFieldsReportUpdate___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+                "$ref": "#/components/schemas/ReportUpdate"
               }
             }
           }
@@ -35257,7 +35257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
                 }
               }
             }
@@ -35670,7 +35670,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
                 }
               }
             }
@@ -35801,7 +35801,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportOutput_"
                 }
               }
             }
@@ -35918,6 +35918,10 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
               "title": "Report Id"
             }
           }
@@ -35928,7 +35932,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_ReportDataOutput_"
                 }
               }
             }
@@ -36803,6 +36807,66 @@
         ],
         "title": "ApiTokenOut"
       },
+      "AxisInput": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AxisType",
+            "description": "Type of axis (project or custom field)"
+          },
+          "custom_field_gid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+                "format": "uuid",
+                "description": "UUID string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Field Gid",
+            "description": "Custom field GID for the axis (only when type is CUSTOM_FIELD)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "AxisInput"
+      },
+      "AxisOutput": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AxisType",
+            "description": "Type of axis (project or custom field)"
+          },
+          "custom_field": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Custom field for the axis (only when type is CUSTOM_FIELD)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "AxisOutput"
+      },
+      "AxisType": {
+        "type": "string",
+        "enum": [
+          "project",
+          "custom_field"
+        ],
+        "title": "AxisType"
+      },
       "BaseListOutput_Activity_": {
         "properties": {
           "success": {
@@ -37177,6 +37241,23 @@
         ],
         "title": "BaseListOutput[ProjectResolvedPermissionOutput]"
       },
+      "BaseListOutput_ReportOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BaseListPayload_ReportOutput_"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BaseListOutput[ReportOutput]"
+      },
       "BaseListOutput_RoleOutput_": {
         "properties": {
           "success": {
@@ -37193,23 +37274,6 @@
           "payload"
         ],
         "title": "BaseListOutput[RoleOutput]"
-      },
-      "BaseListOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "BaseListOutput[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "BaseListOutput_SearchOutput_": {
         "properties": {
@@ -38046,6 +38110,37 @@
         ],
         "title": "BaseListPayload[ProjectResolvedPermissionOutput]"
       },
+      "BaseListPayload_ReportOutput_": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportOutput"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "BaseListPayload[ReportOutput]"
+      },
       "BaseListPayload_RoleOutput_": {
         "properties": {
           "count": {
@@ -38076,37 +38171,6 @@
           "items"
         ],
         "title": "BaseListPayload[RoleOutput]"
-      },
-      "BaseListPayload_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
-        "properties": {
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
-            },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "count",
-          "limit",
-          "offset",
-          "items"
-        ],
-        "title": "BaseListPayload[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "BaseListPayload_SearchOutput_": {
         "properties": {
@@ -39025,6 +39089,40 @@
           "fields"
         ],
         "title": "BooleanCustomFieldGroupOutput"
+      },
+      "BooleanCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "boolean",
+            "title": "Type",
+            "default": "boolean"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "BooleanCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific boolean custom field group with simplified values."
       },
       "BooleanCustomFieldGroupWithValuesOutput": {
         "properties": {
@@ -39999,6 +40097,41 @@
         ],
         "title": "DateCustomFieldGroupOutput"
       },
+      "DateCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "date",
+            "title": "Type",
+            "default": "date"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "DateCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific date custom field group with simplified values."
+      },
       "DateCustomFieldGroupWithValuesOutput": {
         "properties": {
           "field": {
@@ -40294,6 +40427,41 @@
         ],
         "title": "DateTimeCustomFieldGroupOutput"
       },
+      "DateTimeCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "datetime",
+            "title": "Type",
+            "default": "datetime"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "DateTimeCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific datetime custom field group with simplified values."
+      },
       "DateTimeCustomFieldGroupWithValuesOutput": {
         "properties": {
           "field": {
@@ -40588,6 +40756,40 @@
           "fields"
         ],
         "title": "DurationCustomFieldGroupOutput"
+      },
+      "DurationCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "duration",
+            "title": "Type",
+            "default": "duration"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "DurationCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific duration custom field group with simplified values."
       },
       "DurationCustomFieldOutput": {
         "properties": {
@@ -41260,6 +41462,33 @@
         ],
         "title": "EnumCustomFieldGroupOutput"
       },
+      "EnumCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "enum",
+            "title": "Type",
+            "default": "enum"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "EnumCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific enum custom field group with simplified values."
+      },
       "EnumCustomFieldGroupWithValuesOutput": {
         "properties": {
           "field": {
@@ -41555,6 +41784,33 @@
           "fields"
         ],
         "title": "EnumMultiCustomFieldGroupOutput"
+      },
+      "EnumMultiCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "enum_multi",
+            "title": "Type",
+            "default": "enum_multi"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "EnumMultiCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific enum multi custom field group with simplified values."
       },
       "EnumMultiCustomFieldOutput": {
         "properties": {
@@ -41996,6 +42252,40 @@
           "fields"
         ],
         "title": "FloatCustomFieldGroupOutput"
+      },
+      "FloatCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "float",
+            "title": "Type",
+            "default": "float"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "FloatCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific float custom field group with simplified values."
       },
       "FloatCustomFieldGroupWithValuesOutput": {
         "properties": {
@@ -42653,6 +42943,40 @@
           "fields"
         ],
         "title": "IntegerCustomFieldGroupOutput"
+      },
+      "IntegerCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "integer",
+            "title": "Type",
+            "default": "integer"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "IntegerCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific integer custom field group with simplified values."
       },
       "IntegerCustomFieldGroupWithValuesOutput": {
         "properties": {
@@ -45310,1094 +45634,6 @@
         ],
         "title": "IssueVersionMultiFieldChangeOutput"
       },
-      "IssuesPerFieldReportCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_field",
-            "title": "Type",
-            "default": "issues_per_field"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-            },
-            "type": "array",
-            "title": "Permissions"
-          },
-          "field_gid": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "format": "uuid",
-            "title": "Field Gid",
-            "description": "UUID string"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "field_gid"
-        ],
-        "title": "IssuesPerFieldReportCreate"
-      },
-      "IssuesPerFieldReportDataItem": {
-        "properties": {
-          "value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserLinkField"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserLinkField"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/OwnedOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/OwnedOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value",
-            "description": "Field value for this item (null for empty values)"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count",
-            "description": "Number of issues for this field value"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "count"
-        ],
-        "title": "IssuesPerFieldReportDataItem",
-        "description": "Single item in an issues-per-field report dataset."
-      },
-      "IssuesPerFieldReportDataOutput": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_field",
-            "title": "Type",
-            "default": "issues_per_field"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/IssuesPerFieldReportDataItem"
-            },
-            "type": "array",
-            "title": "Items",
-            "description": "List of field report data items"
-          },
-          "total_count": {
-            "type": "integer",
-            "title": "Total Count",
-            "description": "Total number of issues across all field values"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total_count"
-        ],
-        "title": "IssuesPerFieldReportDataOutput",
-        "description": "Output model for generated issues-per-field report data."
-      },
-      "IssuesPerFieldReportOutput": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "$ref": "#/components/schemas/ProjectField"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_field",
-            "title": "Type",
-            "default": "issues_per_field"
-          },
-          "created_by": {
-            "$ref": "#/components/schemas/UserOutput"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
-            },
-            "type": "array",
-            "title": "Permissions"
-          },
-          "is_favorite": {
-            "type": "boolean",
-            "title": "Is Favorite",
-            "description": "Whether report is favorited by current user"
-          },
-          "current_permission": {
-            "$ref": "#/components/schemas/PermissionType",
-            "description": "Current user permission"
-          },
-          "field": {
-            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "description",
-          "query",
-          "projects",
-          "created_by",
-          "permissions",
-          "is_favorite",
-          "current_permission",
-          "field"
-        ],
-        "title": "IssuesPerFieldReportOutput"
-      },
-      "IssuesPerFieldReportUpdate": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_field",
-            "title": "Type",
-            "default": "issues_per_field"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "maxLength": 24,
-                  "minLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Projects"
-          },
-          "permissions": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Permissions"
-          },
-          "field_gid": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-                "format": "uuid",
-                "description": "UUID string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Field Gid"
-          }
-        },
-        "type": "object",
-        "title": "IssuesPerFieldReportUpdate"
-      },
-      "IssuesPerProjectReportCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_project",
-            "title": "Type",
-            "default": "issues_per_project"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-            },
-            "type": "array",
-            "title": "Permissions"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "IssuesPerProjectReportCreate"
-      },
-      "IssuesPerProjectReportDataItem": {
-        "properties": {
-          "value": {
-            "$ref": "#/components/schemas/ProjectField",
-            "description": "Project information for this item"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count",
-            "description": "Number of issues for this project"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "count"
-        ],
-        "title": "IssuesPerProjectReportDataItem",
-        "description": "Single item in an issues-per-project report dataset."
-      },
-      "IssuesPerProjectReportDataOutput": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_project",
-            "title": "Type",
-            "default": "issues_per_project"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/IssuesPerProjectReportDataItem"
-            },
-            "type": "array",
-            "title": "Items",
-            "description": "List of project report data items"
-          },
-          "total_count": {
-            "type": "integer",
-            "title": "Total Count",
-            "description": "Total number of issues across all projects"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total_count"
-        ],
-        "title": "IssuesPerProjectReportDataOutput",
-        "description": "Output model for generated issues-per-project report data."
-      },
-      "IssuesPerProjectReportOutput": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "$ref": "#/components/schemas/ProjectField"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_project",
-            "title": "Type",
-            "default": "issues_per_project"
-          },
-          "created_by": {
-            "$ref": "#/components/schemas/UserOutput"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
-            },
-            "type": "array",
-            "title": "Permissions"
-          },
-          "is_favorite": {
-            "type": "boolean",
-            "title": "Is Favorite",
-            "description": "Whether report is favorited by current user"
-          },
-          "current_permission": {
-            "$ref": "#/components/schemas/PermissionType",
-            "description": "Current user permission"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "description",
-          "query",
-          "projects",
-          "created_by",
-          "permissions",
-          "is_favorite",
-          "current_permission"
-        ],
-        "title": "IssuesPerProjectReportOutput"
-      },
-      "IssuesPerProjectReportUpdate": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_project",
-            "title": "Type",
-            "default": "issues_per_project"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "maxLength": 24,
-                  "minLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Projects"
-          },
-          "permissions": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Permissions"
-          }
-        },
-        "type": "object",
-        "title": "IssuesPerProjectReportUpdate"
-      },
-      "IssuesPerTwoFieldsReportColumnItem": {
-        "properties": {
-          "value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserLinkField"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserLinkField"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/OwnedOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/OwnedOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value",
-            "description": "Column field value"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count",
-            "description": "Number of issues for this column in the current row"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "count"
-        ],
-        "title": "IssuesPerTwoFieldsReportColumnItem",
-        "description": "Single column item within a row in a two-fields report."
-      },
-      "IssuesPerTwoFieldsReportCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_two_fields",
-            "title": "Type",
-            "default": "issues_per_two_fields"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "type": "string",
-              "maxLength": 24,
-              "minLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-            },
-            "type": "array",
-            "title": "Permissions"
-          },
-          "row_field_gid": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "format": "uuid",
-            "title": "Row Field Gid",
-            "description": "UUID string"
-          },
-          "column_field_gid": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-            "format": "uuid",
-            "title": "Column Field Gid",
-            "description": "UUID string"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "row_field_gid",
-          "column_field_gid"
-        ],
-        "title": "IssuesPerTwoFieldsReportCreate"
-      },
-      "IssuesPerTwoFieldsReportDataOutput": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_two_fields",
-            "title": "Type",
-            "default": "issues_per_two_fields"
-          },
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/IssuesPerTwoFieldsReportRowItem"
-            },
-            "type": "array",
-            "title": "Rows",
-            "description": "List of row items with nested column data"
-          },
-          "total_count": {
-            "type": "integer",
-            "title": "Total Count",
-            "description": "Total number of issues across all field combinations"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rows",
-          "total_count"
-        ],
-        "title": "IssuesPerTwoFieldsReportDataOutput",
-        "description": "Output model for generated issues-per-two-fields report data."
-      },
-      "IssuesPerTwoFieldsReportOutput": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "items": {
-              "$ref": "#/components/schemas/ProjectField"
-            },
-            "type": "array",
-            "title": "Projects"
-          },
-          "type": {
-            "type": "string",
-            "const": "issues_per_two_fields",
-            "title": "Type",
-            "default": "issues_per_two_fields"
-          },
-          "created_by": {
-            "$ref": "#/components/schemas/UserOutput"
-          },
-          "permissions": {
-            "items": {
-              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
-            },
-            "type": "array",
-            "title": "Permissions"
-          },
-          "is_favorite": {
-            "type": "boolean",
-            "title": "Is Favorite",
-            "description": "Whether report is favorited by current user"
-          },
-          "current_permission": {
-            "$ref": "#/components/schemas/PermissionType",
-            "description": "Current user permission"
-          },
-          "row_field": {
-            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
-          },
-          "column_field": {
-            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "description",
-          "query",
-          "projects",
-          "created_by",
-          "permissions",
-          "is_favorite",
-          "current_permission",
-          "row_field",
-          "column_field"
-        ],
-        "title": "IssuesPerTwoFieldsReportOutput"
-      },
-      "IssuesPerTwoFieldsReportRowItem": {
-        "properties": {
-          "value": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "$ref": "#/components/schemas/UserLinkField"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/UserLinkField"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/EnumOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EnumOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/StateOption"
-              },
-              {
-                "$ref": "#/components/schemas/VersionOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VersionOption"
-                },
-                "type": "array"
-              },
-              {
-                "$ref": "#/components/schemas/OwnedOption"
-              },
-              {
-                "items": {
-                  "$ref": "#/components/schemas/OwnedOption"
-                },
-                "type": "array"
-              },
-              {
-                "type": "string",
-                "example": "5eb7cf5a86d9755df3a6c593"
-              },
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value",
-            "description": "Row field value"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total",
-            "description": "Total number of issues for this row across all columns"
-          },
-          "columns": {
-            "items": {
-              "$ref": "#/components/schemas/IssuesPerTwoFieldsReportColumnItem"
-            },
-            "type": "array",
-            "title": "Columns",
-            "description": "List of column items for this row"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value",
-          "total",
-          "columns"
-        ],
-        "title": "IssuesPerTwoFieldsReportRowItem",
-        "description": "Single row item in a two-fields report dataset."
-      },
-      "IssuesPerTwoFieldsReportUpdate": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "const": "issues_per_two_fields",
-            "title": "Type",
-            "default": "issues_per_two_fields"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "projects": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "maxLength": 24,
-                  "minLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Projects"
-          },
-          "permissions": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Permissions"
-          },
-          "row_field_gid": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-                "format": "uuid",
-                "description": "UUID string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Row Field Gid"
-          },
-          "column_field_gid": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-                "format": "uuid",
-                "description": "UUID string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Column Field Gid"
-          }
-        },
-        "type": "object",
-        "title": "IssuesPerTwoFieldsReportUpdate"
-      },
       "MFASettingOut": {
         "properties": {
           "is_enabled": {
@@ -46556,6 +45792,33 @@
           "fields"
         ],
         "title": "OwnedCustomFieldGroupOutput"
+      },
+      "OwnedCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned",
+            "title": "Type",
+            "default": "owned"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "OwnedCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific owned custom field group with simplified values."
       },
       "OwnedCustomFieldOutput": {
         "properties": {
@@ -46817,6 +46080,33 @@
           "fields"
         ],
         "title": "OwnedMultiCustomFieldGroupOutput"
+      },
+      "OwnedMultiCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "owned_multi",
+            "title": "Type",
+            "default": "owned_multi"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "OwnedMultiCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific owned multi custom field group with simplified values."
       },
       "OwnedMultiCustomFieldOutput": {
         "properties": {
@@ -47393,6 +46683,30 @@
           "default"
         ],
         "title": "ProjectAvatarType"
+      },
+      "ProjectAxisOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "project",
+            "title": "Type",
+            "description": "Axis type identifier",
+            "default": "project"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectField"
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "List of projects in this axis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "title": "ProjectAxisOutput"
       },
       "ProjectCreate": {
         "properties": {
@@ -48099,6 +47413,417 @@
         ],
         "title": "QueryBuilderOutput"
       },
+      "ReportCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "type": "string",
+              "maxLength": 24,
+              "minLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "axis_1": {
+            "$ref": "#/components/schemas/AxisInput"
+          },
+          "axis_2": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AxisInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the report"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "axis_1"
+        ],
+        "title": "ReportCreate"
+      },
+      "ReportDataOutput": {
+        "properties": {
+          "axis_1": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StringCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/IntegerCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/FloatCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/BooleanCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DateCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DateTimeCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/UserCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/UserMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/EnumCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/EnumMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/StateCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/VersionCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/VersionMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/ProjectAxisOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Axis 1",
+            "description": "First axis configuration with discriminated values (like columns)"
+          },
+          "axis_2": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StringCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/IntegerCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/FloatCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/BooleanCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DateCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DateTimeCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/UserCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/UserMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/EnumCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/EnumMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/StateCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/VersionCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/VersionMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/ProjectAxisOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Axis 2",
+            "description": "Second axis configuration with discriminated values (like swimlanes)"
+          },
+          "data": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "2D array of issue counts: [axis_2_value_index][axis_1_value_index]"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ReportDataOutput",
+        "description": "Unified report data output structure (similar to BoardIssuesOutput)."
+      },
+      "ReportOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectField"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "axis_1": {
+            "$ref": "#/components/schemas/AxisOutput"
+          },
+          "axis_2": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AxisOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the report"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/pm__api__views__permission__PermissionOutput"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "is_favorite": {
+            "type": "boolean",
+            "title": "Is Favorite",
+            "description": "Whether report is favorited by current user"
+          },
+          "current_permission": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Current user permission"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "query",
+          "projects",
+          "axis_1",
+          "axis_2",
+          "created_by",
+          "permissions",
+          "is_favorite",
+          "current_permission"
+        ],
+        "title": "ReportOutput"
+      },
+      "ReportUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 24,
+                  "minLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "axis_1": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AxisInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "axis_2": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AxisInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ui_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Settings"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "title": "ReportUpdate"
+      },
       "RoleCreate": {
         "properties": {
           "name": {
@@ -48220,94 +47945,6 @@
         },
         "type": "object",
         "title": "RoleUpdate"
-      },
-      "RootModel_Annotated_Union_IssuesPerProjectReportCreate__IssuesPerFieldReportCreate__IssuesPerTwoFieldsReportCreate___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/IssuesPerProjectReportCreate"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerFieldReportCreate"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportCreate"
-          }
-        ],
-        "title": "RootModel[Annotated[Union[IssuesPerProjectReportCreate, IssuesPerFieldReportCreate, IssuesPerTwoFieldsReportCreate], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "issues_per_field": "#/components/schemas/IssuesPerFieldReportCreate",
-            "issues_per_project": "#/components/schemas/IssuesPerProjectReportCreate",
-            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportCreate"
-          }
-        }
-      },
-      "RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/IssuesPerProjectReportDataOutput"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerFieldReportDataOutput"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportDataOutput"
-          }
-        ],
-        "title": "RootModel[Annotated[Union[IssuesPerProjectReportDataOutput, IssuesPerFieldReportDataOutput, IssuesPerTwoFieldsReportDataOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "issues_per_field": "#/components/schemas/IssuesPerFieldReportDataOutput",
-            "issues_per_project": "#/components/schemas/IssuesPerProjectReportDataOutput",
-            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportDataOutput"
-          }
-        }
-      },
-      "RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/IssuesPerProjectReportOutput"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerFieldReportOutput"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportOutput"
-          }
-        ],
-        "title": "RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "issues_per_field": "#/components/schemas/IssuesPerFieldReportOutput",
-            "issues_per_project": "#/components/schemas/IssuesPerProjectReportOutput",
-            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportOutput"
-          }
-        }
-      },
-      "RootModel_Annotated_Union_IssuesPerProjectReportUpdate__IssuesPerFieldReportUpdate__IssuesPerTwoFieldsReportUpdate___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/IssuesPerProjectReportUpdate"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerFieldReportUpdate"
-          },
-          {
-            "$ref": "#/components/schemas/IssuesPerTwoFieldsReportUpdate"
-          }
-        ],
-        "title": "RootModel[Annotated[Union[IssuesPerProjectReportUpdate, IssuesPerFieldReportUpdate, IssuesPerTwoFieldsReportUpdate], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "issues_per_field": "#/components/schemas/IssuesPerFieldReportUpdate",
-            "issues_per_project": "#/components/schemas/IssuesPerProjectReportUpdate",
-            "issues_per_two_fields": "#/components/schemas/IssuesPerTwoFieldsReportUpdate"
-          }
-        }
       },
       "RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
@@ -48778,6 +48415,33 @@
           "fields"
         ],
         "title": "StateCustomFieldGroupOutput"
+      },
+      "StateCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "state",
+            "title": "Type",
+            "default": "state"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "StateCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific state custom field group with simplified values."
       },
       "StateCustomFieldGroupWithValuesOutput": {
         "properties": {
@@ -49263,6 +48927,40 @@
           "fields"
         ],
         "title": "StringCustomFieldGroupOutput"
+      },
+      "StringCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "string",
+            "title": "Type",
+            "default": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "StringCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific string custom field group with simplified values."
       },
       "StringCustomFieldGroupWithValuesOutput": {
         "properties": {
@@ -49836,6 +49534,40 @@
         ],
         "title": "SuccessPayloadOutput[QueryBuilderOutput]"
       },
+      "SuccessPayloadOutput_ReportDataOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ReportDataOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[ReportDataOutput]"
+      },
+      "SuccessPayloadOutput_ReportOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ReportOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[ReportOutput]"
+      },
       "SuccessPayloadOutput_RoleOutput_": {
         "properties": {
           "success": {
@@ -49852,40 +49584,6 @@
           "payload"
         ],
         "title": "SuccessPayloadOutput[RoleOutput]"
-      },
-      "SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportDataOutput__IssuesPerFieldReportDataOutput__IssuesPerTwoFieldsReportDataOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "SuccessPayloadOutput[RootModel[Annotated[Union[IssuesPerProjectReportDataOutput, IssuesPerFieldReportDataOutput, IssuesPerTwoFieldsReportDataOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
-      },
-      "SuccessPayloadOutput_RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type_____": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "default": true
-          },
-          "payload": {
-            "$ref": "#/components/schemas/RootModel_Annotated_Union_IssuesPerProjectReportOutput__IssuesPerFieldReportOutput__IssuesPerTwoFieldsReportOutput___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
-          }
-        },
-        "type": "object",
-        "required": [
-          "payload"
-        ],
-        "title": "SuccessPayloadOutput[RootModel[Annotated[Union[IssuesPerProjectReportOutput, IssuesPerFieldReportOutput, IssuesPerTwoFieldsReportOutput], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]]"
       },
       "SuccessPayloadOutput_SearchOutput_": {
         "properties": {
@@ -50676,6 +50374,40 @@
         ],
         "title": "UserCustomFieldGroupOutput"
       },
+      "UserCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "user",
+            "title": "Type",
+            "default": "user"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "UserCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific user custom field group with simplified values."
+      },
       "UserCustomFieldGroupWithValuesOutput": {
         "properties": {
           "field": {
@@ -51098,6 +50830,40 @@
           "fields"
         ],
         "title": "UserMultiCustomFieldGroupOutput"
+      },
+      "UserMultiCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "user_multi",
+            "title": "Type",
+            "default": "user_multi"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/UserOutput"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "UserMultiCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific user multi custom field group with simplified values."
       },
       "UserMultiCustomFieldOutput": {
         "properties": {
@@ -51561,6 +51327,33 @@
         ],
         "title": "VersionCustomFieldGroupOutput"
       },
+      "VersionCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "version",
+            "title": "Type",
+            "default": "version"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "VersionCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific version custom field group with simplified values."
+      },
       "VersionCustomFieldGroupWithValuesOutput": {
         "properties": {
           "field": {
@@ -51856,6 +51649,33 @@
           "fields"
         ],
         "title": "VersionMultiCustomFieldGroupOutput"
+      },
+      "VersionMultiCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "version_multi",
+            "title": "Type",
+            "default": "version_multi"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "VersionMultiCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific version multi custom field group with simplified values."
       },
       "VersionMultiCustomFieldOutput": {
         "properties": {

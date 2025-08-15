@@ -11,7 +11,6 @@ from .issue import *
 from .permission import *
 from .project import *
 from .report import *
-from .report import rebuild_models as report_rebuild_models
 from .role import *
 from .search import *
 from .tag import *
@@ -19,7 +18,6 @@ from .user import *
 from .workflow import *
 
 cf_rebuild_models()
-report_rebuild_models()
 group_rebuild_models()
 
 __beanie_models__ = [
@@ -38,9 +36,6 @@ __beanie_models__ = [
     ProjectRole,
     GlobalRole,
     Report,
-    IssuesPerProjectReport,
-    IssuesPerFieldReport,
-    IssuesPerTwoFieldsReport,
     CustomField,
     StringCustomField,
     IntegerCustomField,

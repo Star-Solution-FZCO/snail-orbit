@@ -1,16 +1,22 @@
+# pylint: disable=too-many-lines
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from beanie import PydanticObjectId
 from fastapi import Depends, HTTPException
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.utils.router import APIRouter
-from pm.api.views.custom_fields import CustomFieldGroupLinkOutput
+from pm.api.views.custom_fields import (
+    CustomFieldGroupLinkOutput,
+    CustomFieldGroupWithReportValuesOutputT,
+    ShortOptionOutput,
+    custom_field_group_with_report_values_output_cls_from_type,
+)
 from pm.api.views.error_responses import error_responses
 from pm.api.views.issue import ProjectField
 from pm.api.views.output import (
@@ -23,7 +29,6 @@ from pm.api.views.output import (
 from pm.api.views.params import ListParams
 from pm.api.views.permission import PermissionOutput
 from pm.api.views.user import UserOutput
-from pm.models.custom_fields import CustomFieldValueT
 from pm.utils.pydantic_uuid import UUIDStr
 
 if TYPE_CHECKING:
@@ -31,6 +36,80 @@ if TYPE_CHECKING:
 
 
 __all__ = ('router',)
+
+
+OPTION_BASED_FIELD_TYPES = (
+    m.CustomFieldTypeT.ENUM,
+    m.CustomFieldTypeT.ENUM_MULTI,
+    m.CustomFieldTypeT.STATE,
+    m.CustomFieldTypeT.VERSION,
+    m.CustomFieldTypeT.VERSION_MULTI,
+    m.CustomFieldTypeT.OWNED,
+    m.CustomFieldTypeT.OWNED_MULTI,
+)
+
+USER_BASED_FIELD_TYPES = (
+    m.CustomFieldTypeT.USER,
+    m.CustomFieldTypeT.USER_MULTI,
+)
+
+MULTI_TO_SINGLE_FIELD_TYPE_MAPPING = {
+    m.CustomFieldTypeT.USER_MULTI: m.CustomFieldTypeT.USER,
+    m.CustomFieldTypeT.ENUM_MULTI: m.CustomFieldTypeT.ENUM,
+    m.CustomFieldTypeT.VERSION_MULTI: m.CustomFieldTypeT.VERSION,
+    m.CustomFieldTypeT.OWNED_MULTI: m.CustomFieldTypeT.OWNED,
+}
+
+
+def convert_aggregated_value_to_proper_output(
+    raw_value: Any, sample_value: Any, field: m.CustomField
+) -> Any:
+    """Convert aggregated raw values to proper output format based on field type."""
+    if field.type in OPTION_BASED_FIELD_TYPES:
+        if sample_value and isinstance(sample_value, dict) and 'value' in sample_value:
+            return ShortOptionOutput(
+                value=str(sample_value['value']),
+                color=sample_value.get('color'),
+            )
+        return ShortOptionOutput(
+            value=str(raw_value) if raw_value is not None else '', color=None
+        )
+
+    if field.type in USER_BASED_FIELD_TYPES:
+        if sample_value and isinstance(sample_value, dict):
+            user_link = m.UserLinkField(**sample_value)
+            return UserOutput.from_obj(user_link)
+        return raw_value
+
+    return raw_value
+
+
+def transform_field_with_values_to_report_discriminated(
+    values: list[Any],
+    original_field: m.CustomFieldGroupLink,
+) -> CustomFieldGroupWithReportValuesOutputT:
+    """Transform field values using report-specific discriminated union with ShortOptionOutput."""
+    field_output = CustomFieldGroupLinkOutput.from_obj(original_field)
+
+    if original_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        single_value_type = MULTI_TO_SINGLE_FIELD_TYPE_MAPPING[original_field.type]
+        output_cls = custom_field_group_with_report_values_output_cls_from_type(
+            single_value_type
+        )
+
+        return output_cls(
+            field=field_output,
+            type=single_value_type,
+            values=values,
+        )
+    output_cls = custom_field_group_with_report_values_output_cls_from_type(
+        original_field.type
+    )
+    return output_cls(
+        field=field_output,
+        type=original_field.type,
+        values=values,
+    )
 
 
 router = APIRouter(
@@ -44,168 +123,88 @@ router = APIRouter(
 )
 
 
-# Base output model for common fields
-class BaseReportOutput(BaseModel):
+class AxisOutput(BaseModel):
+    type: m.AxisType = Field(description='Type of axis (project or custom field)')
+    custom_field: CustomFieldGroupLinkOutput | None = Field(
+        default=None,
+        description='Custom field for the axis (only when type is CUSTOM_FIELD)',
+    )
+
+
+class ReportOutput(BaseModel):
     id: str
     name: str
     description: str | None
     query: str | None
     projects: list[ProjectField]
-    type: m.ReportType
+    axis_1: AxisOutput
+    axis_2: AxisOutput | None
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the report'
+    )
     created_by: UserOutput
     permissions: list[PermissionOutput]
     is_favorite: bool = Field(description='Whether report is favorited by current user')
     current_permission: m.PermissionType = Field(description='Current user permission')
 
-
-class IssuesPerProjectReportOutput(BaseReportOutput):
-    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
-
-
-class IssuesPerFieldReportOutput(BaseReportOutput):
-    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
-    field: CustomFieldGroupLinkOutput
-
-
-class IssuesPerTwoFieldsReportOutput(BaseReportOutput):
-    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
-        m.ReportType.ISSUES_PER_TWO_FIELDS
-    )
-    row_field: CustomFieldGroupLinkOutput
-    column_field: CustomFieldGroupLinkOutput
-
-
-# Discriminated union for all report outputs
-ReportOutput = RootModel[
-    Annotated[
-        IssuesPerProjectReportOutput
-        | IssuesPerFieldReportOutput
-        | IssuesPerTwoFieldsReportOutput,
-        Field(discriminator='type'),
-    ]
-]
-
-
-# Report generation models
-class IssuesPerProjectReportDataItem(BaseModel):
-    """Single item in an issues-per-project report dataset."""
-
-    value: ProjectField = Field(description='Project information for this item')
-    count: int = Field(description='Number of issues for this project')
-
-
-class IssuesPerProjectReportDataOutput(BaseModel):
-    """Output model for generated issues-per-project report data."""
-
-    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
-    items: list[IssuesPerProjectReportDataItem] = Field(
-        description='List of project report data items'
-    )
-    total_count: int = Field(description='Total number of issues across all projects')
-
-
-class IssuesPerFieldReportDataItem(BaseModel):
-    """Single item in an issues-per-field report dataset."""
-
-    value: CustomFieldValueT = Field(
-        description='Field value for this item (null for empty values)'
-    )
-    count: int = Field(description='Number of issues for this field value')
-
-
-class IssuesPerFieldReportDataOutput(BaseModel):
-    """Output model for generated issues-per-field report data."""
-
-    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
-    items: list[IssuesPerFieldReportDataItem] = Field(
-        description='List of field report data items'
-    )
-    total_count: int = Field(
-        description='Total number of issues across all field values'
-    )
-
-
-class IssuesPerTwoFieldsReportColumnItem(BaseModel):
-    """Single column item within a row in a two-fields report."""
-
-    value: CustomFieldValueT = Field(description='Column field value')
-    count: int = Field(
-        description='Number of issues for this column in the current row'
-    )
-
-
-class IssuesPerTwoFieldsReportRowItem(BaseModel):
-    """Single row item in a two-fields report dataset."""
-
-    value: CustomFieldValueT = Field(description='Row field value')
-    total: int = Field(
-        description='Total number of issues for this row across all columns'
-    )
-    columns: list[IssuesPerTwoFieldsReportColumnItem] = Field(
-        description='List of column items for this row'
-    )
-
-
-class IssuesPerTwoFieldsReportDataOutput(BaseModel):
-    """Output model for generated issues-per-two-fields report data."""
-
-    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
-        m.ReportType.ISSUES_PER_TWO_FIELDS
-    )
-    rows: list[IssuesPerTwoFieldsReportRowItem] = Field(
-        description='List of row items with nested column data'
-    )
-    total_count: int = Field(
-        description='Total number of issues across all field combinations'
-    )
-
-
-# Discriminated union for all report data outputs (extensible for future report types)
-ReportDataOutput = RootModel[
-    Annotated[
-        IssuesPerProjectReportDataOutput
-        | IssuesPerFieldReportDataOutput
-        | IssuesPerTwoFieldsReportDataOutput,
-        Field(discriminator='type'),
-    ]
-]
-
-
-def create_report_output(obj: m.Report) -> ReportOutput:
-    """Create the appropriate report output based on the report type."""
-    user_ctx = current_user()
-
-    base_data = {
-        'id': str(obj.id),
-        'name': obj.name,
-        'description': obj.description,
-        'query': obj.query,
-        'projects': [ProjectField.from_obj(p) for p in obj.projects],
-        'created_by': UserOutput.from_obj(obj.created_by),
-        'permissions': [
-            PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
-        ],
-        'is_favorite': obj.is_favorite_of(user_ctx.user.id),
-        'current_permission': obj.user_permission(user_ctx),
-    }
-
-    if obj.type == m.ReportType.ISSUES_PER_PROJECT:
-        return ReportOutput(root=IssuesPerProjectReportOutput(**base_data))
-    if obj.type == m.ReportType.ISSUES_PER_FIELD:
-        return ReportOutput(
-            root=IssuesPerFieldReportOutput(
-                **base_data, field=CustomFieldGroupLinkOutput.from_obj(obj.field)
+    @classmethod
+    def from_obj(cls, obj: m.Report, user_ctx: 'UserContext') -> 'ReportOutput':
+        """Create report output from the Report object."""
+        return cls(
+            id=str(obj.id),
+            name=obj.name,
+            description=obj.description,
+            query=obj.query,
+            projects=[ProjectField.from_obj(p) for p in obj.projects],
+            axis_1=AxisOutput(
+                type=obj.axis_1.type,
+                custom_field=CustomFieldGroupLinkOutput.from_obj(
+                    obj.axis_1.custom_field
+                )
+                if obj.axis_1.custom_field
+                else None,
+            ),
+            axis_2=AxisOutput(
+                type=obj.axis_2.type,
+                custom_field=CustomFieldGroupLinkOutput.from_obj(
+                    obj.axis_2.custom_field
+                )
+                if obj.axis_2.custom_field
+                else None,
             )
+            if obj.axis_2
+            else None,
+            ui_settings=obj.ui_settings,
+            created_by=UserOutput.from_obj(obj.created_by),
+            permissions=[
+                PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
+            ],
+            is_favorite=obj.is_favorite_of(user_ctx.user.id),
+            current_permission=obj.user_permission(user_ctx),
         )
-    if obj.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
-        return ReportOutput(
-            root=IssuesPerTwoFieldsReportOutput(
-                **base_data,
-                row_field=CustomFieldGroupLinkOutput.from_obj(obj.row_field),
-                column_field=CustomFieldGroupLinkOutput.from_obj(obj.column_field),
-            )
-        )
-    raise HTTPException(HTTPStatus.BAD_REQUEST, f'Unknown report type: {obj.type}')
+
+
+class ProjectAxisOutput(BaseModel):
+    type: Literal['project'] = Field(
+        default='project', description='Axis type identifier'
+    )
+    values: list[ProjectField] = Field(description='List of projects in this axis')
+
+
+class ReportDataOutput(BaseModel):
+    """Unified report data output structure (similar to BoardIssuesOutput)."""
+
+    axis_1: CustomFieldGroupWithReportValuesOutputT | ProjectAxisOutput | None = Field(
+        default=None,
+        description='First axis configuration with discriminated values (like columns)',
+    )
+    axis_2: CustomFieldGroupWithReportValuesOutputT | ProjectAxisOutput | None = Field(
+        default=None,
+        description='Second axis configuration with discriminated values (like swimlanes)',
+    )
+    data: list[list[int]] = Field(
+        description='2D array of issue counts: [axis_2_value_index][axis_1_value_index]'
+    )
 
 
 class GrantPermissionBody(BaseModel):
@@ -214,78 +213,36 @@ class GrantPermissionBody(BaseModel):
     permission_type: m.PermissionType
 
 
-class BaseReportCreate(BaseModel):
+class AxisInput(BaseModel):
+    type: m.AxisType = Field(description='Type of axis (project or custom field)')
+    custom_field_gid: UUIDStr | None = Field(
+        default=None,
+        description='Custom field GID for the axis (only when type is CUSTOM_FIELD)',
+    )
+
+
+class ReportCreate(BaseModel):
     name: str
-    type: m.ReportType
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId] = Field(default_factory=list)
+    axis_1: AxisInput
+    axis_2: AxisInput | None = None
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the report'
+    )
     permissions: Annotated[list[GrantPermissionBody], Field(default_factory=list)]
 
 
-class IssuesPerProjectReportCreate(BaseReportCreate):
-    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
-
-
-class IssuesPerFieldReportCreate(BaseReportCreate):
-    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
-    field_gid: UUIDStr
-
-
-class IssuesPerTwoFieldsReportCreate(BaseReportCreate):
-    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
-        m.ReportType.ISSUES_PER_TWO_FIELDS
-    )
-    row_field_gid: UUIDStr
-    column_field_gid: UUIDStr
-
-
-ReportCreate = RootModel[
-    Annotated[
-        IssuesPerProjectReportCreate
-        | IssuesPerFieldReportCreate
-        | IssuesPerTwoFieldsReportCreate,
-        Field(discriminator='type'),
-    ]
-]
-
-
-# Base update model for common fields
-class BaseReportUpdate(BaseModel):
-    type: m.ReportType
+class ReportUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     query: str | None = None
     projects: list[PydanticObjectId] | None = None
+    axis_1: AxisInput | None = None
+    axis_2: AxisInput | None = None
+    ui_settings: dict | None = None
     permissions: list[GrantPermissionBody] | None = None
-
-
-class IssuesPerProjectReportUpdate(BaseReportUpdate):
-    type: Literal[m.ReportType.ISSUES_PER_PROJECT] = m.ReportType.ISSUES_PER_PROJECT
-
-
-class IssuesPerFieldReportUpdate(BaseReportUpdate):
-    type: Literal[m.ReportType.ISSUES_PER_FIELD] = m.ReportType.ISSUES_PER_FIELD
-    field_gid: UUIDStr | None = None
-
-
-class IssuesPerTwoFieldsReportUpdate(BaseReportUpdate):
-    type: Literal[m.ReportType.ISSUES_PER_TWO_FIELDS] = (
-        m.ReportType.ISSUES_PER_TWO_FIELDS
-    )
-    row_field_gid: UUIDStr | None = None
-    column_field_gid: UUIDStr | None = None
-
-
-# Discriminated union for all report updates
-ReportUpdate = RootModel[
-    Annotated[
-        IssuesPerProjectReportUpdate
-        | IssuesPerFieldReportUpdate
-        | IssuesPerTwoFieldsReportUpdate,
-        Field(discriminator='type'),
-    ]
-]
 
 
 @router.get('/list')
@@ -300,7 +257,7 @@ async def list_reports(
 
     count = await q.count()
     reports = await q.limit(query.limit).skip(query.offset).to_list()
-    items = [create_report_output(report) for report in reports]
+    items = [ReportOutput.from_obj(report, user_ctx) for report in reports]
 
     return BaseListOutput.make(
         count=count,
@@ -310,10 +267,41 @@ async def list_reports(
     )
 
 
-async def _create_common_fields(
-    body_data: BaseReportCreate, user_ctx: 'UserContext'
-) -> dict:
-    """Create common fields for all report types."""
+async def _validate_axis(axis: AxisInput) -> m.Axis:
+    """Validate and convert AxisInput to Axis model."""
+    if axis.type == m.AxisType.CUSTOM_FIELD:
+        if not axis.custom_field_gid:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                'custom_field_gid must be provided for custom field axis',
+            )
+
+        field = await m.CustomField.find_one(
+            m.CustomField.gid == axis.custom_field_gid, with_children=True
+        )
+        if not field:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Custom field {axis.custom_field_gid} not found',
+            )
+
+        custom_field = m.CustomFieldGroupLink.from_obj(field)
+    elif axis.type == m.AxisType.PROJECT:
+        if axis.custom_field_gid is not None:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST, 'custom_field_gid must be None for project axis'
+            )
+        custom_field = None
+    else:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Invalid axis type: {axis.type}')
+
+    return m.Axis(type=axis.type, custom_field=custom_field)
+
+
+@router.post('/')
+async def create_report(body: ReportCreate) -> SuccessPayloadOutput[ReportOutput]:
+    user_ctx = current_user()
+
     permissions = [
         m.PermissionRecord(
             target_type=m.PermissionTargetType.USER,
@@ -321,11 +309,11 @@ async def _create_common_fields(
             permission_type=m.PermissionType.ADMIN,
         ),
     ]
-    if len(body_data.permissions) != len(
-        {perm.target for perm in body_data.permissions}
-    ):
+
+    if len(body.permissions) != len({perm.target for perm in body.permissions}):
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Duplicate permission targets')
-    for perm in body_data.permissions:
+
+    for perm in body.permissions:
         if perm.target == user_ctx.user.id:
             continue
         target = await resolve_grant_permission_target(perm)
@@ -337,10 +325,9 @@ async def _create_common_fields(
             ),
         )
 
-    # Resolve project links
     projects = []
-    if body_data.projects:
-        for project_id in body_data.projects:
+    if body.projects:
+        for project_id in body.projects:
             project = await m.Project.find_one(m.Project.id == project_id)
             if not project:
                 raise HTTPException(
@@ -348,94 +335,25 @@ async def _create_common_fields(
                 )
             projects.append(m.ProjectLinkField.from_obj(project))
 
-    return {
-        'name': body_data.name,
-        'description': body_data.description,
-        'query': body_data.query,
-        'projects': projects,
-        'created_by': m.UserLinkField.from_obj(user_ctx.user),
-        'permissions': permissions,
-    }
+    # Validate axes
+    axis_1 = await _validate_axis(body.axis_1)
+    axis_2 = await _validate_axis(body.axis_2) if body.axis_2 else None
 
-
-async def _create_issues_per_project_report(
-    body_data: IssuesPerProjectReportCreate, user_ctx: 'UserContext'
-) -> m.IssuesPerProjectReport:
-    """Create an IssuesPerProject report."""
-    common_fields = await _create_common_fields(body_data, user_ctx)
-    return m.IssuesPerProjectReport(**common_fields)
-
-
-async def _create_issues_per_field_report(
-    body_data: IssuesPerFieldReportCreate, user_ctx: 'UserContext'
-) -> m.IssuesPerFieldReport:
-    """Create an IssuesPerField report."""
-    common_fields = await _create_common_fields(body_data, user_ctx)
-
-    # Resolve field by gid
-    field = await m.CustomField.find_one(
-        m.CustomField.gid == body_data.field_gid, with_children=True
+    # Create and save report
+    report = m.Report(
+        name=body.name,
+        description=body.description,
+        query=body.query,
+        projects=projects,
+        axis_1=axis_1,
+        axis_2=axis_2,
+        ui_settings=body.ui_settings,
+        created_by=m.UserLinkField.from_obj(user_ctx.user),
+        permissions=permissions,
     )
-    if not field:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST, f'Custom field {body_data.field_gid} not found'
-        )
-
-    return m.IssuesPerFieldReport(
-        **common_fields,
-        field=m.CustomFieldGroupLink.from_obj(field),
-    )
-
-
-async def _create_issues_per_two_fields_report(
-    body_data: IssuesPerTwoFieldsReportCreate, user_ctx: 'UserContext'
-) -> m.IssuesPerTwoFieldsReport:
-    """Create an IssuesPerTwoFields report."""
-    common_fields = await _create_common_fields(body_data, user_ctx)
-
-    row_field = await m.CustomField.find_one(
-        m.CustomField.gid == body_data.row_field_gid, with_children=True
-    )
-    if not row_field:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            f'Custom field {body_data.row_field_gid} not found',
-        )
-
-    column_field = await m.CustomField.find_one(
-        m.CustomField.gid == body_data.column_field_gid, with_children=True
-    )
-    if not column_field:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            f'Custom field {body_data.column_field_gid} not found',
-        )
-
-    return m.IssuesPerTwoFieldsReport(
-        **common_fields,
-        row_field=m.CustomFieldGroupLink.from_obj(row_field),
-        column_field=m.CustomFieldGroupLink.from_obj(column_field),
-    )
-
-
-@router.post('/')
-async def create_report(body: ReportCreate) -> SuccessPayloadOutput[ReportOutput]:
-    user_ctx = current_user()
-    body_data = body.root  # Access the discriminated union data
-
-    if body_data.type == m.ReportType.ISSUES_PER_PROJECT:
-        report = await _create_issues_per_project_report(body_data, user_ctx)
-    elif body_data.type == m.ReportType.ISSUES_PER_FIELD:
-        report = await _create_issues_per_field_report(body_data, user_ctx)
-    elif body_data.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
-        report = await _create_issues_per_two_fields_report(body_data, user_ctx)
-    else:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST, f'Unknown report type: {body_data.type}'
-        )
 
     await report.insert()
-    return SuccessPayloadOutput(payload=create_report_output(report))
+    return SuccessPayloadOutput(payload=ReportOutput.from_obj(report, user_ctx))
 
 
 @router.get('/{report_id}')
@@ -448,7 +366,7 @@ async def get_report(
     user_ctx = current_user()
     if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
-    return SuccessPayloadOutput(payload=create_report_output(report))
+    return SuccessPayloadOutput(payload=ReportOutput.from_obj(report, user_ctx))
 
 
 @router.delete('/{report_id}')
@@ -463,10 +381,10 @@ async def delete_report(report_id: PydanticObjectId) -> ModelIdOutput:
     return ModelIdOutput.from_obj(report)
 
 
-async def _update_common_fields(
-    report: m.Report, body_data: BaseReportUpdate, user_ctx: 'UserContext'
+async def _update_report_fields(
+    report: m.Report, body_data: ReportUpdate, user_ctx: 'UserContext'
 ) -> None:
-    """Update common fields for all report types."""
+    """Update report fields."""
     if body_data.permissions:
         if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
             raise HTTPException(
@@ -503,52 +421,16 @@ async def _update_common_fields(
             projects.append(m.ProjectLinkField.from_obj(project))
         report.projects = projects
 
+    if body_data.axis_1 is not None:
+        report.axis_1 = await _validate_axis(body_data.axis_1)
+
+    if body_data.axis_2 is not None:
+        report.axis_2 = await _validate_axis(body_data.axis_2)
+
     for k, v in body_data.model_dump(
-        exclude_unset=True, include={'name', 'description', 'query'}
+        exclude_unset=True, include={'name', 'description', 'query', 'ui_settings'}
     ).items():
         setattr(report, k, v)
-
-
-async def _update_issues_per_field_report(
-    report: m.IssuesPerFieldReport, body_data: IssuesPerFieldReportUpdate
-) -> None:
-    """Update type-specific fields for IssuesPerField report."""
-    if body_data.field_gid:
-        field = await m.CustomField.find_one(
-            m.CustomField.gid == body_data.field_gid, with_children=True
-        )
-        if not field:
-            raise HTTPException(
-                HTTPStatus.BAD_REQUEST, f'Custom field {body_data.field_gid} not found'
-            )
-        report.field = m.CustomFieldGroupLink.from_obj(field)
-
-
-async def _update_issues_per_two_fields_report(
-    report: m.IssuesPerTwoFieldsReport, body_data: IssuesPerTwoFieldsReportUpdate
-) -> None:
-    """Update type-specific fields for IssuesPerTwoFields report."""
-    if body_data.row_field_gid:
-        row_field = await m.CustomField.find_one(
-            m.CustomField.gid == body_data.row_field_gid, with_children=True
-        )
-        if not row_field:
-            raise HTTPException(
-                HTTPStatus.BAD_REQUEST,
-                f'Custom field {body_data.row_field_gid} not found',
-            )
-        report.row_field = m.CustomFieldGroupLink.from_obj(row_field)
-
-    if body_data.column_field_gid:
-        column_field = await m.CustomField.find_one(
-            m.CustomField.gid == body_data.column_field_gid, with_children=True
-        )
-        if not column_field:
-            raise HTTPException(
-                HTTPStatus.BAD_REQUEST,
-                f'Custom field {body_data.column_field_gid} not found',
-            )
-        report.column_field = m.CustomFieldGroupLink.from_obj(column_field)
 
 
 @router.put('/{report_id}')
@@ -565,24 +447,11 @@ async def update_report(
     if not report.check_permissions(user_ctx, m.PermissionType.EDIT):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to edit this report')
 
-    body_data = body.root  # Access the discriminated union data
-
-    if report.type != body_data.type:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            'Cannot change report type',
-        )
-
-    await _update_common_fields(report, body_data, user_ctx)
-
-    if report.type == m.ReportType.ISSUES_PER_FIELD:
-        await _update_issues_per_field_report(report, body_data)
-    elif report.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
-        await _update_issues_per_two_fields_report(report, body_data)
+    await _update_report_fields(report, body, user_ctx)
 
     if report.is_changed:
         await report.save_changes()
-    return SuccessPayloadOutput(payload=create_report_output(report))
+    return SuccessPayloadOutput(payload=ReportOutput.from_obj(report, user_ctx))
 
 
 @router.post('/{report_id}/permission')
@@ -666,7 +535,7 @@ async def favorite_report(
         raise HTTPException(HTTPStatus.CONFLICT, 'Report already in favorites')
     report.favorite_of.append(user_ctx.user.id)
     await report.save_changes()
-    return SuccessPayloadOutput(payload=create_report_output(report))
+    return SuccessPayloadOutput(payload=ReportOutput.from_obj(report, user_ctx))
 
 
 @router.post('/{report_id}/unfavorite')
@@ -683,7 +552,7 @@ async def unfavorite_report(
         raise HTTPException(HTTPStatus.CONFLICT, 'Report is not in favorites')
     report.favorite_of.remove(user_ctx.user.id)
     await report.save_changes()
-    return SuccessPayloadOutput(payload=create_report_output(report))
+    return SuccessPayloadOutput(payload=ReportOutput.from_obj(report, user_ctx))
 
 
 async def resolve_grant_permission_target(
@@ -702,20 +571,6 @@ async def resolve_grant_permission_target(
     return m.GroupLinkField.from_obj(group)
 
 
-def _make_hashable_key(value: Any) -> Any:
-    if value is None:
-        return None
-    if isinstance(value, dict):
-        return tuple(sorted(value.items()))
-    if isinstance(value, list):
-        return tuple(value)
-    return value
-
-
-def _sort_key(value: Any) -> tuple:
-    return (value is None, str(value) if value is not None else '')
-
-
 async def _build_base_filter(
     report: m.Report, user_ctx: 'UserContext'
 ) -> dict[str, Any]:
@@ -732,59 +587,175 @@ async def _build_base_filter(
     return base_filter
 
 
-async def generate_per_project_report_data(
+async def generate_single_axis_report_data(
     report: m.Report,
     user_ctx: 'UserContext',
-) -> IssuesPerProjectReportDataOutput:
+) -> ReportDataOutput:
+    """Generate data for single-axis reports (project or custom field)."""
     base_filter = await _build_base_filter(report, user_ctx)
 
-    pipeline = [
-        {'$match': base_filter},
-        {
-            '$group': {
-                '_id': '$project.id',
-                'count': {'$sum': 1},
-                'project_name': {'$first': '$project.name'},
-                'project_slug': {'$first': '$project.slug'},
-            }
-        },
-        {'$sort': {'project_name': 1}},
-    ]
+    # Report axis
+    if report.axis_1.type == m.AxisType.PROJECT:
+        pipeline = [
+            {'$match': base_filter},
+            {
+                '$group': {
+                    '_id': '$project.id',
+                    'count': {'$sum': 1},
+                    'project_name': {'$first': '$project.name'},
+                    'project_slug': {'$first': '$project.slug'},
+                }
+            },
+            {'$sort': {'project_name': 1}},
+        ]
+
+        aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+        count_lookup = {result['_id']: result['count'] for result in aggregation_result}
+
+        data_row = []
+        for project in report.projects:
+            count = count_lookup.get(project.id, 0)
+            data_row.append(count)
+
+        project_values = [ProjectField.from_obj(project) for project in report.projects]
+
+        return ReportDataOutput(
+            axis_1=ProjectAxisOutput(values=project_values),
+            axis_2=None,
+            data=[data_row],
+        )
+
+    # Custom field axis
+    field_gid = report.axis_1.custom_field.gid
+
+    field = await m.CustomField.find_one(
+        m.CustomField.gid == field_gid, with_children=True
+    )
+    if not field:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Field {field_gid} not found')
+
+    if field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        pipeline = [
+            {'$match': base_filter},
+            {
+                '$addFields': {
+                    'field_value': {
+                        '$arrayElemAt': [
+                            {
+                                '$filter': {
+                                    'input': '$fields',
+                                    'as': 'field',
+                                    'cond': {'$eq': ['$$field.gid', field_gid]},
+                                }
+                            },
+                            0,
+                        ]
+                    }
+                }
+            },
+            {'$unwind': '$field_value.value'},
+            {
+                '$group': {
+                    '_id': '$field_value.value',
+                    'count': {'$sum': 1},
+                    'sample_value': {'$first': '$field_value.value'},
+                }
+            },
+            {'$sort': {'_id': 1}},
+        ]
+    else:
+        if field.type in OPTION_BASED_FIELD_TYPES:
+            group_field = '$field_value.value.value'
+            sample_field = '$field_value.value'
+        elif field.type in USER_BASED_FIELD_TYPES:
+            group_field = '$field_value.value'
+            sample_field = '$field_value.value'
+        else:
+            group_field = '$field_value.value'
+            sample_field = '$field_value'
+
+        pipeline = [
+            {'$match': base_filter},
+            {
+                '$addFields': {
+                    'field_value': {
+                        '$arrayElemAt': [
+                            {
+                                '$filter': {
+                                    'input': '$fields',
+                                    'as': 'field',
+                                    'cond': {'$eq': ['$$field.gid', field_gid]},
+                                }
+                            },
+                            0,
+                        ]
+                    }
+                }
+            },
+            {
+                '$group': {
+                    '_id': group_field,
+                    'count': {'$sum': 1},
+                    'sample_value': {'$first': sample_field},
+                }
+            },
+            {'$sort': {'_id': 1}},
+        ]
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
-    count_lookup = {result['_id']: result['count'] for result in aggregation_result}
 
-    items = []
-    total_count = 0
-    for project in report.projects:
-        count = count_lookup.get(project.id, 0)
-        items.append(
-            IssuesPerProjectReportDataItem(
-                value=ProjectField.from_obj(project),
-                count=count,
-            )
+    field_values = []
+    data_row = []
+
+    for result in aggregation_result:
+        raw_value = result['_id']
+        count = result['count']
+        sample_value = result.get('sample_value')
+
+        converted_value = convert_aggregated_value_to_proper_output(
+            raw_value, sample_value, field
         )
-        total_count += count
-    return IssuesPerProjectReportDataOutput(items=items, total_count=total_count)
+        field_values.append(converted_value)
+        data_row.append(count)
+
+    return ReportDataOutput(
+        axis_1=transform_field_with_values_to_report_discriminated(
+            field_values, report.axis_1.custom_field
+        ),
+        axis_2=None,
+        data=[data_row],
+    )
 
 
-async def generate_per_field_report_data(
-    report: m.IssuesPerFieldReport,
+async def generate_project_custom_field_report_data(
+    report: m.Report,
     user_ctx: 'UserContext',
-) -> IssuesPerFieldReportDataOutput:
+) -> ReportDataOutput:
+    """Generate data for project + custom field axis reports."""
     base_filter = await _build_base_filter(report, user_ctx)
+
+    # axis_1 is project, axis_2 is custom field
+    custom_field_gid = report.axis_2.custom_field.gid
+
+    custom_field = await m.CustomField.find_one(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    )
+    if not custom_field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Field {custom_field_gid} not found'
+        )
 
     pipeline = [
         {'$match': base_filter},
         {
             '$addFields': {
-                'field_value': {
+                'custom_field_value': {
                     '$arrayElemAt': [
                         {
                             '$filter': {
                                 'input': '$fields',
                                 'as': 'field',
-                                'cond': {'$eq': ['$$field.gid', report.field.gid]},
+                                'cond': {'$eq': ['$$field.gid', custom_field_gid]},
                             }
                         },
                         0,
@@ -792,163 +763,493 @@ async def generate_per_field_report_data(
                 }
             }
         },
-        {
-            '$group': {
-                '_id': '$field_value.value',
-                'count': {'$sum': 1},
-            }
-        },
-        {'$sort': {'_id': 1}},
     ]
+
+    if custom_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        pipeline.extend(
+            [
+                {'$unwind': '$custom_field_value.value'},
+                {
+                    '$group': {
+                        '_id': {
+                            'project_id': '$project.id',
+                            'custom_field_value': '$custom_field_value.value',
+                        },
+                        'count': {'$sum': 1},
+                        'project_name': {'$first': '$project.name'},
+                        'project_slug': {'$first': '$project.slug'},
+                        'sample_custom_field_value': {
+                            '$first': '$custom_field_value.value'
+                        },
+                    }
+                },
+            ]
+        )
+    else:
+        if custom_field.type in OPTION_BASED_FIELD_TYPES:
+            sample_field = '$custom_field_value.value'
+            group_field = '$custom_field_value.value.value'
+        else:
+            sample_field = '$custom_field_value'
+            group_field = '$custom_field_value.value'
+
+        pipeline.append(
+            {
+                '$group': {
+                    '_id': {
+                        'project_id': '$project.id',
+                        'custom_field_value': group_field,
+                    },
+                    'count': {'$sum': 1},
+                    'project_name': {'$first': '$project.name'},
+                    'project_slug': {'$first': '$project.slug'},
+                    'sample_custom_field_value': {'$first': sample_field},
+                }
+            }
+        )
+
+    pipeline.append({'$sort': {'_id.project_id': 1, '_id.custom_field_value': 1}})
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
 
-    items = []
-    total_count = 0
+    unique_custom_field_values = []
+    seen_custom_field_values = set()
+
     for result in aggregation_result:
-        field_value = result['_id']
-        count = result['count']
-        items.append(
-            IssuesPerFieldReportDataItem(
-                value=field_value,
-                count=count,
+        result_id = result.get('_id', {})
+        custom_field_value = result_id.get('custom_field_value')
+        sample_value = result.get('sample_custom_field_value')
+
+        if (
+            custom_field_value is not None
+            and custom_field_value not in seen_custom_field_values
+        ):
+            seen_custom_field_values.add(custom_field_value)
+            converted_value = convert_aggregated_value_to_proper_output(
+                custom_field_value, sample_value, custom_field
             )
-        )
-        total_count += count
+            unique_custom_field_values.append(converted_value)
 
-    return IssuesPerFieldReportDataOutput(items=items, total_count=total_count)
+    project_values = [ProjectField.from_obj(project) for project in report.projects]
+
+    data = [[0 for _ in project_values] for _ in unique_custom_field_values]
+
+    custom_field_value_to_index = {}
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        custom_field_value = result_id.get('custom_field_value')
+        if (
+            custom_field_value is not None
+            and custom_field_value not in custom_field_value_to_index
+        ):
+            custom_field_value_to_index[custom_field_value] = len(
+                custom_field_value_to_index
+            )
+
+    project_id_to_index = {project.id: i for i, project in enumerate(report.projects)}
+
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        project_id = result_id.get('project_id')
+        custom_field_value = result_id.get('custom_field_value')
+        count = result.get('count', 0)
+
+        if project_id is not None and custom_field_value is not None:
+            project_idx = project_id_to_index.get(project_id)
+            custom_field_idx = custom_field_value_to_index.get(custom_field_value)
+
+            if project_idx is not None and custom_field_idx is not None:
+                data[custom_field_idx][project_idx] = count
+
+    return ReportDataOutput(
+        axis_1=ProjectAxisOutput(values=project_values),
+        axis_2=transform_field_with_values_to_report_discriminated(
+            unique_custom_field_values, report.axis_2.custom_field
+        ),
+        data=data,
+    )
 
 
-async def generate_per_two_fields_report_data(
-    report: m.IssuesPerTwoFieldsReport,
+async def generate_custom_field_project_report_data(
+    report: m.Report,
     user_ctx: 'UserContext',
-) -> IssuesPerTwoFieldsReportDataOutput:
+) -> ReportDataOutput:
+    """Generate data for custom field + project axis reports (reverse of project + custom field)."""
     base_filter = await _build_base_filter(report, user_ctx)
+
+    # axis_1 is custom field, axis_2 is project
+    custom_field_gid = report.axis_1.custom_field.gid
+
+    custom_field = await m.CustomField.find_one(
+        m.CustomField.gid == custom_field_gid, with_children=True
+    )
+    if not custom_field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, f'Field {custom_field_gid} not found'
+        )
 
     pipeline = [
         {'$match': base_filter},
         {
             '$addFields': {
-                'row_field_value': {
+                'custom_field_value': {
                     '$arrayElemAt': [
                         {
                             '$filter': {
                                 'input': '$fields',
                                 'as': 'field',
-                                'cond': {'$eq': ['$$field.gid', report.row_field.gid]},
+                                'cond': {'$eq': ['$$field.gid', custom_field_gid]},
                             }
                         },
                         0,
                     ]
-                },
-                'column_field_value': {
-                    '$arrayElemAt': [
-                        {
-                            '$filter': {
-                                'input': '$fields',
-                                'as': 'field',
-                                'cond': {
-                                    '$eq': ['$$field.gid', report.column_field.gid]
-                                },
-                            }
-                        },
-                        0,
-                    ]
-                },
+                }
             }
         },
-        {
-            '$group': {
-                '_id': {
-                    'row_value': '$row_field_value.value',
-                    'column_value': '$column_field_value.value',
-                },
-                'count': {'$sum': 1},
-            }
-        },
-        {'$sort': {'_id.row_value': 1, '_id.column_value': 1}},
     ]
+
+    if custom_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        pipeline.extend(
+            [
+                {'$unwind': '$custom_field_value.value'},
+                {
+                    '$group': {
+                        '_id': {
+                            'custom_field_value': '$custom_field_value.value',
+                            'project_id': '$project.id',
+                        },
+                        'count': {'$sum': 1},
+                        'project_name': {'$first': '$project.name'},
+                        'project_slug': {'$first': '$project.slug'},
+                        'sample_custom_field_value': {
+                            '$first': '$custom_field_value.value'
+                        },
+                    }
+                },
+            ]
+        )
+    else:
+        if custom_field.type in OPTION_BASED_FIELD_TYPES:
+            sample_field = '$custom_field_value.value'
+            group_field = '$custom_field_value.value.value'
+        else:
+            sample_field = '$custom_field_value'
+            group_field = '$custom_field_value.value'
+
+        pipeline.append(
+            {
+                '$group': {
+                    '_id': {
+                        'custom_field_value': group_field,
+                        'project_id': '$project.id',
+                    },
+                    'count': {'$sum': 1},
+                    'project_name': {'$first': '$project.name'},
+                    'project_slug': {'$first': '$project.slug'},
+                    'sample_custom_field_value': {'$first': sample_field},
+                }
+            }
+        )
+
+    pipeline.append({'$sort': {'_id.custom_field_value': 1, '_id.project_id': 1}})
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
 
-    row_groups = {}
-    total_count = 0
+    unique_project_ids = set()
+    unique_custom_field_values = []
+    seen_custom_field_values = set()
 
     for result in aggregation_result:
         result_id = result.get('_id', {})
-        row_value = result_id.get('row_value')
-        column_value = result_id.get('column_value')
+        project_id = result_id.get('project_id')
+        custom_field_value = result_id.get('custom_field_value')
+        sample_value = result.get('sample_custom_field_value')
+
+        if project_id is not None:
+            unique_project_ids.add(project_id)
+        if (
+            custom_field_value is not None
+            and custom_field_value not in seen_custom_field_values
+        ):
+            unique_custom_field_values.append((custom_field_value, sample_value))
+            seen_custom_field_values.add(custom_field_value)
+
+    custom_field_values = []
+    for raw_value, sample_value in unique_custom_field_values:
+        converted_value = convert_aggregated_value_to_proper_output(
+            raw_value, sample_value, custom_field
+        )
+        custom_field_values.append(converted_value)
+
+    project_values = [ProjectField.from_obj(project) for project in report.projects]
+
+    count_lookup = {}
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        custom_field_value = result_id.get('custom_field_value')
+        project_id = result_id.get('project_id')
         count = result.get('count', 0)
 
-        row_key = _make_hashable_key(row_value)
+        key = (custom_field_value, project_id)
+        count_lookup[key] = count
 
-        if row_key not in row_groups:
-            row_groups[row_key] = {'original_value': row_value, 'columns': []}
+    data = []
+    for raw_value, _ in unique_custom_field_values:
+        custom_field_row = []
+        for project in report.projects:
+            count = count_lookup.get((raw_value, project.id), 0)
+            custom_field_row.append(count)
+        data.append(custom_field_row)
 
-        row_groups[row_key]['columns'].append(
+    return ReportDataOutput(
+        axis_1=transform_field_with_values_to_report_discriminated(
+            custom_field_values, report.axis_1.custom_field
+        ),
+        axis_2=ProjectAxisOutput(values=project_values),
+        data=data,
+    )
+
+
+async def generate_two_axis_report_data(
+    report: m.Report,
+    user_ctx: 'UserContext',
+) -> ReportDataOutput:
+    """Generate data for two-axis reports (similar to Board with columns and swimlanes)."""
+    base_filter = await _build_base_filter(report, user_ctx)
+
+    primary_field_gid = report.axis_1.custom_field.gid
+    secondary_field_gid = report.axis_2.custom_field.gid
+
+    primary_field = await m.CustomField.find_one(
+        m.CustomField.gid == primary_field_gid, with_children=True
+    )
+    secondary_field = await m.CustomField.find_one(
+        m.CustomField.gid == secondary_field_gid, with_children=True
+    )
+
+    if not primary_field or not secondary_field:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Field not found')
+
+    pipeline = [
+        {'$match': base_filter},
+        {
+            '$addFields': {
+                'primary_field_value': {
+                    '$arrayElemAt': [
+                        {
+                            '$filter': {
+                                'input': '$fields',
+                                'as': 'field',
+                                'cond': {'$eq': ['$$field.gid', primary_field_gid]},
+                            }
+                        },
+                        0,
+                    ]
+                },
+                'secondary_field_value': {
+                    '$arrayElemAt': [
+                        {
+                            '$filter': {
+                                'input': '$fields',
+                                'as': 'field',
+                                'cond': {'$eq': ['$$field.gid', secondary_field_gid]},
+                            }
+                        },
+                        0,
+                    ]
+                },
+            }
+        },
+    ]
+
+    primary_value_field = '$primary_field_value.value'
+    if primary_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        pipeline.append(
             {
-                'column_value': column_value,
-                'count': count,
+                '$addFields': {
+                    'primary_field_value_unwound': {
+                        '$cond': {
+                            'if': {'$isArray': '$primary_field_value.value'},
+                            'then': '$primary_field_value.value',
+                            'else': ['$primary_field_value.value'],
+                        }
+                    }
+                }
             }
         )
-        total_count += count
+        pipeline.append({'$unwind': '$primary_field_value_unwound'})
+        primary_value_field = '$primary_field_value_unwound'
 
-    rows = []
-    for row_data in row_groups.values():
-        original_row_value = row_data['original_value']
-        columns_data = row_data['columns']
-
-        row_total = sum(col['count'] for col in columns_data)
-
-        columns = [
-            IssuesPerTwoFieldsReportColumnItem(
-                value=col['column_value'],
-                count=col['count'],
-            )
-            for col in columns_data
-        ]
-
-        columns.sort(key=lambda x: _sort_key(x.value))
-
-        rows.append(
-            IssuesPerTwoFieldsReportRowItem(
-                value=original_row_value,
-                total=row_total,
-                columns=columns,
-            )
+    secondary_value_field = '$secondary_field_value.value'
+    if secondary_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+        pipeline.append(
+            {
+                '$addFields': {
+                    'secondary_field_value_unwound': {
+                        '$cond': {
+                            'if': {'$isArray': '$secondary_field_value.value'},
+                            'then': '$secondary_field_value.value',
+                            'else': ['$secondary_field_value.value'],
+                        }
+                    }
+                }
+            }
         )
+        pipeline.append({'$unwind': '$secondary_field_value_unwound'})
+        secondary_value_field = '$secondary_field_value_unwound'
 
-    rows.sort(key=lambda x: _sort_key(x.value))
+    if primary_field.type in OPTION_BASED_FIELD_TYPES:
+        sample_primary_field = primary_value_field
+        if primary_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+            group_primary_field = f'{primary_value_field}.value'
+        else:
+            group_primary_field = '$primary_field_value.value.value'
+    else:
+        sample_primary_field = (
+            '$primary_field_value'
+            if primary_field.type not in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING
+            else primary_value_field
+        )
+        group_primary_field = primary_value_field
 
-    return IssuesPerTwoFieldsReportDataOutput(rows=rows, total_count=total_count)
+    if secondary_field.type in OPTION_BASED_FIELD_TYPES:
+        sample_secondary_field = secondary_value_field
+        if secondary_field.type in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING:
+            group_secondary_field = f'{secondary_value_field}.value'
+        else:
+            group_secondary_field = '$secondary_field_value.value.value'
+    else:
+        sample_secondary_field = (
+            '$secondary_field_value'
+            if secondary_field.type not in MULTI_TO_SINGLE_FIELD_TYPE_MAPPING
+            else secondary_value_field
+        )
+        group_secondary_field = secondary_value_field
+
+    pipeline.extend(
+        [
+            {
+                '$group': {
+                    '_id': {
+                        'primary_value': group_primary_field,
+                        'secondary_value': group_secondary_field,
+                    },
+                    'count': {'$sum': 1},
+                    'sample_primary_value': {'$first': sample_primary_field},
+                    'sample_secondary_value': {'$first': sample_secondary_field},
+                }
+            },
+            {'$sort': {'_id.secondary_value': 1, '_id.primary_value': 1}},
+        ]
+    )
+
+    aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+
+    unique_primary_values = []
+    unique_secondary_values = []
+    seen_primary = set()
+    seen_secondary = set()
+
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        primary_value = result_id.get('primary_value')
+        secondary_value = result_id.get('secondary_value')
+        sample_primary = result.get('sample_primary_value')
+        sample_secondary = result.get('sample_secondary_value')
+
+        if primary_value is not None and primary_value not in seen_primary:
+            seen_primary.add(primary_value)
+            converted_primary = convert_aggregated_value_to_proper_output(
+                primary_value, sample_primary, primary_field
+            )
+            unique_primary_values.append(converted_primary)
+
+        if secondary_value is not None and secondary_value not in seen_secondary:
+            seen_secondary.add(secondary_value)
+            converted_secondary = convert_aggregated_value_to_proper_output(
+                secondary_value, sample_secondary, secondary_field
+            )
+            unique_secondary_values.append(converted_secondary)
+
+    primary_value_to_index = {}
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        primary_value = result_id.get('primary_value')
+        if primary_value is not None and primary_value not in primary_value_to_index:
+            primary_value_to_index[primary_value] = len(primary_value_to_index)
+
+    secondary_value_to_index = {}
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        secondary_value = result_id.get('secondary_value')
+        if (
+            secondary_value is not None
+            and secondary_value not in secondary_value_to_index
+        ):
+            secondary_value_to_index[secondary_value] = len(secondary_value_to_index)
+
+    data = [[0 for _ in unique_primary_values] for _ in unique_secondary_values]
+
+    for result in aggregation_result:
+        result_id = result.get('_id', {})
+        primary_value = result_id.get('primary_value')
+        secondary_value = result_id.get('secondary_value')
+        count = result.get('count', 0)
+
+        if primary_value is not None and secondary_value is not None:
+            primary_idx = primary_value_to_index.get(primary_value)
+            secondary_idx = secondary_value_to_index.get(secondary_value)
+            if primary_idx is not None and secondary_idx is not None:
+                data[secondary_idx][primary_idx] = count
+
+    return ReportDataOutput(
+        axis_1=transform_field_with_values_to_report_discriminated(
+            unique_primary_values, report.axis_1.custom_field
+        ),
+        axis_2=transform_field_with_values_to_report_discriminated(
+            unique_secondary_values, report.axis_2.custom_field
+        ),
+        data=data,
+    )
 
 
 @router.post('/{report_id}/generate')
 async def generate_report_data(
-    report_id: str,
+    report_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ReportDataOutput]:
     user_ctx = current_user()
-    try:
-        object_id = PydanticObjectId(report_id)
-        report = await m.Report.find_one(m.Report.id == object_id, with_children=True)
-        if not report:
-            raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
-    except ValueError as e:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, f'Invalid report ID: {e!s}') from e
-
+    report: m.Report | None = await m.Report.find_one(m.Report.id == report_id)
+    if not report:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Report not found')
     if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
         raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this report')
 
-    if report.type == m.ReportType.ISSUES_PER_PROJECT:
-        data = await generate_per_project_report_data(report, user_ctx)
-    elif report.type == m.ReportType.ISSUES_PER_FIELD:
-        data = await generate_per_field_report_data(report, user_ctx)
-    elif report.type == m.ReportType.ISSUES_PER_TWO_FIELDS:
-        data = await generate_per_two_fields_report_data(report, user_ctx)
-    else:
-        raise HTTPException(
-            HTTPStatus.BAD_REQUEST,
-            f'Report generation not implemented for type: {report.type}',
+    if not report.axis_2:
+        return SuccessPayloadOutput(
+            payload=await generate_single_axis_report_data(report, user_ctx)
         )
-
-    return SuccessPayloadOutput(payload=data)
+    if (
+        report.axis_1.type == m.AxisType.PROJECT
+        and report.axis_2.type == m.AxisType.CUSTOM_FIELD
+    ):
+        return SuccessPayloadOutput(
+            payload=await generate_project_custom_field_report_data(report, user_ctx)
+        )
+    if (
+        report.axis_1.type == m.AxisType.CUSTOM_FIELD
+        and report.axis_2.type == m.AxisType.PROJECT
+    ):
+        return SuccessPayloadOutput(
+            payload=await generate_custom_field_project_report_data(report, user_ctx)
+        )
+    if (
+        report.axis_1.type == m.AxisType.CUSTOM_FIELD
+        and report.axis_2.type == m.AxisType.CUSTOM_FIELD
+    ):
+        return SuccessPayloadOutput(
+            payload=await generate_two_axis_report_data(report, user_ctx)
+        )
+    raise HTTPException(
+        HTTPStatus.NOT_IMPLEMENTED,
+        f'Report generation not implemented for axis configuration: axis_1={report.axis_1.type}, axis_2={report.axis_2.type if report.axis_2 else None}',
+    )

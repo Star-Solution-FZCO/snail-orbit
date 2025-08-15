@@ -331,7 +331,7 @@ async def test_report_direct_sharing(
         headers=creator_headers,
         json={
             'name': 'Sales Dashboard',
-            'type': 'issues_per_project',
+            'axis_1': {'type': 'project'},
             'description': 'Comprehensive sales performance dashboard',
             'query': 'status:active',
         },

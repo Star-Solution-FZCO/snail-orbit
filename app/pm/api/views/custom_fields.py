@@ -14,49 +14,68 @@ from .project import ProjectShortOutput
 from .user import UserOutput
 
 __all__ = (
+    'BooleanCustomFieldGroupWithReportValuesOutput',
     'BooleanCustomFieldGroupWithValuesOutput',
     'CustomFieldGroupLinkOutput',
     'CustomFieldGroupOutputRootModel',
     'CustomFieldGroupOutputT',
     'CustomFieldGroupSelectOptionsT',
+    'CustomFieldGroupWithReportValuesOutputRootModel',
+    'CustomFieldGroupWithReportValuesOutputT',
     'CustomFieldLinkOutput',
     'CustomFieldOutput',
     'CustomFieldOutputRootModel',
     'CustomFieldOutputT',
     'CustomFieldSelectOptionsT',
     'CustomFieldValueOutputRootModel',
+    'DateCustomFieldGroupWithReportValuesOutput',
     'DateCustomFieldGroupWithValuesOutput',
+    'DateTimeCustomFieldGroupWithReportValuesOutput',
     'DateTimeCustomFieldGroupWithValuesOutput',
+    'DurationCustomFieldGroupWithReportValuesOutput',
     'DurationCustomFieldGroupWithValuesOutput',
     'DurationCustomFieldOutput',
+    'EnumCustomFieldGroupWithReportValuesOutput',
     'EnumCustomFieldGroupWithValuesOutput',
     'EnumCustomFieldOutput',
+    'EnumMultiCustomFieldGroupWithReportValuesOutput',
     'EnumMultiCustomFieldGroupWithValuesOutput',
     'EnumOptionOutput',
+    'FloatCustomFieldGroupWithReportValuesOutput',
     'FloatCustomFieldGroupWithValuesOutput',
+    'IntegerCustomFieldGroupWithReportValuesOutput',
     'IntegerCustomFieldGroupWithValuesOutput',
     'OwnedCustomFieldGroupOutput',
+    'OwnedCustomFieldGroupWithReportValuesOutput',
     'OwnedCustomFieldGroupWithValuesOutput',
     'OwnedCustomFieldOutput',
     'OwnedMultiCustomFieldGroupOutput',
+    'OwnedMultiCustomFieldGroupWithReportValuesOutput',
     'OwnedMultiCustomFieldGroupWithValuesOutput',
     'OwnedMultiCustomFieldOutput',
     'OwnedOptionOutput',
     'ShortOptionOutput',
+    'StateCustomFieldGroupWithReportValuesOutput',
     'StateCustomFieldGroupWithValuesOutput',
     'StateCustomFieldOutput',
     'StateOptionOutput',
+    'StringCustomFieldGroupWithReportValuesOutput',
     'StringCustomFieldGroupWithValuesOutput',
+    'UserCustomFieldGroupWithReportValuesOutput',
     'UserCustomFieldGroupWithValuesOutput',
     'UserCustomFieldOutput',
+    'UserMultiCustomFieldGroupWithReportValuesOutput',
     'UserMultiCustomFieldGroupWithValuesOutput',
+    'VersionCustomFieldGroupWithReportValuesOutput',
     'VersionCustomFieldGroupWithValuesOutput',
     'VersionCustomFieldOutput',
+    'VersionMultiCustomFieldGroupWithReportValuesOutput',
     'VersionMultiCustomFieldGroupWithValuesOutput',
     'VersionOptionOutput',
     'cf_group_output_cls_from_type',
     'cf_output_from_obj',
     'cf_value_output_cls_from_type',
+    'custom_field_group_with_report_values_output_cls_from_type',
 )
 
 
@@ -1040,5 +1059,194 @@ def custom_field_group_with_values_output_cls_from_type(
     type_: m.CustomFieldTypeT,
 ) -> type[CustomFieldGroupWithValuesOutputT]:
     if not (output_class := CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP.get(type_)):
+        raise ValueError(f'Unsupported custom field type: {type_}')
+    return output_class
+
+
+# Report-specific discriminated output models using ShortOptionOutput
+class StringCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific string custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.STRING] = m.CustomFieldTypeT.STRING
+    values: list[str | None]
+
+
+class IntegerCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific integer custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.INTEGER] = m.CustomFieldTypeT.INTEGER
+    values: list[int | None]
+
+
+class FloatCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific float custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.FLOAT] = m.CustomFieldTypeT.FLOAT
+    values: list[float | None]
+
+
+class BooleanCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific boolean custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.BOOLEAN] = m.CustomFieldTypeT.BOOLEAN
+    values: list[bool | None]
+
+
+class DateCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific date custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.DATE] = m.CustomFieldTypeT.DATE
+    values: list[date | None]
+
+
+class DateTimeCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific datetime custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.DATETIME] = m.CustomFieldTypeT.DATETIME
+    values: list[datetime | None]
+
+
+class DurationCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific duration custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.DURATION] = m.CustomFieldTypeT.DURATION
+    values: list[int | None]  # Duration in seconds
+
+
+class UserCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific user custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.USER] = m.CustomFieldTypeT.USER
+    values: list[UserOutput | None]
+
+
+class UserMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific user multi custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.USER_MULTI] = m.CustomFieldTypeT.USER_MULTI
+    values: list[UserOutput | None]
+
+
+class EnumCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific enum custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.ENUM] = m.CustomFieldTypeT.ENUM
+    values: list[ShortOptionOutput]
+
+
+class EnumMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific enum multi custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.ENUM_MULTI] = m.CustomFieldTypeT.ENUM_MULTI
+    values: list[ShortOptionOutput]
+
+
+class StateCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific state custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.STATE] = m.CustomFieldTypeT.STATE
+    values: list[ShortOptionOutput]
+
+
+class VersionCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific version custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.VERSION] = m.CustomFieldTypeT.VERSION
+    values: list[ShortOptionOutput]
+
+
+class VersionMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific version multi custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.VERSION_MULTI] = m.CustomFieldTypeT.VERSION_MULTI
+    values: list[ShortOptionOutput]
+
+
+class OwnedCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific owned custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.OWNED] = m.CustomFieldTypeT.OWNED
+    values: list[ShortOptionOutput]
+
+
+class OwnedMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific owned multi custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.OWNED_MULTI] = m.CustomFieldTypeT.OWNED_MULTI
+    values: list[ShortOptionOutput]
+
+
+# Report-specific discriminated union
+CustomFieldGroupWithReportValuesOutputT = (
+    StringCustomFieldGroupWithReportValuesOutput
+    | IntegerCustomFieldGroupWithReportValuesOutput
+    | FloatCustomFieldGroupWithReportValuesOutput
+    | BooleanCustomFieldGroupWithReportValuesOutput
+    | DateCustomFieldGroupWithReportValuesOutput
+    | DateTimeCustomFieldGroupWithReportValuesOutput
+    | DurationCustomFieldGroupWithReportValuesOutput
+    | UserCustomFieldGroupWithReportValuesOutput
+    | UserMultiCustomFieldGroupWithReportValuesOutput
+    | EnumCustomFieldGroupWithReportValuesOutput
+    | EnumMultiCustomFieldGroupWithReportValuesOutput
+    | StateCustomFieldGroupWithReportValuesOutput
+    | VersionCustomFieldGroupWithReportValuesOutput
+    | VersionMultiCustomFieldGroupWithReportValuesOutput
+    | OwnedCustomFieldGroupWithReportValuesOutput
+    | OwnedMultiCustomFieldGroupWithReportValuesOutput
+)
+
+
+class CustomFieldGroupWithReportValuesOutputRootModel(RootModel):
+    root: Annotated[
+        CustomFieldGroupWithReportValuesOutputT, Field(..., discriminator='type')
+    ]
+
+
+CUSTOM_FIELD_GROUP_WITH_REPORT_VALUES_OUTPUT_MAP: dict[
+    m.CustomFieldTypeT,
+    type[CustomFieldGroupWithReportValuesOutputT],
+] = {
+    m.CustomFieldTypeT.STRING: StringCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.INTEGER: IntegerCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.FLOAT: FloatCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.BOOLEAN: BooleanCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.DATE: DateCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.DATETIME: DateTimeCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.DURATION: DurationCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.USER: UserCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.ENUM: EnumCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.STATE: StateCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.VERSION: VersionCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupWithReportValuesOutput,
+}
+
+
+def custom_field_group_with_report_values_output_cls_from_type(
+    type_: m.CustomFieldTypeT,
+) -> type[CustomFieldGroupWithReportValuesOutputT]:
+    if not (
+        output_class := CUSTOM_FIELD_GROUP_WITH_REPORT_VALUES_OUTPUT_MAP.get(type_)
+    ):
         raise ValueError(f'Unsupported custom field type: {type_}')
     return output_class

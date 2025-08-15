@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 import beanie.operators as bo
 import pymongo
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import Field
+from pydantic import BaseModel, Field, model_validator
 
 from ._audit import audited_model
 from .custom_fields import CustomField, CustomFieldGroupLink
@@ -25,19 +25,31 @@ if TYPE_CHECKING:
     from pm.api.context import UserContext
 
 __all__ = (
-    'IssuesPerFieldReport',
-    'IssuesPerProjectReport',
-    'IssuesPerTwoFieldsReport',
+    'Axis',
+    'AxisType',
     'Report',
-    'ReportType',
-    'get_report_class',
 )
 
 
-class ReportType(StrEnum):
-    ISSUES_PER_PROJECT = 'issues_per_project'
-    ISSUES_PER_FIELD = 'issues_per_field'
-    ISSUES_PER_TWO_FIELDS = 'issues_per_two_fields'
+class AxisType(StrEnum):
+    PROJECT = 'project'
+    CUSTOM_FIELD = 'custom_field'
+
+
+class Axis(BaseModel):
+    type: AxisType = Field(description='Type of axis (project or custom field)')
+    custom_field: CustomFieldGroupLink | None = Field(
+        default=None,
+        description='Custom field for the axis (only when type is CUSTOM_FIELD)',
+    )
+
+    @model_validator(mode='after')
+    def validate_axis(self) -> 'Axis':
+        if self.type == AxisType.CUSTOM_FIELD and not self.custom_field:
+            raise ValueError('custom_field must be provided for custom field axis')
+        if self.type == AxisType.PROJECT and self.custom_field:
+            raise ValueError('custom_field must be None for project axis')
+        return self
 
 
 @audited_model
@@ -47,7 +59,6 @@ class Report(Document, PermissionRecordMixin):
         use_revision = True
         use_state_management = True
         state_management_save_previous = True
-        is_root = True
         indexes: ClassVar = [
             pymongo.IndexModel(
                 [
@@ -60,7 +71,6 @@ class Report(Document, PermissionRecordMixin):
             pymongo.IndexModel([('projects.id', 1)], name='projects_id_index'),
             pymongo.IndexModel([('favorite_of', 1)], name='favorite_of_index'),
             pymongo.IndexModel([('created_by.id', 1)], name='created_by_id_index'),
-            pymongo.IndexModel([('type', 1)], name='type_index'),
         ]
 
     name: str = Indexed(str)
@@ -76,7 +86,14 @@ class Report(Document, PermissionRecordMixin):
             default_factory=list, description='List of projects this report applies to'
         ),
     ]
-    type: ReportType = Field(description='Type of report')
+    axis_1: Axis = Field(description='Primary axis for the report')
+    axis_2: Axis | None = Field(
+        default=None, description='Secondary axis for the report (optional)'
+    )
+    ui_settings: Annotated[
+        dict,
+        Field(default_factory=dict, description='UI-specific settings for the report'),
+    ]
     created_by: UserLinkField = Field(description='User who created the report')
     favorite_of: Annotated[
         list[PydanticObjectId],
@@ -203,67 +220,21 @@ class Report(Document, PermissionRecordMixin):
         cls,
         field: CustomField | CustomFieldGroupLink,
     ) -> None:
-        pass
-
-
-class IssuesPerProjectReport(Report):
-    type: ReportType = ReportType.ISSUES_PER_PROJECT
-
-
-class IssuesPerFieldReport(Report):
-    type: ReportType = ReportType.ISSUES_PER_FIELD
-    field: CustomFieldGroupLink
-
-    @classmethod
-    async def update_field_embedded_links(
-        cls,
-        field: CustomField | CustomFieldGroupLink,
-    ) -> None:
-        """Update embedded custom field links in IssuesPerFieldReport."""
-        field_link = CustomFieldGroupLink.from_obj(field)
-        await cls.find(cls.field.gid == field_link.gid).update(
-            {'$set': {'field': field_link}},
-        )
-
-
-class IssuesPerTwoFieldsReport(Report):
-    type: ReportType = ReportType.ISSUES_PER_TWO_FIELDS
-    row_field: CustomFieldGroupLink
-    column_field: CustomFieldGroupLink
-
-    @classmethod
-    async def update_field_embedded_links(
-        cls,
-        field: CustomField | CustomFieldGroupLink,
-    ) -> None:
-        """Update embedded custom field links in IssuesPerTwoFieldsReport."""
+        """Update embedded custom field references in report axes."""
         field_link = CustomFieldGroupLink.from_obj(field)
 
-        # Update row_field
-        await cls.find(cls.row_field.gid == field_link.gid).update(
-            {'$set': {'row_field': field_link}},
+        # Update axis_1 references
+        await cls.find(
+            cls.axis_1.type == AxisType.CUSTOM_FIELD,  # pylint: disable=no-member
+            cls.axis_1.custom_field.gid == field_link.gid,  # pylint: disable=no-member
+        ).update(
+            {'$set': {'axis_1.custom_field': field_link}},
         )
 
-        # Update column_field
-        await cls.find(cls.column_field.gid == field_link.gid).update(
-            {'$set': {'column_field': field_link}},
+        # Update axis_2 references
+        await cls.find(
+            cls.axis_2.type == AxisType.CUSTOM_FIELD,  # pylint: disable=no-member
+            cls.axis_2.custom_field.gid == field_link.gid,  # pylint: disable=no-member
+        ).update(
+            {'$set': {'axis_2.custom_field': field_link}},
         )
-
-
-REPORT_TYPE_MAPPING = {
-    ReportType.ISSUES_PER_PROJECT: IssuesPerProjectReport,
-    ReportType.ISSUES_PER_FIELD: IssuesPerFieldReport,
-    ReportType.ISSUES_PER_TWO_FIELDS: IssuesPerTwoFieldsReport,
-}
-
-
-def get_report_class(report_type: ReportType) -> type[Report]:
-    """Get the specific report class for a given report type."""
-    return REPORT_TYPE_MAPPING[report_type]
-
-
-def rebuild_models() -> None:
-    """Rebuild all report models."""
-    Report.model_rebuild()
-    for report_class in REPORT_TYPE_MAPPING.values():
-        report_class.model_rebuild()

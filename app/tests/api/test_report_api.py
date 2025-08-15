@@ -173,7 +173,7 @@ async def test_issues_per_project_report_crud(
         'description': 'Test report for issues per project',
         'query': 'status:open',
         'projects': [project_ids[0]],
-        'type': 'issues_per_project',
+        'axis_1': {'type': 'project'},
     }
 
     response = test_client.post('/api/v1/report', headers=headers, json=report_payload)
@@ -186,8 +186,7 @@ async def test_issues_per_project_report_crud(
     report_id = data['payload']['id']
     print(f'Created report with ID: {report_id}')
 
-    # Verify discriminated union structure
-    assert data['payload']['type'] == 'issues_per_project'
+    # Verify axis-based structure
     assert data['payload']['name'] == report_payload['name']
     assert data['payload']['description'] == report_payload['description']
     assert data['payload']['query'] == report_payload['query']
@@ -197,6 +196,11 @@ async def test_issues_per_project_report_crud(
     assert len(data['payload']['permissions']) == 1
     assert data['payload']['permissions'][0]['permission_type'] == 'admin'
     assert not data['payload']['is_favorite']
+
+    # Verify axis configuration
+    assert data['payload']['axis_1']['type'] == 'project'
+    assert data['payload']['axis_1']['custom_field'] is None
+    assert data['payload']['axis_2'] is None
 
     # Test report retrieval
     print(
@@ -213,7 +217,7 @@ async def test_issues_per_project_report_crud(
     data = response.json()
     assert data['success']
     assert data['payload']['id'] == report_id
-    assert data['payload']['type'] == 'issues_per_project'
+    assert data['payload']['axis_1']['type'] == 'project'
     assert data['payload']['name'] == report_payload['name']
 
     # Test report update
@@ -222,7 +226,7 @@ async def test_issues_per_project_report_crud(
         'description': 'Updated description',
         'query': 'status:open OR status:closed',
         'projects': project_ids,  # Add second project
-        'type': 'issues_per_project',
+        'axis_1': {'type': 'project'},
     }
 
     response = test_client.put(
@@ -233,7 +237,7 @@ async def test_issues_per_project_report_crud(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['type'] == 'issues_per_project'
+    assert data['payload']['axis_1']['type'] == 'project'
     assert data['payload']['name'] == update_payload['name']
     assert data['payload']['description'] == update_payload['description']
     assert data['payload']['query'] == update_payload['query']
@@ -353,8 +357,7 @@ async def test_issues_per_field_report_crud(
         'description': 'Test report for issues per field',
         'query': None,
         'projects': [project_ids[0]],
-        'type': 'issues_per_field',
-        'field_gid': status_field['gid'],
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
     }
 
     response = test_client.post('/api/v1/report', headers=headers, json=report_payload)
@@ -367,27 +370,31 @@ async def test_issues_per_field_report_crud(
     assert data['success']
     report_id = data['payload']['id']
 
-    # Verify discriminated union structure with field
-    assert data['payload']['type'] == 'issues_per_field'
+    # Verify axis-based structure with custom field
     assert data['payload']['name'] == report_payload['name']
-    assert data['payload']['field']['gid'] == status_field['gid']
-    assert data['payload']['field']['name'] == 'Status'  # Use the actual field name
-    assert data['payload']['field']['type'] == 'state'  # Use the actual field type
+    assert data['payload']['axis_1']['type'] == 'custom_field'
+    assert data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
+    assert (
+        data['payload']['axis_1']['custom_field']['name'] == 'Status'
+    )  # Use the actual field name
+    assert (
+        data['payload']['axis_1']['custom_field']['type'] == 'state'
+    )  # Use the actual field type
+    assert data['payload']['axis_2'] is None
 
     # Test report retrieval
     response = test_client.get(f'/api/v1/report/{report_id}', headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['type'] == 'issues_per_field'
-    assert data['payload']['field']['gid'] == status_field['gid']
+    assert data['payload']['axis_1']['type'] == 'custom_field'
+    assert data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
 
     # Test report update with different field
     update_payload = {
         'name': 'Updated Issues Per Field Report',
         'description': 'Updated description',
-        'type': 'issues_per_field',
-        'field_gid': priority_field['gid'],
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': priority_field['gid']},
     }
 
     response = test_client.put(
@@ -398,14 +405,16 @@ async def test_issues_per_field_report_crud(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['type'] == 'issues_per_field'
+    assert data['payload']['axis_1']['type'] == 'custom_field'
     assert data['payload']['name'] == update_payload['name']
-    assert data['payload']['field']['gid'] == priority_field['gid']
+    assert data['payload']['axis_1']['custom_field']['gid'] == priority_field['gid']
 
     # Test invalid field_gid
     invalid_update_payload = {
-        'type': 'issues_per_field',
-        'field_gid': str(uuid.uuid4()),  # Random UUID
+        'axis_1': {
+            'type': 'custom_field',
+            'custom_field_gid': str(uuid.uuid4()),
+        },  # Random UUID
     }
 
     response = test_client.put(
@@ -506,9 +515,8 @@ async def test_issues_per_two_fields_report_crud(
         'description': 'Test report for issues per two fields',
         'query': None,
         'projects': project_ids,
-        'type': 'issues_per_two_fields',
-        'row_field_gid': status_field['gid'],
-        'column_field_gid': priority_field['gid'],
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
+        'axis_2': {'type': 'custom_field', 'custom_field_gid': priority_field['gid']},
     }
 
     response = test_client.post('/api/v1/report', headers=headers, json=report_payload)
@@ -517,14 +525,17 @@ async def test_issues_per_two_fields_report_crud(
     assert data['success']
     report_id = data['payload']['id']
 
-    # Verify discriminated union structure with two fields
-    assert data['payload']['type'] == 'issues_per_two_fields'
+    # Verify axis-based structure with two custom fields
     assert data['payload']['name'] == report_payload['name']
-    assert data['payload']['row_field']['gid'] == status_field['gid']
-    assert data['payload']['row_field']['name'] == 'Status'  # Use actual field name
-    assert data['payload']['column_field']['gid'] == priority_field['gid']
+    assert data['payload']['axis_1']['type'] == 'custom_field'
+    assert data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
     assert (
-        data['payload']['column_field']['name'] == 'Priority'
+        data['payload']['axis_1']['custom_field']['name'] == 'Status'
+    )  # Use actual field name
+    assert data['payload']['axis_2']['type'] == 'custom_field'
+    assert data['payload']['axis_2']['custom_field']['gid'] == priority_field['gid']
+    assert (
+        data['payload']['axis_2']['custom_field']['name'] == 'Priority'
     )  # Use actual field name
 
     # Test report retrieval
@@ -532,17 +543,17 @@ async def test_issues_per_two_fields_report_crud(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['type'] == 'issues_per_two_fields'
-    assert data['payload']['row_field']['gid'] == status_field['gid']
-    assert data['payload']['column_field']['gid'] == priority_field['gid']
+    assert data['payload']['axis_1']['type'] == 'custom_field'
+    assert data['payload']['axis_2']['type'] == 'custom_field'
+    assert data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
+    assert data['payload']['axis_2']['custom_field']['gid'] == priority_field['gid']
 
     # Test report update with different fields
     update_payload = {
         'name': 'Updated Issues Per Two Fields Report',
         'description': 'Updated description',
-        'type': 'issues_per_two_fields',
-        'row_field_gid': priority_field['gid'],
-        'column_field_gid': component_field['gid'],
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': priority_field['gid']},
+        'axis_2': {'type': 'custom_field', 'custom_field_gid': component_field['gid']},
     }
 
     response = test_client.put(
@@ -553,15 +564,15 @@ async def test_issues_per_two_fields_report_crud(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['type'] == 'issues_per_two_fields'
+    assert data['payload']['axis_1']['type'] == 'custom_field'
+    assert data['payload']['axis_2']['type'] == 'custom_field'
     assert data['payload']['name'] == update_payload['name']
-    assert data['payload']['row_field']['gid'] == priority_field['gid']
-    assert data['payload']['column_field']['gid'] == component_field['gid']
+    assert data['payload']['axis_1']['custom_field']['gid'] == priority_field['gid']
+    assert data['payload']['axis_2']['custom_field']['gid'] == component_field['gid']
 
     # Test partial update - only row field
     partial_update_payload = {
-        'type': 'issues_per_two_fields',
-        'row_field_gid': status_field['gid'],
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
     }
 
     response = test_client.put(
@@ -572,15 +583,17 @@ async def test_issues_per_two_fields_report_crud(
     assert response.status_code == 200
     data = response.json()
     assert data['success']
-    assert data['payload']['row_field']['gid'] == status_field['gid']
+    assert data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
     assert (
-        data['payload']['column_field']['gid'] == component_field['gid']
+        data['payload']['axis_2']['custom_field']['gid'] == component_field['gid']
     )  # Should remain unchanged
 
     # Test invalid field_gid
     invalid_update_payload = {
-        'type': 'issues_per_two_fields',
-        'row_field_gid': str(uuid.uuid4()),  # Random UUID
+        'axis_1': {
+            'type': 'custom_field',
+            'custom_field_gid': str(uuid.uuid4()),
+        },  # Random UUID
     }
 
     response = test_client.put(
@@ -660,7 +673,7 @@ async def test_report_permission_management(
         'name': 'Permissions Test Report',
         'description': 'Report for testing permissions',
         'projects': [project_ids[0]],
-        'type': 'issues_per_project',
+        'axis_1': {'type': 'project'},
     }
 
     response = test_client.post('/api/v1/report', headers=headers, json=report_payload)
@@ -804,7 +817,7 @@ async def test_report_validation_errors(
     # Test invalid project ID
     invalid_project_payload = {
         'name': 'Invalid Project Report',
-        'type': 'issues_per_project',
+        'axis_1': {'type': 'project'},
         'projects': [project_ids[0], UNKNOWN_ID],
     }
 
@@ -823,9 +836,11 @@ async def test_report_validation_errors(
     # Test invalid field_gid for issues_per_field
     invalid_field_payload = {
         'name': 'Invalid Field Report',
-        'type': 'issues_per_field',
         'projects': [project_ids[0]],
-        'field_gid': str(uuid.uuid4()),  # Random UUID
+        'axis_1': {
+            'type': 'custom_field',
+            'custom_field_gid': str(uuid.uuid4()),
+        },  # Random UUID
     }
 
     response = test_client.post(
@@ -843,7 +858,6 @@ async def test_report_validation_errors(
     # Test missing field_gid for issues_per_field
     missing_field_payload = {
         'name': 'Missing Field Report',
-        'type': 'issues_per_field',
         'projects': [project_ids[0]],
         # Missing field_gid
     }
@@ -858,7 +872,6 @@ async def test_report_validation_errors(
     # Test missing fields for issues_per_two_fields
     missing_two_fields_payload = {
         'name': 'Missing Two Fields Report',
-        'type': 'issues_per_two_fields',
         'projects': [project_ids[0]],
         # Missing row_field_gid and column_field_gid
     }
@@ -873,10 +886,12 @@ async def test_report_validation_errors(
     # Test invalid row_field_gid for issues_per_two_fields
     invalid_row_field_payload = {
         'name': 'Invalid Row Field Report',
-        'type': 'issues_per_two_fields',
         'projects': [project_ids[0]],
-        'row_field_gid': str(uuid.uuid4()),  # Random UUID
-        'column_field_gid': custom_fields[0]['gid'],
+        'axis_1': {
+            'type': 'custom_field',
+            'custom_field_gid': str(uuid.uuid4()),
+        },  # Random UUID
+        'axis_2': {'type': 'custom_field', 'custom_field_gid': custom_fields[0]['gid']},
     }
 
     response = test_client.post(
@@ -894,10 +909,12 @@ async def test_report_validation_errors(
     # Test invalid column_field_gid for issues_per_two_fields
     invalid_column_field_payload = {
         'name': 'Invalid Column Field Report',
-        'type': 'issues_per_two_fields',
         'projects': [project_ids[0]],
-        'row_field_gid': custom_fields[0]['gid'],
-        'column_field_gid': str(uuid.uuid4()),  # Random UUID
+        'axis_1': {'type': 'custom_field', 'custom_field_gid': custom_fields[0]['gid']},
+        'axis_2': {
+            'type': 'custom_field',
+            'custom_field_gid': str(uuid.uuid4()),
+        },  # Random UUID
     }
 
     response = test_client.post(
@@ -929,7 +946,7 @@ async def test_report_error_handling(
     response = test_client.put(
         f'/api/v1/report/{UNKNOWN_ID}',
         headers=headers,
-        json={'name': 'Updated', 'type': 'issues_per_project'},
+        json={'name': 'Updated', 'axis_1': {'type': 'project'}},
     )
     assert response.status_code == 404
 
@@ -1002,7 +1019,7 @@ async def test_report_search_and_filtering(
         report_payload = {
             'name': f'Test Report {i}',
             'description': f'Description {i}',
-            'type': 'issues_per_project',
+            'axis_1': {'type': 'project'},
             'projects': [project_ids[0]],
         }
         response = test_client.post(
@@ -1098,25 +1115,23 @@ async def test_discriminated_union_functionality(
 
     status_field = custom_fields[0]
 
-    # Create reports of different types
+    # Create reports of different types using new axis-based format
     report_types = [
         {
             'name': 'Issues Per Project Test',
-            'type': 'issues_per_project',
             'projects': [project_ids[0]],
+            'axis_1': {'type': 'project'},
         },
         {
             'name': 'Issues Per Field Test',
-            'type': 'issues_per_field',
             'projects': [project_ids[0]],
-            'field_gid': status_field['gid'],
+            'axis_1': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
         },
         {
             'name': 'Issues Per Two Fields Test',
-            'type': 'issues_per_two_fields',
             'projects': [project_ids[0]],
-            'row_field_gid': status_field['gid'],
-            'column_field_gid': status_field['gid'],
+            'axis_1': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
+            'axis_2': {'type': 'custom_field', 'custom_field_gid': status_field['gid']},
         },
     ]
 
@@ -1130,26 +1145,32 @@ async def test_discriminated_union_functionality(
         assert data['success']
         report_ids.append(data['payload']['id'])
 
-        # Verify discriminated union type
-        assert data['payload']['type'] == report_payload['type']
+        # Verify axis-based structure
         assert data['payload']['name'] == report_payload['name']
 
-        # Verify type-specific fields
-        if report_payload['type'] == 'issues_per_field':
-            assert 'field' in data['payload']
-            assert data['payload']['field']['gid'] == status_field['gid']
-            assert 'row_field' not in data['payload']
-            assert 'column_field' not in data['payload']
-        elif report_payload['type'] == 'issues_per_two_fields':
-            assert 'row_field' in data['payload']
-            assert 'column_field' in data['payload']
-            assert data['payload']['row_field']['gid'] == status_field['gid']
-            assert data['payload']['column_field']['gid'] == status_field['gid']
-            assert 'field' not in data['payload']
-        else:  # issues_per_project
-            assert 'field' not in data['payload']
-            assert 'row_field' not in data['payload']
-            assert 'column_field' not in data['payload']
+        # Verify axis_1 configuration
+        assert 'axis_1' in data['payload']
+        assert data['payload']['axis_1']['type'] == report_payload['axis_1']['type']
+
+        if report_payload['axis_1']['type'] == 'custom_field':
+            assert (
+                data['payload']['axis_1']['custom_field']['gid'] == status_field['gid']
+            )
+        else:  # project type
+            assert data['payload']['axis_1']['custom_field'] is None
+
+        # Verify axis_2 configuration
+        if 'axis_2' in report_payload:
+            assert 'axis_2' in data['payload']
+            assert data['payload']['axis_2'] is not None
+            assert data['payload']['axis_2']['type'] == report_payload['axis_2']['type']
+            if report_payload['axis_2']['type'] == 'custom_field':
+                assert (
+                    data['payload']['axis_2']['custom_field']['gid']
+                    == status_field['gid']
+                )
+        else:
+            assert data['payload']['axis_2'] is None
 
     # Test list returns all types correctly
     response = test_client.get('/api/v1/report/list', headers=headers)
@@ -1158,14 +1179,14 @@ async def test_discriminated_union_functionality(
     assert data['success']
     assert data['payload']['count'] == 3
 
-    # Verify each item in list has correct discriminated union structure
+    # Verify each item in list has correct axis-based structure
     for item in data['payload']['items']:
-        assert 'type' in item
-        assert item['type'] in [
-            'issues_per_project',
-            'issues_per_field',
-            'issues_per_two_fields',
-        ]
+        assert 'axis_1' in item
+        assert 'axis_2' in item
+        assert item['axis_1']['type'] in ['project', 'custom_field']
+        # axis_2 can be None or have custom_field type
+        if item['axis_2'] is not None:
+            assert item['axis_2']['type'] == 'custom_field'
 
     # Test favorite functionality with different report types
     for report_id in report_ids:
