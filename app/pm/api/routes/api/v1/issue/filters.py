@@ -3,13 +3,14 @@ import re
 from http import HTTPStatus
 from typing import Any
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
 from bson.errors import InvalidId
 from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.api.context import current_user_context_dependency
+from pm.api.context import current_user, current_user_context_dependency
 from pm.api.issue_query import split_query
 from pm.api.issue_query.parse_logical_expression import (
     BracketError,
@@ -30,7 +31,8 @@ from pm.api.issue_query.search import (
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput, ShortOptionOutput
 from pm.api.views.error_responses import error_responses
-from pm.api.views.output import ErrorOutput, SuccessPayloadOutput
+from pm.api.views.issue import FavoriteFilterOutput, FavoriteFilterType
+from pm.api.views.output import BaseListOutput, ErrorOutput, SuccessPayloadOutput
 from pm.api.views.project import ProjectShortOutput
 from pm.api.views.query_builder import (
     AvailableFieldRootModel,
@@ -79,6 +81,7 @@ from pm.api.views.query_builder import (
 )
 from pm.api.views.user import UserOutput
 from pm.models.tag import TagLinkField
+from pm.permissions import ProjectPermissions
 
 logger = logging.getLogger(__name__)
 
@@ -865,4 +868,49 @@ async def get_query_builder_data(
             filters=filters,
             available_fields=filtered_available_fields,
         )
+    )
+
+
+@router.get(
+    '/favorites/list',
+    dependencies=[Depends(current_user_context_dependency)],
+    responses=error_responses(
+        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
+        (HTTPStatus.FORBIDDEN, ErrorOutput),
+    ),
+)
+async def list_favorite_filters() -> BaseListOutput[FavoriteFilterOutput]:
+    """List user's favorite filters combining favorite projects and saved searches."""
+    user_ctx = current_user()
+    filters = []
+
+    project_query = m.Project.find().sort(m.Project.slug)
+    if not user_ctx.user.is_admin:
+        project_query = project_query.find(
+            bo.In(
+                m.Project.id,
+                user_ctx.get_projects_with_permission(ProjectPermissions.PROJECT_READ),
+            ),
+        )
+
+    favorite_projects = await project_query.find(
+        bo.Eq(m.Project.subscribers, user_ctx.user.id)
+    ).to_list()
+
+    filters.extend(
+        [
+            FavoriteFilterOutput(
+                name=project.name,
+                type=FavoriteFilterType.PROJECT,
+                query=f'project: {project.slug}',
+            )
+            for project in favorite_projects
+        ]
+    )
+
+    return BaseListOutput.make(
+        items=filters,
+        count=len(filters),
+        limit=len(filters),
+        offset=0,
     )

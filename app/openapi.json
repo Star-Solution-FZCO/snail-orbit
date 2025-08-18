@@ -13321,6 +13321,113 @@
         ]
       }
     },
+    "/api/v1/issue/filters/favorites/list": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "List Favorite Filters",
+        "description": "List user's favorite filters combining favorite projects and saved searches.",
+        "operationId": "list_favorite_filters_api_v1_issue_filters_favorites_list_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_FavoriteFilterOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/issue/{issue_id_or_alias}/feed/list": {
       "get": {
         "tags": [
@@ -37037,6 +37144,23 @@
         ],
         "title": "BaseListOutput[EncryptionKeyPublicOut]"
       },
+      "BaseListOutput_FavoriteFilterOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/BaseListPayload_FavoriteFilterOutput_"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BaseListOutput[FavoriteFilterOutput]"
+      },
       "BaseListOutput_GlobalRoleSimpleOutput_": {
         "properties": {
           "success": {
@@ -37737,6 +37861,37 @@
           "items"
         ],
         "title": "BaseListPayload[EncryptionKeyPublicOut]"
+      },
+      "BaseListPayload_FavoriteFilterOutput_": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FavoriteFilterOutput"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "limit",
+          "offset",
+          "items"
+        ],
+        "title": "BaseListPayload[FavoriteFilterOutput]"
       },
       "BaseListPayload_GlobalRoleSimpleOutput_": {
         "properties": {
@@ -42130,6 +42285,38 @@
         },
         "type": "object",
         "title": "EnumOptionUpdateBody"
+      },
+      "FavoriteFilterOutput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the favorite filter"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FavoriteFilterType",
+            "description": "Type of favorite filter"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "Query string for filtering issues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "query"
+        ],
+        "title": "FavoriteFilterOutput"
+      },
+      "FavoriteFilterType": {
+        "type": "string",
+        "enum": [
+          "PROJECT"
+        ],
+        "title": "FavoriteFilterType"
       },
       "FieldMoveBody": {
         "properties": {

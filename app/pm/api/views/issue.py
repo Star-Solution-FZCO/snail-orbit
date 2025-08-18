@@ -1,5 +1,6 @@
 from abc import ABC
 from datetime import date, datetime
+from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
@@ -22,6 +23,8 @@ from .user import UserOutput
 
 __all__ = (
     'CustomFieldValueOutT',
+    'FavoriteFilterOutput',
+    'FavoriteFilterType',
     'IssueAttachmentBody',
     'IssueAttachmentOut',
     'IssueChangeOutputRootModel',
@@ -53,6 +56,16 @@ CustomFieldValueOutT = (
     | Any
     | None
 )
+
+
+class FavoriteFilterType(StrEnum):
+    PROJECT = 'PROJECT'
+
+
+class FavoriteFilterOutput(BaseModel):
+    name: str = Field(description='Display name of the favorite filter')
+    type: FavoriteFilterType = Field(description='Type of favorite filter')
+    query: str = Field(description='Query string for filtering issues')
 
 
 class ProjectField(BaseModel):
