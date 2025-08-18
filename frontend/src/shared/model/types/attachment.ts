@@ -8,6 +8,7 @@ export type AttachmentT = {
     author: BasicUserT;
     created_at: string;
     ocr_text: string | null;
+    url: string;
 };
 
 export type SelectedAttachmentT = {

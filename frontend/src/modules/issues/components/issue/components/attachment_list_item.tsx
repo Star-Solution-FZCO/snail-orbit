@@ -8,7 +8,6 @@ import { useAppSelector } from "shared/model";
 import { IssueAttachmentT } from "shared/model/types";
 import { useLightbox, UserAvatar } from "shared/ui";
 import { formatBytes } from "shared/utils";
-import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 
 interface IAttachmentListItemProps {
     attachment: IssueAttachmentT;
@@ -30,8 +29,6 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
     const { open } = useLightbox();
 
     const user = useAppSelector((state) => state.profile.user);
-
-    const fileUrl = makeFileUrl(attachment.id);
 
     const isImage = attachment.content_type.startsWith("image/");
 
@@ -59,7 +56,7 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
             {isImage ? (
                 <Box
                     component="img"
-                    src={fileUrl}
+                    src={attachment.url}
                     sx={{
                         width: 40,
                         height: 40,
@@ -69,7 +66,7 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
                     onClick={() =>
                         open({
                             id: attachment.id,
-                            src: fileUrl,
+                            src: attachment.url,
                             name: attachment.name,
                             size: attachment.size,
                             content_type: attachment.content_type,

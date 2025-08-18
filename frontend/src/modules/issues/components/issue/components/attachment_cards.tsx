@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "shared/model";
 import type { IssueAttachmentT } from "shared/model/types";
 import { useLightbox } from "shared/ui/lightbox";
-import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 
 type BaseAttachmentCardProps = {
     filename: string;
@@ -261,14 +260,13 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
 
     const { open } = useLightbox();
 
-    const fileUrl = makeFileUrl(attachment.id);
     const isImage = attachment.content_type.startsWith("image/");
 
     const handleClick = () => {
         if (isImage) {
             open({
                 id: attachment.id,
-                src: fileUrl,
+                src: attachment.url,
                 name: attachment.name,
                 size: attachment.size,
                 content_type: attachment.content_type,
@@ -286,7 +284,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
         <BaseAttachmentCard
             filename={attachment.name}
             isImage={isImage}
-            url={fileUrl}
+            url={attachment.url}
             onClick={handleClick}
             onDownload={handleDownload}
             onDelete={onDelete}

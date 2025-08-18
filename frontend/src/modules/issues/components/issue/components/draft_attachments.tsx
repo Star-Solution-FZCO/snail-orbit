@@ -6,7 +6,6 @@ import type {
 } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { useLightbox } from "shared/ui";
-import { makeFileUrl } from "shared/utils/helpers/make-file-url";
 import { AttachmentsList } from "./attachments_list";
 
 type DraftAttachmentsProps = {
@@ -58,7 +57,7 @@ export const DraftAttachments = (props: DraftAttachmentsProps) => {
         loadLBFiles(
             attachments.map((a) => ({
                 id: a.id,
-                src: makeFileUrl(a.id),
+                src: a.url,
                 name: a.name,
                 size: a.size,
                 content_type: a.content_type,
