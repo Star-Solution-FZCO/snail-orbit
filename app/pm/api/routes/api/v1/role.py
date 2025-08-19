@@ -5,7 +5,10 @@ from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 
 import pm.models as m
-from pm.api.context import admin_context_dependency
+from pm.api.context import (
+    admin_context_dependency,
+    current_user_context_dependency,
+)
 from pm.api.utils.router import APIRouter
 from pm.api.views.error_responses import AUTH_ERRORS, error_responses
 from pm.api.views.output import (
@@ -24,7 +27,7 @@ __all__ = ('router',)
 router = APIRouter(
     prefix='/role',
     tags=['role'],
-    dependencies=[Depends(admin_context_dependency)],
+    dependencies=[Depends(current_user_context_dependency)],
     responses=error_responses(*AUTH_ERRORS),
 )
 
@@ -43,7 +46,6 @@ class RoleUpdate(BaseModel):
     '/list',
     responses=error_responses(
         (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
 async def list_roles(
@@ -65,8 +67,6 @@ async def list_roles(
 @router.get(
     '/{role_id}',
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
         (HTTPStatus.NOT_FOUND, ErrorOutput),
     ),
 )
@@ -79,7 +79,7 @@ async def get_role(
     return SuccessPayloadOutput(payload=RoleOutput.from_obj(obj))
 
 
-@router.post('')
+@router.post('', dependencies=[Depends(admin_context_dependency)])
 async def create_role(
     body: RoleCreate,
 ) -> SuccessPayloadOutput[RoleOutput]:
@@ -90,10 +90,9 @@ async def create_role(
 
 @router.put(
     '/{role_id}',
+    dependencies=[Depends(admin_context_dependency)],
     responses=error_responses(
         (HTTPStatus.BAD_REQUEST, ErrorOutput),
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
         (HTTPStatus.NOT_FOUND, ErrorOutput),
         (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
     ),
@@ -125,9 +124,8 @@ async def update_role(
 
 @router.delete(
     '/{role_id}',
+    dependencies=[Depends(admin_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
         (HTTPStatus.NOT_FOUND, ErrorOutput),
     ),
 )
@@ -151,10 +149,9 @@ async def delete_role(
 
 @router.post(
     '/{role_id}/permission/{permission_key}',
+    dependencies=[Depends(admin_context_dependency)],
     responses=error_responses(
         (HTTPStatus.BAD_REQUEST, ErrorOutput),
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
         (HTTPStatus.UNPROCESSABLE_ENTITY, ErrorOutput),
     ),
 )
@@ -184,9 +181,8 @@ async def grant_permission(
 
 @router.delete(
     '/{role_id}/permission/{permission_key}',
+    dependencies=[Depends(admin_context_dependency)],
     responses=error_responses(
-        (HTTPStatus.UNAUTHORIZED, ErrorOutput),
-        (HTTPStatus.FORBIDDEN, ErrorOutput),
         (HTTPStatus.NOT_FOUND, ErrorOutput),
     ),
 )
