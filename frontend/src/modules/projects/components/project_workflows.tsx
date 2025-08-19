@@ -12,6 +12,7 @@ import {
     DialogTitle,
     Divider,
     IconButton,
+    Stack,
     Typography,
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -37,7 +38,7 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
     const { t } = useTranslation();
 
     const {
-        data: workflows,
+        data,
         isLoading: workflowsLoading,
         error,
     } = projectApi.useListProjectAvailableWorkflowsQuery({
@@ -72,19 +73,20 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
             </Typography>
         );
 
-    if (!workflows)
+    if (!data)
         return (
             <Typography fontWeight="bold">
                 {t("projects.workflows.empty")}
             </Typography>
         );
 
+    const workflows = data.payload.items;
+
     return (
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Box display="flex" flexDirection="column" gap={1} height={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
-                    {workflows.payload.items.length}{" "}
-                    {t("projects.workflows.plural")}
+                    {workflows.length} {t("projects.workflows.plural")}
                 </Typography>
 
                 {addProjectWorkflowLoading && (
@@ -98,10 +100,11 @@ const WorkflowList: FC<IWorkflowListProps> = ({ projectId }) => {
                 display="flex"
                 flexDirection="column"
                 gap={1}
-                flex={1}
+                flex="1 1 0"
                 overflow="auto"
+                pr={1}
             >
-                {workflows.payload.items.map((workflow) => (
+                {workflows.map((workflow) => (
                     <Box
                         key={workflow.id}
                         display="flex"
@@ -285,8 +288,10 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
         [t],
     );
 
+    const rows = project.workflows;
+
     return (
-        <Box display="flex" flexDirection="column" gap={1} height="100%">
+        <Stack direction="row" gap={2} height={1}>
             <DetachProjectWorkflowDialog
                 open={detachDialogOpen}
                 projectId={project.id}
@@ -294,20 +299,21 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
                 onClose={() => setDetachDialogOpen(false)}
             />
 
-            <Box display="flex" gap={2} height="100%">
-                <Box flex={1}>
-                    <DataGrid
-                        columns={columns}
-                        rows={project.workflows}
-                        density="compact"
-                    />
-                </Box>
+            <Stack flex={1} minHeight={0}>
+                <DataGrid
+                    sx={{ flex: "1 1 0" }}
+                    columns={columns}
+                    rows={rows}
+                    density="compact"
+                    disableRowSelectionOnClick
+                    disableColumnMenu
+                />
+            </Stack>
 
-                <Box flex={1}>
-                    <WorkflowList projectId={project.id} />
-                </Box>
+            <Box flex={1} height={1}>
+                <WorkflowList projectId={project.id} />
             </Box>
-        </Box>
+        </Stack>
     );
 };
 

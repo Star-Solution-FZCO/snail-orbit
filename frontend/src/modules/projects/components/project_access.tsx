@@ -446,7 +446,7 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
     const rowCount = permissions?.payload.count || 0;
 
     return (
-        <Box display="flex" flexDirection="column" gap={1} height="100%">
+        <Box display="flex" flexDirection="column" gap={1} height={1}>
             <Box>
                 <Button
                     onClick={() => setGrantPermissionDialogOpen(true)}
@@ -460,6 +460,7 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
 
             <DataGrid
                 sx={{
+                    flex: "1 1 0",
                     "& .MuiDataGrid-row": {
                         cursor: "pointer",
                     },

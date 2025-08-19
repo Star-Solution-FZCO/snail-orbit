@@ -41,7 +41,19 @@ const Bundle: FC<{
 
     return (
         <Stack>
-            <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+            <Stack
+                direction="row"
+                alignItems="center"
+                gap={1}
+                pb={0.5}
+                mb={0.5}
+                position="sticky"
+                zIndex={1}
+                bgcolor="background.default"
+                borderBottom={1}
+                borderColor="divider"
+                top={0}
+            >
                 <IconButton
                     onClick={() => setExpanded((prev) => !prev)}
                     size="small"
@@ -67,8 +79,6 @@ const Bundle: FC<{
                     {bundle.name}
                 </Link>
             </Stack>
-
-            <Divider />
 
             <Collapse in={expanded}>
                 <Stack pl={0.5} pt={0.5}>
@@ -158,7 +168,7 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
         );
 
     return (
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Box display="flex" flexDirection="column" gap={1} height={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
                     {bundles.length} {t("projects.customFields.fields")}
@@ -175,8 +185,9 @@ const CustomFieldList: FC<ICustomFieldListProps> = ({ project }) => {
                 display="flex"
                 flexDirection="column"
                 gap={1}
-                flex={1}
+                flex="1 1 0"
                 overflow="auto"
+                pr={1}
             >
                 {bundles.map((bundle) => (
                     <Bundle
@@ -333,8 +344,10 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
         [t],
     );
 
+    const rows = project.custom_fields;
+
     return (
-        <Box display="flex" flexDirection="column" gap={1} height="100%">
+        <Stack direction="row" gap={2} height={1}>
             <RemoveProjectCustomFieldDialog
                 open={removeDialogOpen}
                 projectId={project.id}
@@ -342,20 +355,21 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 onClose={() => setRemoveDialogOpen(false)}
             />
 
-            <Box display="flex" gap={2} height="100%">
-                <Box flex={1}>
-                    <DataGrid
-                        columns={columns}
-                        rows={project.custom_fields}
-                        density="compact"
-                    />
-                </Box>
+            <Stack flex={1} minHeight={0}>
+                <DataGrid
+                    sx={{ flex: "1 1 0" }}
+                    columns={columns}
+                    rows={rows}
+                    density="compact"
+                    disableRowSelectionOnClick
+                    disableColumnMenu
+                />
+            </Stack>
 
-                <Box flex={1}>
-                    <CustomFieldList project={project} />
-                </Box>
+            <Box flex={1} height={1}>
+                <CustomFieldList project={project} />
             </Box>
-        </Box>
+        </Stack>
     );
 };
 

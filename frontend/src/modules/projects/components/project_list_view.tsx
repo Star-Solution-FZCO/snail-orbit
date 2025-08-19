@@ -27,7 +27,7 @@ const AvailableCustomFieldsList: FC<AvailableCustomFieldsListProp1s> = ({
     }, [custom_fields, card_fields]);
 
     return (
-        <Box display="flex" flexDirection="column" gap={1}>
+        <Box display="flex" flexDirection="column" gap={1} height={1}>
             <Box display="flex" alignItems="center" gap={1}>
                 <Typography fontWeight="bold">
                     {t("projects.listView.remain", {
@@ -42,8 +42,9 @@ const AvailableCustomFieldsList: FC<AvailableCustomFieldsListProp1s> = ({
                 display="flex"
                 flexDirection="column"
                 gap={1}
-                flex={1}
+                flex="1 1 0"
                 overflow="auto"
+                pr={1}
             >
                 {filteredCustomFields.map((field) => (
                     <Stack
@@ -134,19 +135,20 @@ export const ProjectListView: FC<ProjectListViewProps> = ({ project }) => {
     );
 
     return (
-        <Stack gap={1} height="100%">
-            <Box display="flex" gap={2} height="100%">
-                <Box flex={1}>
-                    <DataGrid
-                        columns={columns}
-                        rows={fieldRows}
-                        density="compact"
-                    />
-                </Box>
+        <Stack direction="row" gap={2} height={1}>
+            <Stack flex={1} minHeight={0}>
+                <DataGrid
+                    sx={{ flex: "1 1 0" }}
+                    columns={columns}
+                    rows={fieldRows}
+                    density="compact"
+                    disableRowSelectionOnClick
+                    disableColumnMenu
+                />
+            </Stack>
 
-                <Box flex={1}>
-                    <AvailableCustomFieldsList project={project} />
-                </Box>
+            <Box flex={1} height={1}>
+                <AvailableCustomFieldsList project={project} />
             </Box>
         </Stack>
     );

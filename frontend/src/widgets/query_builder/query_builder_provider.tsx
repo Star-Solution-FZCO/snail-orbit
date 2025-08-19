@@ -51,6 +51,7 @@ export const QueryBuilderProvider = (props: PropsWithChildren) => {
                 >
                     {children}
                 </Box>
+
                 {showQueryBuilder && (
                     <>
                         <Box

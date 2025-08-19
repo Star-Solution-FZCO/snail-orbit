@@ -90,7 +90,7 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
             px={4}
             pb={4}
             gap={2}
-            flex={1}
+            height={1}
         >
             <Box display="flex" alignItems="center" gap={1}>
                 <ProjectSubscribeButton project={project} />
