@@ -116,6 +116,7 @@ async def _create_project(
             'card_fields': [],
             'workflows': [],
             'is_subscribed': False,
+            'is_favorite': False,
             'is_active': True,
             'avatar_type': 'default',
             'avatar': None,

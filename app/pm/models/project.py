@@ -75,6 +75,7 @@ class Project(Document):
                 name='permissions_target_index',
             ),
             pymongo.IndexModel([('subscribers', 1)], name='subscribers_index'),
+            pymongo.IndexModel([('favorite_of', 1)], name='favorite_of_index'),
             pymongo.IndexModel([('custom_fields', 1)], name='custom_fields_index'),
             pymongo.IndexModel([('slug_history', 1)], name='slug_history_index'),
             pymongo.IndexModel([('is_active', 1)], name='is_active_index'),
@@ -96,6 +97,7 @@ class Project(Document):
     permissions: Annotated[list[ProjectPermission], Field(default_factory=list)]
     issue_counter: int = 0
     subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+    favorite_of: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     card_fields: Annotated[list[PydanticObjectId], Field(default_factory=list)]
     avatar_type: ProjectAvatarType = ProjectAvatarType.DEFAULT
     encryption_settings: ProjectEncryptionSettings | None = None

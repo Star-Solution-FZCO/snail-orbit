@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 import asyncio
 import contextlib
 from http import HTTPStatus
@@ -89,6 +90,7 @@ class ProjectListItemOutput(BaseModel):
     ai_description: str | None
     is_active: bool
     is_subscribed: bool
+    is_favorite: bool
     avatar_type: m.ProjectAvatarType
     is_encrypted: bool
     access_claims: list[ProjectPermissions]
@@ -117,6 +119,7 @@ class ProjectListItemOutput(BaseModel):
             ai_description=obj.ai_description,
             is_active=obj.is_active,
             is_subscribed=user_ctx.user.id in obj.subscribers,
+            is_favorite=user_ctx.user.id in obj.favorite_of,
             avatar_type=obj.avatar_type,
             is_encrypted=bool(obj.encryption_settings),
             access_claims=list(user_permissions),
@@ -257,6 +260,7 @@ class ProjectOutput(BaseModel):
     card_fields: list[PydanticObjectId]
     workflows: list[WorkflowOutput]
     is_subscribed: bool = False
+    is_favorite: bool = False
     avatar_type: m.ProjectAvatarType
     encryption_settings: EncryptionSettingsOutput | None
     access_claims: list[ProjectPermissions]
@@ -293,6 +297,7 @@ class ProjectOutput(BaseModel):
             card_fields=obj.card_fields,
             workflows=[WorkflowOutput.from_obj(w) for w in obj.workflows],
             is_subscribed=user_ctx.user.id in obj.subscribers,
+            is_favorite=user_ctx.user.id in obj.favorite_of,
             avatar_type=obj.avatar_type,
             encryption_settings=(
                 EncryptionSettingsOutput.from_obj(obj.encryption_settings)
@@ -343,9 +348,15 @@ class FieldMoveBody(BaseModel):
     after_id: PydanticObjectId | None = None
 
 
+class ProjectListParams(ListParams):
+    favorite_of: PydanticObjectId | None = Field(
+        None, description='Filter by projects favorited by user'
+    )
+
+
 @router.get('/list')
 async def list_projects(
-    query: ListParams = Depends(),
+    query: ProjectListParams = Depends(),
 ) -> BaseListOutput[ProjectListItemOutput]:
     user_ctx = current_user()
     q = m.Project.find().sort(m.Project.id)
@@ -358,6 +369,8 @@ async def list_projects(
         )
     if query.search:
         q = q.find(m.Project.search_query(query.search))
+    if query.favorite_of:
+        q = q.find(bo.Eq(m.Project.favorite_of, query.favorite_of))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
@@ -879,6 +892,40 @@ async def unsubscribe_project(
     user_ctx = current_user()
     if user_ctx.user.id in project.subscribers:
         project.subscribers.remove(user_ctx.user.id)
+        await project.replace()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.post('/{project_id}/favorite')
+async def favorite_project(
+    project_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    user_ctx = current_user()
+    user_ctx.validate_project_permission(
+        project, ProjectPermissions.PROJECT_READ, admin_override=True
+    )
+    if user_ctx.user.id not in project.favorite_of:
+        project.favorite_of.append(user_ctx.user.id)
+        await project.replace()
+    return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
+
+
+@router.post('/{project_id}/unfavorite')
+async def unfavorite_project(
+    project_id: PydanticObjectId,
+) -> SuccessPayloadOutput[ProjectOutput]:
+    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
+    user_ctx = current_user()
+    user_ctx.validate_project_permission(
+        project, ProjectPermissions.PROJECT_READ, admin_override=True
+    )
+    if user_ctx.user.id in project.favorite_of:
+        project.favorite_of.remove(user_ctx.user.id)
         await project.replace()
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 

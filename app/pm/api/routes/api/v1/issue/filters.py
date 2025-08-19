@@ -894,7 +894,7 @@ async def list_favorite_filters() -> BaseListOutput[FavoriteFilterOutput]:
         )
 
     favorite_projects = await project_query.find(
-        bo.Eq(m.Project.subscribers, user_ctx.user.id)
+        bo.Eq(m.Project.favorite_of, user_ctx.user.id)
     ).to_list()
 
     filters.extend(
