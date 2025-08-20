@@ -2,6 +2,7 @@ import { Stack } from "@mui/material";
 import { memo } from "react";
 import { issueApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
+import { Link } from "shared/ui";
 import { Tag } from "shared/ui/tag";
 
 type IssueTagsProps = {
@@ -17,14 +18,24 @@ export const IssueTags = memo((props: IssueTagsProps) => {
     return (
         <Stack direction="row" gap={1} flexShrink={0}>
             {tags.map(({ name, color, id }) => (
-                <Tag
+                <Link
                     key={id}
-                    color={color || ""}
-                    label={name}
-                    onDelete={() =>
-                        untagIssue({ issueId: issue.id_readable, tagId: id })
-                    }
-                />
+                    to="/issues"
+                    search={{ query: `tag: "${name}"` }}
+                >
+                    <Tag
+                        color={color || ""}
+                        label={name}
+                        onDelete={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            untagIssue({
+                                issueId: issue.id_readable,
+                                tagId: id,
+                            });
+                        }}
+                    />
+                </Link>
             ))}
         </Stack>
     );

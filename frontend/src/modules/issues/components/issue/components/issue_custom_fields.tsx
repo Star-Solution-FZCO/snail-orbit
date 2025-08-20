@@ -68,6 +68,7 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
 
             {fields.map((field) => (
                 <CustomFieldsParser
+                    key={field.gid || field.id}
                     field={field}
                     onChange={onFieldUpdate}
                     customFieldsErrors={customFieldsErrors}
