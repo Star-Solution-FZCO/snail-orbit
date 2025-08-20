@@ -17,6 +17,7 @@ from pm.api.issue_query import (
     transform_query,
 )
 from pm.api.issue_query.search import transform_text_search
+from pm.api.routes.api.v1.project import ProjectListItemOutput
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
 from pm.api.views.error_responses import READ_ERRORS, WRITE_ERRORS, error_responses
@@ -245,6 +246,62 @@ async def select_draft(
         limit=query.limit,
         offset=query.offset,
         projection_fn=IssueDraftOutput.from_obj,
+    )
+
+
+@router.get('/project/select')
+async def select_projects_for_issue_creation(
+    query: SelectParams = Depends(),
+) -> BaseListOutput[ProjectListItemOutput]:
+    user_ctx = current_user()
+
+    read_project_ids = user_ctx.get_projects_with_permission(
+        ProjectPermissions.PROJECT_READ
+    )
+    create_issue_project_ids = user_ctx.get_projects_with_permission(
+        ProjectPermissions.ISSUE_CREATE
+    )
+    project_ids = read_project_ids & create_issue_project_ids
+
+    q = m.Project.find(
+        bo.In(m.Project.id, project_ids),
+        bo.Eq(m.Project.is_active, True),
+    )
+
+    if query.search:
+        q = q.find(m.Project.search_query(query.search))
+
+    # Count for pagination
+    cnt = await q.count()
+
+    # Build pipeline to sort favorites first, then by name
+    pipeline = [
+        {
+            '$addFields': {
+                'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']},
+            },
+        },
+        {
+            '$sort': {
+                'is_favorite': -1,
+                'slug': 1,
+            },
+        },
+        {
+            '$skip': query.offset,
+        },
+        {
+            '$limit': query.limit,
+        },
+    ]
+
+    q_agg = q.aggregate(pipeline, projection_model=m.Project.get_ro_projection_model())
+
+    return BaseListOutput.make(
+        items=[ProjectListItemOutput.from_obj(obj) async for obj in q_agg],
+        count=cnt,
+        limit=query.limit,
+        offset=query.offset,
     )
 
 

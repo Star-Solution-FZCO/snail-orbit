@@ -5806,6 +5806,156 @@
         }
       }
     },
+    "/api/v1/issue/project/select": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Select Projects For Issue Creation",
+        "operationId": "select_projects_for_issue_creation_api_v1_issue_project_select_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_ProjectListItemOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/issue/draft/{draft_id}": {
       "get": {
         "tags": [
