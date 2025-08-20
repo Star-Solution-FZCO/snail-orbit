@@ -215,29 +215,6 @@ export const agileBoardApi = createApi({
             providesTags: (_result, _error, { boardId }) => [
                 { type: "AgileBoardIssues", id: boardId },
             ],
-            async onQueryStarted(
-                _,
-                { dispatch, queryFulfilled },
-            ): Promise<void> {
-                try {
-                    const { data } = await queryFulfilled;
-                    data.payload.issues.forEach((el) =>
-                        el.forEach((el) =>
-                            el.forEach((el) => {
-                                dispatch(
-                                    issueApi.util.upsertQueryData(
-                                        "getIssue",
-                                        el.id_readable,
-                                        { payload: el, success: true },
-                                    ),
-                                );
-                            }),
-                        ),
-                    );
-                } catch {
-                    // noop
-                }
-            },
         }),
         moveIssue: build.mutation<ApiResponse<{ id: string }>, MoveIssueT>({
             query: ({ issue_id, board_id, ...params }) => ({
@@ -264,7 +241,6 @@ export const agileBoardApi = createApi({
                         string,
                         string
                     >;
-                    console.log(data.id_readable);
                     dispatch(
                         issueApi.util.upsertQueryData(
                             "getIssue",

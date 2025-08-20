@@ -25,6 +25,10 @@ export const StyledSwimLine = styled("div")<StyledSwimLineProps>(
         borderBottom: "1px solid",
         borderColor: theme.palette.grey["700"],
 
+        "&:last-of-type": {
+            borderBottom: 0,
+        },
+
         ...(scrollable
             ? {
                   "& ul": {

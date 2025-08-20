@@ -49,7 +49,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
             projectApi.useGetProjectQuery(project.id);
 
         const { updateIssueCache, updateIssue, isLoading, issue } =
-            useIssueOperations({ issueId: id_readable });
+            useIssueOperations({ issueId: id_readable, issue: outerIssue });
 
         const colors = useMemo(() => {
             return cardColorFields

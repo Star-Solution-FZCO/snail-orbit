@@ -31,7 +31,7 @@ export const HeaderStyledContainer = styled("div")(({ theme }) => ({
     borderColor: theme.palette.grey["700"],
     borderBottom: `1px solid ${theme.palette.grey["700"]}`,
     borderTop: `1px solid ${theme.palette.grey["700"]}`,
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
+    scrollbarGutter: "stable",
+    overflow: "auto",
+    backgroundColor: theme.palette.background.board,
 }));

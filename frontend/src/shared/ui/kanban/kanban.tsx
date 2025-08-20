@@ -7,6 +7,7 @@ import { Header } from "./components/header";
 import { HeaderStyledContainer } from "./components/header/header.styles";
 import Item from "./components/item";
 import { ItemStyled } from "./components/item/Item.styles";
+import { KanbanWrapper } from "./components/KanbanWrapper";
 import { SwimLine } from "./components/swim-line";
 import {
     getCollisionDetection,
@@ -151,71 +152,75 @@ export const Kanban = <I, S, C>({
                     />
                 ))}
             </HeaderStyledContainer>
-            {swimLanes.map((swimLane, swimLaneIdx) => (
-                <SwimLine
-                    key={getKey({ type: "swimLane", value: swimLane })}
-                    label={getLabel({ type: "swimLane", value: swimLane })}
-                    isClosed={getIsClosed?.({
-                        type: "swimLane",
-                        value: swimLane,
-                    })}
-                    onClosedChange={(value) =>
-                        onClosedChange?.(
-                            { type: "swimLane", value: swimLane },
-                            value,
-                        )
-                    }
-                    issueCount={perSwimLaneCounter[swimLaneIdx]}
-                >
-                    {columns.map((column, columnIdx) => (
-                        <Container
-                            key={getKey({ type: "column", value: column })}
-                            columnIndex={columnIdx}
-                            swimLaneIndex={swimLaneIdx}
-                            columns={inBlockColumns}
-                            isClosed={getIsClosed?.({
-                                type: "column",
-                                value: column,
-                            })}
-                            collisionDetector={collisionDetectionStrategy}
-                        >
-                            {items[swimLaneIdx] &&
-                                items[swimLaneIdx][columnIdx] &&
-                                items[swimLaneIdx][columnIdx].map(
-                                    (item, index) => {
-                                        return (
-                                            <Item
-                                                id={getKey({
-                                                    type: "item",
-                                                    value: item,
-                                                })}
-                                                key={getKey({
-                                                    type: "item",
-                                                    value: item,
-                                                })}
-                                                itemIndex={index}
-                                                columnIndex={columnIdx}
-                                                swimLaneIndex={swimLaneIdx}
-                                                collisionDetector={
-                                                    collisionDetectionStrategy
-                                                }
-                                            >
-                                                {ItemContent ? (
-                                                    <ItemContent data={item} />
-                                                ) : (
-                                                    getKey({
+            <KanbanWrapper>
+                {swimLanes.map((swimLane, swimLaneIdx) => (
+                    <SwimLine
+                        key={getKey({ type: "swimLane", value: swimLane })}
+                        label={getLabel({ type: "swimLane", value: swimLane })}
+                        isClosed={getIsClosed?.({
+                            type: "swimLane",
+                            value: swimLane,
+                        })}
+                        onClosedChange={(value) =>
+                            onClosedChange?.(
+                                { type: "swimLane", value: swimLane },
+                                value,
+                            )
+                        }
+                        issueCount={perSwimLaneCounter[swimLaneIdx]}
+                    >
+                        {columns.map((column, columnIdx) => (
+                            <Container
+                                key={getKey({ type: "column", value: column })}
+                                columnIndex={columnIdx}
+                                swimLaneIndex={swimLaneIdx}
+                                columns={inBlockColumns}
+                                isClosed={getIsClosed?.({
+                                    type: "column",
+                                    value: column,
+                                })}
+                                collisionDetector={collisionDetectionStrategy}
+                            >
+                                {items[swimLaneIdx] &&
+                                    items[swimLaneIdx][columnIdx] &&
+                                    items[swimLaneIdx][columnIdx].map(
+                                        (item, index) => {
+                                            return (
+                                                <Item
+                                                    id={getKey({
                                                         type: "item",
                                                         value: item,
-                                                    })
-                                                )}
-                                            </Item>
-                                        );
-                                    },
-                                )}
-                        </Container>
-                    ))}
-                </SwimLine>
-            ))}
+                                                    })}
+                                                    key={getKey({
+                                                        type: "item",
+                                                        value: item,
+                                                    })}
+                                                    itemIndex={index}
+                                                    columnIndex={columnIdx}
+                                                    swimLaneIndex={swimLaneIdx}
+                                                    collisionDetector={
+                                                        collisionDetectionStrategy
+                                                    }
+                                                >
+                                                    {ItemContent ? (
+                                                        <ItemContent
+                                                            data={item}
+                                                        />
+                                                    ) : (
+                                                        getKey({
+                                                            type: "item",
+                                                            value: item,
+                                                        })
+                                                    )}
+                                                </Item>
+                                            );
+                                        },
+                                    )}
+                            </Container>
+                        ))}
+                    </SwimLine>
+                ))}
+            </KanbanWrapper>
             <DragOverlay>
                 {draggedItem.current ? (
                     <ItemStyled>
