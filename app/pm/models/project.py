@@ -5,10 +5,11 @@ from uuid import UUID, uuid4
 
 import beanie.operators as bo
 import pymongo
-from beanie import Document, Indexed, Link, PydanticObjectId, Update
+from beanie import Indexed, Link, PydanticObjectId, Update
 from pydantic import BaseModel, Field
 
 from pm.permissions import ProjectPermissions
+from pm.utils.document import DocumentWithReadOnlyProjection
 
 from ._audit import audited_model
 from ._encryption import EncryptionKey
@@ -63,7 +64,7 @@ class ProjectEncryptionSettings(BaseModel):
 
 
 @audited_model
-class Project(Document):
+class Project(DocumentWithReadOnlyProjection):
     class Settings:
         name = 'projects'
         use_revision = True
