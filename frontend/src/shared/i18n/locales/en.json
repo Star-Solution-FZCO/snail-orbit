@@ -309,7 +309,7 @@
   "issues.delete.success": "Issue deleted successfully",
   "issues.delete.title": "Delete Issue",
   "issues.delete.warning": "Are you sure you want to delete this issue? This action cannot be undone.",
-  "issues.draft.issueCreateSuccessToast": "was successfully created",
+  "issues.draft.issueCreateSuccessToast": "{{issue_id}} was successfully created",
   "issues.fields.id": "ID",
   "issues.fields.project": "Project",
   "issues.fields.subject": "Subject",

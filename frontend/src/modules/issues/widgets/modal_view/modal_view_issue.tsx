@@ -13,8 +13,6 @@ import { ModalViewLoader } from "./modal_view_loader";
 export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
     const { open, id, onClose } = props;
 
-    console.log("ModalViewIssue", id);
-
     const { data, isLoading, error } = issueApi.useGetIssueQuery(
         open && id ? id : skipToken,
         {

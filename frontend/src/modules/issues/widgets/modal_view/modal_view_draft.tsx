@@ -59,11 +59,17 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                     if (!openIssue) {
                         toast.success(
                             <span>
-                                {t("issues.draft.issueCreateSuccessToast")}
+                                {t("issues.draft.issueCreateSuccessToast", {
+                                    issue_id: res.payload.id_readable,
+                                })}
                             </span>,
+                            {
+                                onClick: () =>
+                                    openIssueModal(res.payload.id_readable),
+                            },
                         );
                         onClose?.();
-                    } else openIssueModal(res.payload.id);
+                    } else openIssueModal(res.payload.id_readable);
                 })
                 .catch((error) => {
                     toastApiError(error);

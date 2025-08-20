@@ -1,41 +1,19 @@
-import { CssBaseline, styled, ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { RouterProvider } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Suspense } from "react";
 import { Provider as StoreProvider } from "react-redux";
-import { Slide, ToastContainer } from "react-toastify";
 import { store } from "shared/model";
 import { theme } from "shared/theme";
 import { Lightbox } from "shared/ui";
 import { router } from "./router";
 import "./sentry";
 
-// TODO: Move somewhere
-const StyledContainer = styled(ToastContainer)(({ theme }) => ({
-    ".Toastify__toast": {
-        backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-    },
-}));
-
-const ToastContainerComp = () => {
-    return (
-        <StyledContainer
-            position="bottom-right"
-            transition={Slide}
-            closeOnClick
-            stacked
-        />
-    );
-};
-
 const App = () => {
     return (
         <ThemeProvider theme={theme}>
             <StoreProvider store={store}>
                 <CssBaseline />
-
-                <ToastContainerComp />
 
                 <Lightbox>
                     <RouterProvider router={router} />

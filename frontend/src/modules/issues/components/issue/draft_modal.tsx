@@ -49,6 +49,7 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
                     display: "flex",
                     flexDirection: "row",
                     overflow: "hidden",
+                    minHeight: "50dvh",
                 })}
             >
                 <Stack direction="column" gap={2} flex={1} pt={2} pl={2}>
