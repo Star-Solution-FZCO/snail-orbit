@@ -1,17 +1,23 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
     Box,
     Button,
     Checkbox,
+    Collapse,
     FormControlLabel,
+    Link as MuiLink,
+    Stack,
     TextField,
+    Typography,
 } from "@mui/material";
-import { useEffect, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { CustomFieldT, CustomFieldTypeT } from "shared/model/types";
+import { Link } from "shared/ui";
 import * as yup from "yup";
 import { DefaultValueInput } from "./default_value_input";
 
@@ -47,6 +53,8 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     loading,
 }) => {
     const { t } = useTranslation();
+
+    const [usedInExpanded, setUsedInExpanded] = useState(false);
 
     const {
         control,
@@ -131,6 +139,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 <Button
                     type="submit"
                     variant="outlined"
+                    size="small"
                     loading={loading}
                     disabled={!isDirty}
                 >
@@ -138,7 +147,12 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 </Button>
 
                 {onCancel && (
-                    <Button onClick={onCancel} variant="outlined" color="error">
+                    <Button
+                        onClick={onCancel}
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                    >
                         {t("cancel")}
                     </Button>
                 )}
@@ -146,9 +160,10 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 {onCopy && (
                     <Button
                         onClick={onCopy}
+                        startIcon={<ContentCopyIcon />}
                         variant="outlined"
                         color="info"
-                        startIcon={<ContentCopyIcon />}
+                        size="small"
                     >
                         {t("copy")}
                     </Button>
@@ -157,14 +172,64 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 {onDelete && (
                     <Button
                         onClick={onDelete}
+                        startIcon={<DeleteIcon />}
                         variant="outlined"
                         color="error"
-                        startIcon={<DeleteIcon />}
+                        size="small"
                     >
                         {t("delete")}
                     </Button>
                 )}
             </Box>
+
+            {defaultValues && defaultValues.projects.length > 0 && (
+                <Stack fontSize={14}>
+                    <MuiLink
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => setUsedInExpanded(!usedInExpanded)}
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        underline="hover"
+                        fontSize="inherit"
+                    >
+                        <ArrowForwardIosIcon
+                            sx={{
+                                transform: usedInExpanded
+                                    ? "rotate(90deg)"
+                                    : "none",
+                                transition: "transform 0.2s",
+                            }}
+                            fontSize="inherit"
+                        />
+
+                        <Typography fontSize="inherit">
+                            {t("customFields.fields.usedInProjects")}
+                        </Typography>
+                    </MuiLink>
+
+                    <Collapse in={usedInExpanded}>
+                        <Stack direction="row" flexWrap="wrap" mt={1}>
+                            {defaultValues.projects.map((project) => (
+                                <Link
+                                    key={`project-${project.id}`}
+                                    to="/projects/$projectId"
+                                    params={{ projectId: project.id }}
+                                    search={{
+                                        // @ts-expect-error TODO: fix this types
+                                        tab: "customFields",
+                                    }}
+                                    underline="hover"
+                                    fontSize="inherit"
+                                    mr={2}
+                                >
+                                    {project.name}
+                                </Link>
+                            ))}
+                        </Stack>
+                    </Collapse>
+                </Stack>
+            )}
         </Box>
     );
 };

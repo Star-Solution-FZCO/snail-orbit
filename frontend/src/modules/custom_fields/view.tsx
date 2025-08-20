@@ -137,7 +137,9 @@ export const CustomFieldGroupView: FC<CustomFieldGroupViewProps> = (props) => {
                         loading={isLoading}
                     />
                 </Box>
+
                 <Divider orientation="vertical" flexItem />
+
                 <Box flex={1}>
                     <FieldList
                         fields={customFieldGroup.fields}
@@ -146,7 +148,9 @@ export const CustomFieldGroupView: FC<CustomFieldGroupViewProps> = (props) => {
                         onClickAdd={() => setAddFieldDialogOpen(true)}
                     />
                 </Box>
+
                 <Divider orientation="vertical" flexItem />
+
                 <Box flex={2}>
                     {selectedCustomFieldId && (
                         <CustomFieldEditView

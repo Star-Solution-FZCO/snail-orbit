@@ -1,6 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import type { FC } from "react";
+import { type FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { CustomFieldT } from "shared/model/types";
 
@@ -9,11 +9,19 @@ const FieldItem: FC<{
     onClick: (fieldId: string) => void;
     selected: boolean;
 }> = ({ field, onClick, selected }) => {
+    const { t } = useTranslation();
+
+    const usedInCount = field.projects.length;
+
     return (
         <Box
             key={field.id}
             sx={(theme) => ({
                 cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 1,
                 width: 1,
                 px: 1,
                 py: 0.5,
@@ -24,10 +32,21 @@ const FieldItem: FC<{
                 "&:hover": {
                     backgroundColor: "action.hover",
                 },
+                fontSize: 14,
             })}
             onClick={() => onClick(field.id)}
         >
-            {field.label}
+            <Typography fontSize="inherit">{field.label}</Typography>
+
+            <Typography fontSize="inherit" color="textSecondary">
+                {usedInCount === 1
+                    ? t("customFields.fields.usedInProject", {
+                          project: field.projects[0].name,
+                      })
+                    : t("customFields.fields.usedInProjects", {
+                          count: field.projects.length,
+                      })}
+            </Typography>
         </Box>
     );
 };

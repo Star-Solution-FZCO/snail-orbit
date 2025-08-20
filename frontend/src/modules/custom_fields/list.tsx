@@ -23,6 +23,7 @@ import { customFieldsApi } from "shared/model";
 import type { CustomFieldGroupT, ListQueryParams } from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
+import { getProjectsByCustomFieldGroup } from "./utils/getProjectsByCustomFieldGroup";
 
 const initialQueryParams = {
     limit: 50,
@@ -67,6 +68,26 @@ const CustomFieldList = () => {
                 headerName: t("customFields.fields"),
                 flex: 1,
                 valueGetter: (_, row) => row.fields.length,
+                sortable: false,
+            },
+            {
+                field: "used_in",
+                headerName: t("customFields.fields.usedIn"),
+                flex: 1,
+                valueGetter: (_, row) => {
+                    const usedInProjects = getProjectsByCustomFieldGroup(
+                        row.fields,
+                    );
+                    return usedInProjects.length;
+                },
+                valueFormatter: (_, row) => {
+                    const usedInProjects = getProjectsByCustomFieldGroup(
+                        row.fields,
+                    );
+                    const count = usedInProjects.length;
+                    if (count === 1) return usedInProjects[0].name;
+                    return t("customFields.fields.usedInCount", { count });
+                },
                 sortable: false,
             },
             {
