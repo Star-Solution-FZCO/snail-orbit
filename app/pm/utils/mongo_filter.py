@@ -59,6 +59,13 @@ OPERATOR_TO_TYPE = {
         'nin': bo.NotIn,
         'default': bo.Eq,
     },
+    'bool': {
+        'eq': bo.Eq,
+        'ne': bo.NE,
+        'in': bo.In,
+        'nin': bo.NotIn,
+        'default': bo.Eq,
+    },
     'str': {
         'contains': lambda f, s: bo.RegEx(f, rf'.*{s}.*'),
         'icontains': lambda f, s: bo.RegEx(f, rf'.*{s}.*', 'i'),
