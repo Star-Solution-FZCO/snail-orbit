@@ -64,7 +64,6 @@ export const CreateCustomFieldFormDialog: FC<
             <DialogContent>
                 <Box mt={1}>
                     <CustomFieldForm
-                        // @ts-expect-error TODO: Fix types
                         onSubmit={onSubmit}
                         onCancel={onClose}
                         type={customFieldGroup.type}

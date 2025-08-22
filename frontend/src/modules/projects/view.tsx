@@ -10,7 +10,7 @@ import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
-import { ProjectCustomFields } from "./components/project_custom_fields";
+import { ProjectCustomFields } from "./components/project_custom_fields_tab/project_custom_fields";
 import { ProjectEncryptionTab } from "./components/project_encryption_tab/project_encryption_tab";
 import { ProjectFavoriteButton } from "./components/project_favorite_button";
 import { ProjectListView } from "./components/project_list_view";

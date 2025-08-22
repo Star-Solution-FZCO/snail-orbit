@@ -1,5 +1,8 @@
 import { Box, Breadcrumbs, Divider, Stack, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { ConfirmCustomFieldChangesDialog } from "features/custom_fields/confirm_custom_field_changes_dialog";
+import { CustomFieldGroupForm } from "features/custom_fields/custom_field_group_form";
+import { CreateCustomFieldFormDialog } from "features/custom_fields/form_dialogs/add_custom_field_form_dialog";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,11 +14,8 @@ import type {
 } from "shared/model/types";
 import { ErrorHandler, Link } from "shared/ui";
 import { toastApiError } from "shared/utils";
-import { ConfirmChangesDialog } from "./components/confirm_changes_dialog";
 import { CustomFieldEditView } from "./components/custom_field_edit_view";
-import { CustomFieldGroupForm } from "./components/custom_field_group_form";
 import { FieldList } from "./components/field_list";
-import { CreateCustomFieldFormDialog } from "./components/form_dialogs/add_custom_field_form_dialog";
 
 type CustomFieldGroupViewProps = {
     customFieldGroupId: string;
@@ -162,7 +162,7 @@ export const CustomFieldGroupView: FC<CustomFieldGroupViewProps> = (props) => {
                 </Box>
             </Box>
 
-            <ConfirmChangesDialog
+            <ConfirmCustomFieldChangesDialog
                 open={confirmDialogOpen}
                 onSubmit={handleConfirm}
                 onClose={handleCloseConfirmDialog}

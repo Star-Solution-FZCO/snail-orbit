@@ -1,4 +1,5 @@
 import type {
+    CustomFieldGroupCreateBody,
     CustomFieldGroupLinkOutput,
     CustomFieldGroupOutputRootModel,
     CustomFieldOutputRootModel,
@@ -170,3 +171,5 @@ export type UpdateCustomFieldGroupT = Partial<{
     description: string | null;
     ai_description: string | null;
 }>;
+
+export type CreateCustomFieldGroupT = CustomFieldGroupCreateBody;

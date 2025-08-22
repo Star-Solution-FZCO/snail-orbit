@@ -11,19 +11,16 @@ import {
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 
-interface IConfirmChangesDialogProps {
+interface IConfirmCustomFieldChangesDialogProps {
     open: boolean;
     onSubmit: () => void;
     onClose: () => void;
     loading?: boolean;
 }
 
-const ConfirmChangesDialog: FC<IConfirmChangesDialogProps> = ({
-    open,
-    onSubmit,
-    onClose,
-    loading,
-}) => {
+export const ConfirmCustomFieldChangesDialog: FC<
+    IConfirmCustomFieldChangesDialogProps
+> = ({ open, onSubmit, onClose, loading }) => {
     const { t } = useTranslation();
 
     return (
@@ -63,5 +60,3 @@ const ConfirmChangesDialog: FC<IConfirmChangesDialogProps> = ({
         </Dialog>
     );
 };
-
-export { ConfirmChangesDialog };

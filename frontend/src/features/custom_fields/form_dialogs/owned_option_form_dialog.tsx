@@ -47,11 +47,10 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [queryParams, updateQueryParams] =
-        useListQueryParams<ListSelectQueryParams>({
-            limit: 20,
-            offset: 0,
-        });
+    const [queryParams] = useListQueryParams<ListSelectQueryParams>({
+        limit: 20,
+        offset: 0,
+    });
 
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -76,7 +75,7 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
             : { value: "", owner: null, color: null },
     });
 
-    const handleInputChange = useCallback((event: any, value: string) => {
+    const handleInputChange = useCallback((_event: any, value: string) => {
         setSearchQuery(value);
     }, []);
 
@@ -183,10 +182,7 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
                                                                 option.avatar ||
                                                                 ""
                                                             }
-                                                            sx={{
-                                                                width: 24,
-                                                                height: 24,
-                                                            }}
+                                                            size={24}
                                                         />
                                                         <Stack direction="column">
                                                             {option.name}

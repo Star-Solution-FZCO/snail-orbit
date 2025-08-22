@@ -169,7 +169,7 @@ const CustomFieldVersionOptionsEditor: FC<
             .catch(toastApiError);
     };
 
-    const options = customField.options || [];
+    const options = "options" in customField ? customField.options || [] : [];
 
     return (
         <Box display="flex" flexDirection="column" gap={1}>

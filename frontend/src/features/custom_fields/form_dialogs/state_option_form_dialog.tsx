@@ -17,7 +17,6 @@ import type { StateOptionT } from "shared/model/types";
 import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import * as yup from "yup";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const stateOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     color: yup.string().nullable().default(null),

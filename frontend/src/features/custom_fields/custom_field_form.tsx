@@ -24,11 +24,7 @@ import { DefaultValueInput } from "./default_value_input";
 const customFieldSchema = yup.object().shape({
     label: yup.string().required("form.validation.required"),
     is_nullable: yup.boolean().required("form.validation.required"),
-    default_value: yup
-        .mixed()
-        .required("form.validation.required")
-        .nullable()
-        .default(null),
+    default_value: yup.mixed(),
 });
 
 type CustomFieldFormData = yup.InferType<typeof customFieldSchema>;
@@ -103,7 +99,6 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <DefaultValueInput
-                        // @ts-expect-error TODO: fix this types
                         value={value}
                         options={
                             defaultValues && "options" in defaultValues

@@ -15,7 +15,6 @@ import type { EnumOptionT } from "shared/model/types";
 import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import * as yup from "yup";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const enumOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     color: yup.string().nullable().default(null),

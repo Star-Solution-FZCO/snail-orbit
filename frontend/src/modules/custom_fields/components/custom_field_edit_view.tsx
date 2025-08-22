@@ -1,4 +1,8 @@
 import { Box, Divider, Typography } from "@mui/material";
+import { ConfirmCustomFieldChangesDialog } from "features/custom_fields/confirm_custom_field_changes_dialog";
+import { CustomFieldForm } from "features/custom_fields/custom_field_form";
+import { FieldTypeEditor } from "features/custom_fields/options_editors/field_type_editor";
+import { isComplexCustomFieldType } from "features/custom_fields/utils";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,12 +11,8 @@ import { customFieldsApi } from "shared/model";
 import type { CustomFieldGroupT, UpdateCustomFieldT } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
 import { toastApiError } from "shared/utils";
-import { ConfirmChangesDialog } from "./confirm_changes_dialog";
 import { CopyCustomFieldDialog } from "./copy_custom_field_dialog";
-import { CustomFieldForm } from "./custom_field_form";
 import { DeleteCustomFieldGroupDialog } from "./delete_custom_field_group_dialog";
-import { FieldTypeEditor } from "./options_editors/field_type_editor";
-import { isComplexCustomFieldType } from "./utils";
 
 interface ICustomFieldEditViewProps {
     customFieldGroup: CustomFieldGroupT;
@@ -125,7 +125,6 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                 </Typography>
 
                 <CustomFieldForm
-                    // @ts-expect-error TODO: fix this types
                     onSubmit={handleSubmit}
                     onDelete={() => setDeleteDialogOpen(true)}
                     onCopy={() => setCopyDialogOpen(true)}
@@ -145,7 +144,7 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                 </>
             )}
 
-            <ConfirmChangesDialog
+            <ConfirmCustomFieldChangesDialog
                 open={confirmDialogOpen}
                 onSubmit={handleConfirm}
                 onClose={handleCloseConfirmDialog}
