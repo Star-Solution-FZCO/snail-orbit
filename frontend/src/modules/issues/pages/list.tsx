@@ -1,15 +1,11 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import { Box, CircularProgress, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
-import type { IssueT } from "shared/model/types";
-import {
-    defaultLimit,
-    formatErrorMessages,
-    usePaginationParams,
-} from "shared/utils";
+import type { IssueT, ProjectT } from "shared/model/types";
+import { defaultLimit, formatErrorMessages, useParams } from "shared/utils";
+import { IssueSearchSelect } from "../components/issue/components/issue_project_select";
 import { SearchField } from "../components/issue/components/search_field";
 import IssuesList from "../components/list/issues_list";
 import { useCreateIssueNavbarSettings } from "../hooks/use-create-issue-navbar-settings";
@@ -24,27 +20,36 @@ export type IssueListQueryParams = {
 export type IssueListProps = {
     queryParams?: IssueListQueryParams;
     onQueryParamsChanged?: (params: Partial<IssueListQueryParams>) => unknown;
+    listId?: string;
+    onChangeListId?: (id: string) => unknown;
 };
 
 const IssueList: FC<IssueListProps> = (props) => {
-    const { queryParams, onQueryParamsChanged } = props;
+    const { queryParams, onQueryParamsChanged, listId, onChangeListId } = props;
 
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const { openIssueModal } = useIssueModalView();
 
     useCreateIssueNavbarSettings();
 
-    const [listQueryParams, updateListQueryParams] = usePaginationParams({
+    const [listQueryParams, updateListQueryParams] = useParams({
         perPage: queryParams?.perPage ?? defaultLimit,
         page: queryParams?.page ?? 1,
         query: queryParams?.query || "",
     });
 
+    const totalQuery = useMemo(() => {
+        const parts = [
+            listId ? `project: ${listId}` : "",
+            listQueryParams.query,
+        ];
+        return parts.filter((el) => !!el).join(" and ");
+    }, [listId, listQueryParams.query]);
+
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
         limit: listQueryParams.perPage,
         offset: (listQueryParams.page - 1) * listQueryParams.perPage,
-        q: listQueryParams.query,
+        q: totalQuery,
     });
 
     const handleSearchUpdate = useCallback(
@@ -59,20 +64,28 @@ const IssueList: FC<IssueListProps> = (props) => {
 
     useEffect(() => {
         onQueryParamsChanged?.(listQueryParams);
-    }, [listQueryParams, navigate, onQueryParamsChanged]);
+    }, [listQueryParams, onQueryParamsChanged, queryParams]);
 
-    useEffect(() => {
-        updateListQueryParams((prev) => ({
-            ...prev,
-            ...queryParams,
-        }));
-    }, [queryParams, updateListQueryParams]);
+    // useEffect(() => {
+    //     updateListQueryParams((prev) => ({
+    //         ...prev,
+    //         ...queryParams,
+    //     }));
+    // }, [queryParams, updateListQueryParams]);
 
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {
             openIssueModal(issue.id_readable);
         },
         [openIssueModal],
+    );
+
+    const handleIssueSearchSelectChange = useCallback(
+        (project: ProjectT | null) => {
+            if (project) onChangeListId?.(project.slug);
+            else onChangeListId?.("");
+        },
+        [onChangeListId],
     );
 
     const rows = data?.payload.items || [];
@@ -86,11 +99,18 @@ const IssueList: FC<IssueListProps> = (props) => {
             height={1}
             px={4}
         >
-            <SearchField
-                value={listQueryParams?.query || ""}
-                onChange={handleSearchUpdate}
-                loading={isFetching}
-            />
+            <Stack direction="row" gap={1}>
+                <IssueSearchSelect
+                    selectedProjectSlug={listId}
+                    onChange={handleIssueSearchSelectChange}
+                />
+
+                <SearchField
+                    value={listQueryParams?.query || ""}
+                    onChange={handleSearchUpdate}
+                    loading={isFetching}
+                />
+            </Stack>
 
             {error && (
                 <Typography color="error" fontSize={16}>

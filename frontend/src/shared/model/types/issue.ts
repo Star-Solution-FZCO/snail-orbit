@@ -1,4 +1,5 @@
 import type {
+    FavoriteFilterOutput,
     IssueAttachmentBody,
     IssueAttachmentOut,
     IssueChangeOutputRootModel,
@@ -17,6 +18,8 @@ import { issueInterlinkTypeTValues } from "./backend-schema.gen";
 import type { ProjectT } from "./project";
 
 export type IssueProjectT = Pick<ProjectT, "id" | "name" | "slug">;
+
+export type IssueFavoriteFilter = FavoriteFilterOutput;
 
 export type CreateIssueT = IssueCreate;
 export type IssueT = IssueOutput;

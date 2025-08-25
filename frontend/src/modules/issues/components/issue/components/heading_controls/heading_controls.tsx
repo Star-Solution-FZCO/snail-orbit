@@ -22,9 +22,9 @@ import { issueToCreateIssue } from "shared/model/mappers/issue";
 import type { IssueT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { slugify } from "transliteration";
-import { DeleteIssueDialog } from "./delete_dialog";
-import { HeadingTagButton } from "./heading_tag_button";
-import { IssuePermissionsDialog } from "./permissions/issue_permissions_dialog";
+import { DeleteIssueDialog } from "../delete_dialog";
+import { HeadingTagButton } from "../heading_tag_button";
+import { IssuePermissionsDialog } from "../permissions/issue_permissions_dialog";
 
 type HeadingControlsProps = {
     issue: IssueT;
@@ -89,7 +89,7 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
                         <Link
                             onClick={() =>
                                 navigate({
-                                    to: "/issues/$issueId/$subject",
+                                    to: "/issues/$issueId/{-$subject}",
                                     params: {
                                         issueId,
                                         subject: slugify(

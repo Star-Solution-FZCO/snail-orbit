@@ -90,7 +90,6 @@ export const SelectField = <
                 id={id}
                 anchorEl={anchorEl}
                 options={options}
-                value={value}
                 onClose={() => setAnchorEl(null)}
                 onChange={onChange}
                 open={!!anchorEl}

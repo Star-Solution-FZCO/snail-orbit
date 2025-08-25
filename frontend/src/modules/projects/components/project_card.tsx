@@ -3,6 +3,7 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { ProjectT } from "shared/model/types";
 import { Link } from "shared/ui";
+import { ProjectFavoriteButton } from "./project_favorite_button";
 import { ProjectSubscribeButton } from "./project_subscribe_button";
 
 interface IProjectCardProps {
@@ -13,8 +14,10 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
     const { t } = useTranslation();
 
     return (
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" alignItems="center" gap={2}>
             <ProjectSubscribeButton project={project} />
+
+            <ProjectFavoriteButton project={project} />
 
             <Avatar
                 sx={{
@@ -22,9 +25,8 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
                     height: 40,
                     fontSize: 16,
                     fontWeight: "bold",
-                    mx: 2,
                 }}
-                src={project.avatar}
+                src={project.avatar || ""}
                 variant="rounded"
             >
                 {project.slug.slice(0, 3).toUpperCase()}

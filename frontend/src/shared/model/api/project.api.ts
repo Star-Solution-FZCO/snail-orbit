@@ -213,6 +213,26 @@ export const projectApi = createApi({
                 { type: "Projects", id },
             ],
         }),
+        favoriteProject: build.mutation<ApiResponse<ProjectT>, string>({
+            query: (id) => ({
+                url: `project/${id}/favorite`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
+        unfavoriteProject: build.mutation<ApiResponse<ProjectT>, string>({
+            query: (id) => ({
+                url: `project/${id}/unfavorite`,
+                method: "POST",
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: "Projects", id: "LIST" },
+                { type: "Projects", id },
+            ],
+        }),
         uploadProjectAvatar: build.mutation<
             ApiResponse<{ id: string }>,
             { id: string; body: FormData }

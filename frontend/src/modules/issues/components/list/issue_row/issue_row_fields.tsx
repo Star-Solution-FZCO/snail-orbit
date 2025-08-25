@@ -16,6 +16,7 @@ export const IssueRowFields: FC<IssueRowFieldsProps> = memo(({ issue }) => {
 
     const { updateIssue, updateIssueCache, isLoading } = useIssueOperations({
         issueId: id_readable,
+        issue,
     });
 
     const projectData = projectApi.useGetProjectQuery(project?.id || skipToken);

@@ -4,6 +4,7 @@ import type {
     CommentT,
     CustomFieldValueT,
     IssueDraftT,
+    IssueFavoriteFilter,
     IssueFeedRecordT,
     IssueHistoryT,
     IssueLinkTypeT,
@@ -25,7 +26,7 @@ import type {
     IssueDraftUpdate,
     IssuePermissionCreate,
     IssueUpdate,
-    UUIDOutput,
+    UuidPayload,
 } from "../types/backend-schema.gen";
 import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
@@ -461,6 +462,17 @@ export const issueApi = createApi({
                 }
             },
         }),
+        listFavoriteFilters: build.query<
+            ListResponse<IssueFavoriteFilter>,
+            ListQueryParams | void
+        >({
+            providesTags: [{ type: "IssueFavoriteFilters", id: "LIST" }],
+            query: (params) => ({
+                url: "/issue/filters/favorites/list",
+                method: "GET",
+                params: params || undefined,
+            }),
+        }),
         subscribeIssue: build.mutation<ApiResponse<IssueT>, string>({
             query: (id) => ({
                 url: `issue/${id}/subscribe`,
@@ -494,7 +506,7 @@ export const issueApi = createApi({
             ],
         }),
         grantIssuePermission: build.mutation<
-            ApiResponse<UUIDOutput>,
+            ApiResponse<UuidPayload>,
             { id: string } & IssuePermissionCreate
         >({
             query: ({ id, ...body }) => ({
@@ -507,7 +519,7 @@ export const issueApi = createApi({
             ],
         }),
         revokeIssuePermission: build.mutation<
-            ApiResponse<UUIDOutput>,
+            ApiResponse<UuidPayload>,
             { id: string; permissionId: string }
         >({
             query: ({ id, permissionId }) => ({

@@ -4,7 +4,7 @@ import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { t } from "i18next";
 import type { FC } from "react";
 import type { IssueT } from "shared/model/types";
-import { HeadingControls } from "./heading_controls";
+import { HeadingControls } from "./heading_controls/heading_controls";
 import { IssueSubscribeButton } from "./issue_subscribe_button";
 
 type IssueHeadingProps = {

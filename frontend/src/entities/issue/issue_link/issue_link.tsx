@@ -23,11 +23,7 @@ export const IssueLink = (props: IssueLinkProps) => {
 
     return (
         <IssueLinkComponent
-            to={
-                issueLinkMode === "long"
-                    ? "/issues/$issueId/$subject"
-                    : "/issues/$issueId"
-            }
+            to={"/issues/$issueId/{-$subject}"}
             params={{
                 issueId: issue.id_readable,
                 subject:

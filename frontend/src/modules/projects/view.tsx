@@ -12,6 +12,7 @@ import { ProjectGeneralInfo } from "./components/general_info";
 import { ProjectAccess } from "./components/project_access";
 import { ProjectCustomFields } from "./components/project_custom_fields";
 import { ProjectEncryptionTab } from "./components/project_encryption_tab/project_encryption_tab";
+import { ProjectFavoriteButton } from "./components/project_favorite_button";
 import { ProjectListView } from "./components/project_list_view";
 import { ProjectSubscribeButton } from "./components/project_subscribe_button";
 import { ProjectWorkflows } from "./components/project_workflows";
@@ -94,6 +95,8 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
         >
             <Box display="flex" alignItems="center" gap={1}>
                 <ProjectSubscribeButton project={project} />
+
+                <ProjectFavoriteButton project={project} />
 
                 <Typography fontSize={24} fontWeight="bold">
                     {project.slug} / {project.name}
