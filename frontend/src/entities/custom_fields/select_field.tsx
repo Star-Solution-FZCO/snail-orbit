@@ -90,6 +90,7 @@ export const SelectField = <
                 id={id}
                 anchorEl={anchorEl}
                 options={options}
+                value={multiple ? value : undefined}
                 onClose={() => setAnchorEl(null)}
                 onChange={onChange}
                 open={!!anchorEl}

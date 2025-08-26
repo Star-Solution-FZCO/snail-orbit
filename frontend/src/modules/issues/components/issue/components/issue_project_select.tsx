@@ -7,14 +7,8 @@ import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form
 import { noLimitListQueryParams, useParams } from "shared/utils";
 
 type IssueProjectSelectProps = {
-    selectedProjectSlug: string | null | undefined;
-    onChange: (value: ProjectT | null) => void;
-};
-
-type Option = {
-    name: string;
-    slug: string;
-    id: string;
+    selectedProjectSlug: string[] | null | undefined;
+    onChange: (value: ProjectT[]) => void;
 };
 
 export const IssueSearchSelect = (props: IssueProjectSelectProps) => {
@@ -30,20 +24,21 @@ export const IssueSearchSelect = (props: IssueProjectSelectProps) => {
     });
 
     const handleChange = useCallback(
-        (value: Option) => {
-            setAnchorEl(null);
-            if (value.id === "NONE") onChange(null);
-            else onChange(value as ProjectT);
+        (value: ProjectT[]) => {
+            onChange(value as ProjectT[]);
         },
         [onChange],
     );
 
     const options = useMemo(() => {
-        const items: Option[] = [...(data?.payload.items || [])];
-        items.unshift({ slug: t("All"), name: "", id: "NONE" });
+        return data?.payload.items || [];
+    }, [data]);
 
-        return items;
-    }, [data, t]);
+    const selectedValues = useMemo(() => {
+        return options.filter((option) =>
+            selectedProjectSlug?.includes(option.slug),
+        );
+    }, [options, selectedProjectSlug]);
 
     return (
         <>
@@ -63,7 +58,9 @@ export const IssueSearchSelect = (props: IssueProjectSelectProps) => {
                         textOverflow: "ellipsis",
                     }}
                 >
-                    {selectedProjectSlug || t("All")}
+                    {selectedProjectSlug?.length
+                        ? `${selectedProjectSlug[0]}${selectedProjectSlug.length > 1 ? ` +${selectedProjectSlug.length - 1}` : ""}`
+                        : t("All")}
                 </Box>
             </Button>
 
@@ -73,10 +70,12 @@ export const IssueSearchSelect = (props: IssueProjectSelectProps) => {
                 onClose={() => setAnchorEl(null)}
                 anchorEl={anchorEl}
                 options={options}
+                value={selectedValues}
+                multiple
                 getOptionKey={(option) => option.name}
                 getOptionLabel={(option) => option.slug}
                 getOptionDescription={(option) => option.name}
-                onChange={(_, value) => handleChange(value as Option)}
+                onChange={(_, value) => handleChange(value as ProjectT[])}
             />
         </>
     );

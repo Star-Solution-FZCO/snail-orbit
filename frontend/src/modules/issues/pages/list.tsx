@@ -38,13 +38,18 @@ const IssueList: FC<IssueListProps> = (props) => {
         query: queryParams?.query || "",
     });
 
+    const splitListId = useMemo(() => {
+        if (!listId) return [];
+        return listId.split(",").map((el) => el.trim());
+    }, [listId]);
+
     const totalQuery = useMemo(() => {
         const parts = [
-            listId ? `project: ${listId}` : "",
+            splitListId.map((el) => `project: ${el}`).join(" or "),
             listQueryParams.query,
         ];
         return parts.filter((el) => !!el).join(" and ");
-    }, [listId, listQueryParams.query]);
+    }, [listQueryParams.query, splitListId]);
 
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
         limit: listQueryParams.perPage,
@@ -66,13 +71,6 @@ const IssueList: FC<IssueListProps> = (props) => {
         onQueryParamsChanged?.(listQueryParams);
     }, [listQueryParams, onQueryParamsChanged, queryParams]);
 
-    // useEffect(() => {
-    //     updateListQueryParams((prev) => ({
-    //         ...prev,
-    //         ...queryParams,
-    //     }));
-    // }, [queryParams, updateListQueryParams]);
-
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {
             openIssueModal(issue.id_readable);
@@ -81,8 +79,9 @@ const IssueList: FC<IssueListProps> = (props) => {
     );
 
     const handleIssueSearchSelectChange = useCallback(
-        (project: ProjectT | null) => {
-            if (project) onChangeListId?.(project.slug);
+        (projects: ProjectT[]) => {
+            if (projects)
+                onChangeListId?.(projects.map((el) => el.slug).join(","));
             else onChangeListId?.("");
         },
         [onChangeListId],
@@ -101,7 +100,7 @@ const IssueList: FC<IssueListProps> = (props) => {
         >
             <Stack direction="row" gap={1}>
                 <IssueSearchSelect
-                    selectedProjectSlug={listId}
+                    selectedProjectSlug={splitListId}
                     onChange={handleIssueSearchSelectChange}
                 />
 
