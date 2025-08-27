@@ -73,11 +73,15 @@ class BaseClient:
         return urljoin(self.base_url, path)
 
     def _get_headers(
-        self, method: str, path: str, extra_headers: dict[str, str] | None = None
+        self,
+        method: str,
+        path: str,
+        extra_headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         """Get request headers."""
         headers = {
-            'Authorization': self._auth_handler.get_auth_header(method, path),
+            'Authorization': self._auth_handler.get_auth_header(method, path, params),
             'User-Agent': self.config.user_agent,
             'Accept': 'application/json',
         }
@@ -171,7 +175,7 @@ class SnailOrbitClient(BaseClient):
         self._check_rate_limit()
 
         url = self._build_url(path)
-        request_headers = self._get_headers(method, path, headers)
+        request_headers = self._get_headers(method, path, headers, params)
 
         # Set content type for JSON requests
         if json_data is not None:
@@ -329,7 +333,7 @@ class SnailOrbitAsyncClient(BaseClient):
         self._check_rate_limit()
 
         url = self._build_url(path)
-        request_headers = self._get_headers(method, path, headers)
+        request_headers = self._get_headers(method, path, headers, params)
 
         # Set content type for JSON requests
         if json_data is not None:

@@ -69,10 +69,11 @@ class BaseTransport:
         method: str,
         path: str,
         extra_headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         """Get request headers with authentication."""
         headers = {
-            'Authorization': self.auth.get_auth_header(method, path),
+            'Authorization': self.auth.get_auth_header(method, path, params),
             'User-Agent': self.config.user_agent,
             'Accept': 'application/json',
         }
@@ -154,7 +155,7 @@ class SyncHttpTransport(BaseTransport):
         self._check_rate_limit()
 
         url = self._build_url(path)
-        request_headers = self._get_headers(method, path, headers)
+        request_headers = self._get_headers(method, path, headers, params)
 
         if json_data is not None:
             request_headers['Content-Type'] = 'application/json'
@@ -204,7 +205,7 @@ class SyncHttpTransport(BaseTransport):
             # We'll directly call the sync HTTP request
             self._check_rate_limit()
             full_url = self._build_url(url)
-            headers = self._get_headers('GET', url)
+            headers = self._get_headers('GET', url, None, page_params)
 
             http_response = self._client.get(
                 full_url, params=page_params, headers=headers
@@ -276,7 +277,7 @@ class AsyncHttpTransport(BaseTransport):
         self._check_rate_limit()
 
         url = self._build_url(path)
-        request_headers = self._get_headers(method, path, headers)
+        request_headers = self._get_headers(method, path, headers, params)
 
         if json_data is not None:
             request_headers['Content-Type'] = 'application/json'

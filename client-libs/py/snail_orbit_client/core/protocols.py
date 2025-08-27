@@ -75,7 +75,9 @@ HttpTransport = SyncHttpTransport | AsyncHttpTransport
 class AuthProvider(Protocol):
     """Protocol for authentication providers."""
 
-    def get_auth_header(self, method: str, path: str) -> str:
+    def get_auth_header(
+        self, method: str, path: str, params: dict[str, Any] | None = None
+    ) -> str:
         """Generate authentication header for a request."""
         ...
 

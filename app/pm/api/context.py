@@ -1,8 +1,9 @@
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
-from hashlib import sha1
+from hashlib import sha256
 from http import HTTPStatus
 from typing import cast
+from urllib.parse import parse_qsl
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -303,11 +304,22 @@ async def get_user_from_service_token(token: str, request: Request) -> m.User | 
     if not key.check_ip(request.client.host):
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Invalid source IP')
 
-    url_path = request.url.path + ('?' + request.url.query if request.url.query else '')
-    real_req_hash = sha1(
-        (request.method + url_path).encode('utf-8'),
-        usedforsecurity=False,
-    ).hexdigest()
+    try:
+        params = parse_qsl(
+            request.url.query or '',
+            strict_parsing=True,
+            keep_blank_values=True,
+        )
+    except ValueError as err:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid query parameters') from err
+    sorted_params = sorted(params)
+
+    hash_input = (
+        request.method
+        + request.url.path
+        + ''.join(f'{k}={v}' for k, v in sorted_params)
+    )
+    real_req_hash = sha256(hash_input.encode('utf-8')).hexdigest()
     if data['req_hash'] != real_req_hash:
         raise HTTPException(
             HTTPStatus.UNAUTHORIZED,
