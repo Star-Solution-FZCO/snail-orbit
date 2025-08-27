@@ -3,6 +3,7 @@ export * from "./api";
 export * from "./attachment";
 export * from "./comment";
 export * from "./custom_fields";
+export * from "./dashboard";
 export * from "./encryption";
 export * from "./global_role";
 export * from "./group";
