@@ -36,6 +36,10 @@ class Tile(BaseModel):
     ]
     type: TileTypeT
     name: str = Field(description='Display name of the tile')
+    ui_settings: Annotated[
+        dict,
+        Field(default_factory=dict, description='UI-specific settings for the tile'),
+    ]
 
 
 class IssueListTile(Tile):
@@ -67,6 +71,12 @@ class Dashboard(Document, PermissionRecordMixin):
     tiles: Annotated[
         list[IssueListTile],
         Field(default_factory=list, description='List of tiles in this dashboard'),
+    ]
+    ui_settings: Annotated[
+        dict,
+        Field(
+            default_factory=dict, description='UI-specific settings for the dashboard'
+        ),
     ]
     created_by: UserLinkField = Field(description='Dashboard creator')
 

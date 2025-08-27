@@ -39,6 +39,9 @@ class BaseTileOutput(BaseModel):
     id: UUID = Field(description='Tile identifier')
     type: m.TileTypeT
     name: str = Field(description='Display name of the tile')
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the tile'
+    )
 
 
 class IssueListTileOutput(BaseTileOutput):
@@ -52,6 +55,7 @@ class IssueListTileOutput(BaseTileOutput):
             type=obj.type,
             name=obj.name,
             query=obj.query,
+            ui_settings=obj.ui_settings,
         )
 
 
@@ -69,6 +73,9 @@ class DashboardOutput(BaseModel):
     description: str | None = Field(description='Dashboard description')
     tiles: list[TileOutputRootModel] = Field(
         description='List of tiles in this dashboard'
+    )
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the dashboard'
     )
     created_by: UserOutput = Field(description='Dashboard creator')
     permissions: list[PermissionOutput] = Field(description='Dashboard permissions')
@@ -90,6 +97,7 @@ class DashboardOutput(BaseModel):
             name=obj.name,
             description=obj.description,
             tiles=processed_tiles,
+            ui_settings=obj.ui_settings,
             created_by=UserOutput.from_obj(obj.created_by),
             permissions=[
                 PermissionOutput.from_obj(p) for p in obj.filter_permissions(user_ctx)
@@ -101,6 +109,9 @@ class DashboardOutput(BaseModel):
 class TileCreate(BaseModel):
     type: m.TileTypeT
     name: str = Field(description='Display name of the tile')
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the tile'
+    )
 
 
 class IssueListTileCreate(TileCreate):
@@ -115,15 +126,8 @@ class DashboardCreate(BaseModel):
         list[IssueListTileCreate],
         Field(default_factory=list, description='List of tiles to create'),
     ]
-
-
-class TileUpdate(BaseModel):
-    name: str | None = Field(default=None, description='Display name of the tile')
-
-
-class IssueListTileUpdate(TileUpdate):
-    query: str | None = Field(
-        default=None, description='Issue query to filter issues for this tile'
+    ui_settings: dict = Field(
+        default_factory=dict, description='UI-specific settings for the dashboard'
     )
 
 
@@ -132,6 +136,9 @@ class DashboardUpdate(BaseModel):
     description: str | None = Field(default=None, description='Dashboard description')
     tiles: list[IssueListTileCreate] | None = Field(
         default=None, description='List of tiles to update'
+    )
+    ui_settings: dict | None = Field(
+        default=None, description='UI-specific settings for the dashboard'
     )
 
 
@@ -182,6 +189,7 @@ async def create_dashboard(
                 type=tile_data.type,
                 name=tile_data.name,
                 query=tile_data.query,
+                ui_settings=tile_data.ui_settings,
             )
         else:
             raise HTTPException(
@@ -194,6 +202,7 @@ async def create_dashboard(
         name=body.name,
         description=body.description,
         tiles=tiles,
+        ui_settings=body.ui_settings,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
         permissions=[
             m.PermissionRecord(
@@ -238,7 +247,7 @@ async def update_dashboard(
 
     data = body.model_dump(
         exclude_unset=True,
-        include={'name', 'description'},
+        include={'name', 'description', 'ui_settings'},
     )
     for k, v in data.items():
         setattr(dashboard, k, v)
@@ -260,6 +269,7 @@ async def update_dashboard(
                     type=tile_data.type,
                     name=tile_data.name,
                     query=tile_data.query,
+                    ui_settings=tile_data.ui_settings,
                 )
             else:
                 raise HTTPException(

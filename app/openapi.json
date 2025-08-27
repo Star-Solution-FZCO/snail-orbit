@@ -40482,6 +40482,12 @@
             "type": "array",
             "title": "Tiles",
             "description": "List of tiles to create"
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the dashboard"
           }
         },
         "type": "object",
@@ -40522,6 +40528,12 @@
             "type": "array",
             "title": "Tiles",
             "description": "List of tiles in this dashboard"
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the dashboard"
           },
           "created_by": {
             "$ref": "#/components/schemas/UserOutput",
@@ -40592,6 +40604,19 @@
             ],
             "title": "Tiles",
             "description": "List of tiles to update"
+          },
+          "ui_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the dashboard"
           }
         },
         "type": "object",
@@ -45148,6 +45173,12 @@
             "title": "Name",
             "description": "Display name of the tile"
           },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
+          },
           "query": {
             "type": "string",
             "title": "Query",
@@ -45179,6 +45210,12 @@
             "type": "string",
             "title": "Name",
             "description": "Display name of the tile"
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
           },
           "query": {
             "type": "string",
