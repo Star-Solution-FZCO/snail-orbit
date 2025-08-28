@@ -96,11 +96,11 @@ export type CustomFieldOptionT =
     | VersionOptionT
     | OwnedOptionT;
 
-// fields
-export type FieldBaseT = {
-    value: string;
-    is_archived: boolean;
-};
+export type CustomFieldOptionNoUserT =
+    | EnumOptionT
+    | StateOptionT
+    | VersionOptionT
+    | OwnedOptionT;
 
 export type EnumOptionT = EnumOptionOutput;
 export type EnumFieldValueT = EnumOption;
@@ -115,12 +115,6 @@ export type OwnedOptionT = OwnedOptionOutput;
 export type OwnedFieldValueT = OwnedOption;
 
 export type UserOrGroupOptionT = UserOptionOutput;
-
-export type BasicCustomFieldT = {
-    id: string;
-    name: string;
-    type: CustomFieldTypeT;
-};
 
 export type CreateCustomFieldT = {
     label: string;

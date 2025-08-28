@@ -4,9 +4,7 @@ import { DateField } from "entities/custom_fields/date_field";
 import { DurationField } from "entities/custom_fields/duration_field";
 import { EnumField } from "entities/custom_fields/enum_field";
 import { InputField } from "entities/custom_fields/input_field";
-import { OwnedField } from "entities/custom_fields/owned_field";
 import { UserField } from "entities/custom_fields/user_field";
-import { VersionField } from "entities/custom_fields/version_field";
 import type { FC, ReactNode } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import FieldCard from "shared/ui/fields/field_card/field_card";
@@ -36,18 +34,37 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
     switch (field.type) {
         case "enum":
         case "enum_multi":
+        case "owned":
+        case "owned_multi":
+        case "state":
+        case "version":
+        case "version_multi":
             return (
                 <EnumField
                     {...baseCompProps}
                     key={field.id}
-                    value={field.value || undefined}
-                    multiple={field.type === "enum_multi"}
+                    value={
+                        field.value
+                            ? Array.isArray(field.value)
+                                ? field.value.map((el) => ({
+                                      ...el,
+                                      uuid: el.id,
+                                  }))
+                                : { ...field.value, uuid: field.value.id }
+                            : undefined
+                    }
+                    multiple={
+                        field.type === "enum_multi" ||
+                        field.type === "owned_multi" ||
+                        field.type === "version_multi"
+                    }
                     onChange={(value) => {
                         onChange?.({
                             ...field,
                             value: value as never,
                         });
                     }}
+                    addEmptyOption
                 />
             );
         case "string":
@@ -148,52 +165,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                 />
             );
         }
-        case "state":
-            return (
-                <EnumField
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
-        case "version":
-        case "version_multi":
-            return (
-                <VersionField
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    multiple={field.type === "version_multi"}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
-        case "owned":
-        case "owned_multi":
-            return (
-                <OwnedField
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    multiple={field.type === "owned_multi"}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
         default:
             return null;
     }

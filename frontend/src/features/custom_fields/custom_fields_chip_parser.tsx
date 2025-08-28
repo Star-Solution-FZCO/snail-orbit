@@ -5,7 +5,6 @@ import { DateChip } from "entities/custom_fields/date_chip";
 import { DurationChip } from "entities/custom_fields/duration_chip";
 import { EnumChip } from "entities/custom_fields/enum_chip";
 import { InputChip } from "entities/custom_fields/input_chip";
-import { OwnedChip } from "entities/custom_fields/owned_chip";
 import UserChip from "entities/custom_fields/user_chip";
 import type { FC, ReactNode } from "react";
 import type { CustomFieldWithValueT } from "shared/model/types";
@@ -36,18 +35,37 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
     switch (field.type) {
         case "enum":
         case "enum_multi":
+        case "owned":
+        case "owned_multi":
+        case "state":
+        case "version":
+        case "version_multi":
             return (
                 <EnumChip
                     {...baseCompProps}
                     key={field.id}
-                    value={field.value || undefined}
-                    multiple={field.type === "enum_multi"}
+                    value={
+                        field.value
+                            ? Array.isArray(field.value)
+                                ? field.value.map((el) => ({
+                                      ...el,
+                                      uuid: el.id,
+                                  }))
+                                : { ...field.value, uuid: field.value.id }
+                            : undefined
+                    }
+                    multiple={
+                        field.type === "enum_multi" ||
+                        field.type === "owned_multi" ||
+                        field.type === "version_multi"
+                    }
                     onChange={(value) => {
                         onChange?.({
                             ...field,
                             value: value as never,
                         });
                     }}
+                    addEmptyOption
                 />
             );
         case "string":
@@ -154,52 +172,6 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                 />
             );
         }
-        case "state":
-            return (
-                <EnumChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
-        case "version":
-        case "version_multi":
-            return (
-                <EnumChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    multiple={field.type === "version_multi"}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
-        case "owned":
-        case "owned_multi":
-            return (
-                <OwnedChip
-                    {...baseCompProps}
-                    key={field.id}
-                    value={field?.value || undefined}
-                    multiple={field.type === "owned_multi"}
-                    onChange={(value) => {
-                        onChange?.({
-                            ...field,
-                            value: value as never,
-                        });
-                    }}
-                />
-            );
         default:
             return null;
     }

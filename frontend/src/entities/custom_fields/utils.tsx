@@ -1,14 +1,17 @@
 import dayjs from "dayjs";
+import i18n from "shared/i18n";
 import type {
     BasicUserT,
+    CustomFieldOptionT,
     VersionFieldValueT,
-    VersionOptionT,
 } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 
-export const getOptionColorAdornment = (option: { color?: string | null }) =>
-    option.color ? (
+export const getOptionColorAdornment = (
+    option: { color?: string | null } | object,
+) =>
+    "color" in option && option.color ? (
         <ColorAdornment
             color={option.color}
             size="medium"
@@ -33,16 +36,6 @@ const formatVersion = (version: string, releaseDate: string | null): string => {
     return `${version} (${dayjs(releaseDate).format("DD MMM YYYY")})`;
 };
 
-export const versionOptionToField = (
-    option: VersionOptionT,
-): VersionFieldValueT => ({
-    value: option.value,
-    id: option.uuid,
-    release_date: option.release_date,
-    is_archived: option.is_archived,
-    is_released: option.is_released,
-});
-
 export const cardLabelGetter = <T,>(
     option: T | T[] | null,
     labelGetter: (value: T) => string,
@@ -53,6 +46,14 @@ export const cardLabelGetter = <T,>(
     } else {
         return labelGetter(option);
     }
+};
+
+export const getCustomFieldOptionLabel = (option: CustomFieldOptionT) => {
+    if (option.value === null) return i18n.t("No value");
+    if ("release_date" in option)
+        return formatVersion(option.value, option.release_date || null);
+    if (typeof option.value === "string") return option.value;
+    return option.value.name;
 };
 
 export const getVersionFieldLabel = (option: VersionFieldValueT) =>

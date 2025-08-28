@@ -1,20 +1,27 @@
 import type { FC, SyntheticEvent } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { customFieldsApi } from "shared/model";
-import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
+import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import type { ColorAdornmentProps } from "shared/ui/fields/adornments/color_adornment";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectChip } from "./select_chip";
-import { cardLabelGetter, getOptionColorAdornment } from "./utils";
+import {
+    cardLabelGetter,
+    getCustomFieldOptionLabel,
+    getOptionColorAdornment,
+} from "./utils";
 
 type EnumChipProps = {
-    value?: EnumFieldValueT | EnumFieldValueT[];
-    onChange: (value: EnumFieldValueT | EnumFieldValueT[]) => void;
+    value?: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[];
+    onChange: (
+        value: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[],
+    ) => void;
     label: string;
     id: string;
     multiple?: boolean;
     size?: ColorAdornmentProps["size"];
+    addEmptyOption?: boolean;
 };
 
 export const EnumChip: FC<EnumChipProps> = ({
@@ -24,27 +31,37 @@ export const EnumChip: FC<EnumChipProps> = ({
     id,
     multiple,
     size,
+    addEmptyOption,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
+    const [wasOpened, setWasOpened] = useState(false);
 
-    const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+    const { data, isLoading } = customFieldsApi.useListSelectOptionsQuery(
+        { id, ...listQueryParams },
+        { skip: !wasOpened },
+    );
 
     const handleOpened = () => {
-        fetchOptions({ id, ...listQueryParams });
+        setWasOpened(true);
     };
 
     const items = useMemo(() => {
-        return ((data?.payload.items || []) as unknown as EnumOptionT[]).map(
-            (el) => ({ ...el, id: el.uuid }),
-        );
-    }, [data?.payload.items]);
+        if (!data?.payload.items) return [];
+
+        const res = [...data.payload.items] as CustomFieldOptionNoUserT[];
+
+        if (addEmptyOption)
+            // @ts-expect-error TODO: Ask kbelov to add null as value type
+            res.unshift({ uuid: "EMPTY", value: null, is_archived: false });
+
+        return res;
+    }, [addEmptyOption, data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent<Element, Event>,
-        value: EnumFieldValueT | EnumFieldValueT[] | null,
+        value: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[] | null,
     ) => {
         if (!value) return;
         onChange(value);
@@ -53,12 +70,12 @@ export const EnumChip: FC<EnumChipProps> = ({
     const adornment = useMemo(() => {
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
-        if (targetValue.color)
+        if ("color" in targetValue && targetValue.color)
             return <ColorAdornment color={targetValue.color} size={size} />;
     }, [size, value]);
 
     return (
-        <SelectChip<EnumFieldValueT, typeof multiple, undefined>
+        <SelectChip<CustomFieldOptionNoUserT, typeof multiple, undefined>
             loading={isLoading}
             options={items}
             value={value}
@@ -70,9 +87,9 @@ export const EnumChip: FC<EnumChipProps> = ({
             multiple={multiple}
             getOptionRightAdornment={getOptionColorAdornment}
             isOptionEqualToValue={(a, b) => a.value === b.value}
-            getOptionLabel={(el) => el.value}
+            getOptionLabel={getCustomFieldOptionLabel}
             getCardLabelString={(value) =>
-                cardLabelGetter(value, (el) => el.value)
+                cardLabelGetter(value, getCustomFieldOptionLabel)
             }
         />
     );

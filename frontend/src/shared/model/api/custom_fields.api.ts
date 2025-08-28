@@ -1,19 +1,16 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
     ApiResponse,
-    BasicUserT,
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateOwnedOptionT,
     CreateStateOptionT,
     CreateVersionOptionT,
     CustomFieldGroupT,
+    CustomFieldOptionT,
     CustomFieldT,
-    EnumOptionT,
     ListQueryParams,
     ListResponse,
-    OwnedOptionT,
-    StateOptionT,
     TargetTypeT,
     UpdateCustomFieldGroupT,
     UpdateCustomFieldT,
@@ -21,7 +18,6 @@ import type {
     UpdateOwnedOptionT,
     UpdateStateOptionT,
     UpdateVersionOptionT,
-    VersionOptionT,
 } from "shared/model/types";
 import type {
     CustomFieldGroupCreateBody,
@@ -370,13 +366,7 @@ export const customFieldsApi = createApi({
             ],
         }),
         listSelectOptions: build.query<
-            ListResponse<
-                | EnumOptionT
-                | StateOptionT
-                | BasicUserT
-                | VersionOptionT
-                | OwnedOptionT
-            >,
+            ListResponse<CustomFieldOptionT>,
             { id: string } & (ListQueryParams | void)
         >({
             query: ({ id, ...params }) => ({

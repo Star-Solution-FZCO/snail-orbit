@@ -1,20 +1,27 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { customFieldsApi } from "shared/model";
-import type { EnumFieldValueT, EnumOptionT } from "shared/model/types";
+import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
 import { SelectField } from "./select_field";
-import { cardLabelGetter, getOptionColorAdornment } from "./utils";
+import {
+    cardLabelGetter,
+    getCustomFieldOptionLabel,
+    getOptionColorAdornment,
+} from "./utils";
 
 type EnumFieldProps = {
-    value?: EnumFieldValueT | EnumFieldValueT[];
-    onChange: (value: EnumFieldValueT | EnumFieldValueT[]) => void;
+    value?: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[];
+    onChange: (
+        value: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[],
+    ) => void;
     label: string;
     id: string;
     multiple?: boolean;
     rightAdornment?: ReactNode;
     error?: string;
+    addEmptyOption?: boolean;
 };
 
 export const EnumField: FC<EnumFieldProps> = ({
@@ -25,27 +32,37 @@ export const EnumField: FC<EnumFieldProps> = ({
     multiple,
     rightAdornment,
     error,
+    addEmptyOption,
 }) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
+    const [wasOpened, setWasOpened] = useState(false);
 
-    const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+    const { data, isLoading } = customFieldsApi.useListSelectOptionsQuery(
+        { id, ...listQueryParams },
+        { skip: !wasOpened },
+    );
 
     const handleOpened = () => {
-        fetchOptions({ id: id, ...listQueryParams });
+        setWasOpened(true);
     };
 
     const items = useMemo(() => {
-        return ((data?.payload.items || []) as EnumOptionT[]).map(
-            ({ uuid, ...rest }) => ({ ...rest, id: uuid }),
-        );
-    }, [data?.payload.items]);
+        if (!data?.payload.items) return [];
+
+        const res = [...data.payload.items] as CustomFieldOptionNoUserT[];
+
+        if (addEmptyOption)
+            // @ts-expect-error TODO: Ask kbelov to add null as value type
+            res.unshift({ uuid: "EMPTY", value: null, is_archived: false });
+
+        return res;
+    }, [addEmptyOption, data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent,
-        value: EnumFieldValueT | EnumFieldValueT[] | null,
+        value: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[] | null,
     ) => {
         if (!value) return undefined;
         onChange?.(value);
@@ -55,18 +72,18 @@ export const EnumField: FC<EnumFieldProps> = ({
         if (rightAdornment) return rightAdornment;
         if (!value || (Array.isArray(value) && !value.length)) return null;
         const targetValue = Array.isArray(value) ? value[0] : value;
-        if (targetValue && targetValue.color)
+        if (targetValue && "color" in targetValue && targetValue.color)
             return (
                 <ColorAdornment
                     color={targetValue.color}
-                    size="medium"
+                    size="small"
                     sx={{ my: "auto" }}
                 />
             );
     }, [value, rightAdornment]);
 
     return (
-        <SelectField<EnumFieldValueT, typeof multiple, true>
+        <SelectField<CustomFieldOptionNoUserT, typeof multiple, true>
             loading={isLoading}
             options={items}
             value={value}
@@ -77,11 +94,11 @@ export const EnumField: FC<EnumFieldProps> = ({
             id={id}
             multiple={multiple}
             getOptionRightAdornment={getOptionColorAdornment}
-            getOptionLabel={(el) => el.value}
-            getOptionKey={(el) => el.value}
+            getOptionLabel={getCustomFieldOptionLabel}
+            getOptionKey={(el) => el.uuid}
             isOptionEqualToValue={(a, b) => a.value === b.value}
             getCardLabelString={(value) =>
-                cardLabelGetter(value, (el) => el.value)
+                cardLabelGetter(value, getCustomFieldOptionLabel)
             }
             variant={error ? "error" : "standard"}
             description={error}
