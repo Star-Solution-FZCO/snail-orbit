@@ -122,10 +122,6 @@ class IssueListTileCreate(TileCreate):
 class DashboardCreate(BaseModel):
     name: str = Field(description='Dashboard name')
     description: str | None = Field(default=None, description='Dashboard description')
-    tiles: Annotated[
-        list[IssueListTileCreate],
-        Field(default_factory=list, description='List of tiles to create'),
-    ]
     ui_settings: dict = Field(
         default_factory=dict, description='UI-specific settings for the dashboard'
     )
@@ -134,9 +130,6 @@ class DashboardCreate(BaseModel):
 class DashboardUpdate(BaseModel):
     name: str | None = Field(default=None, description='Dashboard name')
     description: str | None = Field(default=None, description='Dashboard description')
-    tiles: list[IssueListTileCreate] | None = Field(
-        default=None, description='List of tiles to update'
-    )
     ui_settings: dict | None = Field(
         default=None, description='UI-specific settings for the dashboard'
     )
@@ -150,6 +143,16 @@ class GrantPermissionBody(BaseModel):
 
 class UpdatePermissionBody(BaseModel):
     permission_type: m.PermissionType = Field(description='New permission level')
+
+
+class TileUpdate(BaseModel):
+    name: str | None = Field(default=None, description='Display name of the tile')
+    query: str | None = Field(
+        default=None, description='Issue query to filter issues for this tile'
+    )
+    ui_settings: dict | None = Field(
+        default=None, description='UI-specific settings for the tile'
+    )
 
 
 @router.get('/list')
@@ -174,34 +177,10 @@ async def create_dashboard(
 ) -> SuccessPayloadOutput[DashboardOutput]:
     user_ctx = current_user()
 
-    tiles = []
-    for tile_data in body.tiles:
-        if tile_data.type == m.TileTypeT.ISSUE_LIST:
-            if tile_data.query:
-                try:
-                    await transform_query(tile_data.query)
-                except IssueQueryTransformError as err:
-                    raise HTTPException(
-                        HTTPStatus.BAD_REQUEST,
-                        f'Invalid query in tile "{tile_data.name}": {err.message}',
-                    ) from err
-            tile = m.IssueListTile(
-                type=tile_data.type,
-                name=tile_data.name,
-                query=tile_data.query,
-                ui_settings=tile_data.ui_settings,
-            )
-        else:
-            raise HTTPException(
-                HTTPStatus.BAD_REQUEST,
-                f'Unsupported tile type: {tile_data.type}',
-            )
-        tiles.append(tile)
-
     dashboard = m.Dashboard(
         name=body.name,
         description=body.description,
-        tiles=tiles,
+        tiles=[],
         ui_settings=body.ui_settings,
         created_by=m.UserLinkField.from_obj(user_ctx.user),
         permissions=[
@@ -245,39 +224,9 @@ async def update_dashboard(
             HTTPStatus.FORBIDDEN, 'No permission to edit this dashboard'
         )
 
-    data = body.model_dump(
-        exclude_unset=True,
-        include={'name', 'description', 'ui_settings'},
-    )
+    data = body.model_dump(exclude_unset=True)
     for k, v in data.items():
         setattr(dashboard, k, v)
-
-    if 'tiles' in body.model_fields_set:
-        # Validate tile queries
-        tiles = []
-        for tile_data in body.tiles:
-            if tile_data.type == m.TileTypeT.ISSUE_LIST:
-                if tile_data.query:
-                    try:
-                        await transform_query(tile_data.query)
-                    except IssueQueryTransformError as err:
-                        raise HTTPException(
-                            HTTPStatus.BAD_REQUEST,
-                            f'Invalid query in tile "{tile_data.name}": {err.message}',
-                        ) from err
-                tile = m.IssueListTile(
-                    type=tile_data.type,
-                    name=tile_data.name,
-                    query=tile_data.query,
-                    ui_settings=tile_data.ui_settings,
-                )
-            else:
-                raise HTTPException(
-                    HTTPStatus.BAD_REQUEST,
-                    f'Unsupported tile type: {tile_data.type}',
-                )
-            tiles.append(tile)
-        dashboard.tiles = tiles
 
     if dashboard.is_changed:
         await dashboard.replace()
@@ -436,3 +385,170 @@ async def get_dashboard_permissions(
             for perm in dashboard.permissions[query.offset : query.offset + query.limit]
         ],
     )
+
+
+@router.get('/{dashboard_id}/tile/list')
+async def list_tiles(
+    dashboard_id: PydanticObjectId,
+    query: ListParams = Depends(),
+) -> BaseListOutput[TileOutputRootModel]:
+    dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
+    if not dashboard:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Dashboard not found')
+    user_ctx = current_user()
+    if not dashboard.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to view this dashboard'
+        )
+
+    # Process tiles
+    processed_tiles = []
+    for tile in dashboard.tiles:
+        if isinstance(tile, m.IssueListTile):
+            tile_output = IssueListTileOutput.from_obj(tile)
+            processed_tiles.append(TileOutputRootModel(root=tile_output))
+
+    start = query.offset
+    end = query.offset + query.limit
+    return BaseListOutput.make(
+        count=len(processed_tiles),
+        limit=query.limit,
+        offset=query.offset,
+        items=processed_tiles[start:end],
+    )
+
+
+@router.post('/{dashboard_id}/tile')
+async def create_tile(
+    dashboard_id: PydanticObjectId,
+    body: IssueListTileCreate,
+) -> SuccessPayloadOutput[TileOutputRootModel]:
+    dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
+    if not dashboard:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Dashboard not found')
+    user_ctx = current_user()
+    if not dashboard.check_permissions(user_ctx, m.PermissionType.EDIT):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to edit this dashboard'
+        )
+
+    if body.type == m.TileTypeT.ISSUE_LIST:
+        if body.query:
+            try:
+                await transform_query(body.query)
+            except IssueQueryTransformError as err:
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    f'Invalid query in tile "{body.name}": {err.message}',
+                ) from err
+        tile = m.IssueListTile(
+            type=body.type,
+            name=body.name,
+            query=body.query,
+            ui_settings=body.ui_settings,
+        )
+    else:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            f'Unsupported tile type: {body.type}',
+        )
+
+    dashboard.tiles.append(tile)
+    await dashboard.save_changes()
+
+    tile_output = IssueListTileOutput.from_obj(tile)
+    return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
+
+
+@router.get('/{dashboard_id}/tile/{tile_id}')
+async def get_tile(
+    dashboard_id: PydanticObjectId,
+    tile_id: UUID,
+) -> SuccessPayloadOutput[TileOutputRootModel]:
+    dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
+    if not dashboard:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Dashboard not found')
+    user_ctx = current_user()
+    if not dashboard.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to view this dashboard'
+        )
+
+    tile = next((t for t in dashboard.tiles if t.id == tile_id), None)
+    if not tile:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Tile not found')
+
+    if isinstance(tile, m.IssueListTile):
+        tile_output = IssueListTileOutput.from_obj(tile)
+        return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
+    raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown tile type')
+
+
+@router.put('/{dashboard_id}/tile/{tile_id}')
+async def update_tile(
+    dashboard_id: PydanticObjectId,
+    tile_id: UUID,
+    body: TileUpdate,
+) -> SuccessPayloadOutput[TileOutputRootModel]:
+    dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
+    if not dashboard:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Dashboard not found')
+    user_ctx = current_user()
+    if not dashboard.check_permissions(user_ctx, m.PermissionType.EDIT):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to edit this dashboard'
+        )
+
+    tile_index = next(
+        (i for i, t in enumerate(dashboard.tiles) if t.id == tile_id), None
+    )
+    if tile_index is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Tile not found')
+
+    tile = dashboard.tiles[tile_index]
+    data = body.model_dump(exclude_unset=True)
+
+    if tile.type == m.TileTypeT.ISSUE_LIST and data.get('query'):
+        try:
+            await transform_query(data['query'])
+        except IssueQueryTransformError as err:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Invalid query: {err.message}',
+            ) from err
+
+    for field, value in data.items():
+        setattr(tile, field, value)
+
+    await dashboard.save_changes()
+
+    if isinstance(tile, m.IssueListTile):
+        tile_output = IssueListTileOutput.from_obj(tile)
+        return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
+    raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown tile type')
+
+
+@router.delete('/{dashboard_id}/tile/{tile_id}')
+async def delete_tile(
+    dashboard_id: PydanticObjectId,
+    tile_id: UUID,
+) -> UUIDOutput:
+    dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
+    if not dashboard:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Dashboard not found')
+    user_ctx = current_user()
+    if not dashboard.check_permissions(user_ctx, m.PermissionType.EDIT):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, 'No permission to edit this dashboard'
+        )
+
+    tile_index = next(
+        (i for i, t in enumerate(dashboard.tiles) if t.id == tile_id), None
+    )
+    if tile_index is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Tile not found')
+
+    dashboard.tiles.pop(tile_index)
+    await dashboard.save_changes()
+
+    return UUIDOutput.make(tile_id)
