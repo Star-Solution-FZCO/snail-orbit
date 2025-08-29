@@ -862,6 +862,8 @@ async def get_query_builder_data(
         available_fields, used_field_names
     )
 
+    filtered_available_fields.sort(key=lambda field: field.root.name.lower())
+
     return SuccessPayloadOutput(
         payload=QueryBuilderOutput(
             query=built_query,
