@@ -11,15 +11,10 @@ export const FieldChipStyled = styled(Box, { label: "FieldChip" })(
         alignItems: "center",
         overflow: "hidden",
         textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
 
         "&:hover": {
             color: theme.palette.primary.main,
         },
     }),
 );
-
-export const FieldChipBoxStyled = styled(Box)(({ theme }) => ({
-    width: theme.typography.pxToRem(20),
-    height: theme.typography.pxToRem(20),
-    borderRadius: 3,
-}));

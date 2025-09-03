@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AgileBoardView } from "modules";
 import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
+import { AgileBoardView } from "pages/agile_boards";
 import { useCallback } from "react";
 import type { AgileBoardT } from "shared/model/types";
 
@@ -27,10 +27,6 @@ function Component() {
         [navigate],
     );
 
-    const handleGoToList = useCallback(() => {
-        navigate({ to: "/agiles/list" });
-    }, [navigate]);
-
     const handleBoardSelect = useCallback(
         (board: AgileBoardT) => {
             navigate({ to: "/agiles/$boardId", params: { boardId: board.id } });
@@ -44,7 +40,6 @@ function Component() {
                 boardId={boardId}
                 query={query}
                 onQueryChange={handleQueryChange}
-                onGoToList={handleGoToList}
                 onBoardSelect={handleBoardSelect}
             />
         </IssueModalViewContextProvider>

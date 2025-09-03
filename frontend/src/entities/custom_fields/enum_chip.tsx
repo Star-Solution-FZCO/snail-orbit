@@ -4,13 +4,10 @@ import { customFieldsApi } from "shared/model";
 import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import type { ColorAdornmentProps } from "shared/ui/fields/adornments/color_adornment";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
+import { SelectChip } from "shared/ui/fields/select_chip";
+import { cardLabelGetter } from "shared/ui/fields/utils";
 import { useListQueryParams } from "shared/utils";
-import { SelectChip } from "./select_chip";
-import {
-    cardLabelGetter,
-    getCustomFieldOptionLabel,
-    getOptionColorAdornment,
-} from "./utils";
+import { getCustomFieldOptionLabel, getOptionColorAdornment } from "./utils";
 
 type EnumChipProps = {
     value?: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[];

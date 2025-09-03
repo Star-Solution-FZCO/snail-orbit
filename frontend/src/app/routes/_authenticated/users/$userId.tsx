@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { UserView } from "modules";
+import { UserView } from "pages/users/view";
 
 type UserViewSearch = {
     tab?: string;

@@ -1,4 +1,5 @@
 import { Box, Button, Stack, TextField } from "@mui/material";
+import { ProjectSelect } from "entities/projects/project_select";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import type { FC } from "react";
@@ -7,12 +8,10 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link, MDEditor } from "shared/ui";
 import { ColumnSelectPopover } from "../agile_board_form/components/columns_select_popover";
-import { ProjectSelect } from "../agile_board_form/components/project_select";
-import type { FormValues } from "./create_agile_board_form.types";
-
-export type CreateAgileBoardFormProps = {
-    onSubmit: (formData: FormValues) => void;
-};
+import type {
+    CreateAgileBoardFormProps,
+    FormValues,
+} from "./create_agile_board_form.types";
 
 const defaultValues: FormValues = {
     name: "",

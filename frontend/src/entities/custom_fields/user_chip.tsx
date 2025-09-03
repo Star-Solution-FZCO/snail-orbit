@@ -1,10 +1,11 @@
-import { type SyntheticEvent, useMemo } from "react";
-import { customFieldsApi } from "shared/model";
+import { type SyntheticEvent, useMemo, useState } from "react";
+import { customFieldsApi, userApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
+import { SelectChip } from "shared/ui/fields/select_chip";
+import { cardLabelGetter } from "shared/ui/fields/utils";
 import { useListQueryParams } from "shared/utils";
-import { SelectChip } from "./select_chip";
-import { cardLabelGetter, getUserAvatarAdornment } from "./utils";
+import { getUserAvatarAdornment } from "./utils";
 
 type UserChipProps = {
     value?: BasicUserT | BasicUserT[];
@@ -12,6 +13,7 @@ type UserChipProps = {
     label: string;
     multiple?: boolean;
     id: string;
+    type?: "field" | "group_field" | "users";
 };
 
 export const UserChip = ({
@@ -20,20 +22,44 @@ export const UserChip = ({
     multiple,
     id,
     onChange,
+    type = "field",
 }: UserChipProps) => {
+    const [wasOpened, setWasOpened] = useState(false);
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
-    const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListSelectOptionsQuery();
+    const { data: customFieldOptions, isLoading: isCustomFieldOptionsLoading } =
+        customFieldsApi.useListSelectOptionsQuery(
+            { id, ...listQueryParams },
+            { skip: type !== "field" || !wasOpened },
+        );
+    const { data: userOptions, isLoading: isUsersOptionsLoading } =
+        userApi.useListSelectUserQuery(
+            { ...listQueryParams },
+            { skip: type !== "users" || !wasOpened },
+        );
+    const {
+        data: customFieldGroupOptions,
+        isLoading: isCustomFieldGroupOptionsLoading,
+    } = customFieldsApi.useListGroupSelectOptionsQuery(
+        { gid: id, ...listQueryParams },
+        { skip: type !== "group_field" || !wasOpened },
+    );
 
     const handleOpened = () => {
-        fetchOptions({ id, ...listQueryParams });
+        setWasOpened(true);
     };
 
     const options = useMemo(() => {
-        return (data?.payload.items || []) as BasicUserT[];
-    }, [data?.payload.items]);
+        return (customFieldOptions?.payload.items ||
+            userOptions?.payload.items ||
+            customFieldGroupOptions?.payload.items ||
+            []) as BasicUserT[];
+    }, [
+        customFieldGroupOptions?.payload.items,
+        customFieldOptions?.payload.items,
+        userOptions?.payload.items,
+    ]);
 
     const handleChange = (
         _: SyntheticEvent<Element, Event>,
@@ -59,7 +85,11 @@ export const UserChip = ({
 
     return (
         <SelectChip
-            loading={isLoading}
+            loading={
+                isCustomFieldOptionsLoading ||
+                isUsersOptionsLoading ||
+                isCustomFieldGroupOptionsLoading
+            }
             options={options}
             value={value}
             label={label}

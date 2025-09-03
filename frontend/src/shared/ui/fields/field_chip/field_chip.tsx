@@ -1,6 +1,8 @@
-import { FC, forwardRef, memo } from "react";
+import { Box } from "@mui/material";
+import type { FC } from "react";
+import { forwardRef, memo } from "react";
 import { FieldChipStyled } from "./field_chip.styles";
-import { FieldChipProps } from "./field_chip.types";
+import type { FieldChipProps } from "./field_chip.types";
 
 export const FieldChip: FC<FieldChipProps> = memo(
     forwardRef(
@@ -16,7 +18,12 @@ export const FieldChip: FC<FieldChipProps> = memo(
                     ref={ref}
                 >
                     {leftAdornment}
-                    {children}
+                    <Box
+                        component="span"
+                        sx={{ textOverflow: "ellipsis", overflow: "hidden" }}
+                    >
+                        {children}
+                    </Box>
                     {rightAdornment}
                 </FieldChipStyled>
             );

@@ -7,6 +7,7 @@ import {
     groupApi,
     issueApi,
     projectApi,
+    reportApi,
     roleApi,
     searchApi,
     sharedApi,
@@ -34,6 +35,7 @@ export const store = configureStore({
         [searchApi.reducerPath]: searchApi.reducer,
         [encryptionKeysApi.reducerPath]: encryptionKeysApi.reducer,
         [dashboardApi.reducerPath]: dashboardApi.reducer,
+        [reportApi.reducerPath]: reportApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -49,6 +51,7 @@ export const store = configureStore({
             tagApi.middleware,
             searchApi.middleware,
             encryptionKeysApi.middleware,
+            reportApi.middleware,
             dashboardApi.middleware,
         ]),
 });

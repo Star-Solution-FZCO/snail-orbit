@@ -6,6 +6,7 @@ import {
     Popper,
     Stack,
     Switch,
+    TextField,
 } from "@mui/material";
 import {
     bindPopper,
@@ -86,6 +87,20 @@ export const IssuesListSettings = (props: IssueListProps) => {
                                             })
                                         }
                                     />
+                                }
+                            />
+
+                            <TextField
+                                size="small"
+                                label={t("customFields.slots")}
+                                variant="standard"
+                                type="number"
+                                value={rowViewParams.customFieldSlots || 10}
+                                onChange={(e) =>
+                                    onRowViewParamsChange?.({
+                                        ...rowViewParams,
+                                        customFieldSlots: +e.target.value,
+                                    })
                                 }
                             />
                         </Stack>

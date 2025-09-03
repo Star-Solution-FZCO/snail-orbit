@@ -17,6 +17,7 @@ export type IssueCustomFieldChipsProps = {
     project?: ProjectT;
     onUpdateIssue: (issueValues: IssueUpdate) => Promise<unknown>;
     onUpdateCache: (issueValue: Partial<IssueT>) => unknown;
+    slots?: number;
 };
 
 export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
@@ -24,16 +25,27 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
     project,
     onUpdateIssue,
     onUpdateCache,
+    slots,
 }) => {
-    const fields: CustomFieldWithValueT[] = useMemo(() => {
-        const projectFields = project?.custom_fields || [];
+    const fields: (CustomFieldWithValueT | null)[] = useMemo(() => {
+        const projectFields = new Map(
+            project?.custom_fields.map((el) => [el.id, el]),
+        );
+        const cardFields = project?.card_fields || [];
 
-        return projectFields.map((projectField) => {
-            const targetIssueField = issue.fields[projectField.name];
-            if (targetIssueField) return targetIssueField;
-            return { ...projectField, value: null };
-        });
-    }, [issue, project]);
+        const res = cardFields
+            .map((cardField) => projectFields.get(cardField))
+            .filter((el) => !!el)
+            .map((projectField) => {
+                const targetIssueField = issue.fields[projectField.name];
+                if (targetIssueField) return targetIssueField;
+                return { ...projectField, value: null };
+            });
+
+        if (!slots || slots <= 0) return res;
+        if (res.length > slots) return res.slice(0, slots);
+        return [...res, ...new Array(slots - res.length).map(() => null)];
+    }, [issue, project, slots]);
 
     const onFieldUpdate = (field: CustomFieldWithValueT) => {
         onUpdateIssue?.({
@@ -49,12 +61,16 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
         });
     };
 
-    return fields.map((field) => (
-        <CustomFieldsChipParser
-            field={field}
-            onChange={onFieldUpdate}
-            size="xsmall"
-            key={field.id}
-        />
-    ));
+    return fields.map((field) =>
+        !field ? (
+            <div />
+        ) : (
+            <CustomFieldsChipParser
+                field={field}
+                onChange={onFieldUpdate}
+                size="xsmall"
+                key={field.id}
+            />
+        ),
+    );
 };

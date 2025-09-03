@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GroupView } from "modules";
+import { GroupView } from "pages/groups/view";
 
 type GroupViewSearch = {
     tab?: string;

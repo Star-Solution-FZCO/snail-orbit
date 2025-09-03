@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { DashboardView } from "modules";
+import { DashboardView } from "pages/dashboards";
 
 export const Route = createLazyFileRoute(
     "/_authenticated/dashboards/$dashboardId",

@@ -5,3 +5,7 @@ export type FormValues = Pick<
     "name" | "description" | "projects"
 > &
     Partial<Pick<AgileBoardT, "columns">>;
+
+export type CreateAgileBoardFormProps = {
+    onSubmit: (formData: FormValues) => void;
+};

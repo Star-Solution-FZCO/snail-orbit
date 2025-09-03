@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { IssueDraft } from "modules";
+import { IssueDraft } from "pages/issues";
 
 export const Route = createLazyFileRoute(
     "/_authenticated/issues/draft/$draftId",

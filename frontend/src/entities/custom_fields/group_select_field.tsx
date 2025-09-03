@@ -1,11 +1,12 @@
-import { type ReactNode, type SyntheticEvent, useMemo } from "react";
+import { type ReactNode, type SyntheticEvent, useMemo, useState } from "react";
 import { customFieldsApi } from "shared/model";
 import type { EnumOptionT } from "shared/model/types";
 import type { ShortOptionOutput } from "shared/model/types/backend-schema.gen";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
+import { SelectField } from "shared/ui/fields/select_field";
+import { cardLabelGetter } from "shared/ui/fields/utils";
 import { useListQueryParams } from "shared/utils";
-import { SelectField } from "./select_field";
-import { cardLabelGetter, getOptionColorAdornment } from "./utils";
+import { getOptionColorAdornment } from "./utils";
 
 type GroupSelectFieldProps = {
     value?: ShortOptionOutput | ShortOptionOutput[];
@@ -23,12 +24,15 @@ export const GroupSelectField = (props: GroupSelectFieldProps) => {
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
+    const [wasOpened, setWasOpened] = useState(false);
 
-    const [fetchOptions, { data, isLoading }] =
-        customFieldsApi.useLazyListGroupSelectOptionsQuery();
+    const { data, isLoading } = customFieldsApi.useListGroupSelectOptionsQuery(
+        { gid: gid, ...listQueryParams },
+        { skip: !wasOpened },
+    );
 
     const handleOpened = () => {
-        fetchOptions({ gid: gid, ...listQueryParams });
+        setWasOpened(true);
     };
 
     const items = useMemo(() => {

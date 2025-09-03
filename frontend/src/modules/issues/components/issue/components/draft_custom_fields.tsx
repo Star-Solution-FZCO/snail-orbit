@@ -1,4 +1,4 @@
-import { ProjectField } from "entities/custom_fields/project_field";
+import { ProjectField } from "entities/projects/project_field";
 import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
 import type { FC } from "react";
 import { useMemo } from "react";

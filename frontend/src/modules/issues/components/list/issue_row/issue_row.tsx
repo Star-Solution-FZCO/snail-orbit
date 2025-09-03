@@ -12,11 +12,12 @@ import { UpdateTime } from "./update_time";
 export const IssueRow: FC<IssueRowProps> = memo(
     ({
         issue,
-        showSubscribeButton = true,
         showCustomFields,
         showDescription,
-        showUpdateTime = true,
         onIssueRowDoubleClick,
+        customFieldSlots,
+        showSubscribeButton = true,
+        showUpdateTime = true,
     }) => {
         const { subject, id_readable, text } = issue;
 
@@ -69,7 +70,9 @@ export const IssueRow: FC<IssueRowProps> = memo(
                     <IssueRowBody>{text?.value}</IssueRowBody>
                 )}
 
-                {showCustomFields && <IssueRowFields issue={issue} />}
+                {showCustomFields && (
+                    <IssueRowFields issue={issue} slots={customFieldSlots} />
+                )}
             </IssueRowRoot>
         );
     },

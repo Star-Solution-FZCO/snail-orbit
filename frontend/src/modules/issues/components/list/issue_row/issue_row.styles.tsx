@@ -63,4 +63,11 @@ export const IssueRowFieldsContainer = styled("div", {
     flexDirection: "row",
     gap: theme.spacing(1),
     marginTop: theme.spacing(1),
+
+    "& > *": {
+        flex: 1,
+        flexBasis: 0,
+        maxWidth: 120,
+        minWidth: 0,
+    },
 }));

@@ -4,12 +4,12 @@ import { customFieldsApi } from "shared/model";
 import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
 import { useListQueryParams } from "shared/utils";
-import { SelectField } from "./select_field";
+import { SelectField } from "shared/ui/fields/select_field";
 import {
-    cardLabelGetter,
     getCustomFieldOptionLabel,
     getOptionColorAdornment,
 } from "./utils";
+import { cardLabelGetter } from "shared/ui/fields/utils";
 
 type EnumFieldProps = {
     value?: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[];

@@ -9,6 +9,7 @@ export const Route = createFileRoute("/_authenticated/issues/")({
             to: "/issues/list/{-$listId}",
             params: { listId: lastSearch || undefined },
             search,
+            throw: true,
         });
     },
 });

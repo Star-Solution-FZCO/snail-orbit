@@ -5,6 +5,7 @@ export * from "./encryption_keys.api";
 export * from "./group.api";
 export * from "./issue.api";
 export * from "./project.api";
+export * from "./report.api";
 export * from "./role.api";
 export * from "./search.api";
 export * from "./shared.api";

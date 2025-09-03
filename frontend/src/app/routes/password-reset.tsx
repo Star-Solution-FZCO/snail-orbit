@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PasswordReset } from "modules";
+import { PasswordReset } from "pages/auth/password_reset";
 
 type PasswordResetSearch = {
     reset_token?: string;

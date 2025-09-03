@@ -36,18 +36,6 @@ const formatVersion = (version: string, releaseDate: string | null): string => {
     return `${version} (${dayjs(releaseDate).format("DD MMM YYYY")})`;
 };
 
-export const cardLabelGetter = <T,>(
-    option: T | T[] | null,
-    labelGetter: (value: T) => string,
-) => {
-    if (!option) return undefined;
-    if (Array.isArray(option)) {
-        return option.map(labelGetter);
-    } else {
-        return labelGetter(option);
-    }
-};
-
 export const getCustomFieldOptionLabel = (option: CustomFieldOptionT) => {
     if (option.value === null) return i18n.t("No value");
     if ("release_date" in option)

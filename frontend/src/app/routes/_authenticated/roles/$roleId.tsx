@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RoleView } from "modules";
+import { RoleView } from "pages/roles/view";
 
 type RoleViewSearch = {
     tab?: string;

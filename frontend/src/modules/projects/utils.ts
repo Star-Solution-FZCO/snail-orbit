@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CustomFieldT, ProjectT } from "shared/model/types";
+import type { CustomFieldT, ProjectT } from "shared/model/types";
 
 export const enum ProjectFormTabKey {
     GENERAL = "general",

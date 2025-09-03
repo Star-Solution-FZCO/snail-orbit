@@ -3,7 +3,7 @@ import type { FC, PropsWithChildren } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "shared/model";
-import { Link } from "shared/ui/index";
+import { Link } from "shared/ui";
 import { AdminSettingsButton } from "./components/admin_settings_button";
 import { UserMenuButton } from "./components/user_menu_button";
 import { useNavbarSettings } from "./navbar_settings";
@@ -29,6 +29,10 @@ const useLinks = () => {
                 to: "/projects",
                 label: t("navbar.projects"),
             },
+            // {
+            //     to: "/reports/list",
+            //     label: t("navbar.reports"),
+            // },
         ],
         [t],
     );

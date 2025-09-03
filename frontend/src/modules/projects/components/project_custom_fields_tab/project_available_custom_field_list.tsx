@@ -7,11 +7,12 @@ import {
     Typography,
 } from "@mui/material";
 import { groupCustomFields } from "modules/projects/utils";
-import { FC, useCallback, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { projectApi } from "shared/model";
-import { ProjectT } from "shared/model/types";
+import type { ProjectT } from "shared/model/types";
 import { toastApiError, useListQueryParams } from "shared/utils";
 import { Bundle } from "./bundle";
 

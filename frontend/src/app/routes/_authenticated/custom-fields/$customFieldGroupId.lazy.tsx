@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CustomFieldGroupView } from "modules";
+import { CustomFieldGroupView } from "pages/custom_fields";
 
 export const Route = createLazyFileRoute(
     "/_authenticated/custom-fields/$customFieldGroupId",

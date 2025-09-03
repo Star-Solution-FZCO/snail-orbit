@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ProfileView } from "modules";
+import { ProfileView } from "pages/profile/view";
 
 type ProfileViewSearch = {
     tab?: string;

@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { DashboardList } from "modules";
+import { DashboardList } from "pages/dashboards";
 import { getFromLS } from "shared/utils/helpers/local-storage";
 
 export const Route = createFileRoute("/_authenticated/dashboards/")({

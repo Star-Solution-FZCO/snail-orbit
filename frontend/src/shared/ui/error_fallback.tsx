@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import CatsNoConnectionImagePath from "shared/assets/images/cats_no_connection.png";
 import { Link } from "./link";
 
-const ErrorFallback = () => {
+const ErrorFallback = (e) => {
+    console.log(e);
     const { t } = useTranslation();
 
     return (

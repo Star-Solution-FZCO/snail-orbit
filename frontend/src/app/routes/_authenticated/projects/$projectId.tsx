@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ProjectView } from "modules";
 import type { ProjectFormTabKey } from "modules/projects/utils";
+import { ProjectView } from "pages/projects/view";
 import { useCallback } from "react";
 
 type ProjectViewSearch = {

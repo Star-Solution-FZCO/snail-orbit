@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GlobalRoleView } from "modules";
+import { GlobalRoleView } from "pages/global_roles/view";
 import { z } from "zod";
 
 const globalRoleSearchSchema = z.object({
