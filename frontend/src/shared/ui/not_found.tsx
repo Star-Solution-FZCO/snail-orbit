@@ -38,6 +38,8 @@ const NotFound = () => {
                     <Link to="/issues">{t("navbar.issues")}</Link>
                     {", "}
                     <Link to="/agiles">{t("navbar.agileBoards")}</Link>
+                    {", "}
+                    <Link to="/dashboards/list">{t("navbar.dashboards")}</Link>
                 </Typography>
             </Box>
         </Box>

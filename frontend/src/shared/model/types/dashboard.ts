@@ -2,6 +2,8 @@ import type {
     DashboardCreate,
     DashboardOutput,
     DashboardUpdate,
+    IssueListTileCreate,
+    TileUpdate,
 } from "./backend-schema.gen";
 import { PermissionTargetT, PermissionTypeT } from "./permission";
 
@@ -12,6 +14,10 @@ export type CreateDashboardT = DashboardCreate;
 export type UpdateDashboardT = DashboardUpdate;
 
 export type DashboardTileT = DashboardOutput["tiles"][number];
+
+export type CreateDashboardTileT = IssueListTileCreate;
+
+export type UpdateDashboardTileT = TileUpdate;
 
 export type DashboardTileTypeT = DashboardTileT["type"];
 

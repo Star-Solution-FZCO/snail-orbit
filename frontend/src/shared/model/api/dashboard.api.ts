@@ -3,17 +3,20 @@ import type {
     ApiResponse,
     ChangeDashboardPermissionT,
     CreateDashboardT,
+    CreateDashboardTileT,
     DashboardT,
+    DashboardTileT,
     GrantDashboardPermissionT,
     ListQueryParams,
     ListResponse,
     PermissionT,
     RevokeDashboardPermissionT,
     UpdateDashboardT,
+    UpdateDashboardTileT,
 } from "shared/model/types";
 import customFetchBase from "./custom_fetch_base";
 
-const tagTypes = ["Dashboards"];
+const tagTypes = ["Dashboards", "DashboardTiles"];
 
 export const dashboardApi = createApi({
     reducerPath: "dashboardApi",
@@ -187,6 +190,69 @@ export const dashboardApi = createApi({
             }),
             providesTags: (_result, _error, { id }) => [
                 { type: "Dashboards", id },
+            ],
+        }),
+        listDashboardTile: build.query<
+            ListResponse<DashboardTileT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `dashboard/${id}/tile/list`,
+                params: params ?? undefined,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "DashboardTiles", id },
+            ],
+        }),
+        getDashboardTile: build.query<
+            ApiResponse<DashboardTileT>,
+            { dashboardId: string; id: string }
+        >({
+            query: ({ dashboardId, id }) =>
+                `dashboard/${dashboardId}/tile/${id}`,
+            providesTags: (_result, _error, { dashboardId }) => [
+                { type: "DashboardTiles", id: dashboardId },
+            ],
+        }),
+        createDashboardTile: build.mutation<
+            ApiResponse<DashboardTileT>,
+            { id: string; body: CreateDashboardTileT }
+        >({
+            query: ({ id, body }) => ({
+                url: `dashboard/${id}/tile`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "Dashboards", id },
+                { type: "DashboardTiles", id },
+            ],
+        }),
+        updateDashboardTile: build.mutation<
+            ApiResponse<DashboardTileT>,
+            { dashboardId: string; id: string; body: UpdateDashboardTileT }
+        >({
+            query: ({ dashboardId, id, body }) => ({
+                url: `dashboard/${dashboardId}/tile/${id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { dashboardId }) => [
+                { type: "Dashboards", id: dashboardId },
+                { type: "DashboardTiles", id: dashboardId },
+            ],
+        }),
+        deleteDashboardTile: build.mutation<
+            ApiResponse<DashboardTileT>,
+            { dashboardId: string; id: string }
+        >({
+            query: ({ dashboardId, id }) => ({
+                url: `dashboard/${dashboardId}/tile/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { dashboardId }) => [
+                { type: "Dashboards", id: dashboardId },
+                { type: "DashboardTiles", id: dashboardId },
             ],
         }),
     }),

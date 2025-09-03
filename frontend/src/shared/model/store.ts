@@ -14,6 +14,7 @@ import {
     userApi,
     workflowApi,
 } from "./api";
+import { dashboardApi } from "./api/dashboard.api";
 import { profileReducer } from "./slices";
 
 export const store = configureStore({
@@ -32,6 +33,7 @@ export const store = configureStore({
         [tagApi.reducerPath]: tagApi.reducer,
         [searchApi.reducerPath]: searchApi.reducer,
         [encryptionKeysApi.reducerPath]: encryptionKeysApi.reducer,
+        [dashboardApi.reducerPath]: dashboardApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([
@@ -47,6 +49,7 @@ export const store = configureStore({
             tagApi.middleware,
             searchApi.middleware,
             encryptionKeysApi.middleware,
+            dashboardApi.middleware,
         ]),
 });
 
