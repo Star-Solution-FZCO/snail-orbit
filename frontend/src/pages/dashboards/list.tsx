@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { CreateDashboardDialog } from "modules/dashboards/components/create_dashboard_dialog";
 import { DashboardListItem } from "modules/dashboards/components/dashboard_list_item";
+import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dashboardApi } from "shared/model";
@@ -24,7 +25,9 @@ const perPageOptions = [10, 25, 50, 100, 500, 1000];
 export const DashboardList = () => {
     const { t } = useTranslation();
 
-    const [debouncedSearch, setSearch] = useDebouncedState<string>("");
+    useCreateIssueNavbarSettings();
+
+    const [debouncedSearch, setSearch, search] = useDebouncedState<string>("");
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -45,12 +48,13 @@ export const DashboardList = () => {
                 gap: 2,
                 height: "100%",
                 px: 4,
+                pb: 4,
             }}
             disableGutters
         >
             <Stack direction="row" justifyContent="space-between" gap={1}>
                 <TextField
-                    value={listQueryParams.search}
+                    value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder={t("dashboards.list.search.placeholder")}
                     size="small"

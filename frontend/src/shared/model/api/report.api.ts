@@ -1,7 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import type { ListResponse } from "../types";
+import type { ApiResponse, ListResponse } from "../types";
 import { type ListQueryParams } from "../types";
-import type { ReportT } from "../types/report";
+import type { CreateReportT, ReportT } from "../types/report";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Reports"];
@@ -31,5 +31,9 @@ export const reportApi = createApi({
                 },
             },
         ),
+        createReport: build.mutation<ApiResponse<ReportT>, CreateReportT>({
+            query: (body) => ({ url: "report", body, method: "POST" }),
+            invalidatesTags: [{ type: "Reports", id: "LIST" }],
+        }),
     }),
 });

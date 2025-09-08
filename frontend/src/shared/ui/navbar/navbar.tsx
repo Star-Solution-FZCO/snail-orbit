@@ -29,10 +29,10 @@ const useLinks = () => {
                 to: "/projects",
                 label: t("navbar.projects"),
             },
-            // {
-            //     to: "/reports/list",
-            //     label: t("navbar.reports"),
-            // },
+            {
+                to: "/reports",
+                label: t("navbar.reports"),
+            },
         ],
         [t],
     );

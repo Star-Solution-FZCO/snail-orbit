@@ -1,44 +1,29 @@
 import { Box, Button, Stack, TextField } from "@mui/material";
 import { ProjectSelect } from "entities/projects/project_select";
-import { usePopupState } from "material-ui-popup-state/hooks";
-import { useMemo } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link, MDEditor } from "shared/ui";
+import { MDEditor } from "shared/ui";
 import { AxisSelect } from "./axis_select";
-import type {
-    CreateReportFormProps,
-    FormValues,
-} from "./create_report_form.types";
+import type { ReportFormProps, ReportFormValues } from "./report_form.types";
 
-const defaultValues: FormValues = {
+const defaultValues: ReportFormValues = {
+    query: "",
     name: "",
     axis_1: { type: "project", custom_field: null },
+    axis_2: null,
     description: "",
     projects: [],
 };
 
-export const CreateReportForm = (props: CreateReportFormProps) => {
-    const { onSubmit } = props;
+export const ReportForm = (props: ReportFormProps) => {
+    const { onSubmit, onBack } = props;
     const { t } = useTranslation();
 
-    const columnSelectPopoverState = usePopupState({
-        variant: "popover",
-        popupId: "column-select",
-    });
-
-    const form = useForm<FormValues>({
+    const form = useForm<ReportFormValues>({
         defaultValues,
     });
 
     const { handleSubmit, control } = form;
-
-    const projects = useWatch({ control, name: "projects" });
-
-    const projectIds = useMemo(
-        () => projects.map((project) => project.id),
-        [projects],
-    );
 
     return (
         <Box
@@ -86,31 +71,40 @@ export const CreateReportForm = (props: CreateReportFormProps) => {
 
             <Controller
                 control={control}
-                name="axis_1"
-                render={({ field }) => <AxisSelect {...field} />}
+                name="query"
+                render={({ field, fieldState: { error, invalid } }) => (
+                    <TextField
+                        {...field}
+                        label={t("createReport.form.query")}
+                        error={invalid}
+                        helperText={error?.message || ""}
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                    />
+                )}
             />
 
-            {/*<Controller*/}
-            {/*    control={control}*/}
-            {/*    name="axis_1.field"*/}
-            {/*    render={({ field: { onChange, value } }) => (*/}
-            {/*        <span>*/}
-            {/*            {t("columns.describedBy")}:{" "}*/}
-            {/*            <Button*/}
-            {/*                {...bindTrigger(columnSelectPopoverState)}*/}
-            {/*                variant="text"*/}
-            {/*                size="small"*/}
-            {/*            >*/}
-            {/*                {value?.name || "-"}*/}
-            {/*            </Button>*/}
-            {/*            <ColumnSelectPopover*/}
-            {/*                {...bindPopover(columnSelectPopoverState)}*/}
-            {/*                projectId={projectIds}*/}
-            {/*                onChange={(_, value) => onChange(value)}*/}
-            {/*            />*/}
-            {/*        </span>*/}
-            {/*    )}*/}
-            {/*/>*/}
+            <Controller
+                control={control}
+                name="axis_1"
+                render={({ field }) => (
+                    <AxisSelect {...field} label={t("axis1.label")} />
+                )}
+            />
+
+            <Controller
+                control={control}
+                name="axis_2"
+                render={({ field }) => (
+                    <AxisSelect
+                        {...field}
+                        value={field.value || undefined}
+                        label={t("axis2.label")}
+                        withNone
+                    />
+                )}
+            />
 
             <Stack direction="row" gap={1}>
                 <Button
@@ -120,11 +114,14 @@ export const CreateReportForm = (props: CreateReportFormProps) => {
                 >
                     {t("save")}
                 </Button>
-                <Link to="..">
-                    <Button variant="outlined" size="small" color="error">
-                        {t("cancel")}
-                    </Button>
-                </Link>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    color="error"
+                    onClick={onBack}
+                >
+                    {t("cancel")}
+                </Button>
             </Stack>
         </Box>
     );
