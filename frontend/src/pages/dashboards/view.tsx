@@ -35,6 +35,7 @@ export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
                 query: formData.query,
                 ui_settings: {
                     height: formData.height,
+                    polling_interval: formData.polling_interval,
                 },
             },
         })

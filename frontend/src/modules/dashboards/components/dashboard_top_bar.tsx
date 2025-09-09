@@ -49,6 +49,7 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
                 <DashboardSelect
                     value={dashboard}
                     onChange={handleChangeDashboard}
+                    onCreate={() => setCreateDialogOpen(true)}
                 />
 
                 {canEdit && (

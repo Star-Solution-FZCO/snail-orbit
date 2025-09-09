@@ -3,10 +3,10 @@ import { useMemo, useState } from "react";
 import { customFieldsApi, userApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
-import { useListQueryParams } from "shared/utils";
 import { SelectField } from "shared/ui/fields/select_field";
-import { getUserAvatarAdornment } from "./utils";
 import { cardLabelGetter } from "shared/ui/fields/utils";
+import { useListQueryParams } from "shared/utils";
+import { getUserAvatarAdornment } from "./utils";
 
 type UserFieldProps = {
     value?: BasicUserT | BasicUserT[];

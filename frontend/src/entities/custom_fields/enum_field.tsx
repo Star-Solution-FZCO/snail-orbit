@@ -3,13 +3,10 @@ import { useMemo, useState } from "react";
 import { customFieldsApi } from "shared/model";
 import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
-import { useListQueryParams } from "shared/utils";
 import { SelectField } from "shared/ui/fields/select_field";
-import {
-    getCustomFieldOptionLabel,
-    getOptionColorAdornment,
-} from "./utils";
 import { cardLabelGetter } from "shared/ui/fields/utils";
+import { useListQueryParams } from "shared/utils";
+import { getCustomFieldOptionLabel, getOptionColorAdornment } from "./utils";
 
 type EnumFieldProps = {
     value?: CustomFieldOptionNoUserT | CustomFieldOptionNoUserT[];

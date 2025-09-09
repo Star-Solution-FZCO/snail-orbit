@@ -8,10 +8,11 @@ import { DashboardListPopover } from "./dashboard_list_popover";
 type DashboardSelectProps = {
     value: DashboardT;
     onChange: (value: DashboardT) => void;
+    onCreate: () => void;
 };
 
 export const DashboardSelect: FC<DashboardSelectProps> = (props) => {
-    const { value, onChange } = props;
+    const { value, onChange, onCreate } = props;
 
     const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
 
@@ -46,6 +47,7 @@ export const DashboardSelect: FC<DashboardSelectProps> = (props) => {
                 anchorEl={buttonRef}
                 onClose={() => setButtonRef(null)}
                 onSelect={onChange}
+                onCreate={onCreate}
             />
         </>
     );

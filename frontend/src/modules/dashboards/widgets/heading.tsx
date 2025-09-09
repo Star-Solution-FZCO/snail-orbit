@@ -1,4 +1,8 @@
-import { Delete, Edit, MoreVert } from "@mui/icons-material";
+import CachedIcon from "@mui/icons-material/Cached";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import CopyIcon from "@mui/icons-material/FileCopy";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
     IconButton,
     ListItemIcon,
@@ -11,19 +15,19 @@ import {
 import type { FC, MouseEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DashboardTileT } from "shared/model/types";
 import { Link } from "shared/ui";
+import { WidgetProps } from "./types";
 
-interface WidgetHeadingProps {
-    widget: DashboardTileT;
-    onEdit: (widget: DashboardTileT) => void;
-    onDelete: (widget: DashboardTileT) => void;
-    canManage?: boolean;
+interface WidgetHeadingProps extends WidgetProps {
+    onRefresh: () => void;
 }
 
 export const WidgetHeading: FC<WidgetHeadingProps> = ({
     widget,
+    issueCount,
+    onRefresh,
     onDelete,
+    onClone,
     onEdit,
     canManage = false,
 }) => {
@@ -43,6 +47,11 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
     const handleEdit = () => {
         handleMenuClose();
         onEdit(widget);
+    };
+
+    const handleClone = () => {
+        handleMenuClose();
+        onClone(widget);
     };
 
     const handleDelete = () => {
@@ -68,13 +77,23 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
                 fontWeight="bold"
             >
                 {widget.name}
+
+                <Typography component="sup" variant="caption">
+                    {issueCount !== undefined ? ` ${issueCount}` : ""}
+                </Typography>
             </Link>
 
-            {canManage && (
-                <IconButton onClick={handleMenuOpen} size="small">
-                    <MoreVert fontSize="small" />
+            <Stack direction="row" alignItems="center" gap={1}>
+                <IconButton onClick={onRefresh} size="small">
+                    <CachedIcon fontSize="small" />
                 </IconButton>
-            )}
+
+                {canManage && (
+                    <IconButton onClick={handleMenuOpen} size="small">
+                        <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                )}
+            </Stack>
 
             <Menu
                 anchorEl={anchorEl}
@@ -91,15 +110,25 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
             >
                 <MenuItem onClick={handleEdit}>
                     <ListItemIcon>
-                        <Edit fontSize="small" />
+                        <EditIcon fontSize="small" />
                     </ListItemIcon>
 
                     <ListItemText>{t("dashboards.widgets.edit")}</ListItemText>
                 </MenuItem>
 
+                <MenuItem onClick={handleClone}>
+                    <ListItemIcon>
+                        <CopyIcon fontSize="small" />
+                    </ListItemIcon>
+
+                    <ListItemText>
+                        <Typography>{t("dashboards.widgets.clone")}</Typography>
+                    </ListItemText>
+                </MenuItem>
+
                 <MenuItem onClick={handleDelete}>
                     <ListItemIcon>
-                        <Delete fontSize="small" color="error" />
+                        <DeleteIcon fontSize="small" color="error" />
                     </ListItemIcon>
 
                     <ListItemText>
