@@ -14,6 +14,7 @@ export const WidgetContainer = styled(Stack)(({ theme }) => ({
 
 interface WidgetBaseProps extends React.PropsWithChildren, WidgetProps {
     onRefresh: () => void;
+    loading?: boolean;
 }
 
 export const WidgetBase: FC<WidgetBaseProps> = ({ children, ...props }) => {

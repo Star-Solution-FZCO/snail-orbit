@@ -28,6 +28,9 @@ const ProjectList = () => {
     const [debouncedSearch, setSearch] = useDebouncedState<string>("");
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
 
+    const isAdmin = useAppSelector(
+        (state) => state.profile.user?.is_admin || false,
+    );
     const userAccessClaims =
         useAppSelector((state) => state.profile.user?.access_claims) || [];
 
@@ -38,7 +41,8 @@ const ProjectList = () => {
 
     const projects = data?.payload?.items || [];
     const count = data?.payload?.count || 0;
-    const canCreateProject = userAccessClaims.includes("global:project_create");
+    const canCreateProject =
+        isAdmin || userAccessClaims.includes("global:project_create");
 
     return (
         <Container

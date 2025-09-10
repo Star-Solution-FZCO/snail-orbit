@@ -20,6 +20,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
     const {
         data,
         isLoading: loading,
+        isFetching,
         error,
         refetch: refetchQuery,
     } = issueApi.useListIssuesQuery(
@@ -132,7 +133,12 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
         );
 
     return (
-        <WidgetBase {...props} onRefresh={refetch} issueCount={count}>
+        <WidgetBase
+            {...props}
+            onRefresh={refetch}
+            issueCount={count}
+            loading={isFetching}
+        >
             <Stack overflow="auto" px={2} pb={1}>
                 {issues.length === 0 && !loading && (
                     <Typography variant="body2" color="text.secondary">
@@ -146,8 +152,6 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
                         issue={issue}
                         showSubscribeButton={false}
                         showUpdateTime={false}
-                        showCustomFields
-                        customFieldSlots={5}
                     />
                 ))}
 

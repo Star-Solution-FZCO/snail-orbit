@@ -20,6 +20,7 @@ import { WidgetProps } from "./types";
 
 interface WidgetHeadingProps extends WidgetProps {
     onRefresh: () => void;
+    loading?: boolean;
 }
 
 export const WidgetHeading: FC<WidgetHeadingProps> = ({
@@ -30,6 +31,7 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
     onClone,
     onEdit,
     canManage = false,
+    loading = false,
 }) => {
     const { t } = useTranslation();
 
@@ -84,7 +86,26 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
             </Link>
 
             <Stack direction="row" alignItems="center" gap={1}>
-                <IconButton onClick={onRefresh} size="small">
+                <IconButton
+                    sx={{
+                        "& svg": {
+                            animation: loading
+                                ? "spin 1s linear infinite reverse"
+                                : "none",
+                        },
+                        "@keyframes spin": {
+                            "0%": {
+                                transform: "rotate(0deg)",
+                            },
+                            "100%": {
+                                transform: "rotate(360deg)",
+                            },
+                        },
+                    }}
+                    onClick={onRefresh}
+                    size="small"
+                    disabled={loading}
+                >
                     <CachedIcon fontSize="small" />
                 </IconButton>
 
