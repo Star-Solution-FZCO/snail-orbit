@@ -20,12 +20,14 @@ interface ICustomFieldOwnedOptionProps {
     option: OwnedOptionT;
     onEdit: (option: OwnedOptionT) => void;
     onDelete: (option: OwnedOptionT) => void;
+    readOnly?: boolean;
 }
 
 const CustomFieldOwnedOption: FC<ICustomFieldOwnedOptionProps> = ({
     option,
     onEdit,
     onDelete,
+    readOnly = false,
 }) => {
     return (
         <Box display="flex" alignItems="center" gap={1}>
@@ -53,28 +55,33 @@ const CustomFieldOwnedOption: FC<ICustomFieldOwnedOptionProps> = ({
                 )}
             </Box>
 
-            <IconButton onClick={() => onEdit(option)} size="small">
-                <EditIcon />
-            </IconButton>
+            {!readOnly && (
+                <>
+                    <IconButton onClick={() => onEdit(option)} size="small">
+                        <EditIcon />
+                    </IconButton>
 
-            <IconButton
-                onClick={() => onDelete(option)}
-                color="error"
-                size="small"
-            >
-                <DeleteIcon />
-            </IconButton>
+                    <IconButton
+                        onClick={() => onDelete(option)}
+                        color="error"
+                        size="small"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                </>
+            )}
         </Box>
     );
 };
 
 interface ICustomFieldOwnedOptionsEditorProps {
     customField: CustomFieldT;
+    readOnly?: boolean;
 }
 
 const CustomFieldOwnedOptionsEditor: FC<
     ICustomFieldOwnedOptionsEditorProps
-> = ({ customField }) => {
+> = ({ customField, readOnly = false }) => {
     const { t } = useTranslation();
 
     const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -167,9 +174,11 @@ const CustomFieldOwnedOptionsEditor: FC<
                     {t("customFields.options.title")}
                 </Typography>
 
-                <IconButton onClick={handleClickAddOption} size="small">
-                    <AddIcon />
-                </IconButton>
+                {!readOnly && (
+                    <IconButton onClick={handleClickAddOption} size="small">
+                        <AddIcon />
+                    </IconButton>
+                )}
 
                 {createLoading && (
                     <CircularProgress size={20} color="inherit" />
@@ -186,6 +195,7 @@ const CustomFieldOwnedOptionsEditor: FC<
                     option={option as OwnedOptionT}
                     onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
+                    readOnly={readOnly}
                 />
             ))}
 

@@ -96,6 +96,7 @@ export const groupCustomFields = (
 ): Array<{
     gid: string;
     name: string;
+    type: string;
     fields: CustomFieldT[];
 }> => {
     const groups = new Map<string, CustomFieldT[]>();
@@ -110,6 +111,7 @@ export const groupCustomFields = (
     return Array.from(groups.entries()).map(([gid, groupFields]) => ({
         gid,
         fields: groupFields,
+        type: groupFields[0]?.type || "",
         name: groupFields[0]?.name || "",
     }));
 };

@@ -35,8 +35,10 @@ interface ICustomFieldFormProps {
     onDelete?: () => void;
     onCancel?: () => void;
     onCopy?: () => void;
+    onEdit?: () => void;
     type: CustomFieldTypeT;
     loading?: boolean;
+    disabled?: boolean;
 }
 
 const CustomFieldForm: FC<ICustomFieldFormProps> = ({
@@ -45,12 +47,14 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
     onDelete,
     onCancel,
     onCopy,
+    onEdit,
     type,
     loading,
+    disabled,
 }) => {
     const { t } = useTranslation();
 
-    const [usedInExpanded, setUsedInExpanded] = useState(false);
+    const [usedInExpanded, setUsedInExpanded] = useState(true);
 
     const {
         control,
@@ -92,6 +96,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 variant="outlined"
                 size="small"
                 fullWidth
+                disabled={disabled}
             />
 
             <Controller
@@ -109,6 +114,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                         onChange={onChange}
                         error={!!errors?.default_value}
                         errorMessage={errors.default_value?.message as string}
+                        disabled={disabled}
                     />
                 )}
             />
@@ -124,6 +130,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                                 checked={value}
                                 onChange={(_, checked) => onChange(checked)}
                                 size="small"
+                                disabled={disabled}
                             />
                         }
                     />
@@ -131,15 +138,21 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
             />
 
             <Box display="flex" gap={1}>
-                <Button
-                    type="submit"
-                    variant="outlined"
-                    size="small"
-                    loading={loading}
-                    disabled={!isDirty}
-                >
-                    {t("save")}
-                </Button>
+                {disabled && onEdit ? (
+                    <Button onClick={onEdit} variant="outlined" size="small">
+                        {t("customFields.form.edit")}
+                    </Button>
+                ) : (
+                    <Button
+                        type="submit"
+                        variant="outlined"
+                        size="small"
+                        loading={loading}
+                        disabled={!isDirty || disabled}
+                    >
+                        {t("save")}
+                    </Button>
+                )}
 
                 {onCancel && (
                     <Button

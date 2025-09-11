@@ -7,8 +7,11 @@ import {
     DialogContentText,
     DialogTitle,
     IconButton,
+    TextField,
+    Typography,
 } from "@mui/material";
 import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface IConfirmCustomFieldChangesDialogProps {
@@ -16,12 +19,28 @@ interface IConfirmCustomFieldChangesDialogProps {
     onSubmit: () => void;
     onClose: () => void;
     loading?: boolean;
+    customFieldName?: string;
 }
 
 export const ConfirmCustomFieldChangesDialog: FC<
     IConfirmCustomFieldChangesDialogProps
-> = ({ open, onSubmit, onClose, loading }) => {
+> = ({ open, onSubmit, onClose, loading, customFieldName }) => {
     const { t } = useTranslation();
+    const [confirmationText, setConfirmationText] = useState("");
+
+    const isConfirmationValid = confirmationText === customFieldName;
+
+    const handleSubmit = () => {
+        if (isConfirmationValid) {
+            onSubmit();
+            setConfirmationText("");
+        }
+    };
+
+    const handleClose = () => {
+        onClose();
+        setConfirmationText("");
+    };
 
     return (
         <Dialog open={open} onClose={onClose}>
@@ -41,11 +60,47 @@ export const ConfirmCustomFieldChangesDialog: FC<
                 <DialogContentText>
                     {t("customFields.save.warning")}
                 </DialogContentText>
+
+                {customFieldName && (
+                    <>
+                        <Typography mt={2} mb={1} fontWeight="bold">
+                            {t("customFields.save.confirmationRequired")}
+                        </Typography>
+
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            mb={2}
+                        >
+                            {t("customFields.save.typeFieldName", {
+                                name: customFieldName,
+                            })}
+                        </Typography>
+
+                        <TextField
+                            value={confirmationText}
+                            placeholder={customFieldName}
+                            onChange={(e) =>
+                                setConfirmationText(e.target.value)
+                            }
+                            error={
+                                confirmationText !== "" && !isConfirmationValid
+                            }
+                            helperText={
+                                confirmationText !== "" && !isConfirmationValid
+                                    ? t("customFields.save.nameDoesNotMatch")
+                                    : ""
+                            }
+                            fullWidth
+                            size="small"
+                        />
+                    </>
+                )}
             </DialogContent>
 
             <DialogActions>
                 <Button
-                    onClick={onClose}
+                    onClick={handleClose}
                     variant="outlined"
                     color="error"
                     disabled={loading}
@@ -53,7 +108,12 @@ export const ConfirmCustomFieldChangesDialog: FC<
                     {t("cancel")}
                 </Button>
 
-                <Button onClick={onSubmit} variant="outlined" loading={loading}>
+                <Button
+                    onClick={handleSubmit}
+                    variant="outlined"
+                    loading={loading}
+                    disabled={!isConfirmationValid}
+                >
                     {t("save")}
                 </Button>
             </DialogActions>

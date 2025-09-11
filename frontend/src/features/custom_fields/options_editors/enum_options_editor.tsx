@@ -20,12 +20,14 @@ interface ICustomFieldEnumOptionProps {
     option: EnumOptionT;
     onEdit: (option: EnumOptionT) => void;
     onDelete: (option: EnumOptionT) => void;
+    readOnly?: boolean;
 }
 
 const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
     option,
     onEdit,
     onDelete,
+    readOnly = false,
 }) => {
     return (
         <Box display="flex" alignItems="center" gap={1}>
@@ -42,27 +44,33 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
 
             <Typography flex={1}>{option.value}</Typography>
 
-            <IconButton onClick={() => onEdit(option)} size="small">
-                <EditIcon />
-            </IconButton>
+            {!readOnly && (
+                <>
+                    <IconButton onClick={() => onEdit(option)} size="small">
+                        <EditIcon />
+                    </IconButton>
 
-            <IconButton
-                onClick={() => onDelete(option)}
-                color="error"
-                size="small"
-            >
-                <DeleteIcon />
-            </IconButton>
+                    <IconButton
+                        onClick={() => onDelete(option)}
+                        color="error"
+                        size="small"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                </>
+            )}
         </Box>
     );
 };
 
 interface ICustomFieldEnumOptionsEditorProps {
     customField: CustomFieldT;
+    readOnly?: boolean;
 }
 
 const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
     customField,
+    readOnly = false,
 }) => {
     const { t } = useTranslation();
 
@@ -152,9 +160,11 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
                     {t("customFields.options.title")}
                 </Typography>
 
-                <IconButton onClick={handleClickAddOption} size="small">
-                    <AddIcon />
-                </IconButton>
+                {!readOnly && (
+                    <IconButton onClick={handleClickAddOption} size="small">
+                        <AddIcon />
+                    </IconButton>
+                )}
 
                 {createLoading && (
                     <CircularProgress size={20} color="inherit" />
@@ -171,6 +181,7 @@ const CustomFieldEnumOptionsEditor: FC<ICustomFieldEnumOptionsEditorProps> = ({
                     option={option as EnumOptionT}
                     onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
+                    readOnly={readOnly}
                 />
             ))}
 

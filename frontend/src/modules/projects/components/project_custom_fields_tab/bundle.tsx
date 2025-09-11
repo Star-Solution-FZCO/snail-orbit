@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Collapse, IconButton, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
@@ -8,9 +7,10 @@ import { CustomFieldT } from "shared/model/types";
 import { Link } from "shared/ui";
 
 export const Bundle: FC<{
-    bundle: { gid: string; name: string; fields: CustomFieldT[] };
-    onAddCustomFieldClick: (id: string) => void;
-}> = ({ bundle, onAddCustomFieldClick }) => {
+    bundle: { gid: string; name: string; type: string; fields: CustomFieldT[] };
+    onCustomFieldClick: (field: CustomFieldT) => void;
+    selectedFieldId?: string;
+}> = ({ bundle, onCustomFieldClick, selectedFieldId }) => {
     const isAdmin = useAppSelector(
         (state) => state.profile.user?.is_admin || false,
     );
@@ -59,36 +59,45 @@ export const Bundle: FC<{
                 ) : (
                     <Typography fontWeight="bold">{bundle.name}</Typography>
                 )}
+
+                <Box flex={1} />
+
+                <Typography color="text.secondary">{bundle.type}</Typography>
             </Stack>
 
             <Collapse in={expanded}>
                 <Stack pl={0.5} pt={0.5}>
-                    {bundle.fields.map((field) => (
-                        <Box
-                            key={field.id}
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            gap={1}
-                        >
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <IconButton
-                                    onClick={() =>
-                                        onAddCustomFieldClick(field.id)
-                                    }
-                                    size="small"
+                    {bundle.fields.map((field) => {
+                        const isSelected = selectedFieldId === field.id;
+                        return (
+                            <Stack
+                                key={field.id}
+                                sx={{
+                                    "&:hover": {
+                                        backgroundColor: "action.hover",
+                                    },
+                                    cursor: "pointer",
+                                    borderRadius: 1,
+                                    backgroundColor: isSelected
+                                        ? "action.selected"
+                                        : "transparent",
+                                }}
+                                px={1}
+                                py={0.5}
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                gap={1}
+                                onClick={() => onCustomFieldClick(field)}
+                            >
+                                <Typography
+                                    fontWeight={isSelected ? "bold" : "normal"}
                                 >
-                                    <AddIcon fontSize="small" />
-                                </IconButton>
-
-                                <Typography flex={1} fontWeight="bold">
                                     {field.label}
                                 </Typography>
-                            </Box>
-
-                            <Typography>{field.type}</Typography>
-                        </Box>
-                    ))}
+                            </Stack>
+                        );
+                    })}
                 </Stack>
             </Collapse>
         </Stack>

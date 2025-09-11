@@ -1,7 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Button, IconButton, Stack } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import type { GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DataGrid } from "@mui/x-data-grid";
 import type { FC } from "react";
@@ -28,8 +29,10 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
 
     const [addFieldDialogOpen, setAddFieldDialogOpen] = useState(false);
     const [removeFieldDialogOpen, setRemoveFieldDialogOpen] = useState(false);
+
     const [selectedField, setSelectedField] =
         useState<CustomFieldOutput | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
     const [rowSelectionModel, setRowSelectionModel] =
         useState<GridRowSelectionModel>([]);
 
@@ -105,6 +108,7 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
             project.custom_fields.find((field) => field.id === selectedId) ||
             null;
         setSelectedField(selected);
+        setIsEditing(!!selected);
     };
 
     const handleClearFieldSelection = () => {
@@ -139,7 +143,7 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                     {t("projects.customFields.add")}
                 </Button>
 
-                {selectedField && (
+                {selectedField ? (
                     <Button
                         onClick={handleClearFieldSelection}
                         startIcon={<CloseIcon />}
@@ -149,6 +153,14 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                     >
                         {t("projects.customFields.clearSelection")}
                     </Button>
+                ) : (
+                    <Stack direction="row" alignItems="center" gap={1}>
+                        <InfoIcon color="info" fontSize="small" />
+
+                        <Typography variant="body2" color="text.secondary">
+                            {t("projects.customFields.selectField.hint")}
+                        </Typography>
+                    </Stack>
                 )}
             </Stack>
 
@@ -173,8 +185,11 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 </Stack>
 
                 <Box flex={3} height={1}>
-                    {selectedField && (
-                        <CustomFieldDetail customFieldId={selectedField.id} />
+                    {selectedField && isEditing && (
+                        <CustomFieldDetail
+                            customFieldId={selectedField.id}
+                            project={project}
+                        />
                     )}
                 </Box>
             </Stack>

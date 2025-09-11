@@ -64,7 +64,15 @@ const RenderSelect: FC<
         options?: CustomFieldOptionT[];
         multiple?: boolean;
     }
-> = ({ value, onChange, label, error, options, multiple = false }) => {
+> = ({
+    value,
+    onChange,
+    label,
+    error,
+    options,
+    multiple = false,
+    disabled = false,
+}) => {
     const { t } = useTranslation();
     return (
         <FormControl size="small">
@@ -75,6 +83,7 @@ const RenderSelect: FC<
                 onChange={(e) => onChange(e.target.value)}
                 error={error}
                 multiple={multiple}
+                disabled={disabled}
                 size="small"
             >
                 {!multiple && (
@@ -96,6 +105,7 @@ const RenderBooleanSwitch: FC<InputProps<boolean>> = ({
     value,
     onChange,
     label,
+    disabled,
 }) => {
     const { t } = useTranslation();
     return (
@@ -110,6 +120,7 @@ const RenderBooleanSwitch: FC<InputProps<boolean>> = ({
                     <Switch
                         checked={value}
                         onChange={(e) => onChange(e.target.checked)}
+                        disabled={disabled}
                     />
                     <Typography>
                         {t("customFields.form.defaultValue.boolean.true")}
@@ -192,6 +203,7 @@ export const DefaultValueInput: FC<{
                         value={!!value}
                         onChange={onChange}
                         label={label}
+                        disabled={disabled}
                     />
                 );
             case "integer":
@@ -238,6 +250,7 @@ export const DefaultValueInput: FC<{
                         label={label}
                         error={error}
                         options={options}
+                        disabled={disabled}
                     />
                 );
             case "enum_multi":
@@ -251,6 +264,7 @@ export const DefaultValueInput: FC<{
                         label={label}
                         error={error}
                         options={options}
+                        disabled={disabled}
                         multiple
                     />
                 );

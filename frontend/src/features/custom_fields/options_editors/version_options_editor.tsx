@@ -29,12 +29,14 @@ interface ICustomFieldVersionOptionProps {
     option: VersionOptionT;
     onEdit: (option: VersionOptionT) => void;
     onDelete: (option: VersionOptionT) => void;
+    readOnly?: boolean;
 }
 
 const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
     option,
     onEdit,
     onDelete,
+    readOnly = false,
 }) => {
     const releaseDate = option.release_date
         ? `(${dayjs(option.release_date).format("DD MMM YYYY")})`
@@ -68,28 +70,33 @@ const CustomFieldVersionOption: FC<ICustomFieldVersionOptionProps> = ({
                 label={t("customFields.options.version.archived")}
             />
 
-            <IconButton onClick={() => onEdit(option)} size="small">
-                <EditIcon />
-            </IconButton>
+            {!readOnly && (
+                <>
+                    <IconButton onClick={() => onEdit(option)} size="small">
+                        <EditIcon />
+                    </IconButton>
 
-            <IconButton
-                onClick={() => onDelete(option)}
-                color="error"
-                size="small"
-            >
-                <DeleteIcon />
-            </IconButton>
+                    <IconButton
+                        onClick={() => onDelete(option)}
+                        color="error"
+                        size="small"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                </>
+            )}
         </Box>
     );
 };
 
 interface ICustomFieldVersionOptionsEditorProps {
     customField: CustomFieldT;
+    readOnly?: boolean;
 }
 
 const CustomFieldVersionOptionsEditor: FC<
     ICustomFieldVersionOptionsEditorProps
-> = ({ customField }) => {
+> = ({ customField, readOnly = false }) => {
     const { t } = useTranslation();
 
     const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -178,9 +185,11 @@ const CustomFieldVersionOptionsEditor: FC<
                     {t("customFields.options.title")}
                 </Typography>
 
-                <IconButton onClick={handleClickAddOption} size="small">
-                    <AddIcon />
-                </IconButton>
+                {!readOnly && (
+                    <IconButton onClick={handleClickAddOption} size="small">
+                        <AddIcon />
+                    </IconButton>
+                )}
 
                 {createLoading && (
                     <CircularProgress size={20} color="inherit" />
@@ -197,6 +206,7 @@ const CustomFieldVersionOptionsEditor: FC<
                     option={option as VersionOptionT}
                     onEdit={handleClickEditOption}
                     onDelete={handleClickDeleteOption}
+                    readOnly={readOnly}
                 />
             ))}
 

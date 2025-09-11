@@ -35,11 +35,13 @@ import { toastApiError, useListQueryParams } from "shared/utils";
 interface IUserOrGroupOptionProps {
     entity: UserOrGroupOptionT;
     onDelete: (entity: UserOrGroupOptionT) => void;
+    readOnly?: boolean;
 }
 
 const UserOrGroupOption: FC<IUserOrGroupOptionProps> = ({
     entity,
     onDelete,
+    readOnly = false,
 }) => {
     return (
         <Box display="flex" alignItems="center" gap={1}>
@@ -50,13 +52,15 @@ const UserOrGroupOption: FC<IUserOrGroupOptionProps> = ({
 
             <Typography flex={1}>{entity.value.name}</Typography>
 
-            <IconButton
-                onClick={() => onDelete(entity)}
-                size="small"
-                color="error"
-            >
-                <DeleteIcon />
-            </IconButton>
+            {!readOnly && (
+                <IconButton
+                    onClick={() => onDelete(entity)}
+                    size="small"
+                    color="error"
+                >
+                    <DeleteIcon />
+                </IconButton>
+            )}
         </Box>
     );
 };
@@ -319,10 +323,12 @@ const RemoveUserOrGroupDialog: FC<IRemoveUserOrGroupDialogProps> = ({
 
 interface ICustomFieldOptionsEditorProps {
     customField: CustomFieldT;
+    readOnly?: boolean;
 }
 
 const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
     customField,
+    readOnly = false,
 }) => {
     const { t } = useTranslation();
 
@@ -370,9 +376,14 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
                     {t("customFields.usersAndGroups.title")}
                 </Typography>
 
-                <IconButton onClick={handleClickAddUserOrGroup} size="small">
-                    <AddIcon />
-                </IconButton>
+                {!readOnly && (
+                    <IconButton
+                        onClick={handleClickAddUserOrGroup}
+                        size="small"
+                    >
+                        <AddIcon />
+                    </IconButton>
+                )}
             </Box>
 
             {users.length === 0 && (
@@ -384,6 +395,7 @@ const CustomFieldUserOptionsEditor: FC<ICustomFieldOptionsEditorProps> = ({
                     key={user.uuid}
                     entity={user as unknown as UserOrGroupOptionT}
                     onDelete={handleClickDeleteUserOrGroup}
+                    readOnly={readOnly}
                 />
             ))}
 

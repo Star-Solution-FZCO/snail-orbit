@@ -122,7 +122,10 @@ export const AddProjectCustomFieldDialog: FC<
                     </TabPanel>
 
                     <TabPanel value="use_existing">
-                        <ProjectAvailableCustomFieldList project={project} />
+                        <ProjectAvailableCustomFieldList
+                            project={project}
+                            onClose={handleClose}
+                        />
                     </TabPanel>
                 </TabContext>
             </DialogContent>
