@@ -56,6 +56,7 @@ const NavBarLink: FC<INavBarLinkProps & PropsWithChildren> = ({
                     color: theme.palette.text.primary,
                 },
             }}
+            underline="hover"
         >
             {children}
         </Link>

@@ -184,7 +184,7 @@ export const DashboardWidgets: FC<DashboardWidgetsProps> = ({
 
     return (
         <Stack direction="row" gap={2} alignItems="start">
-            <Stack flex={1} gap={2}>
+            <Stack flex={1} gap={2} minWidth={0}>
                 {columns.leftColumn.map((widget) => (
                     <WidgetRenderer
                         key={widget.id}
@@ -197,7 +197,7 @@ export const DashboardWidgets: FC<DashboardWidgetsProps> = ({
                 ))}
             </Stack>
 
-            <Stack flex={1} gap={2}>
+            <Stack flex={1} gap={2} minWidth={0}>
                 {columns.rightColumn.map((widget) => (
                     <WidgetRenderer
                         key={widget.id}

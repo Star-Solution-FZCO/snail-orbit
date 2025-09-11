@@ -77,41 +77,20 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
                     {[...Array(10)].map((_, idx) => (
                         <Stack
                             key={`widget-${props.widget.id}-issue-skeleton-${idx + 1}`}
+                            direction="row"
                             gap={1}
                         >
-                            <Stack direction="row" gap={1}>
-                                <Skeleton
-                                    variant="rounded"
-                                    width={50}
-                                    height={21}
-                                />
+                            <Skeleton
+                                variant="rounded"
+                                width={50}
+                                height={21}
+                            />
 
-                                <Skeleton
-                                    variant="rounded"
-                                    width="100%"
-                                    height={21}
-                                />
-                            </Stack>
-
-                            <Stack direction="row" gap={1}>
-                                <Skeleton
-                                    variant="rounded"
-                                    width={60}
-                                    height={18}
-                                />
-
-                                <Skeleton
-                                    variant="rounded"
-                                    width={60}
-                                    height={18}
-                                />
-
-                                <Skeleton
-                                    variant="rounded"
-                                    width={60}
-                                    height={18}
-                                />
-                            </Stack>
+                            <Skeleton
+                                variant="rounded"
+                                width="100%"
+                                height={21}
+                            />
                         </Stack>
                     ))}
                 </Stack>

@@ -12,11 +12,10 @@ type DashboardListPopoverProps = {
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
     onSelect?: (dashboard: DashboardT) => void;
-    onCreate: () => void;
 };
 
 export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
-    const { open, anchorEl, onClose, onSelect, onCreate } = props;
+    const { open, anchorEl, onClose, onSelect } = props;
 
     const { t } = useTranslation();
 
@@ -52,16 +51,11 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
     const bottomSlot = useMemo(() => {
         return (
             <>
-                <Button
-                    onClick={() => {
-                        onCreate();
-                        onClose?.();
-                    }}
-                    size="small"
-                    fullWidth
-                >
-                    {t("dashboards.new")}
-                </Button>
+                <Link to="/dashboards/create">
+                    <Button size="small" fullWidth>
+                        {t("dashboards.new")}
+                    </Button>
+                </Link>
 
                 <Link to="/dashboards/list">
                     <Button size="small" fullWidth>
@@ -70,7 +64,7 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
                 </Link>
             </>
         );
-    }, [t, onCreate, onClose]);
+    }, [t, onClose]);
 
     return (
         <>

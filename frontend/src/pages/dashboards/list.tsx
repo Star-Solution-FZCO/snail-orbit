@@ -10,13 +10,11 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { CreateDashboardDialog } from "modules/dashboards/components/create_dashboard_dialog";
 import { DashboardListItem } from "modules/dashboards/components/dashboard_list_item";
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dashboardApi } from "shared/model";
-import { QueryPagination } from "shared/ui";
+import { Link, QueryPagination } from "shared/ui";
 import { formatErrorMessages, useListQueryParams } from "shared/utils";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
 
@@ -29,8 +27,6 @@ export const DashboardList = () => {
 
     const [debouncedSearch, setSearch, search] = useDebouncedState<string>("");
     const [listQueryParams, updateListQueryParams] = useListQueryParams();
-
-    const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
     const { data, isLoading, error } = dashboardApi.useListDashboardQuery({
         ...listQueryParams,
@@ -52,7 +48,12 @@ export const DashboardList = () => {
             }}
             disableGutters
         >
-            <Stack direction="row" justifyContent="space-between" gap={1}>
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                gap={1}
+            >
                 <TextField
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
@@ -61,21 +62,17 @@ export const DashboardList = () => {
                     fullWidth
                 />
 
-                <Button
-                    sx={{ textWrap: "nowrap", flexShrink: 0 }}
-                    onClick={() => setCreateDialogOpen(true)}
-                    startIcon={<AddIcon />}
-                    variant="outlined"
-                    size="small"
-                >
-                    {t("dashboards.new")}
-                </Button>
+                <Link to="/dashboards/create">
+                    <Button
+                        sx={{ textWrap: "nowrap", height: "40px" }}
+                        startIcon={<AddIcon />}
+                        variant="outlined"
+                        size="small"
+                    >
+                        {t("dashboards.new")}
+                    </Button>
+                </Link>
             </Stack>
-
-            <CreateDashboardDialog
-                open={createDialogOpen}
-                onClose={() => setCreateDialogOpen(false)}
-            />
 
             {error && (
                 <Typography>

@@ -6,8 +6,8 @@ import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DashboardT } from "shared/model/types";
+import { Link } from "shared/ui";
 import { canEdit } from "shared/utils/permissions/checks";
-import { CreateDashboardDialog } from "./create_dashboard_dialog";
 import { DashboardSelect } from "./dashboard_select";
 import { DashboardSettingsDialog } from "./dashboard_settings_dialog";
 
@@ -23,7 +23,6 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
     const handleChangeDashboard = (dashboard: DashboardT) => {
@@ -46,7 +45,6 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
                 <DashboardSelect
                     value={dashboard}
                     onChange={handleChangeDashboard}
-                    onCreate={() => setCreateDialogOpen(true)}
                 />
 
                 {isCanEdit && (
@@ -60,14 +58,15 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
             </Stack>
 
             <Stack direction="row" alignItems="center" gap={1}>
-                <Button
-                    onClick={() => setCreateDialogOpen(true)}
-                    size="small"
-                    variant="outlined"
-                    startIcon={<AddIcon />}
-                >
-                    {t("dashboards.new")}
-                </Button>
+                <Link to="/dashboards/create">
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<AddIcon />}
+                    >
+                        {t("dashboards.new")}
+                    </Button>
+                </Link>
 
                 {isCanEdit && (
                     <Button
@@ -80,11 +79,6 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
                     </Button>
                 )}
             </Stack>
-
-            <CreateDashboardDialog
-                open={createDialogOpen}
-                onClose={() => setCreateDialogOpen(false)}
-            />
 
             <DashboardSettingsDialog
                 dashboard={dashboard}
