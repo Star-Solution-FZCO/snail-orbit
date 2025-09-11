@@ -1,17 +1,19 @@
-import type { GroupT } from "./group";
-import type { BasicUserT } from "./user";
+import {
+    permissionTargetTypeValues,
+    permissionTypeValues,
+    type PermissionTargetType,
+    type PermissionType,
+    type PmApiViewsPermissionPermissionOutput,
+} from "./backend-schema.gen";
 
-export const permissionTargets = ["group", "user"] as const;
+export const permissionTargets = permissionTargetTypeValues;
 
-export type PermissionTargetT = (typeof permissionTargets)[number];
+export type PermissionTargetTypeT = PermissionTargetType;
 
-export const permissionTypes = ["view", "edit", "admin"] as const;
+export const permissionTypes = permissionTypeValues;
 
-export type PermissionTypeT = (typeof permissionTypes)[number];
+export type PermissionTypeT = PermissionType;
 
-export type PermissionT = {
-    id: string;
-    target_type: PermissionTargetT;
-    permission_type: PermissionTypeT;
-    target: BasicUserT | GroupT;
-};
+export type PermissionT = PmApiViewsPermissionPermissionOutput;
+
+export type PermissionTargetT = PermissionT["target"];

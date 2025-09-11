@@ -24,7 +24,7 @@ import { tagApi, userApi } from "shared/model";
 import type {
     BasicUserT,
     ListSelectQueryParams,
-    PermissionTargetT,
+    PermissionTargetTypeT,
     PermissionTypeT,
     TagT,
     UserOrGroupT,
@@ -89,7 +89,7 @@ export const AddTagPermissionDialog: FC<AddTagPermissionDialogProps> = ({
         try {
             await grantTagPermission({
                 tagId: tag.id,
-                target_type: selectedTarget.type as PermissionTargetT,
+                target_type: selectedTarget.type as PermissionTargetTypeT,
                 target: selectedTarget.data.id,
                 permission_type: selectedPermissionType,
             }).unwrap();

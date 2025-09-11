@@ -1,37 +1,36 @@
 import { Button, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { dashboardApi } from "shared/model/api/dashboard.api";
-import type { DashboardT } from "shared/model/types";
+import { reportApi } from "shared/model";
+import type { ReportT } from "shared/model/types/report";
 import { Link, UserAvatar } from "shared/ui";
 import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { noLimitListQueryParams } from "shared/utils";
 
-type DashboardListPopoverProps = {
+type ReportListPopoverProps = {
     open: boolean;
     anchorEl?: HTMLElement | null;
     onClose?: () => void;
-    onSelect?: (dashboard: DashboardT) => void;
-    onCreate: () => void;
+    onSelect?: (dashboard: ReportT) => void;
 };
 
-export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
-    const { open, anchorEl, onClose, onSelect, onCreate } = props;
+export const ReportListPopover = memo((props: ReportListPopoverProps) => {
+    const { open, anchorEl, onClose, onSelect } = props;
 
     const { t } = useTranslation();
 
-    const { data, isLoading } = dashboardApi.useListDashboardQuery(
+    const { data, isLoading } = reportApi.useListReportsQuery(
         noLimitListQueryParams,
         { skip: !open },
     );
 
-    const options: DashboardT[] = useMemo(() => {
+    const options: ReportT[] = useMemo(() => {
         if (!data || !data.payload || !data.payload.items.length) return [];
         return data.payload.items;
     }, [data]);
 
     const rightAdornment = useCallback(
-        (el: DashboardT) => (
+        (el: ReportT) => (
             <Stack direction="row" alignItems="center" gap={1}>
                 <UserAvatar src={el.created_by.avatar} />
 
@@ -42,7 +41,7 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
     );
 
     const handleChange = useCallback(
-        (value: DashboardT | DashboardT[] | null) => {
+        (value: ReportT | ReportT[] | null) => {
             if (onSelect && value)
                 onSelect(Array.isArray(value) ? value[0] : value);
         },
@@ -52,35 +51,30 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
     const bottomSlot = useMemo(() => {
         return (
             <>
-                <Button
-                    onClick={() => {
-                        onCreate();
-                        onClose?.();
-                    }}
-                    size="small"
-                    fullWidth
-                >
-                    {t("dashboards.new")}
-                </Button>
+                <Link to="/reports/create">
+                    <Button size="small" fullWidth>
+                        {t("reports.new")}
+                    </Button>
+                </Link>
 
                 <Link to="/dashboards/list">
                     <Button size="small" fullWidth>
-                        {t("dashboardListPopover.goToList")}
+                        {t("reports.goToList")}
                     </Button>
                 </Link>
             </>
         );
-    }, [t, onCreate, onClose]);
+    }, [t]);
 
     return (
         <>
             <FormAutocompletePopover
                 onClose={onClose}
                 anchorEl={anchorEl}
-                id="dashboard-list"
+                id="reports-list"
                 open={open}
                 inputProps={{
-                    placeholder: t("dashboardListPopover.placeholder"),
+                    placeholder: t("reportsListPopover.placeholder"),
                 }}
                 bottomSlot={bottomSlot}
                 loading={isLoading}
@@ -90,7 +84,7 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
                 getOptionLabel={(el) => el.name}
                 getOptionRightAdornment={rightAdornment}
                 getOptionDescription={(el) => el.description}
-                getOptionLink={(el) => `/dashboards/${el.id}`}
+                getOptionLink={(el) => `/reports/${el.id}`}
             />
         </>
     );

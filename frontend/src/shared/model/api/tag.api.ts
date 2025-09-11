@@ -3,7 +3,7 @@ import type {
     ListQueryParams,
     ListResponse,
     PermissionT,
-    PermissionTargetT,
+    PermissionTargetTypeT,
     PermissionTypeT,
     TagDto,
     TagT,
@@ -83,7 +83,7 @@ export const tagApi = createApi({
             ApiResponse<{ id: string }>,
             {
                 tagId: string;
-                target_type: PermissionTargetT;
+                target_type: PermissionTargetTypeT;
                 target: string;
                 permission_type: PermissionTypeT;
             }

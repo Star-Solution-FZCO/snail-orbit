@@ -2,9 +2,11 @@ import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Button, IconButton, Stack } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { FC, useState } from "react";
+import type { FC } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DashboardT } from "shared/model/types";
+import type { DashboardT } from "shared/model/types";
+import { canEdit } from "shared/utils/permissions/checks";
 import { CreateDashboardDialog } from "./create_dashboard_dialog";
 import { DashboardSelect } from "./dashboard_select";
 import { DashboardSettingsDialog } from "./dashboard_settings_dialog";
@@ -31,9 +33,7 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
         });
     };
 
-    const canEdit =
-        dashboard.current_permission === "edit" ||
-        dashboard.current_permission === "admin";
+    const isCanEdit = canEdit(dashboard.current_permission);
 
     return (
         <Stack
@@ -41,9 +41,6 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
             justifyContent="space-between"
             alignItems="center"
             gap={1}
-            borderBottom={1}
-            borderColor="divider"
-            pb={1}
         >
             <Stack direction="row" alignItems="center" gap={1}>
                 <DashboardSelect
@@ -52,7 +49,7 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
                     onCreate={() => setCreateDialogOpen(true)}
                 />
 
-                {canEdit && (
+                {isCanEdit && (
                     <IconButton
                         onClick={() => setSettingsDialogOpen(true)}
                         color="primary"
@@ -72,7 +69,7 @@ export const DashboardTopBar: FC<DashboardTopBarProps> = ({
                     {t("dashboards.new")}
                 </Button>
 
-                {canEdit && (
+                {isCanEdit && (
                     <Button
                         onClick={onAddWidget}
                         size="small"

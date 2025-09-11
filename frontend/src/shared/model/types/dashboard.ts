@@ -5,7 +5,7 @@ import type {
     IssueListTileCreate,
     TileUpdate,
 } from "./backend-schema.gen";
-import { PermissionTargetT, PermissionTypeT } from "./permission";
+import type { PermissionTargetTypeT, PermissionTypeT } from "./permission";
 
 export type DashboardT = DashboardOutput;
 
@@ -23,7 +23,7 @@ export type DashboardTileTypeT = DashboardTileT["type"];
 
 export type GrantDashboardPermissionT = {
     dashboard_id: string;
-    target_type: PermissionTargetT;
+    target_type: PermissionTargetTypeT;
     target: string;
     permission_type: PermissionTypeT;
 };

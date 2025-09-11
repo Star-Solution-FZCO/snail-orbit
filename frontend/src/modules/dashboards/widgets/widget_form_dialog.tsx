@@ -17,7 +17,7 @@ import {
 import { type FC, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { DashboardTileT } from "shared/model/types";
+import type { DashboardTileT } from "shared/model/types";
 import { TabPanel } from "shared/ui";
 import QueryBuilder from "widgets/query_builder/query_builder";
 import * as yup from "yup";

@@ -6,6 +6,10 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { AgileBoardT } from "shared/model/types";
 import { TabPanel } from "shared/ui";
+import {
+    canOnlyView,
+    isAdmin,
+} from "../../../../shared/utils/permissions/checks";
 import { Access } from "./tabs/access";
 import { Card } from "./tabs/card";
 import { ColumnSwimlanes } from "./tabs/column_swimlanes";
@@ -53,8 +57,8 @@ const AgileBoardForm: FC<IAgileBoardFormProps> = ({ board, onSubmit }) => {
         }
     }, [debouncedSubmit, dirtyFields, fieldValues]);
 
-    const isBoardViewer = board.current_permission === "view";
-    const isBoardAdmin = board.current_permission === "admin";
+    const isBoardViewer = canOnlyView(board.current_permission);
+    const isBoardAdmin = isAdmin(board.current_permission);
 
     return (
         <FormProvider {...form}>

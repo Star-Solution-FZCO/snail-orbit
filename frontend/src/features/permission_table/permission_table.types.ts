@@ -7,4 +7,6 @@ export type PermissionTableProps = {
         type: PermissionTypeT,
     ) => void;
     onDeletePermission?: (permission: PermissionT) => void;
+    disableChangeType?: boolean;
+    disableDelete?: boolean;
 };

@@ -1,13 +1,12 @@
 import { Button, Skeleton, Stack, Typography } from "@mui/material";
-import { FC, useMemo, useState } from "react";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dashboardApi } from "shared/model";
-import { DashboardT, DashboardTileT } from "shared/model/types";
+import type { DashboardT, DashboardTileT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
-import {
-    DashboardWidgetFormData,
-    WidgetFormDialog,
-} from "../widgets/widget_form_dialog";
+import type { DashboardWidgetFormData } from "../widgets/widget_form_dialog";
+import { WidgetFormDialog } from "../widgets/widget_form_dialog";
 import { WidgetRenderer } from "../widgets/widget_renderer";
 import { DeleteWidgetDialog } from "./delete_widget_dialog";
 

@@ -4,13 +4,7 @@ import type {
     BoardOutput,
     CustomFieldGroupLinkOutput,
 } from "./backend-schema.gen";
-import type {
-    EnumFieldValueT,
-    StateFieldValueT,
-    VersionFieldValueT,
-} from "./custom_fields";
-import type { IssueT } from "./issue";
-import type { PermissionTargetT, PermissionTypeT } from "./permission";
+import type { PermissionTargetTypeT, PermissionTypeT } from "./permission";
 
 export type CreateAgileBoardT = BoardCreate;
 
@@ -33,26 +27,11 @@ export type AgileBoardT = Omit<BoardOutput, "ui_settings"> & {
 
 export type UpdateAgileBoardT = Partial<CreateAgileBoardT>;
 
-export type AgileFieldValueT =
-    | EnumFieldValueT
-    | StateFieldValueT
-    | VersionFieldValueT;
-
 export type AgileBoardCardFieldT = CustomFieldGroupLinkOutput;
-
-export type AgileColumnT = {
-    field_value: AgileFieldValueT | null;
-    issues: IssueT[];
-};
-
-export type AgileSwimLineT = {
-    field_value: AgileFieldValueT | null;
-    columns: AgileColumnT[];
-};
 
 export type GrantPermissionParams = {
     board_id: string;
-    target_type: PermissionTargetT;
+    target_type: PermissionTargetTypeT;
     target: string;
     permission_type: PermissionTypeT;
 };

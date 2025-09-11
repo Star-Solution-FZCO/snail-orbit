@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ReportView } from "pages/reports";
 
 export const Route = createFileRoute("/_authenticated/reports/$reportId")({
     component: RouteComponent,
 });
 
 function RouteComponent() {
-    return <div>Hello "/_authenticated/reports/$reportId"!</div>;
+    const { reportId } = Route.useParams();
+
+    return <ReportView reportId={reportId} />;
 }

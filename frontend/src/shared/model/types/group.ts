@@ -1,11 +1,11 @@
-export type CreateGroupT = {
-    name: string;
-    description: string | null;
-};
+import type {
+    GroupCreate,
+    GroupOutput,
+    GroupUpdate,
+} from "./backend-schema.gen";
 
-export type UpdateGroupT = Partial<CreateGroupT>;
+export type CreateGroupT = GroupCreate;
 
-export type GroupT = {
-    id: string;
-    type: "local" | "wb" | "all_users";
-} & CreateGroupT;
+export type UpdateGroupT = GroupUpdate;
+
+export type GroupT = GroupOutput;

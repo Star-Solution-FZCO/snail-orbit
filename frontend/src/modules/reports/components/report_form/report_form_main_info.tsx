@@ -1,38 +1,20 @@
-import { Box, Button, Stack, TextField } from "@mui/material";
+import { Stack, TextField } from "@mui/material";
 import { ProjectSelect } from "entities/projects/project_select";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MDEditor } from "shared/ui";
 import { AxisSelect } from "./axis_select";
-import type { ReportFormProps, ReportFormValues } from "./report_form.types";
+import type { ReportFormValues } from "./report_form.types";
 
-const defaultValues: ReportFormValues = {
-    query: "",
-    name: "",
-    axis_1: { type: "project", custom_field: null },
-    axis_2: null,
-    description: "",
-    projects: [],
-};
-
-export const ReportForm = (props: ReportFormProps) => {
-    const { onSubmit, onBack } = props;
+export const ReportFormMainInfo = () => {
     const { t } = useTranslation();
 
-    const form = useForm<ReportFormValues>({
-        defaultValues,
-    });
+    const form = useFormContext<ReportFormValues>();
 
-    const { handleSubmit, control } = form;
+    const { control } = form;
 
     return (
-        <Box
-            component="form"
-            display="flex"
-            flexDirection="column"
-            gap={2}
-            onSubmit={handleSubmit(onSubmit)}
-        >
+        <Stack direction="column" gap={2}>
             <Controller
                 control={control}
                 name={"name"}
@@ -105,24 +87,6 @@ export const ReportForm = (props: ReportFormProps) => {
                     />
                 )}
             />
-
-            <Stack direction="row" gap={1}>
-                <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleSubmit(onSubmit)}
-                >
-                    {t("save")}
-                </Button>
-                <Button
-                    variant="outlined"
-                    size="small"
-                    color="error"
-                    onClick={onBack}
-                >
-                    {t("cancel")}
-                </Button>
-            </Stack>
-        </Box>
+        </Stack>
     );
 };

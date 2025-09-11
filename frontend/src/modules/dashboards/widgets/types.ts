@@ -1,4 +1,4 @@
-import { DashboardTileT } from "shared/model/types";
+import type { DashboardTileT } from "shared/model/types";
 
 export interface WidgetProps {
     widget: DashboardTileT;

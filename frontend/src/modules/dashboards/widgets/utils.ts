@@ -1,4 +1,4 @@
-import { DashboardTileTypeT } from "shared/model/types";
+import type { DashboardTileTypeT } from "shared/model/types";
 
 export const widgetTypes: Array<{
     label: string;

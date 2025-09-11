@@ -23,7 +23,13 @@ import type { PermissionTableProps } from "./permission_table.types";
 
 const PermissionTable = memo((props: PermissionTableProps) => {
     const { t } = useTranslation();
-    const { permissions, onDeletePermission, onChangePermissionType } = props;
+    const {
+        permissions,
+        onDeletePermission,
+        onChangePermissionType,
+        disableChangeType,
+        disableDelete,
+    } = props;
 
     const popupState = usePopupState({
         variant: "popover",
@@ -94,6 +100,7 @@ const PermissionTable = memo((props: PermissionTableProps) => {
                                         textTransform: "none",
                                         minWidth: 0,
                                     }}
+                                    disabled={disableChangeType}
                                     {...bindTrigger(popupState)}
                                 >
                                     {getPermissionTypeLabel(
@@ -121,15 +128,17 @@ const PermissionTable = memo((props: PermissionTableProps) => {
                                 </Menu>
                             </TableCell>
                             <TableCell align="right">
-                                <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() =>
-                                        onDeletePermission?.(permission)
-                                    }
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
+                                {!disableDelete && (
+                                    <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() =>
+                                            onDeletePermission?.(permission)
+                                        }
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                )}
                             </TableCell>
                         </TableRow>
                     ))}

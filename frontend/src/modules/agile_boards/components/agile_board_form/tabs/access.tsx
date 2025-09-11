@@ -1,75 +1,35 @@
-import type { AutocompleteChangeReason } from "@mui/material";
-import { Button, Paper, Stack } from "@mui/material";
-import PermissionTable from "features/permission_table/permission_table";
-import { UserGroupSelectPopover } from "features/user_group_select/user_group_select_popover";
-import { bindPopover, bindTrigger } from "material-ui-popup-state";
-import { usePopupState } from "material-ui-popup-state/hooks";
-import type { FC, SyntheticEvent } from "react";
-import { useCallback, useMemo } from "react";
+import type { FC } from "react";
+import { useCallback } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import type {
     AgileBoardT,
     PermissionT,
+    PermissionTargetT,
     PermissionTypeT,
 } from "shared/model/types";
-import { type BasicUserT, type GroupT } from "shared/model/types";
+import { PermissionsEditor } from "widgets/permissions_editor/permissions_editor";
 
 export const Access: FC = () => {
-    const { t } = useTranslation();
-
-    const popupState = usePopupState({
-        popupId: "user-select-button",
-        variant: "popover",
-    });
-
     const [grantPermission] = agileBoardApi.useGrantPermissionMutation();
     const [revokePermission] = agileBoardApi.useRevokePermissionMutation();
     const [changePermission] = agileBoardApi.useChangePermissionMutation();
 
-    const { control, getValues } = useFormContext<AgileBoardT>();
+    const { control } = useFormContext<AgileBoardT>();
 
     const boardId = useWatch({ control, name: "id" });
     const permissions = useWatch({ control, name: "permissions" });
 
-    const handleUserSelectChange = useCallback(
-        (
-            _: SyntheticEvent,
-            value: (BasicUserT | GroupT)[] | (BasicUserT | GroupT) | null,
-            reason: AutocompleteChangeReason,
-        ) => {
-            if (!value) return;
-            const permissions = getValues("permissions");
-            const tempValue = Array.isArray(value) ? value : [value];
-
-            if (reason === "selectOption") {
-                const activePermissions = new Set(
-                    permissions.map((el) => el.target.id),
-                );
-                const selectedValue = tempValue.find(
-                    (el) => !activePermissions.has(el.id),
-                );
-                if (!selectedValue) return;
-                grantPermission({
-                    board_id: boardId,
-                    target_type: "email" in selectedValue ? "user" : "group",
-                    target: selectedValue.id,
-                    permission_type: "view",
-                });
-            } else {
-                const activeValues = new Set(tempValue.map((el) => el.id));
-                const deletedPermission = permissions.find(
-                    (el) => !activeValues.has(el.target.id),
-                );
-                if (!deletedPermission) return;
-                revokePermission({
-                    board_id: boardId,
-                    permission_id: deletedPermission.id,
-                });
-            }
+    const handleGrantPermissions = useCallback(
+        (permissionTarget: PermissionTargetT) => {
+            grantPermission({
+                board_id: boardId,
+                target_type: "email" in permissionTarget ? "user" : "group",
+                target: permissionTarget.id,
+                permission_type: "view",
+            });
         },
-        [getValues, grantPermission, boardId, revokePermission],
+        [boardId, grantPermission],
     );
 
     const handleChangePermission = useCallback(
@@ -93,39 +53,14 @@ export const Access: FC = () => {
         [boardId, revokePermission],
     );
 
-    const selectedTargets = useMemo(
-        () => permissions.map((el) => el.target),
-        [permissions],
-    );
-
     return (
-        <Stack direction="column" gap={1} component={Paper} sx={{ p: 1 }}>
-            <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-            >
-                "Grant access to board for this users"
-                <span>{t("agileBoards.access.grant")}</span>
-                <Button
-                    variant="text"
-                    size="small"
-                    {...bindTrigger(popupState)}
-                >
-                    {t("users.add")}
-                </Button>
-                <UserGroupSelectPopover
-                    {...bindPopover(popupState)}
-                    multiple
-                    onChange={handleUserSelectChange}
-                    value={selectedTargets}
-                />
-            </Stack>
-            <PermissionTable
+        <>
+            <PermissionsEditor
                 permissions={permissions}
-                onDeletePermission={handleRevokePermission}
-                onChangePermissionType={handleChangePermission}
+                onChangePermission={handleChangePermission}
+                onRevokePermission={handleRevokePermission}
+                onGrantPermission={handleGrantPermissions}
             />
-        </Stack>
+        </>
     );
 };

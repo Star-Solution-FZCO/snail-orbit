@@ -1,9 +1,9 @@
-import type { CreateReportT } from "shared/model/types/report";
-import type { ReportFormValues } from "./components/report_form.types";
+import type { CreateReportParams } from "shared/model/types/report";
+import type { ReportFormValues } from "./components/report_form/report_form.types";
 
 export const reportFormValuesToEditFormValues = (
     report: ReportFormValues,
-): CreateReportT => ({
+): CreateReportParams => ({
     ...report,
     projects: report.projects.map((el) => el.id),
     permissions: [],

@@ -1,4 +1,4 @@
-import { Stack } from "@mui/material";
+import { Divider, Stack } from "@mui/material";
 import { DashboardSkeleton } from "modules/dashboards/components/dashboard_skeleton";
 import { DashboardTopBar } from "modules/dashboards/components/dashboard_top_bar";
 import { DashboardWidgets } from "modules/dashboards/components/dashboard_widgets";
@@ -68,6 +68,8 @@ export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
                 dashboard={dashboard}
                 onAddWidget={() => setAddWidgetDialogOpen(true)}
             />
+
+            <Divider />
 
             <DashboardWidgets
                 dashboard={dashboard}

@@ -1,15 +1,16 @@
 import { Button, Skeleton, Stack, Typography } from "@mui/material";
 import IssueRow from "modules/issues/components/list/issue_row/issue_row";
-import { FC, useCallback, useEffect, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
-import { IssueT } from "shared/model/types";
+import type { IssueT } from "shared/model/types";
 import { WidgetBase } from "./base";
-import { WidgetProps } from "./types";
+import type { WidgetProps } from "./types";
 
 const ITEMS_PER_PAGE = 100;
 
-interface IssueListWidgetProps extends WidgetProps {}
+type IssueListWidgetProps = WidgetProps;
 
 export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
     const { t } = useTranslation();

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
 import { AgileBoardView } from "pages/agile_boards";
 import { useCallback } from "react";
 import type { AgileBoardT } from "shared/model/types";
@@ -35,13 +34,11 @@ function Component() {
     );
 
     return (
-        <IssueModalViewContextProvider>
-            <AgileBoardView
-                boardId={boardId}
-                query={query}
-                onQueryChange={handleQueryChange}
-                onBoardSelect={handleBoardSelect}
-            />
-        </IssueModalViewContextProvider>
+        <AgileBoardView
+            boardId={boardId}
+            query={query}
+            onQueryChange={handleQueryChange}
+            onBoardSelect={handleBoardSelect}
+        />
     );
 }

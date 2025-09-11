@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 
 const Link = createLink(
     forwardRef<HTMLAnchorElement, LinkProps>((props, ref) => (
-        <MUILink {...props} ref={ref} />
+        <MUILink underline="none" {...props} ref={ref} />
     )),
 );
 

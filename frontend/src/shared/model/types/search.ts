@@ -1,6 +1,6 @@
 import type {
     PermissionT,
-    PermissionTargetT,
+    PermissionTargetTypeT,
     PermissionTypeT,
 } from "./permission";
 import type { BasicUserT } from "./user";
@@ -11,7 +11,7 @@ export type SearchFormValuesT = Pick<
 >;
 
 type CreatePermissionT = {
-    target_type: PermissionTargetT;
+    target_type: PermissionTargetTypeT;
     permission_type: PermissionTypeT;
     target: string;
 };

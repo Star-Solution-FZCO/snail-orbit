@@ -1,8 +1,8 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { IssueListWidget } from "./issue_list_widget";
-import { WidgetProps } from "./types";
+import type { WidgetProps } from "./types";
 
-interface WidgetRendererProps extends WidgetProps {}
+type WidgetRendererProps = WidgetProps;
 
 export const WidgetRenderer: FC<WidgetRendererProps> = (props) => {
     switch (props.widget.type) {
