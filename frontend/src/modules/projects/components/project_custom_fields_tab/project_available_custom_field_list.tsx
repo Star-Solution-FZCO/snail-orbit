@@ -40,7 +40,9 @@ export const ProjectAvailableCustomFieldList: FC<
     const { t } = useTranslation();
     const { id: projectId } = project;
 
-    const [listQueryParams, updateListQueryParams] = useListQueryParams();
+    const [listQueryParams, updateListQueryParams] = useListQueryParams({
+        limit: 1000,
+    });
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedField, setSelectedField] = useState<CustomFieldT | null>(
         null,
