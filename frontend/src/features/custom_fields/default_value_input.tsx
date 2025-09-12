@@ -172,7 +172,7 @@ const RenderDateTimePicker: FC<InputProps<string | null>> = ({
 );
 
 export const DefaultValueInput: FC<{
-    value: CustomFieldValueT;
+    value: CustomFieldValueT | undefined;
     type: CustomFieldTypeT;
     options?: CustomFieldOptionT[];
     onChange: (value: CustomFieldValueT) => void;

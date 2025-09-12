@@ -16,7 +16,11 @@ import {
 import { useEffect, useState, type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { CustomFieldT, CustomFieldTypeT } from "shared/model/types";
+import type {
+    CustomFieldT,
+    CustomFieldTypeT,
+    CustomFieldValueT,
+} from "shared/model/types";
 import { Link } from "shared/ui";
 import * as yup from "yup";
 import { DefaultValueInput } from "./default_value_input";
@@ -24,7 +28,7 @@ import { DefaultValueInput } from "./default_value_input";
 const customFieldSchema = yup.object().shape({
     label: yup.string().required("form.validation.required"),
     is_nullable: yup.boolean().required("form.validation.required"),
-    default_value: yup.mixed(),
+    default_value: yup.mixed().notRequired(),
 });
 
 type CustomFieldFormData = yup.InferType<typeof customFieldSchema>;
@@ -104,7 +108,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                 control={control}
                 render={({ field: { value, onChange } }) => (
                     <DefaultValueInput
-                        value={value}
+                        value={value as CustomFieldValueT}
                         options={
                             defaultValues && "options" in defaultValues
                                 ? defaultValues.options

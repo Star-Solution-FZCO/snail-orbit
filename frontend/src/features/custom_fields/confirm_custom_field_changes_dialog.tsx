@@ -28,7 +28,9 @@ export const ConfirmCustomFieldChangesDialog: FC<
     const { t } = useTranslation();
     const [confirmationText, setConfirmationText] = useState("");
 
-    const isConfirmationValid = confirmationText === customFieldName;
+    const isConfirmationValid = customFieldName
+        ? customFieldName === confirmationText
+        : true;
 
     const handleSubmit = () => {
         if (isConfirmationValid) {
