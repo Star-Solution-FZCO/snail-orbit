@@ -2,6 +2,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Collapse, IconButton, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "shared/model";
 import { CustomFieldT } from "shared/model/types";
 import { Link } from "shared/ui";
@@ -11,6 +12,8 @@ export const Bundle: FC<{
     onCustomFieldClick: (field: CustomFieldT) => void;
     selectedFieldId?: string;
 }> = ({ bundle, onCustomFieldClick, selectedFieldId }) => {
+    const { t } = useTranslation();
+
     const isAdmin = useAppSelector(
         (state) => state.profile.user?.is_admin || false,
     );
@@ -94,6 +97,15 @@ export const Bundle: FC<{
                                     fontWeight={isSelected ? "bold" : "normal"}
                                 >
                                     {field.label}
+                                </Typography>
+
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    {t("customFields.fields.usedInProjects", {
+                                        count: field.projects.length,
+                                    })}
                                 </Typography>
                             </Stack>
                         );

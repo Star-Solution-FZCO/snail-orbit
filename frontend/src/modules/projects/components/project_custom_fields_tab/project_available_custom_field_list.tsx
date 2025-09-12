@@ -78,6 +78,22 @@ export const ProjectAvailableCustomFieldList: FC<
         setSelectedField(field);
     };
 
+    const handleAdd = () => {
+        if (!selectedField) return;
+
+        addProjectCustomField({
+            id: projectId,
+            customFieldId: selectedField.id,
+        })
+            .unwrap()
+            .then(() => {
+                toast.success(t("projects.customFields.add.success"));
+                setSelectedField(null);
+                onClose();
+            })
+            .catch(toastApiError);
+    };
+
     const handleCopyAndAdd = () => {
         if (!selectedField) return;
         setCopyDialogOpen(true);
@@ -257,11 +273,21 @@ export const ProjectAvailableCustomFieldList: FC<
 
                         <Button
                             variant="outlined"
-                            onClick={handleCopyAndAdd}
+                            onClick={handleAdd}
                             size="small"
                             disabled={copyLoading}
                         >
                             {t("projects.customFields.add")}
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            onClick={handleCopyAndAdd}
+                            color="secondary"
+                            size="small"
+                            disabled={copyLoading}
+                        >
+                            {t("projects.customFields.makeCopyAndAdd")}
                         </Button>
 
                         <Divider flexItem />
