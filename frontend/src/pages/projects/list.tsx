@@ -52,6 +52,7 @@ const ProjectList = () => {
                 gap: 2,
                 height: "100%",
                 px: 4,
+                pb: 4,
             }}
             disableGutters
         >
