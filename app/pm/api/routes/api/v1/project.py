@@ -572,13 +572,16 @@ async def get_available_select_fields(
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
-    q = m.CustomField.find(
+    filters = [
         bo.NotIn(m.CustomField.id, [field.id for field in project.custom_fields]),
+    ]
+    if query.search:
+        filters.append(bo.RegEx(m.CustomField.name, query.search, 'i'))
+    q = m.CustomField.find(
+        *filters,
         with_children=True,
         fetch_links=True,
     ).sort(m.CustomField.name)
-    if query.search:
-        q = q.find(bo.RegEx(m.CustomField.name, query.search, 'i'))
     return await BaseListOutput.make_from_query(
         q,
         limit=query.limit,
