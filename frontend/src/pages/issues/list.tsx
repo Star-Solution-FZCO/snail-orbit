@@ -5,7 +5,7 @@ import IssuesList from "modules/issues/components/list/issues_list";
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "modules/issues/widgets/modal_view/use_modal_view";
 import type { FC } from "react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
 import type { IssueT, ProjectT } from "shared/model/types";
@@ -59,19 +59,13 @@ const IssueList: FC<IssueListProps> = (props) => {
         q: totalQuery,
     });
 
-    const handleSearchUpdate = useCallback(
-        (search: string) => {
-            updateListQueryParams((prev) => ({
-                ...prev,
-                query: search,
-            }));
+    const handleUpdateParams = useCallback(
+        (search: Partial<typeof listQueryParams>) => {
+            updateListQueryParams(search);
+            onQueryParamsChanged?.(search);
         },
-        [updateListQueryParams],
+        [],
     );
-
-    useEffect(() => {
-        onQueryParamsChanged?.(listQueryParams);
-    }, [listQueryParams, onQueryParamsChanged, queryParams]);
 
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {
@@ -101,7 +95,7 @@ const IssueList: FC<IssueListProps> = (props) => {
 
                 <SearchField
                     value={listQueryParams?.query || ""}
-                    onChange={handleSearchUpdate}
+                    onChange={(query) => handleUpdateParams({ query })}
                     loading={isFetching}
                 />
             </Stack>
@@ -122,9 +116,9 @@ const IssueList: FC<IssueListProps> = (props) => {
                     pageCount={Math.ceil(
                         (data?.payload.count || 0) / listQueryParams.perPage,
                     )}
-                    onChangePage={(page) => updateListQueryParams({ page })}
+                    onChangePage={(page) => handleUpdateParams({ page })}
                     onChangePerPage={(perPage) =>
-                        updateListQueryParams({ perPage, page: 1 })
+                        handleUpdateParams({ perPage, page: 1 })
                     }
                     onIssueRowDoubleClick={handleIssueRowDoubleClick}
                     totalCount={data?.payload.count}

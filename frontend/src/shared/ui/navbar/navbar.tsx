@@ -26,12 +26,12 @@ const useLinks = () => {
                 label: t("navbar.dashboards"),
             },
             {
-                to: "/projects",
-                label: t("navbar.projects"),
-            },
-            {
                 to: "/reports",
                 label: t("navbar.reports"),
+            },
+            {
+                to: "/projects",
+                label: t("navbar.projects"),
             },
         ],
         [t],

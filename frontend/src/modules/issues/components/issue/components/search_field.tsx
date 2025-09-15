@@ -13,7 +13,7 @@ import type { FC, SyntheticEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SearchT } from "shared/model/types/search";
-import { useQueryBuilder } from "widgets/query_builder/query_builder_provider";
+import { QueryBuilderOffside } from "widgets/query_builder/query_builder_offside";
 import { SearchSelectPopover } from "widgets/search_select/search_select_popover";
 
 type SearchFieldProps = {
@@ -25,8 +25,7 @@ type SearchFieldProps = {
 export const SearchField: FC<SearchFieldProps> = (props) => {
     const { value, onChange, loading } = props;
 
-    const { showQueryBuilder, setShowQueryBuilder, setQuery, query } =
-        useQueryBuilder();
+    const [isQueryBuilderOpen, setIsQueryBuilderOpen] = useState(false);
 
     const [innerValue, setInnerValue] = useState<string>(value || "");
 
@@ -47,75 +46,97 @@ export const SearchField: FC<SearchFieldProps> = (props) => {
 
     useEffect(() => {
         setInnerValue(value);
-        setQuery(value);
-    }, [setQuery, value]);
+    }, [value]);
 
-    useEffect(() => {
-        setInnerValue(query);
-        onChange?.(query);
-    }, [onChange, query]);
+    const handleChangeQuery = useCallback(
+        (value: string) => {
+            setInnerValue(value);
+            onChange?.(value);
+        },
+        [onChange],
+    );
 
     const syncValue = () => {
         onChange?.(innerValue);
     };
 
     return (
-        <TextField
-            fullWidth
-            size="small"
-            placeholder={t("placeholder.search")}
-            value={innerValue}
-            onBlur={syncValue}
-            onKeyUp={(event) => {
-                if (event.key === "Enter") syncValue();
-            }}
-            onChange={(e) => setInnerValue(e.target.value)}
-            slotProps={{
-                input: {
-                    endAdornment: (
-                        <InputAdornment position="end">
-                            {loading && (
-                                <CircularProgress size={14} color="inherit" />
-                            )}
-                            <>
-                                <Tooltip title={t("searchListIcon.tooltip")}>
+        <>
+            <TextField
+                fullWidth
+                size="small"
+                placeholder={t("placeholder.search")}
+                value={innerValue}
+                onBlur={syncValue}
+                onKeyUp={(event) => {
+                    if (event.key === "Enter") syncValue();
+                }}
+                onChange={(e) => setInnerValue(e.target.value)}
+                slotProps={{
+                    input: {
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                {loading && (
+                                    <CircularProgress
+                                        size={14}
+                                        color="inherit"
+                                    />
+                                )}
+                                <>
+                                    <Tooltip
+                                        title={t("searchListIcon.tooltip")}
+                                    >
+                                        <IconButton
+                                            size="small"
+                                            color={
+                                                searchSelectPopoverState.isOpen
+                                                    ? "primary"
+                                                    : "default"
+                                            }
+                                            {...bindTrigger(
+                                                searchSelectPopoverState,
+                                            )}
+                                        >
+                                            <ListAlt />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <SearchSelectPopover
+                                        {...bindPopover(
+                                            searchSelectPopoverState,
+                                        )}
+                                        initialQueryString={value}
+                                        onChange={handleSavedSearchSelect}
+                                    />
+                                </>
+                                <Tooltip title={t("queryBuilderIcon.tooltip")}>
                                     <IconButton
+                                        onClick={() =>
+                                            setIsQueryBuilderOpen(
+                                                (prev) => !prev,
+                                            )
+                                        }
                                         size="small"
                                         color={
-                                            searchSelectPopoverState.isOpen
+                                            isQueryBuilderOpen
                                                 ? "primary"
                                                 : "default"
                                         }
-                                        {...bindTrigger(
-                                            searchSelectPopoverState,
-                                        )}
                                     >
-                                        <ListAlt />
+                                        <FilterAltIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <SearchSelectPopover
-                                    {...bindPopover(searchSelectPopoverState)}
-                                    initialQueryString={value}
-                                    onChange={handleSavedSearchSelect}
-                                />
-                            </>
-                            <Tooltip title={t("queryBuilderIcon.tooltip")}>
-                                <IconButton
-                                    onClick={() =>
-                                        setShowQueryBuilder(!showQueryBuilder)
-                                    }
-                                    size="small"
-                                    color={
-                                        showQueryBuilder ? "primary" : "default"
-                                    }
-                                >
-                                    <FilterAltIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </InputAdornment>
-                    ),
-                },
-            }}
-        />
+                            </InputAdornment>
+                        ),
+                    },
+                }}
+            />
+
+            <QueryBuilderOffside
+                id="searchField"
+                isOpen={isQueryBuilderOpen}
+                initialQuery={innerValue}
+                onChangeQuery={handleChangeQuery}
+            />
+        </>
     );
 };

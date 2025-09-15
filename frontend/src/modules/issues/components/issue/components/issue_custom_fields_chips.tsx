@@ -61,9 +61,9 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
         });
     };
 
-    return fields.map((field) =>
+    return fields.map((field, idx) =>
         !field ? (
-            <div />
+            <div key={idx} />
         ) : (
             <CustomFieldsChipParser
                 field={field}
