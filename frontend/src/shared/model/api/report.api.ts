@@ -4,6 +4,7 @@ import { type ListQueryParams } from "../types";
 import type {
     CreateReportParams,
     GrantReportPermissionParams,
+    ReportDataT,
     ReportT,
     UpdateReportParams,
 } from "../types/report";
@@ -44,6 +45,19 @@ export const reportApi = createApi({
                 { type: "Reports", id: result?.payload.id },
             ],
         }),
+        getReportData: build.query<
+            ApiResponse<ReportDataT>,
+            { reportId: string }
+        >({
+            query: (params) => ({
+                url: `report/${params.reportId}/generate`,
+                method: "POST",
+            }),
+            providesTags: (_resp, _err, { reportId }) => [
+                { type: "Reports", id: reportId },
+                { type: "ReportData", id: reportId },
+            ],
+        }),
         createReport: build.mutation<ApiResponse<ReportT>, CreateReportParams>({
             query: (body) => ({ url: "report", body, method: "POST" }),
             invalidatesTags: [{ type: "Reports", id: "LIST" }],
@@ -57,11 +71,12 @@ export const reportApi = createApi({
                 body,
                 method: "PUT",
             }),
-            invalidatesTags: [
+            invalidatesTags: (_resp, _err, { id }) => [
                 {
                     type: "Reports",
                     id: "LIST",
                 },
+                { type: "ReportData", id },
             ],
             async onQueryStarted(
                 { id },

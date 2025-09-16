@@ -3,11 +3,14 @@ import type {
     AxisType,
     PmApiRoutesApiV1ReportGrantPermissionBody,
     ReportCreate,
+    ReportDataOutput,
     ReportOutput,
     ReportUpdate,
 } from "./backend-schema.gen";
 
 export type ReportT = ReportOutput;
+
+export type ReportDataT = ReportDataOutput;
 
 export type CreateReportParams = ReportCreate;
 

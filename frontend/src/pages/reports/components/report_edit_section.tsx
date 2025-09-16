@@ -1,6 +1,7 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, debounce, Tab, Tabs } from "@mui/material";
 import type { ReportFormValues } from "modules/reports/components/report_form/report_form.types";
+import { ReportFormAccess } from "modules/reports/components/report_form/report_form_access";
 import { ReportFormMainInfo } from "modules/reports/components/report_form/report_form_main_info";
 import { reportFormValuesToEditFormValues } from "modules/reports/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -9,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { reportApi } from "shared/model";
 import type { ReportT } from "shared/model/types/report";
 import { isAdmin } from "shared/utils/permissions/checks";
-import { ReportFormAccess } from "../../../modules/reports/components/report_form/report_form_access";
 
 type ReportEditSection = {
     report: ReportT;

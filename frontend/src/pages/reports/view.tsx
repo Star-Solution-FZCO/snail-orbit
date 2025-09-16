@@ -1,8 +1,10 @@
-import { Box, CircularProgress, Stack } from "@mui/material";
+import { Box, CircularProgress, Paper, Stack } from "@mui/material";
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
+import { ReportViewWidget } from "modules/reports/components/report_view_widget";
 import { useState } from "react";
 import { reportApi } from "shared/model";
 import { ErrorHandler } from "shared/ui";
+import { ReportDisplayType } from "../../modules/reports/report.types";
 import { ReportEditSection } from "./components/report_edit_section";
 import { ReportTopBar } from "./components/reports_top_bar";
 
@@ -17,11 +19,28 @@ export const ReportView = (props: ReportViewProps) => {
 
     const [isReportFormOpen, setIsReportFormOpen] = useState(false);
 
-    const { data, isLoading, isError, error } = reportApi.useGetReportQuery({
+    const {
+        data: reportResponse,
+        isLoading: isReportLoading,
+        isError: isReportError,
+        error: reportError,
+    } = reportApi.useGetReportQuery({
         reportId,
     });
 
-    const report = data?.payload;
+    const {
+        data: reportDataResponse,
+        isLoading: isDataLoading,
+        isError: isDataError,
+        error: dataError,
+    } = reportApi.useGetReportDataQuery({
+        reportId,
+    });
+
+    const report = reportResponse?.payload;
+    const isLoading = isReportLoading || isDataLoading;
+    const isError = isReportError || isDataError;
+    const error = reportError || dataError;
 
     return (
         <Stack px={4} pb={4} height="100%" gap={1}>
@@ -43,6 +62,14 @@ export const ReportView = (props: ReportViewProps) => {
             >
                 {isLoading && <CircularProgress size={48} />}
                 {isError && <ErrorHandler error={error} />}
+                {!isLoading && !isError && !!reportDataResponse?.payload && (
+                    <Paper sx={{ p: 2 }}>
+                        <ReportViewWidget
+                            reportData={reportDataResponse.payload}
+                            type={ReportDisplayType.TABLE}
+                        />
+                    </Paper>
+                )}
             </Box>
         </Stack>
     );
