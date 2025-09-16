@@ -421,11 +421,14 @@ async def _update_report_fields(
             projects.append(m.ProjectLinkField.from_obj(project))
         report.projects = projects
 
-    if body_data.axis_1 is not None:
+    if 'axis_1' in body_data.model_fields_set:
         report.axis_1 = await _validate_axis(body_data.axis_1)
 
-    if body_data.axis_2 is not None:
-        report.axis_2 = await _validate_axis(body_data.axis_2)
+    if 'axis_2' in body_data.model_fields_set:
+        if not body_data.axis_2:
+            report.axis_2 = None
+        else:
+            report.axis_2 = await _validate_axis(body_data.axis_2)
 
     for k, v in body_data.model_dump(
         exclude_unset=True, include={'name', 'description', 'query', 'ui_settings'}
