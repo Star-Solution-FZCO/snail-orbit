@@ -46,7 +46,11 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import IssueSearchParams, ListParams
-from pm.api.views.permission import PermissionOutput
+from pm.api.views.permission import (
+    GrantPermissionBody,
+    PermissionOutput,
+    UpdatePermissionBody,
+)
 from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, ProjectPermissions
 from pm.services.issue import update_tags_on_close_resolve
@@ -829,16 +833,6 @@ async def select_card_color_field(
         offset=0,
         items=[CustomFieldGroupLinkOutput.from_obj(cf) for cf in fields],
     )
-
-
-class GrantPermissionBody(BaseModel):
-    target_type: m.PermissionTargetType
-    target: PydanticObjectId
-    permission_type: m.PermissionType
-
-
-class UpdatePermissionBody(BaseModel):
-    permission_type: m.PermissionType
 
 
 @router.post('/{board_id}/permission')

@@ -1,13 +1,18 @@
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel
+from beanie import PydanticObjectId
+from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.views.group import GroupOutput
 from pm.api.views.user import UserOutput
 
-__all__ = ('PermissionOutput',)
+__all__ = (
+    'GrantPermissionBody',
+    'PermissionOutput',
+    'UpdatePermissionBody',
+)
 
 
 class PermissionOutput(BaseModel):
@@ -29,3 +34,13 @@ class PermissionOutput(BaseModel):
             target=target,
             permission_type=obj.permission_type,
         )
+
+
+class GrantPermissionBody(BaseModel):
+    target_type: m.PermissionTargetType = Field(description='Type of permission target')
+    target: PydanticObjectId = Field(description='Target user or group ID')
+    permission_type: m.PermissionType = Field(description='Permission level to grant')
+
+
+class UpdatePermissionBody(BaseModel):
+    permission_type: m.PermissionType = Field(description='New permission level')

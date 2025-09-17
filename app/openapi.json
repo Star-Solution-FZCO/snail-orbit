@@ -24317,7 +24317,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__board__GrantPermissionBody"
+                "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
               }
             }
           }
@@ -24468,7 +24468,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__board__UpdatePermissionBody"
+                "$ref": "#/components/schemas/UpdatePermissionBody"
               }
             }
           }
@@ -25913,7 +25913,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__dashboard__GrantPermissionBody"
+                "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
               }
             }
           }
@@ -26064,7 +26064,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__dashboard__UpdatePermissionBody"
+                "$ref": "#/components/schemas/UpdatePermissionBody"
               }
             }
           }
@@ -34369,7 +34369,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__tag__GrantPermissionBody"
+                "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
               }
             }
           }
@@ -34520,7 +34520,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__tag__UpdatePermissionBody"
+                "$ref": "#/components/schemas/UpdatePermissionBody"
               }
             }
           }
@@ -35702,7 +35702,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__search__GrantPermissionBody"
+                "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
               }
             }
           }
@@ -35810,6 +35810,155 @@
       }
     },
     "/api/v1/search/{search_id}/permission/{permission_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "search"
+        ],
+        "summary": "Change Permission",
+        "operationId": "change_permission_api_v1_search__search_id__permission__permission_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Search Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermissionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "api",
@@ -36691,7 +36840,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
               }
             }
           }
@@ -36799,6 +36948,155 @@
       }
     },
     "/api/v1/report/{report_id}/permission/{permission_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "report"
+        ],
+        "summary": "Change Permission",
+        "operationId": "change_permission_api_v1_report__report_id__permission__permission_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "permission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Permission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePermissionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "api",
@@ -48915,7 +49213,7 @@
           },
           "permissions": {
             "items": {
-              "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+              "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
             },
             "type": "array",
             "title": "Permissions"
@@ -49252,7 +49550,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/pm__api__routes__api__v1__report__GrantPermissionBody"
+                  "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
                 },
                 "type": "array"
               },
@@ -49628,7 +49926,7 @@
           },
           "permissions": {
             "items": {
-              "$ref": "#/components/schemas/pm__api__routes__api__v1__search__GrantPermissionBody"
+              "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
             },
             "type": "array",
             "title": "Permissions"
@@ -49733,7 +50031,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/pm__api__routes__api__v1__search__GrantPermissionBody"
+                  "$ref": "#/components/schemas/pm__api__views__permission__GrantPermissionBody"
                 },
                 "type": "array"
               },
@@ -51708,6 +52006,19 @@
         ],
         "title": "UUIDPayload"
       },
+      "UpdatePermissionBody": {
+        "properties": {
+          "permission_type": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "New permission level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "permission_type"
+        ],
+        "title": "UpdatePermissionBody"
+      },
       "UserAuth": {
         "properties": {
           "login": {
@@ -53644,84 +53955,6 @@
         "type": "object",
         "title": "WorkflowUpdate"
       },
-      "pm__api__routes__api__v1__board__GrantPermissionBody": {
-        "properties": {
-          "target_type": {
-            "$ref": "#/components/schemas/PermissionTargetType"
-          },
-          "target": {
-            "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
-            "title": "Target",
-            "example": "5eb7cf5a86d9755df3a6c593"
-          },
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "target_type",
-          "target",
-          "permission_type"
-        ],
-        "title": "GrantPermissionBody"
-      },
-      "pm__api__routes__api__v1__board__UpdatePermissionBody": {
-        "properties": {
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "permission_type"
-        ],
-        "title": "UpdatePermissionBody"
-      },
-      "pm__api__routes__api__v1__dashboard__GrantPermissionBody": {
-        "properties": {
-          "target_type": {
-            "$ref": "#/components/schemas/PermissionTargetType",
-            "description": "Type of permission target"
-          },
-          "target": {
-            "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
-            "title": "Target",
-            "description": "Target user or group ID",
-            "example": "5eb7cf5a86d9755df3a6c593"
-          },
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType",
-            "description": "Permission level to grant"
-          }
-        },
-        "type": "object",
-        "required": [
-          "target_type",
-          "target",
-          "permission_type"
-        ],
-        "title": "GrantPermissionBody"
-      },
-      "pm__api__routes__api__v1__dashboard__UpdatePermissionBody": {
-        "properties": {
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType",
-            "description": "New permission level"
-          }
-        },
-        "type": "object",
-        "required": [
-          "permission_type"
-        ],
-        "title": "UpdatePermissionBody"
-      },
       "pm__api__routes__api__v1__group__GlobalRoleOutput": {
         "properties": {
           "id": {
@@ -53825,93 +54058,6 @@
           "type"
         ],
         "title": "WorkflowOutput"
-      },
-      "pm__api__routes__api__v1__report__GrantPermissionBody": {
-        "properties": {
-          "target_type": {
-            "$ref": "#/components/schemas/PermissionTargetType"
-          },
-          "target": {
-            "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
-            "title": "Target",
-            "example": "5eb7cf5a86d9755df3a6c593"
-          },
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "target_type",
-          "target",
-          "permission_type"
-        ],
-        "title": "GrantPermissionBody"
-      },
-      "pm__api__routes__api__v1__search__GrantPermissionBody": {
-        "properties": {
-          "target_type": {
-            "$ref": "#/components/schemas/PermissionTargetType"
-          },
-          "target": {
-            "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
-            "title": "Target",
-            "example": "5eb7cf5a86d9755df3a6c593"
-          },
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "target_type",
-          "target",
-          "permission_type"
-        ],
-        "title": "GrantPermissionBody"
-      },
-      "pm__api__routes__api__v1__tag__GrantPermissionBody": {
-        "properties": {
-          "target_type": {
-            "$ref": "#/components/schemas/PermissionTargetType"
-          },
-          "target": {
-            "type": "string",
-            "maxLength": 24,
-            "minLength": 24,
-            "pattern": "^[0-9a-f]{24}$",
-            "title": "Target",
-            "example": "5eb7cf5a86d9755df3a6c593"
-          },
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "target_type",
-          "target",
-          "permission_type"
-        ],
-        "title": "GrantPermissionBody"
-      },
-      "pm__api__routes__api__v1__tag__UpdatePermissionBody": {
-        "properties": {
-          "permission_type": {
-            "$ref": "#/components/schemas/PermissionType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "permission_type"
-        ],
-        "title": "UpdatePermissionBody"
       },
       "pm__api__routes__api__v1__workflow__WorkflowOutput": {
         "properties": {
@@ -54087,6 +54233,34 @@
           "items"
         ],
         "title": "BaseListPayload[GlobalRoleOutput]"
+      },
+      "pm__api__views__permission__GrantPermissionBody": {
+        "properties": {
+          "target_type": {
+            "$ref": "#/components/schemas/PermissionTargetType",
+            "description": "Type of permission target"
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "pattern": "^[0-9a-f]{24}$",
+            "title": "Target",
+            "description": "Target user or group ID",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "permission_type": {
+            "$ref": "#/components/schemas/PermissionType",
+            "description": "Permission level to grant"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_type",
+          "target",
+          "permission_type"
+        ],
+        "title": "GrantPermissionBody"
       },
       "pm__api__views__permission__PermissionOutput": {
         "properties": {

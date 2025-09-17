@@ -27,7 +27,11 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.permission import PermissionOutput
+from pm.api.views.permission import (
+    GrantPermissionBody,
+    PermissionOutput,
+    UpdatePermissionBody,
+)
 from pm.api.views.user import UserOutput
 from pm.utils.pydantic_uuid import UUIDStr
 
@@ -205,12 +209,6 @@ class ReportDataOutput(BaseModel):
     data: list[list[int]] = Field(
         description='2D array of issue counts: [axis_2_value_index][axis_1_value_index]'
     )
-
-
-class GrantPermissionBody(BaseModel):
-    target_type: m.PermissionTargetType
-    target: PydanticObjectId
-    permission_type: m.PermissionType
 
 
 class AxisInput(BaseModel):
@@ -485,6 +483,45 @@ async def grant_permission(
     report.permissions.append(permission)
     await report.save_changes()
     return UUIDOutput.make(permission.id)
+
+
+@router.put('/{report_id}/permission/{permission_id}')
+async def change_permission(
+    report_id: PydanticObjectId,
+    permission_id: UUID,
+    body: UpdatePermissionBody,
+) -> UUIDOutput:
+    user_ctx = current_user()
+    report = await m.Report.find_one(m.Report.id == report_id, with_children=True)
+    if not report:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Report not found')
+    if not report.check_permissions(user_ctx, m.PermissionType.ADMIN):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You cannot modify permissions for this report',
+        )
+    if not (
+        perm := next(
+            (obj for obj in report.permissions if obj.id == permission_id),
+            None,
+        )
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Permission not found'
+        )
+    if perm.permission_type == body.permission_type:
+        return UUIDOutput.make(perm.id)
+    if (
+        perm.permission_type == m.PermissionType.ADMIN
+        and not report.has_any_other_admin_target(perm.target)
+    ):
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='Report must have at least one admin',
+        )
+    perm.permission_type = body.permission_type
+    await report.save_changes()
+    return UUIDOutput.make(perm.id)
 
 
 @router.delete('/{report_id}/permission/{permission_id}')

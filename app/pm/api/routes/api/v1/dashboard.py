@@ -19,7 +19,11 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.permission import PermissionOutput
+from pm.api.views.permission import (
+    GrantPermissionBody,
+    PermissionOutput,
+    UpdatePermissionBody,
+)
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -133,16 +137,6 @@ class DashboardUpdate(BaseModel):
     ui_settings: dict | None = Field(
         default=None, description='UI-specific settings for the dashboard'
     )
-
-
-class GrantPermissionBody(BaseModel):
-    target_type: m.PermissionTargetType = Field(description='Type of permission target')
-    target: PydanticObjectId = Field(description='Target user or group ID')
-    permission_type: m.PermissionType = Field(description='Permission level to grant')
-
-
-class UpdatePermissionBody(BaseModel):
-    permission_type: m.PermissionType = Field(description='New permission level')
 
 
 class TileUpdate(BaseModel):

@@ -21,7 +21,11 @@ from pm.api.views.output import (
     UUIDOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.permission import PermissionOutput
+from pm.api.views.permission import (
+    GrantPermissionBody,
+    PermissionOutput,
+    UpdatePermissionBody,
+)
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -191,16 +195,6 @@ async def delete_tag(
     await tag.delete()
     await m.Issue.remove_tag_embedded_links(tag_id)
     return ModelIdOutput.make(tag_id)
-
-
-class GrantPermissionBody(BaseModel):
-    target_type: m.PermissionTargetType
-    target: PydanticObjectId
-    permission_type: m.PermissionType
-
-
-class UpdatePermissionBody(BaseModel):
-    permission_type: m.PermissionType
 
 
 @router.post('/{tag_id}/permission')
