@@ -132,6 +132,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
                         issue={issue}
                         showSubscribeButton={false}
                         showUpdateTime={false}
+                        showVisibility={false}
                     />
                 ))}
 

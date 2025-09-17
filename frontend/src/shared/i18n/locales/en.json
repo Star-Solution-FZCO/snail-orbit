@@ -460,6 +460,8 @@
   "issues.total": "Total issues",
   "issues.unsubscribe": "Unsubscribe from the issue",
   "issues.update.success": "Issue updated successfully",
+  "issues.visibleTo": "Visible to {{targets}}",
+  "issues.visibleToFirstPlusCount": "{{firstTarget}} +{{count}}",
   "keys.rsa": "RSA",
   "keys.x25519": "X25519",
   "mainPage": "Main page",

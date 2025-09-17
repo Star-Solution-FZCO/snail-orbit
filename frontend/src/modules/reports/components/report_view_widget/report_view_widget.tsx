@@ -1,8 +1,8 @@
+import { ReportViewTable } from "entities/reports/report_view_table";
 import { useMemo } from "react";
 import type { ReportDataT } from "shared/model/types/report";
 import { ReportDisplayType } from "../../report.types";
 import { formatAxisValues } from "./utils";
-import { ReportViewTable } from "entities/reports/report_view_table";
 
 type ReportViewWidgetProps = {
     reportData: ReportDataT;

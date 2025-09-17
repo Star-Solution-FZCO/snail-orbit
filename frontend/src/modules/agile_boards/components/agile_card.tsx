@@ -1,9 +1,11 @@
-import { LinearProgress } from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { LinearProgress, Tooltip, Typography } from "@mui/material";
 import { useIssueOperations } from "entities/issue/api/use_issue_operations";
 import { IssueLink } from "entities/issue/issue_link/issue_link";
 import { CustomFieldsChipParser } from "features/custom_fields/custom_fields_chip_parser";
 import type { ComponentProps, FC } from "react";
 import { memo, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { projectApi } from "shared/model";
 import {
     fieldsToFieldValueMap,
@@ -41,6 +43,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
         onDoubleClick,
         ...props
     }) => {
+        const { t } = useTranslation();
         const { id_readable, subject, project } = outerIssue;
         const { minCardHeight, showCustomFields, showDescription } =
             cardSetting;
@@ -100,6 +103,38 @@ export const AgileCard: FC<IssueCardProps> = memo(
             });
         };
 
+        const renderVisibility = () => {
+            if (!issue?.has_custom_permissions) return null;
+
+            const firstTarget = issue.permissions[0].target.name;
+            const targets = issue.permissions
+                .map((p) => p.target.name)
+                .join(", ");
+            const remainingCount = issue.permissions.length - 1;
+
+            return (
+                <Tooltip
+                    title={t("issues.visibleTo", { targets })}
+                    placement="top"
+                >
+                    <Typography
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        flexShrink={0}
+                        fontSize="inherit"
+                        color="text.secondary"
+                        sx={{ fontSize: "0.75rem" }}
+                    >
+                        <LockOutlinedIcon fontSize="inherit" color="disabled" />
+                        {issue.permissions.length === 1
+                            ? firstTarget
+                            : `${firstTarget} +${remainingCount}`}
+                    </Typography>
+                </Tooltip>
+            );
+        };
+
         return (
             <IssueCard
                 sx={{
@@ -146,6 +181,8 @@ export const AgileCard: FC<IssueCardProps> = memo(
                             ))}
                         </IssueCardBottom>
                     ) : null}
+
+                    {renderVisibility()}
                 </IssueCardBody>
             </IssueCard>
         );

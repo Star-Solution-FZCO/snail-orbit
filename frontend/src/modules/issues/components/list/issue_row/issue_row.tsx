@@ -7,6 +7,7 @@ import { IssueTags } from "../../issue/components/issue_tags";
 import { IssueRowBody, IssueRowHeader, IssueRowRoot } from "./issue_row.styles";
 import type { IssueRowProps } from "./issue_row.types";
 import { IssueRowFields } from "./issue_row_fields";
+import { IssueRowVisibility } from "./issue_row_visibility";
 import { UpdateTime } from "./update_time";
 
 export const IssueRow: FC<IssueRowProps> = memo(
@@ -18,6 +19,7 @@ export const IssueRow: FC<IssueRowProps> = memo(
         customFieldSlots,
         showSubscribeButton = true,
         showUpdateTime = true,
+        showVisibility = true,
     }) => {
         const { subject, id_readable, text } = issue;
 
@@ -59,6 +61,12 @@ export const IssueRow: FC<IssueRowProps> = memo(
                         >
                             {subject}
                         </IssueLink>
+
+                        {showVisibility && issue.has_custom_permissions && (
+                            <IssueRowVisibility
+                                permissions={issue.permissions}
+                            />
+                        )}
 
                         <IssueTags issue={issue} />
                     </Stack>

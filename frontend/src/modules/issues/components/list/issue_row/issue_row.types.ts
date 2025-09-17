@@ -6,6 +6,7 @@ export type IssueRowViewParams = {
     showDescription?: boolean;
     showDividers?: boolean;
     showUpdateTime?: boolean;
+    showVisibility?: boolean;
     customFieldSlots?: number;
 };
 
