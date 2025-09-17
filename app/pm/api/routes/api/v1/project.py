@@ -359,23 +359,43 @@ async def list_projects(
     query: ProjectListParams = Depends(),
 ) -> BaseListOutput[ProjectListItemOutput]:
     user_ctx = current_user()
-    q = m.Project.find().sort(m.Project.id)
+
+    filter_query = {}
     if not user_ctx.user.is_admin:
-        q = q.find(
-            bo.In(
-                m.Project.id,
-                user_ctx.get_projects_with_permission(ProjectPermissions.PROJECT_READ),
-            ),
-        )
+        filter_query['_id'] = {
+            '$in': user_ctx.get_projects_with_permission(
+                ProjectPermissions.PROJECT_READ
+            )
+        }
     if query.search:
-        q = q.find(m.Project.search_query(query.search))
+        search_filter = m.Project.search_query(query.search)
+        filter_query.update(search_filter)
     if query.favorite_of:
-        q = q.find(bo.Eq(m.Project.favorite_of, query.favorite_of))
-    return await BaseListOutput.make_from_query(
-        q,
+        filter_query['favorite_of'] = query.favorite_of
+
+    pipeline = [
+        {'$match': filter_query},
+        {
+            '$addFields': {
+                'is_favorite': {'$in': [user_ctx.user.id, '$favorite_of']},
+            },
+        },
+        {'$sort': {'is_favorite': -1, 'name': 1}},
+    ]
+    if query.offset:
+        pipeline.append({'$skip': query.offset})
+    if query.limit:
+        pipeline.append({'$limit': query.limit})
+    q = m.Project.aggregate(
+        pipeline,
+        projection_model=m.Project,
+    )
+    cnt = await m.Project.find(filter_query).count()
+    return BaseListOutput.make(
+        items=[ProjectListItemOutput.from_obj(project) async for project in q],
+        count=cnt,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=ProjectListItemOutput.from_obj,
     )
 
 
