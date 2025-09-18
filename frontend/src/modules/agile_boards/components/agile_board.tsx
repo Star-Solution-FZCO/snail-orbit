@@ -7,7 +7,7 @@ import type { AgileBoardT, IssueT } from "shared/model/types";
 import { Kanban as KanbanComp } from "shared/ui/kanban/kanban";
 import type {
     ColumnArg,
-    KanbanProps,
+    KanbanOnCardMoved,
     SwimLaneArg,
 } from "shared/ui/kanban/kanban.types";
 import { toastApiError } from "shared/utils";
@@ -23,6 +23,7 @@ import {
 import { AgileBoardViewSettingsPopper } from "./agile_board_view_settings/agile_board_view_settings";
 import type { AgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
 import { defaultAgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
+import type { IssueCardProps } from "./agile_card";
 import { AgileCard } from "./agile_card";
 
 export type AgileBoardProps = {
@@ -63,11 +64,11 @@ export const AgileBoard: FC<AgileBoardProps> = ({
         refetch();
     }, [boardData, refetch]);
 
-    const handleCardMoved: KanbanProps<
-        IssueT,
-        BoardEntry,
-        BoardEntry
-    >["onCardMoved"] = (issue, _from, to) => {
+    const handleCardMoved: KanbanOnCardMoved<IssueT, BoardEntry, BoardEntry> = (
+        issue,
+        _from,
+        to,
+    ) => {
         moveIssue({
             issue_id: issue.id.toString(),
             board_id: boardData.id,
@@ -106,26 +107,16 @@ export const AgileBoard: FC<AgileBoardProps> = ({
         return res;
     }, [data?.payload]);
 
-    const AgileCardComponent = useCallback(
-        ({ data }: { data: IssueT }) => (
-            <AgileCard
-                issue={data}
-                cardSetting={{
-                    minCardHeight: boardData.ui_settings.minCardHeight,
-                    ...viewSettings,
-                }}
-                cardFields={boardData.card_fields}
-                cardColorFields={boardData.card_colors_fields}
-                onDoubleClick={() => onCardDoubleClick?.(data)}
-            />
-        ),
-        [
-            boardData.card_colors_fields,
-            boardData.card_fields,
-            boardData.ui_settings.minCardHeight,
-            onCardDoubleClick,
-            viewSettings,
-        ],
+    const cardProps: Omit<IssueCardProps, "issue"> = useMemo(
+        () => ({
+            cardSetting: {
+                minCardHeight: boardData.ui_settings.minCardHeight,
+                ...viewSettings,
+            },
+            cardFields: boardData.card_fields,
+            cardColorFields: boardData.card_colors_fields,
+        }),
+        [boardData, viewSettings],
     );
 
     const handleIsClosed = useCallback(
@@ -172,18 +163,20 @@ export const AgileBoard: FC<AgileBoardProps> = ({
                     onChange={setViewSettings}
                 />
             </Stack>
-            <KanbanComp<IssueT, BoardEntry, BoardEntry>
+            <KanbanComp<IssueT, BoardEntry, BoardEntry, IssueCardProps>
                 items={issues}
                 columns={columns}
                 swimLanes={swimLanes}
                 getLabel={getLabel}
                 getKey={getKey}
-                ItemContent={AgileCardComponent}
+                ItemContent={AgileCard}
+                itemProps={cardProps}
                 onCardMoved={handleCardMoved}
                 inBlockColumns={inBlockColumns}
                 getIsClosed={handleIsClosed}
                 onClosedChange={handleClose}
                 collisionDetection={viewSettings.collisionDetectionStrategy}
+                onCardDoubleClicked={onCardDoubleClick}
             />
         </>
     );

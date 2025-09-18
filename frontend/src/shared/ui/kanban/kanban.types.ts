@@ -20,7 +20,23 @@ export const enum KanbanCollisionDetection {
     ShapeIntersection,
 }
 
-export type KanbanProps<I, S, C> = {
+type ItemContentProps<P> = Omit<P, "issue">;
+
+export type KanbanOnCardMoved<I, S, C> = (
+    item: I,
+    from: {
+        column: C;
+        swimLane: S;
+        after: I | null;
+    },
+    to: {
+        column: C;
+        swimLane: S;
+        after: I | null;
+    },
+) => Promise<boolean | undefined> | boolean | undefined | void;
+
+export type KanbanProps<I, S, C, P> = {
     columns: C[];
     swimLanes: S[];
     items: KanbanItems<I>;
@@ -34,19 +50,14 @@ export type KanbanProps<I, S, C> = {
         value: boolean,
     ) => void;
     inBlockColumns?: number;
-    ItemContent?: ComponentType<{ data: I }>;
+    ItemContent?: ComponentType<
+        {
+            issue: I;
+            onDoubleClick?: (issue: I) => unknown;
+        } & ItemContentProps<P>
+    >;
+    itemProps?: ItemContentProps<P>;
     collisionDetection?: KanbanCollisionDetection;
-    onCardMoved?(
-        item: I,
-        from: {
-            column: C;
-            swimLane: S;
-            after: I | null;
-        },
-        to: {
-            column: C;
-            swimLane: S;
-            after: I | null;
-        },
-    ): Promise<boolean | undefined> | boolean | undefined | void;
+    onCardMoved?: KanbanOnCardMoved<I, S, C>;
+    onCardDoubleClicked?: (issue: I) => unknown;
 };

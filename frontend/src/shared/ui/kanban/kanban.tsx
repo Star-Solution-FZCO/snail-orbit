@@ -17,7 +17,7 @@ import {
 } from "./kanban.helper";
 import type { ItemData, KanbanItems, KanbanProps } from "./kanban.types";
 
-export const Kanban = <I, S, C>({
+export const Kanban = <I, S, C, P>({
     columns,
     swimLanes,
     getLabel,
@@ -29,7 +29,9 @@ export const Kanban = <I, S, C>({
     onCardMoved,
     getIsClosed,
     onClosedChange,
-}: KanbanProps<I, S, C>) => {
+    itemProps,
+    onCardDoubleClicked,
+}: KanbanProps<I, S, C, P>) => {
     const [items, setItems] = useState<KanbanItems<I>>(outerItems ?? []);
     const snapshot = useRef(makeCopy(items));
     const draggedItem = useRef<I | null>(null);
@@ -203,8 +205,13 @@ export const Kanban = <I, S, C>({
                                                     }
                                                 >
                                                     {ItemContent ? (
+                                                        // @ts-expect-error Fix this shit later
                                                         <ItemContent
-                                                            data={item}
+                                                            issue={item}
+                                                            {...itemProps}
+                                                            onDoubleClick={
+                                                                onCardDoubleClicked
+                                                            }
                                                         />
                                                     ) : (
                                                         getKey({
@@ -225,7 +232,11 @@ export const Kanban = <I, S, C>({
                 {draggedItem.current ? (
                     <ItemStyled>
                         {ItemContent ? (
-                            <ItemContent data={draggedItem.current} />
+                            // @ts-expect-error Fix this shit later
+                            <ItemContent
+                                issue={draggedItem.current}
+                                {...itemProps}
+                            />
                         ) : (
                             getKey({
                                 type: "item",

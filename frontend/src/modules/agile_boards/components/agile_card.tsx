@@ -31,8 +31,8 @@ export type IssueCardProps = {
     cardSetting: TotalAgileBoardViewSettings;
     cardFields: AgileBoardCardFieldT[];
     cardColorFields: AgileBoardCardFieldT[];
-    onDoubleClick: () => void;
-} & ComponentProps<typeof IssueCard>;
+    onDoubleClick?: (issue: IssueT) => void;
+} & Omit<ComponentProps<typeof IssueCard>, "onDoubleClick">;
 
 export const AgileCard: FC<IssueCardProps> = memo(
     ({
@@ -85,6 +85,11 @@ export const AgileCard: FC<IssueCardProps> = memo(
                 .filter(notEmpty);
         }, [cardFields, issue, projectData?.payload.custom_fields]);
 
+        const handleDoubleClick = () => {
+            if (!issue) return;
+            onDoubleClick?.(issue);
+        };
+
         const onFieldUpdate = (field: CustomFieldWithValueT) => {
             if (!issue) return;
             updateIssue?.({
@@ -93,8 +98,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                     [field.name]: fieldToFieldValue(field),
                 },
             }).catch(() => {
-                console.log("test");
-                onDoubleClick();
+                handleDoubleClick();
             });
             updateIssueCache?.({
                 fields: {
@@ -144,7 +148,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
                             : 0,
                 }}
                 colors={colors}
-                onDoubleClick={onDoubleClick}
+                onDoubleClick={handleDoubleClick}
                 {...props}
             >
                 <IssueCardBody>
