@@ -20,6 +20,7 @@ bcrypt = "*"
 fastapi = "*"
 dynaconf = "*"
 uvicorn = "*"
+gunicorn = "*"
 starlette-context = "*"
 starsol-fastapi-jwt-auth = {extras = ["asymmetric"], version = "*"}
 pydantic = {version = ">=2.0"}

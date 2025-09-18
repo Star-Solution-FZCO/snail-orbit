@@ -1,22 +1,59 @@
 # pylint: disable=import-outside-toplevel
 import argparse
 import json
+import multiprocessing
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any
 
 __all__ = ('add_api_args',)
 
 
 def run_api_server(args: argparse.Namespace) -> None:
-    import uvicorn
+    from gunicorn.app.base import BaseApplication
 
-    uvicorn.run(
+    workers = args.workers
+    if workers == 0:
+        workers = max(multiprocessing.cpu_count() - 1, 1)
+
+    def on_starting(server: Any) -> None:  # pylint: disable=unused-argument  # noqa: ARG001
+        from pm.logging import configure_logging
+
+        configure_logging()
+
+        from pm.db import check_database_version
+
+        check_database_version()
+
+    class StandaloneApplication(BaseApplication):
+        def __init__(self, app_module: str, options: dict) -> None:
+            self.app_module = app_module
+            self.options = options
+            super().__init__()
+
+        def init(self, parser: Any, opts: Any, args: Any) -> None:  # pylint: disable=unused-argument
+            pass
+
+        def load_config(self) -> None:
+            for key, value in self.options.items():
+                self.cfg.set(key, value)
+            self.cfg.set('on_starting', on_starting)
+
+        def load(self) -> str:
+            return self.app_module
+
+    StandaloneApplication(
         'pm.api.app:app',
-        host=args.host,
-        port=args.port,
-        forwarded_allow_ips=args.trusted_proxy,
-    )
+        {
+            'bind': f'{args.host}:{args.port}',
+            'workers': workers,
+            'worker_class': 'uvicorn.workers.UvicornWorker',
+            'forwarded_allow_ips': args.trusted_proxy,
+            'timeout': 120,
+            'keepalive': 5,
+        },
+    ).run()
 
 
 @contextmanager
@@ -134,6 +171,12 @@ def add_api_args(parser: argparse.ArgumentParser) -> None:
     server_parser.add_argument('--host', type=str, default='localhost')
     server_parser.add_argument('--port', type=int, default=9090)
     server_parser.add_argument('--trusted-proxy', type=str, default='127.0.0.1')
+    server_parser.add_argument(
+        '--workers',
+        type=int,
+        default=1,
+        help='Number of worker processes (0=auto-detect CPU cores, >=1=specific count)',
+    )
     server_parser.set_defaults(func=run_api_server)
 
     openapi_parser = subparsers.add_parser('openapi')
