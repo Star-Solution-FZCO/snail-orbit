@@ -1,16 +1,20 @@
+import type { StyledComponent } from "@emotion/styled";
+import type { StackProps } from "@mui/material";
 import { Stack, styled } from "@mui/material";
 import type { FC } from "react";
 import { WidgetHeading } from "./heading";
-import { WidgetProps } from "./types";
+import type { WidgetProps } from "./types";
 
-export const WidgetContainer = styled(Stack)(({ theme }) => ({
-    width: "100%",
-    minHeight: 160,
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderColor: theme.palette.divider,
-    borderRadius: theme.spacing(2),
-}));
+export const WidgetContainer: StyledComponent<StackProps> = styled(Stack)(
+    ({ theme }) => ({
+        width: "100%",
+        minHeight: 160,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: theme.palette.divider,
+        borderRadius: theme.spacing(2),
+    }),
+);
 
 interface WidgetBaseProps extends React.PropsWithChildren, WidgetProps {
     onRefresh: () => void;

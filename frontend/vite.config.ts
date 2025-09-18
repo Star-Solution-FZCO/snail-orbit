@@ -1,9 +1,9 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react-swc";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig, splitVendorChunkPlugin, type PluginOption } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import unusedCode from "vite-plugin-unused-code";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -21,9 +21,9 @@ export default defineConfig(() => {
     );
 
     const plugins = [
-        react(),
         tsconfigPaths(),
-        TanStackRouterVite(),
+        tanstackRouter({ target: "react", autoCodeSplitting: true }),
+        react(),
         basicSsl(),
         visualizer() as PluginOption,
         unusedCode({
@@ -34,7 +34,6 @@ export default defineConfig(() => {
                 "src/shared/model/types/*.*",
             ],
         }),
-        splitVendorChunkPlugin(),
     ];
 
     if (isSentryConfigured) {

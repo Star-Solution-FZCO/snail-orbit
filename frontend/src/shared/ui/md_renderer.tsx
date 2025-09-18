@@ -10,19 +10,16 @@ export const MarkdownRenderer: FC<{ content: string | null }> = ({
     return (
         <Box
             sx={(theme) => ({
-                "& .markdown-body": {
-                    backgroundColor: "inherit",
-                    color: theme.palette.text.primary,
-                    wordBreak: "break-word",
-                    fontSize: "0.875rem",
-                    "& code": {
-                        whiteSpace: "pre-wrap",
-                    },
+                backgroundColor: "inherit",
+                color: theme.palette.text.primary,
+                wordBreak: "break-word",
+                fontSize: "0.875rem",
+                "& code": {
+                    whiteSpace: "pre-wrap",
                 },
             })}
         >
             <Markdown
-                className="markdown-body"
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                     a: ({ node: _, ...props }) => {

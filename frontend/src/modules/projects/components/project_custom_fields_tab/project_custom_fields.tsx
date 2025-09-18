@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "shared/model";
 import type { ProjectT } from "shared/model/types";
-import { CustomFieldOutput } from "shared/model/types/backend-schema.gen";
+import type { CustomFieldOutput } from "shared/model/types/backend-schema.gen";
 import { Link } from "shared/ui";
 import { AddProjectCustomFieldDialog } from "./add_project_custom_field_dialog";
 import { CustomFieldDetail } from "./custom_field_detail";

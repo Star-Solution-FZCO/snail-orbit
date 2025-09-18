@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState } from "react";
 import { Kanban as KanbanComp } from "./kanban";
 import type {
@@ -84,7 +84,6 @@ export const Kanban: Story = {
                     items={items}
                     getLabel={getLabel}
                     getKey={getKey}
-                    renderItemContent={() => "test"}
                     onCardMoved={console.log}
                     getIsClosed={handleGetIsOpen}
                     onClosedChange={handleOnOpenChane}

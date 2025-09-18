@@ -1,7 +1,13 @@
 import { GridView } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Box, IconButton, Stack, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    IconButton,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { AgileBoard } from "modules/agile_boards/components/agile_board";
 import { AgileBoardForm } from "modules/agile_boards/components/agile_board_form/agile_board_form";
 import { AgileBoardSelect } from "modules/agile_boards/components/agile_board_select";
@@ -12,7 +18,7 @@ import { SearchField } from "modules/issues/components/issue/components/search_f
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "modules/issues/widgets/modal_view/use_modal_view";
 import type { FC } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
@@ -41,12 +47,16 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     const [search, setSearch] = useState<string>(query || "");
     const [mode, setMode] = useState<"board" | "list">("board");
 
-    const { data, error } = agileBoardApi.useGetAgileBoardQuery(boardId);
+    const {
+        data,
+        error,
+        isLoading: isBoardLoading,
+    } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
     const [updateAgileBoard] = agileBoardApi.useUpdateAgileBoardMutation();
     const [favoriteAgileBoard] = agileBoardApi.useFavoriteBoardMutation();
 
-    const agileBoard = useMemo(() => data?.payload, [data]);
+    const agileBoard = data?.payload;
 
     useEffect(() => {
         setSearch(query || "");
@@ -85,6 +95,23 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
         [openIssueModal],
     );
 
+    if (isBoardLoading)
+        return (
+            <Box
+                sx={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    gap: 2,
+                }}
+            >
+                <CircularProgress sx={{ w: 52, h: 52 }} />
+                {t("agileBoardView.isLoading")}
+            </Box>
+        );
     if (!agileBoard) return null;
 
     return (

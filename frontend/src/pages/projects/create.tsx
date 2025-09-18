@@ -24,7 +24,11 @@ const ProjectCreate = () => {
 
     const userAccessClaims =
         useAppSelector((state) => state.profile.user?.access_claims) || [];
-    const canCreateProject = userAccessClaims.includes("global:project_create");
+    const isAdmin = useAppSelector(
+        (state) => state.profile.user?.is_admin || false,
+    );
+    const canCreateProject =
+        userAccessClaims.includes("global:project_create") || isAdmin;
 
     const [createProject, { isLoading }] =
         projectApi.useCreateProjectMutation();

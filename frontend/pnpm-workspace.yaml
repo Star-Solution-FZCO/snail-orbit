@@ -1,0 +1,6 @@
+minimumReleaseAge: 7200
+
+onlyBuiltDependencies:
+  - '@sentry/cli'
+  - '@swc/core'
+  - esbuild

@@ -1,10 +1,10 @@
 import { mergeRegister } from "@lexical/utils";
+import type { LexicalEditor } from "lexical";
 import {
     $getRoot,
     CAN_REDO_COMMAND,
     CAN_UNDO_COMMAND,
     COMMAND_PRIORITY_LOW,
-    LexicalEditor,
     SELECTION_CHANGE_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
