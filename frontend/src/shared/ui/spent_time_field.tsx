@@ -17,7 +17,7 @@ import { formatSpentTime } from "../utils";
 const minute = 60;
 const hour = minute * 60;
 const day = hour * 24;
-const week = day * 5;
+const week = day * 7;
 
 const timeUnits = [
     { key: "w", label: "week", multiplier: week },
@@ -26,7 +26,7 @@ const timeUnits = [
     { key: "m", label: "minute", multiplier: minute },
 ];
 
-const regex = /^(\d+w)?\s*(\d+d)?\s*(\d+h)?\s*(\d+m)?$/;
+const regex = /^(\d+w\s*)?(\d+d\s*)?(\d+h\s*)?(\d+m\s*)?$/;
 
 const isPartiallyValidDuration = (value: string) => {
     const trimmed = value.trim();
@@ -34,25 +34,40 @@ const isPartiallyValidDuration = (value: string) => {
 
     const parts = trimmed.split(/\s+/);
 
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
+    if (parts.length > 1) {
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
 
-        if (i === parts.length - 1) {
-            if (/^\d+$/.test(part)) {
-                return true;
-            }
-            if (/^\d+[wdhm]$/.test(part)) {
-                return true;
-            }
-            return false;
-        } else {
-            if (!/^\d+[wdhm]$/.test(part)) {
+            if (i === parts.length - 1) {
+                if (/^\d+$/.test(part)) {
+                    return true;
+                }
+                if (/^\d+[wdhm]$/.test(part)) {
+                    return true;
+                }
                 return false;
+            } else {
+                if (!/^\d+[wdhm]$/.test(part)) {
+                    return false;
+                }
             }
+        }
+        return true;
+    }
+
+    if (parts.length === 1) {
+        const part = parts[0];
+
+        if (/^\d+$/.test(part)) {
+            return true;
+        }
+
+        if (/^(\d+[wdhm])*\d*$/.test(part)) {
+            return true;
         }
     }
 
-    return true;
+    return false;
 };
 
 const isValidDuration = (value: string) => {
@@ -62,15 +77,32 @@ const isValidDuration = (value: string) => {
 const convertToSeconds = (duration: string): number => {
     let totalSeconds = 0;
 
-    const parts = duration.trim().split(/\s+/);
+    const trimmed = duration.trim();
 
-    parts.forEach((part) => {
-        const unit = timeUnits.find((u) => part.endsWith(u.key));
-        if (unit) {
-            const value = parseInt(part.replace(unit.key, ""), 10);
-            totalSeconds += value * unit.multiplier;
+    const spaceDelimited = trimmed
+        .split(/\s+/)
+        .filter((part) => part.length > 0);
+
+    if (spaceDelimited.every((part) => /^\d+[wdhm]$/.test(part))) {
+        spaceDelimited.forEach((part) => {
+            const unit = timeUnits.find((u) => part.endsWith(u.key));
+            if (unit) {
+                const value = parseInt(part.replace(unit.key, ""), 10);
+                totalSeconds += value * unit.multiplier;
+            }
+        });
+    } else {
+        const matches = trimmed.match(/(\d+[wdhm])/g);
+        if (matches) {
+            matches.forEach((part) => {
+                const unit = timeUnits.find((u) => part.endsWith(u.key));
+                if (unit) {
+                    const value = parseInt(part.replace(unit.key, ""), 10);
+                    totalSeconds += value * unit.multiplier;
+                }
+            });
         }
-    });
+    }
 
     return totalSeconds;
 };
