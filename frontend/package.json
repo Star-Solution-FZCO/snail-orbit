@@ -33,6 +33,7 @@
     "@mui/material": "6.4.7",
     "@mui/x-data-grid": "7.27.3",
     "@mui/x-date-pickers": "7.27.3",
+    "@mui/x-charts": "8.11.2",
     "@reduxjs/toolkit": "2.6.1",
     "@sentry/react": "9.33.0",
     "@tanstack/react-router": "1.131.27",
@@ -62,8 +63,7 @@
     "remark-gfm": "4.0.1",
     "transliteration": "2.3.5",
     "type-fest": "4.40.0",
-    "yup": "1.6.1",
-    "recharts": "3.2.0"
+    "yup": "1.6.1"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "3.2.5",

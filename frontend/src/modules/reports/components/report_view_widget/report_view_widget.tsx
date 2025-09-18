@@ -1,7 +1,8 @@
+import { ReportViewLineChart } from "entities/reports/report_view_line_chart";
 import { ReportViewTable } from "entities/reports/report_view_table";
 import { useMemo } from "react";
-import type { ReportDataT } from "shared/model/types/report";
-import { ReportDisplayType } from "../../report.types";
+import { ReportDisplayType, type ReportDataT } from "shared/model/types/report";
+import { ReportViewBarChart } from "../../../../entities/reports/report_view_bar_chart";
 import { formatAxisValues } from "./utils";
 
 type ReportViewWidgetProps = {
@@ -23,6 +24,15 @@ export const ReportViewWidget = (props: ReportViewWidgetProps) => {
     switch (type) {
         case ReportDisplayType.TABLE:
             return <ReportViewTable {...values} />;
+        case ReportDisplayType.LINE_CHART:
+            return (
+                <ReportViewLineChart data={values.data} axis={values.xAxis} />
+            );
+        case ReportDisplayType.BAR_CHART:
+            return (
+                <ReportViewBarChart data={values.data} axis={values.xAxis} />
+            );
+        case ReportDisplayType.PIE_CHART:
         default:
             return null;
     }

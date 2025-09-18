@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { MDEditor } from "shared/ui";
 import { AxisSelect } from "./axis_select";
 import type { ReportFormValues } from "./report_form.types";
+import { ReportTypeSelect } from "./report_type_select";
 
 export const ReportFormMainInfo = () => {
     const { t } = useTranslation();
@@ -65,6 +66,12 @@ export const ReportFormMainInfo = () => {
                         fullWidth
                     />
                 )}
+            />
+
+            <Controller
+                control={control}
+                name="ui_settings.report_type"
+                render={({ field }) => <ReportTypeSelect {...field} />}
             />
 
             <Controller

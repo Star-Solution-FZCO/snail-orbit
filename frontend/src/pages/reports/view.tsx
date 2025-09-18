@@ -3,8 +3,8 @@ import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-is
 import { ReportViewWidget } from "modules/reports/components/report_view_widget";
 import { useState } from "react";
 import { reportApi } from "shared/model";
+import { ReportDisplayType } from "shared/model/types/report";
 import { ErrorHandler } from "shared/ui";
-import { ReportDisplayType } from "../../modules/reports/report.types";
 import { ReportEditSection } from "./components/report_edit_section";
 import { ReportTopBar } from "./components/reports_top_bar";
 
@@ -41,6 +41,8 @@ export const ReportView = (props: ReportViewProps) => {
     const isLoading = isReportLoading || isDataLoading;
     const isError = isReportError || isDataError;
     const error = reportError || dataError;
+    const isMinSize =
+        report?.ui_settings.report_type === ReportDisplayType.TABLE;
 
     return (
         <Stack px={4} pb={4} height="100%" gap={1}>
@@ -62,14 +64,26 @@ export const ReportView = (props: ReportViewProps) => {
             >
                 {isLoading && <CircularProgress size={48} />}
                 {isError && <ErrorHandler error={error} />}
-                {!isLoading && !isError && !!reportDataResponse?.payload && (
-                    <Paper sx={{ p: 2 }}>
-                        <ReportViewWidget
-                            reportData={reportDataResponse.payload}
-                            type={ReportDisplayType.TABLE}
-                        />
-                    </Paper>
-                )}
+                {!isLoading &&
+                    !isError &&
+                    !!reportDataResponse?.payload &&
+                    !!report && (
+                        <Paper
+                            sx={{
+                                p: 2,
+                                width: isMinSize ? "auto" : "100%",
+                                height: isMinSize ? "auto" : "100%",
+                            }}
+                        >
+                            <ReportViewWidget
+                                reportData={reportDataResponse.payload}
+                                type={
+                                    report.ui_settings.report_type ||
+                                    ReportDisplayType.TABLE
+                                }
+                            />
+                        </Paper>
+                    )}
             </Box>
         </Stack>
     );
