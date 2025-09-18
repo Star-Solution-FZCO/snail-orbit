@@ -1,4 +1,5 @@
 import type { ReportT } from "shared/model/types/report";
+import { ReportDisplayType } from "shared/model/types/report";
 
 export type ReportFormValues = Omit<
     ReportT,
@@ -14,4 +15,7 @@ export const reportFormDefaultValues: ReportFormValues = {
     description: "",
     projects: [],
     permissions: [],
+    ui_settings: {
+        report_type: ReportDisplayType.TABLE,
+    },
 };

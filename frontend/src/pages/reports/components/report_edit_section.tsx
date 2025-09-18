@@ -29,7 +29,7 @@ export const ReportEditSection = (props: ReportEditSection) => {
 
     const [updateReport] = reportApi.useUpdateReportMutation();
 
-    const form = useForm<ReportFormValues>();
+    const form = useForm<ReportFormValues>({ defaultValues: report });
 
     const { reset, handleSubmit, control, formState } = form;
     const { dirtyFields } = formState;
@@ -84,10 +84,10 @@ export const ReportEditSection = (props: ReportEditSection) => {
                             )}
                         </Tabs>
                     </Box>
-                    <TabPanel value={tabs.main}>
+                    <TabPanel value={tabs.main} sx={{ px: 0 }}>
                         <ReportFormMainInfo />
                     </TabPanel>
-                    <TabPanel value={tabs.access}>
+                    <TabPanel value={tabs.access} sx={{ px: 0 }}>
                         <ReportFormAccess />
                     </TabPanel>
                 </Box>
