@@ -29,24 +29,6 @@ export const projectApi = createApi({
                 url: "project/list",
                 params: params ?? undefined,
             }),
-            transformResponse: (response: ListResponse<ProjectT>) => ({
-                ...response,
-                payload: {
-                    ...response.payload,
-                    items: response.payload.items.sort((a, b) => {
-                        const aScore =
-                            (a.is_favorite ? 2 : 0) + (a.is_subscribed ? 1 : 0);
-                        const bScore =
-                            (b.is_favorite ? 2 : 0) + (b.is_subscribed ? 1 : 0);
-
-                        if (aScore !== bScore) {
-                            return bScore - aScore;
-                        }
-
-                        return a.name.localeCompare(b.name);
-                    }),
-                },
-            }),
             providesTags: (result) => {
                 let tags = [{ type: "Projects", id: "LIST" }];
                 if (result) {
