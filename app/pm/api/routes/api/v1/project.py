@@ -363,8 +363,8 @@ async def list_projects(
     filter_query = {}
     if not user_ctx.user.is_admin:
         filter_query['_id'] = {
-            '$in': user_ctx.get_projects_with_permission(
-                ProjectPermissions.PROJECT_READ
+            '$in': list(
+                user_ctx.get_projects_with_permission(ProjectPermissions.PROJECT_READ)
             )
         }
     if query.search:
