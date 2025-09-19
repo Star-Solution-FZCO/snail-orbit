@@ -1,9 +1,11 @@
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+RUN npm install -g pnpm@latest
 
 WORKDIR /src/frontend
 COPY frontend/package.json .
-COPY frontend/yarn.lock .
-RUN yarn install --frozen-lockfile
+COPY frontend/pnpm-lock.yaml .
+COPY frontend/pnpm-workspace.yaml .
+RUN pnpm install
 COPY frontend .
 COPY app/openapi.json /src/app/openapi.json
 
@@ -17,15 +19,20 @@ ENV SENTRY_PROJECT=${SENTRY_PROJECT}
 ENV SENTRY_RELEASE="snail-orbit@${version}"
 ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 
-RUN yarn build
+RUN pnpm build
 
 
 FROM --platform=$BUILDPLATFORM node:20-alpine AS test
+RUN npm install -g pnpm@latest
+
 COPY frontend/package.json .
-COPY frontend/yarn.lock .
-RUN yarn install --frozen-lockfile --production=false
-RUN yarn config set -- --modules-folder /node_modules && \
-    rm -rf package.json yarn.lock
+COPY frontend/pnpm-lock.yaml .
+COPY frontend/pnpm-workspace.yaml .
+RUN pnpm install
+RUN pnpm config set modulesDir=/node_modules && \
+    pnpm config set nodeLinker=hoisted && \
+    pnpm config set enableModulesDir=false && \
+    rm -rf package.json pnpm-lock.yaml pnpm-workspace.yaml
 ENV PATH="/node_modules/.bin:$PATH"
 
 
