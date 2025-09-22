@@ -81,8 +81,27 @@ def convert_aggregated_value_to_proper_output(
 
     if field.type in USER_BASED_FIELD_TYPES:
         if sample_value and isinstance(sample_value, dict):
-            user_link = m.UserLinkField(**sample_value)
-            return UserOutput.from_obj(user_link)
+            # Check if sample_value has complete UserLinkField data
+            required_fields = {
+                'id',
+                'name',
+                'email',
+                'is_active',
+                'use_external_avatar',
+            }
+            if all(field in sample_value for field in required_fields):
+                user_link = m.UserLinkField(**sample_value)
+                return UserOutput.from_obj(user_link)
+            # Handle incomplete user data - use raw_value or create minimal user info
+            if isinstance(raw_value, dict) and 'id' in raw_value:
+                # Create a minimal UserOutput with available data
+                return UserOutput(
+                    id=str(raw_value['id']),
+                    name=raw_value.get('name', 'Unknown User'),
+                    email=raw_value.get('email', ''),
+                    is_active=raw_value.get('is_active', True),
+                    use_external_avatar=raw_value.get('use_external_avatar', False),
+                )
         return raw_value
 
     return raw_value
@@ -852,6 +871,14 @@ async def generate_project_custom_field_report_data(
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
 
+    def make_hashable_key(value: Any) -> Any:
+        """Convert potentially unhashable values to hashable keys for dict lookup."""
+        if isinstance(value, dict):
+            return tuple(sorted(value.items()))
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
     unique_custom_field_values = []
     seen_custom_field_values = set()
 
@@ -860,11 +887,12 @@ async def generate_project_custom_field_report_data(
         custom_field_value = result_id.get('custom_field_value')
         sample_value = result.get('sample_custom_field_value')
 
+        hashable_key = make_hashable_key(custom_field_value)
         if (
             custom_field_value is not None
-            and custom_field_value not in seen_custom_field_values
+            and hashable_key not in seen_custom_field_values
         ):
-            seen_custom_field_values.add(custom_field_value)
+            seen_custom_field_values.add(hashable_key)
             converted_value = convert_aggregated_value_to_proper_output(
                 custom_field_value, sample_value, custom_field
             )
@@ -878,13 +906,12 @@ async def generate_project_custom_field_report_data(
     for result in aggregation_result:
         result_id = result.get('_id', {})
         custom_field_value = result_id.get('custom_field_value')
-        if (
-            custom_field_value is not None
-            and custom_field_value not in custom_field_value_to_index
-        ):
-            custom_field_value_to_index[custom_field_value] = len(
-                custom_field_value_to_index
-            )
+        if custom_field_value is not None:
+            hashable_key = make_hashable_key(custom_field_value)
+            if hashable_key not in custom_field_value_to_index:
+                custom_field_value_to_index[hashable_key] = len(
+                    custom_field_value_to_index
+                )
 
     project_id_to_index = {project.id: i for i, project in enumerate(report.projects)}
 
@@ -896,7 +923,8 @@ async def generate_project_custom_field_report_data(
 
         if project_id is not None and custom_field_value is not None:
             project_idx = project_id_to_index.get(project_id)
-            custom_field_idx = custom_field_value_to_index.get(custom_field_value)
+            custom_field_key = make_hashable_key(custom_field_value)
+            custom_field_idx = custom_field_value_to_index.get(custom_field_key)
 
             if project_idx is not None and custom_field_idx is not None:
                 data[custom_field_idx][project_idx] = count
@@ -995,6 +1023,14 @@ async def generate_custom_field_project_report_data(
 
     aggregation_result = await m.Issue.aggregate(pipeline).to_list()
 
+    def make_hashable_key(value: Any) -> Any:
+        """Convert potentially unhashable values to hashable keys for dict lookup."""
+        if isinstance(value, dict):
+            return tuple(sorted(value.items()))
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
     unique_project_ids = set()
     unique_custom_field_values = []
     seen_custom_field_values = set()
@@ -1007,12 +1043,11 @@ async def generate_custom_field_project_report_data(
 
         if project_id is not None:
             unique_project_ids.add(project_id)
-        if (
-            custom_field_value is not None
-            and custom_field_value not in seen_custom_field_values
-        ):
-            unique_custom_field_values.append((custom_field_value, sample_value))
-            seen_custom_field_values.add(custom_field_value)
+        if custom_field_value is not None:
+            hashable_key = make_hashable_key(custom_field_value)
+            if hashable_key not in seen_custom_field_values:
+                unique_custom_field_values.append((custom_field_value, sample_value))
+                seen_custom_field_values.add(hashable_key)
 
     custom_field_values = []
     for raw_value, sample_value in unique_custom_field_values:
@@ -1030,14 +1065,15 @@ async def generate_custom_field_project_report_data(
         project_id = result_id.get('project_id')
         count = result.get('count', 0)
 
-        key = (custom_field_value, project_id)
+        key = (make_hashable_key(custom_field_value), project_id)
         count_lookup[key] = count
 
     data = []
     for raw_value, _ in unique_custom_field_values:
         custom_field_row = []
         for project in report.projects:
-            count = count_lookup.get((raw_value, project.id), 0)
+            key = (make_hashable_key(raw_value), project.id)
+            count = count_lookup.get(key, 0)
             custom_field_row.append(count)
         data.append(custom_field_row)
 
@@ -1166,67 +1202,82 @@ async def generate_two_axis_report_data(
         )
         group_secondary_field = secondary_value_field
 
-    pipeline.extend(
-        [
-            {
-                '$group': {
-                    '_id': {
-                        'primary_value': group_primary_field,
-                        'secondary_value': group_secondary_field,
-                    },
-                    'count': {'$sum': 1},
-                    'sample_primary_value': {'$first': sample_primary_field},
-                    'sample_secondary_value': {'$first': sample_secondary_field},
-                }
-            },
-            {'$sort': {'_id.secondary_value': 1, '_id.primary_value': 1}},
-        ]
-    )
+    # Get unique primary values through separate aggregation
+    primary_pipeline = [
+        *pipeline,
+        {
+            '$group': {
+                '_id': group_primary_field,
+                'sample_value': {'$first': sample_primary_field},
+            }
+        },
+        {'$sort': {'_id': 1}},
+    ]
+    primary_results = await m.Issue.aggregate(primary_pipeline).to_list()
 
-    aggregation_result = await m.Issue.aggregate(pipeline).to_list()
+    # Get unique secondary values through separate aggregation
+    secondary_pipeline = [
+        *pipeline,
+        {
+            '$group': {
+                '_id': group_secondary_field,
+                'sample_value': {'$first': sample_secondary_field},
+            }
+        },
+        {'$sort': {'_id': 1}},
+    ]
+    secondary_results = await m.Issue.aggregate(secondary_pipeline).to_list()
 
+    # Get combined data for the matrix
+    combined_pipeline = [
+        *pipeline,
+        {
+            '$group': {
+                '_id': {
+                    'primary_value': group_primary_field,
+                    'secondary_value': group_secondary_field,
+                },
+                'count': {'$sum': 1},
+            }
+        },
+    ]
+    aggregation_result = await m.Issue.aggregate(combined_pipeline).to_list()
+
+    def make_hashable_key(value: Any) -> Any:
+        """Convert potentially unhashable values to hashable keys for dict lookup."""
+        if isinstance(value, dict):
+            return tuple(sorted(value.items()))
+        if isinstance(value, list):
+            return tuple(value)
+        return value
+
+    # Convert primary values and build index mapping
     unique_primary_values = []
-    unique_secondary_values = []
-    seen_primary = set()
-    seen_secondary = set()
-
-    for result in aggregation_result:
-        result_id = result.get('_id', {})
-        primary_value = result_id.get('primary_value')
-        secondary_value = result_id.get('secondary_value')
-        sample_primary = result.get('sample_primary_value')
-        sample_secondary = result.get('sample_secondary_value')
-
-        if primary_value is not None and primary_value not in seen_primary:
-            seen_primary.add(primary_value)
-            converted_primary = convert_aggregated_value_to_proper_output(
-                primary_value, sample_primary, primary_field
-            )
-            unique_primary_values.append(converted_primary)
-
-        if secondary_value is not None and secondary_value not in seen_secondary:
-            seen_secondary.add(secondary_value)
-            converted_secondary = convert_aggregated_value_to_proper_output(
-                secondary_value, sample_secondary, secondary_field
-            )
-            unique_secondary_values.append(converted_secondary)
-
     primary_value_to_index = {}
-    for result in aggregation_result:
-        result_id = result.get('_id', {})
-        primary_value = result_id.get('primary_value')
-        if primary_value is not None and primary_value not in primary_value_to_index:
-            primary_value_to_index[primary_value] = len(primary_value_to_index)
+    for i, result in enumerate(primary_results):
+        raw_value = result['_id']
+        sample_value = result.get('sample_value')
 
+        converted_value = convert_aggregated_value_to_proper_output(
+            raw_value, sample_value, primary_field
+        )
+        unique_primary_values.append(converted_value)
+        hashable_key = make_hashable_key(raw_value)
+        primary_value_to_index[hashable_key] = i
+
+    # Convert secondary values and build index mapping
+    unique_secondary_values = []
     secondary_value_to_index = {}
-    for result in aggregation_result:
-        result_id = result.get('_id', {})
-        secondary_value = result_id.get('secondary_value')
-        if (
-            secondary_value is not None
-            and secondary_value not in secondary_value_to_index
-        ):
-            secondary_value_to_index[secondary_value] = len(secondary_value_to_index)
+    for i, result in enumerate(secondary_results):
+        raw_value = result['_id']
+        sample_value = result.get('sample_value')
+
+        converted_value = convert_aggregated_value_to_proper_output(
+            raw_value, sample_value, secondary_field
+        )
+        unique_secondary_values.append(converted_value)
+        hashable_key = make_hashable_key(raw_value)
+        secondary_value_to_index[hashable_key] = i
 
     data = [[0 for _ in unique_primary_values] for _ in unique_secondary_values]
 
@@ -1237,8 +1288,10 @@ async def generate_two_axis_report_data(
         count = result.get('count', 0)
 
         if primary_value is not None and secondary_value is not None:
-            primary_idx = primary_value_to_index.get(primary_value)
-            secondary_idx = secondary_value_to_index.get(secondary_value)
+            primary_key = make_hashable_key(primary_value)
+            secondary_key = make_hashable_key(secondary_value)
+            primary_idx = primary_value_to_index.get(primary_key)
+            secondary_idx = secondary_value_to_index.get(secondary_key)
             if primary_idx is not None and secondary_idx is not None:
                 data[secondary_idx][primary_idx] = count
 
