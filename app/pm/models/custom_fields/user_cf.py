@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from beanie import PydanticObjectId
+from bson.errors import InvalidId
 from pydantic import BaseModel, Field
 
 from pm.models.group import Group, GroupLinkField
@@ -126,7 +127,7 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
 
         try:
             object_id = PydanticObjectId(value)
-        except ValueError as err:
+        except InvalidId as err:
             value = str(value)
             if '@' in value:
                 user_dict = {u.email: u for u in available_users}
@@ -184,7 +185,7 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
 
             try:
                 object_id = PydanticObjectId(user_val)
-            except ValueError as err:
+            except InvalidId as err:
                 user_val = str(user_val)
                 if '@' in user_val:
                     user_dict = {u.email: u for u in available_users}
