@@ -121,25 +121,36 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
             return value
         if isinstance(value, UserLinkField):
             value = value.id
-        try:
-            value = PydanticObjectId(value)
-        except ValueError as err:
-            raise CustomFieldValidationError(
-                field=self,
-                value=value,
-                msg='must be a valid ObjectId',
-            ) from err
 
         available_users = await self.resolve_available_users()
-        users_dict = {u.id: u for u in available_users}
 
-        if value not in users_dict:
+        try:
+            object_id = PydanticObjectId(value)
+        except ValueError as err:
+            value = str(value)
+            if '@' in value:
+                user_dict = {u.email: u for u in available_users}
+                if value in user_dict:
+                    return user_dict[value]
+                raise CustomFieldValidationError(
+                    field=self,
+                    value=value,
+                    msg='user must be in options',
+                ) from err
             raise CustomFieldValidationError(
                 field=self,
                 value=value,
-                msg='user not found in options',
-            )
-        return users_dict[value]
+                msg='must be a valid ObjectId or email',
+            ) from err
+
+        users_dict = {u.id: u for u in available_users}
+        if object_id in users_dict:
+            return users_dict[object_id]
+        raise CustomFieldValidationError(
+            field=self,
+            value=value,
+            msg='user must be in options',
+        )
 
 
 class UserMultiCustomField(CustomField, UserCustomFieldMixin):
@@ -164,26 +175,40 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
             )
 
         available_users = await self.resolve_available_users()
-        users_dict = {u.id: u for u in available_users}
 
         results = []
         for val in value:
-            user_id = val
-            if isinstance(user_id, UserLinkField):
-                user_id = user_id.id
+            user_val = val
+            if isinstance(user_val, UserLinkField):
+                user_val = user_val.id
+
             try:
-                user_id = PydanticObjectId(user_id)
+                object_id = PydanticObjectId(user_val)
             except ValueError as err:
+                user_val = str(user_val)
+                if '@' in user_val:
+                    user_dict = {u.email: u for u in available_users}
+                    if user_val in user_dict:
+                        results.append(user_dict[user_val])
+                        continue
+                    raise CustomFieldValidationError(
+                        field=self,
+                        value=value,
+                        msg='user must be in options',
+                    ) from err
                 raise CustomFieldValidationError(
                     field=self,
                     value=value,
-                    msg='must be a valid ObjectId',
+                    msg='must be a valid ObjectId or email',
                 ) from err
-            if user_id not in users_dict:
-                raise CustomFieldValidationError(
-                    field=self,
-                    value=value,
-                    msg=f'user {user_id} not found',
-                )
-            results.append(users_dict[user_id])
+
+            users_dict = {u.id: u for u in available_users}
+            if object_id in users_dict:
+                results.append(users_dict[object_id])
+                continue
+            raise CustomFieldValidationError(
+                field=self,
+                value=value,
+                msg='user must be in options',
+            )
         return results
