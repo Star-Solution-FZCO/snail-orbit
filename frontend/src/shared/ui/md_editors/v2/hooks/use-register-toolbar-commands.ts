@@ -27,7 +27,7 @@ import {
 type UseRegisterToolbarCommandsProps = {
     editor: LexicalEditor;
     updateToolbar: () => void;
-    onChange: (textContent: string) => void;
+    onChange?: (textContent: string) => void;
     formatInlineText: (prefix: string, suffix?: string) => void;
     insertAtLineStart: (text: string) => void;
     insertOrderedList: () => void;
@@ -66,7 +66,7 @@ export const useRegisterToolbarCommands = ({
                     updateToolbar();
                     const root = $getRoot();
                     const textContent = root.getTextContent();
-                    onChange(textContent);
+                    onChange?.(textContent);
                 });
             }),
 

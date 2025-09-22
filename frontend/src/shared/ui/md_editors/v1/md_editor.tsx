@@ -29,7 +29,7 @@ import "github-markdown-css";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
 import i18n from "shared/i18n";
-import { IMDEditorProps } from "../types";
+import { MDEditorProps } from "../types";
 import "./md_editor.css";
 import { syncSourceEditing, useCKEditorStyles } from "./utils";
 
@@ -88,7 +88,7 @@ const toolbar = {
     shouldNotGroupWhenFull: true,
 };
 
-export const MDEditorV1: FC<IMDEditorProps> = ({
+export const MDEditorV1: FC<MDEditorProps> = ({
     value,
     defaultValue,
     onChange,

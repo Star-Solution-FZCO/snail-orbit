@@ -1,14 +1,10 @@
-import type { StyledComponent } from "@emotion/styled";
 import { Button, styled } from "@mui/material";
 
 type ToolbarButtonProps = { active?: boolean };
 
-export const ToolbarButton: StyledComponent<ToolbarButtonProps> = styled(
-    Button,
-    {
-        shouldForwardProp: (prop) => prop !== "active",
-    },
-)<ToolbarButtonProps>(({ theme, active }) => ({
+export const ToolbarButton = styled(Button, {
+    shouldForwardProp: (prop) => prop !== "active",
+})<ToolbarButtonProps>(({ theme, active }) => ({
     width: 32,
     height: 32,
     minWidth: "unset",

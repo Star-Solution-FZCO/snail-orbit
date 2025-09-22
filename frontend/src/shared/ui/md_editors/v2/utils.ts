@@ -1,4 +1,5 @@
-export const TABLE_CONTENT = "| | |\n| --- | --- |\n| | |\n";
+export const TABLE_CONTENT =
+    "|   |   |   |\n| --- | --- | --- |\n|   |   |   |\n|   |   |   |\n|   |   |   |\n";
 
 export const getLineInfo = (textContent: string, offset: number) => {
     const lines = textContent.split("\n");
@@ -166,39 +167,4 @@ export const analyzeSelectedText = (text: string) => {
                 (line) => line.includes("|") && line.split("|").length > 2,
             ),
     };
-};
-
-export const removeFormatting = (
-    text: string,
-    formatPrefix: string,
-    formatSuffix?: string,
-): string => {
-    const suffix = formatSuffix || formatPrefix;
-    const escapedPrefix = formatPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const escapedSuffix = suffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`${escapedPrefix}(.*?)${escapedSuffix}`, "g");
-
-    return text.replace(pattern, "$1");
-};
-
-export const addFormatting = (
-    text: string,
-    formatPrefix: string,
-    formatSuffix?: string,
-): string => {
-    const suffix = formatSuffix || formatPrefix;
-    return `${formatPrefix}${text}${suffix}`;
-};
-
-export const hasFormatting = (
-    text: string,
-    formatPrefix: string,
-    formatSuffix?: string,
-): boolean => {
-    const suffix = formatSuffix || formatPrefix;
-    const escapedPrefix = formatPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const escapedSuffix = suffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`${escapedPrefix}.*?${escapedSuffix}`);
-
-    return pattern.test(text);
 };

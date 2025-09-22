@@ -5,25 +5,15 @@ import {
     COMMAND_PRIORITY_LOW,
     FOCUS_COMMAND,
 } from "lexical";
-import { FC, useEffect, useRef } from "react";
+import { FC, useEffect } from "react";
 
 export const FocusBlurPlugin: FC<{
     onFocus?: (value: string) => void;
     onBlur?: (value: string) => void;
-    autoFocus?: boolean;
-}> = ({ onFocus, onBlur, autoFocus }) => {
+}> = ({ onFocus, onBlur }) => {
     const [editor] = useLexicalComposerContext();
 
-    const hasAutoFocused = useRef(false);
-
     useEffect(() => {
-        if (autoFocus && !hasAutoFocused.current) {
-            hasAutoFocused.current = true;
-            setTimeout(() => {
-                editor.focus();
-            }, 0);
-        }
-
         const unregisterFocus = editor.registerCommand(
             FOCUS_COMMAND,
             () => {
@@ -58,7 +48,7 @@ export const FocusBlurPlugin: FC<{
             unregisterFocus();
             unregisterBlur();
         };
-    }, [editor, onFocus, onBlur, autoFocus]);
+    }, [editor, onFocus, onBlur]);
 
     return null;
 };
