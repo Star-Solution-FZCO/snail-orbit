@@ -5,16 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "compile": "tsr generate && npm run api-gen-from-file && npx tsc -b --noCheck",
-    "build": "npm run compile && vite build",
+    "compile": "tsr generate && pnpm run api-gen-from-file && tsc -b --noCheck",
+    "build": "pnpm run compile && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "prettier": "npx prettier . --write -l",
+    "prettier": "prettier . --write -l",
     "extract": "i18next 'src/**/*.{js,ts,jsx,tsx}' -c i18next-parser.config.js",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "api-gen": "npx openapi-typescript http://localhost:9090/openapi.json -o src/shared/model/types/backend-schema.gen.ts --export-type --root-types --root-types-no-schema-prefix --enum-values --dedupe-enums",
-    "api-gen-from-file": "npx openapi-typescript ../app/openapi.json -o src/shared/model/types/backend-schema.gen.ts --export-type --root-types --root-types-no-schema-prefix --enum-values --dedupe-enums"
+    "api-gen": "openapi-typescript http://localhost:9090/openapi.json -o src/shared/model/types/backend-schema.gen.ts --export-type --root-types --root-types-no-schema-prefix --enum-values --dedupe-enums",
+    "api-gen-from-file": "openapi-typescript ../app/openapi.json -o src/shared/model/types/backend-schema.gen.ts --export-type --root-types --root-types-no-schema-prefix --enum-values --dedupe-enums"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "11.0.0",

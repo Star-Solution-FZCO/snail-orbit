@@ -5,7 +5,7 @@ WORKDIR /src/frontend
 COPY frontend/package.json .
 COPY frontend/pnpm-lock.yaml .
 COPY frontend/pnpm-workspace.yaml .
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 COPY frontend .
 COPY app/openapi.json /src/app/openapi.json
 
@@ -23,17 +23,18 @@ RUN pnpm build
 
 
 FROM --platform=$BUILDPLATFORM node:20-alpine AS test
+WORKDIR /pnpm
 RUN npm install -g pnpm@latest
 
 COPY frontend/package.json .
 COPY frontend/pnpm-lock.yaml .
 COPY frontend/pnpm-workspace.yaml .
-RUN pnpm install
-RUN pnpm config set modulesDir=/node_modules && \
+RUN pnpm install --frozen-lockfile
+RUN pnpm config set modulesDir=/pnpm/node_modules && \
     pnpm config set nodeLinker=hoisted && \
     pnpm config set enableModulesDir=false && \
     rm -rf package.json pnpm-lock.yaml pnpm-workspace.yaml
-ENV PATH="/node_modules/.bin:$PATH"
+ENV PATH="/pnpm/node_modules/.bin:$PATH"
 
 
 FROM nginx:alpine AS ui
