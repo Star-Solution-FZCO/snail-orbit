@@ -22610,7 +22610,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_Union_UserOutput__ShortOptionOutput__"
+                  "$ref": "#/components/schemas/BaseListOutput_Union_UserFieldValueOutput__ShortOptionOutput__"
                 }
               }
             }
@@ -38962,7 +38962,7 @@
         ],
         "title": "BaseListOutput[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
       },
-      "BaseListOutput_Union_UserOutput__ShortOptionOutput__": {
+      "BaseListOutput_Union_UserFieldValueOutput__ShortOptionOutput__": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -38970,14 +38970,14 @@
             "default": true
           },
           "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_Union_UserOutput__ShortOptionOutput__"
+            "$ref": "#/components/schemas/BaseListPayload_Union_UserFieldValueOutput__ShortOptionOutput__"
           }
         },
         "type": "object",
         "required": [
           "payload"
         ],
-        "title": "BaseListOutput[Union[UserOutput, ShortOptionOutput]]"
+        "title": "BaseListOutput[Union[UserFieldValueOutput, ShortOptionOutput]]"
       },
       "BaseListOutput_Union_WorkflowOutput__ScheduledWorkflowOutput__": {
         "properties": {
@@ -39979,7 +39979,7 @@
         ],
         "title": "BaseListPayload[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
       },
-      "BaseListPayload_Union_UserOutput__ShortOptionOutput__": {
+      "BaseListPayload_Union_UserFieldValueOutput__ShortOptionOutput__": {
         "properties": {
           "count": {
             "type": "integer",
@@ -39997,7 +39997,7 @@
             "items": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/UserOutput"
+                  "$ref": "#/components/schemas/UserFieldValueOutput"
                 },
                 {
                   "$ref": "#/components/schemas/ShortOptionOutput"
@@ -40015,7 +40015,7 @@
           "offset",
           "items"
         ],
-        "title": "BaseListPayload[Union[UserOutput, ShortOptionOutput]]"
+        "title": "BaseListPayload[Union[UserFieldValueOutput, ShortOptionOutput]]"
       },
       "BaseListPayload_Union_WorkflowOutput__ScheduledWorkflowOutput__": {
         "properties": {
@@ -50206,7 +50206,14 @@
       "ShortOptionOutput": {
         "properties": {
           "value": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Value"
           },
           "color": {
@@ -52595,6 +52602,69 @@
           "value"
         ],
         "title": "UserCustomFieldValueOutput"
+      },
+      "UserFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "is_active",
+          "avatar"
+        ],
+        "title": "UserFieldValueOutput"
       },
       "UserFullOutput": {
         "properties": {

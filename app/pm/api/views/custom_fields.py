@@ -5,9 +5,10 @@ from typing import Annotated, Any, Generic, Literal, Self, TypeVar
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, RootModel, computed_field
 
 import pm.models as m
+from pm.services.avatars import external_avatar_url, local_avatar_url
 
 from .group import GroupOutput
 from .project import ProjectShortOutput
@@ -64,6 +65,7 @@ __all__ = (
     'UserCustomFieldGroupWithReportValuesOutput',
     'UserCustomFieldGroupWithValuesOutput',
     'UserCustomFieldOutput',
+    'UserFieldValueOutput',
     'UserMultiCustomFieldGroupWithReportValuesOutput',
     'UserMultiCustomFieldGroupWithValuesOutput',
     'VersionCustomFieldGroupWithReportValuesOutput',
@@ -77,6 +79,9 @@ __all__ = (
     'cf_value_output_cls_from_type',
     'custom_field_group_with_report_values_output_cls_from_type',
 )
+
+
+NONE_PYDANTIC_OBJECT_ID = PydanticObjectId('000000000000000000000000')
 
 
 class EnumOptionOutput(BaseModel):
@@ -728,18 +733,73 @@ def cf_group_output_cls_from_type(
 
 
 class ShortOptionOutput(BaseModel):
-    value: str
+    value: str | None
     color: str | None = None
 
     @classmethod
-    def from_obj(cls, obj: m.EnumOption | m.VersionOption | m.StateOption) -> Self:
+    def from_obj(
+        cls, obj: m.EnumOption | m.VersionOption | m.StateOption | None
+    ) -> Self:
+        if obj is None:
+            return ShortOptionOutputNone()
         return cls(
             value=obj.value,
             color=getattr(obj, 'color', None),
         )
 
 
-CustomFieldGroupSelectOptionsT = UserOutput | ShortOptionOutput
+class ShortOptionOutputNone(ShortOptionOutput):
+    value: None = None
+    color: None = None
+
+
+class UserFieldValueOutput(BaseModel):
+    id: PydanticObjectId
+    name: str | None
+    email: str | None
+    is_active: bool | None
+
+    _use_external_avatar: bool
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self._use_external_avatar = data.get('_use_external_avatar', False)
+
+    @computed_field
+    @property
+    def avatar(self) -> str | None:
+        if self._use_external_avatar and (url := external_avatar_url(self.email)):
+            return url
+        return local_avatar_url(self.email)
+
+    @classmethod
+    def from_obj(cls, obj: 'm.User | m.UserLinkField | None') -> Self:
+        if obj is None:
+            return UserFieldValueOutputNone()
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            email=obj.email,
+            is_active=obj.is_active,
+            _use_external_avatar=obj.use_external_avatar,
+        )
+
+
+class UserFieldValueOutputNone(UserFieldValueOutput):
+    id: PydanticObjectId = NONE_PYDANTIC_OBJECT_ID
+    name: None = None
+    email: None = None
+    is_active: None = None
+
+    _use_external_avatar: bool = False
+
+    @computed_field
+    @property
+    def avatar(self) -> None:
+        return None
+
+
+CustomFieldGroupSelectOptionsT = UserFieldValueOutput | ShortOptionOutput
 
 
 class BaseCustomFieldValueOutput(BaseModel, ABC):

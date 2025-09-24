@@ -21,6 +21,7 @@ from pm.api.views.custom_fields import (
     OwnedOptionOutput,
     ShortOptionOutput,
     StateOptionOutput,
+    UserFieldValueOutput,
     VersionOptionOutput,
     cf_group_output_cls_from_type,
     cf_output_from_obj,
@@ -1014,13 +1015,16 @@ async def select_options_group(
         all_options = {opt for field in fields for opt in field.options}
     elif fields[0].type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
         select_fn = user_link_select
-        output_fn = UserOutput.from_obj
+        output_fn = UserFieldValueOutput.from_obj
         all_options = set()
         for field in fields:
             field_users = await field.resolve_available_users()
             all_options.update(field_users)
     else:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
+
+    if any(field.is_nullable for field in fields):
+        all_options.add(None)
 
     selected = select_fn(all_options, query)
 
