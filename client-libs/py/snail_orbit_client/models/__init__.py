@@ -17,6 +17,7 @@ from .issues import (
     IssueCommentCreate,
     IssueCommentUpdate,
     IssueCreate,
+    IssueList,
     IssueUpdate,
 )
 from .projects import Project, ProjectListItemOutput
@@ -41,6 +42,7 @@ __all__ = [
     'IssueCommentOutput',
     'IssueCommentUpdate',
     'IssueCreate',
+    'IssueList',
     'IssueUpdate',
     # Projects
     'Project',

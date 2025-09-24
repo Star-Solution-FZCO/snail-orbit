@@ -31,6 +31,7 @@ __all__ = (
     'IssueCommentOutput',
     'IssueDraftOutput',
     'IssueHistoryOutput',
+    'IssueListOutput',
     'IssueOutput',
     'ProjectField',
     'issue_change_output_from_obj',
@@ -229,6 +230,82 @@ class IssueOutput(BaseModel):
             attachments=[
                 await IssueAttachmentOut.from_obj(att) for att in obj.attachments
             ],
+            is_subscribed=current_user().user.id in obj.subscribers,
+            created_by=UserOutput.from_obj(obj.created_by),
+            created_at=obj.created_at,
+            updated_by=UserOutput.from_obj(obj.updated_by),
+            updated_at=obj.updated_at,
+            is_resolved=obj.is_resolved,
+            resolved_at=obj.resolved_at,
+            is_closed=obj.is_closed,
+            closed_at=obj.closed_at,
+            interlinks=[IssueInterlinkOutput.from_obj(link) for link in obj.interlinks],
+            tags=[TagLinkOutput.from_obj(tag) for tag in filtered_tags],
+            permissions=obj.permissions,
+            disable_project_permissions_inheritance=obj.disable_project_permissions_inheritance,
+            has_custom_permissions=obj.has_custom_permissions,
+            access_claims=list(user_permissions),
+        )
+
+
+class IssueListOutput(BaseModel):
+    id: PydanticObjectId
+    aliases: list[str]
+    project: ProjectField
+    subject: str
+    text: EncryptedObject | None
+    fields: dict[str, CustomFieldValueOutputRootModel]
+    is_subscribed: bool
+    id_readable: str
+    created_by: UserOutput
+    created_at: datetime
+    updated_by: UserOutput
+    updated_at: datetime
+    is_resolved: bool
+    resolved_at: datetime | None
+    is_closed: bool
+    closed_at: datetime | None
+    interlinks: list[IssueInterlinkOutput]
+    tags: list[TagLinkOutput]
+    permissions: list[m.ProjectPermission]
+    disable_project_permissions_inheritance: bool
+    has_custom_permissions: bool
+    access_claims: list[ProjectPermissions]
+
+    @classmethod
+    async def from_obj(
+        cls, obj: m.Issue, accessible_tag_ids: set[PydanticObjectId] | None = None
+    ) -> Self:
+        user_ctx = current_user()
+        user_permissions = obj.get_user_permissions(
+            user_ctx.user, user_ctx.all_group_ids
+        )
+
+        # Inherit project permissions unless explicitly disabled
+        if not obj.disable_project_permissions_inheritance:
+            project_permissions = user_ctx.permissions.get(obj.project.id, set())
+            user_permissions.update(project_permissions)
+
+        filtered_tags = obj.tags
+        if accessible_tag_ids is not None:
+            filtered_tags = [tag for tag in obj.tags if tag.id in accessible_tag_ids]
+
+        return cls(
+            id=obj.id,
+            id_readable=obj.id_readable,
+            aliases=obj.aliases,
+            project=ProjectField.from_obj(obj.project),
+            subject=obj.subject,
+            text=EncryptedObject(
+                value=obj.text,
+                encryption=obj.encryption,
+            )
+            if obj.text
+            else None,
+            fields={
+                field.name: cf_value_output_cls_from_type(field.type).from_obj(field)
+                for field in obj.fields
+            },
             is_subscribed=current_user().user.id in obj.subscribers,
             created_by=UserOutput.from_obj(obj.created_by),
             created_at=obj.created_at,

@@ -10,6 +10,7 @@ from ..models.issues import (
     IssueCommentCreate,
     IssueCommentUpdate,
     IssueCreate,
+    IssueList,
     IssueUpdate,
 )
 from .base import AsyncBaseResource, BaseResource
@@ -29,7 +30,7 @@ class IssuesResource(BaseResource):
 
     def list(
         self, q: str | None = None, search: str | None = None, **params: Any
-    ) -> Iterator[Issue]:
+    ) -> Iterator[IssueList]:
         """List issues with optional query.
 
         Args:
@@ -38,13 +39,13 @@ class IssuesResource(BaseResource):
             **params: Additional query parameters
 
         Yields:
-            Issue objects
+            IssueList objects (lightweight, no attachments)
         """
         if q:
             params['q'] = q
         if search:
             params['search'] = search
-        yield from self._paginate('/api/v1/issue/list', Issue, params)
+        yield from self._paginate('/api/v1/issue/list', IssueList, params)
 
     def get(self, issue_id: str) -> Issue:
         """Get a specific issue by ID.
@@ -246,7 +247,7 @@ class AsyncIssuesResource(AsyncBaseResource):
 
     async def list(
         self, q: str | None = None, search: str | None = None, **params: Any
-    ) -> AsyncIterator[Issue]:
+    ) -> AsyncIterator[IssueList]:
         """List issues with optional query.
 
         Args:
@@ -255,13 +256,13 @@ class AsyncIssuesResource(AsyncBaseResource):
             **params: Additional query parameters
 
         Yields:
-            Issue objects
+            IssueList objects (lightweight, no attachments)
         """
         if q:
             params['q'] = q
         if search:
             params['search'] = search
-        async for issue in self._paginate('/api/v1/issue/list', Issue, params):
+        async for issue in self._paginate('/api/v1/issue/list', IssueList, params):
             yield issue
 
     async def get(self, issue_id: str) -> Issue:

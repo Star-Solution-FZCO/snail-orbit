@@ -15,7 +15,8 @@ if TYPE_CHECKING:
 from ..generated.models import (
     EncryptedObjectInput,
     IssueAttachmentBody,
-    IssueOutput,  # Base issue model
+    IssueListOutput,
+    IssueOutput,
 )
 from .base import BaseModel
 
@@ -108,6 +109,50 @@ class Issue(IssueOutput):
     model_config = ConfigDict(
         extra='allow',  # Allow additional fields from API response
         frozen=False,  # Allow computed fields (override generated model's frozen=True)
+    )
+
+    @computed_field
+    def hours_spent(self) -> float:
+        """Convert total time spent from minutes to hours.
+
+        Returns:
+            Total logged time in hours (exact float value)
+        """
+        return (getattr(self, 'total_spent_time', 0) or 0) / MINUTES_IN_HOUR
+
+
+class IssueList(IssueListOutput):
+    """Lightweight issue model optimized for list operations.
+
+    This model is identical to IssueOutput but excludes attachments for better
+    performance in list views. Use this for board views, issue lists, and
+    other scenarios where attachment data is not needed.
+
+    Issues in lists support all the same data except attachments:
+    - Full custom field access and time tracking
+    - Tags, interlinks, and permissions
+    - All core issue metadata
+
+    Example:
+        ```python
+        # Get issues list (no attachments loaded)
+        issues = client.issues.list(project_id='507f1f77bcf86cd799439011')
+
+        for issue in issues:
+            # Same API as full Issue model
+            print(f'{issue.id_readable}: {issue.subject}')
+            priority = issue.fields.get('priority')
+            print(f'Hours: {issue.hours_spent}')
+
+        # Get full issue details (with attachments) when needed
+        full_issue = client.issues.get(issue.id)
+        print(f'Attachments: {len(full_issue.attachments)}')
+        ```
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        frozen=False,
     )
 
     @computed_field

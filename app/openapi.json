@@ -5223,7 +5223,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_IssueOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_IssueListOutput_"
                 }
               }
             }
@@ -8240,7 +8240,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_IssueOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_IssueListOutput_"
                 }
               }
             }
@@ -38758,7 +38758,7 @@
         ],
         "title": "BaseListOutput[IssueHistoryOutput]"
       },
-      "BaseListOutput_IssueOutput_": {
+      "BaseListOutput_IssueListOutput_": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -38766,14 +38766,14 @@
             "default": true
           },
           "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_IssueOutput_"
+            "$ref": "#/components/schemas/BaseListPayload_IssueListOutput_"
           }
         },
         "type": "object",
         "required": [
           "payload"
         ],
-        "title": "BaseListOutput[IssueOutput]"
+        "title": "BaseListOutput[IssueListOutput]"
       },
       "BaseListOutput_IssuePermissionOutput_": {
         "properties": {
@@ -39591,7 +39591,7 @@
         ],
         "title": "BaseListPayload[IssueHistoryOutput]"
       },
-      "BaseListPayload_IssueOutput_": {
+      "BaseListPayload_IssueListOutput_": {
         "properties": {
           "count": {
             "type": "integer",
@@ -39607,7 +39607,7 @@
           },
           "items": {
             "items": {
-              "$ref": "#/components/schemas/IssueOutput"
+              "$ref": "#/components/schemas/IssueListOutput"
             },
             "type": "array",
             "title": "Items"
@@ -39620,7 +39620,7 @@
           "offset",
           "items"
         ],
-        "title": "BaseListPayload[IssueOutput]"
+        "title": "BaseListPayload[IssueListOutput]"
       },
       "BaseListPayload_IssuePermissionOutput_": {
         "properties": {
@@ -40327,7 +40327,7 @@
             "items": {
               "items": {
                 "items": {
-                  "$ref": "#/components/schemas/IssueOutput"
+                  "$ref": "#/components/schemas/IssueListOutput"
                 },
                 "type": "array"
               },
@@ -46247,6 +46247,164 @@
           "is_closed"
         ],
         "title": "IssueLinkFieldOutput"
+      },
+      "IssueListOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectField"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EncryptedObject-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CustomFieldValueOutputRootModel"
+            },
+            "type": "object",
+            "title": "Fields"
+          },
+          "is_subscribed": {
+            "type": "boolean",
+            "title": "Is Subscribed"
+          },
+          "id_readable": {
+            "type": "string",
+            "title": "Id Readable"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/UserOutput"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "is_resolved": {
+            "type": "boolean",
+            "title": "Is Resolved"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "interlinks": {
+            "items": {
+              "$ref": "#/components/schemas/IssueInterlinkOutput"
+            },
+            "type": "array",
+            "title": "Interlinks"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagLinkOutput"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectPermission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "disable_project_permissions_inheritance": {
+            "type": "boolean",
+            "title": "Disable Project Permissions Inheritance"
+          },
+          "has_custom_permissions": {
+            "type": "boolean",
+            "title": "Has Custom Permissions"
+          },
+          "access_claims": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectPermissions"
+            },
+            "type": "array",
+            "title": "Access Claims"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "aliases",
+          "project",
+          "subject",
+          "text",
+          "fields",
+          "is_subscribed",
+          "id_readable",
+          "created_by",
+          "created_at",
+          "updated_by",
+          "updated_at",
+          "is_resolved",
+          "resolved_at",
+          "is_closed",
+          "closed_at",
+          "interlinks",
+          "tags",
+          "permissions",
+          "disable_project_permissions_inheritance",
+          "has_custom_permissions",
+          "access_claims"
+        ],
+        "title": "IssueListOutput"
       },
       "IssueListTileCreate": {
         "properties": {

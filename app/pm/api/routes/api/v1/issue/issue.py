@@ -21,7 +21,12 @@ from pm.api.routes.api.v1.project import ProjectListItemOutput
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
 from pm.api.views.error_responses import READ_ERRORS, WRITE_ERRORS, error_responses
-from pm.api.views.issue import IssueAttachmentBody, IssueDraftOutput, IssueOutput
+from pm.api.views.issue import (
+    IssueAttachmentBody,
+    IssueDraftOutput,
+    IssueListOutput,
+    IssueOutput,
+)
 from pm.api.views.output import (
     BaseListOutput,
     ErrorOutput,
@@ -116,7 +121,7 @@ class IssuePermissionOutput(BaseModel):
 @router.get('/list')
 async def list_issues(
     query: IssueListParams = Depends(),
-) -> BaseListOutput[IssueOutput]:
+) -> BaseListOutput[IssueListOutput]:
     user_ctx = current_user()
     q = m.Issue.find(
         user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
@@ -160,7 +165,9 @@ async def list_issues(
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
     return BaseListOutput.make(
-        items=[await IssueOutput.from_obj(obj, accessible_tag_ids) async for obj in q],
+        items=[
+            await IssueListOutput.from_obj(obj, accessible_tag_ids) async for obj in q
+        ],
         count=cnt,
         limit=query.limit,
         offset=query.offset,
@@ -897,7 +904,7 @@ async def link_issues(
 async def select_linkable_issues(
     issue_id_or_alias: PydanticObjectId | str,
     query: SelectParams = Depends(),
-) -> BaseListOutput[IssueOutput]:
+) -> BaseListOutput[IssueListOutput]:
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -921,7 +928,7 @@ async def select_linkable_issues(
         q,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=IssueOutput.from_obj,
+        projection_fn=IssueListOutput.from_obj,
     )
 
 

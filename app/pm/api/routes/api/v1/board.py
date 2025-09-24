@@ -35,7 +35,7 @@ from pm.api.views.custom_fields import (
 from pm.api.views.error_responses import error_responses
 from pm.api.views.issue import (
     CustomFieldValueOutT,
-    IssueOutput,
+    IssueListOutput,
     ProjectField,
 )
 from pm.api.views.output import (
@@ -219,7 +219,7 @@ class BoardUpdate(BaseModel):
 
 class ColumnOutput(BaseModel):
     field_value: CustomFieldValueOutT
-    issues: list[IssueOutput]
+    issues: list[IssueListOutput]
 
 
 class SwimlaneOutput(BaseModel):
@@ -466,7 +466,7 @@ class BoardIssuesOutput(BaseModel):
     swimlanes: BoardSwimlaneOutputRootModel | None = Field(
         description='Swimlane configuration with discriminated values',
     )
-    issues: list[list[list[IssueOutput]]]
+    issues: list[list[list[IssueListOutput]]]
 
 
 @router.get('/{board_id}/issues')
@@ -604,7 +604,7 @@ async def get_board_issues(
                 issues = cols[col_value]
                 swimlane_columns.append(
                     [
-                        await IssueOutput.from_obj(issue, accessible_tag_ids)
+                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
                         for issue in issues
                     ],
                 )
@@ -619,7 +619,7 @@ async def get_board_issues(
                 issues = non_swimlane[col_value]
                 non_swimlane_columns.append(
                     [
-                        await IssueOutput.from_obj(issue, accessible_tag_ids)
+                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
                         for issue in issues
                     ],
                 )
@@ -717,7 +717,7 @@ async def move_issue(
                 await wf.run(issue)
         except WorkflowError as err:
             raise ValidateModelError(
-                payload=await IssueOutput.from_obj(issue, accessible_tag_ids),
+                payload=await IssueListOutput.from_obj(issue, accessible_tag_ids),
                 error_messages=[err.msg],
                 error_fields=err.fields_errors,
             ) from err
