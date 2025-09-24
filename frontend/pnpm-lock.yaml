@@ -41,12 +41,30 @@ importers:
       '@hookform/resolvers':
         specifier: 5.2.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.1))
+      '@lexical/code':
+        specifier: 0.35.0
+        version: 0.35.0
+      '@lexical/link':
+        specifier: 0.35.0
+        version: 0.35.0
+      '@lexical/list':
+        specifier: 0.35.0
+        version: 0.35.0
       '@lexical/markdown':
         specifier: 0.35.0
         version: 0.35.0
       '@lexical/react':
         specifier: 0.35.0
         version: 0.35.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(yjs@13.6.27)
+      '@lexical/rich-text':
+        specifier: 0.35.0
+        version: 0.35.0
+      '@lexical/selection':
+        specifier: 0.35.0
+        version: 0.35.0
+      '@lexical/table':
+        specifier: 0.35.0
+        version: 0.35.0
       '@lexical/utils':
         specifier: 0.35.0
         version: 0.35.0
@@ -5026,6 +5044,8 @@ snapshots:
       '@ckeditor/ckeditor5-ui': 46.1.0
       '@ckeditor/ckeditor5-utils': 46.1.0
       ckeditor5: 46.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-markdown-gfm@46.1.0':
     dependencies:
@@ -5095,6 +5115,8 @@ snapshots:
       '@ckeditor/ckeditor5-utils': 46.1.0
       '@ckeditor/ckeditor5-widget': 46.1.0
       ckeditor5: 46.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   '@ckeditor/ckeditor5-paragraph@46.1.0':
     dependencies:

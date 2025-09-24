@@ -1,3 +1,4 @@
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import {
     InitialConfigType,
     LexicalComposer,
@@ -11,25 +12,28 @@ import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
 import type { FC } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { IMDEditorProps } from "../types";
-import "./editor.css";
-import { FocusBlurPlugin } from "./plugins/focus_blur_plugin";
-import { ToolbarPlugin } from "./plugins/toolbar_plugin";
+import { useEditorStyles } from "../hooks/use-editor-styles";
+import { FocusBlurPlugin } from "../plugins/focus_blur_plugin";
+import { ToolbarPlugin } from "../plugins/toolbar/toolbar_plugin";
 import { theme } from "./theme";
+import { EditorProps } from "./types";
 
-export const MDEditorV2: FC<IMDEditorProps> = ({
+export const MDEditor: FC<EditorProps> = ({
     value,
+    mode,
+    placeholder,
     onChange,
+    onModeChange,
     onBlur,
     onFocus,
-    placeholder,
     readOnly = false,
     autoHeight,
-    autoFocus,
+    autoFocus = true,
 }) => {
     const { t } = useTranslation();
+    const editorStyles = useEditorStyles();
 
-    const handleMarkdownChange = useCallback(
+    const handleChange = useCallback(
         (markdownContent: string) => {
             onChange?.(markdownContent);
         },
@@ -54,9 +58,13 @@ export const MDEditorV2: FC<IMDEditorProps> = ({
     };
 
     return (
-        <Stack bgcolor="background.paper" borderRadius={1}>
+        <Stack sx={editorStyles} bgcolor="background.paper" borderRadius={1}>
             <LexicalComposer initialConfig={initialConfig}>
-                <ToolbarPlugin onChange={handleMarkdownChange} />
+                <ToolbarPlugin
+                    mode={mode}
+                    onModeChange={onModeChange}
+                    onChange={handleChange}
+                />
 
                 <PlainTextPlugin
                     contentEditable={
@@ -85,11 +93,9 @@ export const MDEditorV2: FC<IMDEditorProps> = ({
                 />
 
                 <HistoryPlugin />
-                <FocusBlurPlugin
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    autoFocus={autoFocus}
-                />
+                <FocusBlurPlugin onFocus={onFocus} onBlur={onBlur} />
+
+                {autoFocus && <AutoFocusPlugin />}
             </LexicalComposer>
         </Stack>
     );

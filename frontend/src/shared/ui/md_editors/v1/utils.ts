@@ -10,6 +10,7 @@ const useCKEditorStyles = () => {
         },
         "--ck-border-radius": theme.spacing(0.5),
         "--ck-font-size-base": "14px",
+        "--ck-content-font-color": theme.palette.text.primary,
 
         "--ck-custom-background": theme.palette.background.paper,
         "--ck-custom-foreground": theme.palette.background.default,
