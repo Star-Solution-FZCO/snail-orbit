@@ -1,6 +1,7 @@
 import { Box, Divider, Typography } from "@mui/material";
 import { ConfirmCustomFieldChangesDialog } from "features/custom_fields/confirm_custom_field_changes_dialog";
 import { CustomFieldForm } from "features/custom_fields/custom_field_form";
+import { FieldEditWarningDialog } from "features/custom_fields/field_edit_warning_dialog";
 import { FieldTypeEditor } from "features/custom_fields/options_editors/field_type_editor";
 import { isComplexCustomFieldType } from "features/custom_fields/utils";
 import type { FC } from "react";
@@ -40,6 +41,8 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [copyDialogOpen, setCopyDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [warningDialogOpen, setWarningDialogOpen] = useState(false);
+    const [isEditingEnabled, setIsEditingEnabled] = useState(false);
 
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
 
@@ -55,6 +58,21 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
     if (!data) return null;
 
     const customField = data.payload;
+
+    const isMultiProjectField = (customField.projects?.length || 0) > 1;
+
+    const handleClickEdit = () => {
+        if (isMultiProjectField) {
+            setWarningDialogOpen(true);
+        } else {
+            setIsEditingEnabled(true);
+        }
+    };
+
+    const handleWarningConfirm = () => {
+        setWarningDialogOpen(false);
+        setIsEditingEnabled(true);
+    };
 
     const handleSubmit = (formData: UpdateCustomFieldT) => {
         if (!formData.default_value) formData.default_value = null;
@@ -125,12 +143,14 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                 </Typography>
 
                 <CustomFieldForm
+                    onEdit={handleClickEdit}
                     onSubmit={handleSubmit}
                     onDelete={() => setDeleteDialogOpen(true)}
                     onCopy={() => setCopyDialogOpen(true)}
                     defaultValues={customField}
                     type={customFieldGroup.type}
                     loading={isLoading}
+                    disabled={!isEditingEnabled}
                 />
             </Box>
 
@@ -139,10 +159,20 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
                     <Divider orientation="vertical" flexItem />
 
                     <Box flex={1}>
-                        <FieldTypeEditor customField={customField} />
+                        <FieldTypeEditor
+                            customField={customField}
+                            readOnly={!isEditingEnabled}
+                        />
                     </Box>
                 </>
             )}
+
+            <FieldEditWarningDialog
+                open={warningDialogOpen}
+                onConfirm={handleWarningConfirm}
+                onClose={() => setWarningDialogOpen(false)}
+                projectCount={customField.projects?.length || 0}
+            />
 
             <ConfirmCustomFieldChangesDialog
                 open={confirmDialogOpen}

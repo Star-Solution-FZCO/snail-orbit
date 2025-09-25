@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { ConfirmCustomFieldChangesDialog } from "features/custom_fields/confirm_custom_field_changes_dialog";
 import { CustomFieldForm } from "features/custom_fields/custom_field_form";
+import { FieldEditWarningDialog } from "features/custom_fields/field_edit_warning_dialog";
 import { FieldTypeEditor } from "features/custom_fields/options_editors/field_type_editor";
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,6 @@ import { toast } from "react-toastify";
 import { customFieldsApi, useAppSelector } from "shared/model";
 import { ProjectT, UpdateCustomFieldT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
-import { FieldEditWarningDialog } from "./field_edit_warning_dialog";
 
 export const CustomFieldDetail: FC<{
     customFieldId: string;
@@ -39,12 +39,12 @@ export const CustomFieldDetail: FC<{
     const customField = data?.payload;
     const isMultiProjectField = (customField?.projects?.length || 0) > 1;
     const canEditProject = project.access_claims.includes("project:update");
-    const canEdit = isAdmin || canEditProject || !isMultiProjectField;
+    const canEdit = isAdmin || canEditProject;
 
     const handleClickEdit = () => {
         if (!canEdit) return;
 
-        if (isMultiProjectField && !isAdmin) {
+        if (isMultiProjectField) {
             setWarningDialogOpen(true);
         } else {
             setIsEditingEnabled(true);

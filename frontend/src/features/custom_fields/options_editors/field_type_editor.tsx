@@ -9,7 +9,9 @@ import { CustomFieldVersionOptionsEditor } from "./version_options_editor";
 export const FieldTypeEditor: FC<{
     customField: CustomFieldT;
     readOnly?: boolean;
-}> = ({ customField, readOnly = false }) => {
+}> = (props) => {
+    const { customField } = props;
+
     const isEnumType = ["enum", "enum_multi"].includes(customField.type);
     const isUserType = ["user", "user_multi"].includes(customField.type);
     const isVersionType = ["version", "version_multi"].includes(
@@ -19,48 +21,23 @@ export const FieldTypeEditor: FC<{
     const isOwnedType = ["owned", "owned_multi"].includes(customField.type);
 
     if (isEnumType) {
-        return (
-            <CustomFieldEnumOptionsEditor
-                customField={customField}
-                readOnly={readOnly}
-            />
-        );
+        return <CustomFieldEnumOptionsEditor {...props} />;
     }
 
     if (isUserType) {
-        return (
-            <CustomFieldUserOptionsEditor
-                customField={customField}
-                readOnly={readOnly}
-            />
-        );
+        return <CustomFieldUserOptionsEditor {...props} />;
     }
 
     if (isVersionType) {
-        return (
-            <CustomFieldVersionOptionsEditor
-                customField={customField}
-                readOnly={readOnly}
-            />
-        );
+        return <CustomFieldVersionOptionsEditor {...props} />;
     }
 
     if (isStateType) {
-        return (
-            <CustomFieldStateOptionsEditor
-                customField={customField}
-                readOnly={readOnly}
-            />
-        );
+        return <CustomFieldStateOptionsEditor {...props} />;
     }
 
     if (isOwnedType) {
-        return (
-            <CustomFieldOwnedOptionsEditor
-                customField={customField}
-                readOnly={readOnly}
-            />
-        );
+        return <CustomFieldOwnedOptionsEditor {...props} />;
     }
 
     return null;

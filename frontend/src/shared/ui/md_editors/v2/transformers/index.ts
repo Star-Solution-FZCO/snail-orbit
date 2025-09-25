@@ -65,8 +65,10 @@ export const TABLE: ElementTransformer = {
             let isHeaderRow = false;
             for (const cell of row.getChildren()) {
                 if ($isTableCellNode(cell)) {
-                    const cellContent = $convertToMarkdownString(TRANSFORMERS, cell)
-                        .replace(/\n/g, "\\n");
+                    const cellContent = $convertToMarkdownString(
+                        TRANSFORMERS,
+                        cell,
+                    ).replace(/\n/g, "\\n");
                     rowOutput.push(cellContent.trim() || " ");
                     if (cell.__headerState === TableCellHeaderStates.ROW) {
                         isHeaderRow = true;
@@ -194,7 +196,9 @@ const mapToTableCells = (textContent: string): Array<TableCellNode> | null => {
     if (!match || match[1] === undefined) {
         return null;
     }
-    return match[1].split("|").map((text) => $createTableCell(text.trim() || " "));
+    return match[1]
+        .split("|")
+        .map((text) => $createTableCell(text.trim() || " "));
 };
 
 export const TRANSFORMERS = [TABLE, HR, CHECK_LIST, ...LEXICAL_TRANSFORMERS];
