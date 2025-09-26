@@ -1,8 +1,8 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
 from hashlib import sha256
 from http import HTTPStatus
-from typing import cast
+from typing import Any, cast
 from urllib.parse import parse_qsl
 
 import beanie.operators as bo
@@ -15,6 +15,7 @@ from starsol_fastapi_jwt_auth import AuthJWT
 import pm.models as m
 from pm.api.exceptions import MFARequiredError
 from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
+from pm.cache import cached
 from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
 from pm.permissions import (
     GlobalPermissions,
@@ -32,6 +33,79 @@ __all__ = (
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+# ACL-specific serializers for cached functions
+def _serialize_objectid_set(data: set[PydanticObjectId]) -> list[str]:
+    """Convert set of PydanticObjectId to list of strings for JSON serialization."""
+    return [str(obj_id) for obj_id in data]
+
+
+def _serialize_permissions_dict(
+    data: dict[PydanticObjectId, set[ProjectPermissions]],
+) -> dict[str, list[str]]:
+    """Convert dict with PydanticObjectId keys and permission sets to JSON-serializable format."""
+    return {
+        str(obj_id): [p.value for p in permissions]
+        for obj_id, permissions in data.items()
+    }
+
+
+def _serialize_global_permissions_set(data: set[GlobalPermissions]) -> list[str]:
+    """Convert set of GlobalPermissions to list of strings for JSON serialization."""
+    return [p.value for p in data]
+
+
+# ACL-specific deserializers for cached functions
+def _deserialize_objectid_set(data: list[str]) -> set[PydanticObjectId]:
+    """Convert list of ObjectId strings back to set of PydanticObjectId."""
+    return {PydanticObjectId(id_str) for id_str in data}
+
+
+def _deserialize_permissions_dict(
+    data: dict[str, list[str]],
+) -> dict[PydanticObjectId, set[ProjectPermissions]]:
+    """Convert dict with string keys and permission lists back to proper types."""
+    return {
+        PydanticObjectId(str_key): {ProjectPermissions(p) for p in perm_list}
+        for str_key, perm_list in data.items()
+    }
+
+
+def _deserialize_global_permissions_set(data: list[str]) -> set[GlobalPermissions]:
+    """Convert list of permission strings back to set of GlobalPermissions."""
+    return {GlobalPermissions(p) for p in data}
+
+
+# ACL-specific key builders for cached functions
+# pylint: disable=unused-argument
+# ruff: noqa: ARG001
+def _user_groups_key_builder(
+    func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> str:
+    """Build cache key for resolve_all_user_groups based on user ID."""
+    user = args[0]
+    return f'user_groups:{user.id}'
+
+
+# pylint: disable=unused-argument
+# ruff: noqa: ARG001
+def _user_permissions_key_builder(
+    func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> str:
+    """Build cache key for resolve_user_permissions based on user ID."""
+    user = args[0]
+    return f'user_permissions:{user.id}'
+
+
+# pylint: disable=unused-argument
+# ruff: noqa: ARG001
+def _user_global_permissions_key_builder(
+    func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> str:
+    """Build cache key for resolve_user_global_permissions based on user ID."""
+    user = args[0]
+    return f'user_global_permissions:{user.id}'
 
 
 @dataclass
@@ -230,6 +304,14 @@ async def admin_context_dependency(
     yield
 
 
+@cached(
+    ttl=120,
+    tags=['groups:all'],
+    namespace='acl',
+    serializer=_serialize_objectid_set,
+    deserializer=_deserialize_objectid_set,
+    key_builder=_user_groups_key_builder,
+)
 async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
     """Resolve all group IDs for user (stored + dynamic)"""
     group_ids = {gr.id for gr in user.groups}  # Stored groups (LOCAL, WB)
@@ -248,6 +330,14 @@ async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
     return group_ids
 
 
+@cached(
+    ttl=120,
+    tags=['projects:all', 'permissions:all'],
+    namespace='acl',
+    serializer=_serialize_permissions_dict,
+    deserializer=_deserialize_permissions_dict,
+    key_builder=_user_permissions_key_builder,
+)
 async def resolve_user_permissions(
     user: m.User,
     all_group_ids: set[PydanticObjectId] | None = None,
@@ -255,10 +345,19 @@ async def resolve_user_permissions(
     """Resolve project permissions for user across all projects."""
     if all_group_ids is None:
         all_group_ids = await resolve_all_user_groups(user)
+
     projects = await m.Project.find_all().to_list()
     return {pr.id: pr.get_user_permissions(user, all_group_ids) for pr in projects}
 
 
+@cached(
+    ttl=120,
+    tags=['groups:all', 'global_permissions:all'],
+    namespace='acl',
+    serializer=_serialize_global_permissions_set,
+    deserializer=_deserialize_global_permissions_set,
+    key_builder=_user_global_permissions_key_builder,
+)
 async def resolve_user_global_permissions(
     user: m.User,
     all_group_ids: set[PydanticObjectId] | None = None,
