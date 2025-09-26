@@ -218,6 +218,26 @@ CONFIG = Dynaconf(
             default='',
         ),
         Validator(
+            'CACHE_REDIS_URL',
+            cast=str,
+            default='',
+        ),
+        Validator(
+            'CACHE_DEFAULT_TTL_SECONDS',
+            cast=int,
+            default=300,
+        ),
+        Validator(
+            'CACHE_MAX_CONNECTIONS',
+            cast=int,
+            default=10,
+        ),
+        Validator(
+            'CACHE_KEY_PREFIX',
+            cast=str,
+            default='snail_orbit_cache',
+        ),
+        Validator(
             'WB_SYNC_ENABLED',
             cast=bool,
             default=False,

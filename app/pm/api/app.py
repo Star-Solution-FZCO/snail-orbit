@@ -153,6 +153,7 @@ async def _init_default_roles() -> None:
 
 @app.on_event('startup')
 async def app_init() -> None:
+    from pm.cache import init_cache_system
     from pm.db import check_database_version
     from pm.models import __beanie_models__
     from pm.tasks.app import broker
@@ -169,6 +170,9 @@ async def app_init() -> None:
 
     # Initialize taskiq broker for task kicking
     await broker.startup()
+
+    # Initialize cache system
+    await init_cache_system()
 
 
 @AuthJWT.load_config
@@ -200,10 +204,14 @@ connect_error_handlers(app)
 
 @app.on_event('shutdown')
 async def app_shutdown() -> None:
+    from pm.cache import shutdown_cache_system
     from pm.tasks.app import broker
 
     # Clean shutdown of taskiq broker
     await broker.shutdown()
+
+    # Clean shutdown of cache system
+    await shutdown_cache_system()
 
 
 from pm.api.routes import api_router, events_router
