@@ -142,7 +142,7 @@ async def test_api_v1_settings(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
-    admin_id, admin_token = create_initial_admin
+    _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
 
     fingerprint = 'ffffffff'
@@ -1947,8 +1947,8 @@ async def test_api_v1_search_delete(
     create_initial_user,
     custom_field_payloads,
 ) -> None:
-    admin_id, admin_token = create_initial_admin
-    user_id, user_token = create_initial_user
+    _, admin_token = create_initial_admin
+    _, user_token = create_initial_user
     admin_headers = {'Authorization': f'Bearer {admin_token}'}
     user_headers = {'Authorization': f'Bearer {user_token}'}
     response = test_client.delete(
@@ -2871,3 +2871,158 @@ async def test_api_v1_custom_field_copy_not_found(
     )
     assert response.status_code == 404
     assert response.json()['success'] is False
+
+
+@pytest.mark.parametrize(
+    'project_payload',
+    [
+        pytest.param(
+            {
+                'name': 'Test Project POST List',
+                'slug': 'test_project_post_list',
+                'description': 'Test project for POST issue list endpoint',
+                'ai_description': 'AI description for POST issue list test project',
+            },
+            id='project',
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_post_issue_list_comprehensive(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_project: str,
+    project_payload: dict,
+) -> None:
+    """Comprehensive test for POST /issue/list endpoint core functionality"""
+    _, admin_token = create_initial_admin
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create test issues using existing project
+    issue_ids = []
+    issue_subjects = [
+        'AAA First test issue',
+        'ZZZ Last test issue',
+        'MMM Middle test issue',
+    ]
+
+    for subject in issue_subjects:
+        issue_response = test_client.post(
+            '/api/v1/issue',
+            headers=admin_headers,
+            json={
+                'project_id': create_project,
+                'subject': subject,
+                'text': {'value': f'Content for {subject}'},
+            },
+        )
+        assert issue_response.status_code == 200
+        issue_ids.append(issue_response.json()['payload']['id'])
+
+    # Test 1: Empty issue_ids list
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': []},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 0
+    assert len(data['payload']['items']) == 0
+
+    # Test 2: Non-existent issue IDs
+    fake_ids = ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': fake_ids},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 0
+    assert len(data['payload']['items']) == 0
+
+    # Test 3: Fetch all issues by IDs (using admin to ensure permissions work)
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': issue_ids},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 3
+    assert len(data['payload']['items']) == 3
+
+    # Verify all requested issues are returned
+    returned_ids = {item['id'] for item in data['payload']['items']}
+    assert returned_ids == set(issue_ids)
+
+    # Test 5: Fetch subset of issues by IDs
+    subset_ids = issue_ids[:2]
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': subset_ids},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 2
+    assert len(data['payload']['items']) == 2
+
+    returned_ids = {item['id'] for item in data['payload']['items']}
+    assert returned_ids == set(subset_ids)
+
+    # Test 6: Fetch issue by alias
+    # Get the first issue to find its alias
+    response = test_client.get(f'/api/v1/issue/{issue_ids[0]}', headers=admin_headers)
+    assert response.status_code == 200
+    issue_data = response.json()['payload']
+    issue_alias = issue_data['aliases'][0] if issue_data['aliases'] else None
+
+    if issue_alias:  # Only test if alias exists
+        response = test_client.post(
+            '/api/v1/issue/list',
+            headers=admin_headers,
+            json={'issue_ids': [issue_alias]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success'] is True
+        assert data['payload']['count'] == 1
+        assert len(data['payload']['items']) == 1
+        assert data['payload']['items'][0]['id'] == issue_ids[0]
+
+    # Test 7: Verify request order is preserved
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': issue_ids},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 3
+
+    # Verify issues are returned in the same order as requested
+    returned_ids = [item['id'] for item in data['payload']['items']]
+    assert returned_ids == issue_ids
+
+    # Test 8: Mixed valid and invalid IDs
+    mixed_ids = [issue_ids[0], '507f1f77bcf86cd799439011', issue_ids[1]]
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': mixed_ids},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['count'] == 2  # Only valid IDs returned
+    assert len(data['payload']['items']) == 2
+
+    returned_ids = {item['id'] for item in data['payload']['items']}
+    assert returned_ids == {issue_ids[0], issue_ids[1]}

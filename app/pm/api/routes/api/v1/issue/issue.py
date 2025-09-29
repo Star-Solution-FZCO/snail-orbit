@@ -105,6 +105,12 @@ class IssueTagDelete(BaseModel):
     tag_id: PydanticObjectId
 
 
+class IssueListByIdsRequest(BaseModel):
+    issue_ids: list[PydanticObjectId | str] = Field(
+        description='List of issue IDs or aliases to fetch'
+    )
+
+
 class IssuePermissionCreate(BaseModel):
     target_type: m.PermissionTargetType
     target_id: PydanticObjectId
@@ -171,6 +177,44 @@ async def list_issues(
         count=cnt,
         limit=query.limit,
         offset=query.offset,
+    )
+
+
+@router.post('/list', responses=error_responses(*READ_ERRORS))
+async def list_issues_by_ids(
+    body: IssueListByIdsRequest,
+) -> BaseListOutput[IssueListOutput]:
+    user_ctx = current_user()
+
+    q = m.Issue.find(
+        bo.And(
+            bo.Or(
+                bo.In(m.Issue.id, body.issue_ids),
+                bo.In(m.Issue.aliases, body.issue_ids),
+            ),
+            user_ctx.get_issue_filter_for_permission(ProjectPermissions.ISSUE_READ),
+        )
+    )
+
+    issues_dict = {}
+    async for issue in q:
+        issues_dict[str(issue.id)] = issue
+        for alias in issue.aliases:
+            issues_dict[alias] = issue
+
+    accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
+
+    items = []
+    for requested_id in body.issue_ids:
+        requested_id_str = str(requested_id)
+        if issue := issues_dict.get(requested_id_str):
+            items.append(await IssueListOutput.from_obj(issue, accessible_tag_ids))
+
+    return BaseListOutput.make(
+        items=items,
+        count=len(items),
+        limit=len(items),
+        offset=0,
     )
 
 

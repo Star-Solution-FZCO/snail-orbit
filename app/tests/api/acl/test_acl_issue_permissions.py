@@ -574,3 +574,102 @@ async def test_issue_permission_system_comprehensive(
     assert len(admin_issues) == 0, (
         f'Admin should see 0 issues but saw {len(admin_issues)} - content access requires explicit permissions'
     )
+
+    # Test POST /api/v1/issue/list endpoint with same ACL rules
+    # Collect all issue IDs created during the test phases
+    all_issue_ids = [
+        issue1_id,
+        confidential_issue_id,
+        ux_issue_id,
+        complex_issue_id,
+        side_effects_issue_id,
+    ]
+
+    # Diana should see all 5 issues via POST endpoint (same as GET)
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=diana_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(response, 'Diana POST issue list access')
+    diana_post_issues = response.json()['payload']['items']
+    diana_post_issue_subjects = {issue['subject'] for issue in diana_post_issues}
+    assert diana_post_issue_subjects >= expected_diana_subjects, (
+        f'Diana POST endpoint should see all 5 issues, got: {diana_post_issue_subjects}'
+    )
+    assert len(diana_post_issues) == 5, (
+        f'Diana should see 5 issues via POST, got {len(diana_post_issues)}'
+    )
+
+    # Frank should see 4 issues via POST endpoint (same as GET)
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=frank_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(response, 'Frank POST issue list access')
+    frank_post_issues = response.json()['payload']['items']
+    frank_post_issue_subjects = {issue['subject'] for issue in frank_post_issues}
+    assert len(frank_post_issues) == 4, (
+        f'Frank should see 4 issues via POST, got {len(frank_post_issues)}'
+    )
+    assert (
+        'Permission Inheritance Side Effects Test' not in frank_post_issue_subjects
+    ), (
+        'Frank should NOT see inheritance side effects test issue via POST (inheritance disabled, only has project permissions)'
+    )
+
+    # Charlie should see same issues via POST as GET
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=charlie_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(response, 'Charlie POST issue list access')
+    charlie_post_issues = response.json()['payload']['items']
+    charlie_post_issue_subjects = {issue['subject'] for issue in charlie_post_issues}
+    assert (
+        'Permission Inheritance Side Effects Test' not in charlie_post_issue_subjects
+    ), (
+        'Charlie should NOT see inheritance side effects test issue via POST (inheritance disabled)'
+    )
+
+    # Eve should see same issues via POST as GET
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=eve_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(response, 'Eve POST issue list access')
+    eve_post_issues = response.json()['payload']['items']
+    # Eve should see fewer issues (external stakeholder with limited access)
+    assert len(eve_post_issues) <= len(diana_post_issues), (
+        'Eve should see same or fewer issues than Diana via POST'
+    )
+
+    # Bob should see same issues via POST as GET
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=bob_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(response, 'Bob POST issue list access')
+    bob_post_issues = response.json()['payload']['items']
+    bob_post_issue_subjects = {issue['subject'] for issue in bob_post_issues}
+    assert 'Permission Inheritance Side Effects Test' not in bob_post_issue_subjects, (
+        'Bob should NOT see inheritance side effects test issue via POST (inheritance disabled, only has project permissions)'
+    )
+
+    # Admin should see no issues via POST (same content-level restriction as GET)
+    response = test_client.post(
+        '/api/v1/issue/list',
+        headers=admin_headers,
+        json={'issue_ids': all_issue_ids},
+    )
+    assert_permission_granted(
+        response, 'Admin POST issue list access (endpoint accessible)'
+    )
+    admin_post_issues = response.json()['payload']['items']
+    assert len(admin_post_issues) == 0, (
+        f'Admin should see 0 issues via POST but saw {len(admin_post_issues)} - content access requires explicit permissions'
+    )
