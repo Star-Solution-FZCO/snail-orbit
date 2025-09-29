@@ -1,8 +1,8 @@
+import { ReportViewBarChart } from "entities/reports/report_view_bar_chart";
 import { ReportViewLineChart } from "entities/reports/report_view_line_chart";
 import { ReportViewTable } from "entities/reports/report_view_table";
 import { useMemo } from "react";
 import { ReportDisplayType, type ReportDataT } from "shared/model/types/report";
-import { ReportViewBarChart } from "../../../../entities/reports/report_view_bar_chart";
 import { formatAxisValues } from "./utils";
 
 type ReportViewWidgetProps = {

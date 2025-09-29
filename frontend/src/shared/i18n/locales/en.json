@@ -271,6 +271,7 @@
   "dashboards.widgets.tabs.query": "Query",
   "dashboards.widgets.type.label": "Widget type",
   "dashboards.widgets.types.issueList": "Issue List",
+  "dashboards.widgets.types.report": "Report",
   "default": "Default",
   "delete": "Delete",
   "deleteTag.successMessage": "Tag deleted successfully",

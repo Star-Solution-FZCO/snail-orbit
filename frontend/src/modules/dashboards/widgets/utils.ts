@@ -8,4 +8,8 @@ export const widgetTypes: Array<{
         label: "dashboards.widgets.types.issueList",
         type: "issue_list",
     },
+    {
+        label: "dashboards.widgets.types.report",
+        type: "report",
+    },
 ];

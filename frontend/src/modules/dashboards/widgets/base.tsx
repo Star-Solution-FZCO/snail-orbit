@@ -17,7 +17,7 @@ export const WidgetContainer: StyledComponent<StackProps> = styled(Stack)(
 );
 
 interface WidgetBaseProps extends React.PropsWithChildren, WidgetProps {
-    onRefresh: () => void;
+    onRefresh?: () => void;
     loading?: boolean;
 }
 

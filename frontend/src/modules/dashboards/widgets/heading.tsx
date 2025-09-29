@@ -19,7 +19,7 @@ import { Link } from "shared/ui";
 import { WidgetProps } from "./types";
 
 interface WidgetHeadingProps extends WidgetProps {
-    onRefresh: () => void;
+    onRefresh?: () => void;
     loading?: boolean;
 }
 

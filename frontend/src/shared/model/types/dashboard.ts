@@ -19,7 +19,7 @@ export type CreateDashboardTileT = IssueListTileCreate;
 
 export type UpdateDashboardTileT = TileUpdate;
 
-export type DashboardTileTypeT = DashboardTileT["type"];
+export type DashboardTileTypeT = DashboardTileT["type"] | "report";
 
 export type GrantDashboardPermissionT = {
     dashboard_id: string;
