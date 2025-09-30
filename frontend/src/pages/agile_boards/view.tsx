@@ -109,7 +109,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                 }}
             >
                 <CircularProgress sx={{ w: 52, h: 52 }} />
-                {t("agileBoardView.isLoading")}
+                {t("agileBoards.loading")}
             </Box>
         );
     if (!agileBoard) return null;

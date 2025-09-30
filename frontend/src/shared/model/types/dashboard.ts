@@ -3,7 +3,8 @@ import type {
     DashboardOutput,
     DashboardUpdate,
     IssueListTileCreate,
-    TileUpdate,
+    ReportTileCreate,
+    TileUpdateRootModel as TileUpdate,
 } from "./backend-schema.gen";
 import type { PermissionTargetTypeT, PermissionTypeT } from "./permission";
 
@@ -15,7 +16,7 @@ export type UpdateDashboardT = DashboardUpdate;
 
 export type DashboardTileT = DashboardOutput["tiles"][number];
 
-export type CreateDashboardTileT = IssueListTileCreate;
+export type CreateDashboardTileT = IssueListTileCreate | ReportTileCreate;
 
 export type UpdateDashboardTileT = TileUpdate;
 

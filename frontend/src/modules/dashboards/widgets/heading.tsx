@@ -61,6 +61,20 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
         onDelete(widget);
     };
 
+    const linkProps = {
+        to: widget.type === "issue_list" ? "/issues" : "/reports/$reportId",
+        params: {
+            reportId: widget.type === "report" ? widget.report.id : undefined,
+        },
+        search: {
+            query: widget.type === "issue_list" ? widget.query : undefined,
+        },
+        underline: "hover" as const,
+        fontWeight: "bold",
+        target: "_blank",
+        rel: "noopener noreferrer",
+    };
+
     return (
         <Stack
             direction="row"
@@ -70,14 +84,7 @@ export const WidgetHeading: FC<WidgetHeadingProps> = ({
             px={2}
             py={1}
         >
-            <Link
-                to="/issues"
-                search={{
-                    query: widget.query,
-                }}
-                underline="hover"
-                fontWeight="bold"
-            >
+            <Link {...linkProps}>
                 {widget.name}
 
                 <Typography component="sup" variant="caption">

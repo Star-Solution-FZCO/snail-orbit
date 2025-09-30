@@ -16,6 +16,7 @@ from .permission import (
     _check_permissions,
     _filter_permissions,
 )
+from .report import ReportLinkField
 from .user import UserLinkField
 
 if TYPE_CHECKING:
@@ -23,11 +24,12 @@ if TYPE_CHECKING:
 
     from .user import User
 
-__all__ = ('Dashboard', 'IssueListTile', 'Tile', 'TileTypeT')
+__all__ = ('Dashboard', 'IssueListTile', 'ReportTile', 'Tile', 'TileTypeT')
 
 
 class TileTypeT(StrEnum):
     ISSUE_LIST = 'issue_list'
+    REPORT = 'report'
 
 
 class Tile(BaseModel):
@@ -45,6 +47,11 @@ class Tile(BaseModel):
 class IssueListTile(Tile):
     type: TileTypeT = TileTypeT.ISSUE_LIST
     query: str = Field(description='Issue query to filter issues for this tile')
+
+
+class ReportTile(Tile):
+    type: TileTypeT = TileTypeT.REPORT
+    report: ReportLinkField = Field(description='Report to display in this tile')
 
 
 @audited_model
@@ -69,7 +76,7 @@ class Dashboard(Document, PermissionRecordMixin):
     name: str = Indexed(str, description='Dashboard name')
     description: str | None = Field(default=None, description='Dashboard description')
     tiles: Annotated[
-        list[IssueListTile],
+        list[IssueListTile | ReportTile],
         Field(default_factory=list, description='List of tiles in this dashboard'),
     ]
     ui_settings: Annotated[

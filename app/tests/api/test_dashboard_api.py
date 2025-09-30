@@ -11,6 +11,7 @@ import pytest_asyncio
 
 from .create import (
     _create_group,
+    _create_project,
 )
 from .test_api import create_initial_admin
 
@@ -90,27 +91,6 @@ async def test_create_dashboard(
     assert dashboard['current_permission'] == 'admin'
     assert len(dashboard['permissions']) == 1
     assert dashboard['permissions'][0]['permission_type'] == 'admin'
-
-
-@pytest.mark.asyncio
-async def test_create_dashboard_invalid_query(
-    test_client: 'TestClient',
-    create_initial_admin: tuple[str, str],
-) -> None:
-    """Test creating dashboard with invalid query fails."""
-    admin_user, admin_token = create_initial_admin
-    headers = {'Authorization': f'Bearer {admin_token}'}
-
-    dashboard_data = {
-        'name': 'Test Dashboard',
-    }
-
-    # Since dashboards are now created without tiles, this test should succeed
-    response = test_client.post(
-        '/api/v1/dashboard/', headers=headers, json=dashboard_data
-    )
-    # Should succeed since no tiles with invalid queries are being created
-    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -639,7 +619,7 @@ async def test_list_tiles_empty_dashboard(
 
 
 @pytest.mark.asyncio
-async def test_create_tile_in_dashboard(
+async def test_create_issue_tile(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
@@ -685,7 +665,7 @@ async def test_create_tile_in_dashboard(
 
 
 @pytest.mark.asyncio
-async def test_create_tile_invalid_query(
+async def test_create_issue_tile_invalid_query(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
@@ -717,7 +697,7 @@ async def test_create_tile_invalid_query(
 
 
 @pytest.mark.asyncio
-async def test_get_specific_tile(
+async def test_get_tile(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
@@ -785,7 +765,7 @@ async def test_get_nonexistent_tile(
 
 
 @pytest.mark.asyncio
-async def test_update_tile(
+async def test_update_issue_tile(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
@@ -814,6 +794,7 @@ async def test_update_tile(
 
     # Update tile
     update_data = {
+        'type': 'issue_list',
         'name': 'Updated Tile',
         'query': '#bug #high-priority',
         'ui_settings': {'color': 'orange', 'size': 'large'},
@@ -834,7 +815,7 @@ async def test_update_tile(
 
 
 @pytest.mark.asyncio
-async def test_update_tile_invalid_query(
+async def test_update_issue_tile_invalid_query(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
 ) -> None:
@@ -857,7 +838,10 @@ async def test_update_tile_invalid_query(
     tile_id = response.json()['payload']['id']
 
     # Try to update with invalid query
-    update_data = {'query': 'invalid_syntax ('}
+    update_data = {
+        'type': 'issue_list',
+        'query': 'invalid_syntax (',
+    }
 
     response = test_client.put(
         f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}',
@@ -969,7 +953,10 @@ async def test_tile_operations_permission_denied(
     assert response.status_code == 403
 
     # Test user tries to update tile - should fail
-    update_data = {'name': 'Updated by test user'}
+    update_data = {
+        'type': 'issue_list',
+        'name': 'Updated by test user',
+    }
     response = test_client.put(
         f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}',
         headers=test_headers,
@@ -1046,7 +1033,10 @@ async def test_tile_operations_with_view_permission(
     assert response.status_code == 403
 
     # Test user cannot update tile
-    update_data = {'name': 'Modified Tile'}
+    update_data = {
+        'type': 'issue_list',
+        'name': 'Modified Tile',
+    }
     response = test_client.put(
         f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}',
         headers=test_headers,
@@ -1059,3 +1049,244 @@ async def test_tile_operations_with_view_permission(
         f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}', headers=test_headers
     )
     assert response.status_code == 403
+
+
+@pytest_asyncio.fixture
+async def create_test_project(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> str:
+    """Create a test project for report tests."""
+    project_payload = {
+        'name': 'Report Tile Test Project',
+        'slug': 'report_tile_test',
+        'description': 'Test project for report tiles',
+        'ai_description': 'AI description for report tile project',
+    }
+    return await _create_project(test_client, create_initial_admin, project_payload)
+
+
+@pytest_asyncio.fixture
+async def create_test_report(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_test_project: str,
+) -> str:
+    """Create a test report for tile tests."""
+    admin_user, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    report_data = {
+        'name': 'Test Report for Tiles',
+        'description': 'A test report for dashboard tiles',
+        'projects': [create_test_project],
+        'axis_1': {'type': 'project'},
+        'ui_settings': {'report_type': 'table'},
+    }
+
+    response = test_client.post('/api/v1/report/', headers=headers, json=report_data)
+    assert response.status_code == 200
+    return response.json()['payload']['id']
+
+
+@pytest.mark.asyncio
+async def test_create_report_tile(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_test_report: str,
+) -> None:
+    """Test creating a report tile in a dashboard."""
+    admin_user, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create dashboard first
+    dashboard_data = {
+        'name': 'Test Dashboard for Report Tiles',
+        'description': 'A test dashboard for report tile testing',
+    }
+    response = test_client.post(
+        '/api/v1/dashboard/', headers=headers, json=dashboard_data
+    )
+    assert response.status_code == 200
+    dashboard_id = response.json()['payload']['id']
+
+    tile_data = {
+        'type': 'report',
+        'name': 'Test Report Tile',
+        'report_id': create_test_report,
+        'ui_settings': {'height': 300},
+    }
+
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/tile',
+        headers=headers,
+        json=tile_data,
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['type'] == 'report'
+    assert data['payload']['name'] == 'Test Report Tile'
+    assert data['payload']['report']['id'] == create_test_report
+    assert data['payload']['report']['name'] == 'Test Report for Tiles'
+
+    # Verify dashboard has the tile
+    response = test_client.get(f'/api/v1/dashboard/{dashboard_id}', headers=headers)
+    assert response.status_code == 200
+    dashboard = response.json()['payload']
+    assert len(dashboard['tiles']) == 1
+    assert dashboard['tiles'][0]['type'] == 'report'
+
+
+@pytest.mark.asyncio
+async def test_create_report_tile_invalid_report(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test creating a report tile with a nonexistent report."""
+    admin_user, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create dashboard first
+    dashboard_data = {
+        'name': 'Test Dashboard for Report Tiles',
+        'description': 'A test dashboard for report tile testing',
+    }
+    response = test_client.post(
+        '/api/v1/dashboard/', headers=headers, json=dashboard_data
+    )
+    assert response.status_code == 200
+    dashboard_id = response.json()['payload']['id']
+
+    tile_data = {
+        'type': 'report',
+        'name': 'Test Report Tile',
+        'report_id': UNKNOWN_ID,  # Nonexistent report ID
+        'ui_settings': {'height': 300},
+    }
+
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/tile',
+        headers=headers,
+        json=tile_data,
+    )
+    assert response.status_code == 400
+    error_data = response.json()
+    assert f'Report {UNKNOWN_ID} not found' in error_data['error_messages'][0]
+
+
+@pytest.mark.asyncio
+async def test_update_report_tile(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_test_report: str,
+) -> None:
+    """Test updating a report tile."""
+    admin_user, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create dashboard first
+    dashboard_data = {
+        'name': 'Test Dashboard for Report Tiles',
+        'description': 'A test dashboard for report tile testing',
+    }
+    response = test_client.post(
+        '/api/v1/dashboard/', headers=headers, json=dashboard_data
+    )
+    assert response.status_code == 200
+    dashboard_id = response.json()['payload']['id']
+
+    # Create a report tile first
+    tile_data = {
+        'type': 'report',
+        'name': 'Original Report Tile',
+        'report_id': create_test_report,
+        'ui_settings': {'height': 300},
+    }
+
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/tile',
+        headers=headers,
+        json=tile_data,
+    )
+    assert response.status_code == 200
+    tile_id = response.json()['payload']['id']
+
+    # Update the tile using discriminated union
+    update_data = {
+        'type': 'report',
+        'name': 'Updated Report Tile Name',
+        'ui_settings': {'height': 400},
+    }
+
+    response = test_client.put(
+        f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}',
+        headers=headers,
+        json=update_data,
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data['success'] is True
+    assert data['payload']['name'] == 'Updated Report Tile Name'
+    assert data['payload']['ui_settings']['height'] == 400
+    # Report should remain the same
+    assert data['payload']['report']['id'] == create_test_report
+
+
+@pytest.mark.asyncio
+async def test_update_report_tile_wrong_type(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    create_test_report: str,
+) -> None:
+    """Test updating report tile with wrong type fails."""
+    admin_user, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+
+    # Create dashboard first
+    dashboard_data = {
+        'name': 'Test Dashboard for Report Tiles',
+        'description': 'A test dashboard for report tile testing',
+    }
+    response = test_client.post(
+        '/api/v1/dashboard/', headers=headers, json=dashboard_data
+    )
+    assert response.status_code == 200
+    dashboard_id = response.json()['payload']['id']
+
+    # Create a report tile first
+    tile_data = {
+        'type': 'report',
+        'name': 'Report Tile',
+        'report_id': create_test_report,
+        'ui_settings': {'height': 300},
+    }
+
+    response = test_client.post(
+        f'/api/v1/dashboard/{dashboard_id}/tile',
+        headers=headers,
+        json=tile_data,
+    )
+    assert response.status_code == 200
+    tile_id = response.json()['payload']['id']
+
+    # Try to update with issue list data - should fail
+    update_data = {
+        'type': 'issue_list',
+        'name': 'Should Fail',
+        'query': '#assigned-to-me',
+    }
+
+    response = test_client.put(
+        f'/api/v1/dashboard/{dashboard_id}/tile/{tile_id}',
+        headers=headers,
+        json=update_data,
+    )
+    assert response.status_code == 400
+    error_data = response.json()
+    assert (
+        'Cannot update non-issue-list tile with issue list data'
+        in error_data['error_messages'][0]
+    )

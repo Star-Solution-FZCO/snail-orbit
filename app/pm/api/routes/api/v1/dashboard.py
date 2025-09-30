@@ -24,6 +24,9 @@ from pm.api.views.permission import (
     PermissionOutput,
     UpdatePermissionBody,
 )
+
+# Import report schemas for report tile data
+from pm.api.views.report import ReportLinkOutput
 from pm.api.views.user import UserOutput
 
 __all__ = ('router',)
@@ -63,8 +66,23 @@ class IssueListTileOutput(BaseTileOutput):
         )
 
 
+class ReportTileOutput(BaseTileOutput):
+    type: Literal[m.TileTypeT.REPORT] = m.TileTypeT.REPORT
+    report: ReportLinkOutput = Field(description='Report information for this tile')
+
+    @classmethod
+    def from_obj(cls, obj: m.ReportTile) -> Self:
+        return cls(
+            id=obj.id,
+            type=obj.type,
+            name=obj.name,
+            report=ReportLinkOutput.from_obj(obj.report),
+            ui_settings=obj.ui_settings,
+        )
+
+
 # Union type for tile discrimination
-TileOutputT = IssueListTileOutput
+TileOutputT = IssueListTileOutput | ReportTileOutput
 
 
 class TileOutputRootModel(RootModel):
@@ -92,9 +110,13 @@ class DashboardOutput(BaseModel):
         # Process tiles without executing queries
         processed_tiles = []
         for tile in obj.tiles:
-            if isinstance(tile, m.IssueListTile):
+            if tile.type == m.TileTypeT.ISSUE_LIST:
                 tile_output = IssueListTileOutput.from_obj(tile)
-                processed_tiles.append(TileOutputRootModel(root=tile_output))
+            elif tile.type == m.TileTypeT.REPORT:
+                tile_output = ReportTileOutput.from_obj(tile)
+            else:
+                raise ValueError(f'Unknown tile type: {tile.type}')
+            processed_tiles.append(TileOutputRootModel(root=tile_output))
 
         return cls(
             id=obj.id,
@@ -123,6 +145,17 @@ class IssueListTileCreate(TileCreate):
     query: str = Field(description='Issue query to filter issues for this tile')
 
 
+class ReportTileCreate(TileCreate):
+    type: Literal[m.TileTypeT.REPORT] = m.TileTypeT.REPORT
+    report_id: PydanticObjectId = Field(
+        description='ID of the report to display in this tile'
+    )
+
+
+# Union type for tile creation
+TileCreateT = IssueListTileCreate | ReportTileCreate
+
+
 class DashboardCreate(BaseModel):
     name: str = Field(description='Dashboard name')
     description: str | None = Field(default=None, description='Dashboard description')
@@ -139,14 +172,33 @@ class DashboardUpdate(BaseModel):
     )
 
 
-class TileUpdate(BaseModel):
+class BaseTileUpdate(BaseModel):
     name: str | None = Field(default=None, description='Display name of the tile')
-    query: str | None = Field(
-        default=None, description='Issue query to filter issues for this tile'
-    )
     ui_settings: dict | None = Field(
         default=None, description='UI-specific settings for the tile'
     )
+
+
+class IssueListTileUpdate(BaseTileUpdate):
+    type: Literal[m.TileTypeT.ISSUE_LIST] = m.TileTypeT.ISSUE_LIST
+    query: str | None = Field(
+        default=None, description='Issue query to filter issues for this tile'
+    )
+
+
+class ReportTileUpdate(BaseTileUpdate):
+    type: Literal[m.TileTypeT.REPORT] = m.TileTypeT.REPORT
+    report_id: PydanticObjectId | None = Field(
+        default=None, description='Report ID for report tiles'
+    )
+
+
+# Union type for tile updates
+TileUpdateT = IssueListTileUpdate | ReportTileUpdate
+
+
+class TileUpdateRootModel(RootModel):
+    root: Annotated[TileUpdateT, Field(..., discriminator='type')]
 
 
 @router.get('/list')
@@ -398,8 +450,11 @@ async def list_tiles(
     # Process tiles
     processed_tiles = []
     for tile in dashboard.tiles:
-        if isinstance(tile, m.IssueListTile):
+        if tile.type == m.TileTypeT.ISSUE_LIST:
             tile_output = IssueListTileOutput.from_obj(tile)
+            processed_tiles.append(TileOutputRootModel(root=tile_output))
+        elif tile.type == m.TileTypeT.REPORT:
+            tile_output = ReportTileOutput.from_obj(tile)
             processed_tiles.append(TileOutputRootModel(root=tile_output))
 
     start = query.offset
@@ -415,7 +470,7 @@ async def list_tiles(
 @router.post('/{dashboard_id}/tile')
 async def create_tile(
     dashboard_id: PydanticObjectId,
-    body: IssueListTileCreate,
+    body: TileCreateT,
 ) -> SuccessPayloadOutput[TileOutputRootModel]:
     dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
     if not dashboard:
@@ -441,6 +496,25 @@ async def create_tile(
             query=body.query,
             ui_settings=body.ui_settings,
         )
+    elif body.type == m.TileTypeT.REPORT:
+        # Verify the report exists and user has access
+        report = await m.Report.find_one(m.Report.id == body.report_id)
+        if not report:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'Report {body.report_id} not found',
+            )
+        if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                f'No permission to view report {body.report_id}',
+            )
+        tile = m.ReportTile(
+            type=body.type,
+            name=body.name,
+            report=m.ReportLinkField.from_obj(report),
+            ui_settings=body.ui_settings,
+        )
     else:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
@@ -450,7 +524,13 @@ async def create_tile(
     dashboard.tiles.append(tile)
     await dashboard.save_changes()
 
-    tile_output = IssueListTileOutput.from_obj(tile)
+    if tile.type == m.TileTypeT.ISSUE_LIST:
+        tile_output = IssueListTileOutput.from_obj(tile)
+    elif tile.type == m.TileTypeT.REPORT:
+        tile_output = ReportTileOutput.from_obj(tile)
+    else:
+        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown tile type')
+
     return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
 
 
@@ -472,8 +552,11 @@ async def get_tile(
     if not tile:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Tile not found')
 
-    if isinstance(tile, m.IssueListTile):
+    if tile.type == m.TileTypeT.ISSUE_LIST:
         tile_output = IssueListTileOutput.from_obj(tile)
+        return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
+    if tile.type == m.TileTypeT.REPORT:
+        tile_output = ReportTileOutput.from_obj(tile)
         return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
     raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown tile type')
 
@@ -482,7 +565,7 @@ async def get_tile(
 async def update_tile(
     dashboard_id: PydanticObjectId,
     tile_id: UUID,
-    body: TileUpdate,
+    body: TileUpdateRootModel,
 ) -> SuccessPayloadOutput[TileOutputRootModel]:
     dashboard = await m.Dashboard.find_one(m.Dashboard.id == dashboard_id)
     if not dashboard:
@@ -500,26 +583,77 @@ async def update_tile(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Tile not found')
 
     tile = dashboard.tiles[tile_index]
-    data = body.model_dump(exclude_unset=True)
+    update_data = body.root
 
-    if tile.type == m.TileTypeT.ISSUE_LIST and data.get('query'):
-        try:
-            await transform_query(data['query'])
-        except IssueQueryTransformError as err:
+    # Type-specific validation and processing
+    if update_data.type == m.TileTypeT.ISSUE_LIST:
+        # Validate tile type matches
+        if tile.type != m.TileTypeT.ISSUE_LIST:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
-                f'Invalid query: {err.message}',
-            ) from err
+                'Cannot update non-issue-list tile with issue list data',
+            )
 
-    for field, value in data.items():
-        setattr(tile, field, value)
+        # Validate query if provided
+        if update_data.query:
+            try:
+                await transform_query(update_data.query)
+            except IssueQueryTransformError as err:
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    f'Invalid query: {err.message}',
+                ) from err
+
+        # Apply updates
+        if update_data.name is not None:
+            tile.name = update_data.name
+        if update_data.query is not None:
+            tile.query = update_data.query
+        if update_data.ui_settings is not None:
+            tile.ui_settings = update_data.ui_settings
+
+    elif update_data.type == m.TileTypeT.REPORT:
+        # Validate tile type matches
+        if tile.type != m.TileTypeT.REPORT:
+            raise HTTPException(
+                HTTPStatus.BAD_REQUEST,
+                'Cannot update non-report tile with report data',
+            )
+
+        # Handle report_id update if provided
+        if update_data.report_id:
+            # Verify the report exists and user has access
+            report = await m.Report.find_one(m.Report.id == update_data.report_id)
+            if not report:
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    f'Report {update_data.report_id} not found',
+                )
+            if not report.check_permissions(user_ctx, m.PermissionType.VIEW):
+                raise HTTPException(
+                    HTTPStatus.BAD_REQUEST,
+                    f'No permission to view report {update_data.report_id}',
+                )
+            # Update the report link
+            tile.report = m.ReportLinkField.from_obj(report)
+
+        # Apply other updates
+        if update_data.name is not None:
+            tile.name = update_data.name
+        if update_data.ui_settings is not None:
+            tile.ui_settings = update_data.ui_settings
 
     await dashboard.save_changes()
 
-    if isinstance(tile, m.IssueListTile):
+    if tile.type == m.TileTypeT.ISSUE_LIST:
         tile_output = IssueListTileOutput.from_obj(tile)
         return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
-    raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, 'Unknown tile type')
+    if tile.type == m.TileTypeT.REPORT:
+        tile_output = ReportTileOutput.from_obj(tile)
+        return SuccessPayloadOutput(payload=TileOutputRootModel(root=tile_output))
+    raise HTTPException(
+        HTTPStatus.INTERNAL_SERVER_ERROR, f'Unknown tile type: {tile.type}'
+    )
 
 
 @router.delete('/{dashboard_id}/tile/{tile_id}')

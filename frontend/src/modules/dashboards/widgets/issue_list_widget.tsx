@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
+import { IssueListTileOutput } from "shared/model/types/backend-schema.gen";
 import { WidgetBase } from "./base";
 import type { WidgetProps } from "./types";
 
@@ -26,7 +27,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
         refetch: refetchQuery,
     } = issueApi.useListIssuesQuery(
         {
-            q: props.widget.query,
+            q: (props.widget as IssueListTileOutput).query,
             limit: ITEMS_PER_PAGE,
             offset,
         },
@@ -73,7 +74,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
     if (loading)
         return (
             <WidgetBase {...props} onRefresh={refetch}>
-                <Stack overflow="auto" px={2} pb={1} gap={1}>
+                <Stack overflow="auto" px={2} pb={2} gap={1}>
                     {[...Array(10)].map((_, idx) => (
                         <Stack
                             key={`widget-${props.widget.id}-issue-skeleton-${idx + 1}`}
@@ -105,7 +106,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
                     color="error"
                     fontWeight={500}
                     px={2}
-                    pb={1}
+                    pb={2}
                 >
                     {t("dashboards.widgets.issueList.error")}
                 </Typography>
@@ -119,7 +120,7 @@ export const IssueListWidget: FC<IssueListWidgetProps> = (props) => {
             issueCount={count}
             loading={isFetching}
         >
-            <Stack overflow="auto" px={2} pb={1}>
+            <Stack overflow="auto" px={2} pb={2}>
                 {issues.length === 0 && !loading && (
                     <Typography variant="body2" color="text.secondary">
                         {t("dashboards.widgets.issueList.empty")}

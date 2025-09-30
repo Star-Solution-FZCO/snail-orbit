@@ -6,9 +6,11 @@ import {
     WidgetFormDialog,
     type DashboardWidgetFormData,
 } from "modules/dashboards/widgets/widget_form_dialog";
+import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { dashboardApi } from "shared/model";
+import type { CreateDashboardTileT } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
 import { toastApiError } from "shared/utils";
 import { saveToLS } from "shared/utils/helpers/local-storage";
@@ -18,26 +20,45 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
+    useCreateIssueNavbarSettings();
+
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
 
-    const { data, isLoading, isFetching, error } =
+    const { data, isLoading, error } =
         dashboardApi.useGetDashboardQuery(dashboardId);
 
     const [addWidget, { isLoading: isAdding }] =
         dashboardApi.useCreateDashboardTileMutation();
 
     const handleSubmitAddWidget = (formData: DashboardWidgetFormData) => {
+        const data = {
+            name: formData.name,
+            ui_settings: {
+                height: formData.height,
+                polling_interval: formData.polling_interval,
+            },
+        };
+
+        let body: CreateDashboardTileT;
+
+        if (formData.type.type === "report") {
+            body = {
+                ...data,
+                type: "report",
+
+                report_id: formData.report_id || "",
+            };
+        } else {
+            body = {
+                ...data,
+                type: "issue_list",
+                query: formData.query || "",
+            };
+        }
+
         addWidget({
             id: dashboardId,
-            body: {
-                type: formData.type.type,
-                name: formData.name,
-                query: formData.query,
-                ui_settings: {
-                    height: formData.height,
-                    polling_interval: formData.polling_interval,
-                },
-            },
+            body,
         })
             .unwrap()
             .then(() => {
@@ -74,7 +95,6 @@ export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
             <DashboardWidgets
                 dashboard={dashboard}
                 onAddWidget={() => setAddWidgetDialogOpen(true)}
-                loading={isFetching}
             />
 
             <WidgetFormDialog

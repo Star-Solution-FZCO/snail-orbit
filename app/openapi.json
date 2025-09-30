@@ -26897,7 +26897,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IssueListTileCreate"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/IssueListTileCreate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReportTileCreate"
+                  }
+                ],
+                "title": "Body"
               }
             }
           }
@@ -27187,7 +27195,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TileUpdate"
+                "$ref": "#/components/schemas/TileUpdateRootModel"
               }
             }
           }
@@ -46668,6 +46676,55 @@
         ],
         "title": "IssueListTileOutput"
       },
+      "IssueListTileUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Display name of the tile"
+          },
+          "ui_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
+          },
+          "type": {
+            "type": "string",
+            "const": "issue_list",
+            "title": "Type",
+            "default": "issue_list"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query",
+            "description": "Issue query to filter issues for this tile"
+          }
+        },
+        "type": "object",
+        "title": "IssueListTileUpdate"
+      },
       "IssueMoveBody": {
         "properties": {
           "after_issue": {
@@ -49716,6 +49773,36 @@
         "title": "ReportDataOutput",
         "description": "Unified report data output structure (similar to BoardIssuesOutput)."
       },
+      "ReportLinkOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "title": "ReportLinkOutput"
+      },
       "ReportOutput": {
         "properties": {
           "id": {
@@ -49809,6 +49896,133 @@
           "current_permission"
         ],
         "title": "ReportOutput"
+      },
+      "ReportTileCreate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "report",
+            "title": "Type",
+            "default": "report"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the tile"
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
+          },
+          "report_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "pattern": "^[0-9a-f]{24}$",
+            "title": "Report Id",
+            "description": "ID of the report to display in this tile",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "report_id"
+        ],
+        "title": "ReportTileCreate"
+      },
+      "ReportTileOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Tile identifier"
+          },
+          "type": {
+            "type": "string",
+            "const": "report",
+            "title": "Type",
+            "default": "report"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the tile"
+          },
+          "ui_settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportLinkOutput",
+            "description": "Report information for this tile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "report"
+        ],
+        "title": "ReportTileOutput"
+      },
+      "ReportTileUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Display name of the tile"
+          },
+          "ui_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Settings",
+            "description": "UI-specific settings for the tile"
+          },
+          "type": {
+            "type": "string",
+            "const": "report",
+            "title": "Type",
+            "default": "report"
+          },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24,
+                "minLength": 24,
+                "pattern": "^[0-9a-f]{24}$",
+                "example": "5eb7cf5a86d9755df3a6c593"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id",
+            "description": "Report ID for report tiles"
+          }
+        },
+        "type": "object",
+        "title": "ReportTileUpdate"
       },
       "ReportUpdate": {
         "properties": {
@@ -52250,58 +52464,37 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/IssueListTileOutput"
+          },
+          {
+            "$ref": "#/components/schemas/ReportTileOutput"
           }
         ],
         "title": "TileOutputRootModel",
         "discriminator": {
           "propertyName": "type",
           "mapping": {
-            "issue_list": "#/components/schemas/IssueListTileOutput"
+            "issue_list": "#/components/schemas/IssueListTileOutput",
+            "report": "#/components/schemas/ReportTileOutput"
           }
         }
       },
-      "TileUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name",
-            "description": "Display name of the tile"
+      "TileUpdateRootModel": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IssueListTileUpdate"
           },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query",
-            "description": "Issue query to filter issues for this tile"
-          },
-          "ui_settings": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ui Settings",
-            "description": "UI-specific settings for the tile"
+          {
+            "$ref": "#/components/schemas/ReportTileUpdate"
           }
-        },
-        "type": "object",
-        "title": "TileUpdate"
+        ],
+        "title": "TileUpdateRootModel",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "issue_list": "#/components/schemas/IssueListTileUpdate",
+            "report": "#/components/schemas/ReportTileUpdate"
+          }
+        }
       },
       "UISettingsOut": {
         "properties": {

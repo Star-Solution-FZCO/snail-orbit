@@ -28,6 +28,7 @@ __all__ = (
     'Axis',
     'AxisType',
     'Report',
+    'ReportLinkField',
 )
 
 
@@ -50,6 +51,26 @@ class Axis(BaseModel):
         if self.type == AxisType.PROJECT and self.custom_field:
             raise ValueError('custom_field must be None for project axis')
         return self
+
+
+class ReportLinkField(BaseModel):
+    id: PydanticObjectId
+    name: str
+    description: str | None
+
+    @classmethod
+    def from_obj(cls, obj: 'Report') -> 'ReportLinkField':
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            description=obj.description,
+        )
+
+    async def resolve(self, fetch_links: bool = False) -> 'Report':
+        report = await Report.find_one(Report.id == self.id, fetch_links=fetch_links)
+        if not report:
+            raise ValueError(f'Report {self.name} not found')
+        return report
 
 
 @audited_model

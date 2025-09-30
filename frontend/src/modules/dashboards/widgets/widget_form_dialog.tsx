@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import CloseIcon from "@mui/icons-material/Close";
-import { TabContext, TabList } from "@mui/lab";
 import {
     Autocomplete,
     Box,
@@ -12,15 +11,16 @@ import {
     IconButton,
     Stack,
     Tab,
+    Tabs,
     TextField,
 } from "@mui/material";
 import { type FC, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { DashboardTileT } from "shared/model/types";
-import { TabPanel } from "shared/ui";
 import QueryBuilder from "widgets/query_builder/query_builder";
 import * as yup from "yup";
+import { ReportsSelect } from "./reports_select";
 import { widgetTypes } from "./utils";
 
 const dashboardWidgetSchema = yup.object().shape({
@@ -28,7 +28,16 @@ const dashboardWidgetSchema = yup.object().shape({
     type: yup
         .mixed<(typeof widgetTypes)[0]>()
         .required("form.validation.required"),
-    query: yup.string().required("form.validation.required"),
+    query: yup.string().when("type", {
+        is: (val: (typeof widgetTypes)[0]) => val?.type === "issue_list",
+        then: (schema) => schema.required("form.validation.required"),
+        otherwise: (schema) => schema.notRequired(),
+    }),
+    report_id: yup.string().when("type", {
+        is: (val: (typeof widgetTypes)[0]) => val?.type === "report",
+        then: (schema) => schema.required("form.validation.required"),
+        otherwise: (schema) => schema.notRequired(),
+    }),
     height: yup
         .number()
         .typeError("form.validation.number")
@@ -74,11 +83,14 @@ export const WidgetFormDialog: FC<WidgetFormDialogProps> = ({
         register,
         handleSubmit,
         formState: { errors, isValid },
+        watch,
         reset,
     } = useForm<DashboardWidgetFormData>({
-        resolver: yupResolver(dashboardWidgetSchema),
-        mode: "onChange",
+        // fix types
+        resolver: yupResolver(dashboardWidgetSchema) as any,
     });
+
+    const widgetType = watch("type");
 
     const handleClose = () => {
         onClose();
@@ -87,12 +99,21 @@ export const WidgetFormDialog: FC<WidgetFormDialogProps> = ({
     };
 
     useEffect(() => {
+        const reportId =
+            defaultValues?.type === "report"
+                ? (defaultValues as { report: { id: string } }).report?.id
+                : "";
+
         reset({
             name: defaultValues?.name || "",
             type:
                 widgetTypes.find((wt) => wt.type === defaultValues?.type) ||
                 widgetTypes[0],
-            query: defaultValues?.query || "",
+            query:
+                defaultValues?.type === "issue_list"
+                    ? (defaultValues as { query: string }).query
+                    : "",
+            report_id: reportId,
             height: (defaultValues?.ui_settings?.height as number) || 160,
             polling_interval:
                 (defaultValues?.ui_settings?.polling_interval as number) || 10,
@@ -130,159 +151,162 @@ export const WidgetFormDialog: FC<WidgetFormDialogProps> = ({
                     overflow: "hidden",
                 }}
             >
-                <TabContext value={currentTab}>
-                    <Box borderBottom={1} borderColor="divider" mb={1}>
-                        <TabList onChange={handleChangeTab}>
-                            <Tab
-                                label={t("dashboards.widgets.tabs.general")}
-                                value="general"
-                            />
+                <Box borderBottom={1} borderColor="divider" mb={1}>
+                    <Tabs value={currentTab} onChange={handleChangeTab}>
+                        <Tab
+                            label={t("dashboards.widgets.tabs.general")}
+                            value="general"
+                        />
+                        {widgetType?.type === "issue_list" && (
                             <Tab
                                 label={t("dashboards.widgets.tabs.query")}
                                 value="query"
                             />
-                            <Tab
-                                label={t("dashboards.widgets.tabs.layout")}
-                                value="layout"
-                            />
-                        </TabList>
-                    </Box>
+                        )}
+                        <Tab
+                            label={t("dashboards.widgets.tabs.layout")}
+                            value="layout"
+                        />
+                    </Tabs>
+                </Box>
 
-                    <TabPanel value="general">
-                        <Stack gap={1}>
-                            <TextField
-                                {...register("name")}
-                                label={t("dashboards.widgets.name.label")}
-                                error={!!errors.name}
-                                helperText={
-                                    errors.name?.message &&
-                                    t(errors.name.message)
-                                }
-                                size="small"
-                                fullWidth
-                            />
+                {currentTab === "general" && (
+                    <Stack gap={1}>
+                        <TextField
+                            {...register("name")}
+                            label={t("dashboards.widgets.name.label")}
+                            error={!!errors.name}
+                            helperText={
+                                errors.name?.message && t(errors.name.message)
+                            }
+                            size="small"
+                            fullWidth
+                        />
 
+                        <Controller
+                            name="type"
+                            control={control}
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    value={value}
+                                    onChange={(_, newValue) =>
+                                        onChange(newValue)
+                                    }
+                                    options={widgetTypes}
+                                    getOptionLabel={(option) => t(option.label)}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={t(
+                                                "dashboards.widgets.type.label",
+                                            )}
+                                            error={!!errors.type}
+                                            helperText={
+                                                errors.type?.message &&
+                                                t(errors.type.message)
+                                            }
+                                            size="small"
+                                        />
+                                    )}
+                                    fullWidth
+                                    disabled={!!defaultValues}
+                                />
+                            )}
+                        />
+
+                        {widgetType?.type === "report" && (
                             <Controller
-                                name="type"
+                                name="report_id"
                                 control={control}
-                                render={({ field: { value, onChange } }) => (
-                                    <Autocomplete
-                                        value={value}
-                                        onChange={(_, newValue) =>
-                                            onChange(newValue)
-                                        }
-                                        options={widgetTypes}
-                                        getOptionLabel={(option) =>
-                                            t(option.label)
-                                        }
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label={t(
-                                                    "dashboards.widgets.type.label",
-                                                )}
-                                                error={!!errors.type}
-                                                helperText={
-                                                    errors.type?.message &&
-                                                    t(errors.type.message)
-                                                }
-                                                size="small"
-                                            />
-                                        )}
-                                        fullWidth
-                                        disabled={!!defaultValues}
-                                    />
+                                render={({ field }) => (
+                                    <ReportsSelect {...field} />
                                 )}
                             />
+                        )}
 
-                            <TextField
-                                {...register("polling_interval", {
-                                    valueAsNumber: true,
-                                })}
-                                label={t(
-                                    "dashboards.widgets.pollingInterval.label",
-                                )}
-                                type="number"
-                                slotProps={{
-                                    htmlInput: {
-                                        min: 1,
-                                        max: 60,
-                                    },
-                                }}
-                                error={!!errors.polling_interval}
-                                helperText={
-                                    errors.polling_interval?.message &&
-                                    t(errors.polling_interval.message)
-                                }
-                                size="small"
-                                fullWidth
-                            />
-                        </Stack>
-                    </TabPanel>
+                        <TextField
+                            {...register("polling_interval", {
+                                valueAsNumber: true,
+                            })}
+                            label={t(
+                                "dashboards.widgets.pollingInterval.label",
+                            )}
+                            type="number"
+                            slotProps={{
+                                htmlInput: {
+                                    min: 1,
+                                    max: 60,
+                                },
+                            }}
+                            error={!!errors.polling_interval}
+                            helperText={
+                                errors.polling_interval?.message &&
+                                t(errors.polling_interval.message)
+                            }
+                            size="small"
+                            fullWidth
+                        />
+                    </Stack>
+                )}
 
-                    <TabPanel value="query">
-                        <Stack gap={1}>
-                            <Controller
-                                name="query"
-                                control={control}
-                                render={({ field: { value, onChange } }) => (
-                                    <TextField
-                                        value={value}
-                                        onChange={(e) =>
-                                            onChange(e.target.value)
-                                        }
-                                        label={t(
-                                            "dashboards.widgets.query.label",
-                                        )}
-                                        error={!!errors.query}
-                                        helperText={
-                                            errors.query?.message &&
-                                            t(errors.query.message)
-                                        }
-                                        size="small"
-                                        fullWidth
-                                    />
-                                )}
-                            />
+                {currentTab === "query" && (
+                    <Stack gap={1}>
+                        <Controller
+                            name="query"
+                            control={control}
+                            render={({ field: { value, onChange } }) => (
+                                <TextField
+                                    value={value}
+                                    onChange={(e) => onChange(e.target.value)}
+                                    label={t("dashboards.widgets.query.label")}
+                                    error={!!errors.query}
+                                    helperText={
+                                        errors.query?.message &&
+                                        t(errors.query.message)
+                                    }
+                                    size="small"
+                                    fullWidth
+                                />
+                            )}
+                        />
 
-                            <Controller
-                                name="query"
-                                control={control}
-                                render={({ field: { value, onChange } }) => (
-                                    <QueryBuilder
-                                        initialQuery={value}
-                                        onChangeQuery={(queryString) =>
-                                            onChange(queryString)
-                                        }
-                                    />
-                                )}
-                            />
-                        </Stack>
-                    </TabPanel>
+                        <Controller
+                            name="query"
+                            control={control}
+                            render={({ field: { value, onChange } }) => (
+                                <QueryBuilder
+                                    initialQuery={value}
+                                    onChangeQuery={(queryString) =>
+                                        onChange(queryString)
+                                    }
+                                />
+                            )}
+                        />
+                    </Stack>
+                )}
 
-                    <TabPanel value="layout">
-                        <Stack gap={1}>
-                            <TextField
-                                {...register("height", { valueAsNumber: true })}
-                                label={t("dashboards.widgets.height.label")}
-                                type="number"
-                                slotProps={{
-                                    htmlInput: {
-                                        min: 160,
-                                        max: 800,
-                                    },
-                                }}
-                                error={!!errors.height}
-                                helperText={
-                                    errors.height?.message &&
-                                    t(errors.height.message)
-                                }
-                                size="small"
-                                fullWidth
-                            />
-                        </Stack>
-                    </TabPanel>
-                </TabContext>
+                {currentTab === "layout" && (
+                    <Stack gap={1}>
+                        <TextField
+                            {...register("height", { valueAsNumber: true })}
+                            label={t("dashboards.widgets.height.label")}
+                            type="number"
+                            slotProps={{
+                                htmlInput: {
+                                    min: 160,
+                                    max: 800,
+                                },
+                            }}
+                            error={!!errors.height}
+                            helperText={
+                                errors.height?.message &&
+                                t(errors.height.message)
+                            }
+                            size="small"
+                            fullWidth
+                        />
+                    </Stack>
+                )}
             </DialogContent>
 
             <DialogActions>

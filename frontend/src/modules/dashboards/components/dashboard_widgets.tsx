@@ -3,7 +3,12 @@ import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dashboardApi } from "shared/model";
-import type { DashboardT, DashboardTileT } from "shared/model/types";
+import type {
+    CreateDashboardTileT,
+    DashboardT,
+    DashboardTileT,
+    UpdateDashboardTileT,
+} from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import type { DashboardWidgetFormData } from "../widgets/widget_form_dialog";
 import { WidgetFormDialog } from "../widgets/widget_form_dialog";
@@ -82,17 +87,34 @@ export const DashboardWidgets: FC<DashboardWidgetsProps> = ({
     const handleSubmitEditWidget = (formData: DashboardWidgetFormData) => {
         if (!selectedWidget) return;
 
+        const data = {
+            name: formData.name,
+            ui_settings: {
+                height: formData.height,
+                polling_interval: formData.polling_interval,
+            },
+        };
+
+        let body: UpdateDashboardTileT;
+
+        if (selectedWidget.type === "report") {
+            body = {
+                ...data,
+                type: selectedWidget.type,
+                report_id: formData.report_id,
+            };
+        } else {
+            body = {
+                ...data,
+                type: selectedWidget.type,
+                query: formData.query,
+            };
+        }
+
         updateWidget({
             dashboardId: dashboard.id,
             id: selectedWidget.id,
-            body: {
-                name: formData.name,
-                query: formData.query,
-                ui_settings: {
-                    height: formData.height,
-                    polling_interval: formData.polling_interval,
-                },
-            },
+            body,
         })
             .unwrap()
             .then(() => {
@@ -103,14 +125,22 @@ export const DashboardWidgets: FC<DashboardWidgetsProps> = ({
     };
 
     const handleClickCloneWidget = (widget: DashboardTileT) => {
+        const data = {
+            name: `${widget.name} (Copy)`,
+            ui_settings: widget.ui_settings,
+        };
+
+        let body: CreateDashboardTileT;
+
+        if (widget.type === "report") {
+            body = { ...data, type: widget.type, report_id: widget.report.id };
+        } else {
+            body = { ...data, type: widget.type, query: widget.query };
+        }
+
         createWidget({
             id: dashboard.id,
-            body: {
-                name: `${widget.name} (Copy)`,
-                type: widget.type,
-                query: widget.query,
-                ui_settings: widget.ui_settings,
-            },
+            body,
         })
             .unwrap()
             .catch(toastApiError);
