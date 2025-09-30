@@ -63,6 +63,8 @@ class CustomFieldTypeT(StrEnum):
     USER_MULTI = 'user_multi'
     OWNED = 'owned'
     OWNED_MULTI = 'owned_multi'
+    SPRINT = 'sprint'
+    SPRINT_MULTI = 'sprint_multi'
 
 
 @audited_model

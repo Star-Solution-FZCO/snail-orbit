@@ -52,6 +52,8 @@ __beanie_models__ = [
     VersionMultiCustomField,
     OwnedCustomField,
     OwnedMultiCustomField,
+    SprintCustomField,
+    SprintMultiCustomField,
     Workflow,
     ScheduledWorkflow,
     OnChangeWorkflow,

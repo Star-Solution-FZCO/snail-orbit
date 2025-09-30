@@ -168,6 +168,8 @@ class MongoQueryTransformer(Transformer):
             m.CustomFieldTypeT.VERSION_MULTI,
             m.CustomFieldTypeT.OWNED,
             m.CustomFieldTypeT.OWNED_MULTI,
+            m.CustomFieldTypeT.SPRINT,
+            m.CustomFieldTypeT.SPRINT_MULTI,
         ):
             return {'value.value': str(value) if value is not None else None}
         if field_type == m.CustomFieldTypeT.STRING:

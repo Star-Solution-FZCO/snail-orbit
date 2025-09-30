@@ -22,6 +22,8 @@ def _custom_fields() -> dict:
         'Version': CustomFieldTypeT.VERSION,
         'Feature': CustomFieldTypeT.BOOLEAN,
         'Subsystem': CustomFieldTypeT.OWNED,
+        'Sprint': CustomFieldTypeT.SPRINT,
+        'Sprint-Multi': CustomFieldTypeT.SPRINT_MULTI,
     }
 
     return {k.lower(): v for k, v in fields.items()}
@@ -786,6 +788,35 @@ TEST_OWNED_FIELD_PYTEST_PARAMS = [
         id=f'owned field with value {value}',
     )
     for value in ['null', 'UI', 'API']
+]
+TEST_SPRINT_FIELD_PYTEST_PARAMS = [
+    pytest.param(
+        f'Sprint: {value}',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^sprint$', '$options': 'i'},
+                    'value.value': f'{value}' if value != 'null' else None,
+                }
+            }
+        },
+        id=f'sprint field with value {value}',
+    )
+    for value in ['null', 'Sprint-1', 'Sprint-2', 'v1.0-Sprint']
+] + [
+    pytest.param(
+        f'Sprint-Multi: {value}',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^sprint-multi$', '$options': 'i'},
+                    'value.value': f'{value}' if value != 'null' else None,
+                }
+            }
+        },
+        id=f'sprint multi field with value {value}',
+    )
+    for value in ['null', 'Sprint-1', 'Sprint-2', 'v1.0-Sprint']
 ]
 TEST_RELATIVE_DT_PYTEST_PARAMS = [
     pytest.param(
@@ -2713,6 +2744,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         *TEST_ENUM_FIELD_PYTEST_PARAMS,
         *TEST_STATE_FIELD_PYTEST_PARAMS,
         *TEST_OWNED_FIELD_PYTEST_PARAMS,
+        *TEST_SPRINT_FIELD_PYTEST_PARAMS,
         *TEST_RELATIVE_DT_PYTEST_PARAMS,
         *TEST_USER_FIELD_PYTEST_PARAMS,
         *SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,

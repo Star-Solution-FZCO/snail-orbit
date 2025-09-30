@@ -24,6 +24,7 @@ from .plain import (
     IntegerCustomField,
     StringCustomField,
 )
+from .sprint_cf import SprintCustomField, SprintMultiCustomField, SprintOption
 from .state_cf import StateCustomField, StateOption
 from .user_cf import (
     GroupOption,
@@ -56,6 +57,9 @@ __all__ = (
     'OwnedCustomField',
     'OwnedMultiCustomField',
     'OwnedOption',
+    'SprintCustomField',
+    'SprintMultiCustomField',
+    'SprintOption',
     'StateCustomField',
     'StateOption',
     'StringCustomField',
@@ -86,6 +90,8 @@ MAPPING = {
     CustomFieldTypeT.USER_MULTI: UserMultiCustomField,
     CustomFieldTypeT.OWNED: OwnedCustomField,
     CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomField,
+    CustomFieldTypeT.SPRINT: SprintCustomField,
+    CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomField,
 }
 
 
@@ -116,6 +122,8 @@ CustomFieldValueT = (
     | list[VersionOption]
     | OwnedOption
     | list[OwnedOption]
+    | SprintOption
+    | list[SprintOption]
     | PydanticObjectId
     | Any
     | None

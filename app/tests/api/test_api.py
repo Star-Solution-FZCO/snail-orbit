@@ -807,6 +807,76 @@ async def test_api_v1_tag_access_control(
             },
             id='owned_multi',
         ),
+        pytest.param(
+            {
+                'name': 'Test sprint field',
+                'type': 'sprint',
+                'is_nullable': True,
+                'description': 'Sprint custom field description',
+                'ai_description': 'Sprint custom field AI description',
+                'default_value': None,
+                'options': [
+                    {
+                        'value': 'Sprint 1',
+                        'is_completed': False,
+                        'is_archived': False,
+                        'color': '#4CAF50',
+                        'planed_start_date': '2024-01-01',
+                        'planed_end_date': '2024-01-14',
+                        'start_date': '2024-01-02',
+                        'end_date': '2024-01-15',
+                        'description': 'First sprint of the quarter',
+                    },
+                    {
+                        'value': 'Sprint 2',
+                        'is_completed': True,
+                        'is_archived': False,
+                        'color': '#2196F3',
+                        'planed_start_date': '2024-01-15',
+                        'planed_end_date': '2024-01-28',
+                        'start_date': '2024-01-15',
+                        'end_date': '2024-01-29',
+                        'description': 'Second sprint with extended timeline',
+                    },
+                ],
+            },
+            id='sprint',
+        ),
+        pytest.param(
+            {
+                'name': 'Test sprint multi field',
+                'type': 'sprint_multi',
+                'is_nullable': True,
+                'description': 'Multi-sprint custom field description',
+                'ai_description': 'Multi-sprint custom field AI description',
+                'default_value': None,
+                'options': [
+                    {
+                        'value': 'Sprint Alpha',
+                        'is_completed': False,
+                        'is_archived': False,
+                        'color': '#FF5722',
+                        'planed_start_date': '2024-02-01',
+                        'planed_end_date': '2024-02-14',
+                        'start_date': None,
+                        'end_date': None,
+                        'description': 'Alpha sprint for multi-field testing',
+                    },
+                    {
+                        'value': 'Sprint Beta',
+                        'is_completed': True,
+                        'is_archived': True,
+                        'color': '#9C27B0',
+                        'planed_start_date': '2024-02-15',
+                        'planed_end_date': '2024-02-28',
+                        'start_date': '2024-02-15',
+                        'end_date': '2024-03-01',
+                        'description': 'Beta sprint completed and archived',
+                    },
+                ],
+            },
+            id='sprint_multi',
+        ),
     ],
 )
 async def test_api_v1_custom_field_get_list_update(
@@ -837,6 +907,8 @@ async def test_api_v1_custom_field_get_list_update(
         'version_multi',
         'owned',
         'owned_multi',
+        'sprint',
+        'sprint_multi',
     ):
         if custom_field_payload['type'] in ('owned', 'owned_multi'):
             # For owned fields, use the actual API response data instead of original test data

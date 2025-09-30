@@ -22451,7 +22451,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
+                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__SprintOptionOutput__"
                 }
               }
             }
@@ -22614,7 +22614,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
+                  "$ref": "#/components/schemas/BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__SprintOptionOutput__"
                 }
               }
             }
@@ -22774,6 +22774,868 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseListOutput_Union_UserFieldValueOutput__ShortOptionOutput__"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/group/{custom_field_gid}/field/{custom_field_id}/sprint-option": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Add Sprint Option",
+        "operationId": "add_sprint_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__sprint_option_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SprintOptionCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/{custom_field_id}/sprint-option": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Add Sprint Option",
+        "operationId": "add_sprint_option_api_v1_custom_field__custom_field_id__sprint_option_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SprintOptionCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/group/{custom_field_gid}/field/{custom_field_id}/sprint-option/{option_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Update Sprint Option",
+        "operationId": "update_sprint_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__sprint_option__option_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SprintOptionUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Remove Sprint Option",
+        "operationId": "remove_sprint_option_api_v1_custom_field_group__custom_field_gid__field__custom_field_id__sprint_option__option_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom_field/{custom_field_id}/sprint-option/{option_id}": {
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Update Sprint Option",
+        "operationId": "update_sprint_option_api_v1_custom_field__custom_field_id__sprint_option__option_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SprintOptionUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "custom_field"
+        ],
+        "summary": "Remove Sprint Option",
+        "operationId": "remove_sprint_option_api_v1_custom_field__custom_field_id__sprint_option__option_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "custom_field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Custom Field Id"
+            }
+          },
+          {
+            "name": "option_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Option Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_CustomFieldOutputRootModel_"
                 }
               }
             }
@@ -39116,7 +39978,7 @@
         ],
         "title": "BaseListOutput[TileOutputRootModel]"
       },
-      "BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__": {
+      "BaseListOutput_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__SprintOptionOutput__": {
         "properties": {
           "success": {
             "type": "boolean",
@@ -39124,14 +39986,14 @@
             "default": true
           },
           "payload": {
-            "$ref": "#/components/schemas/BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__"
+            "$ref": "#/components/schemas/BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__SprintOptionOutput__"
           }
         },
         "type": "object",
         "required": [
           "payload"
         ],
-        "title": "BaseListOutput[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
+        "title": "BaseListOutput[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput, SprintOptionOutput]]"
       },
       "BaseListOutput_Union_UserFieldValueOutput__ShortOptionOutput__": {
         "properties": {
@@ -40103,7 +40965,7 @@
         ],
         "title": "BaseListPayload[TileOutputRootModel]"
       },
-      "BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__": {
+      "BaseListPayload_Union_EnumOptionOutput__UserOutput__StateOptionOutput__VersionOptionOutput__OwnedOptionOutput__SprintOptionOutput__": {
         "properties": {
           "count": {
             "type": "integer",
@@ -40134,6 +40996,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/OwnedOptionOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/SprintOptionOutput"
                 }
               ]
             },
@@ -40148,7 +41013,7 @@
           "offset",
           "items"
         ],
-        "title": "BaseListPayload[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput]]"
+        "title": "BaseListPayload[Union[EnumOptionOutput, UserOutput, StateOptionOutput, VersionOptionOutput, OwnedOptionOutput, SprintOptionOutput]]"
       },
       "BaseListPayload_Union_UserFieldValueOutput__ShortOptionOutput__": {
         "properties": {
@@ -41368,6 +42233,12 @@
           },
           {
             "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintCustomFieldGroupOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldGroupOutput"
           }
         ],
         "title": "CustomFieldGroupOutputRootModel",
@@ -41384,6 +42255,8 @@
             "integer": "#/components/schemas/IntegerCustomFieldGroupOutput",
             "owned": "#/components/schemas/OwnedCustomFieldGroupOutput",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldGroupOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldGroupOutput",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldGroupOutput",
             "state": "#/components/schemas/StateCustomFieldGroupOutput",
             "string": "#/components/schemas/StringCustomFieldGroupOutput",
             "user": "#/components/schemas/UserCustomFieldGroupOutput",
@@ -41580,6 +42453,12 @@
           },
           {
             "$ref": "#/components/schemas/OwnedMultiCustomFieldOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintCustomFieldOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldOutput"
           }
         ],
         "title": "CustomFieldOutputRootModel",
@@ -41596,6 +42475,8 @@
             "integer": "#/components/schemas/IntegerCustomFieldOutput",
             "owned": "#/components/schemas/OwnedCustomFieldOutput",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldOutput",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldOutput",
             "state": "#/components/schemas/StateCustomFieldOutput",
             "string": "#/components/schemas/StringCustomFieldOutput",
             "user": "#/components/schemas/UserCustomFieldOutput",
@@ -41623,7 +42504,9 @@
           "user",
           "user_multi",
           "owned",
-          "owned_multi"
+          "owned_multi",
+          "sprint",
+          "sprint_multi"
         ],
         "title": "CustomFieldTypeT"
       },
@@ -41713,6 +42596,12 @@
           },
           {
             "$ref": "#/components/schemas/VersionMultiCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintCustomFieldValueOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldValueOutput"
           }
         ],
         "title": "CustomFieldValueOutputRootModel",
@@ -41729,6 +42618,8 @@
             "integer": "#/components/schemas/IntegerCustomFieldValueOutput",
             "owned": "#/components/schemas/OwnedCustomFieldValueOutput",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldValueOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldValueOutput",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldValueOutput",
             "state": "#/components/schemas/StateCustomFieldValueOutput",
             "string": "#/components/schemas/StringCustomFieldValueOutput",
             "user": "#/components/schemas/UserCustomFieldValueOutput",
@@ -49685,6 +50576,12 @@
                 "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupWithReportValuesOutput"
               },
               {
+                "$ref": "#/components/schemas/SprintCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/SprintMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
                 "$ref": "#/components/schemas/ProjectAxisOutput"
               },
               {
@@ -49743,6 +50640,12 @@
               },
               {
                 "$ref": "#/components/schemas/OwnedMultiCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/SprintCustomFieldGroupWithReportValuesOutput"
+              },
+              {
+                "$ref": "#/components/schemas/SprintMultiCustomFieldGroupWithReportValuesOutput"
               },
               {
                 "$ref": "#/components/schemas/ProjectAxisOutput"
@@ -50638,6 +51541,835 @@
           "value"
         ],
         "title": "ShortOptionOutput"
+      },
+      "SprintCustomFieldGroupOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/SprintCustomFieldOutput"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "fields"
+        ],
+        "title": "SprintCustomFieldGroupOutput"
+      },
+      "SprintCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "SprintCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific sprint custom field group with simplified values."
+      },
+      "SprintCustomFieldOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "is_nullable": {
+            "type": "boolean",
+            "title": "Is Nullable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectShortOutput"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/SprintOptionOutput"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "is_nullable",
+          "default_value",
+          "label",
+          "projects",
+          "options"
+        ],
+        "title": "SprintCustomFieldOutput"
+      },
+      "SprintCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "SprintCustomFieldValueOutput"
+      },
+      "SprintMultiCustomFieldGroupOutput": {
+        "properties": {
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/SprintMultiCustomFieldOutput"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gid",
+          "name",
+          "fields"
+        ],
+        "title": "SprintMultiCustomFieldGroupOutput"
+      },
+      "SprintMultiCustomFieldGroupWithReportValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ShortOptionOutput"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "SprintMultiCustomFieldGroupWithReportValuesOutput",
+        "description": "Report-specific sprint multi custom field group with simplified values."
+      },
+      "SprintMultiCustomFieldOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "is_nullable": {
+            "type": "boolean",
+            "title": "Is Nullable"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOptionOutput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ai_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Description"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectShortOutput"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/SprintOptionOutput"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "is_nullable",
+          "default_value",
+          "label",
+          "projects",
+          "options"
+        ],
+        "title": "SprintMultiCustomFieldOutput"
+      },
+      "SprintMultiCustomFieldValueOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "gid": {
+            "type": "string",
+            "title": "Gid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gid",
+          "name",
+          "value"
+        ],
+        "title": "SprintMultiCustomFieldValueOutput"
+      },
+      "SprintOption": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed",
+            "default": false
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "planed_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed Start Date"
+          },
+          "planed_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed End Date"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "value"
+        ],
+        "title": "SprintOption"
+      },
+      "SprintOptionCreateBody": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed",
+            "default": false
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "planed_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed Start Date"
+          },
+          "planed_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed End Date"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "SprintOptionCreateBody"
+      },
+      "SprintOptionOutput": {
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Uuid"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed",
+            "default": false
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "planed_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed Start Date"
+          },
+          "planed_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed End Date"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uuid",
+          "value"
+        ],
+        "title": "SprintOptionOutput"
+      },
+      "SprintOptionUpdateBody": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "is_completed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Completed"
+          },
+          "is_archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Archived"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "planed_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed Start Date"
+          },
+          "planed_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planed End Date"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "SprintOptionUpdateBody"
       },
       "StateCustomFieldAvailable": {
         "properties": {

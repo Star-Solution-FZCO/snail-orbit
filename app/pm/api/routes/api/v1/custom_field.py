@@ -20,6 +20,7 @@ from pm.api.views.custom_fields import (
     EnumOptionOutput,
     OwnedOptionOutput,
     ShortOptionOutput,
+    SprintOptionOutput,
     StateOptionOutput,
     UserFieldValueOutput,
     VersionOptionOutput,
@@ -115,6 +116,30 @@ class OwnedOptionUpdateBody(BaseModel):
     owner: PydanticObjectId | None = None
     color: str | None = None
     is_archived: bool | None = None
+
+
+class SprintOptionCreateBody(BaseModel):
+    value: str
+    is_completed: bool = False
+    is_archived: bool = False
+    color: str | None = None
+    planed_start_date: date | None = None
+    planed_end_date: date | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    description: str | None = None
+
+
+class SprintOptionUpdateBody(BaseModel):
+    value: str | None = None
+    is_completed: bool | None = None
+    is_archived: bool | None = None
+    color: str | None = None
+    planed_start_date: date | None = None
+    planed_end_date: date | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    description: str | None = None
 
 
 class CustomFieldCreateBody(BaseModel):
@@ -980,6 +1005,14 @@ async def select_options(
             offset=selected.offset,
             items=[OwnedOptionOutput.from_obj(opt) for opt in selected.items],
         )
+    if isinstance(obj, m.SprintCustomField | m.SprintMultiCustomField):
+        selected = enum_option_select(obj.options, query)
+        return BaseListOutput.make(
+            count=selected.total,
+            limit=selected.limit,
+            offset=selected.offset,
+            items=[SprintOptionOutput.from_obj(opt) for opt in selected.items],
+        )
     raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
 
 
@@ -1005,6 +1038,8 @@ async def select_options_group(
         m.CustomFieldTypeT.ENUM_MULTI,
         m.CustomFieldTypeT.OWNED,
         m.CustomFieldTypeT.OWNED_MULTI,
+        m.CustomFieldTypeT.SPRINT,
+        m.CustomFieldTypeT.SPRINT_MULTI,
     ):
         select_fn = enum_option_select
         output_fn = ShortOptionOutput.from_obj
@@ -1034,6 +1069,133 @@ async def select_options_group(
         offset=selected.offset,
         items=[output_fn(opt) for opt in selected.items],
     )
+
+
+@router.post('/{custom_field_id}/sprint-option')
+@router.post('/group/{custom_field_gid}/field/{custom_field_id}/sprint-option')
+async def add_sprint_option(
+    custom_field_id: PydanticObjectId,
+    body: SprintOptionCreateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    obj: m.CustomField | None = await m.SprintCustomField.find_one(
+        m.SprintCustomField.id == custom_field_id,
+        fetch_links=True,
+    )
+    if not obj:
+        obj = await m.SprintMultiCustomField.find_one(
+            m.SprintMultiCustomField.id == custom_field_id,
+            fetch_links=True,
+        )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    if any(opt.value == body.value for opt in obj.options):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Option already added')
+    obj.options.append(
+        m.SprintOption(
+            id=str(uuid4()),
+            value=body.value,
+            is_completed=body.is_completed,
+            is_archived=body.is_archived,
+            color=body.color,
+            planed_start_date=datetime.combine(
+                body.planed_start_date, datetime.min.time()
+            )
+            if body.planed_start_date
+            else None,
+            planed_end_date=datetime.combine(body.planed_end_date, datetime.min.time())
+            if body.planed_end_date
+            else None,
+            start_date=datetime.combine(body.start_date, datetime.min.time())
+            if body.start_date
+            else None,
+            end_date=datetime.combine(body.end_date, datetime.min.time())
+            if body.end_date
+            else None,
+            description=body.description,
+        ),
+    )
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
+
+
+@router.put('/{custom_field_id}/sprint-option/{option_id}')
+@router.put(
+    '/group/{custom_field_gid}/field/{custom_field_id}/sprint-option/{option_id}',
+)
+async def update_sprint_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+    body: SprintOptionUpdateBody,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.SprintCustomField.find_one(
+        m.SprintCustomField.id == custom_field_id,
+        fetch_links=True,
+    )
+    if not obj:
+        obj = await m.SprintMultiCustomField.find_one(
+            m.SprintMultiCustomField.id == custom_field_id,
+            fetch_links=True,
+        )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id_), None)
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    for k, value in body.dict(exclude_unset=True).items():
+        if k in ('planed_start_date', 'planed_end_date', 'start_date', 'end_date'):
+            processed_value = (
+                datetime.combine(value, datetime.min.time()) if value else None
+            )
+            setattr(opt, k, processed_value)
+        else:
+            setattr(opt, k, value)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = opt
+    if obj.is_changed:
+        await obj.replace()
+        await asyncio.gather(
+            m.IssueDraft.update_field_option_embedded_links(obj, opt),
+            m.Issue.update_field_option_embedded_links(obj, opt),
+        )
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
+
+
+@router.delete('/{custom_field_id}/sprint-option/{option_id}')
+@router.delete(
+    '/group/{custom_field_gid}/field/{custom_field_id}/sprint-option/{option_id}',
+)
+async def remove_sprint_option(
+    custom_field_id: PydanticObjectId,
+    option_id: UUID,
+) -> SuccessPayloadOutput[CustomFieldOutputRootModel]:
+    option_id_ = str(option_id)
+    obj: m.CustomField | None = await m.SprintCustomField.find_one(
+        m.SprintCustomField.id == custom_field_id,
+        fetch_links=True,
+    )
+    if not obj:
+        obj = await m.SprintMultiCustomField.find_one(
+            m.SprintMultiCustomField.id == custom_field_id,
+            fetch_links=True,
+        )
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
+    opt = next((opt for opt in obj.options if opt.id == option_id_), None)
+    if not opt:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Option not found')
+    if in_use := await count_issues_with_option(custom_field_id, opt.id):
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            f'Option is in use in {in_use} issues',
+        )
+    obj.options.remove(opt)
+    if obj.default_value and obj.default_value.id == opt.id:
+        obj.default_value = None
+    if obj.is_changed:
+        await obj.replace()
+    return SuccessPayloadOutput(payload=await cf_output_from_obj(obj))
 
 
 async def count_issues_with_option(

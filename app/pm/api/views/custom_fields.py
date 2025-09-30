@@ -56,6 +56,17 @@ __all__ = (
     'OwnedMultiCustomFieldOutput',
     'OwnedOptionOutput',
     'ShortOptionOutput',
+    'SprintCustomFieldGroupOutput',
+    'SprintCustomFieldGroupWithReportValuesOutput',
+    'SprintCustomFieldGroupWithValuesOutput',
+    'SprintCustomFieldOutput',
+    'SprintCustomFieldValueOutput',
+    'SprintMultiCustomFieldGroupOutput',
+    'SprintMultiCustomFieldGroupWithReportValuesOutput',
+    'SprintMultiCustomFieldGroupWithValuesOutput',
+    'SprintMultiCustomFieldOutput',
+    'SprintMultiCustomFieldValueOutput',
+    'SprintOptionOutput',
     'StateCustomFieldGroupWithReportValuesOutput',
     'StateCustomFieldGroupWithValuesOutput',
     'StateCustomFieldOutput',
@@ -159,6 +170,36 @@ class OwnedOptionOutput(BaseModel):
             owner=UserOutput.from_obj(obj.owner) if obj.owner else None,
             color=obj.color,
             is_archived=obj.is_archived,
+        )
+
+
+class SprintOptionOutput(BaseModel):
+    uuid: UUID
+    value: str
+    is_completed: bool = False
+    is_archived: bool = False
+    color: str | None = None
+    planed_start_date: date | None = None
+    planed_end_date: date | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    description: str | None = None
+
+    @classmethod
+    def from_obj(cls, obj: m.SprintOption) -> Self:
+        return cls(
+            uuid=obj.id,
+            value=obj.value,
+            is_completed=obj.is_completed,
+            is_archived=obj.is_archived,
+            color=obj.color,
+            planed_start_date=obj.planed_start_date.date()
+            if obj.planed_start_date
+            else None,
+            planed_end_date=obj.planed_end_date.date() if obj.planed_end_date else None,
+            start_date=obj.start_date.date() if obj.start_date else None,
+            end_date=obj.end_date.date() if obj.end_date else None,
+            description=obj.description,
         )
 
 
@@ -460,6 +501,54 @@ class OwnedMultiCustomFieldOutput(BaseCustomFieldOutput[m.OwnedMultiCustomField]
         )
 
 
+class SprintCustomFieldOutput(BaseCustomFieldOutput[m.SprintCustomField]):
+    type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    default_value: SprintOptionOutput | None
+    options: list[SprintOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.SprintCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            gid=obj.gid,
+            name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
+            is_nullable=obj.is_nullable,
+            options=[SprintOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=SprintOptionOutput.from_obj(obj.default_value)
+            if obj.default_value
+            else None,
+            label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
+        )
+
+
+class SprintMultiCustomFieldOutput(BaseCustomFieldOutput[m.SprintMultiCustomField]):
+    type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = m.CustomFieldTypeT.SPRINT_MULTI
+    default_value: list[SprintOptionOutput] | None
+    options: list[SprintOptionOutput]
+
+    @classmethod
+    def from_obj(cls, obj: m.SprintMultiCustomField) -> Self:
+        return cls(
+            id=obj.id,
+            gid=obj.gid,
+            name=obj.name,
+            description=obj.description,
+            ai_description=obj.ai_description,
+            is_nullable=obj.is_nullable,
+            options=[SprintOptionOutput.from_obj(opt) for opt in obj.options],
+            default_value=[
+                SprintOptionOutput.from_obj(opt) for opt in obj.default_value
+            ]
+            if obj.default_value
+            else None,
+            label=obj.label,
+            projects=[ProjectShortOutput.from_obj(p) for p in obj.projects],
+        )
+
+
 CustomFieldOutputT = (
     StringCustomFieldOutput
     | IntegerCustomFieldOutput
@@ -477,6 +566,8 @@ CustomFieldOutputT = (
     | VersionMultiCustomFieldOutput
     | OwnedCustomFieldOutput
     | OwnedMultiCustomFieldOutput
+    | SprintCustomFieldOutput
+    | SprintMultiCustomFieldOutput
 )
 
 
@@ -486,6 +577,7 @@ CustomFieldSelectOptionsT = (
     | StateOptionOutput
     | VersionOptionOutput
     | OwnedOptionOutput
+    | SprintOptionOutput
 )
 
 
@@ -565,6 +657,8 @@ CF_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldOutputT]] = {
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldOutput,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldOutput,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldOutput,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldOutput,
 }
 
 
@@ -680,6 +774,18 @@ class OwnedMultiCustomFieldGroupOutput(
     fields: list[OwnedMultiCustomFieldOutput]
 
 
+class SprintCustomFieldGroupOutput(BaseCustomFieldGroupOutput[m.SprintCustomField]):
+    type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    fields: list[SprintCustomFieldOutput]
+
+
+class SprintMultiCustomFieldGroupOutput(
+    BaseCustomFieldGroupOutput[m.SprintMultiCustomField]
+):
+    type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = m.CustomFieldTypeT.SPRINT_MULTI
+    fields: list[SprintMultiCustomFieldOutput]
+
+
 CustomFieldGroupOutputT = (
     StringCustomFieldGroupOutput
     | IntegerCustomFieldGroupOutput
@@ -697,6 +803,8 @@ CustomFieldGroupOutputT = (
     | VersionMultiCustomFieldGroupOutput
     | OwnedCustomFieldGroupOutput
     | OwnedMultiCustomFieldGroupOutput
+    | SprintCustomFieldGroupOutput
+    | SprintMultiCustomFieldGroupOutput
 )
 
 
@@ -721,6 +829,8 @@ CF_GROUP_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldGroupOutputT]] = {
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupOutput,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupOutput,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupOutput,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldGroupOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldGroupOutput,
 }
 
 
@@ -738,7 +848,7 @@ class ShortOptionOutput(BaseModel):
 
     @classmethod
     def from_obj(
-        cls, obj: m.EnumOption | m.VersionOption | m.StateOption | None
+        cls, obj: m.EnumOption | m.VersionOption | m.StateOption | m.SprintOption | None
     ) -> Self:
         if obj is None:
             return ShortOptionOutputNone()
@@ -923,6 +1033,16 @@ class VersionMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
     value: list[m.VersionOption] | None
 
 
+class SprintCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    value: m.SprintOption | None
+
+
+class SprintMultiCustomFieldValueOutput(BaseCustomFieldValueOutput):
+    type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = m.CustomFieldTypeT.SPRINT_MULTI
+    value: list[m.SprintOption] | None
+
+
 CustomFieldValueOutputT = (
     StringCustomFieldValueOutput
     | IntegerCustomFieldValueOutput
@@ -940,6 +1060,8 @@ CustomFieldValueOutputT = (
     | StateCustomFieldValueOutput
     | VersionCustomFieldValueOutput
     | VersionMultiCustomFieldValueOutput
+    | SprintCustomFieldValueOutput
+    | SprintMultiCustomFieldValueOutput
 )
 
 
@@ -964,6 +1086,8 @@ CF_VALUE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[CustomFieldValueOutputT]] = {
     m.CustomFieldTypeT.STATE: StateCustomFieldValueOutput,
     m.CustomFieldTypeT.VERSION: VersionCustomFieldValueOutput,
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldValueOutput,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldValueOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldValueOutput,
 }
 
 
@@ -1068,6 +1192,18 @@ class OwnedMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesO
     )
 
 
+class SprintCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    values: list[m.SprintOption | None] = Field(description='Sprint option values')
+
+
+class SprintMultiCustomFieldGroupWithValuesOutput(BaseCustomFieldGroupWithValuesOutput):
+    type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = m.CustomFieldTypeT.SPRINT_MULTI
+    values: list[list[m.SprintOption] | None] = Field(
+        description='Multiple sprint option values'
+    )
+
+
 CustomFieldGroupWithValuesOutputT = (
     StringCustomFieldGroupWithValuesOutput
     | IntegerCustomFieldGroupWithValuesOutput
@@ -1085,6 +1221,8 @@ CustomFieldGroupWithValuesOutputT = (
     | VersionMultiCustomFieldGroupWithValuesOutput
     | OwnedCustomFieldGroupWithValuesOutput
     | OwnedMultiCustomFieldGroupWithValuesOutput
+    | SprintCustomFieldGroupWithValuesOutput
+    | SprintMultiCustomFieldGroupWithValuesOutput
 )
 
 
@@ -1112,6 +1250,8 @@ CUSTOM_FIELD_GROUP_WITH_VALUES_OUTPUT_MAP: dict[
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupWithValuesOutput,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldGroupWithValuesOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldGroupWithValuesOutput,
 }
 
 
@@ -1252,6 +1392,22 @@ class OwnedMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
     values: list[ShortOptionOutput]
 
 
+class SprintCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific sprint custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    values: list[ShortOptionOutput]
+
+
+class SprintMultiCustomFieldGroupWithReportValuesOutput(BaseModel):
+    """Report-specific sprint multi custom field group with simplified values."""
+
+    field: CustomFieldGroupLinkOutput
+    type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = m.CustomFieldTypeT.SPRINT_MULTI
+    values: list[ShortOptionOutput]
+
+
 # Report-specific discriminated union
 CustomFieldGroupWithReportValuesOutputT = (
     StringCustomFieldGroupWithReportValuesOutput
@@ -1270,6 +1426,8 @@ CustomFieldGroupWithReportValuesOutputT = (
     | VersionMultiCustomFieldGroupWithReportValuesOutput
     | OwnedCustomFieldGroupWithReportValuesOutput
     | OwnedMultiCustomFieldGroupWithReportValuesOutput
+    | SprintCustomFieldGroupWithReportValuesOutput
+    | SprintMultiCustomFieldGroupWithReportValuesOutput
 )
 
 
@@ -1299,6 +1457,8 @@ CUSTOM_FIELD_GROUP_WITH_REPORT_VALUES_OUTPUT_MAP: dict[
     m.CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldGroupWithReportValuesOutput,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldGroupWithReportValuesOutput,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldGroupWithReportValuesOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldGroupWithReportValuesOutput,
 }
 
 

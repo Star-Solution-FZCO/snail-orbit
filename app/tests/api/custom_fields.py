@@ -433,6 +433,97 @@ async def _create_custom_field_owned(
     return {**field_data, 'options': option_ids, '_option_data': option_data}
 
 
+async def _create_custom_field_sprint(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    custom_field_payload: dict,
+) -> dict:
+    custom_field_payload = custom_field_payload.copy()
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    if custom_field_payload['type'] not in ('sprint', 'sprint_multi'):
+        pytest.xfail('Unsupported custom field type')
+
+    options = custom_field_payload.get('options', [])
+    default_value = custom_field_payload.get('default_value')
+
+    if options:
+        del custom_field_payload['options']
+    if default_value:
+        custom_field_payload['default_value'] = None
+
+    field_data = await __create_custom_field_group(
+        test_client,
+        create_initial_admin,
+        custom_field_payload,
+        has_options=True,
+    )
+
+    async def _add_option(opt: dict) -> tuple[str, str]:
+        # Convert date strings to proper format for API
+        opt_payload = opt.copy()
+        for date_field in (
+            'planed_start_date',
+            'planed_end_date',
+            'start_date',
+            'end_date',
+        ):
+            if date_field in opt_payload and opt_payload[date_field] is not None:
+                # Keep as date string, API will handle datetime conversion
+                pass
+
+        resp_ = test_client.post(
+            f'/api/v1/custom_field/{field_data["id"]}/sprint-option',
+            headers=headers,
+            json=opt_payload,
+        )
+        assert resp_.status_code == 200, f'{resp_=}'
+        data_ = resp_.json()
+        assert data_['payload']['id'] == field_data['id']
+        opts_ = data_['payload'].pop('options')
+
+        # Normalize default_value for sprint multi-field types (empty list becomes None)
+        expected_payload = custom_field_payload.copy()
+        if (
+            expected_payload.get('type') in ('sprint_multi',)
+            and expected_payload.get('default_value') == []
+        ):
+            expected_payload['default_value'] = None
+
+        assert data_ == {
+            'success': True,
+            'payload': {
+                'id': field_data['id'],
+                'gid': field_data['gid'],
+                'label': 'default',
+                **expected_payload,
+                'projects': [],
+            },
+        }, f'{data_=}'
+        opt_ = next(filter(lambda x: x['value'] == opt['value'], opts_), None)
+        assert opt_, f'{opts_=}'
+        assert opt_.get('uuid'), f'{opt_=}'
+        assert opt_ == {'uuid': opt_['uuid'], **opt}
+        return opt_['uuid'], opt['value']
+
+    option_ids = {}
+    for option in options:
+        opt_id, opt_val = await _add_option(option)
+        option_ids[opt_val] = opt_id
+
+    if default_value:
+        default_option_uuid = option_ids.get(default_value)
+        if default_option_uuid:
+            update_resp = test_client.put(
+                f'/api/v1/custom_field/{field_data["id"]}',
+                headers=headers,
+                json={'default_value': default_value},
+            )
+            assert update_resp.status_code == 200
+
+    return {**field_data, 'options': option_ids}
+
+
 async def _create_custom_field(
     test_client: 'TestClient',
     create_initial_admin: tuple[str, str],
@@ -458,6 +549,12 @@ async def _create_custom_field(
         )
     if custom_field_payload['type'] in ('owned', 'owned_multi'):
         return await _create_custom_field_owned(
+            test_client,
+            create_initial_admin,
+            custom_field_payload,
+        )
+    if custom_field_payload['type'] in ('sprint', 'sprint_multi'):
+        return await _create_custom_field_sprint(
             test_client,
             create_initial_admin,
             custom_field_payload,
