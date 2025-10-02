@@ -11,8 +11,6 @@ export type FormInputPopoverProps = {
     anchorEl: HTMLElement | null;
     id: string;
     open: boolean;
-    submitButtonLabel?: string;
-    cancelButtonLabel?: string;
     value?: string;
     onChange?: (value: string) => unknown;
 } & Omit<InputBaseProps, "value" | "onChange" | "type">;
@@ -24,8 +22,6 @@ export const FormInputPopover = forwardRef(
             anchorEl,
             id,
             open,
-            submitButtonLabel,
-            cancelButtonLabel,
             value,
             onChange,
             inputMode,
@@ -82,7 +78,7 @@ export const FormInputPopover = forwardRef(
                                 onClick={handleSubmit}
                                 disabled={isSubmitDisabled}
                             >
-                                {submitButtonLabel || t("submit")}
+                                {t("submit")}
                             </Button>
                             <Button
                                 size="small"
@@ -90,7 +86,7 @@ export const FormInputPopover = forwardRef(
                                 color="error"
                                 onClick={handleClose}
                             >
-                                {cancelButtonLabel || t("cancel")}
+                                {t("cancel")}
                             </Button>
                         </Stack>
                     </StyledContainer>

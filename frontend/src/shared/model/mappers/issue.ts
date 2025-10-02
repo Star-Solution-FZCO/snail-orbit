@@ -23,8 +23,11 @@ export const fieldToFieldValue = (
         case "version_multi":
         case "owned_multi":
             return field.value?.map((el) => el.value);
-        default:
+        case "date":
+        case "datetime":
             return field.value;
+        default:
+            return null;
     }
 };
 

@@ -128,6 +128,9 @@ export type CustomFieldGroupLinkT = CustomFieldGroupLinkOutput;
 
 export type CustomFieldWithValueT = CustomFieldValueOutputRootModel;
 
+export type CustomFieldWithValueEnhancedT = CustomFieldWithValueT &
+    Pick<CustomFieldT, "is_nullable">;
+
 export type EnumCustomFieldT = EnumCustomFieldOutput;
 
 export type EnumCustomFieldWithValueT = EnumCustomFieldValueOutput;

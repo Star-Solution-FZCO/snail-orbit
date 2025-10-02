@@ -314,6 +314,8 @@ const SpentTimeField: FC<ISpentTimeFieldProps> = ({
                 error={error}
                 variant="outlined"
                 size="small"
+                fullWidth
+                autoFocus
             />
 
             <Popper

@@ -16,6 +16,7 @@ export type CustomFieldsParserProps = {
     onChange?: (field: CustomFieldWithValueT) => unknown;
     rightAdornmentRenderer?: (field: CustomFieldWithValueT) => ReactNode;
     customFieldsErrors?: Record<string, string>;
+    clearable?: boolean;
 };
 
 export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
@@ -23,12 +24,14 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
     onChange,
     rightAdornmentRenderer,
     customFieldsErrors,
+    clearable,
 }) => {
     const baseCompProps = {
         id: field.id,
         label: field.name,
         rightAdornment: rightAdornmentRenderer?.(field),
         error: customFieldsErrors?.[field.name],
+        clearable,
     };
 
     switch (field.type) {
@@ -64,7 +67,6 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                             value: value as never,
                         });
                     }}
-                    addEmptyOption
                 />
             );
         case "string":
@@ -154,11 +156,12 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value.format(
-                                field.type === "datetime"
-                                    ? "YYYY-MM-DDTHH:mm:ss"
-                                    : "YYYY-MM-DD",
-                            ),
+                            value:
+                                value?.format(
+                                    field.type === "datetime"
+                                        ? "YYYY-MM-DDTHH:mm:ss"
+                                        : "YYYY-MM-DD",
+                                ) || null,
                         });
                     }}
                     type={field.type === "datetime" ? "datetime" : "date"}

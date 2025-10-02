@@ -1,6 +1,6 @@
 import { Button, ClickAwayListener, Stack } from "@mui/material";
 import type { ForwardedRef, SyntheticEvent } from "react";
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SpentTimeField } from "shared/ui/spent_time_field";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
@@ -11,8 +11,6 @@ export type FormDurationPopoverProps = {
     anchorEl: HTMLElement | null;
     id: string;
     open: boolean;
-    submitButtonLabel?: string;
-    cancelButtonLabel?: string;
     value?: number;
     onChange?: (value: number) => unknown;
 };
@@ -24,15 +22,17 @@ export const FormDurationPopover = forwardRef(
             anchorEl,
             id,
             open,
-            submitButtonLabel,
-            cancelButtonLabel,
             value,
             onChange,
         }: FormDurationPopoverProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const { t } = useTranslation();
-        const [innerValue, setInnerValue] = useState<number>(value || 0);
+        const [innerValue, setInnerValue] = useState<number>(0);
+
+        useEffect(() => {
+            if (open) setInnerValue(0);
+        }, [open]);
 
         const handleClose = () => {
             if (onClose) onClose();
@@ -41,6 +41,11 @@ export const FormDurationPopover = forwardRef(
         const handleSubmit = (e: SyntheticEvent) => {
             e.preventDefault();
             if (onChange) onChange(innerValue);
+        };
+
+        const handleAdd = (e: SyntheticEvent) => {
+            e.preventDefault();
+            if (onChange) onChange(innerValue + (value || 0));
         };
 
         return (
@@ -65,7 +70,15 @@ export const FormDurationPopover = forwardRef(
                                 color="success"
                                 onClick={handleSubmit}
                             >
-                                {submitButtonLabel || t("submit")}
+                                {t("set")}
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                color="warning"
+                                onClick={handleAdd}
+                            >
+                                {t("add")}
                             </Button>
                             <Button
                                 size="small"
@@ -73,7 +86,7 @@ export const FormDurationPopover = forwardRef(
                                 color="error"
                                 onClick={handleClose}
                             >
-                                {cancelButtonLabel || t("cancel")}
+                                {t("cancel")}
                             </Button>
                         </Stack>
                     </StyledContainer>

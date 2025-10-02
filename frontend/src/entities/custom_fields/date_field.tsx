@@ -9,7 +9,10 @@ type DateFieldProps = {
     label: string;
     rightAdornment?: ReactNode;
     error?: string;
-} & Pick<FormDatePopoverProps, "value" | "onChange" | "id" | "type">;
+} & Pick<
+    FormDatePopoverProps,
+    "value" | "onChange" | "id" | "type" | "clearable"
+>;
 
 export const DateField = forwardRef(
     (
@@ -21,12 +24,13 @@ export const DateField = forwardRef(
             type,
             rightAdornment,
             error,
+            clearable,
         }: DateFieldProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-        const handleChange = (value: Dayjs) => {
+        const handleChange = (value: Dayjs | null) => {
             onChange?.(value);
             setAnchorEl(null);
         };
@@ -58,6 +62,7 @@ export const DateField = forwardRef(
                     onChange={handleChange}
                     value={value}
                     type={type}
+                    clearable={clearable}
                 />
             </>
         );

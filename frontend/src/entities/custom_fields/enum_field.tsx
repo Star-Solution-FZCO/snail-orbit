@@ -1,5 +1,7 @@
+import { Button } from "@mui/material";
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { customFieldsApi } from "shared/model";
 import type { CustomFieldOptionNoUserT } from "shared/model/types";
 import { ColorAdornment } from "shared/ui/fields/adornments/color_adornment";
@@ -18,8 +20,17 @@ type EnumFieldProps = {
     multiple?: boolean;
     rightAdornment?: ReactNode;
     error?: string;
-    addEmptyOption?: boolean;
+    clearable?: boolean;
 };
+
+const emptyValue: CustomFieldOptionNoUserT = {
+    uuid: "EMPTY",
+    // @ts-expect-error known problem fix sometime
+    value: null,
+    is_archived: false,
+};
+
+const arrayEmptyValue: CustomFieldOptionNoUserT[] = [];
 
 export const EnumField: FC<EnumFieldProps> = ({
     value,
@@ -29,8 +40,10 @@ export const EnumField: FC<EnumFieldProps> = ({
     multiple,
     rightAdornment,
     error,
-    addEmptyOption,
+    clearable,
 }) => {
+    const { t } = useTranslation();
+
     const [listQueryParams] = useListQueryParams({
         limit: 0,
     });
@@ -48,14 +61,8 @@ export const EnumField: FC<EnumFieldProps> = ({
     const items = useMemo(() => {
         if (!data?.payload.items) return [];
 
-        const res = [...data.payload.items] as CustomFieldOptionNoUserT[];
-
-        if (addEmptyOption)
-            // @ts-expect-error TODO: Ask kbelov to add null as value type
-            res.unshift({ uuid: "EMPTY", value: null, is_archived: false });
-
-        return res;
-    }, [addEmptyOption, data?.payload.items]);
+        return data.payload.items as CustomFieldOptionNoUserT[];
+    }, [data?.payload.items]);
 
     const handleChange = (
         _: SyntheticEvent,
@@ -99,6 +106,19 @@ export const EnumField: FC<EnumFieldProps> = ({
             }
             variant={error ? "error" : "standard"}
             description={error}
+            bottomSlot={
+                clearable ? (
+                    <Button
+                        size="small"
+                        fullWidth
+                        onClick={() =>
+                            onChange?.(multiple ? arrayEmptyValue : emptyValue)
+                        }
+                    >
+                        {t("Clear")}
+                    </Button>
+                ) : null
+            }
         />
     );
 };

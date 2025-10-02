@@ -23,8 +23,9 @@ export type FormDatePopoverProps = {
     id: string;
     open: boolean;
     value?: Dayjs;
-    onChange?: (value: Dayjs) => unknown;
+    onChange?: (value: Dayjs | null) => unknown;
     type?: "date" | "datetime";
+    clearable?: boolean;
 };
 
 export const FormDatePopover = forwardRef(
@@ -37,6 +38,7 @@ export const FormDatePopover = forwardRef(
             value,
             onChange,
             type = "date",
+            clearable,
         }: FormDatePopoverProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
@@ -50,7 +52,7 @@ export const FormDatePopover = forwardRef(
 
         const handleChange = (val: Dayjs | null, shouldSubmit: boolean) => {
             setInnerValue(val);
-            if (shouldSubmit && val) onChange?.(val);
+            if (shouldSubmit) onChange?.(val);
         };
 
         const handleSubmit = () => {
@@ -76,11 +78,13 @@ export const FormDatePopover = forwardRef(
                                 <FormDateContent
                                     value={innerValue}
                                     onChange={handleChange}
+                                    clearable={clearable}
                                 />
                             ) : (
                                 <FormDateTimeContent
                                     value={innerValue}
                                     onChange={handleChange}
+                                    clearable={clearable}
                                 />
                             )}
                         </LocalizationProvider>

@@ -11,18 +11,10 @@ type InputFieldProps = {
 } & Pick<FormInputPopoverProps, "value" | "onChange" | "id" | "inputMode">;
 
 export const InputField = forwardRef(
-    (
-        {
-            value,
-            onChange,
-            label,
-            id,
-            inputMode,
-            rightAdornment,
-            error,
-        }: InputFieldProps,
-        ref: ForwardedRef<HTMLDivElement>,
-    ) => {
+    (props: InputFieldProps, ref: ForwardedRef<HTMLDivElement>) => {
+        const { value, onChange, label, id, inputMode, rightAdornment, error } =
+            props;
+
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
         const handleChange = (value: string) => {

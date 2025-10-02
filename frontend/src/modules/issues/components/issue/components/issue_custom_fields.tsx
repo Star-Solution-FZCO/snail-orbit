@@ -8,6 +8,7 @@ import {
     fieldToFieldValue,
 } from "shared/model/mappers/issue";
 import type {
+    CustomFieldWithValueEnhancedT,
     CustomFieldWithValueT,
     IssueT,
     ProjectT,
@@ -31,13 +32,15 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const fields: CustomFieldWithValueT[] = useMemo(() => {
+    const fields: CustomFieldWithValueEnhancedT[] = useMemo(() => {
         const projectFields = project?.custom_fields || [];
 
         return projectFields.map((projectField) => {
             const targetIssueField = issue.fields[projectField.name];
-            if (targetIssueField) return targetIssueField;
-            return { ...projectField, value: null };
+            const base = targetIssueField
+                ? targetIssueField
+                : { ...projectField, value: null };
+            return { ...base, is_nullable: projectField.is_nullable };
         });
     }, [issue, project]);
 
@@ -72,6 +75,7 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
                     field={field}
                     onChange={onFieldUpdate}
                     customFieldsErrors={customFieldsErrors}
+                    clearable
                 />
             ))}
         </>

@@ -1,5 +1,7 @@
+import { Button } from "@mui/material";
 import type { ReactNode, SyntheticEvent } from "react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { customFieldsApi, userApi } from "shared/model";
 import type { BasicUserT } from "shared/model/types";
 import { AvatarAdornment } from "shared/ui/fields/adornments/avatar_adornment";
@@ -17,7 +19,15 @@ type UserFieldProps = {
     type?: "field" | "group_field" | "users";
     rightAdornment?: ReactNode;
     error?: string;
+    clearable?: boolean;
 };
+
+const emptyValue: BasicUserT = {
+    // @ts-expect-error known problem fix sometime
+    id: null,
+};
+
+const arrayEmptyValue: BasicUserT[] = [];
 
 export const UserField = ({
     value,
@@ -28,7 +38,10 @@ export const UserField = ({
     rightAdornment,
     error,
     type = "field",
+    clearable,
 }: UserFieldProps) => {
+    const { t } = useTranslation();
+
     const [wasOpened, setWasOpened] = useState(false);
     const [listQueryParams] = useListQueryParams({
         limit: 0,
@@ -113,6 +126,19 @@ export const UserField = ({
             }
             variant={error ? "error" : "standard"}
             description={error}
+            bottomSlot={
+                clearable ? (
+                    <Button
+                        size="small"
+                        fullWidth
+                        onClick={() =>
+                            onChange?.(multiple ? arrayEmptyValue : emptyValue)
+                        }
+                    >
+                        {t("Clear")}
+                    </Button>
+                ) : null
+            }
         />
     );
 };

@@ -1,22 +1,29 @@
 import { Stack } from "@mui/material";
-import {
-    DateCalendar,
-    DateCalendarProps,
-    DateField,
+import type {
     DateFieldProps,
+    StaticDatePickerProps,
 } from "@mui/x-date-pickers";
-import { Dayjs } from "dayjs";
-import { ForwardedRef, forwardRef } from "react";
+import { DateField, StaticDatePicker } from "@mui/x-date-pickers";
+import type { Dayjs } from "dayjs";
+import type { ForwardedRef } from "react";
+import { forwardRef } from "react";
 
 export type FormDateContentProps = {
     fieldProps?: Omit<DateFieldProps<Dayjs>, "value" | "onChange">;
-    calendarProps?: Omit<DateCalendarProps<Dayjs>, "value" | "onChange">;
+    calendarProps?: Omit<StaticDatePickerProps<Dayjs>, "value" | "onChange">;
     onChange?: (value: Dayjs | null, shouldSubmit: boolean) => unknown;
+    clearable?: boolean;
 } & Pick<DateFieldProps<Dayjs>, "value">;
 
 export const FormDateContent = forwardRef(
     (
-        { value, onChange, fieldProps, calendarProps }: FormDateContentProps,
+        {
+            value,
+            onChange,
+            fieldProps,
+            calendarProps,
+            clearable,
+        }: FormDateContentProps,
         ref: ForwardedRef<HTMLDivElement>,
     ) => {
         return (
@@ -30,10 +37,17 @@ export const FormDateContent = forwardRef(
                     value={value}
                     onChange={(val) => onChange?.(val, false)}
                 />
-                <DateCalendar
+                <StaticDatePicker
                     {...calendarProps}
                     value={value}
                     onChange={(val) => onChange?.(val, true)}
+                    sx={{ backgroundColor: "inherit" }}
+                    slotProps={{
+                        actionBar: {
+                            actions: clearable ? ["clear", "accept"] : [],
+                            onClear: () => onChange?.(null, true),
+                        },
+                    }}
                 />
             </Stack>
         );
