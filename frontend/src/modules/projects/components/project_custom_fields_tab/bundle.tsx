@@ -56,6 +56,9 @@ export const Bundle: FC<{
                             customFieldGroupId: bundle.gid,
                         }}
                         fontWeight="bold"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        underline="hover"
                     >
                         {bundle.name}
                     </Link>

@@ -53,10 +53,16 @@ export const ProjectAvailableCustomFieldList: FC<
         data: customFields,
         isLoading,
         isFetching,
-    } = projectApi.useListProjectAvailableCustomFieldsQuery({
-        id: projectId,
-        ...listQueryParams,
-    });
+    } = projectApi.useListProjectAvailableCustomFieldsQuery(
+        {
+            id: projectId,
+            ...listQueryParams,
+        },
+        {
+            refetchOnFocus: true,
+            refetchOnMountOrArgChange: true,
+        },
+    );
 
     const [addProjectCustomField] =
         projectApi.useAddProjectCustomFieldMutation();

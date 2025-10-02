@@ -72,6 +72,9 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                             }}
                             flex={1}
                             fontWeight="bold"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="hover"
                         >
                             {row.name}
                         </Link>
@@ -130,7 +133,12 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
                 open={removeFieldDialogOpen}
                 projectId={project.id}
                 customField={selectedField}
-                onClose={() => setRemoveFieldDialogOpen(false)}
+                onClose={() => {
+                    setRemoveFieldDialogOpen(false);
+                    setSelectedField(null);
+                    setRowSelectionModel([]);
+                    setIsEditing(false);
+                }}
             />
 
             <Stack direction="row" alignItems="center" gap={1}>
