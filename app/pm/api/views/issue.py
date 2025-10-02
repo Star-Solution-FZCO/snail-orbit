@@ -22,11 +22,13 @@ from .tag import TagLinkOutput
 from .user import UserOutput
 
 __all__ = (
+    'AttachmentSourceTypeT',
     'CustomFieldValueOutT',
     'FavoriteFilterOutput',
     'FavoriteFilterType',
     'IssueAttachmentBody',
     'IssueAttachmentOut',
+    'IssueAttachmentWithSourceOutput',
     'IssueChangeOutputRootModel',
     'IssueCommentOutput',
     'IssueDraftOutput',
@@ -88,6 +90,11 @@ class IssueAttachmentBody(BaseModel):
     encryption: list[m.EncryptionMeta] | None = None
 
 
+class AttachmentSourceTypeT(StrEnum):
+    ISSUE = 'issue'
+    COMMENT = 'comment'
+
+
 class IssueAttachmentOut(BaseModel):
     id: UUID
     name: str
@@ -116,6 +123,30 @@ class IssueAttachmentOut(BaseModel):
             ocr_text=obj.ocr_text,
             encryption=obj.encryption,
             url=url,
+        )
+
+
+class IssueAttachmentWithSourceOutput(IssueAttachmentOut):
+    source_type: AttachmentSourceTypeT = Field(
+        description='Type of source where the attachment is located'
+    )
+    source_id: PydanticObjectId | UUID = Field(
+        description='ID of the source (issue ObjectId or comment UUID)'
+    )
+
+    @classmethod
+    async def from_obj_with_source(
+        cls,
+        obj: m.IssueAttachment,
+        source_type: AttachmentSourceTypeT,
+        source_id: PydanticObjectId | UUID,
+    ) -> Self:
+        """Create attachment output with source information"""
+        base_attachment = await IssueAttachmentOut.from_obj(obj)
+        return cls(
+            **base_attachment.model_dump(),
+            source_type=source_type,
+            source_id=source_id,
         )
 
 

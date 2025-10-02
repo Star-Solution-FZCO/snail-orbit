@@ -22,7 +22,9 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
 from pm.api.views.error_responses import READ_ERRORS, WRITE_ERRORS, error_responses
 from pm.api.views.issue import (
+    AttachmentSourceTypeT,
     IssueAttachmentBody,
+    IssueAttachmentWithSourceOutput,
     IssueDraftOutput,
     IssueListOutput,
     IssueOutput,
@@ -35,9 +37,10 @@ from pm.api.views.output import (
     SuccessPayloadOutput,
     UUIDOutput,
 )
-from pm.api.views.params import IssueSearchParams
+from pm.api.views.params import IssueSearchParams, ListParams
 from pm.api.views.select import SelectParams
 from pm.permissions import PermAnd, ProjectPermissions
+from pm.services.files import resolve_files
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
@@ -1491,6 +1494,183 @@ async def enable_project_permissions_inheritance(
     await obj.replace()
 
     return SuccessOutput()
+
+
+@router.get(
+    '/{issue_id_or_alias}/attachment/list',
+    responses=error_responses(*READ_ERRORS),
+)
+async def list_issue_attachments(
+    issue_id_or_alias: PydanticObjectId | str,
+    query: ListParams = Depends(),
+) -> BaseListOutput[IssueAttachmentWithSourceOutput]:
+    """List all attachments for an issue, including those from comments"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
+
+    all_attachments = []
+
+    for attachment in obj.attachments:
+        attachment_out = await IssueAttachmentWithSourceOutput.from_obj_with_source(
+            attachment, AttachmentSourceTypeT.ISSUE, obj.id
+        )
+        all_attachments.append(attachment_out)
+
+    for comment in obj.comments:
+        for attachment in comment.attachments:
+            attachment_out = await IssueAttachmentWithSourceOutput.from_obj_with_source(
+                attachment, AttachmentSourceTypeT.COMMENT, comment.id
+            )
+            all_attachments.append(attachment_out)
+
+    all_attachments.sort(key=lambda a: a.created_at, reverse=True)
+
+    total_count = len(all_attachments)
+    paginated_attachments = all_attachments[query.offset : query.offset + query.limit]
+
+    return BaseListOutput.make(
+        items=paginated_attachments,
+        count=total_count,
+        limit=query.limit,
+        offset=query.offset,
+    )
+
+
+@router.post(
+    '/{issue_id_or_alias}/attachment',
+    responses=error_responses(*WRITE_ERRORS),
+)
+async def add_issue_attachment(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueAttachmentBody,
+) -> SuccessPayloadOutput[IssueAttachmentWithSourceOutput]:
+    """Add an attachment to an issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE)
+    )
+
+    if any(a.id == body.id for a in obj.attachments):
+        raise HTTPException(HTTPStatus.CONFLICT, 'Attachment already exists')
+
+    now = utcnow()
+
+    try:
+        file_data = await resolve_files([body.id])
+        if body.id not in file_data:
+            raise HTTPException(HTTPStatus.BAD_REQUEST, 'File not found')
+        file_info = file_data[body.id]
+    except ValueError as err:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, str(err)) from err
+
+    # Create the attachment
+    attachment = m.IssueAttachment(
+        id=body.id,
+        name=file_info.name,
+        size=file_info.size,
+        content_type=file_info.content_type,
+        author=m.UserLinkField.from_obj(user_ctx.user),
+        created_at=now,
+        encryption=body.encryption,
+    )
+
+    obj.attachments.append(attachment)
+    obj.updated_at = now
+    obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
+
+    await obj.replace()
+
+    if not attachment.encryption:
+        await send_task(
+            Task(type=TaskType.OCR, data={'attachment_id': str(attachment.id)})
+        )
+
+    await schedule_batched_notification(
+        'update',
+        obj.subject,
+        obj.id_readable,
+        [str(s) for s in obj.subscribers],
+        str(obj.project.id),
+        author=user_ctx.user.email,
+        field_changes=[],
+    )
+
+    await send_event(
+        Event(
+            type=EventType.ISSUE_UPDATE,
+            data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+        ),
+    )
+
+    return SuccessPayloadOutput(
+        payload=await IssueAttachmentWithSourceOutput.from_obj_with_source(
+            attachment, AttachmentSourceTypeT.ISSUE, obj.id
+        )
+    )
+
+
+@router.delete(
+    '/{issue_id_or_alias}/attachment/{attachment_id}',
+    responses=error_responses(*WRITE_ERRORS),
+)
+async def delete_issue_attachment(
+    issue_id_or_alias: PydanticObjectId | str,
+    attachment_id: UUID,
+) -> UUIDOutput:
+    """Delete an attachment from an issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE)
+    )
+
+    attachment_found = False
+    for attachment in obj.attachments:
+        if attachment.id == attachment_id:
+            obj.attachments = [a for a in obj.attachments if a.id != attachment_id]
+            attachment_found = True
+            break
+
+    if not attachment_found:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Attachment not found')
+
+    # Update issue timestamps
+    now = utcnow()
+    obj.updated_at = now
+    obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
+
+    await obj.replace()
+
+    # Send notification
+    await schedule_batched_notification(
+        'update',
+        obj.subject,
+        obj.id_readable,
+        [str(s) for s in obj.subscribers],
+        str(obj.project.id),
+        author=user_ctx.user.email,
+        field_changes=[],
+    )
+
+    await send_event(
+        Event(
+            type=EventType.ISSUE_UPDATE,
+            data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+        ),
+    )
+
+    return UUIDOutput.make(attachment_id)
 
 
 async def validate_custom_fields_values(
