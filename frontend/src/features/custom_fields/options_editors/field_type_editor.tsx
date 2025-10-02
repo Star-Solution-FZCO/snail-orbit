@@ -2,6 +2,7 @@ import { FC } from "react";
 import { CustomFieldT } from "shared/model/types";
 import { CustomFieldEnumOptionsEditor } from "./enum_options_editor";
 import { CustomFieldOwnedOptionsEditor } from "./owned_options_editor";
+import { CustomFieldSprintOptionsEditor } from "./sprint_options_editor";
 import { CustomFieldStateOptionsEditor } from "./state_options_editor";
 import { CustomFieldUserOptionsEditor } from "./user_options_editor";
 import { CustomFieldVersionOptionsEditor } from "./version_options_editor";
@@ -19,6 +20,7 @@ export const FieldTypeEditor: FC<{
     );
     const isStateType = customField.type === "state";
     const isOwnedType = ["owned", "owned_multi"].includes(customField.type);
+    const isSprintType = ["sprint", "sprint_multi"].includes(customField.type);
 
     if (isEnumType) {
         return <CustomFieldEnumOptionsEditor {...props} />;
@@ -38,6 +40,10 @@ export const FieldTypeEditor: FC<{
 
     if (isOwnedType) {
         return <CustomFieldOwnedOptionsEditor {...props} />;
+    }
+
+    if (isSprintType) {
+        return <CustomFieldSprintOptionsEditor {...props} />;
     }
 
     return null;

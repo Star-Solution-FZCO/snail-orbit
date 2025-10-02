@@ -4,6 +4,7 @@ import type {
     CreateCustomFieldT,
     CreateEnumOptionT,
     CreateOwnedOptionT,
+    CreateSprintOptionT,
     CreateStateOptionT,
     CreateVersionOptionT,
     CustomFieldGroupT,
@@ -16,6 +17,7 @@ import type {
     UpdateCustomFieldT,
     UpdateEnumOptionT,
     UpdateOwnedOptionT,
+    UpdateSprintOptionT,
     UpdateStateOptionT,
     UpdateVersionOptionT,
 } from "shared/model/types";
@@ -359,6 +361,44 @@ export const customFieldsApi = createApi({
         >({
             query: ({ id, option_id }) => ({
                 url: `custom_field/${id}/owned-option/${option_id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        createCustomFieldSprintOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & CreateSprintOptionT
+        >({
+            query: ({ id, ...body }) => ({
+                url: `custom_field/${id}/sprint-option`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        updateCustomFieldSprintOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string } & UpdateSprintOptionT
+        >({
+            query: ({ id, option_id, ...body }) => ({
+                url: `custom_field/${id}/sprint-option/${option_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "CustomFields", id },
+            ],
+        }),
+        deleteCustomFieldSprintOption: build.mutation<
+            ApiResponse<CustomFieldT>,
+            { id: string; option_id: string }
+        >({
+            query: ({ id, option_id }) => ({
+                url: `custom_field/${id}/sprint-option/${option_id}`,
                 method: "DELETE",
             }),
             invalidatesTags: (_result, _error, { id }) => [

@@ -5,7 +5,7 @@ import { FieldEditWarningDialog } from "features/custom_fields/field_edit_warnin
 import { FieldTypeEditor } from "features/custom_fields/options_editors/field_type_editor";
 import { isComplexCustomFieldType } from "features/custom_fields/utils";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { customFieldsApi } from "shared/model";
@@ -46,6 +46,16 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
 
     const [formData, setFormData] = useState<UpdateCustomFieldT | null>(null);
 
+    const isMultiProjectField = (data?.payload?.projects?.length || 0) > 1;
+    const hasOptions =
+        data?.payload && "options" in data.payload
+            ? !!data.payload.options?.length
+            : false;
+
+    useEffect(() => {
+        setIsEditingEnabled(!isMultiProjectField || !hasOptions);
+    }, [isMultiProjectField]);
+
     if (error) {
         return (
             <ErrorHandler
@@ -57,9 +67,7 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
 
     if (!data) return null;
 
-    const customField = data.payload;
-
-    const isMultiProjectField = (customField.projects?.length || 0) > 1;
+    const customField = data?.payload;
 
     const handleClickEdit = () => {
         if (isMultiProjectField) {

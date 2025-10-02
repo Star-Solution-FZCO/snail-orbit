@@ -33,9 +33,9 @@ const CustomFieldEnumOption: FC<ICustomFieldEnumOptionProps> = ({
         <Box display="flex" alignItems="center" gap={1}>
             <Box
                 sx={{
-                    width: "32px",
-                    height: "32px",
-                    backgroundColor: option.color,
+                    width: "24px",
+                    height: "24px",
+                    backgroundColor: option.color || "#f0f0f0",
                     border: 1,
                     borderColor: "divider",
                     borderRadius: 0.5,

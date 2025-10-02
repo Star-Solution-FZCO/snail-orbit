@@ -14,6 +14,12 @@ import type {
     OwnedOptionOutput,
     QueryBuilderInput,
     QueryBuilderOutput,
+    SprintCustomFieldOutput,
+    SprintMultiCustomFieldOutput,
+    SprintOption,
+    SprintOptionCreateBody,
+    SprintOptionOutput,
+    SprintOptionUpdateBody,
     StateOption,
     StateOptionOutput,
     UserOptionOutput,
@@ -39,6 +45,8 @@ export const customFieldsTypes = [
     "version_multi",
     "owned",
     "owned_multi",
+    "sprint",
+    "sprint_multi",
 ] as const;
 
 export type CustomFieldTypeT = (typeof customFieldsTypes)[number];
@@ -89,6 +97,13 @@ export type UpdateOwnedOptionT = Partial<CreateOwnedOptionT> & {
     option_id: string;
 };
 
+// sprint
+export type CreateSprintOptionT = SprintOptionCreateBody;
+
+export type UpdateSprintOptionT = SprintOptionUpdateBody & {
+    option_id: string;
+};
+
 export type CustomFieldOptionT =
     | EnumOptionT
     | StateOptionT
@@ -114,6 +129,9 @@ export type VersionFieldValueT = VersionOption;
 export type OwnedOptionT = OwnedOptionOutput;
 export type OwnedFieldValueT = OwnedOption;
 
+export type SprintOptionT = SprintOptionOutput;
+export type SprintFieldValueT = SprintOption;
+
 export type UserOrGroupOptionT = UserOptionOutput;
 
 export type CreateCustomFieldT = {
@@ -138,6 +156,10 @@ export type EnumCustomFieldWithValueT = EnumCustomFieldValueOutput;
 export type OwnedCustomFieldT = OwnedCustomFieldOutput;
 
 export type OwnedMultiCustomFieldT = OwnedMultiCustomFieldOutput;
+
+export type SprintCustomFieldT = SprintCustomFieldOutput;
+
+export type SprintMultiCustomFieldT = SprintMultiCustomFieldOutput;
 
 export type QueryBuilderDataT = QueryBuilderOutput;
 
