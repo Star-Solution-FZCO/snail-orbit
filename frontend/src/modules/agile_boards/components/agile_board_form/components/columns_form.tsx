@@ -114,15 +114,18 @@ export const ColumnsForm: FC<{ controlsDisabled?: boolean }> = ({
         ) => {
             if (!value) return null;
             if (reason === "selectOption") {
-                append({
-                    id: getOptionKey(value),
-                    value: getOptionValue(value),
-                    color:
-                        typeof value === "object" && "color" in value
-                            ? value.color || undefined
-                            : undefined,
-                    is_archived: false,
-                });
+                if (typeof value === "object" && "email" in value)
+                    append(value);
+                else
+                    append({
+                        id: getOptionKey(value),
+                        value: getOptionValue(value),
+                        color:
+                            typeof value === "object" && "color" in value
+                                ? value.color || undefined
+                                : undefined,
+                        is_archived: false,
+                    });
             }
         },
         [append],

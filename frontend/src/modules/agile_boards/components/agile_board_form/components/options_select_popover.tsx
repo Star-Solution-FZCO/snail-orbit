@@ -62,7 +62,7 @@ export const OptionsSelectPopover: FC<OptionsSelectPopoverProps> = ({
             inputProps={{
                 placeholder: t("searchSelectPopover.placeholder"),
             }}
-            getOptionLabel={getOptionValue}
+            getOptionLabel={(e) => getOptionValue(e) || t("Empty")}
             isOptionEqualToValue={(a, b) =>
                 getOptionValue(a) === getOptionValue(b)
             }

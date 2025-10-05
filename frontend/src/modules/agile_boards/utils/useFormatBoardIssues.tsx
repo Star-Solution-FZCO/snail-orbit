@@ -11,7 +11,7 @@ import { notEmpty } from "shared/utils/helpers/notEmpty";
 export type BoardEntry = {
     label: string;
     id: string;
-    value: string | number | boolean;
+    value: string | number | boolean | null;
 };
 
 export const defaultSwimLaneId = "__DEFAULT__";
@@ -49,9 +49,11 @@ const formatSwimLane = (
                     label: number,
                 }));
         case "user":
-            return swimLaneData.values
-                .filter(notEmpty)
-                .map(({ id, name }) => ({ id, value: id, label: name }));
+            return swimLaneData.values.map((user) =>
+                user
+                    ? { id: user.id, value: user.id, label: user.name }
+                    : { id: "__EMPTY__", value: null, label: "Empty" },
+            );
         case "boolean":
             return swimLaneData.values.filter(notEmpty).map((value) => ({
                 id: value ? "+" : "-",

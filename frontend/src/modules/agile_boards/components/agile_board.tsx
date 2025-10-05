@@ -32,6 +32,7 @@ export type AgileBoardProps = {
     onCardDoubleClick?: (issue: IssueT) => void;
 };
 
+// TODO: Fully refactor: add proper null values support
 export const AgileBoard: FC<AgileBoardProps> = ({
     boardData,
     query,
@@ -72,12 +73,12 @@ export const AgileBoard: FC<AgileBoardProps> = ({
         moveIssue({
             issue_id: issue.id.toString(),
             board_id: boardData.id,
-            column: to.column.value.toString(),
+            column: to.column.value?.toString() || null,
             swimlane:
                 to.swimLane === undefined ||
                 to.swimLane.value === defaultSwimLaneId
                     ? undefined
-                    : to.swimLane.value.toString(),
+                    : to.swimLane.value?.toString() || null,
             after_issue: to.after?.id.toString() || null,
         })
             .unwrap()
