@@ -514,6 +514,20 @@ class IssueDurationFieldChangeOutput(IssueFieldChangeBaseOutput):
     new_value: int | None
 
 
+class IssueSprintFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.SPRINT] = m.CustomFieldTypeT.SPRINT
+    old_value: m.SprintOption | None
+    new_value: m.SprintOption | None
+
+
+class IssueSprintMultiFieldChangeOutput(IssueFieldChangeBaseOutput):
+    field_type: Literal[m.CustomFieldTypeT.SPRINT_MULTI] = (
+        m.CustomFieldTypeT.SPRINT_MULTI
+    )
+    old_value: list[m.SprintOption] | None
+    new_value: list[m.SprintOption] | None
+
+
 class IssueSubjectChangeOutput(IssueBaseChangeOutput):
     type: Literal['subject'] = 'subject'
     old_value: str
@@ -543,6 +557,8 @@ IssueFieldChangeOutputT = (
     | IssueVersionFieldChangeOutput
     | IssueVersionMultiFieldChangeOutput
     | IssueDurationFieldChangeOutput
+    | IssueSprintFieldChangeOutput
+    | IssueSprintMultiFieldChangeOutput
 )
 
 
@@ -567,6 +583,8 @@ FIELD_CHANGE_OUTPUT_MAP: dict[m.CustomFieldTypeT, type[IssueFieldChangeOutputT]]
     m.CustomFieldTypeT.VERSION: IssueVersionFieldChangeOutput,
     m.CustomFieldTypeT.VERSION_MULTI: IssueVersionMultiFieldChangeOutput,
     m.CustomFieldTypeT.DURATION: IssueDurationFieldChangeOutput,
+    m.CustomFieldTypeT.SPRINT: IssueSprintFieldChangeOutput,
+    m.CustomFieldTypeT.SPRINT_MULTI: IssueSprintMultiFieldChangeOutput,
 }
 
 

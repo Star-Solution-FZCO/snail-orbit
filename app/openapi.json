@@ -47748,6 +47748,12 @@
           },
           {
             "$ref": "#/components/schemas/IssueDurationFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueSprintFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueSprintMultiFieldChangeOutput"
           }
         ],
         "title": "IssueFieldChangeOutputRootModel",
@@ -47764,6 +47770,8 @@
             "integer": "#/components/schemas/IssueIntegerFieldChangeOutput",
             "owned": "#/components/schemas/IssueOwnedFieldChangeOutput",
             "owned_multi": "#/components/schemas/IssueOwnedMultiFieldChangeOutput",
+            "sprint": "#/components/schemas/IssueSprintFieldChangeOutput",
+            "sprint_multi": "#/components/schemas/IssueSprintMultiFieldChangeOutput",
             "state": "#/components/schemas/IssueStateFieldChangeOutput",
             "string": "#/components/schemas/IssueStringFieldChangeOutput",
             "user": "#/components/schemas/IssueUserFieldChangeOutput",
@@ -48954,6 +48962,130 @@
           "created_at"
         ],
         "title": "IssueSpentTimeRecordOutput"
+      },
+      "IssueSprintFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Field Type",
+            "default": "sprint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueSprintFieldChangeOutput"
+      },
+      "IssueSprintMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Field Type",
+            "default": "sprint_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueSprintMultiFieldChangeOutput"
       },
       "IssueStateFieldChangeOutput": {
         "properties": {

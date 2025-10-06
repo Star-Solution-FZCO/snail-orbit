@@ -40,6 +40,8 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
         case "state":
         case "version":
         case "version_multi":
+        case "sprint":
+        case "sprint_multi":
             return (
                 <EnumChip
                     {...baseCompProps}
@@ -57,7 +59,8 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                     multiple={
                         field.type === "enum_multi" ||
                         field.type === "owned_multi" ||
-                        field.type === "version_multi"
+                        field.type === "version_multi" ||
+                        field.type === "sprint_multi"
                     }
                     onChange={(value) => {
                         onChange?.({
