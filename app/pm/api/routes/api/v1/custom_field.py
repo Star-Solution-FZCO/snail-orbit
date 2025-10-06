@@ -189,12 +189,12 @@ class CustomFieldCopyBody(BaseModel):
 async def list_custom_field_groups(
     query: ListParams = Depends(),
 ) -> BaseListOutput[CustomFieldGroupOutputRootModel]:
-    q = m.CustomField.find(with_children=True, fetch_links=True)
+    q = m.CustomField.find(with_children=True)
     query.apply_filter(q, m.CustomField)
     query.apply_sort(q, m.CustomField, (m.CustomField.name,))
     if query.search:
         q = q.find(m.CustomField.search_query(query.search))
-    fields = await q.to_list()
+    fields = await q.find(fetch_links=True).to_list()
     results = {}
     for field in fields:
         if field.gid not in results:
