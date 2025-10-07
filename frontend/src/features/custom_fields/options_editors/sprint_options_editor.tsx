@@ -88,15 +88,6 @@ const CustomFieldSprintOption: FC<ICustomFieldSprintOptionProps> = ({
                 </Typography>
             )}
 
-            {option.planed_start_date && option.planed_end_date && (
-                <Typography fontSize={14}>
-                    {t("customFields.options.sprint.plannedPeriod", {
-                        startDate: formatDate(option.planed_start_date),
-                        endDate: formatDate(option.planed_end_date),
-                    })}
-                </Typography>
-            )}
-
             <Stack direction="row" gap={1}>
                 <FormControlLabel
                     control={
