@@ -2,18 +2,19 @@
 """Event-driven batch processor for notifications using Redis pub/sub."""
 
 import asyncio
+import logging
 
 import redis.asyncio as aioredis
 from pydantic import ValidationError
 
 from pm.config import CONFIG
-from pm.logging import get_logger, log_context
 from pm.tasks._base import setup_database
 from pm.tasks.actions.notification_batch import NotificationBatch
 from pm.tasks.actions.notify import task_notify_by_pararam
 from pm.tasks.app import broker, import_all_tasks
+from pm.tasks.logging import set_tasks_logging_context
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 TIMER_KEY_PARTS_COUNT = 2
 
@@ -26,109 +27,66 @@ async def process_expired_batch(timer_key: str) -> None:
 
         key_parts = timer_key[len('notification_timer:') :].split(':', 1)
         if len(key_parts) != TIMER_KEY_PARTS_COUNT:
-            logger.warning(
-                'Invalid timer key format',
-                extra={
-                    'event': 'batch_timer_invalid_format',
-                    'timer_key': timer_key,
-                },
-            )
+            logger.warning('Invalid timer key format: %s', timer_key)
             return
 
         issue_id_readable, author = key_parts
         batch_key = f'notification_batch:{issue_id_readable}:{author}'
 
-        with log_context(
+        set_tasks_logging_context(
+            task_id='process_expired_batch',
+            task_name='Batch Processor',
             issue_id=issue_id_readable,
-            batch_author=author,
-            task_name='process_expired_batch',
-        ):
-            redis_client = aioredis.from_url(CONFIG.REDIS_EVENT_BUS_URL)
-            batch_data = await redis_client.get(batch_key)
+            author=author,
+        )
+        redis_client = aioredis.from_url(CONFIG.REDIS_EVENT_BUS_URL)
+        batch_data = await redis_client.get(batch_key)
 
-            if not batch_data:
-                logger.warning(
-                    'No batch data found for expired timer',
-                    extra={
-                        'event': 'batch_data_not_found',
-                        'timer_key': timer_key,
-                        'batch_key': batch_key,
-                    },
-                )
-                return
+        if not batch_data:
+            logger.warning('No batch data found for timer: %s', timer_key)
+            return
 
-            batch = NotificationBatch.model_validate_json(batch_data)
+        batch = NotificationBatch.model_validate_json(batch_data)
 
-            logger.info(
-                'Processing expired notification batch',
-                extra={
-                    'event': 'batch_processing_started',
-                    'change_count': batch.change_count,
-                    'action': batch.action,
-                },
-            )
+        logger.info(
+            'Processing expired batch: %s (%s changes)',
+            batch.action,
+            batch.change_count,
+        )
 
-            await redis_client.delete(batch_key)
+        await redis_client.delete(batch_key)
 
-            await task_notify_by_pararam.kiq(
-                batch.action,
-                batch.issue_subject,
-                batch.issue_id_readable,
-                batch.issue_subscribers,
-                batch.project_id,
-                author=batch.author,
-                field_changes=batch.field_changes,
-                comment_changes=batch.comment_changes,
-            )
+        await task_notify_by_pararam.kiq(
+            batch.action,
+            batch.issue_subject,
+            batch.issue_id_readable,
+            batch.issue_subscribers,
+            batch.project_id,
+            author=batch.author,
+            field_changes=batch.field_changes,
+            comment_changes=batch.comment_changes,
+        )
 
-            logger.info(
-                'Queued notification task for expired batch',
-                extra={
-                    'event': 'batch_notification_queued',
-                    'subscriber_count': len(batch.issue_subscribers),
-                },
-            )
+        logger.info(
+            'Queued notification task for %s subscribers', len(batch.issue_subscribers)
+        )
 
     except ValidationError as e:
-        logger.exception(
-            'Invalid batch data for timer',
-            exc_info=e,
-            extra={
-                'event': 'batch_validation_error',
-                'timer_key': timer_key,
-            },
-        )
+        logger.exception('Invalid batch data for timer: %s', timer_key, exc_info=e)
     except Exception as e:
-        logger.exception(
-            'Failed to process expired batch',
-            exc_info=e,
-            extra={
-                'event': 'batch_processing_error',
-                'timer_key': timer_key,
-            },
-        )
+        logger.exception('Failed to process expired batch: %s', timer_key, exc_info=e)
 
 
 async def listen_for_expiration_events() -> None:
     """Listen for Redis key expiration events and process expired batches."""
     if not CONFIG.REDIS_EVENT_BUS_URL:
-        logger.warning(
-            'Redis not configured, batch processor disabled',
-            extra={
-                'event': 'batch_processor_disabled',
-                'reason': 'redis_not_configured',
-            },
-        )
+        logger.warning('Redis not configured, batch processor disabled')
         return
 
     if CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS <= 0:
         logger.info(
-            'Batching disabled, processor stopping',
-            extra={
-                'event': 'batch_processor_disabled',
-                'reason': 'batching_disabled',
-                'delay_seconds': CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS,
-            },
+            'Batching disabled (delay=%ss), processor stopping',
+            CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS,
         )
         return
 
@@ -156,13 +114,7 @@ async def listen_for_expiration_events() -> None:
             pubsub = redis_client.pubsub()
             await pubsub.subscribe('__keyevent@0__:expired')
 
-            logger.info(
-                'Listening for Redis key expiration events',
-                extra={
-                    'event': 'batch_processor_listening',
-                    'redis_url': CONFIG.REDIS_EVENT_BUS_URL,
-                },
-            )
+            logger.info('Listening for Redis key expiration events')
 
             async for message in pubsub.listen():
                 if message['type'] == 'message':
@@ -245,62 +197,31 @@ async def listen_for_expiration_events() -> None:
 
 async def main() -> None:
     """Main batch processor."""
-    with log_context(
-        task_name='batch_processor',
-        component='notification_batch_processor',
-    ):
-        logger.info(
-            'Starting notification batch processor',
-            extra={
-                'event': 'batch_processor_startup',
-                'delay_seconds': CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS,
-            },
-        )
+    set_tasks_logging_context(
+        task_id='batch_processor',
+        task_name='Batch Processor',
+    )
+    logger.info(
+        'Starting notification batch processor (delay=%ss)',
+        CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS,
+    )
 
+    try:
+        import_all_tasks()
+        await broker.startup()
+        await setup_database()
+
+        logger.info('Batch processor ready')
+
+        await listen_for_expiration_events()
+    except KeyboardInterrupt:
+        logger.info('Batch processor interrupted, shutting down')
+    except Exception as e:
+        logger.exception('Fatal error in batch processor', exc_info=e)
+        raise
+    finally:
         try:
-            import_all_tasks()
-            await broker.startup()
-            await setup_database()
-
-            delay_seconds = CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS
-            logger.info(
-                'Batch processor ready',
-                extra={
-                    'event': 'batch_processor_ready',
-                    'delay_seconds': delay_seconds,
-                },
-            )
-
-            await listen_for_expiration_events()
-        except KeyboardInterrupt:
-            logger.info(
-                'Batch processor interrupted, shutting down',
-                extra={'event': 'batch_processor_interrupted'},
-            )
-        except Exception as e:
-            logger.exception(
-                'Fatal error in batch processor',
-                exc_info=e,
-                extra={'event': 'batch_processor_fatal_error'},
-            )
-            raise
-        finally:
-            try:
-                await broker.shutdown()
-                logger.info(
-                    'Batch processor broker shutdown complete',
-                    extra={'event': 'batch_processor_shutdown'},
-                )
-            except (ConnectionError, TimeoutError, RuntimeError) as e:
-                logger.warning(
-                    'Error during broker shutdown',
-                    exc_info=e,
-                    extra={'event': 'batch_processor_shutdown_error'},
-                )
-
-
-if __name__ == '__main__':
-    from pm.logging import configure_logging
-
-    configure_logging()
-    asyncio.run(main())
+            await broker.shutdown()
+            logger.info('Batch processor broker shutdown complete')
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
+            logger.warning('Error during broker shutdown', exc_info=e)

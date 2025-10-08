@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -9,11 +10,14 @@ from dynaconf import Dynaconf, Validator
 
 from pm.constants import CONFIG_PATHS
 from pm.enums import EncryptionKeyAlgorithmT
+from pm.logging import LogFormat
 
 __all__ = (
     'API_SERVICE_TOKEN_KEYS',
     'CONFIG',
     'DB_ENCRYPTION_KEY',
+    'LOG_FORMAT',
+    'LOG_LEVEL',
     'APIServiceTokenKeyT',
     'FileStorageModeT',
 )
@@ -484,39 +488,9 @@ CONFIG = Dynaconf(
         ),
         Validator(
             'LOG_FORMAT',
-            is_type_of=str,
+            cast=LogFormat,
             default='json',
-            description='Log format type (json, pretty, console)',
-        ),
-        Validator(
-            'LOG_FILE',
-            is_type_of=str | None,
-            default=None,
-            description='Path to log file (if None, only console logging)',
-        ),
-        Validator(
-            'LOG_FILE_MAX_BYTES',
-            cast=int,
-            default=10_000_000,
-            description='Maximum size of log file before rotation (bytes)',
-        ),
-        Validator(
-            'LOG_FILE_BACKUP_COUNT',
-            cast=int,
-            default=5,
-            description='Number of backup log files to keep',
-        ),
-        Validator(
-            'LOG_REQUESTS',
-            cast=bool,
-            default=True,
-            description='Whether to log HTTP requests',
-        ),
-        Validator(
-            'LOG_ERRORS',
-            cast=bool,
-            default=True,
-            description='Whether to log HTTP errors',
+            description='Log format type (json, sipmle)',
         ),
     ],
 )
@@ -526,3 +500,6 @@ API_SERVICE_TOKEN_KEYS = parse_api_service_token_keys(CONFIG.API_SERVICE_TOKEN_K
 DB_ENCRYPTION_KEY: bytes | None = (
     CONFIG.DB_ENCRYPTION_KEY.encode('utf-8') if CONFIG.DB_ENCRYPTION_KEY else None
 )
+
+LOG_FORMAT = CONFIG.LOG_FORMAT
+LOG_LEVEL = logging.getLevelNamesMapping().get(CONFIG.LOG_LEVEL.upper(), logging.INFO)

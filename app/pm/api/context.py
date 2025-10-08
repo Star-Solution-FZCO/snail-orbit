@@ -14,6 +14,7 @@ from starsol_fastapi_jwt_auth import AuthJWT
 
 import pm.models as m
 from pm.api.exceptions import MFARequiredError
+from pm.api.request_ctx import set_request_context
 from pm.api.utils.jwt_validator import JWTValidationError, is_jwt, validate_jwt
 from pm.cache import cached
 from pm.config import API_SERVICE_TOKEN_KEYS, CONFIG
@@ -268,9 +269,21 @@ async def user_dependency(
         mfa_passed = (jwt_auth.get_raw_jwt() or {}).get('mfa_passed', False)
         user = await m.User.find_one(m.User.email == user_login)
         if user and user.mfa_enabled and not mfa_passed:
+            set_request_context(
+                request,
+                user_id=str(user.id),
+                user_email=user.email,
+            )
             raise MFARequiredError()
     if not user:
         raise HTTPException(HTTPStatus.UNAUTHORIZED, 'Authorized user not found')
+
+    set_request_context(
+        request,
+        user_id=str(user.id),
+        user_email=user.email,
+    )
+
     return user
 
 

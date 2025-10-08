@@ -4,11 +4,20 @@ from pm.patches.beanie_links import patch_beanie_construct_query
 
 patch_beanie_construct_query()
 
-# Configure logging early
-from pm.logging import configure_logging
+from pm.api.logging.context import api_context
+from pm.config import LOG_FORMAT, LOG_LEVEL
+from pm.logging import setup_logging
 
-configure_logging()
+setup_logging(
+    logger_name='pm',
+    context_var=api_context,
+    prefix_keys=('request_id',),
+    format_type=LOG_FORMAT,
+    level=LOG_LEVEL,
+    force_reconfigure=True,
+)
 
+import logging
 from collections.abc import Awaitable, Callable
 from http import HTTPMethod, HTTPStatus
 
@@ -42,6 +51,7 @@ if CONFIG.SENTRY_DSN:
     )
 
 
+logger = logging.getLogger(__name__)
 app = FastAPI(title='Snail Orbit', version=APP_VERSION, debug=CONFIG.DEBUG)
 
 
@@ -71,10 +81,10 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-# Add logging middleware for request correlation and context
-from pm.logging import create_logging_middleware
+from pm.api.middleware import RequestIDMiddleware, create_api_logging_middleware
 
-app.middleware('http')(create_logging_middleware())
+app.middleware('http')(create_api_logging_middleware(__name__))
+app.middleware('http')(RequestIDMiddleware())
 
 if CONFIG.RO_MODE:
     RO_METHODS = {HTTPMethod.GET, HTTPMethod.HEAD, HTTPMethod.OPTIONS}
@@ -154,11 +164,10 @@ async def _init_default_roles() -> None:
 @app.on_event('startup')
 async def app_init() -> None:
     from pm.cache import init_cache_system
-    from pm.db import check_database_version
     from pm.models import __beanie_models__
     from pm.tasks.app import broker
 
-    check_database_version()
+    logger.info('Starting API server worker')
 
     client = AsyncIOMotorClient(CONFIG.DB_URI)
     db = client.get_default_database()
@@ -173,6 +182,8 @@ async def app_init() -> None:
 
     # Initialize cache system
     await init_cache_system()
+
+    logger.info('API server worker initialized')
 
 
 @AuthJWT.load_config
