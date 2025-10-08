@@ -18,8 +18,6 @@ class SprintOption(BaseModel):
     is_completed: bool = False
     is_archived: bool = False
     color: str | None = None
-    planed_start_date: datetime | None = None
-    planed_end_date: datetime | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None
     description: str | None = None
