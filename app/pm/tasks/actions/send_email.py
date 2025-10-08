@@ -1,3 +1,4 @@
+import logging
 import smtplib
 from base64 import b64decode
 from collections.abc import Sequence
@@ -8,12 +9,12 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 
 from pm.config import CONFIG
-from pm.logging import get_logger, log_context
 from pm.tasks.app import broker
+from pm.tasks.logging import set_tasks_logging_context
 
 __all__ = ('task_send_email',)
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _send_email(
@@ -152,42 +153,42 @@ def task_send_email(
     body: str,
     attachments: dict[str, str] | None = None,
 ) -> None:
-    with log_context(
+    set_tasks_logging_context(
         task_id='send_email',
         task_name='Email Notification',
-        recipient_count=len(recipients),
-    ):
+        task_type='notification',
+    )
+    logger.info(
+        'Email task started',
+        extra={
+            'event': 'task_started',
+            'task_type': 'notification',
+            'notification_method': 'email',
+            'recipient_count': len(recipients),
+            'subject': subject,
+        },
+    )
+
+    try:
+        _send_email(recipients, subject, body, attachments)
+
         logger.info(
-            'Email task started',
+            'Email task completed successfully',
             extra={
-                'event': 'task_started',
+                'event': 'task_completed',
                 'task_type': 'notification',
                 'notification_method': 'email',
-                'recipient_count': len(recipients),
-                'subject': subject,
             },
         )
-
-        try:
-            _send_email(recipients, subject, body, attachments)
-
-            logger.info(
-                'Email task completed successfully',
-                extra={
-                    'event': 'task_completed',
-                    'task_type': 'notification',
-                    'notification_method': 'email',
-                },
-            )
-        except Exception as e:
-            logger.exception(
-                'Email task failed',
-                exc_info=e,
-                extra={
-                    'event': 'task_failed',
-                    'task_type': 'notification',
-                    'notification_method': 'email',
-                    'error_type': type(e).__name__,
-                },
-            )
-            raise
+    except Exception as e:
+        logger.exception(
+            'Email task failed',
+            exc_info=e,
+            extra={
+                'event': 'task_failed',
+                'task_type': 'notification',
+                'notification_method': 'email',
+                'error_type': type(e).__name__,
+            },
+        )
+        raise

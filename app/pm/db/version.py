@@ -5,7 +5,10 @@ from starsol_mongo_migrate import MigrationManager
 
 from pm.config import CONFIG
 
-__all__ = ('DatabaseVersionMismatchError', 'check_database_version')
+__all__ = (
+    'DatabaseVersionMismatchError',
+    'check_database_version',
+)
 
 logger = logging.getLogger(__name__)
 

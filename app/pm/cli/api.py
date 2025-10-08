@@ -1,6 +1,7 @@
 # pylint: disable=import-outside-toplevel
 import argparse
 import json
+import logging
 import multiprocessing
 import os
 from collections.abc import Generator
@@ -11,20 +12,31 @@ __all__ = ('add_api_args',)
 
 
 def run_api_server(args: argparse.Namespace) -> None:
-    from gunicorn.app.base import BaseApplication
+    from gunicorn.app.base import Arbiter, BaseApplication
 
     workers = args.workers
     if workers == 0:
         workers = max(multiprocessing.cpu_count() - 1, 1)
 
-    def on_starting(server: Any) -> None:  # pylint: disable=unused-argument  # noqa: ARG001
-        from pm.logging import configure_logging
+    def on_starting(arbiter: Arbiter) -> None:  # pylint: disable=unused-argument
+        from pm.config import LOG_FORMAT, LOG_LEVEL
+        from pm.db.version import check_database_version
+        from pm.logging import setup_logging
 
-        configure_logging()
-
-        from pm.db import check_database_version
+        setup_logging(
+            'pm',
+            level=LOG_LEVEL,
+            format_type=LOG_FORMAT,
+        )
 
         check_database_version()
+
+        logger = logging.getLogger('pm.api.startup')
+        logger.info(
+            'Starting API server on %s with %s workers',
+            arbiter.address,
+            arbiter.num_workers,
+        )
 
     class StandaloneApplication(BaseApplication):
         def __init__(self, app_module: str, options: dict) -> None:
@@ -52,6 +64,7 @@ def run_api_server(args: argparse.Namespace) -> None:
             'forwarded_allow_ips': args.trusted_proxy,
             'timeout': 120,
             'keepalive': 5,
+            'loglevel': 'error',
         },
     ).run()
 

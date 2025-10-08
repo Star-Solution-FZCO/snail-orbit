@@ -1,6 +1,8 @@
 # pylint: disable=import-outside-toplevel
 import argparse
 import asyncio
+import logging
+import sys
 
 __all__ = ('add_tasks_args',)
 
@@ -10,16 +12,24 @@ __all__ = ('add_tasks_args',)
 def run_worker(args: argparse.Namespace) -> None:
     from taskiq.api import run_receiver_task
 
+    from pm.logging import LogFormat, setup_logging
     from pm.tasks.app import broker, import_all_tasks
+    from pm.tasks.logging.context import tasks_context
 
     async def start_worker() -> None:
-        import sys
+        # Set up contextual logging for tasks
+        setup_logging(
+            logger_name='pm',
+            context_var=tasks_context,
+            prefix_keys=('task_id',),
+            suffix_keys=('task_name',),
+            format_type=LogFormat.SIMPLE,
+        )
 
-        from pm.logging import configure_logging, get_logger
+        # Also set up basic logging for Taskiq framework logs
+        setup_logging(logger_name='taskiq', format_type=LogFormat.SIMPLE)
 
-        configure_logging()
-        logger = get_logger('taskiq.worker.startup')
-
+        logger = logging.getLogger('pm.tasks.worker.startup')
         import_all_tasks()
 
         logger.info('Starting taskiq worker...')
@@ -49,15 +59,24 @@ def run_worker(args: argparse.Namespace) -> None:
 def run_scheduler(args: argparse.Namespace) -> None:
     from taskiq.api import run_scheduler_task
 
+    from pm.logging import LogFormat, setup_logging
     from pm.tasks.app import import_all_tasks, scheduler
+    from pm.tasks.logging.context import tasks_context
 
     async def start_scheduler() -> None:
-        import sys
+        # Set up contextual logging for tasks
+        setup_logging(
+            logger_name='pm',
+            context_var=tasks_context,
+            prefix_keys=('task_id',),
+            suffix_keys=('task_name',),
+            format_type=LogFormat.SIMPLE,
+        )
 
-        from pm.logging import configure_logging, get_logger
+        # Also set up basic logging for Taskiq framework logs
+        setup_logging(logger_name='taskiq', format_type=LogFormat.SIMPLE)
 
-        configure_logging()
-        logger = get_logger('taskiq.scheduler.startup')
+        logger = logging.getLogger('pm.tasks.scheduler.startup')
 
         import_all_tasks()
 
@@ -84,13 +103,24 @@ def run_scheduler(args: argparse.Namespace) -> None:
 
 
 def run_notification_processor(args: argparse.Namespace) -> None:
+    from pm.logging import LogFormat, setup_logging
     from pm.tasks.batch_processor import main
+    from pm.tasks.logging.context import tasks_context
 
     async def start_notification_processor() -> None:
-        from pm.logging import configure_logging, get_logger
+        # Set up contextual logging for tasks
+        setup_logging(
+            logger_name='pm',
+            context_var=tasks_context,
+            prefix_keys=('task_id',),
+            suffix_keys=('task_name',),
+            format_type=LogFormat.SIMPLE,
+        )
 
-        configure_logging()
-        logger = get_logger('taskiq.notification_processor.startup')
+        # Also set up basic logging for Taskiq framework logs
+        setup_logging(logger_name='taskiq', format_type=LogFormat.SIMPLE)
+
+        logger = logging.getLogger('pm.tasks.notification_processor.startup')
 
         logger.info('Starting notification batch processor...')
 
