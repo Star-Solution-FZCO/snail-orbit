@@ -7,4 +7,7 @@
     window["env"]["ENVIRONMENT"] = "${ENVIRONMENT}";
     window["env"]["SENTRY_DSN"] = "${SENTRY_DSN}";
     window["env"]["SENTRY_ENVIRONMENT"] = "${SENTRY_ENVIRONMENT}";
+    window["env"]["FAVICON_URL"] = "${FAVICON_URL}";
+    window["env"]["APP_TITLE"] = "${APP_TITLE}";
+    window["env"]["APP_TITLE_PREFIX"] = "${APP_TITLE_PREFIX}";
 })(this);

@@ -4,53 +4,19 @@ declare global {
             API_URL?: string;
             EVENTS_URL?: string;
             APP_VERSION?: string;
-            ENVIRONMENT?: string;
             SENTRY_DSN?: string;
             SENTRY_ENVIRONMENT?: string;
+            FAVICON_URL?: string;
+            APP_TITLE?: string;
+            APP_TITLE_PREFIX?: string;
         };
     }
 }
 
-const META_CONFIG = {
-    dev: {
-        title: "[dev] Snail Orbit",
-        favicon: "/favicon-dev.ico",
-    },
-    test: {
-        title: "[test] Snail Orbit",
-        favicon: "/favicon-test.ico",
-    },
-    prod: {
-        title: "Snail Orbit",
-        favicon: "/favicon.ico",
-    },
-} as const;
-
-type Environment = keyof typeof META_CONFIG;
-
-const getEnvironment = (): Environment => {
-    const env = (window?.env?.ENVIRONMENT ||
-        import.meta.env.VITE_ENVIRONMENT) as Environment;
-
-    if (env && env in META_CONFIG) {
-        return env;
-    }
-
-    // fallback
-    const hostname = window.location.hostname;
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-        return "dev";
-    }
-    if (hostname.includes("test")) {
-        return "test";
-    }
-
-    return "prod";
-};
-
-export const ENVIRONMENT = getEnvironment();
-
-const metaConfig = META_CONFIG[ENVIRONMENT];
+const DEFAULT_FAVICON_URL = import.meta.env.DEV
+    ? "/favicon-pink.ico"
+    : "/favicon.ico";
+const DEFAULT_APP_PREFIX = import.meta.env.DEV ? "dev" : "";
 
 // variables
 export const API_URL =
@@ -66,11 +32,21 @@ export const SENTRY_ENVIRONMENT =
     window?.env?.SENTRY_ENVIRONMENT ||
     import.meta.env.VITE_SENTRY_ENVIRONMENT ||
     "dev";
-export const APP_TITLE = metaConfig.title;
-export const FAVICON_URL = metaConfig.favicon;
+export const APP_TITLE_PREFIX =
+    window?.env?.APP_TITLE_PREFIX ||
+    import.meta.env.VITE_APP_TITLE_PREFIX ||
+    DEFAULT_APP_PREFIX;
+export const APP_TITLE =
+    window?.env?.APP_TITLE || import.meta.env.VITE_APP_TITLE || "Snail Orbit";
+export const FAVICON_URL =
+    window?.env?.FAVICON_URL ||
+    import.meta.env.VITE_FAVICON_URL ||
+    DEFAULT_FAVICON_URL;
 
 const setPageMeta = () => {
-    document.title = APP_TITLE;
+    document.title = APP_TITLE_PREFIX
+        ? `[${APP_TITLE_PREFIX}] ${APP_TITLE}`
+        : APP_TITLE;
 
     const links = document.querySelectorAll("link[rel*='icon']");
 

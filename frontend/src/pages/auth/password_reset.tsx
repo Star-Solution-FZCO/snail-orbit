@@ -8,6 +8,7 @@ import {
     Typography,
 } from "@mui/material";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { FAVICON_URL } from "app/config";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -69,7 +70,7 @@ const PasswordReset = () => {
                 <Box display="flex" flexDirection="column" alignItems="center">
                     <Avatar
                         sx={{ mb: 2, bgcolor: "#F07167" }}
-                        src="/favicon.ico"
+                        src={FAVICON_URL}
                     />
 
                     <Typography variant="h5">
