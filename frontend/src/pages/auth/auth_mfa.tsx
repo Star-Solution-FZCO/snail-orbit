@@ -7,6 +7,7 @@ import {
     Typography,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { FAVICON_URL } from "app/config";
 import type { FC } from "react";
 import { useState } from "react";
 import type { SubmitHandler } from "react-hook-form";
@@ -64,7 +65,7 @@ export const MFAView: FC = () => {
                 <Box display="flex" flexDirection="column" alignItems="center">
                     <Avatar
                         sx={{ mb: 2, bgcolor: "#F07167" }}
-                        src="/favicon.ico"
+                        src={FAVICON_URL}
                     />
 
                     <Typography variant="h5">{t("auth.mfa")}</Typography>
