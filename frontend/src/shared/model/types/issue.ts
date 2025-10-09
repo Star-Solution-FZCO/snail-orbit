@@ -2,6 +2,7 @@ import type {
     FavoriteFilterOutput,
     IssueAttachmentBody,
     IssueAttachmentOut,
+    IssueAttachmentWithSourceOutput,
     IssueChangeOutputRootModel,
     IssueCreate,
     IssueDraftOutput,
@@ -33,6 +34,7 @@ export type IssueHistoryT = IssueHistoryOutput;
 
 export type IssueAttachmentBodyT = IssueAttachmentBody;
 export type IssueAttachmentT = IssueAttachmentOut;
+export type IssueAttachmentWithSourceT = IssueAttachmentWithSourceOutput;
 
 export type IssueChangeT = IssueChangeOutputRootModel;
 export type IssueFieldChangeT = IssueFieldChangeOutputRootModel;

@@ -73,13 +73,12 @@ const CommentCard: FC<CommentCardProps> = ({
     };
 
     const handleClickDeleteAttachment = (id: string, filename: string) => {
-        setSelectedAttachment({ id, filename, type: "server" });
+        setSelectedAttachment({ id, filename });
         setOpenDeleteDialog(true);
     };
 
     const deleteAttachment = () => {
         if (!selectedAttachment) return;
-        if (selectedAttachment.type !== "server") return;
 
         updateComment({
             id: issueId,

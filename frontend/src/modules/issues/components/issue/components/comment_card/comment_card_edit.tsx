@@ -1,6 +1,6 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { Box, Button } from "@mui/material";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
     CommentT,
@@ -35,8 +35,10 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
         onClose,
     } = props;
     const { t } = useTranslation();
+
     const [text, setText] = useState(commentText);
     const [spentTime, setSpentTime] = useState(comment.spent_time);
+    const [isFocused, setIsFocused] = useState(false);
 
     const author = comment.author;
     const attachmentsExists = comment.attachments.length > 0;
@@ -46,11 +48,8 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
         onClose?.();
     };
 
-    const handleChangeFileInput = useCallback(
-        async (event: ChangeEvent<HTMLInputElement>) => {
-            const files = event.target.files;
-            if (!files) return;
-
+    const handleUploadFiles = useCallback(
+        async (files: File[]) => {
             const newAttachments = await Promise.all(
                 Array.from(files).map(onUploadAttachment),
             );
@@ -62,6 +61,48 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
         [onUploadAttachment, updateComment, comment.attachments],
     );
 
+    const handleChangeFileInput = useCallback(
+        async (event: ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (!files) return;
+
+            await handleUploadFiles(Array.from(files));
+        },
+        [handleUploadFiles],
+    );
+
+    const handlePaste = useCallback(
+        async (event: ClipboardEvent) => {
+            const clipboardItems = event.clipboardData?.items;
+
+            if (!clipboardItems) return;
+
+            const files = Array.from(clipboardItems)
+                .map((item) => item.getAsFile())
+                .filter((file) => !!file);
+
+            if (!files.length) return;
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            await handleUploadFiles(files);
+        },
+        [handleUploadFiles],
+    );
+
+    useEffect(() => {
+        if (isFocused) {
+            window.addEventListener("paste", handlePaste, { capture: true });
+
+            return () => {
+                window.removeEventListener("paste", handlePaste, {
+                    capture: true,
+                });
+            };
+        }
+    }, [handlePaste, isFocused]);
+
     return (
         <Box display="flex" flexDirection="column" pl={1} py={0.5}>
             <Box display="flex" gap={2}>
@@ -71,6 +112,8 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
                     <MDEditor
                         value={text}
                         onChange={setText}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
                         placeholder={t("issues.comments.write")}
                         autoFocus
                         autoHeight

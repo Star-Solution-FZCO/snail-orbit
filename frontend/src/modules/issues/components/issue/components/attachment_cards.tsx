@@ -4,7 +4,10 @@ import { Box, Checkbox, Tooltip, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "shared/model";
-import type { IssueAttachmentT } from "shared/model/types";
+import type {
+    IssueAttachmentT,
+    IssueAttachmentWithSourceT,
+} from "shared/model/types";
 import { useLightbox } from "shared/ui/lightbox";
 
 type BaseAttachmentCardProps = {
@@ -75,18 +78,6 @@ const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
                             onDelete();
                         }}
                         fontSize="small"
-                    />
-                )}
-
-                <Box flex={1} />
-
-                {selectionEnabled && (
-                    <Checkbox
-                        sx={{ flexShrink: 0, p: 0, borderRadius: 1 }}
-                        checked={selected}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={onSelect}
-                        size="small"
                     />
                 )}
             </>
@@ -194,7 +185,7 @@ const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
                         justifyContent: "space-between",
                         p: 1.5,
                         backgroundColor: "background.default",
-                        opacity: 0.9,
+                        opacity: 0.8,
                     }}
                 >
                     {filenameCaption}
@@ -203,6 +194,26 @@ const BaseAttachmentCard: FC<BaseAttachmentCardProps> = ({
                         {controls}
                     </Box>
                 </Box>
+
+                {selectionEnabled && (
+                    <Checkbox
+                        sx={{
+                            "&.MuiCheckbox-root": {
+                                bgcolor: "background.default",
+                                opacity: 0.8,
+                            },
+                            position: "absolute",
+                            right: 12,
+                            bottom: 12,
+                            p: 0,
+                            borderRadius: 1,
+                        }}
+                        checked={selected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={onSelect}
+                        size="small"
+                    />
+                )}
             </Box>
         </Tooltip>
     );
@@ -240,7 +251,7 @@ const BrowserFileCard: FC<BrowserFileCardProps> = ({ file, onDelete }) => {
 };
 
 interface IAttachmentCardProps {
-    attachment: IssueAttachmentT;
+    attachment: IssueAttachmentT | IssueAttachmentWithSourceT;
     onDelete: () => void;
     onDownload: (attachment: IssueAttachmentT) => void;
     onSelect: (id: string) => void;
@@ -280,6 +291,11 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
         onDownload(attachment);
     };
 
+    const sourceType =
+        "source_type" in attachment ? attachment.source_type : "issue";
+    const canDelete =
+        user?.id === attachment.author.id && sourceType === "issue";
+
     return (
         <BaseAttachmentCard
             filename={attachment.name}
@@ -289,7 +305,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
             onDownload={handleDownload}
             onDelete={onDelete}
             onSelect={() => onSelect(attachment.id)}
-            canDelete={user?.id === attachment.author.id}
+            canDelete={canDelete}
             selectionEnabled={selectionEnabled}
             selected={selected}
         />
