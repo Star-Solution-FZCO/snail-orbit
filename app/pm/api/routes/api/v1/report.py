@@ -50,6 +50,8 @@ OPTION_BASED_FIELD_TYPES = (
     m.CustomFieldTypeT.VERSION_MULTI,
     m.CustomFieldTypeT.OWNED,
     m.CustomFieldTypeT.OWNED_MULTI,
+    m.CustomFieldTypeT.SPRINT,
+    m.CustomFieldTypeT.SPRINT_MULTI,
 )
 
 USER_BASED_FIELD_TYPES = (
@@ -62,6 +64,7 @@ MULTI_TO_SINGLE_FIELD_TYPE_MAPPING = {
     m.CustomFieldTypeT.ENUM_MULTI: m.CustomFieldTypeT.ENUM,
     m.CustomFieldTypeT.VERSION_MULTI: m.CustomFieldTypeT.VERSION,
     m.CustomFieldTypeT.OWNED_MULTI: m.CustomFieldTypeT.OWNED,
+    m.CustomFieldTypeT.SPRINT_MULTI: m.CustomFieldTypeT.SPRINT,
 }
 
 

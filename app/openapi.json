@@ -41957,6 +41957,9 @@
           },
           {
             "$ref": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput"
           }
         ],
         "title": "BoardColumnOutputRootModel",
@@ -41964,6 +41967,7 @@
           "propertyName": "type",
           "mapping": {
             "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput",
             "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
             "version": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
           }
@@ -42254,6 +42258,9 @@
             "$ref": "#/components/schemas/DateCustomFieldGroupWithValuesOutput"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput"
+          },
+          {
             "$ref": "#/components/schemas/DateTimeCustomFieldGroupWithValuesOutput"
           },
           {
@@ -42279,6 +42286,7 @@
             "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
             "float": "#/components/schemas/FloatCustomFieldGroupWithValuesOutput",
             "integer": "#/components/schemas/IntegerCustomFieldGroupWithValuesOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput",
             "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
             "string": "#/components/schemas/StringCustomFieldGroupWithValuesOutput",
             "user": "#/components/schemas/UserCustomFieldGroupWithValuesOutput",
@@ -51383,7 +51391,7 @@
           },
           "filters": {
             "items": {
-              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__SprintCustomFieldParsed__SprintMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
             },
             "type": "array",
             "title": "Filters",
@@ -51391,7 +51399,7 @@
           },
           "available_fields": {
             "items": {
-              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__SprintCustomFieldAvailable__SprintMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
             },
             "type": "array",
             "title": "Available Fields",
@@ -52108,7 +52116,7 @@
         "type": "object",
         "title": "RoleUpdate"
       },
-      "RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+      "RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__SprintCustomFieldAvailable__SprintMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/StringCustomFieldAvailable"
@@ -52159,6 +52167,12 @@
             "$ref": "#/components/schemas/OwnedMultiCustomFieldAvailable"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldAvailable"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldAvailable"
+          },
+          {
             "$ref": "#/components/schemas/ProjectFieldAvailable"
           },
           {
@@ -52168,7 +52182,7 @@
             "$ref": "#/components/schemas/TagFieldAvailable"
           }
         ],
-        "title": "RootModel[Annotated[Union[StringCustomFieldAvailable, IntegerCustomFieldAvailable, FloatCustomFieldAvailable, BooleanCustomFieldAvailable, DateCustomFieldAvailable, DateTimeCustomFieldAvailable, DurationCustomFieldAvailable, EnumCustomFieldAvailable, EnumMultiCustomFieldAvailable, StateCustomFieldAvailable, VersionCustomFieldAvailable, VersionMultiCustomFieldAvailable, UserCustomFieldAvailable, UserMultiCustomFieldAvailable, OwnedCustomFieldAvailable, OwnedMultiCustomFieldAvailable, ProjectFieldAvailable, HashtagFieldAvailable, TagFieldAvailable], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "title": "RootModel[Annotated[Union[StringCustomFieldAvailable, IntegerCustomFieldAvailable, FloatCustomFieldAvailable, BooleanCustomFieldAvailable, DateCustomFieldAvailable, DateTimeCustomFieldAvailable, DurationCustomFieldAvailable, EnumCustomFieldAvailable, EnumMultiCustomFieldAvailable, StateCustomFieldAvailable, VersionCustomFieldAvailable, VersionMultiCustomFieldAvailable, UserCustomFieldAvailable, UserMultiCustomFieldAvailable, OwnedCustomFieldAvailable, OwnedMultiCustomFieldAvailable, SprintCustomFieldAvailable, SprintMultiCustomFieldAvailable, ProjectFieldAvailable, HashtagFieldAvailable, TagFieldAvailable], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
         "discriminator": {
           "propertyName": "type",
           "mapping": {
@@ -52184,6 +52198,8 @@
             "owned": "#/components/schemas/OwnedCustomFieldAvailable",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldAvailable",
             "project": "#/components/schemas/ProjectFieldAvailable",
+            "sprint": "#/components/schemas/SprintCustomFieldAvailable",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldAvailable",
             "state": "#/components/schemas/StateCustomFieldAvailable",
             "string": "#/components/schemas/StringCustomFieldAvailable",
             "tag": "#/components/schemas/TagFieldAvailable",
@@ -52194,7 +52210,7 @@
           }
         }
       },
-      "RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+      "RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__SprintCustomFieldParsed__SprintMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/StringCustomFieldParsed"
@@ -52245,6 +52261,12 @@
             "$ref": "#/components/schemas/OwnedMultiCustomFieldParsed"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldParsed"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldParsed"
+          },
+          {
             "$ref": "#/components/schemas/ProjectFieldParsed"
           },
           {
@@ -52254,7 +52276,7 @@
             "$ref": "#/components/schemas/TagFieldParsed"
           }
         ],
-        "title": "RootModel[Annotated[Union[StringCustomFieldParsed, IntegerCustomFieldParsed, FloatCustomFieldParsed, BooleanCustomFieldParsed, DateCustomFieldParsed, DateTimeCustomFieldParsed, DurationCustomFieldParsed, EnumCustomFieldParsed, EnumMultiCustomFieldParsed, StateCustomFieldParsed, VersionCustomFieldParsed, VersionMultiCustomFieldParsed, UserCustomFieldParsed, UserMultiCustomFieldParsed, OwnedCustomFieldParsed, OwnedMultiCustomFieldParsed, ProjectFieldParsed, HashtagFieldParsed, TagFieldParsed], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "title": "RootModel[Annotated[Union[StringCustomFieldParsed, IntegerCustomFieldParsed, FloatCustomFieldParsed, BooleanCustomFieldParsed, DateCustomFieldParsed, DateTimeCustomFieldParsed, DurationCustomFieldParsed, EnumCustomFieldParsed, EnumMultiCustomFieldParsed, StateCustomFieldParsed, VersionCustomFieldParsed, VersionMultiCustomFieldParsed, UserCustomFieldParsed, UserMultiCustomFieldParsed, OwnedCustomFieldParsed, OwnedMultiCustomFieldParsed, SprintCustomFieldParsed, SprintMultiCustomFieldParsed, ProjectFieldParsed, HashtagFieldParsed, TagFieldParsed], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
         "discriminator": {
           "propertyName": "type",
           "mapping": {
@@ -52270,6 +52292,8 @@
             "owned": "#/components/schemas/OwnedCustomFieldParsed",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldParsed",
             "project": "#/components/schemas/ProjectFieldParsed",
+            "sprint": "#/components/schemas/SprintCustomFieldParsed",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldParsed",
             "state": "#/components/schemas/StateCustomFieldParsed",
             "string": "#/components/schemas/StringCustomFieldParsed",
             "tag": "#/components/schemas/TagFieldParsed",
@@ -52498,6 +52522,39 @@
         ],
         "title": "ShortOptionOutput"
       },
+      "SprintCustomFieldAvailable": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "gid"
+        ],
+        "title": "SprintCustomFieldAvailable"
+      },
       "SprintCustomFieldGroupOutput": {
         "properties": {
           "gid": {
@@ -52578,6 +52635,41 @@
         ],
         "title": "SprintCustomFieldGroupWithReportValuesOutput",
         "description": "Report-specific sprint custom field group with simplified values."
+      },
+      "SprintCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Sprint option values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "SprintCustomFieldGroupWithValuesOutput"
       },
       "SprintCustomFieldOutput": {
         "properties": {
@@ -52668,6 +52760,50 @@
         ],
         "title": "SprintCustomFieldOutput"
       },
+      "SprintCustomFieldParsed": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "gid"
+        ],
+        "title": "SprintCustomFieldParsed"
+      },
       "SprintCustomFieldValueOutput": {
         "properties": {
           "id": {
@@ -52708,6 +52844,39 @@
           "value"
         ],
         "title": "SprintCustomFieldValueOutput"
+      },
+      "SprintMultiCustomFieldAvailable": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "gid"
+        ],
+        "title": "SprintMultiCustomFieldAvailable"
       },
       "SprintMultiCustomFieldGroupOutput": {
         "properties": {
@@ -52882,6 +53051,50 @@
           "options"
         ],
         "title": "SprintMultiCustomFieldOutput"
+      },
+      "SprintMultiCustomFieldParsed": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "gid"
+        ],
+        "title": "SprintMultiCustomFieldParsed"
       },
       "SprintMultiCustomFieldValueOutput": {
         "properties": {
