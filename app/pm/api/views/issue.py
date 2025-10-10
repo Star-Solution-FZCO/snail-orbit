@@ -26,6 +26,8 @@ __all__ = (
     'CustomFieldValueOutT',
     'FavoriteFilterOutput',
     'FavoriteFilterType',
+    'IssueAttachmentBatchCreateBody',
+    'IssueAttachmentBatchDeleteBody',
     'IssueAttachmentBody',
     'IssueAttachmentOut',
     'IssueAttachmentWithSourceOutput',
@@ -88,6 +90,16 @@ class ProjectField(BaseModel):
 class IssueAttachmentBody(BaseModel):
     id: UUID
     encryption: list[m.EncryptionMeta] | None = None
+
+
+class IssueAttachmentBatchCreateBody(BaseModel):
+    attachments: list[IssueAttachmentBody] = Field(
+        description='List of attachments to create'
+    )
+
+
+class IssueAttachmentBatchDeleteBody(BaseModel):
+    attachment_ids: list[UUID] = Field(description='List of attachment IDs to delete')
 
 
 class AttachmentSourceTypeT(StrEnum):

@@ -23,6 +23,8 @@ from pm.api.views.encryption import EncryptedObject
 from pm.api.views.error_responses import READ_ERRORS, WRITE_ERRORS, error_responses
 from pm.api.views.issue import (
     AttachmentSourceTypeT,
+    IssueAttachmentBatchCreateBody,
+    IssueAttachmentBatchDeleteBody,
     IssueAttachmentBody,
     IssueAttachmentWithSourceOutput,
     IssueDraftOutput,
@@ -31,6 +33,9 @@ from pm.api.views.issue import (
 )
 from pm.api.views.output import (
     BaseListOutput,
+    BatchFailureItem,
+    BatchOperationOutput,
+    BatchSuccessItem,
     ErrorOutput,
     ModelIdOutput,
     SuccessOutput,
@@ -1671,6 +1676,204 @@ async def delete_issue_attachment(
     )
 
     return UUIDOutput.make(attachment_id)
+
+
+@router.post(
+    '/{issue_id_or_alias}/attachments/batch-create',
+    status_code=HTTPStatus.MULTI_STATUS,
+    responses=error_responses(*WRITE_ERRORS),
+)
+async def batch_create_issue_attachments(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueAttachmentBatchCreateBody,
+) -> BatchOperationOutput[IssueAttachmentWithSourceOutput, IssueAttachmentBody]:
+    """Create multiple attachments for an issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE)
+    )
+
+    if not body.attachments:
+        return BatchOperationOutput.make(successes=[], failures=[])
+
+    now = utcnow()
+    existing_attachment_ids = {a.id for a in obj.attachments}
+    successes = []
+    failures = []
+
+    try:
+        file_ids = [a.id for a in body.attachments]
+        new_file_ids = [fid for fid in file_ids if fid not in existing_attachment_ids]
+        file_data = await resolve_files(new_file_ids)
+    except ValueError as err:
+        failures.extend(
+            [
+                BatchFailureItem(
+                    payload=attachment,
+                    error_code=HTTPStatus.BAD_REQUEST,
+                    error_messages=[str(err)],
+                )
+                for attachment in body.attachments
+            ]
+        )
+        return BatchOperationOutput.make(successes=successes, failures=failures)
+
+    for attachment_body in body.attachments:
+        try:
+            if attachment_body.id in existing_attachment_ids:
+                failures.append(
+                    BatchFailureItem(
+                        payload=attachment_body,
+                        error_code=HTTPStatus.CONFLICT,
+                        error_messages=['Attachment already exists'],
+                    )
+                )
+                continue
+
+            if attachment_body.id not in file_data:
+                failures.append(
+                    BatchFailureItem(
+                        payload=attachment_body,
+                        error_code=HTTPStatus.BAD_REQUEST,
+                        error_messages=['File not found'],
+                    )
+                )
+                continue
+
+            file_info = file_data[attachment_body.id]
+            attachment = m.IssueAttachment(
+                id=attachment_body.id,
+                name=file_info.name,
+                size=file_info.size,
+                content_type=file_info.content_type,
+                author=m.UserLinkField.from_obj(user_ctx.user),
+                created_at=now,
+                encryption=attachment_body.encryption,
+            )
+
+            obj.attachments.append(attachment)
+            attachment_out = await IssueAttachmentWithSourceOutput.from_obj_with_source(
+                attachment, AttachmentSourceTypeT.ISSUE, obj.id
+            )
+            successes.append(BatchSuccessItem(payload=attachment_out))
+
+            if not attachment.encryption:
+                await send_task(
+                    Task(type=TaskType.OCR, data={'attachment_id': str(attachment.id)})
+                )
+
+        except (ValueError, KeyError, AttributeError) as e:
+            failures.append(
+                BatchFailureItem(
+                    payload=attachment_body,
+                    error_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    error_messages=[str(e)],
+                )
+            )
+
+    if successes:
+        obj.updated_at = now
+        obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
+        await obj.replace()
+
+        await schedule_batched_notification(
+            'update',
+            obj.subject,
+            obj.id_readable,
+            [str(s) for s in obj.subscribers],
+            str(obj.project.id),
+            author=user_ctx.user.email,
+            field_changes=[],
+        )
+
+        await send_event(
+            Event(
+                type=EventType.ISSUE_UPDATE,
+                data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+            ),
+        )
+
+    return BatchOperationOutput.make(successes=successes, failures=failures)
+
+
+@router.post(
+    '/{issue_id_or_alias}/attachments/batch-delete',
+    status_code=HTTPStatus.MULTI_STATUS,
+    responses=error_responses(*WRITE_ERRORS),
+)
+async def batch_delete_issue_attachments(
+    issue_id_or_alias: PydanticObjectId | str,
+    body: IssueAttachmentBatchDeleteBody,
+) -> BatchOperationOutput[UUID, UUID]:
+    """Delete multiple attachments from an issue"""
+    obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
+    if not obj:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
+
+    user_ctx = current_user()
+    user_ctx.validate_issue_permission(
+        obj, PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE)
+    )
+
+    if not body.attachment_ids:
+        return BatchOperationOutput.make(successes=[], failures=[])
+
+    existing_attachment_ids = {a.id for a in obj.attachments}
+    successes = []
+    failures = []
+
+    for attachment_id in body.attachment_ids:
+        try:
+            if attachment_id not in existing_attachment_ids:
+                failures.append(
+                    BatchFailureItem(
+                        payload=attachment_id,
+                        error_code=HTTPStatus.NOT_FOUND,
+                        error_messages=['Attachment not found'],
+                    )
+                )
+                continue
+
+            obj.attachments = [a for a in obj.attachments if a.id != attachment_id]
+            successes.append(BatchSuccessItem(payload=attachment_id))
+
+        except (ValueError, KeyError, AttributeError) as e:
+            failures.append(
+                BatchFailureItem(
+                    payload=attachment_id,
+                    error_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    error_messages=[str(e)],
+                )
+            )
+
+    if successes:
+        now = utcnow()
+        obj.updated_at = now
+        obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
+        await obj.replace()
+
+        await schedule_batched_notification(
+            'update',
+            obj.subject,
+            obj.id_readable,
+            [str(s) for s in obj.subscribers],
+            str(obj.project.id),
+            author=user_ctx.user.email,
+            field_changes=[],
+        )
+
+        await send_event(
+            Event(
+                type=EventType.ISSUE_UPDATE,
+                data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
+            ),
+        )
+
+    return BatchOperationOutput.make(successes=successes, failures=failures)
 
 
 async def validate_custom_fields_values(
