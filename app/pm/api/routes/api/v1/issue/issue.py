@@ -174,7 +174,7 @@ async def list_issues(
     ]
     q = q.aggregate(
         pipeline,
-        projection_model=m.Issue.get_ro_projection_model(),
+        projection_model=m.IssueRO,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
@@ -1881,7 +1881,7 @@ async def validate_custom_fields_values(
     project: m.Project,
     issue: m.Issue | None = None,
     ignore_none_errors: bool = False,
-) -> tuple[list[m.CustomFieldValue], list[m.CustomFieldValidationError]]:
+) -> tuple[list[m.CustomFieldValueUnion], list[m.CustomFieldValidationError]]:
     project_fields = {f.name: f for f in project.custom_fields}
     issue_fields = {f.name: f for f in issue.fields} if issue else {}
     for f_name in fields:
@@ -1909,7 +1909,7 @@ async def validate_custom_fields_values(
             val_ = err.value
             errors.append(err)
         results.append(
-            m.CustomFieldValue(
+            m.get_cf_value_class(f.type)(
                 id=f.id,
                 gid=f.gid,
                 name=f.name,
@@ -1921,9 +1921,9 @@ async def validate_custom_fields_values(
 
 
 def filter_valid_project_fields(
-    fields: list[m.CustomFieldValue],
+    fields: list[m.CustomFieldValueUnion],
     project: m.Project | None,
-) -> list[m.CustomFieldValue]:
+) -> list[m.CustomFieldValueUnion]:
     if not project:
         return []
     project_field_ids = {f.id for f in project.custom_fields}

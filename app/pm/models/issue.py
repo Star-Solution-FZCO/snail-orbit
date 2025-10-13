@@ -6,12 +6,11 @@ from uuid import UUID, uuid4
 
 import beanie.operators as bo
 import pymongo
-from beanie import Document, Indexed, PydanticObjectId
+from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Extra, Field
 
 from pm.permissions import ProjectPermissions
 from pm.utils.dateutils import utcnow
-from pm.utils.document import DocumentWithReadOnlyProjection
 
 from ._audit import audited_model
 from ._encryption import EncryptionMeta
@@ -19,8 +18,8 @@ from .custom_fields import (
     CustomField,
     CustomFieldLink,
     CustomFieldTypeT,
-    CustomFieldValue,
     CustomFieldValueT,
+    CustomFieldValueUnion,
     EnumOption,
     OwnedOption,
     StateOption,
@@ -35,13 +34,18 @@ from .user import User, UserLinkField
 __all__ = (
     'Issue',
     'IssueAttachment',
+    'IssueAttachmentSchema',
+    'IssueBaseSchema',
     'IssueComment',
+    'IssueCommentSchema',
     'IssueDraft',
     'IssueFieldChange',
     'IssueHistoryRecord',
+    'IssueHistorySchema',
     'IssueInterlink',
     'IssueInterlinkTypeT',
     'IssueLinkField',
+    'IssueRO',
 )
 
 
@@ -142,8 +146,110 @@ class IssueHistoryRecord(BaseModel):
     is_hidden: bool = False
 
 
+class IssueHistorySchema(BaseModel):
+    history: Annotated[list[IssueHistoryRecord], Field(default_factory=list)]
+
+
+class IssueAttachmentSchema(BaseModel):
+    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
+
+
+class IssueCommentSchema(BaseModel):
+    comments: Annotated[list[IssueComment], Field(default_factory=list)]
+
+
+class IssueBaseSchema(BaseModel):
+    subject: str
+    text: str | None = None
+    aliases: Annotated[list[str], Field(default_factory=list)]
+
+    project: ProjectLinkField
+
+    fields: Annotated[
+        list[Annotated[CustomFieldValueUnion, Field(discriminator='type')]],
+        Field(default_factory=list),
+    ]
+    subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
+
+    created_by: UserLinkField
+    created_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+    updated_by: UserLinkField
+    updated_at: Annotated[datetime, Field(default_factory=utcnow)]
+
+    interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
+    tags: Annotated[list[TagLinkField], Field(default_factory=list)]
+    encryption: list[EncryptionMeta] | None = None
+
+    permissions: Annotated[list[ProjectPermission], Field(default_factory=list)]
+    disable_project_permissions_inheritance: bool = False
+
+    resolved_at: datetime | None = None
+    closed_at: datetime | None = None
+
+    @property
+    def id_readable(self) -> str:
+        return self.aliases[-1] if self.aliases else str(self.id)
+
+    @property
+    def is_resolved(self) -> bool:
+        return bool(self.resolved_at)
+
+    @property
+    def is_closed(self) -> bool:
+        return bool(self.closed_at)
+
+    @property
+    def has_custom_permissions(self) -> bool:
+        return len(self.permissions) > 0
+
+    def get_field_by_name(self, name: str) -> CustomFieldValueUnion | None:
+        return next((field for field in self.fields if field.name == name), None)
+
+    def get_field_by_id(self, id_: PydanticObjectId) -> CustomFieldValueUnion | None:
+        return next((field for field in self.fields if field.id == id_), None)
+
+    def get_field_by_gid(self, gid: str) -> CustomFieldValueUnion | None:
+        return next((field for field in self.fields if field.gid == gid), None)
+
+    def get_alias_by_slug(self, slug: str) -> str | None:
+        slug_pattern = re.compile(rf'^{slug}-\d+$')
+        return next(
+            (alias for alias in self.aliases if slug_pattern.fullmatch(alias)),
+            None,
+        )
+
+    def get_user_permissions(
+        self,
+        user: User,
+        all_group_ids: set[PydanticObjectId] | None = None,
+    ) -> set[ProjectPermissions]:
+        results = set()
+        if all_group_ids is None:
+            all_group_ids = {gr.id for gr in user.groups}
+        for perm in self.permissions:
+            if (
+                perm.target_type == PermissionTargetType.USER
+                and perm.target.id == user.id
+            ):
+                results.update(perm.role.permissions)
+                continue
+            if (
+                perm.target_type == PermissionTargetType.GROUP
+                and perm.target.id in all_group_ids
+            ):
+                results.update(perm.role.permissions)
+        return results
+
+
 @audited_model
-class Issue(DocumentWithReadOnlyProjection):
+class Issue(
+    Document,
+    IssueBaseSchema,
+    IssueHistorySchema,
+    IssueAttachmentSchema,
+    IssueCommentSchema,
+):
     class Settings:
         name = 'issues'
         use_revision = True
@@ -217,59 +323,6 @@ class Issue(DocumentWithReadOnlyProjection):
 
     class Config:
         extra = Extra.allow
-
-    subject: Annotated[str, Indexed(str)]
-    text: str | None = None
-    aliases: Annotated[list[str], Field(default_factory=list)]
-
-    project: ProjectLinkField
-    comments: Annotated[list[IssueComment], Field(default_factory=list)]
-    attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
-
-    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
-    history: Annotated[list[IssueHistoryRecord], Field(default_factory=list)]
-    subscribers: Annotated[list[PydanticObjectId], Field(default_factory=list)]
-
-    created_by: UserLinkField
-    created_at: Annotated[datetime, Field(default_factory=utcnow)]
-
-    updated_by: UserLinkField
-    updated_at: Annotated[datetime, Field(default_factory=utcnow)]
-
-    interlinks: Annotated[list[IssueInterlink], Field(default_factory=list)]
-    tags: Annotated[list[TagLinkField], Field(default_factory=list)]
-    encryption: list[EncryptionMeta] | None = None
-
-    permissions: Annotated[list[ProjectPermission], Field(default_factory=list)]
-    disable_project_permissions_inheritance: bool = False
-
-    resolved_at: datetime | None = None
-    closed_at: datetime | None = None
-
-    @property
-    def id_readable(self) -> str:
-        return self.aliases[-1] if self.aliases else str(self.id)
-
-    @property
-    def is_resolved(self) -> bool:
-        return bool(self.resolved_at)
-
-    @property
-    def is_closed(self) -> bool:
-        return bool(self.closed_at)
-
-    @property
-    def has_custom_permissions(self) -> bool:
-        return len(self.permissions) > 0
-
-    def get_field_by_name(self, name: str) -> CustomFieldValue | None:
-        return next((field for field in self.fields if field.name == name), None)
-
-    def get_field_by_id(self, id_: PydanticObjectId) -> CustomFieldValue | None:
-        return next((field for field in self.fields if field.id == id_), None)
-
-    def get_field_by_gid(self, gid: str) -> CustomFieldValue | None:
-        return next((field for field in self.fields if field.gid == gid), None)
 
     def _fields_diff(
         self,
@@ -569,35 +622,6 @@ class Issue(DocumentWithReadOnlyProjection):
             {'$pull': {'permissions': {'role.id': role_id}}},
         )
 
-    def get_alias_by_slug(self, slug: str) -> str | None:
-        slug_pattern = re.compile(rf'^{slug}-\d+$')
-        return next(
-            (alias for alias in self.aliases if slug_pattern.fullmatch(alias)),
-            None,
-        )
-
-    def get_user_permissions(
-        self,
-        user: User,
-        all_group_ids: set[PydanticObjectId] | None = None,
-    ) -> set[ProjectPermissions]:
-        results = set()
-        if all_group_ids is None:
-            all_group_ids = {gr.id for gr in user.groups}
-        for perm in self.permissions:
-            if (
-                perm.target_type == PermissionTargetType.USER
-                and perm.target.id == user.id
-            ):
-                results.update(perm.role.permissions)
-                continue
-            if (
-                perm.target_type == PermissionTargetType.GROUP
-                and perm.target.id in all_group_ids
-            ):
-                results.update(perm.role.permissions)
-        return results
-
     @classmethod
     async def update_project_slug(
         cls,
@@ -659,6 +683,10 @@ class Issue(DocumentWithReadOnlyProjection):
             self.closed_at = now
 
 
+class IssueRO(IssueBaseSchema):
+    id: Annotated[PydanticObjectId, Field(alias='_id')]
+
+
 @audited_model
 class IssueDraft(Document):
     class Settings:
@@ -670,7 +698,10 @@ class IssueDraft(Document):
     subject: str | None = None
     text: str | None = None
     project: ProjectLinkField | None = None
-    fields: Annotated[list[CustomFieldValue], Field(default_factory=list)]
+    fields: Annotated[
+        list[Annotated[CustomFieldValueUnion, Field(discriminator='type')]],
+        Field(default_factory=list),
+    ]
     attachments: Annotated[list[IssueAttachment], Field(default_factory=list)]
     created_by: UserLinkField
     created_at: Annotated[datetime, Field(default_factory=utcnow)]

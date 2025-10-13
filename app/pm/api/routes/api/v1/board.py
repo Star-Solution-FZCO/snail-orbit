@@ -532,7 +532,7 @@ async def get_board_issues(
         non_swimlane = {col: [] for col in board.columns}
         swimlanes = {}
 
-    for issue in await q.project(m.Issue.get_ro_projection_model()).to_list():
+    for issue in await q.project(m.IssueRO).to_list():
         if board.swimlane_field and not (
             sl_field := issue.get_field_by_gid(board.swimlane_field.gid)
         ):

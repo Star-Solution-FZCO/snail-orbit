@@ -317,7 +317,9 @@ class IssueListOutput(BaseModel):
 
     @classmethod
     async def from_obj(
-        cls, obj: m.Issue, accessible_tag_ids: set[PydanticObjectId] | None = None
+        cls,
+        obj: m.IssueBaseSchema,
+        accessible_tag_ids: set[PydanticObjectId] | None = None,
     ) -> Self:
         user_ctx = current_user()
         user_permissions = obj.get_user_permissions(
