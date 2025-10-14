@@ -36,6 +36,8 @@ class QueryFieldTypeT(StrEnum):
     USER_MULTI = m.CustomFieldTypeT.USER_MULTI
     OWNED = m.CustomFieldTypeT.OWNED
     OWNED_MULTI = m.CustomFieldTypeT.OWNED_MULTI
+    SPRINT = m.CustomFieldTypeT.SPRINT
+    SPRINT_MULTI = m.CustomFieldTypeT.SPRINT_MULTI
 
     PROJECT = 'project'
     HASHTAG = 'hashtag'
@@ -133,6 +135,14 @@ class OwnedCustomFieldAvailable(CustomFieldGroupAvailable):
 
 class OwnedMultiCustomFieldAvailable(CustomFieldGroupAvailable):
     type: Literal[QueryFieldTypeT.OWNED_MULTI] = QueryFieldTypeT.OWNED_MULTI
+
+
+class SprintCustomFieldAvailable(CustomFieldGroupAvailable):
+    type: Literal[QueryFieldTypeT.SPRINT] = QueryFieldTypeT.SPRINT
+
+
+class SprintMultiCustomFieldAvailable(CustomFieldGroupAvailable):
+    type: Literal[QueryFieldTypeT.SPRINT_MULTI] = QueryFieldTypeT.SPRINT_MULTI
 
 
 class CustomFieldGroupParsed(BaseParsedObject):
@@ -236,6 +246,16 @@ class OwnedMultiCustomFieldParsed(CustomFieldGroupParsed):
     value: ShortOptionOutput | None
 
 
+class SprintCustomFieldParsed(CustomFieldGroupParsed):
+    type: Literal[QueryFieldTypeT.SPRINT] = QueryFieldTypeT.SPRINT
+    value: ShortOptionOutput | None
+
+
+class SprintMultiCustomFieldParsed(CustomFieldGroupParsed):
+    type: Literal[QueryFieldTypeT.SPRINT_MULTI] = QueryFieldTypeT.SPRINT_MULTI
+    value: ShortOptionOutput | None
+
+
 AvailableFieldRootModel = RootModel[
     Annotated[
         (
@@ -255,6 +275,8 @@ AvailableFieldRootModel = RootModel[
             | UserMultiCustomFieldAvailable
             | OwnedCustomFieldAvailable
             | OwnedMultiCustomFieldAvailable
+            | SprintCustomFieldAvailable
+            | SprintMultiCustomFieldAvailable
             | ProjectFieldAvailable
             | HashtagFieldAvailable
             | TagFieldAvailable
@@ -283,6 +305,8 @@ ParsedQueryObjectRootModel = RootModel[
             | UserMultiCustomFieldParsed
             | OwnedCustomFieldParsed
             | OwnedMultiCustomFieldParsed
+            | SprintCustomFieldParsed
+            | SprintMultiCustomFieldParsed
             | ProjectFieldParsed
             | HashtagFieldParsed
             | TagFieldParsed

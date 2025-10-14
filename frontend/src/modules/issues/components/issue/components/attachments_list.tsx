@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import type {
     IssueAttachmentBodyT,
     IssueAttachmentT,
+    IssueAttachmentWithSourceT,
     SelectedAttachmentT,
 } from "shared/model/types";
 import { useLSState } from "shared/utils/helpers/local-storage";
@@ -41,7 +42,7 @@ const CustomMenuItem = styled(MenuItem)(({ theme }) => ({
 }));
 
 type AttachmentsListProps = {
-    attachments: IssueAttachmentT[];
+    attachments: IssueAttachmentT[] | IssueAttachmentWithSourceT[];
     projectId?: string;
     onUpload: (
         attachment: IssueAttachmentBodyT[],

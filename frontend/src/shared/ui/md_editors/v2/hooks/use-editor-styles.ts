@@ -148,6 +148,11 @@ export const useEditorStyles = () => {
             listStylePosition: "inside",
         },
 
+         // Nested list items
+        ".editor-nested-listitem": {
+            listStyleType: "none",
+        },
+
         // Checklist
         ".editor-listitem-checked, .editor-listitem-unchecked": {
             position: "relative",

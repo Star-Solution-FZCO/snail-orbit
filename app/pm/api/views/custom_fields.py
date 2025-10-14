@@ -179,8 +179,6 @@ class SprintOptionOutput(BaseModel):
     is_completed: bool = False
     is_archived: bool = False
     color: str | None = None
-    planed_start_date: date | None = None
-    planed_end_date: date | None = None
     start_date: date | None = None
     end_date: date | None = None
     description: str | None = None
@@ -193,10 +191,6 @@ class SprintOptionOutput(BaseModel):
             is_completed=obj.is_completed,
             is_archived=obj.is_archived,
             color=obj.color,
-            planed_start_date=obj.planed_start_date.date()
-            if obj.planed_start_date
-            else None,
-            planed_end_date=obj.planed_end_date.date() if obj.planed_end_date else None,
             start_date=obj.start_date.date() if obj.start_date else None,
             end_date=obj.end_date.date() if obj.end_date else None,
             description=obj.description,

@@ -64,6 +64,10 @@ from pm.api.views.query_builder import (
     QueryBuilderInput,
     QueryBuilderOutput,
     QueryFieldTypeT,
+    SprintCustomFieldAvailable,
+    SprintCustomFieldParsed,
+    SprintMultiCustomFieldAvailable,
+    SprintMultiCustomFieldParsed,
     StateCustomFieldAvailable,
     StateCustomFieldParsed,
     StringCustomFieldAvailable,
@@ -100,6 +104,8 @@ OPTION_BASED_FIELD_TYPES = (
     m.CustomFieldTypeT.VERSION_MULTI,
     m.CustomFieldTypeT.OWNED,
     m.CustomFieldTypeT.OWNED_MULTI,
+    m.CustomFieldTypeT.SPRINT,
+    m.CustomFieldTypeT.SPRINT_MULTI,
 )
 
 USER_BASED_FIELD_TYPES = (
@@ -116,6 +122,10 @@ VERSION_OPTION_FIELD_TYPES = (
 OWNED_OPTION_FIELD_TYPES = (
     m.CustomFieldTypeT.OWNED,
     m.CustomFieldTypeT.OWNED_MULTI,
+)
+SPRINT_OPTION_FIELD_TYPES = (
+    m.CustomFieldTypeT.SPRINT,
+    m.CustomFieldTypeT.SPRINT_MULTI,
 )
 
 CUSTOM_FIELD_AVAILABLE_MAP = {
@@ -135,6 +145,8 @@ CUSTOM_FIELD_AVAILABLE_MAP = {
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldAvailable,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldAvailable,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldAvailable,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldAvailable,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldAvailable,
 }
 
 CUSTOM_FIELD_PARSED_MAP = {
@@ -154,6 +166,8 @@ CUSTOM_FIELD_PARSED_MAP = {
     m.CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldParsed,
     m.CustomFieldTypeT.OWNED: OwnedCustomFieldParsed,
     m.CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldParsed,
+    m.CustomFieldTypeT.SPRINT: SprintCustomFieldParsed,
+    m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldParsed,
 }
 
 
@@ -212,6 +226,8 @@ async def _collect_field_options(
                 all_options.extend(group_field.version_options or [])
             elif group_field.type in OWNED_OPTION_FIELD_TYPES:
                 all_options.extend(group_field.owned_options or [])
+            elif group_field.type in SPRINT_OPTION_FIELD_TYPES:
+                all_options.extend(group_field.options or [])
 
         return all_options
     except (AttributeError, ValueError):

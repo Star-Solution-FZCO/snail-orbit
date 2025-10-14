@@ -10,8 +10,6 @@ import {
     FormControlLabel,
     TextField,
 } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import type { FC } from "react";
 import { useEffect } from "react";
@@ -19,6 +17,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { SprintOptionT } from "shared/model/types";
 import { ColorInputField } from "shared/ui/color_picker/color_input_field";
+import { DateRangePicker } from "shared/ui/daterange";
 import * as yup from "yup";
 
 const sprintOptionSchema = yup.object().shape({
@@ -27,8 +26,6 @@ const sprintOptionSchema = yup.object().shape({
     color: yup.string().nullable().default(null),
     start_date: yup.string().nullable().default(null),
     end_date: yup.string().nullable().default(null),
-    planed_start_date: yup.string().nullable().default(null),
-    planed_end_date: yup.string().nullable().default(null),
     is_archived: yup.boolean().default(false),
     is_completed: yup.boolean().default(false),
 });
@@ -50,8 +47,6 @@ const optionDefaultValues = {
     color: "#ccc",
     start_date: null,
     end_date: null,
-    planed_start_date: null,
-    planed_end_date: null,
     description: null,
 };
 
@@ -73,19 +68,22 @@ const SprintOptionFormDialog: FC<ISprintOptionFormDialogProps> = ({
         register,
         handleSubmit,
         reset,
+        watch,
+        setValue,
         formState: { errors, isDirty },
     } = useForm<SprintOptionFormData>({
         resolver: yupResolver(sprintOptionSchema),
         defaultValues: optionDefaultValues,
     });
 
+    const startDate = watch("start_date");
+    const endDate = watch("end_date");
+
     const onSubmit = (data: SprintOptionFormData) => {
         const formattedData = {
             ...data,
             start_date: formatDate(data.start_date),
             end_date: formatDate(data.end_date),
-            planed_start_date: formatDate(data.planed_start_date),
-            planed_end_date: formatDate(data.planed_end_date),
         };
         onSubmitFromProps(formattedData);
     };
@@ -151,116 +149,27 @@ const SprintOptionFormDialog: FC<ISprintOptionFormDialogProps> = ({
                         )}
                     />
 
-                    <Controller
-                        name="start_date"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <LocalizationProvider
-                                dateAdapter={AdapterDayjs}
-                                adapterLocale="en-gb"
-                            >
-                                <DatePicker
-                                    value={value ? dayjs(value) : null}
-                                    label={t(
-                                        "customFields.options.sprint.startDate",
-                                    )}
-                                    onChange={onChange}
-                                    format="DD-MM-YYYY"
-                                    slotProps={{
-                                        textField: {
-                                            size: "small",
-                                        },
-                                        actionBar: {
-                                            actions: ["clear"],
-                                        },
-                                    }}
-                                />
-                            </LocalizationProvider>
-                        )}
-                    />
-
-                    <Controller
-                        name="end_date"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <LocalizationProvider
-                                dateAdapter={AdapterDayjs}
-                                adapterLocale="en-gb"
-                            >
-                                <DatePicker
-                                    value={value ? dayjs(value) : null}
-                                    label={t(
-                                        "customFields.options.sprint.endDate",
-                                    )}
-                                    onChange={onChange}
-                                    format="DD-MM-YYYY"
-                                    slotProps={{
-                                        textField: {
-                                            size: "small",
-                                        },
-                                        actionBar: {
-                                            actions: ["clear"],
-                                        },
-                                    }}
-                                />
-                            </LocalizationProvider>
-                        )}
-                    />
-
-                    <Controller
-                        name="planed_start_date"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <LocalizationProvider
-                                dateAdapter={AdapterDayjs}
-                                adapterLocale="en-gb"
-                            >
-                                <DatePicker
-                                    value={value ? dayjs(value) : null}
-                                    label={t(
-                                        "customFields.options.sprint.planedStartDate",
-                                    )}
-                                    onChange={onChange}
-                                    format="DD-MM-YYYY"
-                                    slotProps={{
-                                        textField: {
-                                            size: "small",
-                                        },
-                                        actionBar: {
-                                            actions: ["clear"],
-                                        },
-                                    }}
-                                />
-                            </LocalizationProvider>
-                        )}
-                    />
-
-                    <Controller
-                        name="planed_end_date"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                            <LocalizationProvider
-                                dateAdapter={AdapterDayjs}
-                                adapterLocale="en-gb"
-                            >
-                                <DatePicker
-                                    value={value ? dayjs(value) : null}
-                                    label={t(
-                                        "customFields.options.sprint.planedEndDate",
-                                    )}
-                                    onChange={onChange}
-                                    format="DD-MM-YYYY"
-                                    slotProps={{
-                                        textField: {
-                                            size: "small",
-                                        },
-                                        actionBar: {
-                                            actions: ["clear"],
-                                        },
-                                    }}
-                                />
-                            </LocalizationProvider>
-                        )}
+                    <DateRangePicker
+                        value={{
+                            from: startDate ? dayjs(startDate).toDate() : null,
+                            to: endDate ? dayjs(endDate).toDate() : null,
+                        }}
+                        onChange={(range) => {
+                            setValue(
+                                "start_date",
+                                range?.from
+                                    ? dayjs(range.from).format("YYYY-MM-DD")
+                                    : null,
+                                { shouldDirty: true },
+                            );
+                            setValue(
+                                "end_date",
+                                range?.to
+                                    ? dayjs(range.to).format("YYYY-MM-DD")
+                                    : null,
+                                { shouldDirty: true },
+                            );
+                        }}
                     />
 
                     <Controller

@@ -18,10 +18,12 @@ export const fieldToFieldValue = (
         case "state":
         case "version":
         case "owned":
+        case "sprint":
             return field.value?.value;
         case "enum_multi":
         case "version_multi":
         case "owned_multi":
+        case "sprint_multi":
             return field.value?.map((el) => el.value);
         case "date":
         case "datetime":

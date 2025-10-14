@@ -121,12 +121,14 @@ const renderValue = (change: IssueChangeT, type: "old" | "new"): string => {
         }
 
         case "enum":
-        case "state": {
+        case "state":
+        case "sprint": {
             const target = type === "old" ? change.old_value : change.new_value;
             return target?.value || noValue;
         }
 
-        case "enum_multi": {
+        case "enum_multi":
+        case "sprint_multi": {
             const target = type === "old" ? change.old_value : change.new_value;
             return target?.map((option) => option.value).join(", ") || noValue;
         }

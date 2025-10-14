@@ -17,14 +17,16 @@ type IssueAttachmentsProps = {
 
 export const IssueAttachments = (props: IssueAttachmentsProps) => {
     const {
-        issue: { id_readable, attachments, project },
+        issue: { id_readable, project },
         onUpdateIssue,
         onUpdateCache,
     } = props;
 
-    const { data: comments } = issueApi.useListIssueCommentsQuery({
+    const { data: attachmentsResponse } = issueApi.useListIssueAttachmentQuery({
         id: id_readable,
     });
+
+    const attachments = attachmentsResponse?.payload?.items || [];
 
     const {
         load: loadLBFiles,
@@ -36,7 +38,9 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
         const attachmentIdsToDelete = attachmentsToDelete.map((a) => a.id);
 
         const remainingAttachments = attachments.filter(
-            (attachment) => !attachmentIdsToDelete.includes(attachment.id),
+            (attachment) =>
+                !attachmentIdsToDelete.includes(attachment.id) &&
+                attachment.source_type === "issue",
         );
 
         onUpdateCache({
@@ -51,7 +55,10 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
     const handleUpload = async (
         attachmentsToUpload: IssueAttachmentBodyT[],
     ) => {
-        const newAttachments = [...attachments, ...attachmentsToUpload];
+        const newAttachments = [
+            ...attachments.filter((a) => a.source_type === "issue"),
+            ...attachmentsToUpload,
+        ];
 
         await onUpdateIssue({
             attachments: newAttachments,
@@ -67,25 +74,13 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             content_type: a.content_type,
         }));
 
-        const commentsAttachments =
-            comments?.payload.items
-                .flatMap((comment) => comment.attachments)
-                .reverse()
-                .map((a) => ({
-                    id: a.id,
-                    src: a.url,
-                    name: a.name,
-                    size: a.size,
-                    content_type: a.content_type,
-                })) || [];
-
-        loadLBFiles([...issueAttachments, ...commentsAttachments]);
+        loadLBFiles(issueAttachments);
 
         return () => {
             closeLB();
             clearLBFiles();
         };
-    }, [attachments, comments, loadLBFiles, closeLB, clearLBFiles]);
+    }, [attachments, loadLBFiles, closeLB, clearLBFiles]);
 
     return (
         <AttachmentsList

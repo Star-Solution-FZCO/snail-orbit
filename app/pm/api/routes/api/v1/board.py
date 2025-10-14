@@ -26,6 +26,7 @@ from pm.api.views.custom_fields import (
     EnumCustomFieldGroupWithValuesOutput,
     FloatCustomFieldGroupWithValuesOutput,
     IntegerCustomFieldGroupWithValuesOutput,
+    SprintCustomFieldGroupWithValuesOutput,
     StateCustomFieldGroupWithValuesOutput,
     StringCustomFieldGroupWithValuesOutput,
     UserCustomFieldGroupWithValuesOutput,
@@ -77,6 +78,7 @@ BoardColumnOutputT = (
     EnumCustomFieldGroupWithValuesOutput
     | StateCustomFieldGroupWithValuesOutput
     | VersionCustomFieldGroupWithValuesOutput
+    | SprintCustomFieldGroupWithValuesOutput
 )
 
 
@@ -90,6 +92,7 @@ BoardSwimlaneOutputT = (
     | FloatCustomFieldGroupWithValuesOutput
     | BooleanCustomFieldGroupWithValuesOutput
     | DateCustomFieldGroupWithValuesOutput
+    | SprintCustomFieldGroupWithValuesOutput
     | DateTimeCustomFieldGroupWithValuesOutput
     | UserCustomFieldGroupWithValuesOutput
     | EnumCustomFieldGroupWithValuesOutput

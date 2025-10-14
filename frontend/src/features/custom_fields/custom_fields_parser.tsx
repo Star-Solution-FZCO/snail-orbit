@@ -42,6 +42,8 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
         case "state":
         case "version":
         case "version_multi":
+        case "sprint":
+        case "sprint_multi":
             return (
                 <EnumField
                     {...baseCompProps}
@@ -59,7 +61,8 @@ export const CustomFieldsParser: FC<CustomFieldsParserProps> = ({
                     multiple={
                         field.type === "enum_multi" ||
                         field.type === "owned_multi" ||
-                        field.type === "version_multi"
+                        field.type === "version_multi" ||
+                        field.type === "sprint_multi"
                     }
                     onChange={(value) => {
                         onChange?.({

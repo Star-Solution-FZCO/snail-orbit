@@ -11193,7 +11193,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IssueAttachmentBody"
+                "$ref": "#/components/schemas/IssueAttachmentBody-Input"
               }
             }
           }
@@ -11422,6 +11422,440 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UUIDOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request, validation errors, or MFA required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issue/{issue_id_or_alias}/attachments/batch-create": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Batch Create Issue Attachments",
+        "description": "Create multiple attachments for an issue",
+        "operationId": "batch_create_issue_attachments_api_v1_issue__issue_id_or_alias__attachments_batch_create_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id_or_alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Issue Id Or Alias"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueAttachmentBatchCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "207": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchOperationOutput_IssueAttachmentWithSourceOutput_IssueAttachmentBody_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request, validation errors, or MFA required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/issue/{issue_id_or_alias}/attachments/batch-delete": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "issue"
+        ],
+        "summary": "Batch Delete Issue Attachments",
+        "description": "Delete multiple attachments from an issue",
+        "operationId": "batch_delete_issue_attachments_api_v1_issue__issue_id_or_alias__attachments_batch_delete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id_or_alias",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Issue Id Or Alias"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueAttachmentBatchDeleteBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "207": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchOperationOutput_UUID_UUID_"
                 }
               }
             }
@@ -41947,6 +42381,172 @@
         ],
         "title": "BaseListPayload[WorkflowOutput]"
       },
+      "BatchFailureItem_IssueAttachmentBody_": {
+        "properties": {
+          "error_code": {
+            "$ref": "#/components/schemas/HTTPStatus"
+          },
+          "error_messages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Error Messages"
+          },
+          "error_fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Error Fields"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/IssueAttachmentBody-Output"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code",
+          "payload"
+        ],
+        "title": "BatchFailureItem[IssueAttachmentBody]"
+      },
+      "BatchFailureItem_UUID_": {
+        "properties": {
+          "error_code": {
+            "$ref": "#/components/schemas/HTTPStatus"
+          },
+          "error_messages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Error Messages"
+          },
+          "error_fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Error Fields"
+          },
+          "payload": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code",
+          "payload"
+        ],
+        "title": "BatchFailureItem[UUID]"
+      },
+      "BatchOperationOutput_IssueAttachmentWithSourceOutput_IssueAttachmentBody_": {
+        "properties": {
+          "successes": {
+            "items": {
+              "$ref": "#/components/schemas/BatchSuccessItem_IssueAttachmentWithSourceOutput_"
+            },
+            "type": "array",
+            "title": "Successes"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/BatchFailureItem_IssueAttachmentBody_"
+            },
+            "type": "array",
+            "title": "Failures"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count"
+          },
+          "failure_count": {
+            "type": "integer",
+            "title": "Failure Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "successes",
+          "failures",
+          "total",
+          "success_count",
+          "failure_count"
+        ],
+        "title": "BatchOperationOutput[IssueAttachmentWithSourceOutput, IssueAttachmentBody]"
+      },
+      "BatchOperationOutput_UUID_UUID_": {
+        "properties": {
+          "successes": {
+            "items": {
+              "$ref": "#/components/schemas/BatchSuccessItem_UUID_"
+            },
+            "type": "array",
+            "title": "Successes"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/BatchFailureItem_UUID_"
+            },
+            "type": "array",
+            "title": "Failures"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count"
+          },
+          "failure_count": {
+            "type": "integer",
+            "title": "Failure Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "successes",
+          "failures",
+          "total",
+          "success_count",
+          "failure_count"
+        ],
+        "title": "BatchOperationOutput[UUID, UUID]"
+      },
+      "BatchSuccessItem_IssueAttachmentWithSourceOutput_": {
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/IssueAttachmentWithSourceOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BatchSuccessItem[IssueAttachmentWithSourceOutput]"
+      },
+      "BatchSuccessItem_UUID_": {
+        "properties": {
+          "payload": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "BatchSuccessItem[UUID]"
+      },
       "BoardColumnOutputRootModel": {
         "oneOf": [
           {
@@ -41957,6 +42557,9 @@
           },
           {
             "$ref": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
+          },
+          {
+            "$ref": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput"
           }
         ],
         "title": "BoardColumnOutputRootModel",
@@ -41964,6 +42567,7 @@
           "propertyName": "type",
           "mapping": {
             "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput",
             "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
             "version": "#/components/schemas/VersionCustomFieldGroupWithValuesOutput"
           }
@@ -42254,6 +42858,9 @@
             "$ref": "#/components/schemas/DateCustomFieldGroupWithValuesOutput"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput"
+          },
+          {
             "$ref": "#/components/schemas/DateTimeCustomFieldGroupWithValuesOutput"
           },
           {
@@ -42279,6 +42886,7 @@
             "enum": "#/components/schemas/EnumCustomFieldGroupWithValuesOutput",
             "float": "#/components/schemas/FloatCustomFieldGroupWithValuesOutput",
             "integer": "#/components/schemas/IntegerCustomFieldGroupWithValuesOutput",
+            "sprint": "#/components/schemas/SprintCustomFieldGroupWithValuesOutput",
             "state": "#/components/schemas/StateCustomFieldGroupWithValuesOutput",
             "string": "#/components/schemas/StringCustomFieldGroupWithValuesOutput",
             "user": "#/components/schemas/UserCustomFieldGroupWithValuesOutput",
@@ -46318,6 +46926,75 @@
         "type": "object",
         "title": "GroupUpdate"
       },
+      "HTTPStatus": {
+        "type": "integer",
+        "enum": [
+          100,
+          101,
+          102,
+          103,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          226,
+          300,
+          301,
+          302,
+          303,
+          304,
+          305,
+          307,
+          308,
+          400,
+          401,
+          402,
+          403,
+          404,
+          405,
+          406,
+          407,
+          408,
+          409,
+          410,
+          411,
+          412,
+          413,
+          414,
+          415,
+          416,
+          417,
+          418,
+          421,
+          422,
+          423,
+          424,
+          425,
+          426,
+          428,
+          429,
+          431,
+          451,
+          500,
+          501,
+          502,
+          503,
+          504,
+          505,
+          506,
+          507,
+          508,
+          510,
+          511
+        ],
+        "title": "HTTPStatus",
+        "description": "HTTP status codes and reason phrases\n\nStatus codes from the following RFCs are all observed:\n\n    * RFC 7231: Hypertext Transfer Protocol (HTTP/1.1), obsoletes 2616\n    * RFC 6585: Additional HTTP Status Codes\n    * RFC 3229: Delta encoding in HTTP\n    * RFC 4918: HTTP Extensions for WebDAV, obsoletes 2518\n    * RFC 5842: Binding Extensions to WebDAV\n    * RFC 7238: Permanent Redirect\n    * RFC 2295: Transparent Content Negotiation in HTTP\n    * RFC 2774: An HTTP Extension Framework\n    * RFC 7725: An HTTP Status Code to Report Legal Obstacles\n    * RFC 7540: Hypertext Transfer Protocol Version 2 (HTTP/2)\n    * RFC 2324: Hyper Text Coffee Pot Control Protocol (HTCPCP/1.0)\n    * RFC 8297: An HTTP Status Code for Indicating Hints\n    * RFC 8470: Using Early Data in HTTP"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -46708,7 +47385,42 @@
         ],
         "title": "IntegerCustomFieldValueOutput"
       },
-      "IssueAttachmentBody": {
+      "IssueAttachmentBatchCreateBody": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/IssueAttachmentBody-Input"
+            },
+            "type": "array",
+            "title": "Attachments",
+            "description": "List of attachments to create"
+          }
+        },
+        "type": "object",
+        "required": [
+          "attachments"
+        ],
+        "title": "IssueAttachmentBatchCreateBody"
+      },
+      "IssueAttachmentBatchDeleteBody": {
+        "properties": {
+          "attachment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Attachment Ids",
+            "description": "List of attachment IDs to delete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "attachment_ids"
+        ],
+        "title": "IssueAttachmentBatchDeleteBody"
+      },
+      "IssueAttachmentBody-Input": {
         "properties": {
           "id": {
             "type": "string",
@@ -46720,6 +47432,34 @@
               {
                 "items": {
                   "$ref": "#/components/schemas/EncryptionMeta-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "IssueAttachmentBody"
+      },
+      "IssueAttachmentBody-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "encryption": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EncryptionMeta-Output"
                 },
                 "type": "array"
               },
@@ -46996,7 +47736,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/IssueAttachmentBody"
+              "$ref": "#/components/schemas/IssueAttachmentBody-Input"
             },
             "type": "array",
             "title": "Attachments"
@@ -47087,7 +47827,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/IssueAttachmentBody"
+                  "$ref": "#/components/schemas/IssueAttachmentBody-Input"
                 },
                 "type": "array"
               },
@@ -47145,7 +47885,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/IssueAttachmentBody"
+              "$ref": "#/components/schemas/IssueAttachmentBody-Input"
             },
             "type": "array",
             "title": "Attachments"
@@ -47327,7 +48067,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/IssueAttachmentBody"
+              "$ref": "#/components/schemas/IssueAttachmentBody-Input"
             },
             "type": "array",
             "title": "Attachments"
@@ -47464,7 +48204,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/IssueAttachmentBody"
+                  "$ref": "#/components/schemas/IssueAttachmentBody-Input"
                 },
                 "type": "array"
               },
@@ -47748,6 +48488,12 @@
           },
           {
             "$ref": "#/components/schemas/IssueDurationFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueSprintFieldChangeOutput"
+          },
+          {
+            "$ref": "#/components/schemas/IssueSprintMultiFieldChangeOutput"
           }
         ],
         "title": "IssueFieldChangeOutputRootModel",
@@ -47764,6 +48510,8 @@
             "integer": "#/components/schemas/IssueIntegerFieldChangeOutput",
             "owned": "#/components/schemas/IssueOwnedFieldChangeOutput",
             "owned_multi": "#/components/schemas/IssueOwnedMultiFieldChangeOutput",
+            "sprint": "#/components/schemas/IssueSprintFieldChangeOutput",
+            "sprint_multi": "#/components/schemas/IssueSprintMultiFieldChangeOutput",
             "state": "#/components/schemas/IssueStateFieldChangeOutput",
             "string": "#/components/schemas/IssueStringFieldChangeOutput",
             "user": "#/components/schemas/IssueUserFieldChangeOutput",
@@ -48955,6 +49703,130 @@
         ],
         "title": "IssueSpentTimeRecordOutput"
       },
+      "IssueSprintFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SprintOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Field Type",
+            "default": "sprint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueSprintFieldChangeOutput"
+      },
+      "IssueSprintMultiFieldChangeOutput": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "field",
+            "title": "Type",
+            "default": "field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "field_id": {
+            "type": "string",
+            "title": "Field Id",
+            "example": "5eb7cf5a86d9755df3a6c593"
+          },
+          "field_gid": {
+            "type": "string",
+            "title": "Field Gid"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name"
+          },
+          "field_type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Field Type",
+            "default": "sprint_multi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_value",
+          "new_value",
+          "field_id",
+          "field_gid",
+          "field_name"
+        ],
+        "title": "IssueSprintMultiFieldChangeOutput"
+      },
       "IssueStateFieldChangeOutput": {
         "properties": {
           "type": {
@@ -49223,7 +50095,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/IssueAttachmentBody"
+                  "$ref": "#/components/schemas/IssueAttachmentBody-Input"
                 },
                 "type": "array"
               },
@@ -51251,7 +52123,7 @@
           },
           "filters": {
             "items": {
-              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__SprintCustomFieldParsed__SprintMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
             },
             "type": "array",
             "title": "Filters",
@@ -51259,7 +52131,7 @@
           },
           "available_fields": {
             "items": {
-              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__SprintCustomFieldAvailable__SprintMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
             },
             "type": "array",
             "title": "Available Fields",
@@ -51976,7 +52848,7 @@
         "type": "object",
         "title": "RoleUpdate"
       },
-      "RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+      "RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__SprintCustomFieldAvailable__SprintMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/StringCustomFieldAvailable"
@@ -52027,6 +52899,12 @@
             "$ref": "#/components/schemas/OwnedMultiCustomFieldAvailable"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldAvailable"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldAvailable"
+          },
+          {
             "$ref": "#/components/schemas/ProjectFieldAvailable"
           },
           {
@@ -52036,7 +52914,7 @@
             "$ref": "#/components/schemas/TagFieldAvailable"
           }
         ],
-        "title": "RootModel[Annotated[Union[StringCustomFieldAvailable, IntegerCustomFieldAvailable, FloatCustomFieldAvailable, BooleanCustomFieldAvailable, DateCustomFieldAvailable, DateTimeCustomFieldAvailable, DurationCustomFieldAvailable, EnumCustomFieldAvailable, EnumMultiCustomFieldAvailable, StateCustomFieldAvailable, VersionCustomFieldAvailable, VersionMultiCustomFieldAvailable, UserCustomFieldAvailable, UserMultiCustomFieldAvailable, OwnedCustomFieldAvailable, OwnedMultiCustomFieldAvailable, ProjectFieldAvailable, HashtagFieldAvailable, TagFieldAvailable], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "title": "RootModel[Annotated[Union[StringCustomFieldAvailable, IntegerCustomFieldAvailable, FloatCustomFieldAvailable, BooleanCustomFieldAvailable, DateCustomFieldAvailable, DateTimeCustomFieldAvailable, DurationCustomFieldAvailable, EnumCustomFieldAvailable, EnumMultiCustomFieldAvailable, StateCustomFieldAvailable, VersionCustomFieldAvailable, VersionMultiCustomFieldAvailable, UserCustomFieldAvailable, UserMultiCustomFieldAvailable, OwnedCustomFieldAvailable, OwnedMultiCustomFieldAvailable, SprintCustomFieldAvailable, SprintMultiCustomFieldAvailable, ProjectFieldAvailable, HashtagFieldAvailable, TagFieldAvailable], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
         "discriminator": {
           "propertyName": "type",
           "mapping": {
@@ -52052,6 +52930,8 @@
             "owned": "#/components/schemas/OwnedCustomFieldAvailable",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldAvailable",
             "project": "#/components/schemas/ProjectFieldAvailable",
+            "sprint": "#/components/schemas/SprintCustomFieldAvailable",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldAvailable",
             "state": "#/components/schemas/StateCustomFieldAvailable",
             "string": "#/components/schemas/StringCustomFieldAvailable",
             "tag": "#/components/schemas/TagFieldAvailable",
@@ -52062,7 +52942,7 @@
           }
         }
       },
-      "RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
+      "RootModel_Annotated_Union_StringCustomFieldParsed__IntegerCustomFieldParsed__FloatCustomFieldParsed__BooleanCustomFieldParsed__DateCustomFieldParsed__DateTimeCustomFieldParsed__DurationCustomFieldParsed__EnumCustomFieldParsed__EnumMultiCustomFieldParsed__StateCustomFieldParsed__VersionCustomFieldParsed__VersionMultiCustomFieldParsed__UserCustomFieldParsed__UserMultiCustomFieldParsed__OwnedCustomFieldParsed__OwnedMultiCustomFieldParsed__SprintCustomFieldParsed__SprintMultiCustomFieldParsed__ProjectFieldParsed__HashtagFieldParsed__TagFieldParsed___FieldInfo_annotation_NoneType__required_True__discriminator__type____": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/StringCustomFieldParsed"
@@ -52113,6 +52993,12 @@
             "$ref": "#/components/schemas/OwnedMultiCustomFieldParsed"
           },
           {
+            "$ref": "#/components/schemas/SprintCustomFieldParsed"
+          },
+          {
+            "$ref": "#/components/schemas/SprintMultiCustomFieldParsed"
+          },
+          {
             "$ref": "#/components/schemas/ProjectFieldParsed"
           },
           {
@@ -52122,7 +53008,7 @@
             "$ref": "#/components/schemas/TagFieldParsed"
           }
         ],
-        "title": "RootModel[Annotated[Union[StringCustomFieldParsed, IntegerCustomFieldParsed, FloatCustomFieldParsed, BooleanCustomFieldParsed, DateCustomFieldParsed, DateTimeCustomFieldParsed, DurationCustomFieldParsed, EnumCustomFieldParsed, EnumMultiCustomFieldParsed, StateCustomFieldParsed, VersionCustomFieldParsed, VersionMultiCustomFieldParsed, UserCustomFieldParsed, UserMultiCustomFieldParsed, OwnedCustomFieldParsed, OwnedMultiCustomFieldParsed, ProjectFieldParsed, HashtagFieldParsed, TagFieldParsed], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
+        "title": "RootModel[Annotated[Union[StringCustomFieldParsed, IntegerCustomFieldParsed, FloatCustomFieldParsed, BooleanCustomFieldParsed, DateCustomFieldParsed, DateTimeCustomFieldParsed, DurationCustomFieldParsed, EnumCustomFieldParsed, EnumMultiCustomFieldParsed, StateCustomFieldParsed, VersionCustomFieldParsed, VersionMultiCustomFieldParsed, UserCustomFieldParsed, UserMultiCustomFieldParsed, OwnedCustomFieldParsed, OwnedMultiCustomFieldParsed, SprintCustomFieldParsed, SprintMultiCustomFieldParsed, ProjectFieldParsed, HashtagFieldParsed, TagFieldParsed], FieldInfo(annotation=NoneType, required=True, discriminator='type')]]",
         "discriminator": {
           "propertyName": "type",
           "mapping": {
@@ -52138,6 +53024,8 @@
             "owned": "#/components/schemas/OwnedCustomFieldParsed",
             "owned_multi": "#/components/schemas/OwnedMultiCustomFieldParsed",
             "project": "#/components/schemas/ProjectFieldParsed",
+            "sprint": "#/components/schemas/SprintCustomFieldParsed",
+            "sprint_multi": "#/components/schemas/SprintMultiCustomFieldParsed",
             "state": "#/components/schemas/StateCustomFieldParsed",
             "string": "#/components/schemas/StringCustomFieldParsed",
             "tag": "#/components/schemas/TagFieldParsed",
@@ -52366,6 +53254,39 @@
         ],
         "title": "ShortOptionOutput"
       },
+      "SprintCustomFieldAvailable": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "gid"
+        ],
+        "title": "SprintCustomFieldAvailable"
+      },
       "SprintCustomFieldGroupOutput": {
         "properties": {
           "gid": {
@@ -52446,6 +53367,41 @@
         ],
         "title": "SprintCustomFieldGroupWithReportValuesOutput",
         "description": "Report-specific sprint custom field group with simplified values."
+      },
+      "SprintCustomFieldGroupWithValuesOutput": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/CustomFieldGroupLinkOutput",
+            "description": "Field definition"
+          },
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SprintOption"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Sprint option values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "values"
+        ],
+        "title": "SprintCustomFieldGroupWithValuesOutput"
       },
       "SprintCustomFieldOutput": {
         "properties": {
@@ -52536,6 +53492,50 @@
         ],
         "title": "SprintCustomFieldOutput"
       },
+      "SprintCustomFieldParsed": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint",
+            "title": "Type",
+            "default": "sprint"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "gid"
+        ],
+        "title": "SprintCustomFieldParsed"
+      },
       "SprintCustomFieldValueOutput": {
         "properties": {
           "id": {
@@ -52576,6 +53576,39 @@
           "value"
         ],
         "title": "SprintCustomFieldValueOutput"
+      },
+      "SprintMultiCustomFieldAvailable": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "gid"
+        ],
+        "title": "SprintMultiCustomFieldAvailable"
       },
       "SprintMultiCustomFieldGroupOutput": {
         "properties": {
@@ -52751,6 +53784,50 @@
         ],
         "title": "SprintMultiCustomFieldOutput"
       },
+      "SprintMultiCustomFieldParsed": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "sprint_multi",
+            "title": "Type",
+            "default": "sprint_multi"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortOptionOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "gid"
+        ],
+        "title": "SprintMultiCustomFieldParsed"
+      },
       "SprintMultiCustomFieldValueOutput": {
         "properties": {
           "id": {
@@ -52826,30 +53903,6 @@
               }
             ],
             "title": "Color"
-          },
-          "planed_start_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Planed Start Date"
-          },
-          "planed_end_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Planed End Date"
           },
           "start_date": {
             "anyOf": [
@@ -53018,30 +54071,6 @@
               }
             ],
             "title": "Color"
-          },
-          "planed_start_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Planed Start Date"
-          },
-          "planed_end_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Planed End Date"
           },
           "start_date": {
             "anyOf": [

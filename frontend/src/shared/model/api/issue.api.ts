@@ -3,6 +3,8 @@ import type {
     ApiResponse,
     CommentT,
     CustomFieldValueT,
+    IssueAttachmentBodyT,
+    IssueAttachmentWithSourceT,
     IssueDraftT,
     IssueFavoriteFilter,
     IssueFeedRecordT,
@@ -34,6 +36,7 @@ import customFetchBase from "./custom_fetch_base";
 const tagTypes = [
     "Issues",
     "IssueComments",
+    "IssueAttachments",
     "IssueHistories",
     "IssueDrafts",
     "IssuePermissions",
@@ -104,6 +107,7 @@ export const issueApi = createApi({
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "Issues", id: "LIST" },
                 { type: "IssueHistories", id },
+                { type: "IssueAttachments", id },
             ],
             async onQueryStarted(
                 { id },
@@ -176,6 +180,7 @@ export const issueApi = createApi({
             },
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
+                { type: "IssueAttachments", id },
             ],
         }),
         updateIssueComment: build.mutation<
@@ -189,6 +194,7 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
+                { type: "IssueAttachments", id },
             ],
         }),
         deleteIssueComment: build.mutation<
@@ -201,6 +207,42 @@ export const issueApi = createApi({
             }),
             invalidatesTags: (_result, _error, { id }) => [
                 { type: "IssueComments", id },
+                { type: "IssueAttachments", id },
+            ],
+        }),
+        listIssueAttachment: build.query<
+            ListResponse<IssueAttachmentWithSourceT>,
+            { id: string; params?: ListQueryParams }
+        >({
+            query: ({ id, params }) => ({
+                url: `issue/${id}/attachment/list`,
+                params,
+            }),
+            providesTags: (_result, _error, { id }) => [
+                { type: "IssueAttachments", id },
+            ],
+        }),
+        createIssueAttachment: build.mutation<
+            ApiResponse<IssueAttachmentWithSourceT>,
+            { id: string } & IssueAttachmentBodyT
+        >({
+            query: ({ id, ...body }) => {
+                return { url: `issue/${id}/attachment/`, method: "POST", body };
+            },
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueAttachments", id },
+            ],
+        }),
+        deleteIssueAttachment: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string; attachmentId: string }
+        >({
+            query: ({ id, attachmentId }) => ({
+                url: `issue/${id}/attachment/${attachmentId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueAttachments", id },
             ],
         }),
         listIssueHistory: build.query<

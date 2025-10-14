@@ -463,8 +463,6 @@ async def _create_custom_field_sprint(
         # Convert date strings to proper format for API
         opt_payload = opt.copy()
         for date_field in (
-            'planed_start_date',
-            'planed_end_date',
             'start_date',
             'end_date',
         ):

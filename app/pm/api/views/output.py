@@ -1,10 +1,11 @@
 from asyncio import iscoroutinefunction
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from beanie import Document
@@ -14,6 +15,9 @@ __all__ = (
     'BaseListOutput',
     'BaseOutput',
     'BasePayloadOutput',
+    'BatchFailureItem',
+    'BatchOperationOutput',
+    'BatchSuccessItem',
     'ErrorOutput',
     'ErrorPayloadOutput',
     'MFARequiredOutput',
@@ -76,6 +80,7 @@ class MFARequiredOutput(BaseOutput):
 
 
 T = TypeVar('T')
+F = TypeVar('F')
 DocT = TypeVar('DocT', bound='Document')
 
 
@@ -186,4 +191,37 @@ class BaseListOutput(SuccessPayloadOutput, Generic[T]):
             limit=limit,
             offset=offset,
             items=items,
+        )
+
+
+class BatchSuccessItem(BaseModel, Generic[T]):
+    payload: T
+
+
+class BatchFailureItem(BaseModel, Generic[F]):
+    error_code: HTTPStatus
+    error_messages: list[str] = Field(default_factory=list)
+    error_fields: dict[str, str] = Field(default_factory=dict)
+    payload: F
+
+
+class BatchOperationOutput(BaseModel, Generic[T, F]):
+    successes: list[BatchSuccessItem[T]]
+    failures: list[BatchFailureItem[F]]
+    total: int
+    success_count: int
+    failure_count: int
+
+    @classmethod
+    def make(
+        cls,
+        successes: list[BatchSuccessItem[T]],
+        failures: list[BatchFailureItem[F]],
+    ) -> 'BatchOperationOutput[T, F]':
+        return cls(
+            successes=successes,
+            failures=failures,
+            total=len(successes) + len(failures),
+            success_count=len(successes),
+            failure_count=len(failures),
         )
