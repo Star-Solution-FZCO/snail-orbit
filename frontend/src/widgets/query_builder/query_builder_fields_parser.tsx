@@ -141,6 +141,8 @@ export const QueryBuilderFieldsParser = (
             case "version_multi":
             case "owned_multi":
             case "owned":
+            case "sprint":
+            case "sprint_multi":
                 return (
                     <GroupSelectField
                         gid={filter.gid}

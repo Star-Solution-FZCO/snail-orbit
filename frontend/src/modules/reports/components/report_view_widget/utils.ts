@@ -35,10 +35,12 @@ export const formatAxisValues = (
         case "version_multi":
         case "owned_multi":
         case "enum_multi":
+        case "sprint_multi":
         case "version":
         case "state":
         case "owned":
         case "enum":
+        case "sprint":
             return axis.values.map((el, idx) => ({
                 id: el.value || idx.toString(),
                 label: el.value || "",

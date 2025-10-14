@@ -29,6 +29,7 @@ const formatSwimLane = (
         case "version":
         case "enum":
         case "state":
+        case "sprint":
             return swimLaneData.values
                 .filter(notEmpty)
                 .map(({ id, value }) => ({ id, value, label: value }));
