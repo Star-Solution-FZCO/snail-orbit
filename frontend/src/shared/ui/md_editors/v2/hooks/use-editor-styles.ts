@@ -148,7 +148,7 @@ export const useEditorStyles = () => {
             listStylePosition: "inside",
         },
 
-         // Nested list items
+        // Nested list items
         ".editor-nested-listitem": {
             listStyleType: "none",
         },

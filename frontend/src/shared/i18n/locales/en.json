@@ -532,6 +532,7 @@
   "profile.keys.algorithm": "Algorithm",
   "profile.keys.fingerprint": "Fingerprint",
   "profile.keys.isActive": "Is active",
+  "profile.keys.local": "Local",
   "profile.keys.name": "Name",
   "profile.keys.new": "New",
   "profile.sections.apiTokens": "API Tokens",
