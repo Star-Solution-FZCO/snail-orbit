@@ -5,8 +5,9 @@ from http import HTTPStatus
 from typing import Any
 from uuid import UUID, uuid4
 
+import beanie.operators as bo
 from beanie import PydanticObjectId
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
@@ -1020,6 +1021,7 @@ async def select_options(
 async def select_options_group(
     custom_field_gid: str,
     query: SelectParams = Depends(),
+    project_id: list[PydanticObjectId] = Query(default_factory=list),
 ) -> BaseListOutput[CustomFieldGroupSelectOptionsT]:
     fields = await m.CustomField.find(
         m.CustomField.gid == custom_field_gid,
@@ -1028,6 +1030,24 @@ async def select_options_group(
 
     if not fields:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field group not found')
+
+    if project_id:
+        projects = await m.Project.find(
+            bo.In(m.Project.id, project_id),
+            fetch_links=True,
+        ).to_list()
+        projects_fields = {
+            field.id for proj in projects for field in proj.custom_fields
+        }
+        fields = [field for field in fields if field.id in projects_fields]
+
+    if not fields:
+        return BaseListOutput.make(
+            count=0,
+            limit=query.limit,
+            offset=query.offset,
+            items=[],
+        )
 
     if fields[0].type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
         select_fn = version_option_select

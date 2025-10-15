@@ -1210,3 +1210,265 @@ async def test_board_error_handling(
         json={'invalid': 'data'},
     )
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Status',
+                    'type': 'state',
+                    'is_nullable': False,
+                    'description': 'Issue status field',
+                    'ai_description': 'Field to track issue status',
+                    'default_value': None,
+                    'options': [
+                        {
+                            'value': 'New',
+                            'color': '#2196F3',
+                            'is_archived': False,
+                            'is_resolved': False,
+                            'is_closed': False,
+                        },
+                        {
+                            'value': 'In Progress',
+                            'color': '#FF9800',
+                            'is_archived': False,
+                            'is_resolved': False,
+                            'is_closed': False,
+                        },
+                        {
+                            'value': 'Done',
+                            'color': '#4CAF50',
+                            'is_archived': False,
+                            'is_resolved': True,
+                            'is_closed': False,
+                        },
+                    ],
+                },
+            ],
+            id='columns_select_fields',
+        ),
+    ],
+)
+async def test_board_columns_select_endpoint(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    setup_projects_with_fields: tuple[list[str], list[dict]],
+    custom_field_payloads: list[dict],
+) -> None:
+    """Test the board columns select endpoint."""
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    project_ids, custom_fields = setup_projects_with_fields
+
+    status_field = custom_fields[0]  # First field (Status)
+
+    # Create board with specific column configuration
+    board_payload = {
+        'name': 'Columns Select Test Board',
+        'description': 'Board for testing columns select endpoint',
+        'projects': [project_ids[0]],
+        'column_field': status_field['gid'],
+        'columns': ['New', 'In Progress', 'Done'],
+        'card_fields': [],
+        'card_colors_fields': [],
+        'ui_settings': {},
+    }
+
+    response = test_client.post('/api/v1/board', headers=headers, json=board_payload)
+    assert response.status_code == 200
+    board_id = response.json()['payload']['id']
+
+    # Test board columns select endpoint
+    response = test_client.get(
+        f'/api/v1/board/{board_id}/columns/select',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    # Should return available options for the column field
+    assert len(data['payload']['items']) >= 3  # At least our 3 status options
+    option_values = {item['value'] for item in data['payload']['items']}
+    assert 'New' in option_values
+    assert 'In Progress' in option_values
+    assert 'Done' in option_values
+
+    # Test with pagination
+    response = test_client.get(
+        f'/api/v1/board/{board_id}/columns/select',
+        headers=headers,
+        params={'limit': 2, 'offset': 0},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['items']) <= 2
+
+    # Test error cases
+    # Non-existent board
+    response = test_client.get(
+        f'/api/v1/board/{UNKNOWN_ID}/columns/select',
+        headers=headers,
+    )
+    assert response.status_code == 404
+
+    # Unauthorized access
+    response = test_client.get(f'/api/v1/board/{board_id}/columns/select')
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'custom_field_payloads',
+    [
+        pytest.param(
+            [
+                {
+                    'name': 'Status',
+                    'type': 'state',
+                    'is_nullable': False,
+                    'description': 'Issue status field',
+                    'ai_description': 'Field to track issue status',
+                    'default_value': None,
+                    'options': [
+                        {
+                            'value': 'New',
+                            'color': '#2196F3',
+                            'is_archived': False,
+                            'is_resolved': False,
+                            'is_closed': False,
+                        },
+                        {
+                            'value': 'In Progress',
+                            'color': '#FF9800',
+                            'is_archived': False,
+                            'is_resolved': False,
+                            'is_closed': False,
+                        },
+                    ],
+                },
+                {
+                    'name': 'Priority',
+                    'type': 'enum',
+                    'is_nullable': True,
+                    'description': 'Issue priority field',
+                    'ai_description': 'Field to track issue priority',
+                    'default_value': None,
+                    'options': [
+                        {'value': 'Low', 'color': '#9E9E9E', 'is_archived': False},
+                        {'value': 'Medium', 'color': '#FF9800', 'is_archived': False},
+                        {'value': 'High', 'color': '#F44336', 'is_archived': False},
+                    ],
+                },
+            ],
+            id='swimlanes_select_fields',
+        ),
+    ],
+)
+async def test_board_swimlanes_select_endpoint(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    setup_projects_with_fields: tuple[list[str], list[dict]],
+    custom_field_payloads: list[dict],
+) -> None:
+    """Test the board swimlanes select endpoint."""
+    _, admin_token = create_initial_admin
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    project_ids, custom_fields = setup_projects_with_fields
+
+    status_field = custom_fields[0]  # First field (Status)
+    priority_field = custom_fields[1]  # Second field (Priority)
+
+    # Create board with swimlanes
+    board_payload = {
+        'name': 'Swimlanes Select Test Board',
+        'description': 'Board for testing swimlanes select endpoint',
+        'projects': [project_ids[0]],
+        'column_field': status_field['gid'],
+        'columns': ['New', 'In Progress'],
+        'swimlane_field': priority_field['gid'],
+        'swimlanes': ['Low', 'Medium', 'High'],
+        'card_fields': [],
+        'card_colors_fields': [],
+        'ui_settings': {},
+    }
+
+    response = test_client.post('/api/v1/board', headers=headers, json=board_payload)
+    assert response.status_code == 200
+    board_id = response.json()['payload']['id']
+
+    # Test board swimlanes select endpoint
+    response = test_client.get(
+        f'/api/v1/board/{board_id}/swimlanes/select',
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+
+    # Should return available options for the swimlane field
+    assert len(data['payload']['items']) >= 3  # At least our 3 priority options
+    option_values = {
+        item['value'] for item in data['payload']['items'] if item['value'] is not None
+    }
+    assert 'Low' in option_values
+    assert 'Medium' in option_values
+    assert 'High' in option_values
+
+    # Test with pagination
+    response = test_client.get(
+        f'/api/v1/board/{board_id}/swimlanes/select',
+        headers=headers,
+        params={'limit': 2, 'offset': 0},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['items']) <= 2
+
+    # Test error cases
+    # Board without swimlanes
+    board_no_swimlanes_payload = {
+        'name': 'No Swimlanes Board',
+        'description': 'Board without swimlanes',
+        'projects': [project_ids[0]],
+        'column_field': status_field['gid'],
+        'columns': ['New', 'In Progress'],
+        'card_fields': [],
+        'card_colors_fields': [],
+        'ui_settings': {},
+    }
+
+    response = test_client.post(
+        '/api/v1/board', headers=headers, json=board_no_swimlanes_payload
+    )
+    assert response.status_code == 200
+    board_no_swimlanes_id = response.json()['payload']['id']
+
+    response = test_client.get(
+        f'/api/v1/board/{board_no_swimlanes_id}/swimlanes/select',
+        headers=headers,
+    )
+    assert response.status_code == 400
+    response_data = response.json()
+    error_text = response_data.get(
+        'detail', response_data.get('message', str(response_data))
+    )
+    assert 'Board has no swimlane field configured' in error_text
+
+    # Non-existent board
+    response = test_client.get(
+        f'/api/v1/board/{UNKNOWN_ID}/swimlanes/select',
+        headers=headers,
+    )
+    assert response.status_code == 404
+
+    # Unauthorized access
+    response = test_client.get(f'/api/v1/board/{board_id}/swimlanes/select')
+    assert response.status_code == 401
