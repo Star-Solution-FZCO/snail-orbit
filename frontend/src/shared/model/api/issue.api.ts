@@ -245,6 +245,36 @@ export const issueApi = createApi({
                 { type: "IssueAttachments", id },
             ],
         }),
+        batchCreateIssueAttachments: build.mutation<
+            ApiResponse<IssueAttachmentWithSourceT>,
+            { id: string; attachments: IssueAttachmentBodyT[] }
+        >({
+            query: ({ id, ...body }) => {
+                return {
+                    url: `issue/${id}/attachments/batch-create`,
+                    method: "POST",
+                    body,
+                };
+            },
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueAttachments", id },
+            ],
+        }),
+        batchDeleteIssueAttachments: build.mutation<
+            ApiResponse<{ id: string }>,
+            { id: string; attachmentIds: string[] }
+        >({
+            query: ({ id, attachmentIds }) => ({
+                url: `issue/${id}/attachments/batch-delete`,
+                method: "POST",
+                body: {
+                    attachment_ids: attachmentIds,
+                },
+            }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: "IssueAttachments", id },
+            ],
+        }),
         listIssueHistory: build.query<
             ListResponse<IssueHistoryT>,
             { id: string; params?: ListQueryParams }

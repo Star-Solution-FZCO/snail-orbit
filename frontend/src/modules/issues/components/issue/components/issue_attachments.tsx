@@ -7,6 +7,7 @@ import type {
 } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { useLightbox } from "shared/ui";
+import { toastApiError } from "shared/utils";
 import { AttachmentsList } from "./attachments_list";
 
 type IssueAttachmentsProps = {
@@ -26,6 +27,11 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
         id: id_readable,
     });
 
+    const [batchCreateAttachments] =
+        issueApi.useBatchCreateIssueAttachmentsMutation();
+    const [batchDeleteAttachments] =
+        issueApi.useBatchDeleteIssueAttachmentsMutation();
+
     const attachments = attachmentsResponse?.payload?.items || [];
 
     const {
@@ -35,34 +41,23 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
     } = useLightbox();
 
     const handleDelete = async (attachmentsToDelete: IssueAttachmentT[]) => {
-        const attachmentIdsToDelete = attachmentsToDelete.map((a) => a.id);
+        const attachmentIds = attachmentsToDelete.map((a) => a.id);
 
-        const remainingAttachments = attachments.filter(
-            (attachment) =>
-                !attachmentIdsToDelete.includes(attachment.id) &&
-                attachment.source_type === "issue",
-        );
-
-        onUpdateCache({
-            attachments: remainingAttachments,
-        });
-
-        await onUpdateIssue({
-            attachments: remainingAttachments,
-        });
+        await batchDeleteAttachments({
+            id: id_readable,
+            attachmentIds,
+        })
+            .unwrap()
+            .catch(toastApiError);
     };
 
-    const handleUpload = async (
-        attachmentsToUpload: IssueAttachmentBodyT[],
-    ) => {
-        const newAttachments = [
-            ...attachments.filter((a) => a.source_type === "issue"),
-            ...attachmentsToUpload,
-        ];
-
-        await onUpdateIssue({
-            attachments: newAttachments,
-        });
+    const handleUpload = async (attachments: IssueAttachmentBodyT[]) => {
+        await batchCreateAttachments({
+            id: id_readable,
+            attachments,
+        })
+            .unwrap()
+            .catch(toastApiError);
     };
 
     useEffect(() => {

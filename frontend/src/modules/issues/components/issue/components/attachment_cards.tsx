@@ -306,7 +306,7 @@ const AttachmentCard: FC<IAttachmentCardProps> = ({
             onDelete={onDelete}
             onSelect={() => onSelect(attachment.id)}
             canDelete={canDelete}
-            selectionEnabled={selectionEnabled}
+            selectionEnabled={selectionEnabled && canDelete}
             selected={selected}
         />
     );
