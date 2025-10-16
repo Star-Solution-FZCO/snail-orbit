@@ -1,5 +1,7 @@
-import { FC, useCallback, useMemo, useState } from "react";
-import { LBFile, LightboxContext, useLightbox } from "./context";
+import type { FC } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { LBFile } from "./context";
+import { LightboxContext, useLightbox } from "./context";
 import { LightboxModal } from "./modal";
 
 const initialFile: LBFile = {

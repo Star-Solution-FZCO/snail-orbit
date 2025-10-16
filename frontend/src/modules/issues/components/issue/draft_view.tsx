@@ -1,5 +1,6 @@
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
+import { useTranslation } from "react-i18next";
 import type { IssueDraftT, ProjectT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { DraftAttachments } from "./components/draft_attachments";
@@ -15,6 +16,8 @@ type DraftViewProps = {
     onCreateIssue?: () => Promise<void>;
     onGoBack?: () => void;
     loading?: boolean;
+    isUserAddedToEncryption?: boolean;
+    isEncrypted?: boolean;
 };
 
 export const DraftView: FC<DraftViewProps> = (props) => {
@@ -26,11 +29,21 @@ export const DraftView: FC<DraftViewProps> = (props) => {
         onCreateIssue,
         onGoBack,
         loading,
+        isUserAddedToEncryption,
+        isEncrypted,
     } = props;
+
+    const { t } = useTranslation();
 
     return (
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
+                {isEncrypted && !isUserAddedToEncryption && (
+                    <Typography color="error">
+                        {t("error.projectEncryptedButNoKeys")}
+                    </Typography>
+                )}
+
                 <DraftForm
                     draft={draft}
                     loading={loading}

@@ -11,11 +11,6 @@ import { Link, NotFound } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
 import { useNavbarSettings } from "shared/ui/navbar/navbar_settings";
 import { toastApiError } from "shared/utils";
-import {
-    exportPublicKey,
-    generateKeyPair,
-    getFingerprint,
-} from "shared/utils/crypto/crypto";
 
 const ProjectCreate = () => {
     const { t } = useTranslation();
@@ -34,27 +29,26 @@ const ProjectCreate = () => {
         projectApi.useCreateProjectMutation();
 
     const onSubmit = async (formData: CreateProjectFormData) => {
-        const keyPair = await generateKeyPair("RSA");
-        const fingerprint = await getFingerprint(keyPair.publicKey);
-        const publicKey = await exportPublicKey(keyPair.publicKey);
-        const name = `RSA-${fingerprint}`;
         createProject({
             name: formData.name,
             slug: formData.slug,
             description: formData.description,
-            encryption_settings: formData.is_encrypted
-                ? {
-                      key: {
-                          name,
-                          public_key: publicKey,
-                          fingerprint,
-                          algorithm: "RSA",
-                          is_active: true,
-                      },
-                      encrypt_comments: formData.encrypt_comments,
-                      encrypt_description: formData.encrypt_description,
-                  }
-                : undefined,
+            encryption_settings:
+                formData.is_encrypted &&
+                formData.public_key &&
+                formData.fingerprint
+                    ? {
+                          key: {
+                              name: `X25519-${formData.fingerprint}`,
+                              public_key: formData.public_key,
+                              fingerprint: formData.fingerprint,
+                              algorithm: "X25519",
+                              is_active: true,
+                          },
+                          encrypt_comments: formData.encrypt_comments,
+                          encrypt_description: formData.encrypt_description,
+                      }
+                    : undefined,
         })
             .unwrap()
             .then((response) => {
@@ -70,11 +64,10 @@ const ProjectCreate = () => {
     };
 
     useEffect(() => {
-        const path = canCreateProject ? "/projects/create" : "/issues/create";
         setAction(
-            <Link to={path}>
+            <Link to={"/issues/create"}>
                 <NavbarActionButton startIcon={<AddIcon />}>
-                    {t(canCreateProject ? "projects.new" : "issues.new")}
+                    {t("issues.new")}
                 </NavbarActionButton>
             </Link>,
         );

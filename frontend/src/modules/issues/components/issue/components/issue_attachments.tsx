@@ -16,11 +16,11 @@ type IssueAttachmentsProps = {
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
 };
 
+const emptyArr: unknown[] = [];
+
 export const IssueAttachments = (props: IssueAttachmentsProps) => {
     const {
         issue: { id_readable, project },
-        onUpdateIssue,
-        onUpdateCache,
     } = props;
 
     const { data: attachmentsResponse } = issueApi.useListIssueAttachmentQuery({
@@ -32,7 +32,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
     const [batchDeleteAttachments] =
         issueApi.useBatchDeleteIssueAttachmentsMutation();
 
-    const attachments = attachmentsResponse?.payload?.items || [];
+    const attachments = attachmentsResponse?.payload?.items || emptyArr;
 
     const {
         load: loadLBFiles,
@@ -75,7 +75,7 @@ export const IssueAttachments = (props: IssueAttachmentsProps) => {
             closeLB();
             clearLBFiles();
         };
-    }, [attachments, loadLBFiles, closeLB, clearLBFiles]);
+    }, [attachments, clearLBFiles, closeLB, loadLBFiles]);
 
     return (
         <AttachmentsList

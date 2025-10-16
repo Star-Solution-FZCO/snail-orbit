@@ -6,9 +6,11 @@ import {
     Divider,
     IconButton,
     Stack,
+    Typography,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import type { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { projectApi } from "shared/model";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
@@ -23,6 +25,8 @@ type DraftModalProps = {
     onUpdateCache: (issueValue: Partial<IssueDraftT>) => void;
     onCreateIssue?: (openIssue?: boolean) => Promise<void>;
     loading?: boolean;
+    isUserAddedToEncryption?: boolean;
+    isEncrypted?: boolean;
     onClose?: () => void;
 } & Pick<DialogProps, "open">;
 
@@ -35,7 +39,11 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
         onUpdateDraft,
         onUpdateCache,
         loading,
+        isEncrypted,
+        isUserAddedToEncryption,
     } = props;
+
+    const { t } = useTranslation();
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         draft?.project?.id ?? skipToken,
@@ -53,6 +61,12 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
                 })}
             >
                 <Stack direction="column" gap={2} flex={1} pt={2} pl={2}>
+                    {isEncrypted && !isUserAddedToEncryption && (
+                        <Typography color="error">
+                            {t("error.projectEncryptedButNoKeys")}
+                        </Typography>
+                    )}
+
                     <Stack
                         direction="column"
                         gap={2}

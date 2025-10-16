@@ -2,10 +2,10 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useDraftOperations } from "entities/issue/api/use_draft_operations";
 import { useProjectData } from "entities/issue/api/use_project_data";
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi } from "shared/model";
+import { issueApi, useAppSelector } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
 import { DraftModal } from "../../components/issue/draft_modal";
@@ -20,13 +20,25 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
 
     const { openIssueModal } = useIssueModalView();
 
+    const { user } = useAppSelector((state) => state.profile);
+
     const { data, isLoading, error } = issueApi.useGetDraftQuery(
         open && id ? id : skipToken,
     );
 
-    const { isLoading: isProjectDataLoading } = useProjectData({
+    const {
+        isLoading: isProjectDataLoading,
+        isEncrypted,
+        encryptionKeys,
+    } = useProjectData({
         projectId: data?.payload.project?.id,
     });
+
+    const isUserAddedToEncryption = useMemo(() => {
+        if (!isEncrypted) return false;
+        if (!user) return false;
+        return !!encryptionKeys.some((key) => key.target_id === user.id);
+    }, [encryptionKeys, isEncrypted, user]);
 
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
@@ -104,6 +116,8 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                 isProjectDataLoading
             }
             open={open}
+            isEncrypted={isEncrypted}
+            isUserAddedToEncryption={isUserAddedToEncryption}
             onClose={onClose}
         />
     );

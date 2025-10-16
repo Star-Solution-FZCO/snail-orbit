@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { Provider as StoreProvider } from "react-redux";
 import { store } from "shared/model";
 import { theme } from "shared/theme";
-import { Lightbox } from "shared/ui";
 import { ToastContainerComp as ToastContainer } from "./components/ToastContainer";
 import { router } from "./router";
 import "./sentry";
@@ -18,9 +17,7 @@ const App = () => {
 
                 <ToastContainer />
 
-                <Lightbox>
-                    <RouterProvider router={router} />
-                </Lightbox>
+                <RouterProvider router={router} />
 
                 <Suspense>
                     <TanStackRouterDevtools

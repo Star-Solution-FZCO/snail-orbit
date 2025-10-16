@@ -7,11 +7,13 @@ import {
     Divider,
     IconButton,
     Stack,
+    Typography,
 } from "@mui/material";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { IssueCustomFields } from "modules/issues/components/issue/components/issue_custom_fields";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { projectApi } from "shared/model";
 import type { IssueT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
@@ -33,6 +35,7 @@ type IssueModalProps = {
     loading?: boolean;
     onClose?: () => void;
     isEncrypted?: boolean;
+    isUserAddedToEncryption?: boolean;
     customFieldsErrors?: Record<string, string>;
 } & Pick<DialogProps, "open">;
 
@@ -45,12 +48,15 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
         onUpdateCache,
         loading,
         isEncrypted,
+        isUserAddedToEncryption,
         customFieldsErrors,
     } = props;
 
     const { data: projectData } = projectApi.useGetProjectQuery(
         issue?.project?.id ?? skipToken,
     );
+
+    const { t } = useTranslation();
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
     const [isAddLinksOpen, setIsAddLinksOpen] = useState(false);
@@ -77,6 +83,12 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
                 })}
             >
                 <Stack direction="column" gap={2} flex={1} pt={2} pl={2}>
+                    {isEncrypted && !isUserAddedToEncryption && (
+                        <Typography color="error">
+                            {t("error.projectEncryptedButNoKeys")}
+                        </Typography>
+                    )}
+
                     <Box pr={2}>
                         <IssueMeta issue={issue} />
 

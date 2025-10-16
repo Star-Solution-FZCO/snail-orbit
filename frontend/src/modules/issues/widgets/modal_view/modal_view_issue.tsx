@@ -2,8 +2,8 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useIssueOperations } from "entities/issue/api/use_issue_operations";
 import { useProjectData } from "entities/issue/api/use_project_data";
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
-import { issueApi } from "shared/model";
+import { useCallback, useEffect, useMemo } from "react";
+import { issueApi, useAppSelector } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { toastApiError } from "shared/utils";
 import { IssueModal } from "../../components/issue/issue_modal";
@@ -12,6 +12,8 @@ import { ModalViewLoader } from "./modal_view_loader";
 
 export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
     const { open, id, onClose } = props;
+
+    const { user } = useAppSelector((state) => state.profile);
 
     const { data, isLoading, error } = issueApi.useGetIssueQuery(
         open && id ? id : skipToken,
@@ -22,9 +24,19 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
 
     const issue = data?.payload;
 
-    const { isLoading: isProjectLoading, isEncrypted } = useProjectData({
+    const {
+        isLoading: isProjectLoading,
+        isEncrypted,
+        encryptionKeys,
+    } = useProjectData({
         projectId: issue?.project.id,
     });
+
+    const isUserAddedToEncryption = useMemo(() => {
+        if (!isEncrypted) return false;
+        if (!user) return false;
+        return !!encryptionKeys.some((key) => key.target_id === user.id);
+    }, [encryptionKeys, isEncrypted, user]);
 
     const { updateIssue, updateIssueCache, isIssueUpdateLoading } =
         useIssueOperations({ issueId: id });
@@ -57,6 +69,7 @@ export const ModalViewIssue: FC<ModalViewIssueProps> = (props) => {
             open={open}
             onClose={onClose}
             isEncrypted={isEncrypted}
+            isUserAddedToEncryption={isUserAddedToEncryption}
             customFieldsErrors={issue?.error_fields}
         />
     );

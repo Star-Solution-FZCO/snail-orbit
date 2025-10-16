@@ -2,7 +2,7 @@ import { Box, Stack } from "@mui/material";
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { IssueModalViewContextProvider } from "modules/issues/widgets/modal_view/modal_view_provider";
 import { useAppSelector } from "shared/model";
-import { NavBar, PageTitle } from "shared/ui";
+import { Lightbox, NavBar, PageTitle } from "shared/ui";
 import { NavbarSettingsContextProvider } from "shared/ui/navbar/navbar_settings";
 import { OffsideManagerProvider } from "../../shared/ui/offside_manager/offside_manager_provider";
 
@@ -36,17 +36,19 @@ function Component() {
         >
             <PageTitle title="Snail Orbit" />
 
-            <IssueModalViewContextProvider>
-                <NavbarSettingsContextProvider>
-                    <Stack flex={1}>
-                        <NavBar />
+            <Lightbox>
+                <IssueModalViewContextProvider>
+                    <NavbarSettingsContextProvider>
+                        <Stack flex={1}>
+                            <NavBar />
 
-                        <OffsideManagerProvider>
-                            <Outlet />
-                        </OffsideManagerProvider>
-                    </Stack>
-                </NavbarSettingsContextProvider>
-            </IssueModalViewContextProvider>
+                            <OffsideManagerProvider>
+                                <Outlet />
+                            </OffsideManagerProvider>
+                        </Stack>
+                    </NavbarSettingsContextProvider>
+                </IssueModalViewContextProvider>
+            </Lightbox>
         </Box>
     );
 }

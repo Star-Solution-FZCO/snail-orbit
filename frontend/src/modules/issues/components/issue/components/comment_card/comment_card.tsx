@@ -40,10 +40,16 @@ const CommentCard: FC<CommentCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const { getCommentText, updateComment, isLoading, isCommentUpdateLoading } =
-        useCommentOperations({
-            projectId,
-        });
+    const {
+        getCommentText,
+        updateComment,
+        isLoading,
+        isCommentUpdateLoading,
+        isUserHaveKeys,
+        isCommentsEncrypted,
+    } = useCommentOperations({
+        projectId,
+    });
 
     const { uploadAttachment, downloadAttachment } = useAttachmentOperations({
         projectId,
@@ -93,6 +99,8 @@ const CommentCard: FC<CommentCardProps> = ({
             .catch(toastApiError);
     };
 
+    console.log(isCommentsEncrypted, isUserHaveKeys);
+
     return (
         <>
             {!isEditing ? (
@@ -116,16 +124,18 @@ const CommentCard: FC<CommentCardProps> = ({
                     onDownloadAttachment={downloadAttachment}
                 />
             ) : (
-                <CommentCardEdit
-                    comment={comment}
-                    commentText={commentText}
-                    onDeleteAttachment={handleClickDeleteAttachment}
-                    onClose={onCancel}
-                    updateComment={handleClickSave}
-                    isLoading={isLoading || isCommentUpdateLoading}
-                    onUploadAttachment={uploadAttachment}
-                    onDownloadAttachment={downloadAttachment}
-                />
+                <>
+                    <CommentCardEdit
+                        comment={comment}
+                        commentText={commentText}
+                        onDeleteAttachment={handleClickDeleteAttachment}
+                        onClose={onCancel}
+                        updateComment={handleClickSave}
+                        isLoading={isLoading || isCommentUpdateLoading}
+                        onUploadAttachment={uploadAttachment}
+                        onDownloadAttachment={downloadAttachment}
+                    />
+                </>
             )}
 
             <DeleteAttachmentDialog
