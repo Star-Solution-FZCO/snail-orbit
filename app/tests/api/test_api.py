@@ -1576,6 +1576,85 @@ async def test_api_v1_issue_link(
         assert data['success']
         assert len(data['payload']['interlinks']) == 0
 
+    # Test multiple different link types between same issues (new feature)
+    # Create 'blocks' link
+    response = test_client.post(
+        f'/api/v1/issue/{issues[0]["id"]}/link',
+        headers=headers,
+        json={
+            'type': 'blocks',
+            'target_issues': [issues[1]['id']],
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['interlinks']) == 1
+    blocks_interlink_id = data['payload']['interlinks'][0]['id']
+
+    # Create 'duplicates' link to same issue
+    response = test_client.post(
+        f'/api/v1/issue/{issues[0]["id"]}/link',
+        headers=headers,
+        json={
+            'type': 'duplicates',
+            'target_issues': [issues[1]['id']],
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['interlinks']) == 2  # Both links should exist
+    duplicates_interlink_id = None
+    for link in data['payload']['interlinks']:
+        if link['type'] == 'duplicates':
+            duplicates_interlink_id = link['id']
+    assert duplicates_interlink_id is not None
+
+    # Test duplicate link prevention - should fail with 409
+    response = test_client.post(
+        f'/api/v1/issue/{issues[0]["id"]}/link',
+        headers=headers,
+        json={
+            'type': 'blocks',
+            'target_issues': [issues[1]['id']],
+        },
+    )
+    assert response.status_code == 409
+    assert 'already has blocks link' in response.json()['error_messages'][0]
+
+    # Test update to existing link type - should fail with 409
+    response = test_client.put(
+        f'/api/v1/issue/{issues[0]["id"]}/link/{blocks_interlink_id}',
+        headers=headers,
+        json={'type': 'duplicates'},
+    )
+    assert response.status_code == 409
+    assert 'already has duplicates link' in response.json()['error_messages'][0]
+
+    # Test valid update to non-existing link type - should succeed
+    response = test_client.put(
+        f'/api/v1/issue/{issues[0]["id"]}/link/{blocks_interlink_id}',
+        headers=headers,
+        json={'type': 'related'},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data['success']
+    assert len(data['payload']['interlinks']) == 2  # Still have 2 links
+
+    # Verify link types are now 'related' and 'duplicates'
+    link_types = {link['type'] for link in data['payload']['interlinks']}
+    assert link_types == {'related', 'duplicates'}
+
+    # Clean up the test links
+    for link in data['payload']['interlinks']:
+        response = test_client.delete(
+            f'/api/v1/issue/{issues[0]["id"]}/link/{link["id"]}',
+            headers=headers,
+        )
+        assert response.status_code == 200
+
 
 @pytest_asyncio.fixture
 async def create_initial_user() -> tuple[str, str]:

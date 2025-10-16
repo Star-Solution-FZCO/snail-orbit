@@ -920,10 +920,13 @@ async def link_issues(
         if obj.id == target_issue.id:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Cannot link issue to itself')
 
-        if any(il.issue.id == target_issue.id for il in obj.interlinks):
+        if any(
+            il.issue.id == target_issue.id and il.type == body.type
+            for il in obj.interlinks
+        ):
             raise HTTPException(
                 HTTPStatus.CONFLICT,
-                f'Issue already linked to {target_issue.id_readable}',
+                f'Issue already has {body.type} link to {target_issue.id_readable}',
             )
 
         il_id = uuid4()
@@ -1018,6 +1021,14 @@ async def update_link(
 
     if src_il.type == body.type:
         raise HTTPException(HTTPStatus.CONFLICT, 'Interlink type is the same')
+
+    # Check if the new type already exists between these issues
+    if any(
+        il.issue.id == src_il.issue.id and il.type == body.type for il in obj.interlinks
+    ):
+        raise HTTPException(
+            HTTPStatus.CONFLICT, f'Issue already has {body.type} link to target issue'
+        )
 
     target_obj: m.Issue | None = await m.Issue.find_one(m.Issue.id == src_il.issue.id)
     if not target_obj:
