@@ -631,7 +631,10 @@ export const issueApi = createApi({
                 method: "POST",
                 body: {},
             }),
-            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+            invalidatesTags: (_result, _error, id) => [
+                { type: "IssuePermissions", id },
+                { type: "Issues", id },
+            ],
         }),
         enableProjectPermissionsInheritance: build.mutation<
             ApiResponse<{ success: boolean }>,
@@ -642,7 +645,10 @@ export const issueApi = createApi({
                 method: "POST",
                 body: {},
             }),
-            invalidatesTags: (_result, _error, id) => [{ type: "Issues", id }],
+            invalidatesTags: (_result, _error, id) => [
+                { type: "IssuePermissions", id },
+                { type: "Issues", id },
+            ],
         }),
     }),
 });

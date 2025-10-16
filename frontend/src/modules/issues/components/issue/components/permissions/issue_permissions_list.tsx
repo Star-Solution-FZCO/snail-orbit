@@ -89,6 +89,7 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
                         }}
                         size="small"
                         color="error"
+                        disabled={row.is_inherited}
                     >
                         <DeleteIcon />
                     </IconButton>
@@ -144,7 +145,10 @@ const IssuePermissionsList: FC<IIssuePermissionsListProps> = ({ issue }) => {
                     startIcon={<CopyAllIcon />}
                     variant="outlined"
                     size="small"
-                    disabled={loading}
+                    disabled={
+                        !issue.disable_project_permissions_inheritance ||
+                        loading
+                    }
                 >
                     {t("permissions.project.copy")}
                 </Button>
