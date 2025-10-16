@@ -3,11 +3,11 @@ import type { AgileBoardT, CreateAgileBoardT } from "shared/model/types";
 const swimOptionsToValues = (
     option: NonNullable<AgileBoardT["swimlanes"]>["values"][0],
 ): string | null => {
-    if (option === null) return null;
+    if (option === null || option === undefined) return null;
     if (typeof option !== "object") return option.toString();
-    if ("value" in option) return option.value;
+    if ("value" in option && option.value !== "") return option.value;
     if ("email" in option && !option.email) return null;
-    if ("id" in option) return option.id;
+    if ("id" in option && option.id !== "") return option.id;
     return null;
 };
 
