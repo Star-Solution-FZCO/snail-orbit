@@ -529,18 +529,15 @@ async def get_board_issues(
     if query.search:
         q = q.find(transform_text_search(query.search))
 
-    if board.swimlane_field:
-        non_swimlane = None
-        if None in board.swimlanes:
-            non_swimlane = {col: [] for col in board.columns}
-        swimlanes = {
-            sl: {col: [] for col in board.columns}
-            for sl in board.swimlanes
-            if sl is not None
-        }
-    else:
-        non_swimlane = {col: [] for col in board.columns}
-        swimlanes = {}
+    board_swimlanes = board.swimlanes
+    if not board.swimlane_field:
+        board_swimlanes.append(None)
+    non_swimlane = {col: [] for col in board.columns}
+    swimlanes = {
+        sl: {col: [] for col in board.columns}
+        for sl in board_swimlanes
+        if sl is not None
+    }
 
     for issue in await q.project(m.IssueRO).to_list():
         if board.swimlane_field and not (
@@ -552,12 +549,12 @@ async def get_board_issues(
         if col_field.value not in board.columns:
             continue
         if not board.swimlane_field or sl_field.value is None:
-            if non_swimlane is not None:
-                non_swimlane[col_field.value].append(issue)
+            non_swimlane[col_field.value].append(issue)
             continue
         if sl_field.value not in swimlanes:
             continue
         swimlanes[sl_field.value][col_field.value].append(issue)
+
     if board.issues_order:
 
         def apply_relationship_ordering(col_issues: list[m.Issue]) -> None:
@@ -610,35 +607,22 @@ async def get_board_issues(
 
     issues_list = []
 
-    for cols in swimlanes.values():
+    for sw in board_swimlanes:
+        swimlane_issues = non_swimlane if sw is None else swimlanes[sw]
         swimlane_columns = []
-        for col_value in board.columns:
-            if col_value in cols:
-                issues = cols[col_value]
-                swimlane_columns.append(
-                    [
-                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
-                        for issue in issues
-                    ],
-                )
-            else:
-                swimlane_columns.append([])
-        issues_list.append(swimlane_columns)
 
-    if non_swimlane is not None:
-        non_swimlane_columns = []
         for col_value in board.columns:
-            if col_value in non_swimlane:
-                issues = non_swimlane[col_value]
-                non_swimlane_columns.append(
-                    [
-                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
-                        for issue in issues
-                    ],
-                )
-            else:
-                non_swimlane_columns.append([])
-        issues_list.append(non_swimlane_columns)
+            if col_value not in swimlane_issues:
+                swimlane_columns.append([])
+                continue
+            swimlane_columns.append(
+                [
+                    await IssueListOutput.from_obj(issue, accessible_tag_ids)
+                    for issue in swimlane_issues[col_value]
+                ],
+            )
+
+        issues_list.append(swimlane_columns)
 
     return SuccessPayloadOutput(
         payload=BoardIssuesOutput(
