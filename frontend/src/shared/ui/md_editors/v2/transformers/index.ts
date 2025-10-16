@@ -23,6 +23,7 @@ import {
     $createHorizontalRuleNode,
     $isHorizontalRuleNode,
 } from "@lexical/react/LexicalHorizontalRuleNode";
+import { MENTION } from "./mention_transformer";
 
 export const HR: ElementTransformer = {
     dependencies: [],
@@ -201,4 +202,10 @@ const mapToTableCells = (textContent: string): Array<TableCellNode> | null => {
         .map((text) => $createTableCell(text.trim() || " "));
 };
 
-export const TRANSFORMERS = [TABLE, HR, CHECK_LIST, ...LEXICAL_TRANSFORMERS];
+export const TRANSFORMERS = [
+    TABLE,
+    HR,
+    CHECK_LIST,
+    MENTION,
+    ...LEXICAL_TRANSFORMERS,
+];
