@@ -10344,7 +10344,7 @@
           "issue"
         ],
         "summary": "Copy Project Permissions To Issue",
-        "description": "Copy all project permissions to issue level",
+        "description": "Copy project permissions to issue level (only when inheritance is disabled)",
         "operationId": "copy_project_permissions_to_issue_api_v1_issue__issue_id_or_alias__permissions_copy_from_project_post",
         "security": [
           {
@@ -10522,7 +10522,7 @@
           "issue"
         ],
         "summary": "Disable Project Permissions Inheritance",
-        "description": "Disable project permission inheritance for this issue",
+        "description": "Disable project permission inheritance for this issue and copy project permissions",
         "operationId": "disable_project_permissions_inheritance_api_v1_issue__issue_id_or_alias__permissions_disable_inheritance_post",
         "security": [
           {
@@ -10739,7 +10739,7 @@
           "issue"
         ],
         "summary": "Enable Project Permissions Inheritance",
-        "description": "Enable project permission inheritance for this issue",
+        "description": "Enable project permission inheritance for this issue and remove duplicate permissions",
         "operationId": "enable_project_permissions_inheritance_api_v1_issue__issue_id_or_alias__permissions_enable_inheritance_post",
         "security": [
           {
@@ -49962,6 +49962,11 @@
           },
           "role": {
             "$ref": "#/components/schemas/ProjectRoleLinkField"
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "title": "Is Inherited",
+            "description": "Whether this permission is inherited from project"
           }
         },
         "type": "object",
@@ -49969,7 +49974,8 @@
           "id",
           "target_type",
           "target",
-          "role"
+          "role",
+          "is_inherited"
         ],
         "title": "IssuePermissionOutput"
       },
