@@ -11,7 +11,7 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 import pm.models as m
-from pm.api.context import current_user_context_dependency
+from pm.api.context import current_user, current_user_context_dependency
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
     CustomFieldGroupOutputRootModel,
@@ -967,7 +967,9 @@ async def select_options(
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Custom field not found')
     if isinstance(obj, m.UserCustomField | m.UserMultiCustomField):
         available_users = await obj.resolve_available_users()
-        selected = user_link_select(list(available_users), query)
+        selected = user_link_select(
+            list(available_users), query, current_user().user.id
+        )
         return BaseListOutput.make(
             count=selected.total,
             limit=selected.limit,
@@ -1049,6 +1051,7 @@ async def select_options_group(
             items=[],
         )
 
+    select_fn_kwargs: dict[str, Any] = {}
     if fields[0].type in (m.CustomFieldTypeT.VERSION, m.CustomFieldTypeT.VERSION_MULTI):
         select_fn = version_option_select
         output_fn = ShortOptionOutput.from_obj
@@ -1071,6 +1074,7 @@ async def select_options_group(
     elif fields[0].type in (m.CustomFieldTypeT.USER, m.CustomFieldTypeT.USER_MULTI):
         select_fn = user_link_select
         output_fn = UserFieldValueOutput.from_obj
+        select_fn_kwargs = {'current_user_id': current_user().user.id}
         all_options = set()
         for field in fields:
             field_users = await field.resolve_available_users()
@@ -1081,7 +1085,7 @@ async def select_options_group(
     if any(field.is_nullable for field in fields):
         all_options.add(None)
 
-    selected = select_fn(all_options, query)
+    selected = select_fn(all_options, query, **select_fn_kwargs)
 
     return BaseListOutput.make(
         count=selected.total,
