@@ -911,6 +911,7 @@ async def select_board_swimlanes(
         }
         fields = [field for field in fields if field.id in project_field_ids]
 
+    select_fn_kwargs: dict[str, Any] = {}
     if board.swimlane_field.type in (
         m.CustomFieldTypeT.ENUM,
         m.CustomFieldTypeT.ENUM_MULTI,
@@ -939,6 +940,7 @@ async def select_board_swimlanes(
     ):
         select_fn = user_link_select
         output_fn = UserFieldValueOutput.from_obj
+        select_fn_kwargs = {'current_user_id': current_user().user.id}
         all_options = set()
         for field in fields:
             field_users = await field.resolve_available_users()
@@ -949,7 +951,7 @@ async def select_board_swimlanes(
     if any(field.is_nullable for field in fields):
         all_options.add(None)
 
-    selected = select_fn(all_options, query)
+    selected = select_fn(all_options, query, **select_fn_kwargs)
 
     return BaseListOutput.make(
         count=selected.total,

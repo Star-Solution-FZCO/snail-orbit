@@ -3,6 +3,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
+from beanie import PydanticObjectId
 from fastapi import Query
 from pydantic import BaseModel
 
@@ -66,8 +67,15 @@ def _user_link_filter(obj: m.UserLinkField | None, search: str | None) -> bool:
 def user_link_select(
     objs: Sequence[m.UserLinkField | None],
     query: SelectParams,
+    current_user_id: PydanticObjectId | None = None,
 ) -> SelectResult[m.UserLinkField | None]:
-    return _select(objs, query, _user_link_filter, lambda o: o.name if o else '')
+    def sort_key(obj: m.UserLinkField | None) -> tuple[int, str]:
+        if obj is None:
+            return 1, ''
+        is_current_user = current_user_id is not None and obj.id == current_user_id
+        return 0 if is_current_user else 1, obj.name
+
+    return _select(objs, query, _user_link_filter, sort_key)
 
 
 def _state_filter(obj: m.StateOption | None, search: str | None) -> bool:
