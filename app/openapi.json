@@ -52,6 +52,10 @@
                   "example": "5eb7cf5a86d9755df3a6c593"
                 },
                 {
+                  "type": "string",
+                  "format": "email"
+                },
+                {
                   "type": "null"
                 }
               ],
@@ -516,7 +520,7 @@
         }
       }
     },
-    "/api/v1/user/{user_id}": {
+    "/api/v1/user/{user_identifier}": {
       "get": {
         "tags": [
           "api",
@@ -524,7 +528,7 @@
           "user"
         ],
         "summary": "Get User",
-        "operationId": "get_user_api_v1_user__user_id__get",
+        "operationId": "get_user_api_v1_user__user_identifier__get",
         "security": [
           {
             "HTTPBearer": []
@@ -532,16 +536,24 @@
         ],
         "parameters": [
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           }
         ],
@@ -692,7 +704,7 @@
           "user"
         ],
         "summary": "Update User",
-        "operationId": "update_user_api_v1_user__user_id__put",
+        "operationId": "update_user_api_v1_user__user_identifier__put",
         "security": [
           {
             "HTTPBearer": []
@@ -700,16 +712,24 @@
         ],
         "parameters": [
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           }
         ],
@@ -1126,7 +1146,7 @@
         ]
       }
     },
-    "/api/v1/user/{user_id}/global-roles": {
+    "/api/v1/user/{user_identifier}/global-roles": {
       "get": {
         "tags": [
           "api",
@@ -1135,7 +1155,7 @@
         ],
         "summary": "List User Global Roles",
         "description": "List global roles assigned to a user.",
-        "operationId": "list_user_global_roles_api_v1_user__user_id__global_roles_get",
+        "operationId": "list_user_global_roles_api_v1_user__user_identifier__global_roles_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1143,16 +1163,24 @@
         ],
         "parameters": [
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           },
           {
@@ -1361,7 +1389,7 @@
         }
       }
     },
-    "/api/v1/user/{user_id}/global-role/{role_id}": {
+    "/api/v1/user/{user_identifier}/global-role/{role_id}": {
       "post": {
         "tags": [
           "api",
@@ -1370,7 +1398,7 @@
         ],
         "summary": "Assign Global Role To User",
         "description": "Assign a global role to a user.",
-        "operationId": "assign_global_role_to_user_api_v1_user__user_id__global_role__role_id__post",
+        "operationId": "assign_global_role_to_user_api_v1_user__user_identifier__global_role__role_id__post",
         "security": [
           {
             "HTTPBearer": []
@@ -1378,16 +1406,24 @@
         ],
         "parameters": [
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           },
           {
@@ -1581,7 +1617,7 @@
         ],
         "summary": "Remove Global Role From User",
         "description": "Remove a global role from a user.",
-        "operationId": "remove_global_role_from_user_api_v1_user__user_id__global_role__role_id__delete",
+        "operationId": "remove_global_role_from_user_api_v1_user__user_identifier__global_role__role_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -1589,16 +1625,24 @@
         ],
         "parameters": [
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           },
           {
@@ -32749,7 +32793,7 @@
         }
       }
     },
-    "/api/v1/group/{group_id}/members/{user_id}": {
+    "/api/v1/group/{group_id}/members/{user_identifier}": {
       "post": {
         "tags": [
           "api",
@@ -32757,7 +32801,7 @@
           "group"
         ],
         "summary": "Add Group Member",
-        "operationId": "add_group_member_api_v1_group__group_id__members__user_id__post",
+        "operationId": "add_group_member_api_v1_group__group_id__members__user_identifier__post",
         "security": [
           {
             "HTTPBearer": []
@@ -32778,16 +32822,24 @@
             }
           },
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           }
         ],
@@ -32967,7 +33019,7 @@
           "group"
         ],
         "summary": "Remove Group Member",
-        "operationId": "remove_group_member_api_v1_group__group_id__members__user_id__delete",
+        "operationId": "remove_group_member_api_v1_group__group_id__members__user_identifier__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -32988,16 +33040,24 @@
             }
           },
           {
-            "name": "user_id",
+            "name": "user_identifier",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "User Id"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
             }
           }
         ],
