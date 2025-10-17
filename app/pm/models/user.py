@@ -9,6 +9,7 @@ import bcrypt
 import beanie.operators as bo
 import pymongo
 from beanie import Document, Indexed, PydanticObjectId
+from bson.errors import InvalidId
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, Field
 from starsol_otp import TOTP, generate_random_base32_secret
@@ -290,6 +291,19 @@ class User(Document):
         if not user.password_reset_token.check_secret(secret):
             return None
         return user
+
+    @classmethod
+    async def find_one_by_id_or_email(
+        cls, id_or_email: PydanticObjectId | str
+    ) -> Self | None:
+        if isinstance(id_or_email, PydanticObjectId):
+            return await cls.find_one(cls.id == id_or_email)
+        try:
+            object_id = PydanticObjectId(id_or_email)
+            return await cls.find_one(cls.id == object_id)
+        except InvalidId:  # noqa: S110
+            pass
+        return await cls.find_one(cls.email == id_or_email)
 
     def check_totp(self, code: str) -> bool:
         if not self.totp:

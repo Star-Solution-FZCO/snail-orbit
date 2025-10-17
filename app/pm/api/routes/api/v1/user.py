@@ -27,7 +27,7 @@ from pm.api.views.output import (
 )
 from pm.api.views.params import ListParams
 from pm.api.views.select import SelectParams
-from pm.api.views.user import UserOutput
+from pm.api.views.user import UserIdentifier, UserOutput
 from pm.services.avatars import generate_default_avatar
 from pm.tasks.actions import task_send_email, task_send_pararam_message
 from pm.templates import TemplateT, render_template
@@ -120,11 +120,11 @@ async def select_users(
     )
 
 
-@router.get('/{user_id}', responses=error_responses(*READ_ERRORS))
+@router.get('/{user_identifier}', responses=error_responses(*READ_ERRORS))
 async def get_user(
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
 ) -> SuccessPayloadOutput[UserFullOutput]:
-    user = await m.User.find_one(m.User.id == user_id)
+    user = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(user))
@@ -173,14 +173,14 @@ async def create_user(
 
 
 @router.put(
-    '/{user_id}',
+    '/{user_identifier}',
     responses=error_responses(*CRUD_ERRORS),
 )
 async def update_user(
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
     body: UserUpdate,
 ) -> SuccessPayloadOutput[UserFullOutput]:
-    obj: m.User | None = await m.User.find_one(m.User.id == user_id)
+    obj: m.User | None = await m.User.find_one_by_id_or_email(user_identifier)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     changes = {
@@ -216,13 +216,13 @@ async def update_user(
     return SuccessPayloadOutput(payload=UserFullOutput.from_obj(obj))
 
 
-@router.get('/{user_id}/global-roles', responses=error_responses(*READ_ERRORS))
+@router.get('/{user_identifier}/global-roles', responses=error_responses(*READ_ERRORS))
 async def list_user_global_roles(
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
     query: ListParams = Depends(),
 ) -> BaseListOutput[GlobalRoleOutput]:
     """List global roles assigned to a user."""
-    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    user: m.User | None = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
 
@@ -238,14 +238,14 @@ async def list_user_global_roles(
 
 
 @router.post(
-    '/{user_id}/global-role/{role_id}', responses=error_responses(*WRITE_ERRORS)
+    '/{user_identifier}/global-role/{role_id}', responses=error_responses(*WRITE_ERRORS)
 )
 async def assign_global_role_to_user(
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
     role_id: PydanticObjectId,
 ) -> ModelIdOutput:
     """Assign a global role to a user."""
-    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    user: m.User | None = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
 
@@ -267,14 +267,14 @@ async def assign_global_role_to_user(
 
 
 @router.delete(
-    '/{user_id}/global-role/{role_id}', responses=error_responses(*READ_ERRORS)
+    '/{user_identifier}/global-role/{role_id}', responses=error_responses(*READ_ERRORS)
 )
 async def remove_global_role_from_user(
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
     role_id: PydanticObjectId,
 ) -> ModelIdOutput:
     """Remove a global role from a user."""
-    user: m.User | None = await m.User.find_one(m.User.id == user_id)
+    user: m.User | None = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
 
