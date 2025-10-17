@@ -13,7 +13,7 @@ import { $applyNodeReplacement, TextNode } from "lexical";
 
 export type SerializedMentionNode = Spread<
     {
-        userId: string;
+        email: string;
         username: string;
     },
     SerializedTextNode
@@ -23,11 +23,11 @@ function convertMentionElement(
     domNode: HTMLElement,
 ): DOMConversionOutput | null {
     const textContent = domNode.textContent;
-    const userId = domNode.getAttribute("data-user-id");
+    const email = domNode.getAttribute("data-email");
     const username = domNode.getAttribute("data-username");
 
-    if (textContent !== null && userId !== null && username !== null) {
-        const node = $createMentionNode(userId, username);
+    if (textContent !== null && email !== null && username !== null) {
+        const node = $createMentionNode(email, username);
         return {
             node,
         };
@@ -37,7 +37,7 @@ function convertMentionElement(
 }
 
 export class MentionNode extends TextNode {
-    __userId: string;
+    __email: string;
     __username: string;
 
     static getType(): string {
@@ -46,7 +46,7 @@ export class MentionNode extends TextNode {
 
     static clone(node: MentionNode): MentionNode {
         return new MentionNode(
-            node.__userId,
+            node.__email,
             node.__username,
             node.__text,
             node.__key,
@@ -55,7 +55,7 @@ export class MentionNode extends TextNode {
 
     static importJSON(serializedNode: SerializedMentionNode): MentionNode {
         const node = $createMentionNode(
-            serializedNode.userId,
+            serializedNode.email,
             serializedNode.username,
         );
         node.setTextContent(serializedNode.text);
@@ -66,21 +66,16 @@ export class MentionNode extends TextNode {
         return node;
     }
 
-    constructor(
-        userId: string,
-        username: string,
-        text?: string,
-        key?: NodeKey,
-    ) {
+    constructor(email: string, username: string, text?: string, key?: NodeKey) {
         super(text ?? `@${username}`, key);
-        this.__userId = userId;
+        this.__email = email;
         this.__username = username;
     }
 
     exportJSON(): SerializedMentionNode {
         return {
             ...super.exportJSON(),
-            userId: this.__userId,
+            email: this.__email,
             username: this.__username,
             type: "mention",
             version: 1,
@@ -90,14 +85,14 @@ export class MentionNode extends TextNode {
     createDOM(config: EditorConfig): HTMLElement {
         const dom = super.createDOM(config);
         dom.className = "editor-mention";
-        dom.setAttribute("data-user-id", this.__userId);
+        dom.setAttribute("data-email", this.__email);
         dom.setAttribute("data-username", this.__username);
         return dom;
     }
 
     exportDOM(): DOMExportOutput {
         const element = document.createElement("span");
-        element.setAttribute("data-user-id", this.__userId);
+        element.setAttribute("data-email", this.__email);
         element.setAttribute("data-username", this.__username);
         element.className = "editor-mention";
         element.textContent = this.__text;
@@ -107,7 +102,7 @@ export class MentionNode extends TextNode {
     static importDOM(): DOMConversionMap | null {
         return {
             span: (domNode: HTMLElement) => {
-                if (!domNode.hasAttribute("data-user-id")) {
+                if (!domNode.hasAttribute("data-email")) {
                     return null;
                 }
                 return {
@@ -122,8 +117,8 @@ export class MentionNode extends TextNode {
         return true;
     }
 
-    getUserId(): string {
-        return this.__userId;
+    getEmail(): string {
+        return this.__email;
     }
 
     getUsername(): string {
@@ -144,10 +139,10 @@ export class MentionNode extends TextNode {
 }
 
 export function $createMentionNode(
-    userId: string,
+    email: string,
     username: string,
 ): MentionNode {
-    const mentionNode = new MentionNode(userId, username);
+    const mentionNode = new MentionNode(email, username);
     mentionNode.setMode("segmented").toggleDirectionless();
     return $applyNodeReplacement(mentionNode);
 }

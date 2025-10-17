@@ -2,7 +2,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import {
     LexicalTypeaheadMenuPlugin,
     MenuOption,
-    useBasicTypeaheadTriggerMatch,
+    MenuTextMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import {
     ListItem,
@@ -90,9 +90,21 @@ export const MentionsPlainTextPlugin: FC = () => {
 
     const [users, setUsers] = useState<BasicUserT[]>([]);
 
-    const checkForMentionMatch = useBasicTypeaheadTriggerMatch("@", {
-        minLength: 0,
-    });
+    const checkForMentionMatch = useCallback(
+        (text: string): MenuTextMatch | null => {
+            const match = /(?:^|\s)@([^@\n]{0,50})$/.exec(text);
+            if (match !== null) {
+                const maybeLeadingWhitespace = match[0].startsWith(" ") ? 1 : 0;
+                return {
+                    leadOffset: match.index + maybeLeadingWhitespace,
+                    matchingString: match[1],
+                    replaceableString: match[0].trim(),
+                };
+            }
+            return null;
+        },
+        [],
+    );
 
     const options = useMemo(
         () => users.map((user) => new MentionOption(user)),
@@ -106,7 +118,7 @@ export const MentionsPlainTextPlugin: FC = () => {
             closeMenu: () => void,
         ) => {
             editor.update(() => {
-                const mentionText = `[@${selectedOption.user.name}](${selectedOption.user.id})`;
+                const mentionText = `[@${selectedOption.user.name}](${selectedOption.user.email})`;
                 const mentionNode = $createTextNode(mentionText);
                 const spaceNode = $createTextNode(" ");
 
@@ -129,13 +141,13 @@ export const MentionsPlainTextPlugin: FC = () => {
 
     const checkForSlashTriggerMatch = useCallback(
         (text: string) => {
-            const match = checkForMentionMatch(text, editor);
+            const match = checkForMentionMatch(text);
             if (match !== null) {
                 setQueryString(match.matchingString);
             }
             return match;
         },
-        [checkForMentionMatch, editor, setQueryString],
+        [checkForMentionMatch, setQueryString],
     );
 
     useEffect(() => {
@@ -149,6 +161,8 @@ export const MentionsPlainTextPlugin: FC = () => {
                     setUsers(result.data.payload.items);
                 }
             });
+        } else {
+            setUsers([]);
         }
     }, [debouncedQuery, trigger]);
 

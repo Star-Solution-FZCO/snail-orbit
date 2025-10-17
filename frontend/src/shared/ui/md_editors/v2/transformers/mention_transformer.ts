@@ -12,16 +12,16 @@ export const MENTION: TextMatchTransformer = {
             return null;
         }
 
-        const userId = node.getUserId();
+        const email = node.getEmail();
         const username = node.getUsername();
 
-        return `[@${username}](${userId})`;
+        return `[@${username}](${email})`;
     },
     importRegExp: /\[@([^\]]+)\]\(([^)]+)\)/,
     regExp: /\[@([^\]]+)\]\(([^)]+)\)$/,
     replace: (textNode, match) => {
-        const [, username, userId] = match;
-        const mentionNode = $createMentionNode(userId, username);
+        const [, username, email] = match;
+        const mentionNode = $createMentionNode(email, username);
         textNode.replace(mentionNode);
     },
     trigger: "@",

@@ -427,8 +427,22 @@ export const useToolbarCommands = (
             if ($isRangeSelection(selection)) {
                 const selectedText = selection.getTextContent();
                 const linkText = selectedText || "";
-                const markdownLink = `[${linkText}](http://)`;
+                const markdownLink = `[${linkText}](https://)`;
                 selection.insertText(markdownLink);
+
+                const newSelection = $getSelection();
+                if ($isRangeSelection(newSelection)) {
+                    const newAnchorNode = newSelection.anchor.getNode();
+                    if ($isTextNode(newAnchorNode)) {
+                        const newOffset = newSelection.anchor.offset - 1;
+                        newSelection.setTextNodeRange(
+                            newAnchorNode,
+                            newOffset,
+                            newAnchorNode,
+                            newOffset,
+                        );
+                    }
+                }
             }
         });
     }, [editor]);
