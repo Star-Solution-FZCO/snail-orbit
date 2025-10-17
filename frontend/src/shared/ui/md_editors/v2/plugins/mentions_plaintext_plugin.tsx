@@ -11,7 +11,12 @@ import {
     Paper,
     Stack,
 } from "@mui/material";
-import { $createTextNode, TextNode } from "lexical";
+import {
+    $createTextNode,
+    $getSelection,
+    $isRangeSelection,
+    TextNode,
+} from "lexical";
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
@@ -19,7 +24,6 @@ import { userApi } from "shared/model/api/user.api";
 import type { BasicUserT } from "shared/model/types";
 import { UserAvatar } from "shared/ui/user_avatar";
 import useDebouncedState from "shared/utils/hooks/use-debounced-state";
-import { $createMentionNode } from "../nodes/mention_node";
 
 class MentionOption extends MenuOption {
     user: BasicUserT;
@@ -74,7 +78,7 @@ function MentionsTypeaheadMenuItem({
     );
 }
 
-export const MentionsPlugin: FC = () => {
+export const MentionsPlainTextPlugin: FC = () => {
     const [editor] = useLexicalComposerContext();
 
     const [debouncedQuery, setQueryString] = useDebouncedState<string | null>(
@@ -102,18 +106,21 @@ export const MentionsPlugin: FC = () => {
             closeMenu: () => void,
         ) => {
             editor.update(() => {
-                const mentionNode = $createMentionNode(
-                    selectedOption.user.id,
-                    selectedOption.user.name,
-                );
+                const mentionText = `[@${selectedOption.user.name}](${selectedOption.user.id})`;
+                const mentionNode = $createTextNode(mentionText);
                 const spaceNode = $createTextNode(" ");
 
                 if (nodeToReplace) {
                     nodeToReplace.replace(mentionNode);
+                    mentionNode.insertAfter(spaceNode);
+                } else {
+                    const selection = $getSelection();
+                    if ($isRangeSelection(selection)) {
+                        selection.insertNodes([mentionNode, spaceNode]);
+                    }
                 }
 
-                mentionNode.insertAfter(spaceNode);
-                spaceNode.select();
+                spaceNode.selectNext();
                 closeMenu();
             });
         },
@@ -128,7 +135,7 @@ export const MentionsPlugin: FC = () => {
             }
             return match;
         },
-        [checkForMentionMatch, editor],
+        [checkForMentionMatch, editor, setQueryString],
     );
 
     useEffect(() => {
