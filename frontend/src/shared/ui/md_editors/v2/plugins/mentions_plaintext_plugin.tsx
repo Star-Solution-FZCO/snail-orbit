@@ -86,7 +86,7 @@ export const MentionsPlainTextPlugin: FC = () => {
         300,
     );
 
-    const [trigger] = userApi.useLazyListSelectUserQuery();
+    const [trigger, { reset }] = userApi.useLazyListSelectUserQuery();
 
     const [users, setUsers] = useState<BasicUserT[]>([]);
 
@@ -151,6 +151,13 @@ export const MentionsPlainTextPlugin: FC = () => {
             });
         }
     }, [debouncedQuery, trigger]);
+
+    useEffect(() => {
+        return () => {
+            setUsers([]);
+            reset();
+        };
+    }, [reset]);
 
     return (
         <LexicalTypeaheadMenuPlugin<MentionOption>
