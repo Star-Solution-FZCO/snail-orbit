@@ -28,6 +28,12 @@ export const fieldToFieldValue = (
         case "date":
         case "datetime":
             return field.value;
+        case "boolean":
+        case "duration":
+        case "string":
+        case "float":
+        case "integer":
+            return field.value?.toString();
         default:
             return null;
     }
