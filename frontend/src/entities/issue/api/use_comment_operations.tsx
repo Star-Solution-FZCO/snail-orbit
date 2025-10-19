@@ -54,7 +54,7 @@ export const useCommentOperations = (props: { projectId?: string }) => {
                 params.text?.value || "",
             );
 
-            return updateComment({ ...params, ...processedText });
+            return updateComment({ ...params, text: processedText });
         },
         [processCommentText, updateComment],
     );

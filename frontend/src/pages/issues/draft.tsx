@@ -75,7 +75,10 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         await createIssue(draftId)
             .unwrap()
             .then((issue) =>
-                navigate({ to: `/issues/${issue.payload.id_readable}` }),
+                navigate({
+                    to: `/issues/$issueId/{-$subject}`,
+                    params: { issueId: issue.payload.id_readable },
+                }),
             )
             .catch((error) => {
                 toastApiError(error);

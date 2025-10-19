@@ -40,16 +40,10 @@ const CommentCard: FC<CommentCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const {
-        getCommentText,
-        updateComment,
-        isLoading,
-        isCommentUpdateLoading,
-        isUserHaveKeys,
-        isCommentsEncrypted,
-    } = useCommentOperations({
-        projectId,
-    });
+    const { getCommentText, updateComment, isLoading, isCommentUpdateLoading } =
+        useCommentOperations({
+            projectId,
+        });
 
     const { uploadAttachment, downloadAttachment } = useAttachmentOperations({
         projectId,
@@ -98,8 +92,6 @@ const CommentCard: FC<CommentCardProps> = ({
             })
             .catch(toastApiError);
     };
-
-    console.log(isCommentsEncrypted, isUserHaveKeys);
 
     return (
         <>
