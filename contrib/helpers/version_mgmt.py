@@ -25,38 +25,53 @@ def git(*args) -> bytes:
     return subprocess.check_output(['git'] + list(args))
 
 
-def parse_version(tag: str) -> VersionT:
+def parse_version(tag: str) -> VersionT | None:
     """Parse version tag into components: (major, minor, patch, rc_number)"""
     if match := VERSION_PATTERN.match(tag):
         major, minor, patch, rc = match.groups()
         return int(major), int(minor), int(patch), int(rc) if rc else None
-    raise ValueError(f'Invalid version tag: {tag}')
+    return None
 
 
-def format_version(major: int, minor: int, patch: int, rc: int | None = None) -> str:
+def format_version(version: VersionT) -> str:
     """Format version components into tag string"""
+    major, minor, patch, rc = version
     base_version = f'{major}.{minor}.{patch}'
     if rc is not None:
         return f'{base_version}-rc.{rc}'
     return base_version
 
 
+def version_sort_key(version: VersionT) -> tuple[int, int, int, float]:
+    major, minor, patch, rc = version
+    return major, minor, patch, rc if rc is not None else float('inf')
+
+
+def parse_tags(tags: list[str]) -> list[VersionT]:
+    """Parse list of tags into version components"""
+    versions_ = [parse_version(tag) for tag in tags]
+    versions: list[VersionT] = [v for v in versions_ if v]
+    versions.sort(key=version_sort_key, reverse=True)
+    return versions
+
+
 def get_latest_version() -> VersionT | None:
     """Get the latest version (including RC) as (major, minor, patch, rc_number)"""
-    tags = git('tag', '-l', '--sort=-v:refname').decode().strip().split('\n')
-    for tag in tags:
-        if VERSION_PATTERN.match(tag):
-            return parse_version(tag)
-    return None
+    tags = git('tag', '-l').decode().strip().split('\n')
+    versions = parse_tags(tags)
+    return next((v for v in versions), None)
 
 
-def head_version() -> str | None:
+def head_version() -> VersionT | None:
     """Get version tag at current HEAD"""
     tags = git('tag', '--points-at', 'HEAD').decode().strip().split('\n')
-    return next((tag for tag in tags if VERSION_PATTERN.match(tag)), None)
+    versions = parse_tags(tags)
+    return next((v for v in versions), None)
 
 
-def get_new_bump_version(latest_version: VersionT | None, version_update_type: VersionType | None) -> VersionT:
+def get_new_bump_version(
+    latest_version: VersionT | None, version_update_type: VersionType | None
+) -> VersionT:
     """Get new version for bump command"""
     if not latest_version:
         return FIRST_VERSION
@@ -68,7 +83,9 @@ def get_new_bump_version(latest_version: VersionT | None, version_update_type: V
             return major, minor, patch, rc + 1
         return major, minor, patch + 1, 1
     if rc:
-        raise CmdException('Cannot use --type when on RC version. Use promote or no arguments.')
+        raise CmdException(
+            'Cannot use --type when on RC version. Use promote or no arguments.'
+        )
     if version_update_type == VersionType.MAJOR:
         return major + 1, 0, 0, 1
     if version_update_type == VersionType.MINOR:
@@ -97,8 +114,8 @@ def handle_bump(args) -> int:
         print(f'Error: {e}')
         return 1
 
-    latest_version_str = format_version(*latest_version) if latest_version else None
-    new_version_str = format_version(*new_version)
+    latest_version_str = format_version(latest_version) if latest_version else None
+    new_version_str = format_version(new_version)
 
     print(f'Bumping version: {latest_version_str} -> {new_version_str}')
 
@@ -124,12 +141,12 @@ def handle_promote(args) -> int:
         print('Not on a tagged version')
         return 1
 
-    major, minor, patch, rc = parse_version(head_vers)
+    major, minor, patch, rc = head_vers
     if not rc:
-        print(f'Current version {head_vers} is not an RC')
+        print(f'Current version {format_version(head_vers)} is not an RC')
         return 1
 
-    new_version_str = format_version(major, minor, patch)
+    new_version_str = format_version((major, minor, patch, None))
 
     print(f'Promoting version: {head_vers} -> {new_version_str}')
 
@@ -151,7 +168,9 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest='command', help='Commands', required=True)
 
     # Bump subparser
-    bump_parser = subparsers.add_parser('bump', help='Create new RC version or increment existing RC')
+    bump_parser = subparsers.add_parser(
+        'bump', help='Create new RC version or increment existing RC'
+    )
     bump_parser.add_argument(
         '-t',
         '--type',
@@ -162,17 +181,31 @@ def main() -> int:
     bump_parser.add_argument(
         '--no-fetch', action='store_true', help='do not fetch tags from remote'
     )
-    bump_parser.add_argument('--push', action='store_true', help='push new tag to remote')
-    bump_parser.add_argument('--dry-run', action='store_true', help='show what would be done without making changes')
+    bump_parser.add_argument(
+        '--push', action='store_true', help='push new tag to remote'
+    )
+    bump_parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='show what would be done without making changes',
+    )
     bump_parser.set_defaults(func=handle_bump)
 
     # Promote subparser
-    promote_parser = subparsers.add_parser('promote', help='Promote current RC version to final release')
+    promote_parser = subparsers.add_parser(
+        'promote', help='Promote current RC version to final release'
+    )
     promote_parser.add_argument(
         '--no-fetch', action='store_true', help='do not fetch tags from remote'
     )
-    promote_parser.add_argument('--push', action='store_true', help='push new tag to remote')
-    promote_parser.add_argument('--dry-run', action='store_true', help='show what would be done without making changes')
+    promote_parser.add_argument(
+        '--push', action='store_true', help='push new tag to remote'
+    )
+    promote_parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='show what would be done without making changes',
+    )
     promote_parser.set_defaults(func=handle_promote)
 
     args = parser.parse_args()
