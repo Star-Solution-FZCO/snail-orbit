@@ -914,7 +914,7 @@ class BaseCustomFieldValueOutput(BaseModel, ABC):
     value: Any | None
 
     @classmethod
-    def from_obj(cls, obj: m.CustomFieldValue) -> Self:
+    def from_obj(cls, obj: m.CustomFieldValueUnion) -> Self:
         return cls(
             id=obj.id,
             gid=obj.gid,
@@ -924,7 +924,7 @@ class BaseCustomFieldValueOutput(BaseModel, ABC):
         )
 
     @classmethod
-    def transform_value(cls, obj: m.CustomFieldValue) -> Any:
+    def transform_value(cls, obj: m.CustomFieldValueUnion) -> Any:
         return obj.value
 
 

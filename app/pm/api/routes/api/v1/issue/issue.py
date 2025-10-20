@@ -130,6 +130,9 @@ class IssuePermissionOutput(BaseModel):
     target_type: m.PermissionTargetType
     target: m.GroupLinkField | m.UserLinkField
     role: m.ProjectRoleLinkField
+    is_inherited: bool = Field(
+        description='Whether this permission is inherited from project'
+    )
 
 
 @router.get('/list')
@@ -174,7 +177,7 @@ async def list_issues(
     ]
     q = q.aggregate(
         pipeline,
-        projection_model=m.Issue.get_ro_projection_model(),
+        projection_model=m.IssueRO,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
 
@@ -917,10 +920,13 @@ async def link_issues(
         if obj.id == target_issue.id:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Cannot link issue to itself')
 
-        if any(il.issue.id == target_issue.id for il in obj.interlinks):
+        if any(
+            il.issue.id == target_issue.id and il.type == body.type
+            for il in obj.interlinks
+        ):
             raise HTTPException(
                 HTTPStatus.CONFLICT,
-                f'Issue already linked to {target_issue.id_readable}',
+                f'Issue already has {body.type} link to {target_issue.id_readable}',
             )
 
         il_id = uuid4()
@@ -1015,6 +1021,14 @@ async def update_link(
 
     if src_il.type == body.type:
         raise HTTPException(HTTPStatus.CONFLICT, 'Interlink type is the same')
+
+    # Check if the new type already exists between these issues
+    if any(
+        il.issue.id == src_il.issue.id and il.type == body.type for il in obj.interlinks
+    ):
+        raise HTTPException(
+            HTTPStatus.CONFLICT, f'Issue already has {body.type} link to target issue'
+        )
 
     target_obj: m.Issue | None = await m.Issue.find_one(m.Issue.id == src_il.issue.id)
     if not target_obj:
@@ -1199,17 +1213,38 @@ async def get_issue_permissions(
     user_ctx = current_user()
     user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
 
+    all_permissions = [
+        IssuePermissionOutput(
+            id=perm.id,
+            target_type=perm.target_type,
+            target=perm.target,
+            role=perm.role,
+            is_inherited=False,
+        )
+        for perm in obj.permissions
+    ]
+
+    if not obj.disable_project_permissions_inheritance:
+        project = await obj.get_project()
+        all_permissions.extend(
+            [
+                IssuePermissionOutput(
+                    id=perm.id,
+                    target_type=perm.target_type,
+                    target=perm.target,
+                    role=perm.role,
+                    is_inherited=True,
+                )
+                for perm in project.permissions
+            ]
+        )
+
+    total_count = len(all_permissions)
+    paginated_permissions = all_permissions[query.offset : query.offset + query.limit]
+
     return BaseListOutput.make(
-        items=[
-            IssuePermissionOutput(
-                id=perm.id,
-                target_type=perm.target_type,
-                target=perm.target,
-                role=perm.role,
-            )
-            for perm in obj.permissions[query.offset : query.offset + query.limit]
-        ],
-        count=len(obj.permissions),
+        items=paginated_permissions,
+        count=total_count,
         limit=query.limit,
         offset=query.offset,
     )
@@ -1384,7 +1419,7 @@ async def resolve_issue_permissions(
 async def copy_project_permissions_to_issue(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessOutput:
-    """Copy all project permissions to issue level"""
+    """Copy project permissions to issue level (only when inheritance is disabled)"""
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -1397,26 +1432,24 @@ async def copy_project_permissions_to_issue(
         ),
     )
 
+    # If inheritance is enabled, project permissions are already effective - no need to copy
+    if not obj.disable_project_permissions_inheritance:
+        return SuccessOutput()
+
     project: m.Project | None = await obj.get_project(fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
     copied_count = 0
     for project_permission in project.permissions:
-        equivalent_exists = any(
-            perm.target_type == project_permission.target_type
-            and perm.target.id == project_permission.target.id
-            and perm.role.id == project_permission.role.id
-            for perm in obj.permissions
-        )
-
-        if not equivalent_exists:
-            new_permission = m.ProjectPermission(
-                target_type=project_permission.target_type,
-                target=project_permission.target,
-                role=project_permission.role,
+        if project_permission not in obj.permissions:
+            obj.permissions.append(
+                m.ProjectPermission(
+                    target_type=project_permission.target_type,
+                    target=project_permission.target,
+                    role=project_permission.role,
+                )
             )
-            obj.permissions.append(new_permission)
             copied_count += 1
 
     if copied_count > 0:
@@ -1436,7 +1469,7 @@ async def copy_project_permissions_to_issue(
 async def disable_project_permissions_inheritance(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessOutput:
-    """Disable project permission inheritance for this issue"""
+    """Disable project permission inheritance for this issue and copy project permissions"""
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -1451,17 +1484,18 @@ async def disable_project_permissions_inheritance(
     if obj.disable_project_permissions_inheritance:
         return SuccessOutput()
 
-    issue_permissions = obj.get_user_permissions(user_ctx.user, user_ctx.all_group_ids)
-    has_manage_permissions = ProjectPermissions.ISSUE_MANAGE_PERMISSIONS.check(
-        issue_permissions
-    ) and ProjectPermissions.ISSUE_READ.check(issue_permissions)
+    # Copy project permissions to issue level before disabling inheritance
+    project = await obj.get_project()
 
-    if not has_manage_permissions:
-        raise HTTPException(
-            HTTPStatus.CONFLICT,
-            'You would lose management permissions on this issue. '
-            'First copy project permissions or create direct issue permissions.',
-        )
+    for project_permission in project.permissions:
+        if project_permission not in obj.permissions:
+            obj.permissions.append(
+                m.ProjectPermission(
+                    target_type=project_permission.target_type,
+                    target=project_permission.target,
+                    role=project_permission.role,
+                )
+            )
 
     obj.disable_project_permissions_inheritance = True
     await obj.replace()
@@ -1479,7 +1513,7 @@ async def disable_project_permissions_inheritance(
 async def enable_project_permissions_inheritance(
     issue_id_or_alias: PydanticObjectId | str,
 ) -> SuccessOutput:
-    """Enable project permission inheritance for this issue"""
+    """Enable project permission inheritance for this issue and remove duplicate permissions"""
     obj: m.Issue | None = await m.Issue.find_one_by_id_or_alias(issue_id_or_alias)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Issue not found')
@@ -1494,6 +1528,12 @@ async def enable_project_permissions_inheritance(
 
     if not obj.disable_project_permissions_inheritance:
         return SuccessOutput()
+
+    # Remove issue permissions that are duplicated at the project level
+    project = await obj.get_project()
+    obj.permissions = [
+        perm for perm in obj.permissions if perm not in project.permissions
+    ]
 
     obj.disable_project_permissions_inheritance = False
     await obj.replace()
@@ -1881,7 +1921,7 @@ async def validate_custom_fields_values(
     project: m.Project,
     issue: m.Issue | None = None,
     ignore_none_errors: bool = False,
-) -> tuple[list[m.CustomFieldValue], list[m.CustomFieldValidationError]]:
+) -> tuple[list[m.CustomFieldValueUnion], list[m.CustomFieldValidationError]]:
     project_fields = {f.name: f for f in project.custom_fields}
     issue_fields = {f.name: f for f in issue.fields} if issue else {}
     for f_name in fields:
@@ -1909,7 +1949,7 @@ async def validate_custom_fields_values(
             val_ = err.value
             errors.append(err)
         results.append(
-            m.CustomFieldValue(
+            m.get_cf_value_class(f.type)(
                 id=f.id,
                 gid=f.gid,
                 name=f.name,
@@ -1921,9 +1961,9 @@ async def validate_custom_fields_values(
 
 
 def filter_valid_project_fields(
-    fields: list[m.CustomFieldValue],
+    fields: list[m.CustomFieldValueUnion],
     project: m.Project | None,
-) -> list[m.CustomFieldValue]:
+) -> list[m.CustomFieldValueUnion]:
     if not project:
         return []
     project_field_ids = {f.id for f in project.custom_fields}

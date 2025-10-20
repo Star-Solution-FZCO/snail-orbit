@@ -14,6 +14,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useEditorStyles } from "../hooks/use-editor-styles";
 import { FocusBlurPlugin } from "../plugins/focus_blur_plugin";
+import { MentionsPlainTextPlugin } from "../plugins/mentions_plaintext_plugin";
 import { ToolbarPlugin } from "../plugins/toolbar/toolbar_plugin";
 import { theme } from "./theme";
 import { EditorProps } from "./types";
@@ -94,6 +95,7 @@ export const MDEditor: FC<EditorProps> = ({
 
                 <HistoryPlugin />
                 <FocusBlurPlugin onFocus={onFocus} onBlur={onBlur} />
+                <MentionsPlainTextPlugin />
 
                 {autoFocus && <AutoFocusPlugin />}
             </LexicalComposer>

@@ -5,10 +5,10 @@ import { useDraftOperations } from "entities/issue/api/use_draft_operations";
 import { useProjectData } from "entities/issue/api/use_project_data";
 import { DraftView } from "modules/issues/components/issue/draft_view";
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi } from "shared/model";
+import { issueApi, useAppSelector } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
@@ -26,6 +26,8 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const router = useRouter();
     const { setAction } = useNavbarSettings();
 
+    const { user } = useAppSelector((state) => state.profile);
+
     const {
         data,
         isLoading,
@@ -36,7 +38,15 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         project,
         isLoading: isProjectLoading,
         error: projectError,
+        isEncrypted,
+        encryptionKeys,
     } = useProjectData({ projectId: data?.payload.project?.id });
+
+    const isUserAddedToEncryption = useMemo(() => {
+        if (!isEncrypted) return false;
+        if (!user) return false;
+        return !!encryptionKeys.some((key) => key.target_id === user.id);
+    }, [encryptionKeys, isEncrypted, user]);
 
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
@@ -65,7 +75,10 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         await createIssue(draftId)
             .unwrap()
             .then((issue) =>
-                navigate({ to: `/issues/${issue.payload.id_readable}` }),
+                navigate({
+                    to: `/issues/$issueId/{-$subject}`,
+                    params: { issueId: issue.payload.id_readable },
+                }),
             )
             .catch((error) => {
                 toastApiError(error);
@@ -126,6 +139,8 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
                                 isDraftUpdateLoading ||
                                 createLoading
                             }
+                            isEncrypted={isEncrypted}
+                            isUserAddedToEncryption={isUserAddedToEncryption}
                         />
                     )}
                 </>

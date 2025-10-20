@@ -32,7 +32,10 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
 
     const isImage = attachment.content_type.startsWith("image/");
 
-    const canDelete = user?.id === attachment.author.id;
+    const sourceType =
+        "source_type" in attachment ? attachment.source_type : "issue";
+    const canDelete =
+        user?.id === attachment.author.id && sourceType === "issue";
 
     return (
         <Stack
@@ -44,7 +47,7 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
             borderRadius={1}
             gap={1}
         >
-            {selectionEnabled && (
+            {selectionEnabled && canDelete && (
                 <Checkbox
                     sx={{ flexShrink: 0 }}
                     checked={selected}

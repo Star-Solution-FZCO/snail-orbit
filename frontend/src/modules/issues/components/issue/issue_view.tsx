@@ -1,7 +1,8 @@
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { IssueCustomFields } from "modules/issues/components/issue/components/issue_custom_fields";
 import type { FC } from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { IssueT, ProjectT } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { FieldContainer } from "./components/field_container";
@@ -20,6 +21,7 @@ type IssueFormProps = {
     onUpdateCache: (issueValue: Partial<IssueT>) => void;
     loading?: boolean;
     isEncrypted?: boolean;
+    isUserAddedToEncryption?: boolean;
     customFieldsErrors?: Record<string, string>;
 };
 
@@ -32,7 +34,10 @@ export const IssueView: FC<IssueFormProps> = (props) => {
         loading,
         isEncrypted,
         customFieldsErrors,
+        isUserAddedToEncryption,
     } = props;
+
+    const { t } = useTranslation();
 
     const [displayMode, setDisplayMode] = useState<"view" | "edit">("view");
     const [isAddLinksOpen, setIsAddLinksOpen] = useState(false);
@@ -46,6 +51,12 @@ export const IssueView: FC<IssueFormProps> = (props) => {
         <Box display="flex" alignItems="flex-start" gap={3}>
             <Stack direction="column" gap={2} flex={1}>
                 <Box display="flex" flexDirection="column" gap={2}>
+                    {isEncrypted && !isUserAddedToEncryption && (
+                        <Typography color="error">
+                            {t("error.projectEncryptedButNoKeys")}
+                        </Typography>
+                    )}
+
                     <IssueMeta issue={issue} />
 
                     {displayMode === "view" && (

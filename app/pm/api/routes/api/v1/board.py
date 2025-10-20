@@ -19,6 +19,7 @@ from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import (
     BooleanCustomFieldGroupWithValuesOutput,
     CustomFieldGroupLinkOutput,
+    CustomFieldGroupSelectOptionsT,
     CustomFieldGroupWithValuesOutputT,
     CustomFieldLinkOutput,
     DateCustomFieldGroupWithValuesOutput,
@@ -26,10 +27,12 @@ from pm.api.views.custom_fields import (
     EnumCustomFieldGroupWithValuesOutput,
     FloatCustomFieldGroupWithValuesOutput,
     IntegerCustomFieldGroupWithValuesOutput,
+    ShortOptionOutput,
     SprintCustomFieldGroupWithValuesOutput,
     StateCustomFieldGroupWithValuesOutput,
     StringCustomFieldGroupWithValuesOutput,
     UserCustomFieldGroupWithValuesOutput,
+    UserFieldValueOutput,
     VersionCustomFieldGroupWithValuesOutput,
     custom_field_group_with_values_output_cls_from_type,
 )
@@ -52,6 +55,13 @@ from pm.api.views.permission import (
     PermissionOutput,
     UpdatePermissionBody,
 )
+from pm.api.views.select import (
+    SelectParams,
+    enum_option_select,
+    state_option_select,
+    user_link_select,
+    version_option_select,
+)
 from pm.api.views.user import UserOutput
 from pm.permissions import PermAnd, ProjectPermissions
 from pm.services.issue import update_tags_on_close_resolve
@@ -72,6 +82,9 @@ router = APIRouter(
         (HTTPStatus.FORBIDDEN, ErrorOutput),
     ),
 )
+
+
+BOARD_COLUMN_FIELD_TYPES = {m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.STATE}
 
 
 BoardColumnOutputT = (
@@ -285,7 +298,7 @@ async def create_board(
     if not column_field_:
         raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
     column_field = column_field_[0]
-    if column_field.type not in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM):
+    if column_field.type not in BOARD_COLUMN_FIELD_TYPES:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
             'Column field must be of type STATE or ENUM',
@@ -388,10 +401,7 @@ async def update_board(
         if not column_field_:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Column field not found')
         board.column_field = column_field_[0]
-        if board.column_field.type not in (
-            m.CustomFieldTypeT.STATE,
-            m.CustomFieldTypeT.ENUM,
-        ):
+        if board.column_field.type not in BOARD_COLUMN_FIELD_TYPES:
             raise HTTPException(
                 HTTPStatus.BAD_REQUEST,
                 'Column field must be of type STATE or ENUM',
@@ -519,20 +529,17 @@ async def get_board_issues(
     if query.search:
         q = q.find(transform_text_search(query.search))
 
-    if board.swimlane_field:
-        non_swimlane = None
-        if None in board.swimlanes:
-            non_swimlane = {col: [] for col in board.columns}
-        swimlanes = {
-            sl: {col: [] for col in board.columns}
-            for sl in board.swimlanes
-            if sl is not None
-        }
-    else:
-        non_swimlane = {col: [] for col in board.columns}
-        swimlanes = {}
+    board_swimlanes = board.swimlanes
+    if not board.swimlane_field:
+        board_swimlanes.append(None)
+    non_swimlane = {col: [] for col in board.columns}
+    swimlanes = {
+        sl: {col: [] for col in board.columns}
+        for sl in board_swimlanes
+        if sl is not None
+    }
 
-    for issue in await q.project(m.Issue.get_ro_projection_model()).to_list():
+    for issue in await q.project(m.IssueRO).to_list():
         if board.swimlane_field and not (
             sl_field := issue.get_field_by_gid(board.swimlane_field.gid)
         ):
@@ -542,12 +549,12 @@ async def get_board_issues(
         if col_field.value not in board.columns:
             continue
         if not board.swimlane_field or sl_field.value is None:
-            if non_swimlane is not None:
-                non_swimlane[col_field.value].append(issue)
+            non_swimlane[col_field.value].append(issue)
             continue
         if sl_field.value not in swimlanes:
             continue
         swimlanes[sl_field.value][col_field.value].append(issue)
+
     if board.issues_order:
 
         def apply_relationship_ordering(col_issues: list[m.Issue]) -> None:
@@ -600,35 +607,22 @@ async def get_board_issues(
 
     issues_list = []
 
-    for cols in swimlanes.values():
+    for sw in board_swimlanes:
+        swimlane_issues = non_swimlane if sw is None else swimlanes[sw]
         swimlane_columns = []
-        for col_value in board.columns:
-            if col_value in cols:
-                issues = cols[col_value]
-                swimlane_columns.append(
-                    [
-                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
-                        for issue in issues
-                    ],
-                )
-            else:
-                swimlane_columns.append([])
-        issues_list.append(swimlane_columns)
 
-    if non_swimlane is not None:
-        non_swimlane_columns = []
         for col_value in board.columns:
-            if col_value in non_swimlane:
-                issues = non_swimlane[col_value]
-                non_swimlane_columns.append(
-                    [
-                        await IssueListOutput.from_obj(issue, accessible_tag_ids)
-                        for issue in issues
-                    ],
-                )
-            else:
-                non_swimlane_columns.append([])
-        issues_list.append(non_swimlane_columns)
+            if col_value not in swimlane_issues:
+                swimlane_columns.append([])
+                continue
+            swimlane_columns.append(
+                [
+                    await IssueListOutput.from_obj(issue, accessible_tag_ids)
+                    for issue in swimlane_issues[col_value]
+                ],
+            )
+
+        issues_list.append(swimlane_columns)
 
     return SuccessPayloadOutput(
         payload=BoardIssuesOutput(
@@ -762,7 +756,7 @@ async def select_column_field(
     fields = [
         cf
         for cf in _intersect_custom_fields(projects)
-        if cf.type in (m.CustomFieldTypeT.STATE, m.CustomFieldTypeT.ENUM)
+        if cf.type in BOARD_COLUMN_FIELD_TYPES
     ]
     return BaseListOutput.make(
         count=len(fields),
@@ -824,17 +818,146 @@ async def select_card_color_field(
     fields = [
         cf
         for cf in _intersect_custom_fields(projects)
-        if cf.type
-        in (
-            m.CustomFieldTypeT.ENUM,
-            m.CustomFieldTypeT.STATE,
-        )
+        if cf.type in BOARD_COLUMN_FIELD_TYPES
     ]
     return BaseListOutput.make(
         count=len(fields),
         limit=len(fields),
         offset=0,
         items=[CustomFieldGroupLinkOutput.from_obj(cf) for cf in fields],
+    )
+
+
+@router.get('/{board_id}/columns/select')
+async def select_board_columns(
+    board_id: PydanticObjectId,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[ShortOptionOutput]:
+    """
+    Select possible column values for a specific board.
+    """
+    user_ctx = current_user()
+
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+
+    fields = await board.column_field.resolve()
+
+    if board.projects:
+        projects = await m.Project.find(
+            bo.In(m.Project.id, {pr.id for pr in board.projects}), fetch_links=True
+        ).to_list()
+        project_field_ids = {
+            field.id for proj in projects for field in proj.custom_fields
+        }
+        fields = [field for field in fields if field.id in project_field_ids]
+
+    if board.column_field.type == m.CustomFieldTypeT.ENUM:
+        select_fn = enum_option_select
+    elif board.column_field.type == m.CustomFieldTypeT.STATE:
+        select_fn = state_option_select
+    else:
+        raise HTTPException(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            f'Board column field type {board.column_field.type} has an invalid type',
+        )
+    all_options = {opt for field in fields for opt in field.options}
+    if any(field.is_nullable for field in fields):
+        all_options.add(None)
+
+    selected = select_fn(all_options, query)
+
+    return BaseListOutput.make(
+        count=selected.total,
+        limit=selected.limit,
+        offset=selected.offset,
+        items=[ShortOptionOutput.from_obj(opt) for opt in selected.items],
+    )
+
+
+@router.get('/{board_id}/swimlanes/select')
+async def select_board_swimlanes(
+    board_id: PydanticObjectId,
+    query: SelectParams = Depends(),
+) -> BaseListOutput[CustomFieldGroupSelectOptionsT]:
+    """
+    Select possible swimlane values for a specific board.
+    """
+    user_ctx = current_user()
+
+    board = await m.Board.find_one(m.Board.id == board_id)
+    if not board:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Board not found')
+    if not board.check_permissions(user_ctx, m.PermissionType.VIEW):
+        raise HTTPException(HTTPStatus.FORBIDDEN, 'No permission to view this board')
+
+    # Check if board has swimlanes configured
+    if not board.swimlane_field:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Board has no swimlane field configured'
+        )
+
+    fields = await board.swimlane_field.resolve()
+
+    if board.projects:
+        projects = await m.Project.find(
+            bo.In(m.Project.id, {pr.id for pr in board.projects}), fetch_links=True
+        ).to_list()
+        project_field_ids = {
+            field.id for proj in projects for field in proj.custom_fields
+        }
+        fields = [field for field in fields if field.id in project_field_ids]
+
+    select_fn_kwargs: dict[str, Any] = {}
+    if board.swimlane_field.type in (
+        m.CustomFieldTypeT.ENUM,
+        m.CustomFieldTypeT.ENUM_MULTI,
+        m.CustomFieldTypeT.OWNED,
+        m.CustomFieldTypeT.OWNED_MULTI,
+        m.CustomFieldTypeT.SPRINT,
+        m.CustomFieldTypeT.SPRINT_MULTI,
+    ):
+        select_fn = enum_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif board.swimlane_field.type == m.CustomFieldTypeT.STATE:
+        select_fn = state_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif board.swimlane_field.type in (
+        m.CustomFieldTypeT.VERSION,
+        m.CustomFieldTypeT.VERSION_MULTI,
+    ):
+        select_fn = version_option_select
+        output_fn = ShortOptionOutput.from_obj
+        all_options = {opt for field in fields for opt in field.options}
+    elif board.swimlane_field.type in (
+        m.CustomFieldTypeT.USER,
+        m.CustomFieldTypeT.USER_MULTI,
+    ):
+        select_fn = user_link_select
+        output_fn = UserFieldValueOutput.from_obj
+        select_fn_kwargs = {'current_user_id': current_user().user.id}
+        all_options = set()
+        for field in fields:
+            field_users = await field.resolve_available_users()
+            all_options.update(field_users)
+    else:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, 'Custom field is not selectable')
+
+    if any(field.is_nullable for field in fields):
+        all_options.add(None)
+
+    selected = select_fn(all_options, query, **select_fn_kwargs)
+
+    return BaseListOutput.make(
+        count=selected.total,
+        limit=selected.limit,
+        offset=selected.offset,
+        items=[output_fn(opt) for opt in selected.items],
     )
 
 

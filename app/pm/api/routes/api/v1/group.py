@@ -22,7 +22,7 @@ from pm.api.views.output import (
     SuccessPayloadOutput,
 )
 from pm.api.views.params import ListParams
-from pm.api.views.user import UserOutput
+from pm.api.views.user import UserIdentifier, UserOutput
 from pm.permissions import GLOBAL_PERMISSIONS_BY_CATEGORY, GlobalPermissions
 
 __all__ = ('router',)
@@ -251,10 +251,12 @@ async def list_group_members(
     )
 
 
-@router.post('/{group_id}/members/{user_id}', responses=error_responses(*WRITE_ERRORS))
+@router.post(
+    '/{group_id}/members/{user_identifier}', responses=error_responses(*WRITE_ERRORS)
+)
 async def add_group_member(
     group_id: PydanticObjectId,
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
 ) -> ModelIdOutput:
     group: m.Group | None = await m.Group.find_one(
         m.Group.id == group_id, with_children=True
@@ -267,7 +269,7 @@ async def add_group_member(
             HTTPStatus.BAD_REQUEST, 'Cannot add members to external group'
         )
 
-    user = await m.User.find_one(m.User.id == user_id)
+    user = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     if any(gr.id == group.id for gr in user.groups):
@@ -278,10 +280,12 @@ async def add_group_member(
     return ModelIdOutput.from_obj(group)
 
 
-@router.delete('/{group_id}/members/{user_id}', responses=error_responses(*READ_ERRORS))
+@router.delete(
+    '/{group_id}/members/{user_identifier}', responses=error_responses(*READ_ERRORS)
+)
 async def remove_group_member(
     group_id: PydanticObjectId,
-    user_id: PydanticObjectId,
+    user_identifier: UserIdentifier,
 ) -> ModelIdOutput:
     group = await m.Group.find_one(m.Group.id == group_id, with_children=True)
     if not group:
@@ -292,7 +296,7 @@ async def remove_group_member(
             HTTPStatus.BAD_REQUEST, 'Cannot remove member from this group type'
         )
 
-    user = await m.User.find_one(m.User.id == user_id)
+    user = await m.User.find_one_by_id_or_email(user_identifier)
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
     if not any(gr.id == group.id for gr in user.groups):

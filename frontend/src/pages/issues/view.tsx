@@ -5,9 +5,9 @@ import { useIssueOperations } from "entities/issue/api/use_issue_operations";
 import { useProjectData } from "entities/issue/api/use_project_data";
 import IssueViewComponent from "modules/issues/components/issue/issue_view";
 import type { FC } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { issueApi } from "shared/model";
+import { issueApi, useAppSelector } from "shared/model";
 import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link, PageTitle } from "shared/ui";
@@ -24,6 +24,8 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const { t } = useTranslation();
     const { setAction } = useNavbarSettings();
 
+    const { user } = useAppSelector((state) => state.profile);
+
     const {
         data: issueData,
         isLoading: isIssueLoading,
@@ -36,8 +38,15 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
         project,
         isLoading: isProjectLoading,
         isEncrypted,
+        encryptionKeys,
         error: projectError,
     } = useProjectData({ projectId: issueData?.payload.project.id });
+
+    const isUserAddedToEncryption = useMemo(() => {
+        if (!isEncrypted) return false;
+        if (!user) return false;
+        return !!encryptionKeys.some((key) => key.target_id === user.id);
+    }, [encryptionKeys, isEncrypted, user]);
 
     const issue = issueData?.payload;
 
@@ -116,6 +125,7 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
                             loading={isLoading || isIssueUpdateLoading}
                             isEncrypted={isEncrypted}
                             customFieldsErrors={issue.error_fields}
+                            isUserAddedToEncryption={isUserAddedToEncryption}
                         />
                     </>
                 )

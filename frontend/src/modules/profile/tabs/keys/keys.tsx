@@ -7,7 +7,7 @@ import {
 } from "@mui/x-data-grid";
 import { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { encryptionKeysApi } from "shared/model";
 import type {
@@ -21,6 +21,7 @@ import {
     getFingerprint,
     writeKeyPairToDB,
 } from "shared/utils/crypto/crypto";
+import { getAllKeys } from "shared/utils/crypto/crypto_keys";
 
 const emptyArr = [] as EncryptionKeyT[];
 
@@ -32,6 +33,9 @@ export const Keys = memo(() => {
     });
 
     const [isKeyCreating, setIsKeyCreating] = useState(false);
+    const [localKeyFingerprints, setLocalKeyFingerprints] = useState<
+        Set<string>
+    >(new Set());
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: 50,
@@ -81,7 +85,12 @@ export const Keys = memo(() => {
                 is_active: true,
             })
                 .unwrap()
-                .then(() => writeKeyPairToDB(keyPair))
+                .then(() => {
+                    writeKeyPairToDB(keyPair);
+                    setLocalKeyFingerprints((prev) =>
+                        new Set(prev).add(fingerprint),
+                    );
+                })
                 .catch(toastApiError);
         } finally {
             setIsKeyCreating(false);
@@ -135,6 +144,13 @@ export const Keys = memo(() => {
                 ),
             },
             {
+                field: "is_local",
+                headerName: t("profile.keys.local"),
+                type: "boolean",
+                valueGetter: (_, row) =>
+                    localKeyFingerprints.has(row.fingerprint),
+            },
+            {
                 field: "actions",
                 headerName: t("actions"),
                 type: "actions",
@@ -153,8 +169,24 @@ export const Keys = memo(() => {
                 flex: 0,
             },
         ],
-        [deleteKey, t],
+        [t, localKeyFingerprints, deleteKey, updateKey],
     );
+
+    useEffect(() => {
+        const loadLocalKeys = async () => {
+            try {
+                const keys = await getAllKeys();
+                const fingerprints = new Set(
+                    keys.map((key) => key.fingerprint),
+                );
+
+                setLocalKeyFingerprints(fingerprints);
+            } catch (error) {
+                console.error("Failed to load local keys:", error);
+            }
+        };
+        loadLocalKeys();
+    }, []);
 
     const rows = data?.payload.items || emptyArr;
     const rowCount = data?.payload.count || 0;

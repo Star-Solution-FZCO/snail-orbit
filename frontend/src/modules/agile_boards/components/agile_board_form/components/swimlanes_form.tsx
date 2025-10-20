@@ -33,7 +33,7 @@ import { OptionsSelectPopover } from "./options_select_popover";
 import { SwimlanesSelectPopover } from "./swimlanes_select_popover";
 
 const SwimlaneTableRow: FC<{
-    swimlane: OptionT;
+    swimlane: OptionT | null;
     onRemove?: () => void;
     idx: number;
     controlsDisabled?: boolean;
@@ -41,7 +41,7 @@ const SwimlaneTableRow: FC<{
     const { onRemove, swimlane, idx, controlsDisabled } = data;
 
     const { handleRef, ref } = useSortable({
-        id: getOptionKey(swimlane),
+        id: swimlane ? getOptionKey(swimlane) : "Empty",
         index: idx,
         data: { swimlane, idx },
         disabled: controlsDisabled,
@@ -66,7 +66,9 @@ const SwimlaneTableRow: FC<{
                     />
                 </IconButton>
             </TableCell>
-            <TableCell>{getOptionValue(swimlane)}</TableCell>
+            <TableCell>
+                {swimlane ? getOptionValue(swimlane) : "Empty"}
+            </TableCell>
             <TableCell align="right">
                 {!controlsDisabled && (
                     <IconButton size="small" color="error" onClick={onRemove}>
@@ -221,20 +223,19 @@ export const SwimlanesForm: FC<{ controlsDisabled?: boolean }> = ({
                     <Table size="small">
                         <TableBody>
                             <DragDropProvider onDragEnd={handleDragEnd}>
-                                {swimlanes.map(
-                                    (swimlane, idx) =>
-                                        swimlane && (
-                                            <SwimlaneTableRow
-                                                key={getOptionKey(swimlane)}
-                                                swimlane={swimlane}
-                                                idx={idx}
-                                                onRemove={() => remove(idx)}
-                                                controlsDisabled={
-                                                    controlsDisabled
-                                                }
-                                            />
-                                        ),
-                                )}
+                                {swimlanes.map((swimlane, idx) => (
+                                    <SwimlaneTableRow
+                                        key={
+                                            swimlane
+                                                ? getOptionKey(swimlane)
+                                                : "Empty"
+                                        }
+                                        swimlane={swimlane}
+                                        idx={idx}
+                                        onRemove={() => remove(idx)}
+                                        controlsDisabled={controlsDisabled}
+                                    />
+                                ))}
                             </DragDropProvider>
                         </TableBody>
                     </Table>

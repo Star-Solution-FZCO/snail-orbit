@@ -77,6 +77,13 @@ export const useEditorStyles = () => {
             textDecoration: "underline",
         },
 
+        // Mentions
+        ".editor-mention": {
+            color: theme.palette.primary.main,
+            cursor: "pointer",
+            fontWeight: 500,
+        },
+
         // Code block
         ".editor-code": {
             display: "block",
@@ -148,7 +155,7 @@ export const useEditorStyles = () => {
             listStylePosition: "inside",
         },
 
-         // Nested list items
+        // Nested list items
         ".editor-nested-listitem": {
             listStyleType: "none",
         },

@@ -216,7 +216,7 @@ async def test_issue_permission_system_comprehensive(
         response, 'Frank comment creation via project developer role'
     )
 
-    # Test confidential access (inheritance disabled)
+    # Test confidential access (disable inheritance + delete unwanted permissions)
     # Create confidential issue "Security Vulnerability #123"
     response = test_client.post(
         '/api/v1/issue/',
@@ -229,16 +229,6 @@ async def test_issue_permission_system_comprehensive(
     )
     assert_permission_granted(response, 'Diana confidential issue creation')
     confidential_issue_id = response.json()['payload']['id']
-
-    # Copy all project permissions to the confidential issue first
-    response = test_client.post(
-        f'/api/v1/issue/{confidential_issue_id}/permissions/copy-from-project',
-        headers=diana_headers,
-        json={},
-    )
-    assert_permission_granted(
-        response, 'Diana copy project permissions to confidential issue'
-    )
 
     # Assign additional Security Manager role to Charlie on specific confidential issue
     response = test_client.post(
@@ -264,13 +254,40 @@ async def test_issue_permission_system_comprehensive(
         response, 'Diana disable inheritance on confidential issue'
     )
 
-    # Verify Frank CAN access confidential issue because his project Developer role was copied
-    # (When we copy all project permissions, Frank's permissions are copied too)
+    # Get the issue permissions to find Frank's copied permission ID
+    response = test_client.get(
+        f'/api/v1/issue/{confidential_issue_id}/permissions',
+        headers=diana_headers,
+    )
+    assert_permission_granted(response, 'Diana get issue permissions')
+    issue_permissions = response.json()['payload']['items']
+
+    # Find Frank's copied Developer permission
+    frank_permission_id = None
+    for perm in issue_permissions:
+        if perm['target_type'] == 'user' and perm['target']['id'] == str(frank_user.id):
+            frank_permission_id = perm['id']
+            break
+
+    assert frank_permission_id is not None, (
+        'Frank copied permission should exist after inheritance disabled'
+    )
+
+    # Delete Frank's copied permission to achieve confidentiality
+    response = test_client.delete(
+        f'/api/v1/issue/{confidential_issue_id}/permission/{frank_permission_id}',
+        headers=diana_headers,
+    )
+    assert_permission_granted(
+        response, 'Diana delete Frank copied permission for confidentiality'
+    )
+
+    # Verify Frank CANNOT access confidential issue after his permission is deleted
     response = test_client.get(
         f'/api/v1/issue/{confidential_issue_id}', headers=frank_headers
     )
-    assert_permission_granted(
-        response, 'Frank confidential issue access via copied permissions'
+    assert_permission_denied(
+        response, 'Frank confidential issue access denied after permission deleted'
     )
 
     # Verify Charlie CAN access and manage the confidential issue via direct assignment
@@ -410,34 +427,34 @@ async def test_issue_permission_system_comprehensive(
         response, 'Bob complex issue update via issue manager role'
     )
 
-    # Test inheritance disabling side effects - when one user disables inheritance, others lose access
-    # Create issue "Permission Inheritance Side Effects Test"
+    # Test auto-copy behavior when disabling inheritance - verify all project permissions are copied to issue level
+    # Create issue "Auto-Copy Verification Test"
     response = test_client.post(
         '/api/v1/issue/',
         headers=diana_headers,
         json={
-            'subject': 'Permission Inheritance Side Effects Test',
+            'subject': 'Auto-Copy Verification Test',
             'text': {
-                'value': 'Issue to test inheritance disabling side effects on other users'
+                'value': 'Issue to test that project permissions are automatically copied when disabling inheritance'
             },
             'project_id': project_id,
         },
     )
-    assert_permission_granted(response, 'Diana side effects test issue creation')
-    side_effects_issue_id = response.json()['payload']['id']
+    assert_permission_granted(response, 'Diana auto-copy test issue creation')
+    auto_copy_issue_id = response.json()['payload']['id']
 
     # Verify Frank initially has access via project Developer role (inheritance enabled by default)
     response = test_client.get(
-        f'/api/v1/issue/{side_effects_issue_id}', headers=frank_headers
+        f'/api/v1/issue/{auto_copy_issue_id}', headers=frank_headers
     )
     assert_permission_granted(
         response,
-        'Frank initial access to side effects test issue via project permissions',
+        'Frank initial access to auto-copy test issue via project permissions',
     )
 
-    # Give Diana direct Issue Manager permissions on this specific issue (without copying project permissions)
+    # Give Diana direct Issue Manager permissions on this specific issue
     response = test_client.post(
-        f'/api/v1/issue/{side_effects_issue_id}/permission',
+        f'/api/v1/issue/{auto_copy_issue_id}/permission',
         headers=diana_headers,
         json={
             'target_type': 'user',
@@ -446,32 +463,31 @@ async def test_issue_permission_system_comprehensive(
         },
     )
     assert_permission_granted(
-        response, 'Diana direct issue manager role assignment for side effects test'
+        response, 'Diana direct issue manager role assignment for auto-copy test'
     )
 
-    # Diana disables inheritance WITHOUT copying project permissions first
-    # This should succeed because Diana has direct issue permissions
+    # Diana disables inheritance - this should automatically copy all project permissions to issue level
     response = test_client.post(
-        f'/api/v1/issue/{side_effects_issue_id}/permissions/disable-inheritance',
+        f'/api/v1/issue/{auto_copy_issue_id}/permissions/disable-inheritance',
         headers=diana_headers,
         json={},
     )
     assert_permission_granted(
-        response, 'Diana disable inheritance without copying (has direct permissions)'
+        response, 'Diana disable inheritance (auto-copy behavior)'
     )
 
-    # Verify Frank loses access - he only had project permissions which no longer apply
+    # Verify all users retain access via automatically copied permissions
     response = test_client.get(
-        f'/api/v1/issue/{side_effects_issue_id}', headers=frank_headers
+        f'/api/v1/issue/{auto_copy_issue_id}', headers=frank_headers
     )
-    assert_permission_denied(
+    assert_permission_granted(
         response,
-        'Frank loses access after inheritance disabled (only had project permissions)',
+        'Frank retains access after inheritance disabled (project permissions were auto-copied)',
     )
 
-    # Verify Diana retains access via direct permissions
+    # Verify Diana retains access via both direct and copied permissions
     response = test_client.get(
-        f'/api/v1/issue/{side_effects_issue_id}', headers=diana_headers
+        f'/api/v1/issue/{auto_copy_issue_id}', headers=diana_headers
     )
     assert_permission_granted(
         response,
@@ -479,7 +495,7 @@ async def test_issue_permission_system_comprehensive(
     )
 
     # Test comprehensive issue list ACL filtering
-    # Diana should see all 5 issues (Project Owner + direct permissions on side effects test issue)
+    # Diana should see all 5 issues (Project Owner + direct permissions on auto-copy test issue)
     response = test_client.get('/api/v1/issue/list', headers=diana_headers)
     assert_permission_granted(response, 'Diana issue list access')
     diana_issues = response.json()['payload']['items']
@@ -489,31 +505,31 @@ async def test_issue_permission_system_comprehensive(
         'Security Vulnerability #123 - Updated by Security Manager',
         'User Experience Review',
         'Complex Feature Implementation - Managed by Bob',
-        'Permission Inheritance Side Effects Test',
+        'Auto-Copy Verification Test',
     }
     assert diana_issue_subjects >= expected_diana_subjects, (
         f'Diana should see all 5 issues, got: {diana_issue_subjects}'
     )
 
-    # Frank should see 4 issues (via project Developer role + copied permissions on confidential issue)
-    # Frank should NOT see "Permission Inheritance Side Effects Test" - inheritance was disabled without copying
+    # Frank should see 4 issues (via project Developer role + copied permissions on auto-copy test issue, but NO access to confidential issue after permission deletion)
     response = test_client.get('/api/v1/issue/list', headers=frank_headers)
     assert_permission_granted(response, 'Frank issue list access')
     frank_issues = response.json()['payload']['items']
     frank_issue_subjects = {issue['subject'] for issue in frank_issues}
     expected_frank_subjects = {
         'Implement REST endpoints - Updated by Frank',
-        'Security Vulnerability #123 - Updated by Security Manager',  # Frank can see this via copied permissions
         'User Experience Review',  # Frank can see this via project permissions
         'Complex Feature Implementation - Managed by Bob',
-        # NOTE: Frank should NOT see "Permission Inheritance Side Effects Test" because inheritance was disabled
+        'Auto-Copy Verification Test',  # Frank can see this via copied permissions (auto-copied when inheritance disabled)
     }
     assert frank_issue_subjects >= expected_frank_subjects, (
         f'Frank should see 4 issues, got: {frank_issue_subjects}'
     )
-    assert 'Permission Inheritance Side Effects Test' not in frank_issue_subjects, (
-        'Frank should NOT see inheritance side effects test issue (inheritance disabled, no direct permissions)'
-    )
+    # Verify Frank cannot see the confidential issue (his permission was deleted)
+    assert (
+        'Security Vulnerability #123 - Updated by Security Manager'
+        not in frank_issue_subjects
+    ), 'Frank should NOT see confidential issue after his permission was deleted'
 
     # Charlie should see 1 issue (only direct access to confidential issue)
     response = test_client.get('/api/v1/issue/list', headers=charlie_headers)
@@ -550,22 +566,20 @@ async def test_issue_permission_system_comprehensive(
     bob_issue_subjects = {issue['subject'] for issue in bob_issues}
 
     # Bob should see all non-confidential issues via reviewers group + specific enhanced access to complex issue
-    # Bob should NOT see "Permission Inheritance Side Effects Test" - inheritance was disabled, no direct permissions
+    # Bob CAN see "Auto-Copy Verification Test" - inheritance was disabled but his group permissions were auto-copied
     expected_bob_subjects = {
         'Implement REST endpoints - Updated by Frank',  # via reviewers group reader role
         'User Experience Review',  # via reviewers group reader role
         'Complex Feature Implementation - Managed by Bob',  # via reviewers group + direct issue manager role
+        'Auto-Copy Verification Test',  # via reviewers group reader role (auto-copied when inheritance disabled)
     }
     assert bob_issue_subjects >= expected_bob_subjects, (
-        f'Bob should see 3+ issues via combined permissions, got: {bob_issue_subjects}'
+        f'Bob should see 4+ issues via combined permissions, got: {bob_issue_subjects}'
     )
     assert (
         'Security Vulnerability #123 - Updated by Security Manager'
         not in bob_issue_subjects
     ), 'Bob should NOT see confidential issue'
-    assert 'Permission Inheritance Side Effects Test' not in bob_issue_subjects, (
-        'Bob should NOT see inheritance side effects test issue (inheritance disabled, only has project permissions)'
-    )
 
     # Verify admin sees no issues (content-level restriction)
     response = test_client.get('/api/v1/issue/list', headers=admin_headers)
@@ -582,7 +596,7 @@ async def test_issue_permission_system_comprehensive(
         confidential_issue_id,
         ux_issue_id,
         complex_issue_id,
-        side_effects_issue_id,
+        auto_copy_issue_id,
     ]
 
     # Diana should see all 5 issues via POST endpoint (same as GET)
@@ -601,7 +615,7 @@ async def test_issue_permission_system_comprehensive(
         f'Diana should see 5 issues via POST, got {len(diana_post_issues)}'
     )
 
-    # Frank should see 4 issues via POST endpoint (same as GET)
+    # Frank should see 4 issues via POST endpoint (same as GET - cannot see confidential issue after permission deleted)
     response = test_client.post(
         '/api/v1/issue/list',
         headers=frank_headers,
@@ -613,11 +627,13 @@ async def test_issue_permission_system_comprehensive(
     assert len(frank_post_issues) == 4, (
         f'Frank should see 4 issues via POST, got {len(frank_post_issues)}'
     )
-    assert (
-        'Permission Inheritance Side Effects Test' not in frank_post_issue_subjects
-    ), (
-        'Frank should NOT see inheritance side effects test issue via POST (inheritance disabled, only has project permissions)'
+    assert 'Auto-Copy Verification Test' in frank_post_issue_subjects, (
+        'Frank should see auto-copy test issue via POST (project permissions were auto-copied when inheritance disabled)'
     )
+    assert (
+        'Security Vulnerability #123 - Updated by Security Manager'
+        not in frank_post_issue_subjects
+    ), 'Frank should NOT see confidential issue via POST (his permission was deleted)'
 
     # Charlie should see same issues via POST as GET
     response = test_client.post(
@@ -628,10 +644,8 @@ async def test_issue_permission_system_comprehensive(
     assert_permission_granted(response, 'Charlie POST issue list access')
     charlie_post_issues = response.json()['payload']['items']
     charlie_post_issue_subjects = {issue['subject'] for issue in charlie_post_issues}
-    assert (
-        'Permission Inheritance Side Effects Test' not in charlie_post_issue_subjects
-    ), (
-        'Charlie should NOT see inheritance side effects test issue via POST (inheritance disabled)'
+    assert 'Auto-Copy Verification Test' not in charlie_post_issue_subjects, (
+        'Charlie should NOT see auto-copy test issue via POST (no project permissions copied)'
     )
 
     # Eve should see same issues via POST as GET
@@ -656,8 +670,8 @@ async def test_issue_permission_system_comprehensive(
     assert_permission_granted(response, 'Bob POST issue list access')
     bob_post_issues = response.json()['payload']['items']
     bob_post_issue_subjects = {issue['subject'] for issue in bob_post_issues}
-    assert 'Permission Inheritance Side Effects Test' not in bob_post_issue_subjects, (
-        'Bob should NOT see inheritance side effects test issue via POST (inheritance disabled, only has project permissions)'
+    assert 'Auto-Copy Verification Test' in bob_post_issue_subjects, (
+        'Bob should see auto-copy test issue via POST (project permissions were auto-copied when inheritance disabled)'
     )
 
     # Admin should see no issues via POST (same content-level restriction as GET)

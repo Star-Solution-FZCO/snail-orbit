@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from beanie import PydanticObjectId
 
@@ -45,6 +45,7 @@ __all__ = (
     'CustomFieldValidationError',
     'CustomFieldValue',
     'CustomFieldValueT',
+    'CustomFieldValueUnion',
     'DateCustomField',
     'DateTimeCustomField',
     'DurationCustomField',
@@ -71,6 +72,7 @@ __all__ = (
     'VersionMultiCustomField',
     'VersionOption',
     'get_cf_class',
+    'get_cf_value_class',
 )
 
 MAPPING = {
@@ -132,3 +134,141 @@ CustomFieldValueT = (
 
 class CustomFieldValue(CustomFieldLink):
     value: CustomFieldValueT = None
+
+
+class StringCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.STRING] = CustomFieldTypeT.STRING
+    value: str | None = None
+
+
+class BooleanCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.BOOLEAN] = CustomFieldTypeT.BOOLEAN
+    value: bool | None = None
+
+
+class IntegerCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.INTEGER] = CustomFieldTypeT.INTEGER
+    value: int | None = None
+
+
+class FloatCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.FLOAT] = CustomFieldTypeT.FLOAT
+    value: float | None = None
+
+
+class DateCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.DATE] = CustomFieldTypeT.DATE
+    value: datetime | None = None
+
+
+class DateTimeCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.DATETIME] = CustomFieldTypeT.DATETIME
+    value: datetime | None = None
+
+
+class UserCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.USER] = CustomFieldTypeT.USER
+    value: UserLinkField | None = None
+
+
+class UserMultiCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.USER_MULTI] = CustomFieldTypeT.USER_MULTI
+    value: list[UserLinkField] | None = None
+
+
+class EnumCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.ENUM] = CustomFieldTypeT.ENUM
+    value: EnumOption | None = None
+
+
+class EnumMultiCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.ENUM_MULTI] = CustomFieldTypeT.ENUM_MULTI
+    value: list[EnumOption] | None = None
+
+
+class StateCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.STATE] = CustomFieldTypeT.STATE
+    value: StateOption | None = None
+
+
+class VersionCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.VERSION] = CustomFieldTypeT.VERSION
+    value: VersionOption | None = None
+
+
+class VersionMultiCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.VERSION_MULTI] = CustomFieldTypeT.VERSION_MULTI
+    value: list[VersionOption] | None = None
+
+
+class OwnedCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.OWNED] = CustomFieldTypeT.OWNED
+    value: OwnedOption | None = None
+
+
+class OwnedMultiCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.OWNED_MULTI] = CustomFieldTypeT.OWNED_MULTI
+    value: list[OwnedOption] | None = None
+
+
+class SprintCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.SPRINT] = CustomFieldTypeT.SPRINT
+    value: SprintOption | None = None
+
+
+class SprintMultiCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.SPRINT_MULTI] = CustomFieldTypeT.SPRINT_MULTI
+    value: list[SprintOption] | None = None
+
+
+class DurationCustomFieldValue(CustomFieldLink):
+    type: Literal[CustomFieldTypeT.DURATION] = CustomFieldTypeT.DURATION
+    value: int | None = None
+
+
+CustomFieldValueUnion = (
+    StringCustomFieldValue
+    | BooleanCustomFieldValue
+    | IntegerCustomFieldValue
+    | FloatCustomFieldValue
+    | DateCustomFieldValue
+    | DateTimeCustomFieldValue
+    | UserCustomFieldValue
+    | UserMultiCustomFieldValue
+    | EnumCustomFieldValue
+    | EnumMultiCustomFieldValue
+    | StateCustomFieldValue
+    | VersionCustomFieldValue
+    | VersionMultiCustomFieldValue
+    | OwnedCustomFieldValue
+    | OwnedMultiCustomFieldValue
+    | SprintCustomFieldValue
+    | SprintMultiCustomFieldValue
+    | DurationCustomFieldValue
+)
+
+
+CF_FIELD_VALUE_MAPPING: dict[CustomFieldValueT, CustomFieldValueUnion] = {
+    CustomFieldTypeT.STRING: StringCustomFieldValue,
+    CustomFieldTypeT.BOOLEAN: BooleanCustomFieldValue,
+    CustomFieldTypeT.INTEGER: IntegerCustomFieldValue,
+    CustomFieldTypeT.FLOAT: FloatCustomFieldValue,
+    CustomFieldTypeT.DATE: DateCustomFieldValue,
+    CustomFieldTypeT.DATETIME: DateTimeCustomFieldValue,
+    CustomFieldTypeT.USER: UserCustomFieldValue,
+    CustomFieldTypeT.USER_MULTI: UserMultiCustomFieldValue,
+    CustomFieldTypeT.ENUM: EnumCustomFieldValue,
+    CustomFieldTypeT.ENUM_MULTI: EnumMultiCustomFieldValue,
+    CustomFieldTypeT.STATE: StateCustomFieldValue,
+    CustomFieldTypeT.VERSION: VersionCustomFieldValue,
+    CustomFieldTypeT.VERSION_MULTI: VersionMultiCustomFieldValue,
+    CustomFieldTypeT.OWNED: OwnedCustomFieldValue,
+    CustomFieldTypeT.OWNED_MULTI: OwnedMultiCustomFieldValue,
+    CustomFieldTypeT.SPRINT: SprintCustomFieldValue,
+    CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldValue,
+    CustomFieldTypeT.DURATION: DurationCustomFieldValue,
+}
+
+
+def get_cf_value_class(type_: CustomFieldTypeT) -> CustomFieldValueUnion:
+    return CF_FIELD_VALUE_MAPPING[type_]

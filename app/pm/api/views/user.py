@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Self
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, EmailStr, computed_field
 
 from pm.services.avatars import external_avatar_url, local_avatar_url
 
@@ -9,7 +9,10 @@ if TYPE_CHECKING:
     import pm.models as m
 
 
-__all__ = ('UserOutput',)
+UserIdentifier = PydanticObjectId | EmailStr
+
+
+__all__ = ('UserIdentifier', 'UserOutput')
 
 
 class UserOutput(BaseModel):

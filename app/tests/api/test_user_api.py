@@ -54,6 +54,13 @@ async def test_user_crud_workflow(
 
     assert_success_response(response, expected_payload)
 
+    # Test READ by email
+    user_email = expected_payload['email']
+    email_response = test_client.get(f'/api/v1/user/{user_email}', headers=headers)
+    assert_success_response(email_response, expected_payload)
+    # Verify email and ObjectId return identical data
+    assert email_response.json() == response.json()
+
     # Test UPDATE
     response = test_client.put(
         f'/api/v1/user/{create_user}',
@@ -65,3 +72,19 @@ async def test_user_crud_workflow(
         'name': 'Test User updated',
     }
     assert_success_response(response, expected_updated_payload)
+
+    # Test UPDATE by email
+    email_update_response = test_client.put(
+        f'/api/v1/user/{user_email}',
+        headers=headers,
+        json={'name': 'Test User updated via email'},
+    )
+    expected_email_updated = {
+        **expected_payload,
+        'name': 'Test User updated via email',
+    }
+    assert_success_response(email_update_response, expected_email_updated)
+
+    # Cross-validation: Verify ObjectId and email operations affect the same user
+    verify_response = test_client.get(f'/api/v1/user/{create_user}', headers=headers)
+    assert verify_response.json()['payload']['name'] == 'Test User updated via email'

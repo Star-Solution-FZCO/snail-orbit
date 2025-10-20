@@ -30,9 +30,15 @@ const formatSwimLane = (
         case "enum":
         case "state":
         case "sprint":
-            return swimLaneData.values
-                .filter(notEmpty)
-                .map(({ id, value }) => ({ id, value, label: value }));
+            return swimLaneData.values.map((option) =>
+                option
+                    ? {
+                          id: option.id,
+                          value: option.value,
+                          label: option.value,
+                      }
+                    : { id: "__EMPTY__", value: null, label: "Empty" },
+            );
         case "date":
         case "datetime":
             return swimLaneData.values

@@ -91,7 +91,14 @@ async def test_issue_permissions_crud_workflow(
         headers=headers,
     )
     assert_success_response(response)
-    assert response.json()['payload']['count'] == 0
+    permissions = response.json()['payload']['items']
+    # Should only have inherited project permissions, no direct issue permissions
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    inherited_permissions = [p for p in permissions if p['is_inherited']]
+    assert len(direct_permissions) == 0, (
+        'Should have no direct issue permissions initially'
+    )
+    assert len(inherited_permissions) == 2, 'Should have inherited project permissions'
 
     response = test_client.post(
         f'/api/v1/issue/{issue_id}/permission',
@@ -110,8 +117,11 @@ async def test_issue_permissions_crud_workflow(
         headers=headers,
     )
     assert_success_response(response)
-    assert response.json()['payload']['count'] == 1
-    assert response.json()['payload']['items'][0]['target_type'] == 'user'
+    assert response.json()['payload']['count'] == 3  # 2 inherited + 1 direct
+    permissions = response.json()['payload']['items']
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'user'
 
     response = test_client.post(
         f'/api/v1/issue/{issue_id}/permission',
@@ -130,7 +140,7 @@ async def test_issue_permissions_crud_workflow(
         headers=headers,
     )
     assert_success_response(response)
-    assert response.json()['payload']['count'] == 2
+    assert response.json()['payload']['count'] == 4  # 2 inherited + 2 direct
 
     response = test_client.delete(
         f'/api/v1/issue/{issue_id}/permission/{permission_id}',
@@ -143,8 +153,11 @@ async def test_issue_permissions_crud_workflow(
         headers=headers,
     )
     assert_success_response(response)
-    assert response.json()['payload']['count'] == 1
-    assert response.json()['payload']['items'][0]['target_type'] == 'group'
+    assert response.json()['payload']['count'] == 3  # 2 inherited + 1 direct
+    permissions = response.json()['payload']['items']
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'group'
 
     response = test_client.delete(
         f'/api/v1/issue/{issue_id}/permission/{group_permission_id}',
@@ -157,7 +170,14 @@ async def test_issue_permissions_crud_workflow(
         headers=headers,
     )
     assert_success_response(response)
-    assert response.json()['payload']['count'] == 0
+    permissions = response.json()['payload']['items']
+    # Should only have inherited project permissions, no direct issue permissions
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    inherited_permissions = [p for p in permissions if p['is_inherited']]
+    assert len(direct_permissions) == 0, (
+        'Should have no direct issue permissions initially'
+    )
+    assert len(inherited_permissions) == 2, 'Should have inherited project permissions'
 
 
 @pytest.mark.asyncio
@@ -797,9 +817,12 @@ async def test_issue_permissions_user_update_embedded_links(
     )
     assert_success_response(response)
     permissions = response.json()['payload']['items']
-    assert len(permissions) == 1
-    assert permissions[0]['target']['name'] == 'Test User'
-    assert permissions[0]['target']['email'] == 'testuser@example.com'
+    assert len(permissions) == 3  # 2 inherited + 1 direct
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'user'
+    assert direct_permissions[0]['target']['name'] == 'Test User'
+    assert direct_permissions[0]['target']['email'] == 'testuser@example.com'
 
     # Update user information
     user_update_payload = {
@@ -818,9 +841,12 @@ async def test_issue_permissions_user_update_embedded_links(
     )
     assert_success_response(response)
     permissions = response.json()['payload']['items']
-    assert len(permissions) == 1
-    assert permissions[0]['target']['name'] == 'Updated Test User'
-    assert permissions[0]['target']['email'] == 'updated.testuser@example.com'
+    assert len(permissions) == 3  # 2 inherited + 1 direct
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'user'
+    assert direct_permissions[0]['target']['name'] == 'Updated Test User'
+    assert direct_permissions[0]['target']['email'] == 'updated.testuser@example.com'
 
 
 @pytest.mark.asyncio
@@ -923,9 +949,12 @@ async def test_issue_permissions_group_update_embedded_links(
     )
     assert_success_response(response)
     permissions = response.json()['payload']['items']
-    assert len(permissions) == 1
-    assert permissions[0]['target']['name'] == 'Test Group'
-    assert permissions[0]['target']['description'] == 'Test group description'
+    assert len(permissions) == 3  # 2 inherited + 1 direct
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'group'
+    assert direct_permissions[0]['target']['name'] == 'Test Group'
+    assert direct_permissions[0]['target']['description'] == 'Test group description'
 
     # Update group information
     group_update_payload = {
@@ -944,6 +973,9 @@ async def test_issue_permissions_group_update_embedded_links(
     )
     assert_success_response(response)
     permissions = response.json()['payload']['items']
-    assert len(permissions) == 1
-    assert permissions[0]['target']['name'] == 'Updated Test Group'
-    assert permissions[0]['target']['description'] == 'Updated group description'
+    assert len(permissions) == 3  # 2 inherited + 1 direct
+    direct_permissions = [p for p in permissions if not p['is_inherited']]
+    assert len(direct_permissions) == 1, 'Should have one direct issue permission'
+    assert direct_permissions[0]['target_type'] == 'group'
+    assert direct_permissions[0]['target']['name'] == 'Updated Test Group'
+    assert direct_permissions[0]['target']['description'] == 'Updated group description'

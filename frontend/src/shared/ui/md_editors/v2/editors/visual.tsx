@@ -35,7 +35,9 @@ import type { FC } from "react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useEditorStyles } from "../hooks/use-editor-styles";
+import { MentionNode } from "../nodes/mention_node";
 import { FocusBlurPlugin } from "../plugins/focus_blur_plugin";
+import { MentionsPlugin } from "../plugins/mentions_plugin";
 import { ToolbarPlugin } from "../plugins/toolbar/toolbar_plugin";
 import { TRANSFORMERS } from "../transformers";
 import { theme } from "./theme";
@@ -104,6 +106,7 @@ export const VisualEditor: FC<EditorProps> = ({
             TableCellNode,
             TableRowNode,
             HorizontalRuleNode,
+            MentionNode,
         ],
         editorState: () => {
             if (value) {
@@ -170,6 +173,7 @@ export const VisualEditor: FC<EditorProps> = ({
                 <ClearEditorPlugin />
                 <SelectionAlwaysOnDisplay />
                 <FocusBlurPlugin onFocus={onFocus} onBlur={onBlur} />
+                <MentionsPlugin />
 
                 {autoFocus && <AutoFocusPlugin />}
             </LexicalComposer>

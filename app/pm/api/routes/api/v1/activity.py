@@ -1,5 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
+from http import HTTPStatus
+from http.client import HTTPException
 from typing import Self
 
 import beanie.operators as bo
@@ -17,7 +19,7 @@ from pm.api.views.issue import (
     issue_change_output_from_obj,
 )
 from pm.api.views.output import BaseListOutput
-from pm.api.views.user import UserOutput
+from pm.api.views.user import UserIdentifier, UserOutput
 from pm.permissions import ProjectPermissions
 from pm.utils.dateutils import utcfromtimestamp
 
@@ -105,7 +107,7 @@ def _get_issue_activity_unsorted(
 async def get_activity_list(
     start: float,
     end: float,
-    user_id: PydanticObjectId | None = None,
+    user_id: UserIdentifier | None = None,
 ) -> BaseListOutput[Activity]:
     start_dt = utcfromtimestamp(start)
     end_dt = utcfromtimestamp(end)
@@ -128,11 +130,14 @@ async def get_activity_list(
         ),
     ]
     if user_id:
+        user = await m.User.find_one_by_id_or_email(user_id)
+        if not user:
+            raise HTTPException(HTTPStatus.NOT_FOUND, 'User not found')
         flt.append(
             bo.Or(
-                m.Issue.created_by.id == user_id,
-                m.Issue.history.author.id == user_id,
-                m.Issue.comments.author.id == user_id,
+                m.Issue.created_by.id == user.id,
+                m.Issue.history.author.id == user.id,
+                m.Issue.comments.author.id == user.id,
             ),
         )
     results = []

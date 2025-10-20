@@ -116,16 +116,18 @@ const CommentCard: FC<CommentCardProps> = ({
                     onDownloadAttachment={downloadAttachment}
                 />
             ) : (
-                <CommentCardEdit
-                    comment={comment}
-                    commentText={commentText}
-                    onDeleteAttachment={handleClickDeleteAttachment}
-                    onClose={onCancel}
-                    updateComment={handleClickSave}
-                    isLoading={isLoading || isCommentUpdateLoading}
-                    onUploadAttachment={uploadAttachment}
-                    onDownloadAttachment={downloadAttachment}
-                />
+                <>
+                    <CommentCardEdit
+                        comment={comment}
+                        commentText={commentText}
+                        onDeleteAttachment={handleClickDeleteAttachment}
+                        onClose={onCancel}
+                        updateComment={handleClickSave}
+                        isLoading={isLoading || isCommentUpdateLoading}
+                        onUploadAttachment={uploadAttachment}
+                        onDownloadAttachment={downloadAttachment}
+                    />
+                </>
             )}
 
             <DeleteAttachmentDialog

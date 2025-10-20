@@ -17,7 +17,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { MDEditor } from "shared/ui";
-import { exportPrivateKey, generateKeyPair } from "shared/utils/crypto/crypto";
+import {
+    exportPrivateKey,
+    exportPublicKey,
+    generateKeyPair,
+    getFingerprint,
+} from "shared/utils/crypto/crypto";
 import { downloadTextFile } from "shared/utils/helpers/download-file";
 import * as yup from "yup";
 import { generateSlug } from "../utils";
@@ -34,8 +39,10 @@ const useCreateProjectSchema = (t: TFunction) => {
                     .string()
                     .required(t("form.validation.required"))
                     .default(""),
-                description: yup.string(),
+                description: yup.string().default(""),
                 is_encrypted: yup.boolean().default(false),
+                public_key: yup.string().default(""),
+                fingerprint: yup.string().default(""),
                 encrypt_comments: yup.boolean().default(false),
                 encrypt_description: yup.boolean().default(false),
             }),
@@ -82,8 +89,17 @@ const CreateProjectForm: FC<IProjectFormProps> = ({
             generateKeyPair("X25519")
                 .then(async (pair) => {
                     setKeyPair(pair);
-                    const temp = await exportPrivateKey(pair.privateKey);
-                    setExportedPrivateKey(temp);
+                    const exportedPrivateKey = await exportPrivateKey(
+                        pair.privateKey,
+                    );
+                    setExportedPrivateKey(exportedPrivateKey);
+
+                    const fingerprint = await getFingerprint(pair.publicKey);
+                    const exportedPublicKey = await exportPublicKey(
+                        pair.publicKey,
+                    );
+                    setValue("public_key", exportedPublicKey);
+                    setValue("fingerprint", fingerprint);
                 })
                 .catch(() => {
                     setValue("is_encrypted", false);

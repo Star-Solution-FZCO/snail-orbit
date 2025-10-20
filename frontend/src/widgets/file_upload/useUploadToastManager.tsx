@@ -59,6 +59,7 @@ export const useUploadToastManager = (props?: useUploadToastManagerProps) => {
                     closeOnClick: false,
                     closeButton: false,
                     hideProgressBar: true,
+                    autoClose: 1500,
                 },
             );
 
