@@ -186,11 +186,13 @@ export const MentionsPlainTextPlugin: FC = () => {
                 anchorElementRef.current && options.length
                     ? ReactDOM.createPortal(
                           <Paper
-                              sx={{
-                                  minWidth: 250,
+                              sx={(theme) => ({
+                                  minWidth: 300,
                                   maxHeight: 300,
                                   overflow: "auto",
-                              }}
+                                  position: "absolute",
+                                  zIndex: theme.zIndex.modal + 1,
+                              })}
                               elevation={3}
                           >
                               <Stack
