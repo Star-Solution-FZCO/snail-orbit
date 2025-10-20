@@ -43,8 +43,12 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
 
-    const { updateDraft, updateDraftCache, isDraftUpdateLoading } =
-        useDraftOperations({ draftId: id });
+    const {
+        updateDraft,
+        updateDraftCache,
+        isDraftUpdateLoading,
+        isLoading: isDraftOperationsDataLoading,
+    } = useDraftOperations({ draftId: id });
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
@@ -113,6 +117,7 @@ export const ModalViewDraft: FC<ModalViewDraftProps> = (props) => {
                 isLoading ||
                 isDraftUpdateLoading ||
                 createLoading ||
+                isDraftOperationsDataLoading ||
                 isProjectDataLoading
             }
             open={open}

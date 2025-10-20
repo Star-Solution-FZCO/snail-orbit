@@ -51,8 +51,12 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const [createIssue, { isLoading: createLoading }] =
         issueApi.useCreateIssueFromDraftMutation();
 
-    const { updateDraft, updateDraftCache, isDraftUpdateLoading } =
-        useDraftOperations({ draftId });
+    const {
+        updateDraft,
+        updateDraftCache,
+        isDraftUpdateLoading,
+        isLoading: isDraftOperationsLoading,
+    } = useDraftOperations({ draftId });
 
     const handleSubmit = useCallback(
         async (formData: IssueUpdate) => {
@@ -137,6 +141,7 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
                             loading={
                                 isLoading ||
                                 isDraftUpdateLoading ||
+                                isDraftOperationsLoading ||
                                 createLoading
                             }
                             isEncrypted={isEncrypted}
