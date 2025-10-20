@@ -1,4 +1,5 @@
 import { skipToken } from "@reduxjs/toolkit/query";
+import { useMemo } from "react";
 import { projectApi } from "shared/model";
 
 export const useProjectData = (props: { projectId?: string }) => {
@@ -18,26 +19,35 @@ export const useProjectData = (props: { projectId?: string }) => {
         projectData?.payload.is_encrypted ? projectData?.payload.id : skipToken,
     );
 
-    const isLoading = isProjectLoading || isEncryptionKeysLoading;
-    const isEncrypted = projectData?.payload.is_encrypted || false;
-    const error = projectError || encryptionKeysError;
+    return useMemo(() => {
+        const isLoading = isProjectLoading || isEncryptionKeysLoading;
+        const isEncrypted = projectData?.payload.is_encrypted || false;
+        const error = projectError || encryptionKeysError;
 
-    return {
-        project: projectData?.payload,
-        encryptionKeys: encryptionKeysData?.payload.items || [],
-        isAttachmentsEncrypted:
-            isEncrypted &&
-            !!projectData?.payload.encryption_settings?.encrypt_attachments,
-        isCommentsEncrypted:
-            isEncrypted &&
-            !!projectData?.payload.encryption_settings?.encrypt_comments,
-        isDescriptionEncrypted:
-            isEncrypted &&
-            !!projectData?.payload.encryption_settings?.encrypt_description,
+        return {
+            project: projectData?.payload,
+            encryptionKeys: encryptionKeysData?.payload.items || [],
+            isAttachmentsEncrypted:
+                isEncrypted &&
+                !!projectData?.payload.encryption_settings?.encrypt_attachments,
+            isCommentsEncrypted:
+                isEncrypted &&
+                !!projectData?.payload.encryption_settings?.encrypt_comments,
+            isDescriptionEncrypted:
+                isEncrypted &&
+                !!projectData?.payload.encryption_settings?.encrypt_description,
+            isProjectLoading,
+            isEncryptionKeysLoading,
+            isLoading,
+            isEncrypted,
+            error,
+        };
+    }, [
+        projectData,
+        encryptionKeysData,
         isProjectLoading,
         isEncryptionKeysLoading,
-        isLoading,
-        isEncrypted,
-        error,
-    };
+        encryptionKeysError,
+        projectError,
+    ]);
 };
