@@ -3,8 +3,8 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import type { SyntheticEvent } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { groupApi, userApi } from "shared/model";
-import type { GroupT } from "shared/model/types";
+import { userApi } from "shared/model";
+import type { GroupT, UserOrGroupT } from "shared/model/types";
 import { type BasicUserT } from "shared/model/types";
 import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { useListQueryParams } from "shared/utils";
@@ -52,27 +52,24 @@ export const UserGroupSelectPopover = <T extends SelectType>(
         useDebouncedState<string>("");
 
     const [listParams] = useListQueryParams({
-        limit: 50,
-    }); // up to 50 groups means up to 100 elements
+        limit: 100,
+    });
 
-    const { data: groupsData } = groupApi.useListGroupQuery(
-        open && (selectType === "group" || selectType === "all")
-            ? { ...listParams, search: debouncedInputValue }
-            : skipToken,
-    );
-    const { data: usersData } = userApi.useListUserQuery(
-        open && (selectType === "user" || selectType === "all")
-            ? { ...listParams, search: debouncedInputValue }
-            : skipToken,
+    const { data: userGroupData } = userApi.useListSelectUserOrGroupQuery(
+        open ? { ...listParams, search: debouncedInputValue } : skipToken,
     );
 
-    const options = useMemo(
-        () => [
-            ...(groupsData?.payload.items || []),
-            ...(usersData?.payload.items || []),
-        ],
-        [groupsData, usersData],
-    );
+    const options = useMemo(() => {
+        const items = userGroupData?.payload.items || [];
+
+        return items
+            .filter((item: UserOrGroupT) => {
+                if (selectType === "user") return item.type === "user";
+                if (selectType === "group") return item.type === "group";
+                return true;
+            })
+            .map((item: UserOrGroupT) => item.data);
+    }, [userGroupData, selectType]);
 
     return (
         <FormAutocompletePopover
