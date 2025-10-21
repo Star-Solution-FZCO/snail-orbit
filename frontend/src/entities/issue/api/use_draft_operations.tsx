@@ -1,5 +1,5 @@
 import deepmerge from "deepmerge";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { issueApi, useAppDispatch } from "shared/model";
 import type { IssueDraftT } from "shared/model/types";
 import {
@@ -76,15 +76,26 @@ export const useDraftOperations = (params: { draftId: string }) => {
         return await decryptObject(draft.text);
     }, []);
 
-    const isLoading = isDraftLoading || isProjectLoading;
-    const error = draftError || projectError;
+    return useMemo(() => {
+        const isLoading = isDraftLoading || isProjectLoading;
+        const error = draftError || projectError;
 
-    return {
-        updateDraft: handleUpdateDraft,
-        updateDraftCache: handleUpdateCache,
-        isDraftUpdateLoading,
-        isLoading,
-        error,
+        return {
+            updateDraft: handleUpdateDraft,
+            updateDraftCache: handleUpdateCache,
+            isDraftUpdateLoading,
+            isLoading,
+            error,
+            getDraftText,
+        };
+    }, [
+        draftError,
         getDraftText,
-    };
+        handleUpdateCache,
+        handleUpdateDraft,
+        isDraftLoading,
+        isDraftUpdateLoading,
+        isProjectLoading,
+        projectError,
+    ]);
 };

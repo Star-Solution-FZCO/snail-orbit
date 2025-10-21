@@ -212,6 +212,7 @@ const CreateProjectForm: FC<IProjectFormProps> = ({
                     />
                     <FormControlLabel
                         label={t("projects.form.encryptDescription")}
+                        disabled
                         control={
                             <Controller
                                 control={control}
@@ -219,6 +220,7 @@ const CreateProjectForm: FC<IProjectFormProps> = ({
                                 render={({ field }) => (
                                     <Checkbox
                                         {...field}
+                                        disabled
                                         checked={field.value || false}
                                         size="small"
                                     />

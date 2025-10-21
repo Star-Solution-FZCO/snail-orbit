@@ -116,6 +116,7 @@ export const AddProjectCustomFieldDialog: FC<
 
                             <CustomFieldGroupForm
                                 onSubmit={handleSubmitCreateCustomFieldGroup}
+                                labelValue={project.slug}
                                 loading={loading}
                             />
                         </Stack>

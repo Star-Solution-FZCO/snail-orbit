@@ -39,12 +39,14 @@ type CustomFieldGroupFormData = yup.InferType<typeof customFieldGroupSchema>;
 interface ICustomFieldGroupFormProps {
     defaultValues?: CustomFieldGroupT;
     onSubmit: (formData: CustomFieldGroupFormData) => void;
+    labelValue?: string;
     loading?: boolean;
 }
 
 const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
     defaultValues,
     onSubmit,
+    labelValue = "default",
     loading,
 }) => {
     const { t } = useTranslation();
@@ -61,7 +63,7 @@ const CustomFieldGroupForm: FC<ICustomFieldGroupFormProps> = ({
             type: defaultValues?.type || "string",
             description: defaultValues?.description || null,
             ai_description: defaultValues?.ai_description || null,
-            label: "default",
+            label: labelValue,
             is_nullable: false,
         },
         resolver: yupResolver(customFieldGroupSchema),
