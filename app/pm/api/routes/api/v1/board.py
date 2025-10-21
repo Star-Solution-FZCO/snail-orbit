@@ -13,6 +13,7 @@ import pm.models as m
 from pm.api.context import current_user, current_user_context_dependency
 from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelError
+from pm.api.helpers.issue_validation import validate_custom_fields_values
 from pm.api.issue_query import IssueQueryTransformError, transform_query
 from pm.api.issue_query.search import transform_text_search
 from pm.api.utils.router import APIRouter
@@ -85,6 +86,7 @@ router = APIRouter(
 
 
 BOARD_COLUMN_FIELD_TYPES = {m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.STATE}
+BOARD_COLOR_FIELD_TYPES = {m.CustomFieldTypeT.ENUM, m.CustomFieldTypeT.STATE}
 
 
 BoardColumnOutputT = (
@@ -304,7 +306,7 @@ async def create_board(
             'Column field must be of type STATE or ENUM',
         )
     _all_projects_has_custom_field(column_field, projects)
-    columns = await validate_custom_field_values(column_field, body.columns)
+    columns = await validate_custom_field_group_values(column_field, body.columns)
 
     swimlane_field: m.CustomFieldGroupLink | None = None
     swimlanes = []
@@ -322,7 +324,9 @@ async def create_board(
                 'Swimlane field cannot be of type MULTI',
             )
         _all_projects_has_custom_field(swimlane_field, projects)
-        swimlanes = await validate_custom_field_values(swimlane_field, body.swimlanes)
+        swimlanes = await validate_custom_field_group_values(
+            swimlane_field, body.swimlanes
+        )
 
     board = m.Board(
         name=body.name,
@@ -409,7 +413,9 @@ async def update_board(
 
     _all_projects_has_custom_field(board.column_field, projects)
     columns = body.columns if 'columns' in body.model_fields_set else board.columns
-    board.columns = await validate_custom_field_values(board.column_field, columns)
+    board.columns = await validate_custom_field_group_values(
+        board.column_field, columns
+    )
 
     if 'swimlane_field' in body.model_fields_set:
         if not body.swimlane_field:
@@ -433,7 +439,7 @@ async def update_board(
         swimlanes = (
             body.swimlanes if 'swimlanes' in body.model_fields_set else board.swimlanes
         )
-        board.swimlanes = await validate_custom_field_values(
+        board.swimlanes = await validate_custom_field_group_values(
             board.swimlane_field,
             swimlanes,
         )
@@ -672,33 +678,14 @@ async def move_issue(
         PermAnd(ProjectPermissions.ISSUE_READ, ProjectPermissions.ISSUE_UPDATE),
     )
 
-    data = body.dict(exclude_unset=True)
+    data = body.model_dump(exclude_unset=True)
+    updated_fields = {}
     if 'column' in data:
-        column = (
-            await validate_custom_field_values(board.column_field, [data['column']])
-        )[0]
-        if column not in board.columns:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid column')
-        if not (issue_field := issue.get_field_by_gid(board.column_field.gid)):
-            raise HTTPException(
-                HTTPStatus.INTERNAL_SERVER_ERROR,
-                'Issue has no column field',
-            )
-        issue_field.value = column
+        updated_fields[board.column_field.name] = data['column']
     if 'swimlane' in data:
         if not board.swimlane_field:
             raise HTTPException(HTTPStatus.BAD_REQUEST, 'Board has no swimlanes')
-        swimlane = (
-            await validate_custom_field_values(board.swimlane_field, [body.swimlane])
-        )[0]
-        if swimlane not in board.swimlanes:
-            raise HTTPException(HTTPStatus.BAD_REQUEST, 'Invalid swimlane')
-        if not (issue_field := issue.get_field_by_gid(board.swimlane_field.gid)):
-            raise HTTPException(
-                HTTPStatus.INTERNAL_SERVER_ERROR,
-                'Issue has no swimlane field',
-            )
-        issue_field.value = swimlane
+        updated_fields[board.swimlane_field.name] = data['swimlane']
     if body.after_issue:
         after_issue: m.Issue | None = await m.Issue.find_one(
             m.Issue.id == body.after_issue,
@@ -707,39 +694,55 @@ async def move_issue(
             raise HTTPException(HTTPStatus.NOT_FOUND, 'After issue not found')
     else:
         after_issue = None
-    if issue.is_changed:
+    if updated_fields:
         pr = await issue.get_project(fetch_links=True)
-        try:
-            for wf in pr.workflows:
-                await wf.run(issue)
-        except WorkflowError as err:
+        fields_value, validation_errors = await validate_custom_fields_values(
+            updated_fields,
+            pr,
+            issue,
+        )
+        issue.fields = fields_value
+        if validation_errors:
             raise ValidateModelError(
                 payload=await IssueListOutput.from_obj(issue, accessible_tag_ids),
-                error_messages=[err.msg],
-                error_fields=err.fields_errors,
-            ) from err
-        issue.update_state(now=now)
-        await update_tags_on_close_resolve(issue)
-        issue.gen_history_record(user_ctx.user, time=now)
-        latest_history_changes = issue.history[-1].changes if issue.history else []
-        issue.updated_at = now
-        issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
-        await issue.replace()
-        await schedule_batched_notification(
-            'update',
-            issue.subject,
-            issue.id_readable,
-            [str(s) for s in issue.subscribers],
-            str(issue.project.id),
-            author=user_ctx.user.email,
-            field_changes=latest_history_changes,
-        )
-        await send_event(
-            Event(
-                type=EventType.ISSUE_UPDATE,
-                data={'issue_id': str(issue.id), 'project_id': str(issue.project.id)},
-            ),
-        )
+                error_messages=['Custom field validation error'],
+                error_fields={e.field.name: e.msg for e in validation_errors},
+            )
+        if issue.is_changed:
+            try:
+                for wf in pr.workflows:
+                    await wf.run(issue)
+            except WorkflowError as err:
+                raise ValidateModelError(
+                    payload=await IssueListOutput.from_obj(issue, accessible_tag_ids),
+                    error_messages=[err.msg],
+                    error_fields=err.fields_errors,
+                ) from err
+            issue.update_state(now=now)
+            await update_tags_on_close_resolve(issue)
+            issue.gen_history_record(user_ctx.user, time=now)
+            latest_history_changes = issue.history[-1].changes if issue.history else []
+            issue.updated_at = now
+            issue.updated_by = m.UserLinkField.from_obj(user_ctx.user)
+            await issue.replace()
+            await schedule_batched_notification(
+                'update',
+                issue.subject,
+                issue.id_readable,
+                [str(s) for s in issue.subscribers],
+                str(issue.project.id),
+                author=user_ctx.user.email,
+                field_changes=latest_history_changes,
+            )
+            await send_event(
+                Event(
+                    type=EventType.ISSUE_UPDATE,
+                    data={
+                        'issue_id': str(issue.id),
+                        'project_id': str(issue.project.id),
+                    },
+                ),
+            )
     board.move_issue(issue.id, after_issue.id if after_issue else None)
     await board.save_changes()
     return ModelIdOutput.make(issue_id)
@@ -818,7 +821,7 @@ async def select_card_color_field(
     fields = [
         cf
         for cf in _intersect_custom_fields(projects)
-        if cf.type in BOARD_COLUMN_FIELD_TYPES
+        if cf.type in BOARD_COLOR_FIELD_TYPES
     ]
     return BaseListOutput.make(
         count=len(fields),
@@ -1184,7 +1187,7 @@ async def _resolve_custom_field_groups(
     return [groups[gid] for gid in field_gids]
 
 
-async def validate_custom_field_values(
+async def validate_custom_field_group_values(
     field: m.CustomFieldGroupLink,
     values: list,
 ) -> list[m.CustomFieldValueT]:
@@ -1211,10 +1214,7 @@ async def validate_custom_field_values(
 def validate_custom_field_has_one_color(
     field: m.CustomFieldGroupLink | m.CustomFieldLink | m.CustomField,
 ) -> None:
-    if field.type not in (
-        m.CustomFieldTypeT.ENUM,
-        m.CustomFieldTypeT.STATE,
-    ):
+    if field.type not in BOARD_COLOR_FIELD_TYPES:
         raise HTTPException(
             HTTPStatus.BAD_REQUEST,
             'Card color field must be of type ENUM or STATE',
