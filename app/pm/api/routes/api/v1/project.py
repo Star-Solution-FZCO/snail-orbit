@@ -53,6 +53,8 @@ from pm.utils.file_storage._base import FileHeader, StorageFileNotFoundError
 
 __all__ = ('router',)
 
+ProjectIdentifier = PydanticObjectId | str
+
 SLUG_PATTERN = r'^\w+$'
 
 router = APIRouter(
@@ -401,9 +403,9 @@ async def list_projects(
 
 @router.get('/{project_id}')
 async def get_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    obj = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -494,12 +496,12 @@ async def create_project(
 
 @router.put('/{project_id}')
 async def update_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     body: ProjectUpdate,
     background_tasks: BackgroundTasks,
     _=Depends(current_user_context_dependency),
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    obj = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    obj = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
@@ -567,10 +569,10 @@ async def update_project(
 
 @router.delete('/{project_id}')
 async def delete_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     _=Depends(current_user_context_dependency),
 ) -> ModelIdOutput:
-    obj = await m.Project.find_one(m.Project.id == project_id)
+    obj = await m.Project.find_one_by_id_or_slug(project_id)
     if not obj:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
@@ -579,16 +581,16 @@ async def delete_project(
         obj, ProjectPermissions.PROJECT_DELETE, admin_override=True
     )
     await obj.delete()
-    await m.Issue.find(m.Issue.project.id == project_id).delete()
-    return ModelIdOutput.make(project_id)
+    await m.Issue.find(m.Issue.project.id == obj.id).delete()
+    return ModelIdOutput.make(obj.id)
 
 
 @router.get('/{project_id}/field/available/select')
 async def get_available_select_fields(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     query: SelectParams = Depends(),
 ) -> BaseListOutput[CustomFieldOutputRootModel]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
@@ -612,10 +614,10 @@ async def get_available_select_fields(
 
 @router.post('/{project_id}/field/{field_id}')
 async def add_field(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     field_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     field = await m.CustomField.find_one(
@@ -639,10 +641,10 @@ async def add_field(
 
 @router.delete('/{project_id}/field/{field_id}')
 async def remove_field(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     field_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     field = await m.CustomField.find_one(
@@ -660,22 +662,22 @@ async def remove_field(
         await project.save_changes()
         await m.Issue.remove_field_embedded_links(
             field_id,
-            flt={'project.id': project_id},
+            flt={'project.id': project.id},
         )
         await m.IssueDraft.remove_field_embedded_links(
             field_id,
-            flt={'project.id': project_id},
+            flt={'project.id': project.id},
         )
     return SuccessPayloadOutput(payload=ProjectOutput.from_obj(project))
 
 
 @router.put('/{project_id}/field/{field_id}/move')
 async def move_field(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     field_id: PydanticObjectId,
     body: FieldMoveBody,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     if body.after_id == field_id:
@@ -711,10 +713,10 @@ async def move_field(
 
 @router.get('/{project_id}/permissions')
 async def get_project_permissions(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     query: ListParams = Depends(),
 ) -> BaseListOutput[ProjectPermissionOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one_by_id_or_slug(project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     return BaseListOutput.make(
@@ -730,10 +732,10 @@ async def get_project_permissions(
 
 @router.get('/{project_id}/permissions/resolve')
 async def resolve_permissions(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     query: ListParams = Depends(),
 ) -> BaseListOutput[ProjectResolvedPermissionOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one_by_id_or_slug(project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
@@ -765,10 +767,10 @@ async def resolve_permissions(
 
 @router.post('/{project_id}/permission')
 async def grant_permission(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     body: GrantPermissionBody,
 ) -> UUIDOutput:
-    project: m.Project | None = await m.Project.find_one(m.Project.id == project_id)
+    project: m.Project | None = await m.Project.find_one_by_id_or_slug(project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     role: m.ProjectRole | None = await m.ProjectRole.find_one(
@@ -805,10 +807,10 @@ async def grant_permission(
 
 @router.delete('/{project_id}/permission/{permission_id}')
 async def revoke_permission(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     permission_id: UUID,
 ) -> UUIDOutput:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one_by_id_or_slug(project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     if not any(perm.id == permission_id for perm in project.permissions):
@@ -822,10 +824,10 @@ async def revoke_permission(
 
 @router.post('/{project_id}/workflow/{workflow_id}')
 async def add_workflow(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     workflow_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     workflow = await m.Workflow.find_one(
@@ -844,10 +846,10 @@ async def add_workflow(
 
 @router.delete('/{project_id}/workflow/{workflow_id}')
 async def remove_workflow(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     workflow_id: PydanticObjectId,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     workflow = await m.Workflow.find_one(
@@ -870,10 +872,10 @@ async def remove_workflow(
 
 @router.get('/{project_id}/workflow/available/select')
 async def get_available_workflows_for_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     query: SelectParams = Depends(),
 ) -> BaseListOutput[WorkflowOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
 
@@ -893,9 +895,9 @@ async def get_available_workflows_for_project(
 
 @router.post('/{project_id}/subscribe')
 async def subscribe_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -907,9 +909,9 @@ async def subscribe_project(
 
 @router.post('/{project_id}/unsubscribe')
 async def unsubscribe_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -921,9 +923,9 @@ async def unsubscribe_project(
 
 @router.post('/{project_id}/favorite')
 async def favorite_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -938,9 +940,9 @@ async def favorite_project(
 
 @router.post('/{project_id}/unfavorite')
 async def unfavorite_project(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessPayloadOutput[ProjectOutput]:
-    project = await m.Project.find_one(m.Project.id == project_id, fetch_links=True)
+    project = await m.Project.find_one_by_id_or_slug(project_id, fetch_links=True)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     user_ctx = current_user()
@@ -955,9 +957,9 @@ async def unfavorite_project(
 
 @router.get('/{project_id}/encryption_key/list')
 async def get_encryption_keys(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> BaseListOutput[EncryptionKeyPublicOut]:
-    project = await m.Project.find_one(m.Project.id == project_id)
+    project = await m.Project.find_one_by_id_or_slug(project_id)
     if not project:
         raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     if not project.encryption_settings:
@@ -1008,7 +1010,7 @@ async def get_encryption_keys(
 
 @router.post('/{project_id}/avatar')
 async def upload_project_avatar(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
     file: UploadFile = File(...),
 ) -> SuccessOutput:
     file_header = FileHeader(
@@ -1016,13 +1018,16 @@ async def upload_project_avatar(
         name=file.filename,
         content_type=file.content_type,
     )
+    project = await m.Project.find_one_by_id_or_slug(project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     await STORAGE_CLIENT.upload_file(
-        project_id,
+        project.id,
         file,
         file_header,
         folder=PROJECT_AVATAR_STORAGE_DIR,
     )
-    await m.Project.find_one(m.Project.id == project_id).update(
+    await m.Project.find_one(m.Project.id == project.id).update(
         {'$set': {'avatar_type': m.ProjectAvatarType.LOCAL}},
     )
     return SuccessOutput()
@@ -1030,13 +1035,16 @@ async def upload_project_avatar(
 
 @router.delete('/{project_id}/avatar')
 async def delete_project_avatar(
-    project_id: PydanticObjectId,
+    project_id: ProjectIdentifier,
 ) -> SuccessOutput:
+    project = await m.Project.find_one_by_id_or_slug(project_id)
+    if not project:
+        raise HTTPException(HTTPStatus.NOT_FOUND, 'Project not found')
     try:
-        await STORAGE_CLIENT.delete_file(project_id, folder=PROJECT_AVATAR_STORAGE_DIR)
+        await STORAGE_CLIENT.delete_file(project.id, folder=PROJECT_AVATAR_STORAGE_DIR)
     except StorageFileNotFoundError as err:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND) from err
-    await m.Project.find_one(m.Project.id == project_id).update(
+    await m.Project.find_one(m.Project.id == project.id).update(
         {'$set': {'avatar_type': m.ProjectAvatarType.DEFAULT}},
     )
     return SuccessOutput()

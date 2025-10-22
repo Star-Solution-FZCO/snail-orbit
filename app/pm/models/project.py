@@ -245,6 +245,22 @@ class Project(DocumentWithReadOnlyProjection):
         )
 
     @classmethod
+    async def find_one_by_id_or_slug(
+        cls,
+        id_or_slug: PydanticObjectId | str,
+        fetch_links: bool = False,
+    ) -> Self | None:
+        if isinstance(id_or_slug, str):
+            return await cls.find_one(
+                bo.Or(
+                    cls.slug == id_or_slug,
+                    cls.slug_history == id_or_slug,
+                ),
+                fetch_links=fetch_links,
+            )
+        return await cls.find_one(cls.id == id_or_slug, fetch_links=fetch_links)
+
+    @classmethod
     async def check_slug_used(
         cls,
         slug: str,

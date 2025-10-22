@@ -2022,11 +2022,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -2151,11 +2158,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -2290,11 +2304,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -2547,11 +2568,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -2710,11 +2738,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -2852,11 +2887,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -2996,11 +3038,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -3150,11 +3199,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -3345,11 +3401,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -3540,11 +3603,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -3681,11 +3751,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -3822,11 +3899,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -3964,11 +4048,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -4108,11 +4199,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           },
@@ -4271,11 +4369,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -4402,11 +4507,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -4533,11 +4645,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -4664,11 +4783,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -4795,11 +4921,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -4926,11 +5059,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
@@ -5065,11 +5205,18 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string"
+                }
+              ],
               "title": "Project Id"
             }
           }
