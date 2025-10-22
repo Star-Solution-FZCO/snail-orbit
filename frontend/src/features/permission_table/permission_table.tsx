@@ -19,12 +19,15 @@ import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { permissionTypes, type PermissionTypeT } from "shared/model/types";
-import type { PermissionTableProps } from "./permission_table.types";
+import type {
+    PermissionTableProps,
+    PermissionTableRowProps,
+} from "./permission_table.types";
 
-const PermissionTable = memo((props: PermissionTableProps) => {
+const PermissionTableRow = memo((props: PermissionTableRowProps) => {
     const { t } = useTranslation();
     const {
-        permissions,
+        permission,
         onDeletePermission,
         onChangePermissionType,
         disableChangeType,
@@ -33,7 +36,7 @@ const PermissionTable = memo((props: PermissionTableProps) => {
 
     const popupState = usePopupState({
         variant: "popover",
-        popupId: "select-permission-type",
+        popupId: `select-permission-type-${permission.id}`,
     });
 
     const getPermissionTypeLabel = useCallback(
@@ -51,6 +54,80 @@ const PermissionTable = memo((props: PermissionTableProps) => {
     );
 
     return (
+        <TableRow
+            sx={{
+                "&:last-child td, &:last-child th": {
+                    border: 0,
+                },
+            }}
+        >
+            <TableCell>
+                <Stack direction="row" alignItems="center" gap={2}>
+                    {"avatar" in permission.target ? (
+                        <Avatar
+                            src={permission.target.avatar}
+                            variant="rounded"
+                            sx={{ width: 24, height: 24 }}
+                        />
+                    ) : (
+                        <GroupIcon sx={{ fontSize: 24 }} />
+                    )}
+
+                    {permission.target.name}
+                </Stack>
+            </TableCell>
+            <TableCell>
+                <Button
+                    size="small"
+                    sx={{
+                        textTransform: "none",
+                        minWidth: 0,
+                    }}
+                    disabled={disableChangeType}
+                    {...bindTrigger(popupState)}
+                >
+                    {getPermissionTypeLabel(permission.permission_type)}
+                </Button>
+                <Menu {...bindMenu(popupState)}>
+                    {permissionTypes.map((type) => (
+                        <MenuItem
+                            selected={type === permission.permission_type}
+                            onClick={() => {
+                                popupState.close();
+                                onChangePermissionType?.(permission, type);
+                            }}
+                        >
+                            {getPermissionTypeLabel(type)}
+                        </MenuItem>
+                    ))}
+                </Menu>
+            </TableCell>
+            <TableCell align="right">
+                {!disableDelete && (
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onDeletePermission?.(permission)}
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                )}
+            </TableCell>
+        </TableRow>
+    );
+});
+
+const PermissionTable = memo((props: PermissionTableProps) => {
+    const { t } = useTranslation();
+    const {
+        permissions,
+        onDeletePermission,
+        onChangePermissionType,
+        disableChangeType,
+        disableDelete,
+    } = props;
+
+    return (
         <TableContainer>
             <Table size="small">
                 <TableHead>
@@ -66,81 +143,14 @@ const PermissionTable = memo((props: PermissionTableProps) => {
                 </TableHead>
                 <TableBody>
                     {permissions.map((permission) => (
-                        <TableRow
+                        <PermissionTableRow
+                            permission={permission}
+                            onDeletePermission={onDeletePermission}
+                            onChangePermissionType={onChangePermissionType}
+                            disableChangeType={disableChangeType}
+                            disableDelete={disableDelete}
                             key={permission.id}
-                            sx={{
-                                "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                },
-                            }}
-                        >
-                            <TableCell>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    gap={2}
-                                >
-                                    {"avatar" in permission.target ? (
-                                        <Avatar
-                                            src={permission.target.avatar}
-                                            variant="rounded"
-                                            sx={{ width: 24, height: 24 }}
-                                        />
-                                    ) : (
-                                        <GroupIcon sx={{ fontSize: 24 }} />
-                                    )}
-
-                                    {permission.target.name}
-                                </Stack>
-                            </TableCell>
-                            <TableCell>
-                                <Button
-                                    size="small"
-                                    sx={{
-                                        textTransform: "none",
-                                        minWidth: 0,
-                                    }}
-                                    disabled={disableChangeType}
-                                    {...bindTrigger(popupState)}
-                                >
-                                    {getPermissionTypeLabel(
-                                        permission.permission_type,
-                                    )}
-                                </Button>
-                                <Menu {...bindMenu(popupState)}>
-                                    {permissionTypes.map((type) => (
-                                        <MenuItem
-                                            selected={
-                                                type ===
-                                                permission.permission_type
-                                            }
-                                            onClick={() => {
-                                                popupState.close();
-                                                onChangePermissionType?.(
-                                                    permission,
-                                                    type,
-                                                );
-                                            }}
-                                        >
-                                            {getPermissionTypeLabel(type)}
-                                        </MenuItem>
-                                    ))}
-                                </Menu>
-                            </TableCell>
-                            <TableCell align="right">
-                                {!disableDelete && (
-                                    <IconButton
-                                        size="small"
-                                        color="error"
-                                        onClick={() =>
-                                            onDeletePermission?.(permission)
-                                        }
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
-                            </TableCell>
-                        </TableRow>
+                        />
                     ))}
                 </TableBody>
             </Table>
