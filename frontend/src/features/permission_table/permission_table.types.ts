@@ -10,3 +10,14 @@ export type PermissionTableProps = {
     disableChangeType?: boolean;
     disableDelete?: boolean;
 };
+
+export type PermissionTableRowProps = {
+    permission: PermissionT;
+    onChangePermissionType?: (
+        permission: PermissionT,
+        type: PermissionTypeT,
+    ) => void;
+    onDeletePermission?: (permission: PermissionT) => void;
+    disableChangeType?: boolean;
+    disableDelete?: boolean;
+};
