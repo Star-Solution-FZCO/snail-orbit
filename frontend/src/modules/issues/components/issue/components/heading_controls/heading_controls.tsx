@@ -1,5 +1,6 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import LinkIcon from "@mui/icons-material/Link";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
@@ -13,6 +14,7 @@ import {
     Typography,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { useIssueTemplate } from "entities/issue/api/use_issue_template";
 import type { FC, ReactNode } from "react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +39,7 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { copyTemplateUrl } = useIssueTemplate();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -117,6 +120,11 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
         setPermissionsDialogOpen(true);
     };
 
+    const handleCopyTemplateUrl = () => {
+        handleCloseMenu();
+        copyTemplateUrl(issue);
+    };
+
     return (
         <>
             <Tooltip title={t("issues.links.add.title")}>
@@ -154,6 +162,11 @@ export const HeadingControls: FC<HeadingControlsProps> = ({
                     <ContentCopyIcon />,
                     t("issues.clone"),
                     handleCloneIssue,
+                )}
+                {renderMenuItem(
+                    <InsertLinkIcon />,
+                    t("issues.template.copyUrl"),
+                    handleCopyTemplateUrl,
                 )}
                 {canManagePermissions &&
                     renderMenuItem(
