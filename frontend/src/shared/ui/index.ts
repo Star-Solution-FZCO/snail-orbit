@@ -4,7 +4,7 @@ export * from "./error_fallback";
 export * from "./error_handler";
 export * from "./lightbox";
 export * from "./link";
-export * from "./md_editors";
+export * from "./md_editor";
 export * from "./md_renderer";
 export * from "./navbar";
 export * from "./not_found";

@@ -5,11 +5,11 @@ import {
     EditorViewMode,
 } from "shared/model/types/settings";
 import { useLSState } from "shared/utils/helpers/local-storage";
-import { MDEditorProps } from "../types";
-import { MDEditor } from "./editors/markdown";
+import { MarkdownEditor } from "./editors/markdown";
 import { VisualEditor } from "./editors/visual";
+import { MDEditorProps } from "./types";
 
-export const MDEditorV2: FC<MDEditorProps> = ({
+export const MDEditor: FC<MDEditorProps> = ({
     value = "",
     onChange,
     onBlur,
@@ -59,7 +59,7 @@ export const MDEditorV2: FC<MDEditorProps> = ({
     }
 
     return (
-        <MDEditor
+        <MarkdownEditor
             value={internalValue}
             placeholder={placeholder}
             mode={mode}
