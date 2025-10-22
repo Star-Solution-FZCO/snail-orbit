@@ -13,6 +13,7 @@ from pm.api.context import current_user
 from pm.api.events_bus import send_event, send_task
 from pm.api.exceptions import ValidateModelError
 from pm.api.helpers.issue_validation import validate_custom_fields_values
+from pm.api.helpers.user import resolve_users_by_email
 from pm.api.issue_query import (
     IssueQueryTransformError,
     transform_query,
@@ -51,6 +52,7 @@ from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Event, EventType, Task, TaskType
+from pm.utils.mentions import detect_mention_changes, extract_mentions_from_text
 from pm.workflows import WorkflowError
 
 from ._utils import update_attachments
@@ -550,6 +552,12 @@ async def create_issue_from_draft(
             error_fields=err.fields_errors,
         ) from err
     obj.aliases.append(await project.get_new_issue_alias())
+    mentions = list(extract_mentions_from_text(obj.text))
+    mentioned_users = await resolve_users_by_email(mentions)
+    obj.subscribers.extend(
+        [u.id for u in mentioned_users.values() if u.id not in obj.subscribers]
+    )
+
     obj.update_state(now=now)
     await obj.insert()
     await draft.delete()
@@ -563,6 +571,7 @@ async def create_issue_from_draft(
         if a.encryption:
             continue
         await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+
     await schedule_batched_notification(
         'create',
         obj.subject,
@@ -570,6 +579,7 @@ async def create_issue_from_draft(
         [str(s) for s in obj.subscribers],
         str(project.id),
         author=user_ctx.user.email,
+        new_mentions=mentions,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
     return SuccessPayloadOutput(
@@ -647,6 +657,13 @@ async def create_issue(
             error_fields=err.fields_errors,
         ) from err
     obj.aliases.append(await project.get_new_issue_alias())
+
+    mentions = list(extract_mentions_from_text(obj.text))
+    mentioned_users = await resolve_users_by_email(mentions)
+    obj.subscribers.extend(
+        [u.id for u in mentioned_users.values() if u.id not in obj.subscribers]
+    )
+
     obj.update_state(now=now)
     await obj.insert()
     await send_event(
@@ -666,6 +683,7 @@ async def create_issue(
         [str(s) for s in obj.subscribers],
         str(project.id),
         author=user_ctx.user.email,
+        new_mentions=mentions,
     )
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
     return SuccessPayloadOutput(
@@ -744,8 +762,13 @@ async def update_issue(
     }
     if 'attachments' in body.model_fields_set:
         await update_attachments(obj, body.attachments, user=user_ctx.user, now=now)
+
+    new_mentions = []
+
     if 'text' in body.model_fields_set:
-        obj.text = body.text.value if body.text else None
+        new_text = body.text.value if body.text else None
+        new_mentions = list(detect_mention_changes(obj.text, new_text).newly_mentioned)
+        obj.text = new_text
         obj.encryption = body.text.encryption if body.text else None
     if validation_errors:
         raise ValidateModelError(
@@ -771,12 +794,19 @@ async def update_issue(
             obj.aliases.append(existing_alias)
         else:
             obj.aliases.append(await project.get_new_issue_alias())
+
+    mentioned_users = await resolve_users_by_email(new_mentions)
+    obj.subscribers.extend(
+        [u.id for u in mentioned_users.values() if u.id not in obj.subscribers]
+    )
+
     if obj.is_changed:
         obj.gen_history_record(user_ctx.user, now)
         latest_history_changes = obj.history[-1].changes if obj.history else []
         obj.updated_at = now
         obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
+
         await schedule_batched_notification(
             'update',
             obj.subject,
@@ -785,6 +815,7 @@ async def update_issue(
             str(obj.project.id),
             author=user_ctx.user.email,
             field_changes=latest_history_changes,
+            new_mentions=new_mentions,
         )
         await send_event(
             Event(
