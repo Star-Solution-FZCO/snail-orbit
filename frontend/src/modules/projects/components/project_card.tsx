@@ -35,7 +35,7 @@ const ProjectCard: FC<IProjectCardProps> = ({ project }) => {
             <Stack overflow="hidden">
                 <Link
                     to="/projects/$projectId"
-                    params={{ projectId: project.id }}
+                    params={{ projectId: project.slug }}
                     fontWeight="bold"
                 >
                     {project.name} ({project.slug})

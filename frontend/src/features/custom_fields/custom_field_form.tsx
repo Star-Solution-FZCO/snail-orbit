@@ -226,7 +226,7 @@ const CustomFieldForm: FC<ICustomFieldFormProps> = ({
                                 <Link
                                     key={`project-${project.id}`}
                                     to="/projects/$projectId"
-                                    params={{ projectId: project.id }}
+                                    params={{ projectId: project.slug }}
                                     search={{
                                         // @ts-expect-error TODO: fix this types
                                         tab: "customFields",
