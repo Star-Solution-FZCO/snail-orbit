@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Any
 
-from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
+from ._base import CustomField, CustomFieldTypeT, CustomFieldWrongTypeError
 
 __all__ = (
     'BooleanCustomField',
@@ -20,7 +20,7 @@ class StringCustomField(CustomField):
     async def validate_value(self, value: Any) -> Any:
         value = await super().validate_value(value)
         if value is not None and not isinstance(value, str):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a string',
@@ -34,7 +34,7 @@ class IntegerCustomField(CustomField):
     async def validate_value(self, value: Any) -> Any:
         value = await super().validate_value(value)
         if value is not None and not isinstance(value, int):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be an integer',
@@ -51,7 +51,7 @@ class FloatCustomField(CustomField):
             try:
                 value = float(value)
             except Exception as err:
-                raise CustomFieldValidationError(
+                raise CustomFieldWrongTypeError(
                     field=self,
                     value=value,
                     msg='must be a float',
@@ -65,7 +65,7 @@ class BooleanCustomField(CustomField):
     async def validate_value(self, value: Any) -> Any:
         value = await super().validate_value(value)
         if value is not None and not isinstance(value, bool):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a boolean',
@@ -93,12 +93,12 @@ class DateCustomField(CustomField):
                     microsecond=0,
                 )
             except ValueError as err:
-                raise CustomFieldValidationError(
+                raise CustomFieldWrongTypeError(
                     field=self,
                     value=value,
                     msg='must be a date in ISO format',
                 ) from err
-        raise CustomFieldValidationError(
+        raise CustomFieldWrongTypeError(
             field=self,
             value=value,
             msg='must be a date in ISO format',
@@ -118,12 +118,12 @@ class DateTimeCustomField(CustomField):
             try:
                 return datetime.fromisoformat(value).replace(tzinfo=None)
             except ValueError as err:
-                raise CustomFieldValidationError(
+                raise CustomFieldWrongTypeError(
                     field=self,
                     value=value,
                     msg='must be a datetime in ISO format',
                 ) from err
-        raise CustomFieldValidationError(
+        raise CustomFieldWrongTypeError(
             field=self,
             value=value,
             msg='must be a datetime in ISO format',
@@ -138,13 +138,13 @@ class DurationCustomField(CustomField):
         if value is None:
             return value
         if not isinstance(value, int):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be an integer representing seconds',
             )
         if value < 0:
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a positive number of seconds',

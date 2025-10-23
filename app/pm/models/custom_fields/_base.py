@@ -16,9 +16,11 @@ __all__ = (
     'CustomField',
     'CustomFieldCanBeNoneError',
     'CustomFieldGroupLink',
+    'CustomFieldInvalidOptionError',
     'CustomFieldLink',
     'CustomFieldTypeT',
     'CustomFieldValidationError',
+    'CustomFieldWrongTypeError',
 )
 
 
@@ -26,7 +28,7 @@ class CustomFieldValidationError(ValueError):
     field: 'CustomField'
     value: Any
 
-    def __init__(self, field: 'CustomField', value: Any, msg: str):
+    def __init__(self, field: 'CustomField', value: Any, msg: str) -> None:
         super().__init__(msg)
         self.field = field
         self.value = value
@@ -41,9 +43,30 @@ class CustomFieldCanBeNoneError(CustomFieldValidationError):
         self,
         field: 'CustomField',
         value: Any = None,
-        msg: str = 'cannot be None',
+        msg: str = 'field is not nullable',
     ):
         super().__init__(field, value, msg)
+
+
+class CustomFieldWrongTypeError(CustomFieldValidationError):
+    def __init__(
+        self, field: 'CustomField', value: Any, msg: str = 'value has a wrong type'
+    ) -> None:
+        super().__init__(field, value, msg)
+
+
+class CustomFieldInvalidOptionError(CustomFieldValidationError):
+    value_obj: Any
+
+    def __init__(
+        self,
+        field: 'CustomField',
+        value: Any,
+        msg: str = 'invalid option',
+        value_obj: Any = None,
+    ) -> None:
+        super().__init__(field, value, msg)
+        self.value_obj = value_obj
 
 
 class CustomFieldTypeT(StrEnum):

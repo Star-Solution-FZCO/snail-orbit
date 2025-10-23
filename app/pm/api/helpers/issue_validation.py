@@ -37,8 +37,11 @@ async def validate_custom_fields_values(
             val_ = None
             if not ignore_none_errors:
                 errors.append(err)
-        except m.CustomFieldValidationError as err:
-            val_ = err.value
+        except m.CustomFieldInvalidOptionError as err:
+            val_ = err.value_obj
+            errors.append(err)
+        except (m.CustomFieldWrongTypeError, m.CustomFieldValidationError) as err:
+            val_ = None
             errors.append(err)
         results.append(
             m.get_cf_value_class(f.type)(

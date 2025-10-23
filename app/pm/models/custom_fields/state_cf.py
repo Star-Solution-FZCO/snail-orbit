@@ -2,7 +2,12 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 
-from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
+from ._base import (
+    CustomField,
+    CustomFieldInvalidOptionError,
+    CustomFieldTypeT,
+    CustomFieldWrongTypeError,
+)
 
 __all__ = (
     'StateCustomField',
@@ -38,11 +43,21 @@ class StateCustomField(CustomField):
             return value
         if isinstance(value, StateOption):
             value = value.value
+        if not isinstance(value, str):
+            raise CustomFieldWrongTypeError(
+                field=self,
+                value=value,
+                msg='must be a string',
+            )
         opts = {opt.value: opt for opt in self.options}
         if value not in opts:
-            raise CustomFieldValidationError(
+            raise CustomFieldInvalidOptionError(
                 field=self,
                 value=value,
                 msg='option not found',
+                value_obj=StateOption(
+                    id='',
+                    value=value,
+                ),
             )
         return opts[value]
