@@ -38,7 +38,9 @@ async def test_issue_permissions_crud_workflow(
         'password': 'testpassword',
         'is_active': True,
     }
-    response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+    response = test_client.post(
+        '/api/v1/admin/user', headers=headers, json=user_payload
+    )
     assert_success_response(response)
     user_id = response.json()['payload']['id']
 
@@ -209,7 +211,9 @@ async def test_issue_permissions_inheritance(
         'password': 'testpassword',
         'is_active': True,
     }
-    response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+    response = test_client.post(
+        '/api/v1/admin/user', headers=headers, json=user_payload
+    )
     assert_success_response(response)
     user_id = response.json()['payload']['id']
 
@@ -348,7 +352,9 @@ async def test_issue_permissions_resolve(
         'password': 'testpassword',
         'is_active': True,
     }
-    response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+    response = test_client.post(
+        '/api/v1/admin/user', headers=headers, json=user_payload
+    )
     assert_success_response(response)
     user_id = response.json()['payload']['id']
 
@@ -742,7 +748,9 @@ async def test_issue_permissions_user_update_embedded_links(
         'password': 'testpassword',
         'is_active': True,
     }
-    response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+    response = test_client.post(
+        '/api/v1/admin/user', headers=headers, json=user_payload
+    )
     assert_success_response(response)
     user_id = response.json()['payload']['id']
 
@@ -830,7 +838,7 @@ async def test_issue_permissions_user_update_embedded_links(
         'email': 'updated.testuser@example.com',
     }
     response = test_client.put(
-        f'/api/v1/user/{user_id}', headers=headers, json=user_update_payload
+        f'/api/v1/admin/user/{user_id}', headers=headers, json=user_update_payload
     )
     assert_success_response(response)
 

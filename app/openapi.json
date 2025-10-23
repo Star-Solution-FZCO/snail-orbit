@@ -165,6 +165,1626 @@
         }
       }
     },
+    "/api/v1/admin/user/list": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "List Users",
+        "operationId": "list_users_api_v1_admin_user_list_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort By"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_UserFullOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/user/select": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Select Users",
+        "operationId": "select_users_api_v1_admin_user_select_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseListOutput_UserOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/user/{user_identifier}": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Get User",
+        "operationId": "get_user_api_v1_admin_user__user_identifier__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Update User",
+        "operationId": "update_user_api_v1_admin_user__user_identifier__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request, validation errors, or MFA required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/user": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Create User",
+        "operationId": "create_user_api_v1_admin_user_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request, validation errors, or MFA required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "title": "Success",
+                      "default": false
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "title": "Error Messages"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/user/{user_identifier}/global-roles": {
+      "get": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "List User Global Roles",
+        "description": "List global roles assigned to a user.",
+        "operationId": "list_user_global_roles_api_v1_admin_user__user_identifier__global_roles_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Search"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort By"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/pm__api__views__output__BaseListOutput_GlobalRoleOutput___1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/user/{user_identifier}/global-role/{role_id}": {
+      "post": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Assign Global Role To User",
+        "description": "Assign a global role to a user.",
+        "operationId": "assign_global_role_to_user_api_v1_admin_user__user_identifier__global_role__role_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
+            }
+          },
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelIdOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid request, validation errors, or MFA required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity - Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api",
+          "v1",
+          "admin",
+          "user"
+        ],
+        "summary": "Remove Global Role From User",
+        "description": "Remove a global role from a user.",
+        "operationId": "remove_global_role_from_user_api_v1_admin_user__user_identifier__global_role__role_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 24,
+                  "maxLength": 24,
+                  "pattern": "^[0-9a-f]{24}$",
+                  "example": "5eb7cf5a86d9755df3a6c593"
+                },
+                {
+                  "type": "string",
+                  "format": "email"
+                }
+              ],
+              "title": "User Identifier"
+            }
+          },
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 24,
+              "maxLength": 24,
+              "pattern": "^[0-9a-f]{24}$",
+              "example": "5eb7cf5a86d9755df3a6c593",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelIdOutput"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "success": {
+                      "default": false,
+                      "title": "Success",
+                      "type": "boolean"
+                    },
+                    "error_messages": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Error Messages",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "error_messages"
+                  ],
+                  "title": "ErrorOutput",
+                  "type": "object"
+                },
+                "examples": {
+                  "error_example": {
+                    "summary": "ErrorOutput Example",
+                    "value": {
+                      "success": false,
+                      "error_messages": [
+                        "Operation failed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/version": {
       "get": {
         "tags": [
@@ -274,7 +1894,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseListOutput_UserFullOutput_"
+                  "$ref": "#/components/schemas/BaseListOutput_UserOutput_"
                 }
               }
             }
@@ -563,1109 +2183,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication required or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient permissions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found - Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "api",
-          "v1",
-          "user"
-        ],
-        "summary": "Update User",
-        "operationId": "update_user_api_v1_user__user_identifier__put",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "user_identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 24,
-                  "maxLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {
-                  "type": "string",
-                  "format": "email"
-                }
-              ],
-              "title": "User Identifier"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication required or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient permissions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Invalid request, validation errors, or MFA required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found - Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity - Request validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/user": {
-      "post": {
-        "tags": [
-          "api",
-          "v1",
-          "user"
-        ],
-        "summary": "Create User",
-        "operationId": "create_user_api_v1_user_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserFullOutput_"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication required or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "title": "Success",
-                      "default": false
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array",
-                      "title": "Error Messages"
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient permissions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "title": "Success",
-                      "default": false
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array",
-                      "title": "Error Messages"
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Invalid request, validation errors, or MFA required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "title": "Success",
-                      "default": false
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array",
-                      "title": "Error Messages"
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity - Request validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "title": "Success",
-                      "default": false
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array",
-                      "title": "Error Messages"
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/user/{user_identifier}/global-roles": {
-      "get": {
-        "tags": [
-          "api",
-          "v1",
-          "user"
-        ],
-        "summary": "List User Global Roles",
-        "description": "List global roles assigned to a user.",
-        "operationId": "list_user_global_roles_api_v1_user__user_identifier__global_roles_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "user_identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 24,
-                  "maxLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {
-                  "type": "string",
-                  "format": "email"
-                }
-              ],
-              "title": "User Identifier"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "Search"
-            }
-          },
-          {
-            "name": "filter",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Filter"
-            }
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Sort By"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/pm__api__views__output__BaseListOutput_GlobalRoleOutput___1"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication required or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient permissions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found - Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/user/{user_identifier}/global-role/{role_id}": {
-      "post": {
-        "tags": [
-          "api",
-          "v1",
-          "user"
-        ],
-        "summary": "Assign Global Role To User",
-        "description": "Assign a global role to a user.",
-        "operationId": "assign_global_role_to_user_api_v1_user__user_identifier__global_role__role_id__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "user_identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 24,
-                  "maxLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {
-                  "type": "string",
-                  "format": "email"
-                }
-              ],
-              "title": "User Identifier"
-            }
-          },
-          {
-            "name": "role_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "Role Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ModelIdOutput"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication required or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Insufficient permissions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Invalid request, validation errors, or MFA required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity - Request validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "success": {
-                      "default": false,
-                      "title": "Success",
-                      "type": "boolean"
-                    },
-                    "error_messages": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "title": "Error Messages",
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "error_messages"
-                  ],
-                  "title": "ErrorOutput",
-                  "type": "object"
-                },
-                "examples": {
-                  "error_example": {
-                    "summary": "ErrorOutput Example",
-                    "value": {
-                      "success": false,
-                      "error_messages": [
-                        "Operation failed"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "api",
-          "v1",
-          "user"
-        ],
-        "summary": "Remove Global Role From User",
-        "description": "Remove a global role from a user.",
-        "operationId": "remove_global_role_from_user_api_v1_user__user_identifier__global_role__role_id__delete",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "user_identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 24,
-                  "maxLength": 24,
-                  "pattern": "^[0-9a-f]{24}$",
-                  "example": "5eb7cf5a86d9755df3a6c593"
-                },
-                {
-                  "type": "string",
-                  "format": "email"
-                }
-              ],
-              "title": "User Identifier"
-            }
-          },
-          {
-            "name": "role_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 24,
-              "maxLength": 24,
-              "pattern": "^[0-9a-f]{24}$",
-              "example": "5eb7cf5a86d9755df3a6c593",
-              "title": "Role Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ModelIdOutput"
+                  "$ref": "#/components/schemas/SuccessPayloadOutput_UserOutput_"
                 }
               }
             }
@@ -56228,6 +56746,23 @@
           "payload"
         ],
         "title": "SuccessPayloadOutput[UserFullOutput]"
+      },
+      "SuccessPayloadOutput_UserOutput_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "payload": {
+            "$ref": "#/components/schemas/UserOutput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "SuccessPayloadOutput[UserOutput]"
       },
       "SuccessPayloadOutput_VersionOutput_": {
         "properties": {

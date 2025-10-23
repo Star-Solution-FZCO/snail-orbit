@@ -51,7 +51,7 @@ async def test_admin_global_operations_override(
 
     # Test user management - Create new user with admin credentials
     response = test_client.post(
-        '/api/v1/user/',
+        '/api/v1/admin/user/',
         headers=admin_headers,
         json={
             'name': 'Test User 2',
@@ -70,7 +70,7 @@ async def test_admin_global_operations_override(
 
     # Test user update with admin credentials
     response = test_client.put(
-        f'/api/v1/user/{new_user_id}',
+        f'/api/v1/admin/user/{new_user_id}',
         headers=admin_headers,
         json={'name': 'Test User 2 Updated'},
     )

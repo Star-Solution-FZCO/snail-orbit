@@ -1,6 +1,7 @@
 from pm.api.utils.router import APIRouter
 
 from .activity import router as activity_router
+from .admin import router as admin_router
 from .board import router as board_router
 from .custom_field import router as custom_field_router
 from .dashboard import router as dashboard_router
@@ -24,6 +25,7 @@ __all__ = ('router',)
 
 router = APIRouter(prefix='/v1', tags=['v1'])
 router.include_router(activity_router)
+router.include_router(admin_router)
 router.include_router(version_router)
 router.include_router(user_router)
 router.include_router(project_router)
