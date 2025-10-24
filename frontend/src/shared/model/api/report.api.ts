@@ -2,12 +2,14 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type { ApiResponse, ListResponse } from "../types";
 import { type ListQueryParams } from "../types";
 import type {
+    ChangeReportPermissionParams,
     CreateReportParams,
     GrantReportPermissionParams,
     ReportDataT,
     ReportT,
     UpdateReportParams,
 } from "../types/report";
+import { agileBoardApi } from "./agile_board.api";
 import customFetchBase from "./custom_fetch_base";
 
 const tagTypes = ["Reports"];
@@ -37,9 +39,9 @@ export const reportApi = createApi({
                 },
             },
         ),
-        getReport: build.query<ApiResponse<ReportT>, { reportId: string }>({
-            query: (params) => ({
-                url: `report/${params.reportId}`,
+        getReport: build.query<ApiResponse<ReportT>, string>({
+            query: (id) => ({
+                url: `report/${id}`,
             }),
             providesTags: (result) => [
                 { type: "Reports", id: result?.payload.id },
@@ -85,11 +87,7 @@ export const reportApi = createApi({
                 try {
                     const { data } = await queryFulfilled;
                     dispatch(
-                        reportApi.util.upsertQueryData(
-                            "getReport",
-                            { reportId: id },
-                            data,
-                        ),
+                        reportApi.util.upsertQueryData("getReport", id, data),
                     );
                 } catch {
                     dispatch(
@@ -138,7 +136,7 @@ export const reportApi = createApi({
                 dispatch(
                     reportApi.util.updateQueryData(
                         "getReport",
-                        { reportId },
+                        reportId,
                         (draft) => {
                             if (!draft) return;
                             draft.payload.permissions =
@@ -154,6 +152,53 @@ export const reportApi = createApi({
                 } catch {
                     dispatch(
                         reportApi.util.invalidateTags([
+                            { type: "Reports", id: reportId },
+                        ]),
+                    );
+                }
+            },
+        }),
+        changePermission: build.mutation<
+            ApiResponse<{ id: string }>,
+            ChangeReportPermissionParams
+        >({
+            query: ({ reportId, permission_id, ...body }) => ({
+                url: `report/${reportId}/permission/${permission_id}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: () => [
+                {
+                    type: "Reports",
+                    id: "LIST",
+                },
+            ],
+            async onQueryStarted(
+                { permission_id, reportId, permission_type },
+                { dispatch, queryFulfilled },
+            ): Promise<void> {
+                dispatch(
+                    reportApi.util.updateQueryData(
+                        "getReport",
+                        reportId,
+                        (draft) => {
+                            if (!draft) return;
+                            const targetPermission =
+                                draft.payload.permissions.find(
+                                    (el) => el.id === permission_id,
+                                );
+                            if (targetPermission)
+                                targetPermission.permission_type =
+                                    permission_type;
+                        },
+                    ),
+                );
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    dispatch(
+                        agileBoardApi.util.invalidateTags([
                             { type: "Reports", id: reportId },
                         ]),
                     );
