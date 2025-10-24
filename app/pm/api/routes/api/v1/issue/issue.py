@@ -544,7 +544,7 @@ async def create_issue_from_draft(
     try:
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
-                await wf.run(obj)
+                await wf.run(obj, user_ctx)
     except WorkflowError as err:
         raise ValidateModelError(
             payload=await IssueOutput.from_obj(obj),
@@ -649,7 +649,7 @@ async def create_issue(
     try:
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
-                await wf.run(obj)
+                await wf.run(obj, user_ctx)
     except WorkflowError as err:
         raise ValidateModelError(
             payload=await IssueOutput.from_obj(obj),
@@ -779,7 +779,7 @@ async def update_issue(
     try:
         for wf in project.workflows:
             if isinstance(wf, m.OnChangeWorkflow):
-                await wf.run(obj)
+                await wf.run(obj, user_ctx)
     except WorkflowError as err:
         raise ValidateModelError(
             payload=await IssueOutput.from_obj(obj),

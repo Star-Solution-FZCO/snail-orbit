@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from pm.api.context import UserContext
     from pm.models.issue import Issue
     from pm.models.project import Project
 
@@ -34,7 +35,9 @@ class WorkflowError(Exception):
 
 class OnChangeWorkflowScript(ABC):
     @abstractmethod
-    async def run(self, issue: 'Issue') -> None:
+    async def run(
+        self, issue: 'Issue', user_ctx: 'UserContext', *args: Any, **kwargs: Any
+    ) -> None:
         pass
 
 

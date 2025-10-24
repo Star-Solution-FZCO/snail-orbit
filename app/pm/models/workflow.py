@@ -1,3 +1,4 @@
+import inspect
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
@@ -12,6 +13,8 @@ from pm.workflows import get_on_change_script_from_string
 from ._audit import audited_model
 
 if TYPE_CHECKING:
+    from pm.api.context import UserContext
+
     from .issue import Issue
 
 __all__ = (
@@ -59,7 +62,25 @@ class ScheduledWorkflow(Workflow):
 class OnChangeWorkflow(Workflow):
     type: WorkflowType = WorkflowType.ON_CHANGE
 
-    async def run(self, issue: 'Issue') -> None:
+    async def run(self, issue: 'Issue', user_ctx: 'UserContext') -> None:
         script = get_on_change_script_from_string(self.script)
         if script:
-            await script.run(issue)
+            sig = inspect.signature(script.run)
+
+            # Prepare all possible arguments
+            call_args = {
+                'issue': issue,
+                'user_ctx': user_ctx,
+            }
+
+            # Get parameter names (excluding 'self')
+            param_names = set(sig.parameters.keys()) - {'self'}
+
+            # Filter to only arguments the script accepts
+            filtered_args = {k: v for k, v in call_args.items() if k in param_names}
+
+            # Bind and call with filtered arguments
+            bound = sig.bind_partial(**filtered_args)
+            bound.apply_defaults()
+
+            await script.run(*bound.args, **bound.kwargs)
