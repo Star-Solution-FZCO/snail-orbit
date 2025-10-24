@@ -101,6 +101,7 @@ async def test_api_v1_profile_and_ui_settings(
         'is_admin': True,
         'id': admin_id,
         'is_active': True,
+        'is_bot': False,
         'avatar': f'/api/avatar/{gravatar_like_hash("test_admin@localhost.localdomain")}',
         'ui_settings': {},
         'access_claims': [],

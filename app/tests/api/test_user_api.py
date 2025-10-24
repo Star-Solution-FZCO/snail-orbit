@@ -42,6 +42,7 @@ async def test_user_endpoints(
         'email': user_payload['email'],
         'name': user_payload['name'],
         'is_active': user_payload['is_active'],
+        'is_bot': False,  # Regular user email doesn't end with bot domain
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
         'id': user_id,
     }
@@ -63,7 +64,7 @@ async def test_user_endpoints(
 
     # Verify users have expected limited fields (UserOutput, not UserFullOutput)
     for user in users:
-        expected_fields = {'id', 'name', 'email', 'is_active', 'avatar'}
+        expected_fields = {'id', 'name', 'email', 'is_active', 'is_bot', 'avatar'}
         forbidden_fields = {
             'is_admin',
             'mfa_enabled',
@@ -100,7 +101,7 @@ async def test_user_endpoints(
 
     # Verify users have expected limited fields (UserOutput, not UserFullOutput)
     for user in users:
-        expected_fields = {'id', 'name', 'email', 'is_active', 'avatar'}
+        expected_fields = {'id', 'name', 'email', 'is_active', 'is_bot', 'avatar'}
         forbidden_fields = {
             'is_admin',
             'mfa_enabled',

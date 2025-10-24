@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from unittest import mock
 
+from pm.constants import BOT_USER_DOMAIN
 from tests.api.helpers import (
     assert_error_response,
     assert_success_response,
@@ -86,6 +87,7 @@ async def test_admin_user_crud_workflow(
     expected_payload = {
         **user_payload,
         'is_admin': user_payload.get('is_admin', False),
+        'is_bot': user_payload['email'].endswith(BOT_USER_DOMAIN),
         'avatar_type': 'default',
         'origin': 'local',
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
@@ -436,3 +438,219 @@ async def test_admin_user_select_functionality(
     users = response.json()['payload']['items']
     assert len(users) == 1
     assert users[0]['name'] == 'Select User 0'
+
+
+@pytest.mark.asyncio
+async def test_bot_user_comprehensive(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Comprehensive test for all bot user functionality."""
+    _, admin_token = create_initial_admin
+    headers = make_admin_headers(admin_token)
+
+    # Test: Bot user with email invitation should fail
+    bot_user_with_email_invite = {
+        'email': f'api-bot{BOT_USER_DOMAIN}',
+        'name': 'Bot User Email',
+        'send_email_invite': True,
+        'send_pararam_invite': False,
+    }
+
+    response = test_client.post(
+        '/api/v1/admin/user/', headers=headers, json=bot_user_with_email_invite
+    )
+    assert_error_response(response, HTTPStatus.BAD_REQUEST)
+    error_data = response.json()
+    assert 'Cannot send invitations to bot users' in error_data['error_messages'][0]
+
+    # Test: Bot user with Pararam invitation should fail
+    bot_user_with_pararam_invite = {
+        'email': f'webhook-bot{BOT_USER_DOMAIN}',
+        'name': 'Bot User Pararam',
+        'send_email_invite': False,
+        'send_pararam_invite': True,
+    }
+
+    response = test_client.post(
+        '/api/v1/admin/user/', headers=headers, json=bot_user_with_pararam_invite
+    )
+    assert_error_response(response, HTTPStatus.BAD_REQUEST)
+    error_data = response.json()
+    assert 'Cannot send invitations to bot users' in error_data['error_messages'][0]
+
+    # Test: Bot user with both invitations should fail
+    bot_user_with_both_invites = {
+        'email': f'automation{BOT_USER_DOMAIN}',
+        'name': 'Bot User Both',
+        'send_email_invite': True,
+        'send_pararam_invite': True,
+    }
+
+    response = test_client.post(
+        '/api/v1/admin/user/', headers=headers, json=bot_user_with_both_invites
+    )
+    assert_error_response(response, HTTPStatus.BAD_REQUEST)
+    error_data = response.json()
+    assert 'Cannot send invitations to bot users' in error_data['error_messages'][0]
+
+    # Test: Bot user without invitations should succeed
+    bot_user_no_invites = {
+        'email': f'success-bot{BOT_USER_DOMAIN}',
+        'name': 'Bot User Success',
+        'send_email_invite': False,
+        'send_pararam_invite': False,
+    }
+
+    response = test_client.post(
+        '/api/v1/admin/user/', headers=headers, json=bot_user_no_invites
+    )
+    assert_success_response(response)
+    bot_user_data = response.json()['payload']
+    bot_user_id = bot_user_data['id']
+
+    expected_bot_data = {
+        'is_bot': True,
+        'email': f'success-bot{BOT_USER_DOMAIN}',
+    }
+
+    for key, expected_value in expected_bot_data.items():
+        assert bot_user_data[key] == expected_value
+
+    # === EMAIL RESTRICTION TESTS ===
+
+    # Create a regular user for conversion testing
+    regular_user_payload = {
+        'email': 'regular-user@company.com',
+        'name': 'Regular User',
+        'send_email_invite': False,
+        'send_pararam_invite': False,
+    }
+
+    response = test_client.post(
+        '/api/v1/admin/user/', headers=headers, json=regular_user_payload
+    )
+    assert_success_response(response)
+    regular_user_data = response.json()['payload']
+    regular_user_id = regular_user_data['id']
+
+    # Verify it's a regular user
+    assert regular_user_data['is_bot'] is False
+
+    # Try to convert regular user to bot user - should fail
+    convert_to_bot_payload = {
+        'email': f'converted-bot{BOT_USER_DOMAIN}',
+        'name': 'Converted Bot User',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{regular_user_id}',
+        headers=headers,
+        json=convert_to_bot_payload,
+    )
+    assert_error_response(response, HTTPStatus.FORBIDDEN)
+    error_data = response.json()
+    assert (
+        'Cannot convert regular user to bot user via email change'
+        in error_data['error_messages'][0]
+    )
+
+    # Regular user email change to another regular domain should succeed
+    regular_email_change = {
+        'email': 'updated-regular@company.com',
+        'name': 'Updated Regular User',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{regular_user_id}',
+        headers=headers,
+        json=regular_email_change,
+    )
+    assert_success_response(response)
+    updated_regular_data = response.json()['payload']
+
+    expected_regular_data = {
+        'is_bot': False,
+        'email': 'updated-regular@company.com',
+    }
+
+    for key, expected_value in expected_regular_data.items():
+        assert updated_regular_data[key] == expected_value
+
+    # Try to change bot user email to regular domain - should fail
+    bot_to_regular_payload = {
+        'email': 'converted-regular@company.com',
+        'name': 'Converted Regular User',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{bot_user_id}',
+        headers=headers,
+        json=bot_to_regular_payload,
+    )
+    assert_error_response(response, HTTPStatus.FORBIDDEN)
+    error_data = response.json()
+    assert (
+        'Cannot change email address for bot users' in error_data['error_messages'][0]
+    )
+
+    # Try to change bot user email to different bot domain - should also fail
+    bot_to_bot_payload = {
+        'email': f'renamed-bot{BOT_USER_DOMAIN}',
+        'name': 'Renamed Bot User',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{bot_user_id}', headers=headers, json=bot_to_bot_payload
+    )
+    assert_error_response(response, HTTPStatus.FORBIDDEN)
+    error_data = response.json()
+    assert (
+        'Cannot change email address for bot users' in error_data['error_messages'][0]
+    )
+
+    # === ALLOWED UPDATE TESTS ===
+
+    # Change just the name - should succeed
+    name_only_update = {
+        'name': 'Bot User Updated Name Only',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{bot_user_id}', headers=headers, json=name_only_update
+    )
+    assert_success_response(response)
+    updated_user_data = response.json()['payload']
+
+    expected_name_update_data = {
+        'name': 'Bot User Updated Name Only',
+        'email': f'success-bot{BOT_USER_DOMAIN}',
+        'is_bot': True,
+    }
+
+    for key, expected_value in expected_name_update_data.items():
+        assert updated_user_data[key] == expected_value
+
+    # Change other fields (is_admin, is_active) - should succeed
+    other_fields_update = {
+        'is_admin': True,
+        'is_active': False,
+        'name': 'Bot User All Fields Updated',
+    }
+
+    response = test_client.put(
+        f'/api/v1/admin/user/{bot_user_id}', headers=headers, json=other_fields_update
+    )
+    assert_success_response(response)
+    final_user_data = response.json()['payload']
+
+    expected_final_data = {
+        'name': 'Bot User All Fields Updated',
+        'is_admin': True,
+        'is_active': False,
+        'email': f'success-bot{BOT_USER_DOMAIN}',
+        'is_bot': True,
+    }
+
+    for key, expected_value in expected_final_data.items():
+        assert final_user_data[key] == expected_value

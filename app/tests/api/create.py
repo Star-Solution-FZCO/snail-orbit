@@ -184,9 +184,12 @@ async def _create_user(
     data = response.json()
     assert data['payload']['id']
 
+    from pm.constants import BOT_USER_DOMAIN
+
     expected_payload = {
         **user_payload,
         'is_admin': user_payload.get('is_admin', False),
+        'is_bot': user_payload['email'].endswith(BOT_USER_DOMAIN),
         'avatar_type': 'default',
         'origin': 'local',
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',

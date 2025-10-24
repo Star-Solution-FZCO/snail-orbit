@@ -45,6 +45,7 @@ class Profile(UserOutput):
             is_admin=obj.is_admin,
             ui_settings=obj.ui_settings,
             access_claims=list(global_permissions),
+            is_bot=obj.is_bot,
         )
 
 

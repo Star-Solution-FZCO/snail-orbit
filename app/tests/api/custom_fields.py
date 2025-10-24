@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 import pytest
 import pytest_asyncio
 
+from pm.constants import BOT_USER_DOMAIN
+
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
 
@@ -397,12 +399,13 @@ async def _create_custom_field_owned(
             # For owned fields, the API returns owner as UserOutput, so we build the expected structure
             original_owner = expected_opt['owner']
             user_id = user_mapping[original_owner['id']]
-            # UserOutput format: id, name, email, is_active, avatar (computed)
+            # UserOutput format: id, name, email, is_active, is_bot (computed), avatar (computed)
             expected_opt['owner'] = {
                 'id': user_id,
                 'name': original_owner['name'],
                 'email': original_owner['email'],
                 'is_active': True,  # We created users as active
+                'is_bot': original_owner['email'].endswith(BOT_USER_DOMAIN),
                 'avatar': opt_['owner'][
                     'avatar'
                 ],  # Use the actual avatar from response

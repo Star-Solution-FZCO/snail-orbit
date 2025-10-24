@@ -17,6 +17,7 @@ class UserOutput(BaseModel):
     name: str
     email: str
     is_active: bool
+    is_bot: bool
 
     _use_external_avatar: bool
 
@@ -38,6 +39,7 @@ class UserOutput(BaseModel):
             name=obj.name,
             email=obj.email,
             is_active=obj.is_active,
+            is_bot=obj.is_bot,
             _use_external_avatar=obj.use_external_avatar,
         )
 
@@ -55,6 +57,7 @@ class UserFullOutput(UserOutput):
             email=obj.email,
             name=obj.name,
             is_active=obj.is_active,
+            is_bot=obj.is_bot,
             _use_external_avatar=obj.use_external_avatar,
             is_admin=obj.is_admin,
             origin=obj.origin,

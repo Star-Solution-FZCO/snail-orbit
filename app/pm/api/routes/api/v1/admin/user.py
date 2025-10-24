@@ -30,6 +30,7 @@ from pm.api.views.user import (
     UserOutput,
     UserUpdate,
 )
+from pm.constants import BOT_USER_DOMAIN
 from pm.services.avatars import generate_default_avatar
 from pm.tasks.actions import task_send_email, task_send_pararam_message
 from pm.templates import TemplateT, render_template
@@ -88,6 +89,13 @@ async def get_user(
 async def create_user(
     body: UserCreate,
 ) -> SuccessPayloadOutput[UserFullOutput]:
+    is_bot_user = body.email.endswith(BOT_USER_DOMAIN)
+
+    if is_bot_user and (body.send_email_invite or body.send_pararam_invite):
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST, 'Cannot send invitations to bot users'
+        )
+
     obj = m.User(
         email=body.email,
         name=body.name,
@@ -150,6 +158,24 @@ async def update_user(
         raise HTTPException(
             HTTPStatus.FORBIDDEN,
             'Cannot update user with external origin',
+        )
+
+    # Prevent any email changes for bot users
+    if obj.is_bot and 'email' in changes:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            'Cannot change email address for bot users',
+        )
+
+    # Prevent converting regular users to bot users
+    if (
+        not obj.is_bot
+        and 'email' in changes
+        and changes['email'].endswith(BOT_USER_DOMAIN)
+    ):
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            'Cannot convert regular user to bot user via email change',
         )
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(obj, k, v)
