@@ -8,10 +8,8 @@ import {
     useColorScheme,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import type { EditorMode, IssueLinkMode } from "shared/model/types/settings";
+import type { IssueLinkMode } from "shared/model/types/settings";
 import {
-    EDITOR_MODE_DEFAULT_VALUE,
-    EDITOR_MODE_KEY,
     ISSUE_LINK_MODE_DEFAULT_VALUE,
     ISSUE_LINK_MODE_KEY,
 } from "shared/model/types/settings";
@@ -25,11 +23,6 @@ export const Workspace = () => {
     const [issueLinkMode, setIssueLinkMode] = useLSState<IssueLinkMode>(
         ISSUE_LINK_MODE_KEY,
         ISSUE_LINK_MODE_DEFAULT_VALUE,
-    );
-
-    const [editorMode, setEditorMode] = useLSState<EditorMode>(
-        EDITOR_MODE_KEY,
-        EDITOR_MODE_DEFAULT_VALUE,
     );
 
     return (
@@ -63,32 +56,6 @@ export const Workspace = () => {
                         value="dark"
                         control={<Radio />}
                         label={t("profile.workspace.theme.dark")}
-                    />
-                </RadioGroup>
-            </FormControl>
-
-            <FormControl>
-                <FormLabel id="editor-toggle">
-                    {t("profile.workspace.editor")}
-                </FormLabel>
-                <RadioGroup
-                    name="editor-toggle"
-                    value={editorMode}
-                    onChange={(event) =>
-                        setEditorMode(event.target.value as EditorMode)
-                    }
-                    aria-labelledby="editor-toggle"
-                    row
-                >
-                    <FormControlLabel
-                        value="ckeditor"
-                        control={<Radio />}
-                        label={t("profile.workspace.editor.ckeditor")}
-                    />
-                    <FormControlLabel
-                        value="lexical"
-                        control={<Radio />}
-                        label={t("profile.workspace.editor.lexical")}
                     />
                 </RadioGroup>
             </FormControl>

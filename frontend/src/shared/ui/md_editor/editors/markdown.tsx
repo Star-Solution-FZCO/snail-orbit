@@ -19,7 +19,7 @@ import { ToolbarPlugin } from "../plugins/toolbar/toolbar_plugin";
 import { theme } from "./theme";
 import { EditorProps } from "./types";
 
-export const MDEditor: FC<EditorProps> = ({
+export const MarkdownEditor: FC<EditorProps> = ({
     value,
     mode,
     placeholder,

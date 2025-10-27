@@ -55,7 +55,7 @@ const ProjectCreate = () => {
                 navigate({
                     to: "/projects/$projectId",
                     params: {
-                        projectId: response.payload.id,
+                        projectId: response.payload.slug,
                     },
                 });
                 toast.success(t("projects.create.success"));

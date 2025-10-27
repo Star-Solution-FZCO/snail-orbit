@@ -11,10 +11,11 @@ import pymongo
 from beanie import Document, Indexed, PydanticObjectId
 from bson.errors import InvalidId
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from starsol_otp import TOTP, generate_random_base32_secret
 
 from pm.config import DB_ENCRYPTION_KEY
+from pm.constants import BOT_USER_DOMAIN
 from pm.utils.dateutils import timestamp_from_utc, utcnow
 
 from ._audit import audited_model
@@ -56,6 +57,12 @@ class UserLinkField(BaseModel):
     email: str
     is_active: bool
     use_external_avatar: bool
+
+    @computed_field
+    @property
+    def is_bot(self) -> bool:
+        """Whether this user is a bot account based on email domain."""
+        return self.email.endswith(BOT_USER_DOMAIN)
 
     @classmethod
     def from_obj(cls, obj: 'User') -> Self:
@@ -202,6 +209,11 @@ class User(Document):
     @property
     def use_external_avatar(self) -> bool:
         return self.avatar_type == UserAvatarType.EXTERNAL
+
+    @property
+    def is_bot(self) -> bool:
+        """Whether this user is a bot account based on email domain."""
+        return self.email.endswith(BOT_USER_DOMAIN)  # pylint: disable=no-member
 
     @classmethod
     def search_query(cls, search: str) -> Mapping[str, Any] | bool:

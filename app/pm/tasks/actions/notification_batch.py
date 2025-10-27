@@ -69,6 +69,17 @@ def _merge_comment_changes(
     return list(merged_changes.values())
 
 
+def _merge_mentions(existing_mentions: list[str], new_mentions: list[str]) -> list[str]:
+    """Merge mention lists, removing duplicates."""
+    if not new_mentions:
+        return existing_mentions
+
+    if not existing_mentions:
+        return new_mentions[:]
+
+    return list(set(existing_mentions + new_mentions))
+
+
 class NotificationBatch(BaseModel):
     """Model for batched notification data stored in Redis."""
 
@@ -90,6 +101,9 @@ class NotificationBatch(BaseModel):
     comment_changes: list[CommentChange] = Field(
         default_factory=list, description='Accumulated comment changes in this batch'
     )
+    new_mentions: list[str] = Field(
+        default_factory=list, description='List of newly mentioned email addresses'
+    )
 
 
 async def schedule_batched_notification(
@@ -101,10 +115,12 @@ async def schedule_batched_notification(
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
     comment_changes: list[CommentChange] | None = None,
+    new_mentions: list[str] | None = None,
 ) -> None:
     """Schedule a notification for batching instead of sending immediately."""
     field_changes = field_changes or []
     comment_changes = comment_changes or []
+    new_mentions = new_mentions or []
 
     delay_seconds = CONFIG.NOTIFICATION_BATCH_DELAY_SECONDS
     if delay_seconds <= 0:
@@ -117,6 +133,7 @@ async def schedule_batched_notification(
             author,
             field_changes,
             comment_changes,
+            new_mentions,
         )
         return
 
@@ -131,6 +148,7 @@ async def schedule_batched_notification(
             author,
             field_changes,
             comment_changes,
+            new_mentions,
         )
         return
 
@@ -150,6 +168,7 @@ async def schedule_batched_notification(
             merged_comment_changes = _merge_comment_changes(
                 existing_batch.comment_changes, comment_changes
             )
+            merged_mentions = _merge_mentions(existing_batch.new_mentions, new_mentions)
             batch = NotificationBatch(
                 issue_id_readable=issue_id_readable,
                 issue_subject=issue_subject,
@@ -162,6 +181,7 @@ async def schedule_batched_notification(
                 last_timestamp=now,
                 field_changes=merged_field_changes,
                 comment_changes=merged_comment_changes,
+                new_mentions=merged_mentions,
             )
         else:
             batch = NotificationBatch(
@@ -176,6 +196,7 @@ async def schedule_batched_notification(
                 last_timestamp=now,
                 field_changes=field_changes,
                 comment_changes=comment_changes,
+                new_mentions=new_mentions,
             )
 
         await redis_client.set(batch_key, batch.model_dump_json())
@@ -194,4 +215,5 @@ async def schedule_batched_notification(
             author,
             field_changes,
             comment_changes,
+            new_mentions,
         )

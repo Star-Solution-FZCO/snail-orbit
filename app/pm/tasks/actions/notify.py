@@ -23,29 +23,6 @@ TRUNCATED_FIELD_VALUE_LENGTH = MAX_FIELD_VALUE_LENGTH - 3  # Reserve space for '
 logger = logging.getLogger(__name__)
 
 
-def _send_message(bot: PararamioBot, user_email: str, message: str) -> None:
-    try:
-        bot.post_private_message_by_user_email(user_email, message)
-        logger.debug(
-            'Pararam notification sent successfully',
-            extra={
-                'event': 'pararam_notification_sent',
-                'recipient_email': user_email,
-            },
-        )
-    except Exception as e:
-        logger.exception(
-            'Failed to send Pararam notification',
-            exc_info=e,
-            extra={
-                'event': 'pararam_notification_failed',
-                'recipient_email': user_email,
-                'error_type': type(e).__name__,
-            },
-        )
-        raise
-
-
 def sanitize_issue_subject(subject: str) -> str:
     return subject.replace('[', '\\[').replace(']', '\\]')
 
@@ -140,6 +117,121 @@ def _generate_comment_changes_message(
     return '\n' + '\n'.join(changes_lines) if changes_lines else ''
 
 
+async def _send_pararam_messages(
+    recipients: list[str],
+    message: str,
+    pararam_bot: PararamioBot,
+) -> int:
+    sent_count = 0
+    for recipient in recipients:
+        try:
+            pararam_bot.post_private_message_by_user_email(recipient, message)
+            logger.debug(
+                'Pararam notification sent successfully',
+                extra={
+                    'event': 'pararam_notification_sent',
+                    'recipient_email': recipient,
+                },
+            )
+            sent_count += 1
+        except Exception as e:
+            logger.exception(
+                'Failed to send pararam message',
+                exc_info=e,
+                extra={
+                    'event': 'pararam_notification_recipient_failed',
+                    'recipient_email': recipient,
+                    'error_type': type(e).__name__,
+                },
+            )
+    return sent_count
+
+
+def _generate_mention_message(
+    issue_subject: str,
+    issue_id_readable: str,
+    author: str | None,
+    comment_id: str | None = None,
+) -> str:
+    """Generate notification message for mentions."""
+    issue_url = urljoin(CONFIG.PUBLIC_BASE_URL, f'/issues/{issue_id_readable}')
+
+    if comment_id:
+        issue_url += f'#comment-{comment_id}'
+
+    author_str = f' by {author}' if author else ''
+
+    return (
+        f'🔔 You were mentioned in issue [{issue_id_readable}: {sanitize_issue_subject(issue_subject)}]({issue_url})'
+        f'{author_str}'
+    )
+
+
+async def _send_mention_notifications(
+    pararam_bot: PararamioBot,
+    mentioned_emails: list[str],
+    issue_subject: str,
+    issue_id_readable: str,
+    _project_id: str,  # Reserved for future permission checking
+    author: str | None,
+    comment_id: str | None = None,
+) -> int:
+    """Send mention notifications to mentioned users."""
+    if not mentioned_emails:
+        return 0
+
+    mentioned_users = await m.User.find(
+        bo.And(
+            bo.In(m.User.email, mentioned_emails),
+            bo.Eq(m.User.is_active, True),
+        )
+    ).to_list()
+
+    if not mentioned_users:
+        return 0
+
+    notification_recipients = [user.email for user in mentioned_users]
+
+    message = _generate_mention_message(
+        issue_subject, issue_id_readable, author, comment_id
+    )
+
+    logger.debug(
+        'Generated mention notification message',
+        extra={
+            'event': 'mention_message_generated',
+            'message_length': len(message),
+            'recipient_count': len(notification_recipients),
+        },
+    )
+
+    logger.info(
+        'Sending Pararam mention notifications to recipients',
+        extra={
+            'event': 'pararam_notification_recipients_resolved',
+            'recipient_count': len(notification_recipients),
+            'recipients': list(notification_recipients),
+        },
+    )
+
+    sent_count = await _send_pararam_messages(
+        notification_recipients,
+        message,
+        pararam_bot,
+    )
+
+    logger.info(
+        'Mention Pararam notifications completed',
+        extra={
+            'sent_count': sent_count,
+            'total_recipients': len(notification_recipients),
+            'event': 'mention_pararam_completed',
+        },
+    )
+
+    return sent_count
+
+
 async def notify_by_pararam(
     action: Literal['create', 'update', 'delete'],
     issue_subject: str,
@@ -149,6 +241,7 @@ async def notify_by_pararam(
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
     comment_changes: list[CommentChange] | None = None,
+    new_mentions: list[str] | None = None,
 ) -> None:
     logger.info(
         'Starting Pararam notification task',
@@ -157,6 +250,7 @@ async def notify_by_pararam(
             'author': author,
             'subscriber_count': len(issue_subscribers),
             'field_changes_count': len(field_changes) if field_changes else 0,
+            'new_mentions_count': len(new_mentions) if new_mentions else 0,
         },
     )
 
@@ -171,6 +265,18 @@ async def notify_by_pararam(
         return
 
     pararam_bot = PararamioBot(CONFIG.PARARAM_NOTIFICATION_BOT_TOKEN)
+
+    sent_mention_count = 0
+    if new_mentions:
+        sent_mention_count = await _send_mention_notifications(
+            pararam_bot,
+            new_mentions,
+            issue_subject,
+            issue_id_readable,
+            project_id,
+            author,
+        )
+
     author_str = f' by {author}' if author else ''
 
     message = (
@@ -218,29 +324,20 @@ async def notify_by_pararam(
         },
     )
 
-    sent_count = 0
-    for recipient in recipients:
-        try:
-            _send_message(pararam_bot, recipient, message)
-            sent_count += 1
-        except Exception as e:
-            logger.exception(
-                'Failed to send notification to recipient',
-                exc_info=e,
-                extra={
-                    'event': 'pararam_notification_recipient_failed',
-                    'recipient_email': recipient,
-                    'error_type': type(e).__name__,
-                },
-            )
+    sent_count = await _send_pararam_messages(
+        list(recipients),
+        message,
+        pararam_bot,
+    )
 
     logger.info(
         'Pararam notification task completed',
         extra={
             'event': 'pararam_notification_completed',
             'sent_count': sent_count,
-            'total_recipients': len(recipients),
-            'success_rate': sent_count / len(recipients) if recipients else 0,
+            'recipient_count': len(recipients),
+            'sent_mention_count': sent_mention_count,
+            'new_mentions_count': len(new_mentions) if new_mentions else 0,
         },
     )
 
@@ -259,6 +356,7 @@ async def task_notify_by_pararam(
     author: str | None = None,
     field_changes: list[m.IssueFieldChange] | None = None,
     comment_changes: list[CommentChange] | None = None,
+    new_mentions: list[str] | None = None,
 ) -> None:
     set_tasks_logging_context(
         task_id='notify_by_pararam',
@@ -278,6 +376,7 @@ async def task_notify_by_pararam(
             author=author,
             field_changes=field_changes,
             comment_changes=comment_changes,
+            new_mentions=new_mentions,
         )
 
     except Exception as e:

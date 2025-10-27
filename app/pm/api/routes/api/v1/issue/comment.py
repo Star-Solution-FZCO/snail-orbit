@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import pm.models as m
 from pm.api.context import current_user
 from pm.api.events_bus import send_task
+from pm.api.helpers.user import resolve_users_by_email
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
 from pm.api.views.error_responses import (
@@ -25,6 +26,7 @@ from pm.tasks.actions.notification_batch import schedule_batched_notification
 from pm.tasks.types import CommentChange
 from pm.utils.dateutils import utcnow
 from pm.utils.events_bus import Task, TaskType
+from pm.utils.mentions import detect_mention_changes, extract_mentions_from_text
 
 from ._utils import update_attachments
 
@@ -128,6 +130,13 @@ async def create_comment(
     issue.comments.append(comment)
     issue.updated_at = comment.created_at
     issue.updated_by = comment.author
+
+    mentions = list(extract_mentions_from_text(comment.text))
+    mentioned_users = await resolve_users_by_email(mentions)
+    issue.subscribers.extend(
+        [u.id for u in mentioned_users.values() if u.id not in issue.subscribers]
+    )
+
     await issue.save_changes()
     for a in comment.attachments:
         if a.encryption:
@@ -148,6 +157,7 @@ async def create_comment(
                 action='create',
             )
         ],
+        new_mentions=mentions,
     )
 
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))
@@ -194,9 +204,28 @@ async def update_comment(
             setattr(comment, k, value)
     if 'attachments' in body.model_fields_set:
         await update_attachments(comment, body.attachments, user=user_ctx.user, now=now)
+
+    new_mentions = []
+
     if 'text' in body.model_fields_set:
-        comment.text = body.text.value if body.text else None
+        new_text = body.text.value if body.text else None
+        new_mentions = list(
+            detect_mention_changes(comment.text, new_text).newly_mentioned
+        )
+        comment.text = new_text
         comment.encryption = body.text.encryption if body.text else None
+
+        # Subscribe newly mentioned users to the issue
+        if new_mentions:
+            mentioned_users = await resolve_users_by_email(new_mentions)
+            issue.subscribers.extend(
+                [
+                    u.id
+                    for u in mentioned_users.values()
+                    if u.id not in issue.subscribers
+                ]
+            )
+
     if issue.is_changed:
         comment.updated_at = now
         issue.updated_at = comment.created_at
@@ -221,6 +250,7 @@ async def update_comment(
                     action='update',
                 )
             ],
+            new_mentions=new_mentions,
         )
 
     return SuccessPayloadOutput(payload=await IssueCommentOutput.from_obj(comment))

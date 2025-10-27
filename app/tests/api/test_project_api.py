@@ -284,3 +284,264 @@ async def test_get_available_workflows_for_project(
     data = response.json()
     assert data['payload']['count'] == 0
     assert data['payload']['items'] == []
+
+
+@pytest.mark.asyncio
+async def test_project_access_by_slug_and_id(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test that projects can be accessed by both ObjectId and slug."""
+    _, admin_token = create_initial_admin
+    headers = make_auth_headers(admin_token)
+
+    # Create a project with a known slug
+    project_payload = {
+        'name': 'Slug Test Project',
+        'slug': 'slugtestproject',
+        'description': 'Test project for slug access',
+    }
+
+    response = test_client.post(
+        '/api/v1/project/', headers=headers, json=project_payload
+    )
+    assert response.status_code == 200
+    create_data = response.json()
+    project_id = create_data['payload']['id']
+    project_slug = create_data['payload']['slug']
+
+    # Test GET by ObjectId
+    response_by_id = test_client.get(f'/api/v1/project/{project_id}', headers=headers)
+    assert response_by_id.status_code == 200
+    data_by_id = response_by_id.json()
+
+    # Test GET by slug
+    response_by_slug = test_client.get(
+        f'/api/v1/project/{project_slug}', headers=headers
+    )
+    assert response_by_slug.status_code == 200
+    data_by_slug = response_by_slug.json()
+
+    # Both should return the same project data
+    assert data_by_id == data_by_slug
+    assert data_by_id['payload']['id'] == project_id
+    assert data_by_id['payload']['slug'] == project_slug
+
+    # Test UPDATE by ObjectId
+    update_payload = {'name': 'Updated by ID'}
+    response_update_by_id = test_client.put(
+        f'/api/v1/project/{project_id}', headers=headers, json=update_payload
+    )
+    assert response_update_by_id.status_code == 200
+    update_data_by_id = response_update_by_id.json()
+    assert update_data_by_id['payload']['name'] == 'Updated by ID'
+
+    # Test UPDATE by slug
+    update_payload = {'name': 'Updated by slug'}
+    response_update_by_slug = test_client.put(
+        f'/api/v1/project/{project_slug}', headers=headers, json=update_payload
+    )
+    assert response_update_by_slug.status_code == 200
+    update_data_by_slug = response_update_by_slug.json()
+    assert update_data_by_slug['payload']['name'] == 'Updated by slug'
+
+    # Test subscription by slug
+    response = test_client.post(
+        f'/api/v1/project/{project_slug}/subscribe', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_subscribed'] is True
+
+    # Test favoriting by ObjectId
+    response = test_client.post(
+        f'/api/v1/project/{project_id}/favorite', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_favorite'] is True
+
+    # Clean up - DELETE by ObjectId
+    response = test_client.delete(f'/api/v1/project/{project_id}', headers=headers)
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_project_historical_slug_access(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test that projects can be accessed by historical slugs after slug updates."""
+    _, admin_token = create_initial_admin
+    headers = make_auth_headers(admin_token)
+
+    # Create a project with initial slug
+    project_payload = {
+        'name': 'Historical Slug Test',
+        'slug': 'originalslug',
+        'description': 'Test project for historical slug access',
+    }
+
+    response = test_client.post(
+        '/api/v1/project/', headers=headers, json=project_payload
+    )
+    assert response.status_code == 200
+    create_data = response.json()
+    project_id = create_data['payload']['id']
+    original_slug = create_data['payload']['slug']
+
+    # Verify access by original slug works
+    response = test_client.get(f'/api/v1/project/{original_slug}', headers=headers)
+    assert response.status_code == 200
+
+    # Update the slug
+    new_slug = 'updatedslug'
+    update_payload = {'slug': new_slug}
+    response = test_client.put(
+        f'/api/v1/project/{project_id}', headers=headers, json=update_payload
+    )
+    assert response.status_code == 200
+    update_data = response.json()
+    assert update_data['payload']['slug'] == new_slug
+
+    # Test access by new slug works
+    response = test_client.get(f'/api/v1/project/{new_slug}', headers=headers)
+    assert response.status_code == 200
+    new_slug_data = response.json()
+    assert new_slug_data['payload']['slug'] == new_slug
+
+    # Test access by historical slug still works
+    response = test_client.get(f'/api/v1/project/{original_slug}', headers=headers)
+    assert response.status_code == 200
+    historical_data = response.json()
+    assert (
+        historical_data['payload']['slug'] == new_slug
+    )  # Current slug, not historical
+    assert historical_data['payload']['id'] == project_id
+
+    # Both should return the same project
+    assert new_slug_data == historical_data
+
+    # Clean up
+    response = test_client.delete(f'/api/v1/project/{project_id}', headers=headers)
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_project_not_found_by_slug(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test that non-existent slugs return proper 404 errors."""
+    _, admin_token = create_initial_admin
+    headers = make_auth_headers(admin_token)
+
+    # Test GET with non-existent slug
+    response = test_client.get('/api/v1/project/nonexistentslug', headers=headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        'success': False,
+        'error_messages': ['Project not found'],
+    }
+
+    # Test PUT with non-existent slug
+    response = test_client.put(
+        '/api/v1/project/nonexistentslug', headers=headers, json={'name': 'Updated'}
+    )
+    assert response.status_code == 404
+    assert response.json() == {
+        'success': False,
+        'error_messages': ['Project not found'],
+    }
+
+    # Test DELETE with non-existent slug
+    response = test_client.delete('/api/v1/project/nonexistentslug', headers=headers)
+    assert response.status_code == 404
+    assert response.json() == {
+        'success': False,
+        'error_messages': ['Project not found'],
+    }
+
+
+@pytest.mark.asyncio
+async def test_project_crud_operations_by_slug(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+) -> None:
+    """Test comprehensive CRUD operations using slug identifiers."""
+    _, admin_token = create_initial_admin
+    headers = make_auth_headers(admin_token)
+
+    # Create project
+    project_payload = {
+        'name': 'Slug CRUD Test',
+        'slug': 'slugcrudtest',
+        'description': 'Comprehensive slug CRUD testing',
+    }
+
+    response = test_client.post(
+        '/api/v1/project/', headers=headers, json=project_payload
+    )
+    assert response.status_code == 200
+    create_data = response.json()
+    project_slug = create_data['payload']['slug']
+
+    # Test various endpoints using slug
+
+    # 1. GET project permissions by slug
+    response = test_client.get(
+        f'/api/v1/project/{project_slug}/permissions', headers=headers
+    )
+    assert response.status_code == 200
+
+    # 2. Subscribe by slug
+    response = test_client.post(
+        f'/api/v1/project/{project_slug}/subscribe', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_subscribed'] is True
+
+    # 3. Unsubscribe by slug
+    response = test_client.post(
+        f'/api/v1/project/{project_slug}/unsubscribe', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_subscribed'] is False
+
+    # 4. Favorite by slug
+    response = test_client.post(
+        f'/api/v1/project/{project_slug}/favorite', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_favorite'] is True
+
+    # 5. Unfavorite by slug
+    response = test_client.post(
+        f'/api/v1/project/{project_slug}/unfavorite', headers=headers
+    )
+    assert response.status_code == 200
+    assert response.json()['payload']['is_favorite'] is False
+
+    # 6. Get available fields by slug
+    response = test_client.get(
+        f'/api/v1/project/{project_slug}/field/available/select', headers=headers
+    )
+    assert response.status_code == 200
+
+    # 7. Get encryption keys by slug (should work even without encryption settings)
+    response = test_client.get(
+        f'/api/v1/project/{project_slug}/encryption_key/list', headers=headers
+    )
+    # This might return 400 if no encryption settings, but shouldn't 404
+    assert response.status_code == 400
+    error_response = response.json()
+    assert any(
+        'encryption settings not found' in msg
+        for msg in error_response['error_messages']
+    )
+
+    # Clean up - DELETE by slug
+    response = test_client.delete(f'/api/v1/project/{project_slug}', headers=headers)
+    assert response.status_code == 200
+
+    # Verify project is actually deleted
+    response = test_client.get(f'/api/v1/project/{project_slug}', headers=headers)
+    assert response.status_code == 404

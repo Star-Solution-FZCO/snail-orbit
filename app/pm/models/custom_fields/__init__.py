@@ -9,9 +9,11 @@ from ._base import (
     CustomField,
     CustomFieldCanBeNoneError,
     CustomFieldGroupLink,
+    CustomFieldInvalidOptionError,
     CustomFieldLink,
     CustomFieldTypeT,
     CustomFieldValidationError,
+    CustomFieldWrongTypeError,
 )
 from .enum_cf import EnumCustomField, EnumMultiCustomField, EnumOption
 from .owned_cf import OwnedCustomField, OwnedMultiCustomField, OwnedOption
@@ -40,12 +42,14 @@ __all__ = (
     'CustomField',
     'CustomFieldCanBeNoneError',
     'CustomFieldGroupLink',
+    'CustomFieldInvalidOptionError',
     'CustomFieldLink',
     'CustomFieldTypeT',
     'CustomFieldValidationError',
     'CustomFieldValue',
     'CustomFieldValueT',
     'CustomFieldValueUnion',
+    'CustomFieldWrongTypeError',
     'DateCustomField',
     'DateTimeCustomField',
     'DurationCustomField',

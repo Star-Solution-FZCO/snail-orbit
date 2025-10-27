@@ -3,7 +3,13 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 
-from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
+from ._base import (
+    CustomField,
+    CustomFieldCanBeNoneError,
+    CustomFieldInvalidOptionError,
+    CustomFieldTypeT,
+    CustomFieldWrongTypeError,
+)
 
 __all__ = (
     'SprintCustomField',
@@ -42,12 +48,22 @@ class SprintCustomField(CustomField):
             return value
         if isinstance(value, SprintOption):
             value = value.value
+        if not isinstance(value, str):
+            raise CustomFieldWrongTypeError(
+                field=self,
+                value=value,
+                msg='must be a string',
+            )
         opts = {opt.value: opt for opt in self.options}
         if value not in opts:
-            raise CustomFieldValidationError(
+            raise CustomFieldInvalidOptionError(
                 field=self,
                 value=value,
                 msg='option not found',
+                value_obj=SprintOption(
+                    id='',
+                    value=value,
+                ),
             )
         return opts[value]
 
@@ -68,24 +84,36 @@ class SprintMultiCustomField(CustomField):
         if value is None:
             return value
         if not isinstance(value, list):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a list',
             )
         if not self.is_nullable and not value:
-            raise CustomFieldValidationError(
+            raise CustomFieldCanBeNoneError(
                 field=self,
                 value=value,
-                msg='cannot be empty',
             )
         value = [self.__transform_single_value(val) for val in value]
         opts = {opt.value: opt for opt in self.options}
+        if any(not isinstance(val, str) for val in value):
+            raise CustomFieldWrongTypeError(
+                field=self,
+                value=value,
+                msg='all items must be strings',
+            )
         for val in value:
             if val not in opts:
-                raise CustomFieldValidationError(
+                raise CustomFieldInvalidOptionError(
                     field=self,
                     value=value,
+                    value_obj=[
+                        SprintOption(
+                            id='',
+                            value=val_,
+                        )
+                        for val_ in value
+                    ],
                     msg=f'option {val} not found',
                 )
         return [opts[val] for val in value]

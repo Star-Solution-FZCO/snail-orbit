@@ -24,9 +24,7 @@ export const ReportView = (props: ReportViewProps) => {
         isLoading: isReportLoading,
         isError: isReportError,
         error: reportError,
-    } = reportApi.useGetReportQuery({
-        reportId,
-    });
+    } = reportApi.useGetReportQuery(reportId);
 
     const {
         data: reportDataResponse,

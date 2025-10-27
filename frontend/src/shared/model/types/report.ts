@@ -7,6 +7,7 @@ import type {
     ReportOutput,
     ReportUpdate,
 } from "./backend-schema.gen";
+import { PermissionTypeT } from "./permission";
 
 export const enum ReportDisplayType {
     TABLE = "table",
@@ -29,6 +30,12 @@ export type UpdateReportParams = ReportUpdate;
 
 export type GrantReportPermissionParams =
     PmApiRoutesApiV1ReportGrantPermissionBody;
+
+export type ChangeReportPermissionParams = {
+    reportId: string;
+    permission_id: string;
+    permission_type: PermissionTypeT;
+};
 
 export type AxisT = AxisOutput;
 

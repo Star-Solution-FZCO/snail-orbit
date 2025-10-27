@@ -1,11 +1,12 @@
 import { Box, CircularProgress } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import { issueApi } from "shared/model";
 
 const IssueCreate: FC = () => {
     const navigate = useNavigate();
+    const searchParams = useSearch({ from: "/_authenticated/issues/create" });
 
     const [createDraft, { isLoading }] = issueApi.useCreateDraftMutation();
     const awaitingRef = useRef<boolean>(false);
@@ -18,6 +19,7 @@ const IssueCreate: FC = () => {
                 .then((resp) =>
                     navigate({
                         to: `/issues/draft/${resp.payload.id}`,
+                        search: searchParams,
                         replace: true,
                     }),
                 )
@@ -25,7 +27,7 @@ const IssueCreate: FC = () => {
                     awaitingRef.current = false;
                 });
         }
-    }, [isLoading, createDraft, navigate]);
+    }, [isLoading, createDraft, navigate, searchParams]);
 
     return (
         <Box

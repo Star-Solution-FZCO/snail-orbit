@@ -33,7 +33,7 @@ export const userApi = createApi({
         }),
         listUser: build.query<ListResponse<UserT>, ListQueryParams | void>({
             query: (params) => ({
-                url: "user/list",
+                url: "admin/user/list",
                 params: params ?? undefined,
             }),
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
@@ -65,12 +65,12 @@ export const userApi = createApi({
             providesTags: (_result, _error) => [{ type: "Users", id: "LIST" }],
         }),
         getUser: build.query<ApiResponse<UserT>, string>({
-            query: (id) => `user/${id}`,
+            query: (id) => `admin/user/${id}`,
             providesTags: (_result, _error, id) => [{ type: "Users", id }],
         }),
         createUser: build.mutation<ApiResponse<UserT>, CreateUserT>({
             query: (body) => ({
-                url: "user",
+                url: "admin/user",
                 method: "POST",
                 body,
             }),
@@ -81,7 +81,7 @@ export const userApi = createApi({
             { id: string } & UpdateUserT
         >({
             query: ({ id, ...body }) => ({
-                url: `user/${id}`,
+                url: `admin/user/${id}`,
                 method: "PUT",
                 body,
             }),
@@ -178,7 +178,7 @@ export const userApi = createApi({
             { userId: string } & (ListQueryParams | void)
         >({
             query: ({ userId, ...params }) => ({
-                url: `user/${userId}/global-roles`,
+                url: `admin/user/${userId}/global-roles`,
                 params: params ?? undefined,
             }),
             providesTags: (_result, _error, { userId }) => [
@@ -190,7 +190,7 @@ export const userApi = createApi({
             { userId: string; roleId: string }
         >({
             query: ({ userId, roleId }) => ({
-                url: `user/${userId}/global-role/${roleId}`,
+                url: `admin/user/${userId}/global-role/${roleId}`,
                 method: "POST",
             }),
             invalidatesTags: (_result, _error, { userId }) => [
@@ -203,7 +203,7 @@ export const userApi = createApi({
             { userId: string; roleId: string }
         >({
             query: ({ userId, roleId }) => ({
-                url: `user/${userId}/global-role/${roleId}`,
+                url: `admin/user/${userId}/global-role/${roleId}`,
                 method: "DELETE",
             }),
             invalidatesTags: (_result, _error, { userId }) => [

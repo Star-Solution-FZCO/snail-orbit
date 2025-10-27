@@ -9,7 +9,13 @@ from pydantic import BaseModel, Field
 from pm.models.group import Group, GroupLinkField
 from pm.models.user import User, UserLinkField
 
-from ._base import CustomField, CustomFieldTypeT, CustomFieldValidationError
+from ._base import (
+    CustomField,
+    CustomFieldCanBeNoneError,
+    CustomFieldInvalidOptionError,
+    CustomFieldTypeT,
+    CustomFieldWrongTypeError,
+)
 
 __all__ = (
     'GroupOption',
@@ -133,12 +139,13 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
                 user_dict = {u.email: u for u in available_users}
                 if value in user_dict:
                     return user_dict[value]
-                raise CustomFieldValidationError(
+                raise CustomFieldInvalidOptionError(
                     field=self,
                     value=value,
-                    msg='user must be in options',
+                    msg='option not found',
+                    value_obj=None,
                 ) from err
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a valid ObjectId or email',
@@ -147,10 +154,11 @@ class UserCustomField(CustomField, UserCustomFieldMixin):
         users_dict = {u.id: u for u in available_users}
         if object_id in users_dict:
             return users_dict[object_id]
-        raise CustomFieldValidationError(
+        raise CustomFieldInvalidOptionError(
             field=self,
             value=value,
-            msg='user must be in options',
+            msg='option not found',
+            value_obj=None,
         )
 
 
@@ -163,16 +171,15 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
         if value is None:
             return value
         if not isinstance(value, list):
-            raise CustomFieldValidationError(
+            raise CustomFieldWrongTypeError(
                 field=self,
                 value=value,
                 msg='must be a list',
             )
         if not self.is_nullable and not value:
-            raise CustomFieldValidationError(
+            raise CustomFieldCanBeNoneError(
                 field=self,
                 value=value,
-                msg='cannot be empty',
             )
 
         available_users = await self.resolve_available_users()
@@ -192,12 +199,13 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
                     if user_val in user_dict:
                         results.append(user_dict[user_val])
                         continue
-                    raise CustomFieldValidationError(
+                    raise CustomFieldInvalidOptionError(
                         field=self,
                         value=value,
-                        msg='user must be in options',
+                        msg='option not found',
+                        value_obj=None,
                     ) from err
-                raise CustomFieldValidationError(
+                raise CustomFieldWrongTypeError(
                     field=self,
                     value=value,
                     msg='must be a valid ObjectId or email',
@@ -207,9 +215,10 @@ class UserMultiCustomField(CustomField, UserCustomFieldMixin):
             if object_id in users_dict:
                 results.append(users_dict[object_id])
                 continue
-            raise CustomFieldValidationError(
+            raise CustomFieldInvalidOptionError(
                 field=self,
                 value=value,
-                msg='user must be in options',
+                msg='option not found',
+                value_obj=None,
             )
         return results

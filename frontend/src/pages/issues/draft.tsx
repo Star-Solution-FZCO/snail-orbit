@@ -1,14 +1,21 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, CircularProgress, Container } from "@mui/material";
-import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { skipToken } from "@reduxjs/toolkit/query/react";
+import {
+    useCanGoBack,
+    useNavigate,
+    useRouter,
+    useSearch,
+} from "@tanstack/react-router";
 import { useDraftOperations } from "entities/issue/api/use_draft_operations";
+import { useIssueTemplate } from "entities/issue/api/use_issue_template";
 import { useProjectData } from "entities/issue/api/use_project_data";
 import { DraftView } from "modules/issues/components/issue/draft_view";
 import type { FC } from "react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { issueApi, useAppSelector } from "shared/model";
+import { issueApi, projectApi, useAppSelector } from "shared/model";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
 import { ErrorHandler, Link } from "shared/ui";
 import { NavbarActionButton } from "shared/ui/navbar/navbar_action_button";
@@ -21,12 +28,21 @@ type IssueDraftProps = {
 
 const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const { t } = useTranslation();
+
     const navigate = useNavigate();
     const canGoBack = useCanGoBack();
+
     const router = useRouter();
+    const searchParams = useSearch({
+        from: "/_authenticated/issues/draft/$draftId",
+    });
+
     const { setAction } = useNavbarSettings();
 
     const { user } = useAppSelector((state) => state.profile);
+
+    const { parseTemplateParams, applyTemplateToFields } = useIssueTemplate();
+    const templateAppliedRef = useRef(false);
 
     const {
         data,
@@ -34,13 +50,28 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         error: draftError,
     } = issueApi.useGetDraftQuery(draftId);
 
+    const draft = data?.payload;
+
+    const { projectSlug, fields } = useMemo(
+        () => parseTemplateParams(searchParams),
+        [searchParams, parseTemplateParams],
+    );
+
+    const { data: templateProjectData } = projectApi.useGetProjectQuery(
+        projectSlug && !draft?.project ? projectSlug : skipToken,
+    );
+
+    const templateProject = templateProjectData?.payload;
+
     const {
         project,
         isLoading: isProjectLoading,
         error: projectError,
         isEncrypted,
         encryptionKeys,
-    } = useProjectData({ projectId: data?.payload.project?.id });
+    } = useProjectData({
+        projectId: draft?.project?.id || templateProject?.id,
+    });
 
     const isUserAddedToEncryption = useMemo(() => {
         if (!isEncrypted) return false;
@@ -67,8 +98,6 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         },
         [draftId, updateDraft],
     );
-
-    const draft = data?.payload;
 
     const handleCreateIssue = useCallback(async () => {
         if (!draft?.project) {
@@ -106,6 +135,59 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
         if (canGoBack) router.history.back();
         else navigate({ to: "/issues", replace: true });
     };
+
+    useEffect(() => {
+        if (
+            !templateAppliedRef.current &&
+            draft &&
+            project &&
+            !isLoading &&
+            !isProjectLoading &&
+            (Object.keys(fields).length > 0 || projectSlug)
+        ) {
+            templateAppliedRef.current = true;
+
+            const updatePayload: IssueUpdate = {};
+
+            if (projectSlug && projectSlug === project.slug && !draft.project) {
+                updatePayload.project_id = project.id;
+            }
+
+            if (Object.keys(fields).length > 0 && project.custom_fields) {
+                const fieldsWithValue = project.custom_fields.map((field) => ({
+                    ...field,
+                    value: null,
+                }));
+
+                const appliedFields = applyTemplateToFields(
+                    fieldsWithValue,
+                    fields,
+                );
+
+                if (Object.keys(appliedFields).length > 0) {
+                    updatePayload.fields = appliedFields;
+                }
+            }
+
+            if (Object.keys(updatePayload).length > 0) {
+                updateDraft({ ...updatePayload, id: draftId }).catch(
+                    (error) => {
+                        console.error("Failed to apply template:", error);
+                    },
+                );
+            }
+        }
+    }, [
+        draft,
+        project,
+        isLoading,
+        isProjectLoading,
+        fields,
+        projectSlug,
+        applyTemplateToFields,
+        updateDraft,
+        draftId,
+    ]);
 
     const error = draftError || projectError;
 

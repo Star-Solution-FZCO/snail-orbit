@@ -23,6 +23,7 @@ __all__ = (
     'create_role',
     'create_roles',
     'create_user',
+    'create_user_with_token',
     'create_users',
     'create_workflow',
     'create_workflows',
@@ -167,7 +168,9 @@ async def _create_user(
         mock.patch('pm.tasks.actions.task_send_email.kiq') as mock_email,
         mock.patch('pm.tasks.actions.task_send_pararam_message.kiq') as mock_pararam,
     ):
-        response = test_client.post('/api/v1/user', headers=headers, json=user_payload)
+        response = test_client.post(
+            '/api/v1/admin/user', headers=headers, json=user_payload
+        )
         if user_payload.get('send_email_invite', False):
             mock_email.assert_called_once()
         else:
@@ -181,9 +184,12 @@ async def _create_user(
     data = response.json()
     assert data['payload']['id']
 
+    from pm.constants import BOT_USER_DOMAIN
+
     expected_payload = {
         **user_payload,
         'is_admin': user_payload.get('is_admin', False),
+        'is_bot': user_payload['email'].endswith(BOT_USER_DOMAIN),
         'avatar_type': 'default',
         'origin': 'local',
         'avatar': f'/api/avatar/{gravatar_like_hash(user_payload["email"])}',
@@ -220,6 +226,38 @@ async def create_users(
         user_id = await _create_user(test_client, create_initial_admin, user_payload)
         user_ids.append(user_id)
     return user_ids
+
+
+async def _create_user_with_token(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    user_payload: dict,
+) -> tuple[str, str]:
+    """Create a user and return both user_id and auth_token for the created user."""
+    import pm.models as m
+
+    # First create the user via API
+    user_id = await _create_user(test_client, create_initial_admin, user_payload)
+
+    # Then get the user from DB and generate a token for them
+    user = await m.User.get(user_id)
+    token, token_obj = user.gen_new_api_token('test_token')
+    user.api_tokens.append(token_obj)
+    await user.save()
+
+    return user_id, token
+
+
+@pytest_asyncio.fixture
+async def create_user_with_token(
+    test_client: 'TestClient',
+    create_initial_admin: tuple[str, str],
+    user_payload: dict,
+) -> tuple[str, str]:
+    """Create a user and return (user_id, auth_token) for testing as that user."""
+    return await _create_user_with_token(
+        test_client, create_initial_admin, user_payload
+    )
 
 
 async def grant_permission(

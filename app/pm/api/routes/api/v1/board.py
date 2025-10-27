@@ -711,7 +711,8 @@ async def move_issue(
         if issue.is_changed:
             try:
                 for wf in pr.workflows:
-                    await wf.run(issue)
+                    if isinstance(wf, m.OnChangeWorkflow):
+                        await wf.run(issue, user_ctx)
             except WorkflowError as err:
                 raise ValidateModelError(
                     payload=await IssueListOutput.from_obj(issue, accessible_tag_ids),

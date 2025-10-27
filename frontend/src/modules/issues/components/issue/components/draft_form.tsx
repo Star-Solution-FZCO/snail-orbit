@@ -1,12 +1,13 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { Box, Button, debounce, TextField } from "@mui/material";
 import { useDraftOperations } from "entities/issue/api/use_draft_operations";
+import { useIssueTemplate } from "entities/issue/api/use_issue_template";
 import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { IssueDraftT } from "shared/model/types";
 import type { IssueDraftUpdate } from "shared/model/types/backend-schema.gen";
 import { MDEditor } from "shared/ui";
-import { MDPreview } from "./md_preview";
 
 export type DraftFormProps = {
     draft: IssueDraftT;
@@ -22,6 +23,7 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
     const { t } = useTranslation();
 
     const { getDraftText } = useDraftOperations({ draftId: draft.id });
+    const { copyTemplateUrl } = useIssueTemplate();
 
     const initialTextLoaded = useRef<boolean>(false);
 
@@ -29,6 +31,17 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
     const [text, setText] = useState<string>("");
 
     const [textLoading, setTextLoading] = useState(true);
+
+    const debouncedUpdate = useCallback(
+        debounce((text: string, subject: string) => {
+            onUpdateDraft({ text: { value: text }, subject });
+        }, 500),
+        [],
+    );
+
+    const handleCopyTemplateUrl = useCallback(async () => {
+        await copyTemplateUrl(draft);
+    }, [draft, copyTemplateUrl]);
 
     useEffect(() => {
         if (initialTextLoaded.current) return;
@@ -42,13 +55,6 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
             setTextLoading(false);
         });
     }, [getDraftText, draft]);
-
-    const debouncedUpdate = useCallback(
-        debounce((text: string, subject: string) => {
-            onUpdateDraft({ text: { value: text }, subject });
-        }, 500),
-        [],
-    );
 
     useEffect(() => {
         debouncedUpdate(text, subject);
@@ -95,6 +101,16 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                 </Button>
 
                 <Button
+                    onClick={handleCopyTemplateUrl}
+                    variant="outlined"
+                    size="small"
+                    disabled={!draft.project}
+                    startIcon={<ContentCopyIcon />}
+                >
+                    {t("issues.template.copyUrl")}
+                </Button>
+
+                <Button
                     onClick={onCancel}
                     color="error"
                     variant="outlined"
@@ -103,8 +119,6 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                     {t("cancel")}
                 </Button>
             </Box>
-
-            <MDPreview content={text} />
         </>
     );
 };

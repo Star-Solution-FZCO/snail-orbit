@@ -27,12 +27,12 @@ export const fieldToFieldValue = (
             return field.value?.map((el) => el.value);
         case "date":
         case "datetime":
-            return field.value;
         case "boolean":
+        case "integer":
+        case "float":
+            return field.value;
         case "duration":
         case "string":
-        case "float":
-        case "integer":
             return field.value?.toString();
         default:
             return null;

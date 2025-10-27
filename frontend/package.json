@@ -17,7 +17,6 @@
     "api-gen-from-file": "openapi-typescript ../app/openapi.json -o src/shared/model/types/backend-schema.gen.ts --export-type --root-types --root-types-no-schema-prefix --enum-values --dedupe-enums"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-react": "11.0.0",
     "@dnd-kit/abstract": "0.1.21",
     "@dnd-kit/collision": "0.1.21",
     "@dnd-kit/core": "6.3.1",
@@ -49,7 +48,6 @@
     "@tanstack/react-virtual": "3.13.12",
     "@types/diff": "8.0.0",
     "async-mutex": "0.5.0",
-    "ckeditor5": "46.1.0",
     "dayjs": "1.11.18",
     "deepmerge": "4.3.1",
     "diff": "8.0.2",
