@@ -18,7 +18,7 @@ export const ProjectEncryptionTab: FC<ProjectEncryptionTabProps> = (props) => {
         (user: BasicUserT) => {
             if (!project.encryption_settings) return;
             updateProject({
-                id: project.id,
+                id: project.slug,
                 encryption_settings: {
                     users: [
                         ...project.encryption_settings.users.map((el) => el.id),
@@ -34,7 +34,7 @@ export const ProjectEncryptionTab: FC<ProjectEncryptionTabProps> = (props) => {
         (user: BasicUserT) => {
             if (!project.encryption_settings) return;
             updateProject({
-                id: project.id,
+                id: project.slug,
                 encryption_settings: {
                     users: project.encryption_settings.users
                         .map((el) => el.id)

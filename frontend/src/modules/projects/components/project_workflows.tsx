@@ -294,7 +294,7 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
         <Stack direction="row" gap={2} height={1}>
             <DetachProjectWorkflowDialog
                 open={detachDialogOpen}
-                projectId={project.id}
+                projectId={project.slug}
                 workflow={selectedWorkflow}
                 onClose={() => setDetachDialogOpen(false)}
             />
@@ -311,7 +311,7 @@ const ProjectWorkflows: FC<IProjectWorkflowsProps> = ({ project }) => {
             </Stack>
 
             <Box flex={1} height={1}>
-                <WorkflowList projectId={project.id} />
+                <WorkflowList projectId={project.slug} />
             </Box>
         </Stack>
     );

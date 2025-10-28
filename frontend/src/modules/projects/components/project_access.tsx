@@ -281,7 +281,7 @@ const RevokeProjectPermissionDialog: FC<
         if (!permission) return;
 
         revokeProjectPermission({
-            id: project.id,
+            id: project.slug,
             permissionId: permission.id,
         })
             .unwrap()
@@ -362,7 +362,7 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
         isLoading,
         isFetching,
     } = projectApi.useGetProjectPermissionsQuery({
-        id: project.id,
+        id: project.slug,
         params: listQueryParams,
     });
 
@@ -478,7 +478,7 @@ const ProjectAccess: FC<IProjectAccessProps> = ({ project }) => {
             />
 
             <GrantPermissionDialog
-                projectId={project.id}
+                projectId={project.slug}
                 open={grantPermissionDialogOpen}
                 onClose={() => setGrantPermissionDialogOpen(false)}
             />

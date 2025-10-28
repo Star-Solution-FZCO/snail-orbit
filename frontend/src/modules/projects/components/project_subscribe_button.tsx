@@ -19,8 +19,8 @@ export const ProjectSubscribeButton: FC<ProjectSubscribeButtonProps> = ({
 
     const handleToggleSubscribeButton = useCallback(() => {
         const mutation = project.is_subscribed ? unsubscribe : subscribe;
-        mutation(project.id);
-    }, [project.id, project.is_subscribed, subscribe, unsubscribe]);
+        mutation(project.slug);
+    }, [project.slug, project.is_subscribed, subscribe, unsubscribe]);
 
     return (
         <StarButton

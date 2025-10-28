@@ -58,7 +58,7 @@ export const AddProjectCustomFieldDialog: FC<
             const newCustomFieldGroup = createResponse.payload;
 
             await addProjectCustomField({
-                id: project.id,
+                id: project.slug,
                 customFieldId: newCustomFieldGroup.fields[0].id,
             }).unwrap();
 

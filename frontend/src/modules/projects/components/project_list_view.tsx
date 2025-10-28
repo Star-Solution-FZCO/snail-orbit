@@ -56,7 +56,7 @@ const AvailableCustomFieldsList: FC<AvailableCustomFieldsListProp1s> = ({
                         <IconButton
                             onClick={() =>
                                 updateProject({
-                                    id: project.id,
+                                    id: project.slug,
                                     card_fields: [...card_fields, field.id],
                                 })
                             }
@@ -107,7 +107,7 @@ export const ProjectListView: FC<ProjectListViewProps> = ({ project }) => {
                         onClick={(e) => {
                             e.stopPropagation();
                             updateProject({
-                                id: project.id,
+                                id: project.slug,
                                 card_fields: card_fields.filter(
                                     (el) => el !== row.id,
                                 ),
@@ -131,7 +131,7 @@ export const ProjectListView: FC<ProjectListViewProps> = ({ project }) => {
                 flex: 1,
             },
         ],
-        [t, updateProject, project.id, card_fields],
+        [t, updateProject, project.slug, card_fields],
     );
 
     return (

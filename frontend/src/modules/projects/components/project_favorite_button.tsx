@@ -19,8 +19,8 @@ export const ProjectFavoriteButton: FC<ProjectFavoriteButtonProps> = ({
 
     const handleToggleFavoriteButton = useCallback(() => {
         const mutation = project.is_favorite ? unfavorite : favorite;
-        mutation(project.id);
-    }, [project.is_favorite, project.id, unfavorite, favorite]);
+        mutation(project.slug);
+    }, [project.is_favorite, project.slug, unfavorite, favorite]);
 
     return (
         <FavoriteButton

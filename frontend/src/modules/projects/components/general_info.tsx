@@ -31,7 +31,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
 
     const onSubmit = (formData: UpdateProjectT) => {
         updateProject({
-            id: project.id,
+            id: project.slug,
             ...formData,
         })
             .unwrap()
@@ -59,7 +59,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
         formData.append("file", file);
 
         uploadAvatar({
-            id: project.id,
+            id: project.slug,
             body: formData,
         })
             .unwrap()
@@ -79,7 +79,7 @@ const ProjectGeneralInfo: FC<IProjectGeneralInfoProps> = ({ project }) => {
 
         if (!confirmed) return;
 
-        deleteAvatar(project.id)
+        deleteAvatar(project.slug)
             .unwrap()
             .then(() => {
                 toast.success(t("projects.avatar.delete.success"));

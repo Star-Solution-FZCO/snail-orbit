@@ -131,7 +131,7 @@ const ProjectCustomFields: FC<IProjectCustomFieldsProps> = ({ project }) => {
 
             <RemoveProjectCustomFieldDialog
                 open={removeFieldDialogOpen}
-                projectId={project.id}
+                projectId={project.slug}
                 customField={selectedField}
                 onClose={() => {
                     setRemoveFieldDialogOpen(false);

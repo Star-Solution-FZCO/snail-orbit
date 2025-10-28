@@ -35,7 +35,7 @@ export const projectApi = createApi({
                     tags = tags.concat(
                         result.payload.items.map((project) => ({
                             type: "Projects",
-                            id: project.id,
+                            id: project.slug,
                         })),
                     );
                 }
