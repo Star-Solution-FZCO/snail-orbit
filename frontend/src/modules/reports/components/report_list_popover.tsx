@@ -57,7 +57,7 @@ export const ReportListPopover = memo((props: ReportListPopoverProps) => {
                     </Button>
                 </Link>
 
-                <Link to="/dashboards/list">
+                <Link to="/reports/list">
                     <Button size="small" fullWidth>
                         {t("reports.goToList")}
                     </Button>
