@@ -1,3 +1,4 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
     Box,
     Button,
@@ -17,7 +18,14 @@ import * as yup from "yup";
 
 const enumOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
-    color: yup.string().nullable().default(null),
+    color: yup
+        .string()
+        .nullable()
+        .default(null)
+        .matches(
+            /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/,
+            "form.validation.hexColor",
+        ),
 });
 
 type EnumOptionFormData = yup.InferType<typeof enumOptionSchema>;
@@ -46,6 +54,7 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
         reset,
         formState: { errors, isDirty },
     } = useForm<EnumOptionFormData>({
+        resolver: yupResolver(enumOptionSchema),
         defaultValues: defaultValues || { value: "", color: null },
     });
 
@@ -86,12 +95,19 @@ const EnumOptionFormDialog: FC<IEnumOptionFormDialogProps> = ({
                     <Controller
                         name="color"
                         control={control}
-                        render={({ field: { value, onChange } }) => (
+                        render={({
+                            field: { value, onChange },
+                            fieldState: { error },
+                        }) => (
                             <ColorInputField
                                 color={value || ""}
                                 onChange={onChange}
                                 size="small"
                                 label={t("customFields.options.color")}
+                                error={!!error}
+                                helperText={
+                                    error?.message ? t(error.message) : ""
+                                }
                             />
                         )}
                     />

@@ -1,3 +1,4 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
     Box,
     Button,
@@ -19,7 +20,14 @@ import * as yup from "yup";
 
 const stateOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
-    color: yup.string().nullable().default(null),
+    color: yup
+        .string()
+        .nullable()
+        .default(null)
+        .matches(
+            /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/,
+            "form.validation.hexColor",
+        ),
     is_resolved: yup.boolean().default(false),
     is_closed: yup.boolean().default(false),
 });
@@ -50,6 +58,7 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
         reset,
         formState: { errors, isDirty },
     } = useForm<StateOptionFormData>({
+        resolver: yupResolver(stateOptionSchema),
         defaultValues: defaultValues || {
             value: "",
             color: "#ccc",
@@ -102,12 +111,19 @@ const StateOptionFormDialog: FC<IStateOptionFormDialogProps> = ({
                     <Controller
                         name="color"
                         control={control}
-                        render={({ field: { value, onChange } }) => (
+                        render={({
+                            field: { value, onChange },
+                            fieldState: { error },
+                        }) => (
                             <ColorInputField
                                 color={value || "#ccc"}
                                 onChange={onChange}
                                 size="small"
                                 label={t("customFields.options.color")}
+                                error={!!error}
+                                helperText={
+                                    error?.message ? t(error.message) : ""
+                                }
                             />
                         )}
                     />

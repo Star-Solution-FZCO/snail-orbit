@@ -23,7 +23,14 @@ import * as yup from "yup";
 const sprintOptionSchema = yup.object().shape({
     value: yup.string().required("form.validation.required"),
     description: yup.string().nullable().default(null),
-    color: yup.string().nullable().default(null),
+    color: yup
+        .string()
+        .nullable()
+        .default(null)
+        .matches(
+            /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/,
+            "form.validation.hexColor",
+        ),
     start_date: yup.string().nullable().default(null),
     end_date: yup.string().nullable().default(null),
     is_archived: yup.boolean().default(false),
@@ -139,12 +146,19 @@ const SprintOptionFormDialog: FC<ISprintOptionFormDialogProps> = ({
                     <Controller
                         name="color"
                         control={control}
-                        render={({ field: { value, onChange } }) => (
+                        render={({
+                            field: { value, onChange },
+                            fieldState: { error },
+                        }) => (
                             <ColorInputField
                                 color={value || ""}
                                 onChange={onChange}
                                 size="small"
                                 label={t("customFields.options.color")}
+                                error={!!error}
+                                helperText={
+                                    error?.message ? t(error.message) : ""
+                                }
                             />
                         )}
                     />

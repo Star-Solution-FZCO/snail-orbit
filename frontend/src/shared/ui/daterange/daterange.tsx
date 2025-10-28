@@ -1,4 +1,5 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CancelIcon from "@mui/icons-material/Cancel";
 import {
     Button,
     ClickAwayListener,
@@ -122,18 +123,11 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
                                 onSelect={handleDateSelect}
                                 mode="range"
                                 numberOfMonths={2}
+                                weekStartsOn={1}
                             />
                         </StyledDayPickerContainer>
 
                         <Stack mt={2} direction="row" gap={1}>
-                            <Button
-                                onClick={handleClear}
-                                variant="outlined"
-                                size="small"
-                            >
-                                {t("clear")}
-                            </Button>
-
                             <Button
                                 onClick={handleClose}
                                 variant="outlined"
@@ -141,6 +135,16 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
                                 color="error"
                             >
                                 {t("close")}
+                            </Button>
+
+                            <Button
+                                onClick={handleClear}
+                                variant="outlined"
+                                size="small"
+                                color="secondary"
+                                startIcon={<CancelIcon />}
+                            >
+                                {t("clear")}
                             </Button>
                         </Stack>
                     </Stack>

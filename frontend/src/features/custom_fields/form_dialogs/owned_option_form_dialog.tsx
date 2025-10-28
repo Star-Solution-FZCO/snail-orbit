@@ -24,6 +24,7 @@ import type {
 import { UserAvatar } from "shared/ui";
 import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import { useListQueryParams } from "shared/utils";
+
 type OwnedOptionFormData = {
     value: string;
     owner: BasicUserT | null;
@@ -64,7 +65,7 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
         register,
         handleSubmit,
         reset,
-        formState: { isDirty },
+        formState: { isDirty, errors },
     } = useForm<OwnedOptionFormData>({
         defaultValues: defaultValues
             ? {
@@ -135,6 +136,12 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
                         <TextField
                             {...register("value")}
                             label={t("customFields.options.value")}
+                            error={!!errors.value}
+                            helperText={
+                                errors.value?.message
+                                    ? t(errors.value.message)
+                                    : ""
+                            }
                             variant="outlined"
                             size="small"
                             fullWidth
@@ -221,12 +228,30 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
                         <Controller
                             name="color"
                             control={control}
-                            render={({ field: { value, onChange } }) => (
+                            rules={{
+                                validate: (value) => {
+                                    if (!value) return true;
+                                    const hexRegex =
+                                        /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+                                    return (
+                                        hexRegex.test(value) ||
+                                        "form.validation.hexColor"
+                                    );
+                                },
+                            }}
+                            render={({
+                                field: { value, onChange },
+                                fieldState: { error },
+                            }) => (
                                 <ColorInputField
                                     color={value || ""}
                                     onChange={onChange}
                                     size="small"
                                     label={t("customFields.options.color")}
+                                    error={!!error}
+                                    helperText={
+                                        error?.message ? t(error.message) : ""
+                                    }
                                 />
                             )}
                         />

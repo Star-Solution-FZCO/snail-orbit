@@ -338,6 +338,7 @@
   "error.projectEncryptedButNoKeys": "Current project is encrypted but you don't have keys added to the project. Ask project admin to add your keys, or you wouldn't be able to see any of encrypted values.",
   "form.projects": "Projects",
   "form.validation.email": "Invalid email",
+  "form.validation.hexColor": "Must be a valid hex color (e.g., #ccc or #cccccc)",
   "form.validation.number": "Must be a number",
   "form.validation.required": "Required field",
   "formInputPopover.cancel": "Cancel",

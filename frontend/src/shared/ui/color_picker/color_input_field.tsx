@@ -9,7 +9,7 @@ export type ColorInputFieldProps = {
 } & Omit<TextFieldProps, "value" | "onChange" | "color">;
 
 export const ColorInputField = memo((props: ColorInputFieldProps) => {
-    const { color, onChange, size, ...rest } = props;
+    const { color, onChange, size, error, helperText, ...rest } = props;
 
     return (
         <>
@@ -17,6 +17,8 @@ export const ColorInputField = memo((props: ColorInputFieldProps) => {
                 value={color}
                 onChange={(e) => onChange(e.target.value)}
                 size={size}
+                error={error}
+                helperText={helperText}
                 slotProps={{
                     input: {
                         startAdornment: (
