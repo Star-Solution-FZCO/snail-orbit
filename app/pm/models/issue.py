@@ -519,6 +519,7 @@ class Issue(
             CustomFieldTypeT.ENUM_MULTI,
             CustomFieldTypeT.VERSION_MULTI,
             CustomFieldTypeT.OWNED_MULTI,
+            CustomFieldTypeT.SPRINT_MULTI,
         ):
             await cls.find(
                 {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
@@ -812,6 +813,7 @@ class IssueDraft(Document):
             CustomFieldTypeT.ENUM_MULTI,
             CustomFieldTypeT.VERSION_MULTI,
             CustomFieldTypeT.OWNED_MULTI,
+            CustomFieldTypeT.SPRINT_MULTI,
         ):
             await cls.find(
                 {'fields': {'$elemMatch': {'id': field.id, 'value.id': option.id}}},
