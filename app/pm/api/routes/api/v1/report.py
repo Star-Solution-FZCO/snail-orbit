@@ -83,7 +83,11 @@ def convert_aggregated_value_to_proper_output(
         )
 
     if field.type in USER_BASED_FIELD_TYPES:
-        if sample_value and isinstance(sample_value, dict):
+        if (
+            sample_value
+            and isinstance(sample_value, dict)
+            and (user_sample_value := sample_value.get('value'))
+        ):
             # Check if sample_value has complete UserLinkField data
             required_fields = {
                 'id',
@@ -92,19 +96,8 @@ def convert_aggregated_value_to_proper_output(
                 'is_active',
                 'use_external_avatar',
             }
-            if all(field in sample_value for field in required_fields):
-                user_link = m.UserLinkField(**sample_value)
-                return UserOutput.from_obj(user_link)
-            # Handle incomplete user data - use raw_value or create minimal user info
-            if isinstance(raw_value, dict) and 'id' in raw_value:
-                # Create a minimal UserOutput with available data
-                return UserOutput(
-                    id=str(raw_value['id']),
-                    name=raw_value.get('name', 'Unknown User'),
-                    email=raw_value.get('email', ''),
-                    is_active=raw_value.get('is_active', True),
-                    use_external_avatar=raw_value.get('use_external_avatar', False),
-                )
+            if all(field in user_sample_value for field in required_fields):
+                return UserOutput.from_obj(m.UserLinkField(**user_sample_value))
         return raw_value
 
     return raw_value
@@ -1286,17 +1279,22 @@ async def generate_two_axis_report_data(
 
     for result in aggregation_result:
         result_id = result.get('_id', {})
-        primary_value = result_id.get('primary_value')
-        secondary_value = result_id.get('secondary_value')
+        if 'primary_value' not in result_id or 'secondary_value' not in result_id:
+            continue
+        primary_value = result_id['primary_value']
+        secondary_value = result_id['secondary_value']
         count = result.get('count', 0)
 
-        if primary_value is not None and secondary_value is not None:
-            primary_key = make_hashable_key(primary_value)
-            secondary_key = make_hashable_key(secondary_value)
-            primary_idx = primary_value_to_index.get(primary_key)
-            secondary_idx = secondary_value_to_index.get(secondary_key)
-            if primary_idx is not None and secondary_idx is not None:
-                data[secondary_idx][primary_idx] = count
+        primary_key = make_hashable_key(primary_value)
+        secondary_key = make_hashable_key(secondary_value)
+        if (
+            primary_key not in primary_value_to_index
+            or secondary_key not in secondary_value_to_index
+        ):
+            continue
+        data[secondary_value_to_index[secondary_key]][
+            primary_value_to_index[primary_key]
+        ] = count
 
     return ReportDataOutput(
         axis_1=transform_field_with_values_to_report_discriminated(
