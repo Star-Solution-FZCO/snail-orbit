@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { Navigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import PageNotFoundImagePath from "shared/assets/images/page_not_found.png";
+import PageNotFoundImagePath from "shared/assets/images/cat_snail_questions.png";
 import { useAppSelector } from "shared/model";
 import { Link } from "./link";
 

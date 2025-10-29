@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import CatsNoConnectionImagePath from "shared/assets/images/cats_no_connection.png";
+import SomethingWentWrongImagePath from "shared/assets/images/cat_broken_shell.png";
 import { Link } from "./link";
 
 const ErrorFallback = (e: any) => {
@@ -20,7 +20,7 @@ const ErrorFallback = (e: any) => {
                 },
             }}
         >
-            <img src={CatsNoConnectionImagePath} alt="something-went-wrong" />
+            <img src={SomethingWentWrongImagePath} alt="something-went-wrong" />
 
             <Box>
                 <Typography variant="h3">{t("somethingWentWrong")}</Typography>
