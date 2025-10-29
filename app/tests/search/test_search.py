@@ -30,6 +30,7 @@ def _custom_fields() -> dict:
 
 
 FIXED_NOW = datetime(2024, 2, 20, 12, 12, 1, 518243)
+CURRENT_USER_EMAIL = 'current.user@example.com'
 
 TEST_VERSION_FIELD_PYTEST_PARAMS = [
     pytest.param(
@@ -1510,6 +1511,18 @@ TEST_USER_FIELD_PYTEST_PARAMS = [
         },
         id='invalid email missing local part',
     ),
+    pytest.param(
+        'Assignee: me',
+        {
+            'fields': {
+                '$elemMatch': {
+                    'name': {'$regex': '^assignee$', '$options': 'i'},
+                    'value.email': CURRENT_USER_EMAIL,
+                }
+            }
+        },
+        id='user field with me keyword',
+    ),
 ]
 SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
     pytest.param(
@@ -2472,6 +2485,496 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
     ),
 ]
 
+TEST_MULTI_VALUE_PYTEST_PARAMS = [
+    # String field multi-value tests
+    pytest.param(
+        'String: value1, value2, value3',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'value1',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'value2',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'value3',
+                        }
+                    }
+                },
+            ]
+        },
+        id='string field with multiple comma-separated values',
+    ),
+    # Enum field multi-value tests
+    pytest.param(
+        'Priority: high, medium, low',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'high',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'medium',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'low',
+                        }
+                    }
+                },
+            ]
+        },
+        id='enum field with multiple comma-separated values',
+    ),
+    # State field multi-value tests
+    pytest.param(
+        'State: open, closed',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'open',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'closed',
+                        }
+                    }
+                },
+            ]
+        },
+        id='state field with multiple comma-separated values',
+    ),
+    # Version field multi-value tests
+    pytest.param(
+        'Version: v1.0, v2.0, beta',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': 'v1.0',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': 'v2.0',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^version$', '$options': 'i'},
+                            'value.value': 'beta',
+                        }
+                    }
+                },
+            ]
+        },
+        id='version field with multiple comma-separated values',
+    ),
+    # User field multi-value tests
+    pytest.param(
+        'Assignee: user1@example.com, user2@example.com',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'user1@example.com',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'user2@example.com',
+                        }
+                    }
+                },
+            ]
+        },
+        id='user field with multiple comma-separated values',
+    ),
+    # Boolean field multi-value tests
+    pytest.param(
+        'Feature: true, false',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^feature$', '$options': 'i'},
+                            'value': True,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^feature$', '$options': 'i'},
+                            'value': False,
+                        }
+                    }
+                },
+            ]
+        },
+        id='boolean field with multiple comma-separated values',
+    ),
+    # Integer field multi-value tests
+    pytest.param(
+        'Integer: 1, 2, 3',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': 1.0,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': 2.0,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^integer$', '$options': 'i'},
+                            'value': 3.0,
+                        }
+                    }
+                },
+            ]
+        },
+        id='integer field with multiple comma-separated values',
+    ),
+    # Duration field multi-value tests
+    pytest.param(
+        'Duration: 1h, 2h, 30m',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^duration$', '$options': 'i'},
+                            'value': 3600,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^duration$', '$options': 'i'},
+                            'value': 7200,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^duration$', '$options': 'i'},
+                            'value': 1800,
+                        }
+                    }
+                },
+            ]
+        },
+        id='duration field with multiple comma-separated values',
+    ),
+    # Multi-value with null tests
+    pytest.param(
+        'State: open, null',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': 'open',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^state$', '$options': 'i'},
+                            'value.value': None,
+                        }
+                    }
+                },
+            ]
+        },
+        id='state field with comma-separated values including null',
+    ),
+    # Quoted values with commas test
+    pytest.param(
+        'String: "hello, world", "test"',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'hello, world',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^string$', '$options': 'i'},
+                            'value': 'test',
+                        }
+                    }
+                },
+            ]
+        },
+        id='string field with quoted values containing commas',
+    ),
+    # Spaces around commas test
+    pytest.param(
+        'Priority: high , medium , low',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'high',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'medium',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^priority$', '$options': 'i'},
+                            'value.value': 'low',
+                        }
+                    }
+                },
+            ]
+        },
+        id='enum field with spaces around commas',
+    ),
+    # Date field multi-value tests
+    pytest.param(
+        'created_at: 2024-01-01, 2024-02-01',
+        {
+            '$or': [
+                {
+                    'created_at': {
+                        '$gte': datetime(2024, 1, 1, 0, 0),
+                        '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+                    }
+                },
+                {
+                    'created_at': {
+                        '$gte': datetime(2024, 2, 1, 0, 0),
+                        '$lte': datetime(2024, 2, 1, 23, 59, 59, 999999),
+                    }
+                },
+            ]
+        },
+        id='created_at field with multiple comma-separated dates',
+    ),
+    # Project field multi-value tests
+    pytest.param(
+        'project: proj1, proj2',
+        {
+            '$or': [
+                {'project.slug': {'$regex': '^proj1$', '$options': 'i'}},
+                {'project.slug': {'$regex': '^proj2$', '$options': 'i'}},
+            ]
+        },
+        id='project field with multiple comma-separated values',
+    ),
+    # Sprint field multi-value tests
+    pytest.param(
+        'Sprint: Sprint-1, Sprint-2, v1.0-Sprint',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint$', '$options': 'i'},
+                            'value.value': 'Sprint-1',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint$', '$options': 'i'},
+                            'value.value': 'Sprint-2',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint$', '$options': 'i'},
+                            'value.value': 'v1.0-Sprint',
+                        }
+                    }
+                },
+            ]
+        },
+        id='sprint field with multiple comma-separated values',
+    ),
+    # Sprint-Multi field multi-value tests
+    pytest.param(
+        'Sprint-Multi: Sprint-A, Sprint-B, null',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint-multi$', '$options': 'i'},
+                            'value.value': 'Sprint-A',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint-multi$', '$options': 'i'},
+                            'value.value': 'Sprint-B',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^sprint-multi$', '$options': 'i'},
+                            'value.value': None,
+                        }
+                    }
+                },
+            ]
+        },
+        id='sprint-multi field with multiple comma-separated values including null',
+    ),
+    # Subsystem (Owned) field multi-value tests
+    pytest.param(
+        'Subsystem: UI, API, Backend',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^subsystem$', '$options': 'i'},
+                            'value.value': 'UI',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^subsystem$', '$options': 'i'},
+                            'value.value': 'API',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^subsystem$', '$options': 'i'},
+                            'value.value': 'Backend',
+                        }
+                    }
+                },
+            ]
+        },
+        id='subsystem (owned) field with multiple comma-separated values',
+    ),
+    # User field with 'me' keyword multi-value test
+    pytest.param(
+        'Assignee: me, user2@example.com, user3@example.com',
+        {
+            '$or': [
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': CURRENT_USER_EMAIL,
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'user2@example.com',
+                        }
+                    }
+                },
+                {
+                    'fields': {
+                        '$elemMatch': {
+                            'name': {'$regex': '^assignee$', '$options': 'i'},
+                            'value.email': 'user3@example.com',
+                        }
+                    }
+                },
+            ]
+        },
+        id='assignee field with multiple comma-separated values including me keyword',
+    ),
+]
+
 
 @mock.patch('pm.api.issue_query.search.get_custom_fields', new_callable=mock.AsyncMock)
 @mock.patch('pm.api.issue_query.search.utcnow', new_callable=mock.Mock)
@@ -2747,6 +3250,7 @@ COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS = [
         *TEST_SPRINT_FIELD_PYTEST_PARAMS,
         *TEST_RELATIVE_DT_PYTEST_PARAMS,
         *TEST_USER_FIELD_PYTEST_PARAMS,
+        *TEST_MULTI_VALUE_PYTEST_PARAMS,
         *SIMPLE_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,
         *COMPLEX_LEFTOVER_QUERY_SEARCH_PYTEST_PARAMS,
     ],
@@ -2764,10 +3268,10 @@ async def test_search_transformation(
 
     if isinstance(expected, str):
         with pytest.raises(IssueQueryTransformError) as exc_info:
-            await transform_query(query)
+            await transform_query(query, current_user_email=CURRENT_USER_EMAIL)
         assert str(exc_info.value) == expected
     else:
-        res, _ = await transform_query(query)
+        res, _ = await transform_query(query, current_user_email=CURRENT_USER_EMAIL)
         assert res == expected
 
     if (

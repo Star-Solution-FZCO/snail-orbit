@@ -69,7 +69,9 @@ EXPRESSION_GRAMMAR = """
 
     attribute_condition: FIELD_NAME _COLON attribute_values
 
-    attribute_values: NULL_VALUE
+    attribute_values: attribute_value ("," attribute_value)*
+
+    attribute_value: NULL_VALUE
                     | NUMBER_VALUE
                     | DURATION_VALUE
                     | DATE_VALUE
@@ -129,7 +131,7 @@ EXPRESSION_GRAMMAR = """
     FIELD_NAME: /[a-zA-Z_0-9][a-zA-Z0-9_ -]*/
     NUMBER_VALUE: /[0-9]+(\\.[0-9]+)?(?!\\.(?!\\.)|\\d|[a-zA-Z]|-)/
     DURATION_VALUE.4: /(?:[0-9]+[smhdw]\\s*)+(?![a-zA-Z0-9])/
-    STRING_VALUE: /[^:()" *${}]+/
+    STRING_VALUE: /[^:()" *${},]+/
     QUOTED_STRING: /"[^"]*"/
     SIGN: ("+" | "-")
     NOW_VALUE.9: "now"i
@@ -211,8 +213,7 @@ class MongoQueryTransformer(Transformer):
     def escape_regex(self, value: str) -> str:
         return re.escape(value)
 
-    def attribute_condition(self, args):
-        field, value = args
+    def _transform_attribute_condition(self, field: str, value: Any) -> dict:
         field_lower = field.lower()
         if field_lower == 'project':
             if value is None:
@@ -266,6 +267,18 @@ class MongoQueryTransformer(Transformer):
                     **self.__transform_field_value(field, value),
                 }
             }
+        }
+
+    def attribute_condition(self, args):
+        field_name = args[0]
+        values = args[1]
+        if len(values) == 1:
+            return self._transform_attribute_condition(field_name, values[0])
+        return {
+            '$or': [
+                self._transform_attribute_condition(field_name, value)
+                for value in values
+            ]
         }
 
     def dt_period_with_offset(self, args):
@@ -357,6 +370,9 @@ class MongoQueryTransformer(Transformer):
         return token.value
 
     def attribute_values(self, args):
+        return args
+
+    def attribute_value(self, args):
         return args[0]
 
     def NULL_VALUE(self, token):  # noqa: ARG002
