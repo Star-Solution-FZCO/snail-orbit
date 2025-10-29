@@ -5,6 +5,7 @@ import { useState } from "react";
 import { reportApi } from "shared/model";
 import { ReportDisplayType } from "shared/model/types/report";
 import { ErrorHandler } from "shared/ui";
+import { DeleteReportDialog } from "./components/delete_report_dialog";
 import { ReportEditSection } from "./components/report_edit_section";
 import { ReportTopBar } from "./components/reports_top_bar";
 
@@ -18,6 +19,7 @@ export const ReportView = (props: ReportViewProps) => {
     useCreateIssueNavbarSettings();
 
     const [isReportFormOpen, setIsReportFormOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const {
         data: reportResponse,
@@ -47,10 +49,22 @@ export const ReportView = (props: ReportViewProps) => {
             <ReportTopBar
                 report={report}
                 onEditClick={() => setIsReportFormOpen((prev) => !prev)}
+                onDeleteClick={() => setIsDeleteDialogOpen(true)}
+                showDeleteButton={isReportFormOpen}
             />
+
             {isReportFormOpen && !!report && (
                 <ReportEditSection report={report} />
             )}
+
+            {!!report && (
+                <DeleteReportDialog
+                    report={report}
+                    open={isDeleteDialogOpen}
+                    onClose={() => setIsDeleteDialogOpen(false)}
+                />
+            )}
+
             <Box
                 sx={{
                     display: "flex",

@@ -77,7 +77,7 @@ export const dashboardApi = createApi({
                 { type: "Dashboards", id },
             ],
         }),
-        deleteDashboard: build.mutation<ApiResponse<DashboardT>, string>({
+        deleteDashboard: build.mutation<ApiResponse<{ id: string }>, string>({
             query: (id) => ({
                 url: `dashboard/${id}`,
                 method: "DELETE",

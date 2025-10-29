@@ -98,6 +98,19 @@ export const reportApi = createApi({
                 }
             },
         }),
+        deleteReport: build.mutation<ApiResponse<{ id: string }>, string>({
+            query: (reportId) => ({
+                url: `report/${reportId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_result, _error, reportId) => [
+                { type: "Reports", id: reportId },
+                {
+                    type: "Reports",
+                    id: "LIST",
+                },
+            ],
+        }),
         grantPermission: build.mutation<
             ApiResponse<{ id: string }>,
             GrantReportPermissionParams & { reportId: string }
