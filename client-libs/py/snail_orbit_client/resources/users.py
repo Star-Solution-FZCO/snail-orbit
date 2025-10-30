@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ..models import UserFullOutput
+from ..models import User
 from .base import AsyncBaseResource, BaseResource
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class UsersResource(BaseResource):
 
     def list(
         self, search: str | None = None, filter: str | None = None, **params: Any
-    ) -> Iterator[UserFullOutput]:
+    ) -> Iterator[User]:
         """List all users.
 
         Args:
@@ -31,25 +31,25 @@ class UsersResource(BaseResource):
             **params: Other query parameters
 
         Yields:
-            UserFullOutput objects
+            User objects
         """
         if search:
             params['search'] = search
         if filter:
             params['filter'] = filter
-        yield from self._paginate('/api/v1/user/list', UserFullOutput, params)
+        yield from self._paginate('/api/v1/user/list', User, params)
 
-    def get(self, user_id: str) -> UserFullOutput:
+    def get(self, user_id: str) -> User:
         """Get a specific user by ID.
 
         Args:
             user_id: User ID
 
         Returns:
-            UserFullOutput object
+            User object
         """
         data = self._get(f'/api/v1/user/{user_id}')
-        return self._validate_and_convert(data, UserFullOutput)
+        return self._validate_and_convert(data, User)
 
 
 class AsyncUsersResource(AsyncBaseResource):
@@ -61,7 +61,7 @@ class AsyncUsersResource(AsyncBaseResource):
 
     async def list(
         self, search: str | None = None, filter: str | None = None, **params: Any
-    ) -> AsyncIterator[UserFullOutput]:
+    ) -> AsyncIterator[User]:
         """List all users.
 
         Args:
@@ -70,23 +70,23 @@ class AsyncUsersResource(AsyncBaseResource):
             **params: Other query parameters
 
         Yields:
-            UserFullOutput objects
+            User objects
         """
         if search:
             params['search'] = search
         if filter:
             params['filter'] = filter
-        async for user in self._paginate('/api/v1/user/list', UserFullOutput, params):
+        async for user in self._paginate('/api/v1/user/list', User, params):
             yield user
 
-    async def get(self, user_id: str) -> UserFullOutput:
+    async def get(self, user_id: str) -> User:
         """Get a specific user by ID.
 
         Args:
             user_id: User ID
 
         Returns:
-            UserFullOutput object
+            User object
         """
         data = await self._get(f'/api/v1/user/{user_id}')
-        return self._validate_and_convert(data, UserFullOutput)
+        return self._validate_and_convert(data, User)

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 # Import required types from generated models for API compatibility
 from ..generated.models import (
     EncryptedObjectInput,
-    IssueAttachmentBody,
+    IssueAttachmentBodyInput as IssueAttachmentBody,
     IssueListOutput,
     IssueOutput,
 )

@@ -2,11 +2,11 @@
 
 from ..generated.models import (
     EncryptedObjectInput,
-    IssueAttachmentBody,
+    IssueAttachmentBodyInput as IssueAttachmentBody,
     IssueCommentOutput,
 )
 from .activity import Activity
-from .auth import Profile, User, UserFullOutput
+from .auth import Profile, User
 from .base import BaseModel, PaginatedResponse
 from .custom_fields import CustomField, CustomFieldGroup
 
@@ -30,7 +30,6 @@ __all__ = [
     'Activity',
     # Authentication & Users
     'User',
-    'UserFullOutput',
     'Profile',
     # Custom Fields
     'CustomField',
