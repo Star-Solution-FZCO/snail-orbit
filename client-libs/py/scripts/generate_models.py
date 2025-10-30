@@ -215,7 +215,6 @@ def main() -> None:
         'openapi',
         '--output-model-type',
         'pydantic_v2.BaseModel',
-        '--use-double-quotes',
         '--use-schema-description',
         '--use-field-description',
         '--use-default-kwarg',
