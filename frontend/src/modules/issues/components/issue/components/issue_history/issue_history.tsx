@@ -1,7 +1,7 @@
 import { Box, Tooltip, Typography } from "@mui/material";
-import dayjs from "dayjs";
 import { t } from "i18next";
 import type { FC } from "react";
+import dayjs from "shared/date";
 import type { IssueHistoryT } from "shared/model/types";
 import { UserAvatar } from "shared/ui";
 import { FieldChanges } from "./field_changes";

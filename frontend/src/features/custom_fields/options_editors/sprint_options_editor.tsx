@@ -10,10 +10,10 @@ import {
     Stack,
     Typography,
 } from "@mui/material";
-import dayjs from "dayjs";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import { customFieldsApi } from "shared/model";
 import type {
     CreateSprintOptionT,

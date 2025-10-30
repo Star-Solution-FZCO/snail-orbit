@@ -1,15 +1,12 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import { DateField } from "entities/custom_fields/date_field";
 import { DurationField } from "entities/custom_fields/duration_field";
 import { EnumField } from "entities/custom_fields/enum_field";
 import { InputField } from "entities/custom_fields/input_field";
 import { UserField } from "entities/custom_fields/user_field";
 import type { FC, ReactNode } from "react";
+import dayjs from "shared/date";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import FieldCard from "shared/ui/fields/field_card/field_card";
-
-dayjs.extend(utc);
 
 export type CustomFieldsParserProps = {
     field: CustomFieldWithValueT;

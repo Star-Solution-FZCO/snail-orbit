@@ -9,11 +9,11 @@ import {
     IconButton,
     Typography,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { t } from "i18next";
 import type { FC } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import { customFieldsApi } from "shared/model";
 import type {
     CreateVersionOptionT,

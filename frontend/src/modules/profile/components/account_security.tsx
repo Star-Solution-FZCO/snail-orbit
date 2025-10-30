@@ -1,20 +1,15 @@
 import KeyIcon from "@mui/icons-material/Key";
 import LockIcon from "@mui/icons-material/Lock";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import utc from "dayjs/plugin/utc";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import { userApi } from "shared/model";
 import type { TOTPDataT } from "shared/model/types";
 import { toastApiError } from "shared/utils";
 import { DeleteTOTPDialog } from "./dialogs/delete_totp_dialog";
 import { TFASetupDialog } from "./dialogs/tfa_setup_dialog";
 import { ToggleTFADialog } from "./dialogs/toggle_tfa_dialog";
-
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 export const AccountSecurity = () => {
     const { t } = useTranslation();

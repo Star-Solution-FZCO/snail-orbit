@@ -1,16 +1,11 @@
 import { Box, Typography } from "@mui/material";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import utc from "dayjs/plugin/utc";
 import { diffWords } from "diff";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import i18n from "shared/i18n";
 import type { IssueChangeT, VersionFieldValueT } from "shared/model/types";
 import { formatSpentTime } from "shared/utils";
-
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 const renderDiff = (oldText: string, newText: string) => {
     const diff = diffWords(oldText, newText);

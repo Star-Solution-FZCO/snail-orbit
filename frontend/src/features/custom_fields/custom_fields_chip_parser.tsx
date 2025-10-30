@@ -1,16 +1,13 @@
 import { Tooltip } from "@mui/material";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import { DateChip } from "entities/custom_fields/date_chip";
 import { DurationChip } from "entities/custom_fields/duration_chip";
 import { EnumChip } from "entities/custom_fields/enum_chip";
 import { InputChip } from "entities/custom_fields/input_chip";
 import UserChip from "entities/custom_fields/user_chip";
 import type { FC, ReactNode } from "react";
+import dayjs from "shared/date";
 import type { CustomFieldWithValueT } from "shared/model/types";
 import { FieldChip } from "shared/ui/fields/field_chip/field_chip";
-
-dayjs.extend(utc);
 
 export type CustomFieldsChipParserV2Props = {
     field: CustomFieldWithValueT;

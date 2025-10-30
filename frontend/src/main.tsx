@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import "react-toastify/dist/ReactToastify.css";
 import "./app/index.css";
+import "./shared/date";
 import "./shared/i18n";
 
 const rootElement = document.getElementById("root")!;

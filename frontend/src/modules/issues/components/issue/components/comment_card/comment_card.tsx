@@ -1,6 +1,3 @@
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import utc from "dayjs/plugin/utc";
 import { useAttachmentOperations } from "entities/issue/api/use_attachment_operations";
 import { useCommentOperations } from "entities/issue/api/use_comment_operations";
 import type { FC } from "react";
@@ -13,9 +10,6 @@ import { initialSelectedAttachment } from "../../../../utils";
 import { DeleteAttachmentDialog } from "../delete_attachment_dialog";
 import { CommentCardEdit } from "./comment_card_edit";
 import { CommentCardView } from "./comment_card_view";
-
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 type CommentCardProps = {
     issueId: string;

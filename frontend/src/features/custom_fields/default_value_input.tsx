@@ -15,10 +15,10 @@ import {
     LocalizationProvider,
 } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
 import type { FC } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type {
     CustomFieldOptionT,
     CustomFieldTypeT,
@@ -137,7 +137,7 @@ const RenderDatePicker: FC<InputProps<string | null>> = ({
     label,
     disabled,
 }) => (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DatePicker
             value={value ? dayjs(value) : null}
             onChange={(newValue) =>
@@ -156,7 +156,7 @@ const RenderDateTimePicker: FC<InputProps<string | null>> = ({
     label,
     disabled,
 }) => (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DateTimePicker
             value={value ? dayjs(value) : null}
             onChange={(newValue) =>

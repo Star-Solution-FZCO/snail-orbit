@@ -1,7 +1,7 @@
 import { Box, Tooltip, Typography } from "@mui/material";
-import dayjs from "dayjs";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import { useAppSelector } from "shared/model";
 import type { CommentT, IssueAttachmentT } from "shared/model/types";
 import { MarkdownRenderer, UserAvatar } from "shared/ui";

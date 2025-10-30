@@ -1,8 +1,8 @@
 import { Tooltip } from "@mui/material";
-import dayjs from "dayjs";
 import type { FC } from "react";
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type { IssueT } from "shared/model/types";
 
 type UpdateTimeProps = {

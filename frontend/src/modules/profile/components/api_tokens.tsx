@@ -15,19 +15,14 @@ import { DataGrid } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import utc from "dayjs/plugin/utc";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import { userApi } from "shared/model";
 import type { APITokenT } from "shared/model/types";
 import { Clipboard } from "shared/ui";
 import { toastApiError, useListQueryParams } from "shared/utils";
-
-dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 interface IAddAPITokenDialogProps {
     open: boolean;
@@ -92,10 +87,7 @@ const AddAPITokenDialog: FC<IAddAPITokenDialogProps> = ({
                         size="small"
                     />
 
-                    <LocalizationProvider
-                        dateAdapter={AdapterDayjs}
-                        adapterLocale="en-gb"
-                    >
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
                             value={expiresAt ? dayjs(expiresAt) : null}
                             label={t("apiTokens.fields.expires")}

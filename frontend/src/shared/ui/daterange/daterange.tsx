@@ -9,11 +9,11 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { FC, useState } from "react";
 import { DateRange, DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { useTranslation } from "react-i18next";
+import dayjs, { weekStart } from "shared/date";
 import { StyledDayPickerContainer } from "./daterange.styles";
 
 interface DateRangePickerProps {
@@ -123,7 +123,7 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
                                 onSelect={handleDateSelect}
                                 mode="range"
                                 numberOfMonths={2}
-                                weekStartsOn={1}
+                                weekStartsOn={weekStart}
                             />
                         </StyledDayPickerContainer>
 

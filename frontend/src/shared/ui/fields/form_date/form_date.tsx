@@ -2,20 +2,12 @@ import { ClickAwayListener } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import "dayjs/locale/en-gb";
-import updateLocale from "dayjs/plugin/updateLocale";
 import type { ForwardedRef } from "react";
 import { forwardRef, useState } from "react";
 import FieldPopper, { defaultModifiers } from "../field_popper/field_popper";
 import { StyledContainer } from "./form_date.styles";
 import FormDateContent from "./form_date_content";
 import FormDateTimeContent from "./form_datetime_content";
-
-dayjs.extend(updateLocale);
-dayjs.updateLocale("en-gb", {
-    weekStart: 1,
-});
 
 export type FormDatePopoverProps = {
     onClose?: () => unknown;
@@ -70,10 +62,7 @@ export const FormDatePopover = forwardRef(
             >
                 <ClickAwayListener onClickAway={handleClose}>
                     <StyledContainer onSubmit={handleSubmit}>
-                        <LocalizationProvider
-                            dateAdapter={AdapterDayjs}
-                            adapterLocale="en-gb"
-                        >
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
                             {type === "date" ? (
                                 <FormDateContent
                                     value={innerValue}

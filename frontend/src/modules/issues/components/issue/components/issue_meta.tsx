@@ -1,9 +1,9 @@
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { Stack, Tooltip, Typography } from "@mui/material";
-import dayjs from "dayjs";
 import { IssueLink } from "entities/issue/issue_link/issue_link";
 import { useCallback, type FC } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type { IssueT } from "shared/model/types";
 
 type IssueMetaProps = {

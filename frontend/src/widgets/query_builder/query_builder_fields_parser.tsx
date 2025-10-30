@@ -1,6 +1,5 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
-import dayjs from "dayjs";
 import { DateField } from "entities/custom_fields/date_field";
 import { DurationField } from "entities/custom_fields/duration_field";
 import { GroupSelectField } from "entities/custom_fields/group_select_field";
@@ -9,6 +8,7 @@ import UserField from "entities/custom_fields/user_field";
 import { ProjectField } from "entities/projects/project_field";
 import { TagField } from "entities/tag/tag_field";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type { BasicUserT, QueryBuilderDataFilterT } from "shared/model/types";
 import type { ShortOptionOutput } from "shared/model/types/backend-schema.gen";
 import FieldCard from "shared/ui/fields/field_card/field_card";

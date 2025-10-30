@@ -11,11 +11,11 @@ import {
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
 import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type { VersionOptionT } from "shared/model/types";
 import * as yup from "yup";
 
@@ -103,10 +103,7 @@ const VersionOptionFormDialog: FC<IVersionOptionFormDialogProps> = ({
                         name="release_date"
                         control={control}
                         render={({ field: { value, onChange } }) => (
-                            <LocalizationProvider
-                                dateAdapter={AdapterDayjs}
-                                adapterLocale="en-gb"
-                            >
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DatePicker
                                     value={value ? dayjs(value) : null}
                                     label={t(

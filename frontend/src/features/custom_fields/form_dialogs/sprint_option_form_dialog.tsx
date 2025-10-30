@@ -10,11 +10,11 @@ import {
     FormControlLabel,
     TextField,
 } from "@mui/material";
-import dayjs from "dayjs";
 import type { FC } from "react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import dayjs from "shared/date";
 import type { SprintOptionT } from "shared/model/types";
 import { ColorInputField } from "shared/ui/color_picker/color_input_field";
 import { DateRangePicker } from "shared/ui/daterange";
