@@ -6,7 +6,6 @@ import {
     $convertToMarkdownString,
 } from "@lexical/markdown";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin";
 import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
 import { ClearEditorPlugin } from "@lexical/react/LexicalClearEditorPlugin";
 import { ClickableLinkPlugin } from "@lexical/react/LexicalClickableLinkPlugin";
@@ -36,34 +35,13 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useEditorStyles } from "../hooks/use-editor-styles";
 import { MentionNode } from "../nodes/mention_node";
+import { AutoLinkPlugin } from "../plugins/auto_link_plugin";
 import { FocusBlurPlugin } from "../plugins/focus_blur_plugin";
 import { MentionsPlugin } from "../plugins/mentions_plugin";
 import { ToolbarPlugin } from "../plugins/toolbar/toolbar_plugin";
 import { TRANSFORMERS } from "../transformers";
 import { theme } from "./theme";
 import { EditorProps } from "./types";
-
-const URL_MATCHER =
-    /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
-
-const LINK_MATCHERS = [
-    (text: string) => {
-        const match = URL_MATCHER.exec(text);
-        if (match === null) {
-            return null;
-        }
-        const fullMatch = match[0];
-        return {
-            index: match.index,
-            length: fullMatch.length,
-            text: fullMatch,
-            url: fullMatch.startsWith("http")
-                ? fullMatch
-                : `https://${fullMatch}`,
-            attributes: { rel: "noreferrer", target: "_blank" },
-        };
-    },
-];
 
 export const VisualEditor: FC<EditorProps> = ({
     value,
@@ -165,7 +143,7 @@ export const VisualEditor: FC<EditorProps> = ({
                 <ListPlugin />
                 <CheckListPlugin />
                 <LinkPlugin />
-                <AutoLinkPlugin matchers={LINK_MATCHERS} />
+                <AutoLinkPlugin />
                 <ClickableLinkPlugin />
                 <TablePlugin />
                 <HorizontalRulePlugin />
