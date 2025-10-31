@@ -38,7 +38,7 @@ export const ProjectAvailableCustomFieldList: FC<
     IProjectAvailableCustomFieldListProps
 > = ({ project, onClose }) => {
     const { t } = useTranslation();
-    const { id: projectId } = project;
+    const { slug: projectId } = project;
 
     const [listQueryParams, updateListQueryParams] = useListQueryParams({
         limit: 1000,
