@@ -229,3 +229,14 @@ class Board(Document, PermissionRecordMixin):
             {'$set': {'projects.$[p]': ProjectLinkField.from_obj(project)}},
             array_filters=[{'p.id': project.id}],
         )
+
+    @classmethod
+    async def remove_project_embedded_links(
+        cls,
+        project_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.projects.id == project_id,
+        ).update(
+            {'$pull': {'projects': {'id': project_id}}},
+        )

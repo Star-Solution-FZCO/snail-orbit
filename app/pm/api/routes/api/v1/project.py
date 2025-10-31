@@ -581,7 +581,12 @@ async def delete_project(
         obj, ProjectPermissions.PROJECT_DELETE, admin_override=True
     )
     await obj.delete()
-    await m.Issue.find(m.Issue.project.id == obj.id).delete()
+    await asyncio.gather(
+        m.Issue.find(m.Issue.project.id == obj.id).delete(),
+        m.IssueDraft.find(m.IssueDraft.project.id == obj.id).delete(),
+        m.Board.remove_project_embedded_links(obj.id),
+        m.Report.remove_project_embedded_links(obj.id),
+    )
     return ModelIdOutput.make(obj.id)
 
 

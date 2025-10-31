@@ -237,6 +237,17 @@ class Report(Document, PermissionRecordMixin):
         )
 
     @classmethod
+    async def remove_project_embedded_links(
+        cls,
+        project_id: PydanticObjectId,
+    ) -> None:
+        await cls.find(
+            cls.projects.id == project_id,
+        ).update(
+            {'$pull': {'projects': {'id': project_id}}},
+        )
+
+    @classmethod
     async def update_field_embedded_links(
         cls,
         field: CustomField | CustomFieldGroupLink,
