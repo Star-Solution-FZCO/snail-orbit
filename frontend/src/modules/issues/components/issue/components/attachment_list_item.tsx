@@ -96,7 +96,11 @@ export const AttachmentListItem: FC<IAttachmentListItemProps> = ({
                 </Typography>
 
                 <Stack direction="row" gap={0.5} alignItems="center">
-                    <UserAvatar src={attachment.author.avatar} size={16} />
+                    <UserAvatar
+                        src={attachment.author.avatar}
+                        size={16}
+                        isBot={attachment.author.is_bot}
+                    />
 
                     <Typography variant="caption" color="primary.main">
                         {attachment.author.name}

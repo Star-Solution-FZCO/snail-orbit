@@ -204,6 +204,10 @@ const GrantPermissionDialog: FC<GrantPermissionDialogProps> = ({
                                                 (option.data as BasicUserT)
                                                     .avatar || ""
                                             }
+                                            isBot={
+                                                (option.data as BasicUserT)
+                                                    .is_bot
+                                            }
                                         />
                                     ) : (
                                         <GroupIcon />
@@ -420,6 +424,7 @@ export const DashboardAccess: FC<DashboardAccessProps> = ({ dashboard }) => {
                         {row.target_type === "user" ? (
                             <UserAvatar
                                 src={(row.target as BasicUserT).avatar}
+                                isBot={(row.target as BasicUserT).is_bot}
                             />
                         ) : (
                             <GroupIcon />

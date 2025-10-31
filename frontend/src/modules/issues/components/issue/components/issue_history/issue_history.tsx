@@ -21,7 +21,11 @@ const IssueHistory: FC<{ record: IssueHistoryT }> = ({ record }) => {
                 },
             }}
         >
-            <UserAvatar src={record.author.avatar} size={32} />
+            <UserAvatar
+                src={record.author.avatar}
+                size={32}
+                isBot={record.author.is_bot}
+            />
 
             <Box display="flex" flexDirection="column" fontSize={14}>
                 <Box height="24px" display="flex" alignItems="center" gap={1}>

@@ -106,7 +106,11 @@ export const CommentCardEdit = (props: CommentCardEditProps) => {
     return (
         <Box display="flex" flexDirection="column" pl={1} py={0.5}>
             <Box display="flex" gap={2}>
-                <UserAvatar src={author.avatar} size={32} />
+                <UserAvatar
+                    src={author.avatar}
+                    size={32}
+                    isBot={author.is_bot}
+                />
 
                 <Box display="flex" flexDirection="column" gap={1} flex={1}>
                     <MDEditor

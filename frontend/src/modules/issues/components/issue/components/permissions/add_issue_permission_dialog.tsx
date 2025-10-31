@@ -212,6 +212,11 @@ export const AddIssuePermissionDialog: FC<AddIssuePermissionDialogProps> = ({
                                                             option.data as BasicUserT
                                                         ).avatar || ""
                                                     }
+                                                    isBot={
+                                                        (
+                                                            option.data as BasicUserT
+                                                        ).is_bot
+                                                    }
                                                 />
                                             ) : (
                                                 <GroupIcon />

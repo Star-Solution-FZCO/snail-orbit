@@ -21,6 +21,7 @@ const userSchema = yup.object().shape({
     name: yup.string().required("form.validation.required"),
     is_active: yup.boolean().required("form.validation.required"),
     is_admin: yup.boolean().required("form.validation.required"),
+    is_bot: yup.boolean().required("form.validation.required"),
     send_email_invite: yup.boolean().required("form.validation.required"),
     send_pararam_invite: yup.boolean().required("form.validation.required"),
 });
@@ -54,6 +55,7 @@ const UserForm: FC<IUserFormProps> = ({
             name: "",
             is_active: true,
             is_admin: false,
+            is_bot: false,
             send_email_invite: false,
             send_pararam_invite: false,
             ...defaultValues,
@@ -129,6 +131,26 @@ const UserForm: FC<IUserFormProps> = ({
                             />
                         }
                         label={t("users.form.admin")}
+                    />
+                )}
+            />
+
+            <Controller
+                name="is_bot"
+                control={control}
+                render={({ field: { value } }) => (
+                    <FormControlLabel
+                        sx={{ m: 0 }}
+                        control={
+                            <Checkbox
+                                sx={{ p: 0, pr: 1, borderRadius: 1 }}
+                                checked={value}
+                                size="small"
+                                disableRipple
+                                readOnly
+                            />
+                        }
+                        label={t("users.form.bot")}
                     />
                 )}
             />

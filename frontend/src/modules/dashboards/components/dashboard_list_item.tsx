@@ -51,7 +51,10 @@ export const DashboardListItem: FC<DashboardListItemProps> = ({
             </Stack>
 
             <Stack direction="row" alignItems="center" gap={1}>
-                <UserAvatar src={dashboard.created_by.avatar} />
+                <UserAvatar
+                    src={dashboard.created_by.avatar}
+                    isBot={dashboard.created_by.is_bot}
+                />
 
                 <Typography variant="body2">
                     {dashboard.created_by.name}

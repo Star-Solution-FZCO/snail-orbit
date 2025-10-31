@@ -166,7 +166,10 @@ export const AddGroupMemberDialog: FC<AddGroupMemberDialogProps> = ({
                         return (
                             <li {...optionProps} key={option.id}>
                                 <Box display="flex" alignItems="center" gap={1}>
-                                    <UserAvatar src={option.avatar} />
+                                    <UserAvatar
+                                        src={option.avatar}
+                                        isBot={option.is_bot}
+                                    />
                                     {option.name}
                                 </Box>
                             </li>

@@ -141,7 +141,11 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
     if (mode === "view")
         return (
             <Box display="flex" gap={2}>
-                <UserAvatar src={user?.avatar || ""} size={32} />
+                <UserAvatar
+                    src={user?.avatar || ""}
+                    size={32}
+                    isBot={user?.is_bot}
+                />
 
                 <TextField
                     onClick={() => setMode("edit")}
@@ -157,7 +161,11 @@ const CreateCommentForm: FC<CreateCommentFormProps> = ({
         return (
             <Box display="flex" flexDirection="column">
                 <Box display="flex" gap={2}>
-                    <UserAvatar src={user?.avatar || ""} size={32} />
+                    <UserAvatar
+                        src={user?.avatar || ""}
+                        size={32}
+                        isBot={user?.is_bot}
+                    />
 
                     <Box display="flex" flexDirection="column" gap={1} flex={1}>
                         <MDEditor

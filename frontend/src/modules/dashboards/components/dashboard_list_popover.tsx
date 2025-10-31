@@ -32,7 +32,10 @@ export const DashboardListPopover = memo((props: DashboardListPopoverProps) => {
     const rightAdornment = useCallback(
         (el: DashboardT) => (
             <Stack direction="row" alignItems="center" gap={1}>
-                <UserAvatar src={el.created_by.avatar} />
+                <UserAvatar
+                    src={el.created_by.avatar}
+                    isBot={el.created_by.is_bot}
+                />
 
                 <Typography variant="body2">{el.created_by.name}</Typography>
             </Stack>

@@ -794,6 +794,7 @@
   "users.fields.origin": "Origin",
   "users.form.active": "Active",
   "users.form.admin": "Admin",
+  "users.form.bot": "Bot",
   "users.form.email": "Email",
   "users.form.name": "Name",
   "users.form.sendEmailInvite": "Send invite via email",

@@ -61,7 +61,11 @@ function MentionsTypeaheadMenuItem({
             onMouseEnter={onMouseEnter}
         >
             <ListItemAvatar>
-                <UserAvatar src={option.user.avatar} size={32} />
+                <UserAvatar
+                    src={option.user.avatar}
+                    size={32}
+                    isBot={option.user.is_bot}
+                />
             </ListItemAvatar>
 
             <ListItemText

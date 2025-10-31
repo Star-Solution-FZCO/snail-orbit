@@ -4,8 +4,6 @@ import type { GroupT } from "./group";
 export type BasicUserT = UserOutput;
 
 export type UserT = BasicUserT & {
-    is_admin: boolean;
-    is_active: boolean;
     origin: string;
     mfa_enabled: boolean;
 };

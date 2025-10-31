@@ -2,6 +2,7 @@ import { Box, Popover, Skeleton, Stack, Typography } from "@mui/material";
 import type { FC, MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { userApi } from "shared/model/api/user.api";
+import { UserT } from "shared/model/types";
 import { UserAvatar } from "../user_avatar";
 
 export const MentionRenderer: FC<{
@@ -10,11 +11,9 @@ export const MentionRenderer: FC<{
 }> = ({ userId, username }) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-    const [email, setEmail] = useState("");
-    const [avatar, setAvatar] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [user, setUser] = useState<UserT | null>(null);
 
-    const [trigger] = userApi.useLazyGetUserQuery();
+    const [trigger, { isLoading }] = userApi.useLazyGetUserQuery();
 
     const handleOpen = (event: MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -27,20 +26,14 @@ export const MentionRenderer: FC<{
     const open = Boolean(anchorEl);
 
     useEffect(() => {
-        if (open && userId && !email && !isLoading) {
-            setIsLoading(true);
-
+        if (open && userId && !user && !isLoading) {
             trigger(userId)
                 .unwrap()
                 .then((response) => {
-                    setEmail(response.payload.email || "");
-                    setAvatar(response.payload.avatar || "");
-                })
-                .finally(() => {
-                    setIsLoading(false);
+                    setUser(response.payload);
                 });
         }
-    }, [open, userId, email, isLoading, trigger]);
+    }, [open, userId, user, isLoading, trigger]);
 
     return (
         <>
@@ -87,19 +80,23 @@ export const MentionRenderer: FC<{
                     </Stack>
                 ) : (
                     <Stack direction="row" alignItems="center" p={2} gap={1}>
-                        <UserAvatar src={avatar} size={32} />
+                        <UserAvatar
+                            src={user?.avatar || ""}
+                            size={32}
+                            isBot={user?.is_bot}
+                        />
 
                         <Stack>
                             <Typography variant="body2" fontWeight={500}>
                                 {username}
                             </Typography>
 
-                            {email && (
+                            {user?.email && (
                                 <Typography
                                     variant="caption"
                                     color="text.secondary"
                                 >
-                                    {email}
+                                    {user.email}
                                 </Typography>
                             )}
                         </Stack>

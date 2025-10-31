@@ -190,6 +190,9 @@ const OwnedOptionFormDialog: FC<IOwnedOptionFormDialogProps> = ({
                                                                 ""
                                                             }
                                                             size={24}
+                                                            isBot={
+                                                                option.is_bot
+                                                            }
                                                         />
                                                         <Stack direction="column">
                                                             {option.name}

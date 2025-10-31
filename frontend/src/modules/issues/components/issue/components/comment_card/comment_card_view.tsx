@@ -79,7 +79,7 @@ export const CommentCardView = (props: CommentCardViewProps) => {
                 },
             }}
         >
-            <UserAvatar src={author.avatar} size={32} />
+            <UserAvatar src={author.avatar} size={32} isBot={author.is_bot} />
 
             <Box width="100%" fontSize={14}>
                 <Box

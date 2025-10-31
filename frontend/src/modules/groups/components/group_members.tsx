@@ -70,7 +70,7 @@ const GroupMembers: FC<IGroupMembersProps> = ({ groupId }) => {
                 flex: 1,
                 renderCell: ({ row }) => (
                     <Box display="flex" alignItems="center" gap={1}>
-                        <UserAvatar src={row.avatar} />
+                        <UserAvatar src={row.avatar} isBot={row.is_bot} />
                         <Link to="/users/$userId" params={{ userId: row.id }}>
                             {row.name}
                         </Link>

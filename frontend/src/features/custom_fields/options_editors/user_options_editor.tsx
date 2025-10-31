@@ -46,7 +46,10 @@ const UserOrGroupOption: FC<IUserOrGroupOptionProps> = ({
     return (
         <Box display="flex" alignItems="center" gap={1}>
             {entity.type === "user" && (
-                <UserAvatar src={(entity.value as BasicUserT).avatar} />
+                <UserAvatar
+                    src={(entity.value as BasicUserT).avatar}
+                    isBot={(entity.value as BasicUserT).is_bot}
+                />
             )}
             {entity.type === "group" && <GroupIcon />}
 
@@ -233,6 +236,9 @@ const AddUserDialog: FC<IAddUserOrGroupDialogProps> = ({
                                             src={
                                                 (option.data as UserT).avatar ||
                                                 ""
+                                            }
+                                            isBot={
+                                                (option.data as UserT).is_bot
                                             }
                                         />
                                     ) : (

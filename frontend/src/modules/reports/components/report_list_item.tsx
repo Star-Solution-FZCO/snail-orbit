@@ -49,7 +49,10 @@ export const ReportListItem: FC<ReportListItemProps> = ({ report }) => {
             </Stack>
 
             <Stack direction="row" alignItems="center" gap={1}>
-                <UserAvatar src={report.created_by.avatar} />
+                <UserAvatar
+                    src={report.created_by.avatar}
+                    isBot={report.created_by.is_bot}
+                />
 
                 <Typography variant="body2">
                     {report.created_by.name}
