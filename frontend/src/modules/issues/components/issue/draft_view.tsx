@@ -36,7 +36,7 @@ export const DraftView: FC<DraftViewProps> = (props) => {
     const { t } = useTranslation();
 
     return (
-        <Box display="flex" alignItems="flex-start" gap={3}>
+        <Box display="flex" alignItems="flex-start" gap={3} pt={1}>
             <Stack direction="column" gap={2} flex={1}>
                 {isEncrypted && !isUserAddedToEncryption && (
                     <Typography color="error">
