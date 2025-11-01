@@ -261,18 +261,33 @@ State: Open database connection   # Searches State "Open" AND text contains "dat
 
 ## Sorting
 
-Use the `sort by:` clause to specify result ordering:
+Use the `sort by:` clause to specify result ordering. You can sort by both reserved fields and custom fields.
+### Sort Options
+
+Available sort directions:
+- `asc` (ascending, default when direction not specified)
+- `desc` (descending)
+
+You can sort by multiple fields separated by commas. Fields are sorted in the order specified (primary sort, then secondary sort, etc.).
+### Examples
 
 ```
 project: myproject sort by: created_at desc
-priority: High sort by: updated_at asc, priority desc
+Priority: High sort by: updated_at asc, Priority desc
+State: Open sort by: Assignee, updated_at desc
+assignee: me sort by: Sprint, Priority desc
+sort by: Priority
+```
+### Default Sort Behavior
+
+When no `sort by:` clause is specified, results are automatically sorted by `updated_at desc` (most recently updated first):
+
+```
+Priority: High                          # Implicitly: Priority: High sort by: updated_at desc
+State: Open AND assignee: me            # Implicitly: State: Open AND assignee: me sort by: updated_at desc
 ```
 
-Available sort directions:
-- `asc` (ascending, default)
-- `desc` (descending)
-
-You can sort by multiple fields separated by commas.
+The default sort is omitted from query strings to keep them clean, but is always applied for consistent ordering.
 
 ## Error Handling
 
