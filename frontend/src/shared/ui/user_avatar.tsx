@@ -17,7 +17,10 @@ const UserAvatar: FC<{ src: string; size?: number; isBot?: boolean }> = ({
                     border={1}
                     borderColor="common.white"
                 >
-                    <SmartToyIcon sx={{ fontSize: size / 2 }} htmlColor="white"/>
+                    <SmartToyIcon
+                        sx={{ fontSize: size / 2 }}
+                        htmlColor="white"
+                    />
                 </Stack>
             ) : null
         }
