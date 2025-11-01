@@ -1,81 +1,159 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import { FormControl, IconButton, InputLabel, MenuItem, Select, Stack } from "@mui/material";
-import type { FC } from "react";
+import SortIcon from "@mui/icons-material/Sort";
+import type { AutocompleteChangeReason } from "@mui/material";
+import { IconButton, Stack } from "@mui/material";
+import type { FC, SyntheticEvent } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ParsedSortObject, QueryBuilderDataAvailableFieldT } from "shared/model/types";
+import type {
+    ParsedSortObjectT,
+    QueryBuilderDataAvailableFieldT,
+} from "shared/model/types";
+import FieldCard from "shared/ui/fields/field_card/field_card";
+import { FormAutocompletePopover } from "shared/ui/fields/form_autocomplete/form_autocomplete";
 import { useGetQueryBuilderFilterName } from "./utils/get-query-builder-name";
 
 type QueryBuilderSortParserProps = {
-    sort: ParsedSortObject;
+    sort: ParsedSortObjectT;
     availableFields: QueryBuilderDataAvailableFieldT[];
-    onChange: (sort: ParsedSortObject, field: QueryBuilderDataAvailableFieldT, direction: 'asc' | 'desc') => void;
-    onDelete: (sort: ParsedSortObject) => void;
+    onChange: (
+        sort: ParsedSortObjectT,
+        field: QueryBuilderDataAvailableFieldT,
+        direction: "asc" | "desc",
+    ) => void;
+    onDelete: (sort: ParsedSortObjectT) => void;
 };
 
-export const QueryBuilderSortParser: FC<QueryBuilderSortParserProps> = (props) => {
-    const { sort, availableFields, onChange, onDelete } = props;
+export const QueryBuilderSortParser: FC<QueryBuilderSortParserProps> = (
+    props,
+) => {
     const { t } = useTranslation();
+
+    const { sort, availableFields, onChange, onDelete } = props;
     const getQueryBuilderFilterName = useGetQueryBuilderFilterName();
 
-    const currentField = availableFields.find(field =>
-        field.name === sort.name
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const fieldCardRef = useRef<HTMLDivElement>(null);
+
+    const currentField = availableFields.find(
+        (field) => field.name === sort.name,
     );
 
-    const handleFieldChange = (newFieldId: string) => {
-        const selectedField = availableFields.find(field => field.name === newFieldId);
-        if (selectedField) {
-            onChange(sort, selectedField, sort.direction);
-        }
-    };
+    const handleFieldChange = useCallback(
+        (
+            _event: SyntheticEvent,
+            value: QueryBuilderDataAvailableFieldT | null,
+            _reason: AutocompleteChangeReason,
+        ) => {
+            if (value) {
+                onChange(sort, value, sort.direction);
+                setIsPopoverOpen(false);
+            }
+        },
+        [sort, onChange],
+    );
 
-    const handleDirectionChange = (newDirection: 'asc' | 'desc') => {
-        if (currentField) {
-            onChange(sort, currentField, newDirection);
-        }
-    };
+    const handleDirectionToggle = useCallback(
+        (e: React.MouseEvent<HTMLElement>) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentField) {
+                const newDirection = sort.direction === "asc" ? "desc" : "asc";
+                onChange(sort, currentField, newDirection);
+            }
+        },
+        [currentField, sort, onChange],
+    );
 
-    return (
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel id={`sort-field-${sort.name}`}>
-                    {t("queryBuilder.sortBy.field")}
-                </InputLabel>
-                <Select
-                    labelId={`sort-field-${sort.name}`}
-                    value={currentField ? currentField.name : ""}
-                    onChange={(e) => handleFieldChange(e.target.value)}
-                    label={t("queryBuilder.sortBy.field")}
-                >
-                    {availableFields.map((field) => (
-                        <MenuItem key={field.name} value={field.name}>
-                            {getQueryBuilderFilterName(field.name)}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+    const getOptionLabel = useCallback(
+        (field: QueryBuilderDataAvailableFieldT) => {
+            return getQueryBuilderFilterName(field.name);
+        },
+        [getQueryBuilderFilterName],
+    );
 
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id={`sort-direction-${sort.name}`}>
-                    {t("queryBuilder.sortBy.direction")}
-                </InputLabel>
-                <Select
-                    labelId={`sort-direction-${sort.name}`}
-                    value={sort.direction}
-                    onChange={(e) => handleDirectionChange(e.target.value as 'asc' | 'desc')}
-                    label={t("queryBuilder.sortBy.direction")}
-                >
-                    <MenuItem value="asc">{t("queryBuilder.sortBy.ascending")}</MenuItem>
-                    <MenuItem value="desc">{t("queryBuilder.sortBy.descending")}</MenuItem>
-                </Select>
-            </FormControl>
+    const isOptionEqualToValue = useCallback(
+        (
+            a: QueryBuilderDataAvailableFieldT,
+            b: QueryBuilderDataAvailableFieldT,
+        ) => {
+            const aGid = "gid" in a ? a.gid : null;
+            const bGid = "gid" in b ? b.gid : null;
+            return a.name === b.name && aGid === bGid;
+        },
+        [],
+    );
+
+    const getOptionKey = useCallback(
+        (field: QueryBuilderDataAvailableFieldT) => {
+            const gid = "gid" in field ? field.gid : null;
+            return `${field.name}-${gid || "builtin"}`;
+        },
+        [],
+    );
+
+    const options = useMemo(() => availableFields, [availableFields]);
+
+    const rightAdornment = (
+        <Stack direction="row" spacing={0.5} alignItems="center">
+            <IconButton size="small" onClick={handleDirectionToggle}>
+                <SortIcon
+                    sx={{
+                        transform:
+                            sort.direction === "asc"
+                                ? "scaleY(-1)"
+                                : "scaleY(1)",
+                        transition: "transform 0.2s ease-in-out",
+                    }}
+                    fontSize="small"
+                />
+            </IconButton>
 
             <IconButton
                 size="small"
-                onClick={() => onDelete(sort)}
-                color="error"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(sort);
+                }}
             >
-                <DeleteIcon fontSize="small" />
+                <DeleteIcon fontSize="small" color="error" />
             </IconButton>
         </Stack>
+    );
+
+    return (
+        <>
+            <div ref={fieldCardRef}>
+                <FieldCard
+                    label={t("queryBuilder.sortAttribute")}
+                    value={
+                        currentField
+                            ? getQueryBuilderFilterName(currentField.name)
+                            : t("queryBuilder.sortAttributePlaceholder")
+                    }
+                    onClick={() => setIsPopoverOpen(true)}
+                    rightAdornment={rightAdornment}
+                    orientation="vertical"
+                />
+            </div>
+
+            <FormAutocompletePopover<
+                QueryBuilderDataAvailableFieldT,
+                false,
+                false
+            >
+                id={`sort-field-popover-${sort.name}`}
+                open={isPopoverOpen}
+                anchorEl={fieldCardRef.current}
+                onClose={() => setIsPopoverOpen(false)}
+                options={options}
+                value={currentField || null}
+                onChange={handleFieldChange}
+                getOptionLabel={getOptionLabel}
+                isOptionEqualToValue={isOptionEqualToValue}
+                getOptionKey={getOptionKey}
+            />
+        </>
     );
 };

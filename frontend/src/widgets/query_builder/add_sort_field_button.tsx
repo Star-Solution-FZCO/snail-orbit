@@ -45,7 +45,9 @@ export const AddSortFieldButton = (props: AddSortFieldButtonProps) => {
                 }
                 open={!!anchorEl}
                 loading={loading}
-                isOptionEqualToValue={(option, value) => option.name === value.name}
+                isOptionEqualToValue={(option, value) =>
+                    option.name === value.name
+                }
                 getOptionLabel={(option) =>
                     getQueryBuilderFilterName(option.name)
                 }

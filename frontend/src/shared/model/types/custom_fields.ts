@@ -12,8 +12,11 @@ import type {
     OwnedMultiCustomFieldOutput,
     OwnedOption,
     OwnedOptionOutput,
+    ParsedSortObject,
     QueryBuilderInput,
     QueryBuilderOutput,
+    QueryFieldTypeT,
+    SortObject,
     SprintCustomFieldOutput,
     SprintMultiCustomFieldOutput,
     SprintOption,
@@ -169,6 +172,12 @@ export type QueryBuilderDataAvailableFieldT =
 export type QueryBuilderDataFilterT = QueryBuilderOutput["filters"][number];
 
 export type QueryBuilderDto = QueryBuilderInput;
+
+export { QueryFieldTypeT };
+
+export type ParsedSortObjectT = ParsedSortObject;
+
+export type SortObjectT = SortObject;
 
 export type CustomFieldValueT =
     | string
