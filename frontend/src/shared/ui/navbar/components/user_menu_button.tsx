@@ -1,6 +1,6 @@
-import { Info, Logout } from "@mui/icons-material";
+import { Help, Info, Logout } from "@mui/icons-material";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Avatar, ListItemIcon, Menu, MenuItem } from "@mui/material";
+import { Avatar, Box, ListItemIcon, Menu, MenuItem } from "@mui/material";
 import { bindMenu, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import { memo, useState } from "react";
@@ -80,6 +80,19 @@ export const UserMenuButton = memo(() => {
                     </ListItemIcon>
                     {t("navbar.about")}
                 </MenuItem>
+
+                <Box
+                    component="a"
+                    href="/docs"
+                    sx={{ color: "inherit", textDecoration: "none" }}
+                >
+                    <MenuItem onClick={() => popupState.close()}>
+                        <ListItemIcon>
+                            <Help fontSize="small" />
+                        </ListItemIcon>
+                        {t("navbar.docs")}
+                    </MenuItem>
+                </Box>
 
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
