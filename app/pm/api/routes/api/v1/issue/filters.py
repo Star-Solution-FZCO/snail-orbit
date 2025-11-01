@@ -1,7 +1,9 @@
+# pylint: disable=too-many-lines
 import logging
 import re
+from collections.abc import Collection
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Literal
 
 import beanie.operators as bo
 from beanie import PydanticObjectId
@@ -28,6 +30,8 @@ from pm.api.issue_query.search import (
     HASHTAG_VALUES,
     RESERVED_FIELDS,
 )
+from pm.api.issue_query.sort import SortTransformer
+from pm.api.issue_query.sort import parser as sort_parser
 from pm.api.utils.router import APIRouter
 from pm.api.views.custom_fields import CustomFieldLinkOutput, ShortOptionOutput
 from pm.api.views.error_responses import error_responses
@@ -59,11 +63,13 @@ from pm.api.views.query_builder import (
     OwnedMultiCustomFieldAvailable,
     OwnedMultiCustomFieldParsed,
     ParsedQueryObjectRootModel,
+    ParsedSortObject,
     ProjectFieldAvailable,
     ProjectFieldParsed,
     QueryBuilderInput,
     QueryBuilderOutput,
     QueryFieldTypeT,
+    SortObject,
     SprintCustomFieldAvailable,
     SprintCustomFieldParsed,
     SprintMultiCustomFieldAvailable,
@@ -169,6 +175,21 @@ CUSTOM_FIELD_PARSED_MAP = {
     m.CustomFieldTypeT.SPRINT: SprintCustomFieldParsed,
     m.CustomFieldTypeT.SPRINT_MULTI: SprintMultiCustomFieldParsed,
 }
+
+RESERVED_AVAILABLE_FOR_FILTERING = HASHTAG_VALUES | RESERVED_FIELDS
+RESERVED_AVAILABLE_FOR_SORTING = RESERVED_FIELDS
+
+# Default sort constants (matches existing issue list endpoint behavior)
+DEFAULT_SORT_PARSED_OBJECT = ParsedSortObject(
+    type=QueryFieldTypeT.DATETIME,
+    name='updated_at',
+    gid=None,
+    direction='desc',
+)
+DEFAULT_SORT_OBJECT = SortObject(
+    name='updated_at',
+    direction='desc',
+)
 
 
 async def _get_custom_field_groups() -> dict[str, m.CustomField]:
@@ -570,80 +591,73 @@ async def _build_query_from_filters(
     return ' and '.join(query_parts)
 
 
-def _create_reserved_fields() -> list[AvailableFieldRootModel]:
+def _create_reserved_fields(
+    allowed_fields: Collection[str],
+) -> list[AvailableFieldRootModel]:
     """Create available field objects for all reserved fields."""
     available_fields = []
 
-    available_fields.extend(
-        [
-            AvailableFieldRootModel(
-                root=StringCustomFieldAvailable(
-                    type=QueryFieldTypeT.STRING,
-                    name=field_name,
-                    gid=None,
+    for field_name in allowed_fields:
+        if field_name not in (RESERVED_FIELDS | HASHTAG_VALUES):
+            continue
+        if field_name in ('subject', 'text', 'id'):
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=StringCustomFieldAvailable(
+                        type=QueryFieldTypeT.STRING,
+                        name=field_name,
+                        gid=None,
+                    )
                 )
             )
-            for field_name in ['subject', 'text', 'id']
-        ]
-    )
-
-    available_fields.extend(
-        [
-            AvailableFieldRootModel(
-                root=DateTimeCustomFieldAvailable(
-                    type=QueryFieldTypeT.DATETIME,
-                    name=field_name,
-                    gid=None,
+            continue
+        if field_name in ('updated_at', 'created_at'):
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=DateTimeCustomFieldAvailable(
+                        type=QueryFieldTypeT.DATETIME,
+                        name=field_name,
+                        gid=None,
+                    )
                 )
             )
-            for field_name in ['updated_at', 'created_at']
-        ]
-    )
-
-    available_fields.extend(
-        [
-            AvailableFieldRootModel(
-                root=UserCustomFieldAvailable(
-                    type=QueryFieldTypeT.USER,
-                    name=field_name,
-                    gid=None,
+            continue
+        if field_name in ('updated_by', 'created_by'):
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=UserCustomFieldAvailable(
+                        type=QueryFieldTypeT.USER,
+                        name=field_name,
+                        gid=None,
+                    )
                 )
             )
-            for field_name in ['updated_by', 'created_by']
-        ]
-    )
-
-    available_fields.append(
-        AvailableFieldRootModel(
-            root=ProjectFieldAvailable(
-                type=QueryFieldTypeT.PROJECT,
-                name='project',
-                gid=None,
-            )
-        )
-    )
-
-    available_fields.append(
-        AvailableFieldRootModel(
-            root=TagFieldAvailable(
-                type=QueryFieldTypeT.TAG,
-                name='tag',
-                gid=None,
-            )
-        )
-    )
-
-    available_fields.extend(
-        [
-            AvailableFieldRootModel(
-                root=HashtagFieldAvailable(
-                    type=QueryFieldTypeT.HASHTAG,
-                    name=hashtag,
+            continue
+        if field_name == 'project':
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=ProjectFieldAvailable(
+                        type=QueryFieldTypeT.PROJECT,
+                        name='project',
+                    )
                 )
             )
-            for hashtag in HASHTAG_VALUES
-        ]
-    )
+            continue
+        if field_name == 'tag':
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=TagFieldAvailable(type=QueryFieldTypeT.TAG, name='tag')
+                )
+            )
+        if field_name in HASHTAG_VALUES:
+            available_fields.append(
+                AvailableFieldRootModel(
+                    root=HashtagFieldAvailable(
+                        type=QueryFieldTypeT.HASHTAG,
+                        name=field_name,
+                    )
+                )
+            )
 
     return available_fields
 
@@ -668,6 +682,103 @@ def _filter_available_fields(
         for field in available_fields
         if field.root.name.lower() not in used_field_names
     ]
+
+
+async def _parse_sort_from_query(query: str) -> list[ParsedSortObject]:
+    """Parse sort expressions from query string into ParsedSortObject instances.
+
+    When no sort is specified, returns the default sort (updated_at desc).
+    """
+    if not query:
+        return [DEFAULT_SORT_PARSED_OBJECT]
+
+    _, sort_part = split_query(query)
+    if not sort_part:
+        return [DEFAULT_SORT_PARSED_OBJECT]
+
+    try:
+        tree = sort_parser.parse(sort_part)
+        transformer = SortTransformer()
+        parsed_fields: list[tuple[str, bool]] = transformer.transform(tree)
+    except Exception as err:
+        logger.debug('Sort parsing failed: %s', err)
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f'Invalid sort expression: {sort_part}',
+        ) from err
+
+    if not parsed_fields:
+        return [DEFAULT_SORT_PARSED_OBJECT]
+
+    custom_fields = await _get_all_custom_fields()
+    sort_objects = []
+
+    for field_name, is_descending in parsed_fields:
+        direction: Literal['asc', 'desc'] = 'desc' if is_descending else 'asc'
+        field_name_lower = field_name.lower()
+
+        if field_name_lower in RESERVED_FIELDS:
+            sort_objects.append(
+                ParsedSortObject(
+                    type=_get_reserved_field_type(field_name_lower),
+                    name=field_name_lower,
+                    gid=None,
+                    direction=direction,
+                )
+            )
+            continue
+        if field_name_lower in custom_fields:
+            field = custom_fields[field_name_lower][0]
+            sort_objects.append(
+                ParsedSortObject(
+                    type=QueryFieldTypeT(field.type),
+                    name=field.name,
+                    gid=field.gid,
+                    direction=direction,
+                )
+            )
+            continue
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail=f'Unknown field for sorting: {field_name}',
+        )
+
+    return sort_objects
+
+
+def _get_reserved_field_type(field_name: str) -> QueryFieldTypeT:
+    """Get the QueryFieldTypeT for a reserved field name."""
+    if field_name in ('subject', 'text', 'id'):
+        return QueryFieldTypeT.STRING
+    if field_name in ('updated_at', 'created_at'):
+        return QueryFieldTypeT.DATETIME
+    if field_name in ('updated_by', 'created_by'):
+        return QueryFieldTypeT.USER
+    if field_name == 'project':
+        return QueryFieldTypeT.PROJECT
+    if field_name == 'tag':
+        return QueryFieldTypeT.TAG
+    return QueryFieldTypeT.STRING
+
+
+async def _build_sort_query_string(sort_objects: list[SortObject] | None) -> str:
+    """Build sort query string from SortObject instances.
+
+    Returns empty string when sort_objects contains only the default sort.
+    """
+    if not sort_objects:
+        return ''
+
+    if len(sort_objects) == 1 and sort_objects[0] == DEFAULT_SORT_OBJECT:
+        return ''
+
+    sort_expressions = []
+
+    for sort_obj in sort_objects:
+        direction_suffix = ' desc' if sort_obj.direction == 'desc' else ''
+        sort_expressions.append(f'{sort_obj.name}{direction_suffix}')
+
+    return 'sort by: ' + ', '.join(sort_expressions)
 
 
 class IssueFilterBody(BaseModel):
@@ -856,19 +967,27 @@ async def get_query_builder_data(
     """Bidirectional query builder endpoint.
 
     Parse Mode: Provide 'query' to parse query string into structured objects
-    Build Mode: Provide 'filters' to build query string from structured objects
+    Build Mode: Provide 'filters' and 'sort_by' to build query string from structured objects
 
     Both modes return the same unified output format.
     """
     if body.is_build_mode:
-        built_query = await _build_query_from_filters(body.filters)
+        # Build mode: construct query from filters and sort objects
+        filter_query = await _build_query_from_filters(body.filters)
+        sort_query = await _build_sort_query_string(body.sort_by)
+        built_query = f'{filter_query} {sort_query}'.strip()
     else:
+        # Parse mode: use provided query
         built_query = body.query or ''
 
+    # Parse filters and sort from the built/provided query
     filters = await _parse_query_to_objects(built_query)
-    available_fields = []
-    available_fields.extend(_create_reserved_fields())
+    sort_by = await _parse_sort_from_query(built_query)
+
     custom_field_groups = await _get_custom_field_groups()
+
+    # Generate available fields for filtering
+    available_fields = _create_reserved_fields(RESERVED_AVAILABLE_FOR_FILTERING)
     available_fields.extend(
         [_create_available_field(field) for field in custom_field_groups.values()]
     )
@@ -877,14 +996,22 @@ async def get_query_builder_data(
     filtered_available_fields = _filter_available_fields(
         available_fields, used_field_names
     )
-
     filtered_available_fields.sort(key=lambda field: field.root.name.lower())
+
+    # Generate available fields for sorting
+    available_sort_fields = _create_reserved_fields(RESERVED_AVAILABLE_FOR_SORTING)
+    available_sort_fields.extend(
+        [_create_available_field(field) for field in custom_field_groups.values()]
+    )
+    available_sort_fields.sort(key=lambda field: field.root.name.lower())
 
     return SuccessPayloadOutput(
         payload=QueryBuilderOutput(
             query=built_query,
             filters=filters,
             available_fields=filtered_available_fields,
+            sort_by=sort_by,
+            available_sort_fields=available_sort_fields,
         )
     )
 

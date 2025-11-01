@@ -15548,7 +15548,7 @@
           "issue"
         ],
         "summary": "Get Query Builder Data",
-        "description": "Bidirectional query builder endpoint.\n\nParse Mode: Provide 'query' to parse query string into structured objects\nBuild Mode: Provide 'filters' to build query string from structured objects\n\nBoth modes return the same unified output format.",
+        "description": "Bidirectional query builder endpoint.\n\nParse Mode: Provide 'query' to parse query string into structured objects\nBuild Mode: Provide 'filters' and 'sort_by' to build query string from structured objects\n\nBoth modes return the same unified output format.",
         "operationId": "get_query_builder_data_api_v1_issue_filters_query_builder_post",
         "requestBody": {
           "content": {
@@ -52328,6 +52328,48 @@
         "type": "object",
         "title": "OwnedOptionUpdateBody"
       },
+      "ParsedSortObject": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/QueryFieldTypeT",
+            "description": "Field type for discrimination"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name"
+          },
+          "gid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gid",
+            "description": "Custom field group identifier (null for reserved fields)"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Direction",
+            "description": "Sort direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "name",
+          "gid",
+          "direction"
+        ],
+        "title": "ParsedSortObject"
+      },
       "PasswordResetSetBody": {
         "properties": {
           "reset_token": {
@@ -53237,6 +53279,21 @@
             ],
             "title": "Filters",
             "description": "Filter objects to build query from (build mode)"
+          },
+          "sort_by": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SortObject"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort By",
+            "description": "Sort fields and directions"
           }
         },
         "type": "object",
@@ -53264,15 +53321,60 @@
             "type": "array",
             "title": "Available Fields",
             "description": "All queryable fields (using gid for custom fields)"
+          },
+          "sort_by": {
+            "items": {
+              "$ref": "#/components/schemas/ParsedSortObject"
+            },
+            "type": "array",
+            "title": "Sort By",
+            "description": "Sort fields and directions"
+          },
+          "available_sort_fields": {
+            "items": {
+              "$ref": "#/components/schemas/RootModel_Annotated_Union_StringCustomFieldAvailable__IntegerCustomFieldAvailable__FloatCustomFieldAvailable__BooleanCustomFieldAvailable__DateCustomFieldAvailable__DateTimeCustomFieldAvailable__DurationCustomFieldAvailable__EnumCustomFieldAvailable__EnumMultiCustomFieldAvailable__StateCustomFieldAvailable__VersionCustomFieldAvailable__VersionMultiCustomFieldAvailable__UserCustomFieldAvailable__UserMultiCustomFieldAvailable__OwnedCustomFieldAvailable__OwnedMultiCustomFieldAvailable__SprintCustomFieldAvailable__SprintMultiCustomFieldAvailable__ProjectFieldAvailable__HashtagFieldAvailable__TagFieldAvailable___FieldInfo_annotation_NoneType__required_True__discriminator__type____"
+            },
+            "type": "array",
+            "title": "Available Sort Fields",
+            "description": "All sortable fields (using gid for custom fields)"
           }
         },
         "type": "object",
         "required": [
           "query",
           "filters",
-          "available_fields"
+          "available_fields",
+          "sort_by",
+          "available_sort_fields"
         ],
         "title": "QueryBuilderOutput"
+      },
+      "QueryFieldTypeT": {
+        "type": "string",
+        "enum": [
+          "string",
+          "integer",
+          "float",
+          "boolean",
+          "date",
+          "datetime",
+          "duration",
+          "enum",
+          "enum_multi",
+          "state",
+          "version",
+          "version_multi",
+          "user",
+          "user_multi",
+          "owned",
+          "owned_multi",
+          "sprint",
+          "sprint_multi",
+          "project",
+          "hashtag",
+          "tag"
+        ],
+        "title": "QueryFieldTypeT"
       },
       "ReportCreate": {
         "properties": {
@@ -54381,6 +54483,29 @@
           "value"
         ],
         "title": "ShortOptionOutput"
+      },
+      "SortObject": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Direction",
+            "description": "Sort direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "direction"
+        ],
+        "title": "SortObject"
       },
       "SprintCustomFieldAvailable": {
         "properties": {

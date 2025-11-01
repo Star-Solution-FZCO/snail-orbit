@@ -316,6 +316,28 @@ ParsedQueryObjectRootModel = RootModel[
 ]
 
 
+class SortObject(BaseModel):
+    name: str
+    direction: Literal['asc', 'desc'] = Field(description='Sort direction')
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SortObject):
+            return False
+        return self.name == other.name and self.direction == other.direction
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.direction))
+
+
+class ParsedSortObject(BaseModel):
+    type: QueryFieldTypeT = Field(description='Field type for discrimination')
+    name: str = Field(description='Field name')
+    gid: str | None = Field(
+        description='Custom field group identifier (null for reserved fields)'
+    )
+    direction: Literal['asc', 'desc'] = Field(description='Sort direction')
+
+
 class QueryBuilderInput(BaseModel):
     query: str | None = Field(
         default=None, description='Query string to parse (parse mode)'
@@ -323,12 +345,17 @@ class QueryBuilderInput(BaseModel):
     filters: list[dict[str, Any]] | None = Field(
         default=None, description='Filter objects to build query from (build mode)'
     )
+    sort_by: list[SortObject] | None = Field(
+        default=None, description='Sort fields and directions'
+    )
 
     @model_validator(mode='after')
-    def validate_exactly_one_of_query_or_filters(self) -> Self:
+    def validate_exactly_one_of_query_or_filters_and_sort(self) -> Self:
         """Validate that exactly one of query or filters is provided."""
-        if (self.query is None) == (self.filters is None):
-            raise ValueError('Exactly one of query or filters must be provided')
+        if (self.query is None) == (self.filters is None and self.sort_by is None):
+            raise ValueError(
+                'Exactly one of query or filters and sort_by must be provided.'
+            )
         return self
 
     @property
@@ -339,7 +366,7 @@ class QueryBuilderInput(BaseModel):
     @property
     def is_build_mode(self) -> bool:
         """True if building query from objects, False if parsing query to objects."""
-        return self.filters is not None
+        return self.filters is not None or self.sort_by is not None
 
 
 class QueryBuilderOutput(BaseModel):
@@ -349,4 +376,10 @@ class QueryBuilderOutput(BaseModel):
     )
     available_fields: list[AvailableFieldRootModel] = Field(
         description='All queryable fields (using gid for custom fields)',
+    )
+    sort_by: list[ParsedSortObject] = Field(
+        description='Sort fields and directions',
+    )
+    available_sort_fields: list[AvailableFieldRootModel] = Field(
+        description='All sortable fields (using gid for custom fields)',
     )
