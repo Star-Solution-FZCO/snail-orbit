@@ -28,6 +28,7 @@ import type {
 import { linkTypes } from "shared/model/types";
 import { QueryPagination } from "shared/ui";
 import { useListQueryParams } from "shared/utils";
+import { useLSState } from "../../../../../../shared/utils/helpers/local-storage";
 
 type IssueCardProps = {
     issue: IssueT;
@@ -108,7 +109,10 @@ const AddLinks: FC<AddLinksProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const [linkType, setLinkType] = useState<IssueLinkTypeT>("related");
+    const [linkType, setLinkType] = useLSState<IssueLinkTypeT>(
+        "addLinksLastType",
+        "related",
+    );
     const [query, setQuery] = useState<string>("");
     const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
 
