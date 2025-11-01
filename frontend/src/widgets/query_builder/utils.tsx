@@ -1,4 +1,4 @@
-import type { QueryBuilderDataAvailableFieldT } from "shared/model/types";
+import type { QueryBuilderDataAvailableFieldT, ParsedSortObject, QueryFieldTypeT } from "shared/model/types";
 
 export const getDefaultValueForField = (
     field: QueryBuilderDataAvailableFieldT,
@@ -27,5 +27,16 @@ export const getDefaultValueForField = (
     return {
         ...field,
         value: null,
+    };
+};
+
+export const getDefaultSortForField = (
+    field: QueryBuilderDataAvailableFieldT,
+): ParsedSortObject => {
+    return {
+        type: field.type as QueryFieldTypeT,
+        name: field.name,
+        gid: field.gid,
+        direction: 'desc',
     };
 };

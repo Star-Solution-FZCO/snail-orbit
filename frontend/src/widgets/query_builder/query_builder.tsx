@@ -7,10 +7,14 @@ import type {
     QueryBuilderDataAvailableFieldT,
     QueryBuilderDataFilterT,
     QueryBuilderDto,
+    ParsedSortObject,
+    SortObject,
 } from "shared/model/types";
 import { AddFieldButton } from "./add_field_button";
+import { AddSortFieldButton } from "./add_sort_field_button";
 import { QueryBuilderFieldsParser } from "./query_builder_fields_parser";
-import { getDefaultValueForField } from "./utils";
+import { QueryBuilderSortParser } from "./query_builder_sort_parser";
+import { getDefaultValueForField, getDefaultSortForField } from "./utils";
 import { getOptionId, isSameOption } from "./utils/is-same-option";
 
 type QueryBuilderProps = {
@@ -33,14 +37,22 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
         return queryBuilderData?.payload.filters || [];
     }, [queryBuilderData]);
 
+    const activeSorts = useMemo(() => {
+        return queryBuilderData?.payload.sort_by || [];
+    }, [queryBuilderData]);
+
+    const availableSortFields = useMemo(() => {
+        return queryBuilderData?.payload.available_sort_fields || [];
+    }, [queryBuilderData]);
+
     useEffect(() => {
         if (initialQuery !== queryBuilderData?.payload.query)
             filterQueryBuilder({ query: initialQuery });
     }, [filterQueryBuilder, initialQuery, queryBuilderData]);
 
     const requestNewQuery = useCallback(
-        (filters: QueryBuilderDto["filters"]) => {
-            filterQueryBuilder({ filters })
+        (filters: QueryBuilderDto["filters"], sortBy?: SortObject[]) => {
+            filterQueryBuilder({ filters, sort_by: sortBy })
                 .unwrap()
                 .then((res) => {
                     onChangeQuery?.(res.payload.query);
@@ -53,9 +65,13 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
         (field: QueryBuilderDataAvailableFieldT) => {
             const newFilters: QueryBuilderDto["filters"] = [...activeFilters];
             newFilters.push(getDefaultValueForField(field));
-            requestNewQuery(newFilters);
+            const currentSortObjects: SortObject[] = activeSorts.map(sort => ({
+                name: sort.name,
+                direction: sort.direction
+            }));
+            requestNewQuery(newFilters, currentSortObjects);
         },
-        [activeFilters, requestNewQuery],
+        [activeFilters, activeSorts, requestNewQuery],
     );
 
     const handleFieldValueChanged = useCallback(
@@ -65,9 +81,13 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
             ];
             const newFilter = { ...filter, value };
             newFilters.push(newFilter);
-            requestNewQuery(newFilters);
+            const currentSortObjects: SortObject[] = activeSorts.map(sort => ({
+                name: sort.name,
+                direction: sort.direction
+            }));
+            requestNewQuery(newFilters, currentSortObjects);
         },
-        [activeFilters, requestNewQuery],
+        [activeFilters, activeSorts, requestNewQuery],
     );
 
     const handleFieldDelete = useCallback(
@@ -75,9 +95,77 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
             const newFilters: QueryBuilderDto["filters"] = [
                 ...activeFilters.filter((el) => !isSameOption(el, filter)),
             ];
-            requestNewQuery(newFilters);
+            const currentSortObjects: SortObject[] = activeSorts.map(sort => ({
+                name: sort.name,
+                direction: sort.direction
+            }));
+            requestNewQuery(newFilters, currentSortObjects);
         },
-        [activeFilters, requestNewQuery],
+        [activeFilters, activeSorts, requestNewQuery],
+    );
+
+    const handleNewSortSelected = useCallback(
+        (field: QueryBuilderDataAvailableFieldT) => {
+            const newSorts: ParsedSortObject[] = [...activeSorts];
+            newSorts.push(getDefaultSortForField(field));
+            const currentFilters: QueryBuilderDto["filters"] = activeFilters.map(filter => ({
+                type: filter.type,
+                name: filter.name,
+                gid: filter.gid,
+                value: filter.value
+            }));
+            const sortObjects: SortObject[] = newSorts.map(sort => ({
+                name: sort.name,
+                direction: sort.direction
+            }));
+            requestNewQuery(currentFilters, sortObjects);
+        },
+        [activeSorts, activeFilters, requestNewQuery],
+    );
+
+    const handleSortChanged = useCallback(
+        (sort: ParsedSortObject, field: QueryBuilderDataAvailableFieldT, direction: 'asc' | 'desc') => {
+            const newSorts: ParsedSortObject[] = activeSorts.map(s =>
+                s.name === sort.name && s.direction === sort.direction ? {
+                    type: field.type,
+                    name: field.name,
+                    gid: field.gid,
+                    direction
+                } : s
+            );
+            const currentFilters: QueryBuilderDto["filters"] = activeFilters.map(filter => ({
+                type: filter.type,
+                name: filter.name,
+                gid: filter.gid,
+                value: filter.value
+            }));
+            const sortObjects: SortObject[] = newSorts.map(sortObj => ({
+                name: sortObj.name,
+                direction: sortObj.direction
+            }));
+            requestNewQuery(currentFilters, sortObjects);
+        },
+        [activeSorts, activeFilters, requestNewQuery],
+    );
+
+    const handleSortDelete = useCallback(
+        (sort: ParsedSortObject) => {
+            const newSorts: ParsedSortObject[] = activeSorts.filter(s =>
+                !(s.name === sort.name && s.direction === sort.direction)
+            );
+            const currentFilters: QueryBuilderDto["filters"] = activeFilters.map(filter => ({
+                type: filter.type,
+                name: filter.name,
+                gid: filter.gid,
+                value: filter.value
+            }));
+            const sortObjects: SortObject[] = newSorts.map(sortObj => ({
+                name: sortObj.name,
+                direction: sortObj.direction
+            }));
+            requestNewQuery(currentFilters, sortObjects);
+        },
+        [activeSorts, activeFilters, requestNewQuery],
     );
 
     return (
@@ -118,6 +206,30 @@ export const QueryBuilder: FC<QueryBuilderProps> = (props) => {
                                 key={getOptionId(filter)}
                             />
                         ))}
+                    </Stack>
+
+                    <Stack direction="column" gap={2} mt={2}>
+                        <Typography variant="h6">
+                            {t("queryBuilder.sortBy.title")}
+                        </Typography>
+
+                        <AddSortFieldButton
+                            availableFields={availableSortFields}
+                            loading={isLoading}
+                            onSelected={handleNewSortSelected}
+                        />
+
+                        <Stack>
+                            {activeSorts.map((sort, index) => (
+                                <QueryBuilderSortParser
+                                    key={`${sort.name}-${sort.direction}-${index}`}
+                                    sort={sort}
+                                    availableFields={availableSortFields}
+                                    onChange={handleSortChanged}
+                                    onDelete={handleSortDelete}
+                                />
+                            ))}
+                        </Stack>
                     </Stack>
                 </>
             )}
