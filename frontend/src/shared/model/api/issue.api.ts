@@ -2,7 +2,6 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type {
     ApiResponse,
     CommentT,
-    CustomFieldValueT,
     IssueAttachmentBodyT,
     IssueAttachmentWithSourceT,
     IssueDraftT,
@@ -409,31 +408,6 @@ export const issueApi = createApi({
                 { type: "IssueComments", id },
                 { type: "IssueHistories", id },
             ],
-        }),
-        filterBuildQueryString: build.query<
-            ApiResponse<{ query: string }>,
-            { filters: { field: string; value: CustomFieldValueT }[] }
-        >({
-            query: (body) => ({
-                url: `issue/filters/build-query`,
-                body,
-                method: "POST",
-            }),
-        }),
-        filterParseQueryString: build.query<
-            ApiResponse<{
-                filters: {
-                    field: { id: string; name: string };
-                    value: CustomFieldValueT;
-                }[];
-            }>,
-            { query: string }
-        >({
-            query: (body) => ({
-                url: `issue/filters/parse-query`,
-                body,
-                method: "POST",
-            }),
         }),
         filterQueryBuilder: build.query<
             ApiResponse<QueryBuilderDataT>,
