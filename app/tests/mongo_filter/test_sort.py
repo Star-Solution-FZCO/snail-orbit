@@ -44,7 +44,37 @@ def _custom_fields() -> dict:
             [{'$sort': {'project.name': -1}}],
             id='double_project_fields_desc',
         ),
-        pytest.param('id', [{'$sort': {'_id': 1}}], id='id_asc'),
+        pytest.param(
+            'id',
+            [
+                {
+                    '$addFields': {
+                        'id__sort___p1': {
+                            '$arrayElemAt': [
+                                {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                                0,
+                            ]
+                        },
+                        'id__sort___p2': {
+                            '$toInt': {
+                                '$arrayElemAt': [
+                                    {
+                                        '$split': [
+                                            {'$arrayElemAt': ['$aliases', -1]},
+                                            '-',
+                                        ]
+                                    },
+                                    -1,
+                                ]
+                            }
+                        },
+                    }
+                },
+                {'$sort': {'id__sort___p1': 1, 'id__sort___p2': 1}},
+                {'$project': {'id__sort___p1': 0, 'id__sort___p2': 0}},
+            ],
+            id='id_asc',
+        ),
         pytest.param('subject', [{'$sort': {'subject': 1}}], id='subject_asc'),
         pytest.param('updated_at', [{'$sort': {'updated_at': 1}}], id='updated_at_asc'),
         pytest.param(
@@ -73,7 +103,37 @@ def _custom_fields() -> dict:
             [{'$sort': {'project.name': -1}}],
             id='project_desc',
         ),
-        pytest.param('id desc', [{'$sort': {'_id': -1}}], id='id_desc'),
+        pytest.param(
+            'id desc',
+            [
+                {
+                    '$addFields': {
+                        'id__sort___p1': {
+                            '$arrayElemAt': [
+                                {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                                0,
+                            ]
+                        },
+                        'id__sort___p2': {
+                            '$toInt': {
+                                '$arrayElemAt': [
+                                    {
+                                        '$split': [
+                                            {'$arrayElemAt': ['$aliases', -1]},
+                                            '-',
+                                        ]
+                                    },
+                                    -1,
+                                ]
+                            }
+                        },
+                    }
+                },
+                {'$sort': {'id__sort___p1': -1, 'id__sort___p2': -1}},
+                {'$project': {'id__sort___p1': 0, 'id__sort___p2': 0}},
+            ],
+            id='id_desc',
+        ),
         pytest.param('subject desc', [{'$sort': {'subject': -1}}], id='subject_desc'),
         pytest.param(
             'updated_at desc',
@@ -1031,14 +1091,62 @@ def _custom_fields() -> dict:
         pytest.param(
             'project, id',
             [
-                {'$sort': {'project.name': 1, '_id': 1}},
+                {
+                    '$addFields': {
+                        'id__sort___p1': {
+                            '$arrayElemAt': [
+                                {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                                0,
+                            ]
+                        },
+                        'id__sort___p2': {
+                            '$toInt': {
+                                '$arrayElemAt': [
+                                    {
+                                        '$split': [
+                                            {'$arrayElemAt': ['$aliases', -1]},
+                                            '-',
+                                        ]
+                                    },
+                                    -1,
+                                ]
+                            }
+                        },
+                    }
+                },
+                {'$sort': {'project.name': 1, 'id__sort___p1': 1, 'id__sort___p2': 1}},
+                {'$project': {'id__sort___p1': 0, 'id__sort___p2': 0}},
             ],
             id='multiple_builtin_fields',
         ),
         pytest.param(
             'project desc, id asc',
             [
-                {'$sort': {'project.name': -1, '_id': 1}},
+                {
+                    '$addFields': {
+                        'id__sort___p1': {
+                            '$arrayElemAt': [
+                                {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                                0,
+                            ]
+                        },
+                        'id__sort___p2': {
+                            '$toInt': {
+                                '$arrayElemAt': [
+                                    {
+                                        '$split': [
+                                            {'$arrayElemAt': ['$aliases', -1]},
+                                            '-',
+                                        ]
+                                    },
+                                    -1,
+                                ]
+                            }
+                        },
+                    }
+                },
+                {'$sort': {'project.name': -1, 'id__sort___p1': 1, 'id__sort___p2': 1}},
+                {'$project': {'id__sort___p1': 0, 'id__sort___p2': 0}},
             ],
             id='multiple_builtin_with_direction',
         ),
@@ -1912,7 +2020,41 @@ async def test_sort_transformation(
         pytest.param(
             '',
             'id desc',
-            ({}, [{'$sort': {'_id': -1}}]),
+            (
+                {},
+                [
+                    {
+                        '$addFields': {
+                            'id__sort___p1': {
+                                '$arrayElemAt': [
+                                    {
+                                        '$split': [
+                                            {'$arrayElemAt': ['$aliases', -1]},
+                                            '-',
+                                        ]
+                                    },
+                                    0,
+                                ]
+                            },
+                            'id__sort___p2': {
+                                '$toInt': {
+                                    '$arrayElemAt': [
+                                        {
+                                            '$split': [
+                                                {'$arrayElemAt': ['$aliases', -1]},
+                                                '-',
+                                            ]
+                                        },
+                                        -1,
+                                    ]
+                                }
+                            },
+                        }
+                    },
+                    {'$sort': {'id__sort___p1': -1, 'id__sort___p2': -1}},
+                    {'$project': {'id__sort___p1': 0, 'id__sort___p2': 0}},
+                ],
+            ),
             id='sort_only_id_desc',
         ),
         pytest.param(

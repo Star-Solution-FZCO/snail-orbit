@@ -140,20 +140,54 @@ async def transform_sort(
 
         if field_name_lower == 'project':
             sort_field = 'project.name'
-        elif field_name_lower == 'id':
-            sort_field = '_id'
-        elif field_name_lower in {'subject', 'updated_at', 'created_at'}:
-            sort_field = field_name_lower
-        elif field_name_lower in {'created_by', 'updated_by'}:
-            sort_field = f'{field_name_lower}.email'
-        else:
+            sort_stage[sort_field] = -1 if is_descending else 1
+            continue
+        if field_name_lower == 'id':
             sort_field = f'{field_name_lower}__sort'
-            add_field_stage[sort_field] = _gen_sort_field(
-                field_name_lower,
-                custom_fields=custom_fields,
+            add_field_stage.update(
+                {
+                    f'{sort_field}___p1': {
+                        '$arrayElemAt': [
+                            {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                            0,
+                        ]
+                    },
+                    f'{sort_field}___p2': {
+                        '$toInt': {
+                            '$arrayElemAt': [
+                                {'$split': [{'$arrayElemAt': ['$aliases', -1]}, '-']},
+                                -1,
+                            ]
+                        }
+                    },
+                }
             )
-            projection_stage[sort_field] = 0
-
+            sort_stage.update(
+                {
+                    f'{sort_field}___p1': -1 if is_descending else 1,
+                    f'{sort_field}___p2': -1 if is_descending else 1,
+                }
+            )
+            projection_stage.update(
+                {
+                    f'{sort_field}___p1': 0,
+                    f'{sort_field}___p2': 0,
+                }
+            )
+            continue
+        if field_name_lower in {'subject', 'updated_at', 'created_at'}:
+            sort_stage[field_name_lower] = -1 if is_descending else 1
+            continue
+        if field_name_lower in {'created_by', 'updated_by'}:
+            sort_field = f'{field_name_lower}.email'
+            sort_stage[sort_field] = -1 if is_descending else 1
+            continue
+        sort_field = f'{field_name_lower}__sort'
+        add_field_stage[sort_field] = _gen_sort_field(
+            field_name_lower,
+            custom_fields=custom_fields,
+        )
+        projection_stage[sort_field] = 0
         sort_stage[sort_field] = -1 if is_descending else 1
 
     pipeline = []
