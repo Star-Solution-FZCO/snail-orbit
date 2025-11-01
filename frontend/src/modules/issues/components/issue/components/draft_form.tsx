@@ -100,7 +100,7 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                     loading={loading || textLoading}
                     disabled={loading || textLoading || !subject}
                 >
-                    {t("create and close")}
+                    {t("Create and close")}
                 </Button>
 
                 <Button
