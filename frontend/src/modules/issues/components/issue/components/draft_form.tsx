@@ -1,5 +1,12 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { Box, Button, debounce, TextField } from "@mui/material";
+import {
+    Box,
+    Button,
+    debounce,
+    IconButton,
+    TextField,
+    Tooltip,
+} from "@mui/material";
 import { useDraftOperations } from "entities/issue/api/use_draft_operations";
 import { useIssueTemplate } from "entities/issue/api/use_issue_template";
 import type { FC } from "react";
@@ -71,6 +78,12 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
                     size="small"
                     fullWidth
                 />
+
+                <Tooltip title={t("issues.template.copyUrl")}>
+                    <IconButton size="small" onClick={handleCopyTemplateUrl}>
+                        <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
             </Box>
 
             <MDEditor
@@ -81,33 +94,23 @@ export const DraftForm: FC<DraftFormProps> = (props) => {
 
             <Box display="flex" gap={1}>
                 <Button
-                    onClick={() => onCreateIssue?.(true)}
-                    variant="outlined"
-                    size="small"
-                    loading={loading || textLoading}
-                    disabled={loading || textLoading || !subject}
-                >
-                    {t("save")}
-                </Button>
-
-                <Button
                     onClick={() => onCreateIssue?.(false)}
                     variant="outlined"
                     size="small"
                     loading={loading || textLoading}
                     disabled={loading || textLoading || !subject}
                 >
-                    {t("save and close")}
+                    {t("create and close")}
                 </Button>
 
                 <Button
-                    onClick={handleCopyTemplateUrl}
+                    onClick={() => onCreateIssue?.(true)}
                     variant="outlined"
                     size="small"
-                    disabled={!draft.project}
-                    startIcon={<ContentCopyIcon />}
+                    loading={loading || textLoading}
+                    disabled={loading || textLoading || !subject}
                 >
-                    {t("issues.template.copyUrl")}
+                    {t("create")}
                 </Button>
 
                 <Button

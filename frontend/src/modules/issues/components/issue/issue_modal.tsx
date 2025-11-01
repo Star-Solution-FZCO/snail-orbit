@@ -71,7 +71,13 @@ export const IssueModal: FC<IssueModalProps> = (props) => {
     const issueId = issue.id_readable;
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
+        <Dialog
+            open={open}
+            onClose={onClose}
+            closeAfterTransition
+            fullWidth
+            maxWidth="lg"
+        >
             <DialogContent
                 sx={(theme) => ({
                     padding: 0,

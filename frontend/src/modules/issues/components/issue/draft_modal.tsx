@@ -48,8 +48,15 @@ export const DraftModal: FC<DraftModalProps> = (props) => {
     const { data: projectData } = projectApi.useGetProjectQuery(
         draft?.project?.id ?? skipToken,
     );
+
     return (
-        <Dialog open={open} fullWidth maxWidth="lg">
+        <Dialog
+            open={open}
+            onClose={(_, reason) => reason !== "backdropClick" && onClose?.()}
+            closeAfterTransition
+            fullWidth
+            maxWidth="lg"
+        >
             <DialogContent
                 sx={(theme) => ({
                     padding: 0,

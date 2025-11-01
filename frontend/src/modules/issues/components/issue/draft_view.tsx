@@ -59,7 +59,7 @@ export const DraftView: FC<DraftViewProps> = (props) => {
                 />
             </Stack>
 
-            <FieldContainer>
+            <FieldContainer sx={{ top: 0 }}>
                 <DraftCustomFields
                     draft={draft}
                     project={project}
