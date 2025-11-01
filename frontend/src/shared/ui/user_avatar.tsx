@@ -12,12 +12,12 @@ const UserAvatar: FC<{ src: string; size?: number; isBot?: boolean }> = ({
             isBot ? (
                 <Stack
                     borderRadius="50%"
-                    bgcolor="info.dark"
+                    bgcolor="primary.dark"
                     p="1px"
                     border={1}
                     borderColor="common.white"
                 >
-                    <SmartToyIcon sx={{ fontSize: size / 2 }} />
+                    <SmartToyIcon sx={{ fontSize: size / 2 }} htmlColor="white"/>
                 </Stack>
             ) : null
         }
