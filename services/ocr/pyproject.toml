@@ -1,0 +1,110 @@
+[project]
+name = "snail-orbit-ocr-service"
+description = "Snail Orbit OCR service"
+authors = [
+    { name = "StarSoultion Dev Team", "email" = "dev@starsolution.team" },
+]
+readme = "README.md"
+license = "MIT"
+dynamic = ["version"]
+requires-python = "~=3.12.10"
+
+dependencies = [
+    "dynaconf",
+    "easyocr==1.7.2",
+    "taskiq",
+    "taskiq-nats",
+    "aioboto3==13.3.0",
+    "aiofiles",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "mypy",
+    "pylint",
+    "types-aioboto3[s3,aioboto3]",
+    "types-aiofiles",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+exclude = [
+    ".venv",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit
+    "N",   # pep8-naming
+    "UP",  # pyupgrade (excluding deprecated UP038)
+    "ANN", # flake8-annotations
+    "ASYNC", # flake8-async
+    "BLE", # flake8-blind-except
+    "COM", # flake8-commas
+    "C4",  # flake8-comprehensions
+    "EM",  # flake8-errmsg
+    "FA",  # flake8-future-annotations
+    "ICN", # flake8-import-conventions
+    "LOG", # flake8-logging
+    "PIE", # flake8-pie
+    "PT",  # flake8-pytest-style
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PD",  # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "PERF", # perflint
+    "FURB", # refurb
+    "RUF", # ruff-specific
+    "I",   # isort
+]
+ignore = [
+    # Formatter conflicts
+    "E501",  # Line too long
+    "COM812",  # Missing trailing comma
+    "ISC001",  # Single line implicit string concatenation
+]
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+suppress-dummy-args = true
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+strict = true
+
+[tool.pylint.MASTER]
+ignore-paths = '.venv'
+
+[tool.pylint.FORMAT]
+max-line-length = 160
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+]
