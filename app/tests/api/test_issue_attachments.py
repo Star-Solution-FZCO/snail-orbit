@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from .create import _create_project, _upload_attachment
@@ -25,13 +27,17 @@ async def test_attachment_endpoints_basic(test_client, create_initial_admin):
     )
 
     # Create issue
-    issue_response = test_client.post(
-        '/api/v1/issue',
-        headers=admin_headers,
-        json={'project_id': project_id, 'subject': 'Test Issue', 'fields': {}},
-    )
-    assert issue_response.status_code == 200
-    issue_id = issue_response.json()['payload']['id']
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        issue_response = test_client.post(
+            '/api/v1/issue',
+            headers=admin_headers,
+            json={'project_id': project_id, 'subject': 'Test Issue', 'fields': {}},
+        )
+        assert issue_response.status_code == 200
+        issue_id = issue_response.json()['payload']['id']
+        mock_ocr.assert_not_called()
 
     # Test 1: List attachments (should be empty)
     response = test_client.get(
@@ -43,11 +49,15 @@ async def test_attachment_endpoints_basic(test_client, create_initial_admin):
     assert data['payload']['count'] == 0
 
     # Test 2: Add attachment
-    response = test_client.post(
-        f'/api/v1/issue/{issue_id}/attachment',
-        headers=admin_headers,
-        json={'id': attachment_id},
-    )
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        response = test_client.post(
+            f'/api/v1/issue/{issue_id}/attachment',
+            headers=admin_headers,
+            json={'id': attachment_id},
+        )
+        mock_ocr.assert_called_once_with([attachment_id], issue_id)
     assert response.status_code == 200
     data = response.json()
     assert data['success'] is True
@@ -111,17 +121,24 @@ async def test_batch_create_and_delete_success(test_client, create_initial_admin
     issue_id = issue_response.json()['payload']['id']
 
     # Test batch create multiple attachments
-    create_response = test_client.post(
-        f'/api/v1/issue/{issue_id}/attachments/batch-create',
-        headers=admin_headers,
-        json={
-            'attachments': [
-                {'id': attachment_id_1},
-                {'id': attachment_id_2},
-                {'id': attachment_id_3},
-            ]
-        },
-    )
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        create_response = test_client.post(
+            f'/api/v1/issue/{issue_id}/attachments/batch-create',
+            headers=admin_headers,
+            json={
+                'attachments': [
+                    {'id': attachment_id_1},
+                    {'id': attachment_id_2},
+                    {'id': attachment_id_3},
+                ]
+            },
+        )
+        mock_ocr.assert_called_once_with(
+            [attachment_id_1, attachment_id_2, attachment_id_3], issue_id
+        )
+
     assert create_response.status_code == 207
     create_data = create_response.json()
     assert len(create_data['successes']) == 3
@@ -207,23 +224,31 @@ async def test_batch_create_and_delete_partial_failures(
     issue_id = issue_response.json()['payload']['id']
 
     # First, add one attachment individually to set up duplicate scenario
-    test_client.post(
-        f'/api/v1/issue/{issue_id}/attachment',
-        headers=admin_headers,
-        json={'id': attachment_id_1},
-    )
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        test_client.post(
+            f'/api/v1/issue/{issue_id}/attachment',
+            headers=admin_headers,
+            json={'id': attachment_id_1},
+        )
+        mock_ocr.assert_called_once_with([attachment_id_1], issue_id)
 
     # Test batch create: one new (success) + one duplicate (failure)
-    create_response = test_client.post(
-        f'/api/v1/issue/{issue_id}/attachments/batch-create',
-        headers=admin_headers,
-        json={
-            'attachments': [
-                {'id': attachment_id_2},  # New - should succeed
-                {'id': attachment_id_1},  # Duplicate - should fail
-            ]
-        },
-    )
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        create_response = test_client.post(
+            f'/api/v1/issue/{issue_id}/attachments/batch-create',
+            headers=admin_headers,
+            json={
+                'attachments': [
+                    {'id': attachment_id_2},  # New - should succeed
+                    {'id': attachment_id_1},  # Duplicate - should fail
+                ]
+            },
+        )
+        mock_ocr.assert_called_once_with([attachment_id_2], issue_id)
     assert create_response.status_code == 207
     create_data = create_response.json()
     assert len(create_data['successes']) == 1

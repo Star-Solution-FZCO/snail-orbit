@@ -37,6 +37,7 @@ def create_broker() -> AioPikaBroker:
 TASK_MODULES = [
     'pm.tasks.actions.notify',
     'pm.tasks.actions.notification_batch',
+    'pm.tasks.actions.ocr_process',
     'pm.tasks.actions.send_email',
     'pm.tasks.actions.send_pararam_message',
     'pm.tasks.actions.workflows',

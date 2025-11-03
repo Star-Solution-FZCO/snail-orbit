@@ -36,6 +36,7 @@ httpx = "*"
 itsdangerous = "*"
 taskiq = "*"
 taskiq-aio-pika = "*"
+taskiq-nats = "*"
 pillow = "*"
 pararamio = {version = ">=2.0.1"}
 lark = "*"
@@ -68,11 +69,6 @@ pre-commit = "*"
 deepdiff = "*"
 fakeredis = "*"
 
-[tool.poetry.group.ocr]
-optional = true
-
-[tool.poetry.group.ocr.dependencies]
-easyocr = "*"
 
 [tool.ruff]
 target-version = "py312"

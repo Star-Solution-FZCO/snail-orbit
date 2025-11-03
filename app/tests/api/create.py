@@ -459,11 +459,23 @@ async def _create_issue(
 ) -> str:
     _, admin_token = create_initial_admin
     headers = {'Authorization': f'Bearer {admin_token}'}
-    response = test_client.post('/api/v1/issue', headers=headers, json=issue_payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert data['payload']['id']
-    return data['payload']['id']
+    with mock.patch(
+        'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+    ) as mock_ocr:
+        response = test_client.post(
+            '/api/v1/issue', headers=headers, json=issue_payload
+        )
+        assert response.status_code == 200
+        data = response.json()
+        if any(
+            not a.get('encryption')
+            for a in issue_payload['payload'].get('attachments', [])
+        ):
+            mock_ocr.assert_called_once()
+        else:
+            mock_ocr.assert_not_called()
+        assert data['payload']['id']
+        return data['payload']['id']
 
 
 @pytest_asyncio.fixture

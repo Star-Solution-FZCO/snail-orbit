@@ -492,6 +492,42 @@ CONFIG = Dynaconf(
             default='json',
             description='Log format type (json, sipmle)',
         ),
+        Validator(
+            'OCR.ENABLE',
+            cast=bool,
+            default=False,
+            description='Enable OCR',
+        ),
+        Validator(
+            'OCR.NATS_SERVERS',
+            is_type_of=list,
+            default=['nats://nats:4222'],
+            description='NATS servers list',
+            when=Validator(
+                'OCR.ENABLE',
+                condition=bool,
+            ),
+        ),
+        Validator(
+            'OCR.NATS_QUEUE',
+            is_type_of=str,
+            default='ocr',
+            description='NATS queue name',
+            when=Validator(
+                'OCR.ENABLE',
+                condition=bool,
+            ),
+        ),
+        Validator(
+            'OCR.NATS_RESULTS_BUCKET',
+            is_type_of=str,
+            default='ocr',
+            description='NATS results bucket name',
+            when=Validator(
+                'OCR.ENABLE',
+                condition=bool,
+            ),
+        ),
     ],
 )
 CONFIG.configure()

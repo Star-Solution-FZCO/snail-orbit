@@ -1324,9 +1324,14 @@ async def test_api_v1_issue(
     )
     assert response.status_code == 200
 
-    with mock.patch(
-        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
-    ) as mock_notify:
+    with (
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
+        ) as mock_notify,
+        mock.patch(
+            'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+        ) as mock_ocr,
+    ):
         response = test_client.post(
             '/api/v1/issue',
             headers=headers,
@@ -1336,6 +1341,10 @@ async def test_api_v1_issue(
             },
         )
         mock_notify.assert_called_once()
+        if any(not a.get('encryption') for a in issue_payload.get('attachments', [])):
+            mock_ocr.assert_called_once()
+        else:
+            mock_ocr.assert_not_called()
     assert response.status_code == 200
     data = response.json()
     assert data['success']
@@ -2366,9 +2375,14 @@ async def test_api_v1_encrypted_project(
         filename='issue_attachment.txt',
     )
     encryption_meta = comment_data['text']['encryption']
-    with mock.patch(
-        'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
-    ) as mock_notify:
+    with (
+        mock.patch(
+            'pm.api.routes.api.v1.issue.issue.schedule_batched_notification',
+        ) as mock_notify,
+        mock.patch(
+            'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+        ) as mock_ocr,
+    ):
         response = test_client.put(
             f'/api/v1/issue/{issue_id}',
             headers=admin_headers,
@@ -2379,6 +2393,7 @@ async def test_api_v1_encrypted_project(
             },
         )
         mock_notify.assert_called_once()
+        mock_ocr.assert_not_called()
     assert response.status_code == 200
     data = response.json()
     assert data['success']
@@ -2423,9 +2438,14 @@ async def test_api_v1_encrypted_project(
         admin_headers,
         filename='comment_attachment.txt',
     )
-    with mock.patch(
-        'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
-    ) as mock_comment_notify:
+    with (
+        mock.patch(
+            'pm.api.routes.api.v1.issue.comment.schedule_batched_notification',
+        ) as mock_comment_notify,
+        mock.patch(
+            'pm.tasks.actions.ocr_process.process_attachments_ocr.kiq'
+        ) as mock_ocr,
+    ):
         resp = test_client.post(
             f'/api/v1/issue/{issue_id}/comment/',
             headers=admin_headers,
@@ -2437,6 +2457,7 @@ async def test_api_v1_encrypted_project(
             },
         )
         mock_comment_notify.assert_called_once()
+        mock_ocr.assert_not_called()
     assert resp.status_code == 200
     comment = resp.json()['payload']
     comment_id = comment['id']

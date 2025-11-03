@@ -3,6 +3,7 @@ Tests for dedicated permission inheritance management endpoints
 """
 
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 

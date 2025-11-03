@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
-from pm.api.events_bus import send_event, send_task
+from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelError
 from pm.api.helpers.issue_validation import validate_custom_fields_values
 from pm.api.helpers.user import resolve_users_by_email
@@ -50,8 +50,9 @@ from pm.permissions import PermAnd, ProjectPermissions
 from pm.services.files import resolve_files
 from pm.services.issue import update_tags_on_close_resolve
 from pm.tasks.actions.notification_batch import schedule_batched_notification
+from pm.tasks.actions.ocr_process import process_attachments_ocr
 from pm.utils.dateutils import utcnow
-from pm.utils.events_bus import Event, EventType, Task, TaskType
+from pm.utils.events_bus import Event, EventType
 from pm.utils.mentions import detect_mention_changes, extract_mentions_from_text
 from pm.workflows import WorkflowError
 
@@ -567,10 +568,11 @@ async def create_issue_from_draft(
             data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
         ),
     )
-    for a in obj.attachments:
-        if a.encryption:
-            continue
-        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+    ocr_attachment_ids = [str(a.id) for a in obj.attachments if not a.encryption]
+    if ocr_attachment_ids:
+        await process_attachments_ocr.kiq(
+            [str(a.id) for a in obj.attachments if not a.encryption], str(obj.id)
+        )
 
     await schedule_batched_notification(
         'create',
@@ -672,10 +674,11 @@ async def create_issue(
             data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
         ),
     )
-    for a in obj.attachments:
-        if a.encryption:
-            continue
-        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+    ocr_attachment_ids = [str(a.id) for a in obj.attachments if not a.encryption]
+    if ocr_attachment_ids:
+        await process_attachments_ocr.kiq(
+            [str(a.id) for a in obj.attachments if not a.encryption], str(obj.id)
+        )
     await schedule_batched_notification(
         'create',
         obj.subject,
@@ -823,10 +826,16 @@ async def update_issue(
                 data={'issue_id': str(obj.id), 'project_id': str(obj.project.id)},
             ),
         )
-        for a in obj.attachments:
-            if a.id not in extra_attachment_ids or a.encryption:
-                continue
-            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+        ocr_attachment_ids = [
+            str(a.id)
+            for a in obj.attachments
+            if not a.encryption and a.id in extra_attachment_ids
+        ]
+        if ocr_attachment_ids:
+            await process_attachments_ocr.kiq(
+                ocr_attachment_ids,
+                str(obj.id),
+            )
         await m.Issue.update_issue_embedded_links(obj)
     accessible_tag_ids = await user_ctx.get_accessible_tag_ids()
     return SuccessPayloadOutput(
@@ -1666,9 +1675,7 @@ async def add_issue_attachment(
     await obj.replace()
 
     if not attachment.encryption:
-        await send_task(
-            Task(type=TaskType.OCR, data={'attachment_id': str(attachment.id)})
-        )
+        await process_attachments_ocr.kiq([str(attachment.id)], str(obj.id))
 
     await schedule_batched_notification(
         'update',
@@ -1774,7 +1781,7 @@ async def batch_create_issue_attachments(
 
     now = utcnow()
     existing_attachment_ids = {a.id for a in obj.attachments}
-    successes = []
+    successes: list[BatchSuccessItem[IssueAttachmentWithSourceOutput]] = []
     failures = []
 
     try:
@@ -1833,11 +1840,6 @@ async def batch_create_issue_attachments(
             )
             successes.append(BatchSuccessItem(payload=attachment_out))
 
-            if not attachment.encryption:
-                await send_task(
-                    Task(type=TaskType.OCR, data={'attachment_id': str(attachment.id)})
-                )
-
         except (ValueError, KeyError, AttributeError) as e:
             failures.append(
                 BatchFailureItem(
@@ -1851,6 +1853,14 @@ async def batch_create_issue_attachments(
         obj.updated_at = now
         obj.updated_by = m.UserLinkField.from_obj(user_ctx.user)
         await obj.replace()
+
+        ocr_attachments = [
+            str(success.payload.id)
+            for success in successes
+            if not success.payload.encryption
+        ]
+        if ocr_attachments:
+            await process_attachments_ocr.kiq(ocr_attachments, str(obj.id))
 
         await schedule_batched_notification(
             'update',

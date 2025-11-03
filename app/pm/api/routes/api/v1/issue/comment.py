@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 
 import pm.models as m
 from pm.api.context import current_user
-from pm.api.events_bus import send_task
 from pm.api.helpers.user import resolve_users_by_email
 from pm.api.utils.router import APIRouter
 from pm.api.views.encryption import EncryptedObject
@@ -23,9 +22,9 @@ from pm.api.views.output import BaseListOutput, SuccessPayloadOutput, UUIDOutput
 from pm.api.views.params import ListParams
 from pm.permissions import PermAnd, PermOr, ProjectPermissions
 from pm.tasks.actions.notification_batch import schedule_batched_notification
+from pm.tasks.actions.ocr_process import process_attachments_ocr
 from pm.tasks.types import CommentChange
 from pm.utils.dateutils import utcnow
-from pm.utils.events_bus import Task, TaskType
 from pm.utils.mentions import detect_mention_changes, extract_mentions_from_text
 
 from ._utils import update_attachments
@@ -138,10 +137,14 @@ async def create_comment(
     )
 
     await issue.save_changes()
-    for a in comment.attachments:
-        if a.encryption:
-            continue
-        await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+
+    ocr_attachment_ids = [str(a.id) for a in comment.attachments if not a.encryption]
+    if ocr_attachment_ids:
+        await process_attachments_ocr.kiq(
+            ocr_attachment_ids,
+            str(issue.id),
+            comment_id=str(comment.id),
+        )
 
     await schedule_batched_notification(
         'update',
@@ -231,10 +234,18 @@ async def update_comment(
         issue.updated_at = comment.created_at
         issue.updated_by = comment.author
         await issue.save_changes()
-        for a in comment.attachments:
-            if a.id not in extra_attachment_ids or a.encryption:
-                continue
-            await send_task(Task(type=TaskType.OCR, data={'attachment_id': str(a.id)}))
+
+        ocr_attachment_ids = [
+            str(a.id)
+            for a in comment.attachments
+            if not a.encryption and a.id in extra_attachment_ids
+        ]
+        if ocr_attachment_ids:
+            await process_attachments_ocr.kiq(
+                ocr_attachment_ids,
+                str(issue.id),
+                comment_id=str(comment.id),
+            )
 
         await schedule_batched_notification(
             'update',
