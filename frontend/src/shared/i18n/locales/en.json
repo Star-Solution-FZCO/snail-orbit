@@ -98,6 +98,7 @@
   "collisionStrategy": "Collision strategy",
   "columns.add": "Add columns",
   "columns.describedBy": "Columns described by",
+  "columns.selectColumn": "Select column",
   "columnsFields.show": "Show columns fields",
   "commentCard.textLoading": "Loading...",
   "common.changed": "Changed",

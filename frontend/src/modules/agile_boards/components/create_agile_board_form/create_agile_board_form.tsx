@@ -1,4 +1,13 @@
-import { Box, Button, Stack, TextField } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
+import {
+    Box,
+    Button,
+    FormHelperText,
+    IconButton,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
 import { ProjectSelect } from "entities/projects/project_select";
 import { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { usePopupState } from "material-ui-popup-state/hooks";
@@ -34,7 +43,7 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
         defaultValues,
     });
 
-    const { handleSubmit, control } = form;
+    const { control, handleSubmit } = form;
 
     const projects = useWatch({ control, name: "projects" });
 
@@ -53,13 +62,16 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
         >
             <Controller
                 control={control}
-                name={"name"}
+                name="name"
+                rules={{
+                    required: t("form.validation.required"),
+                }}
                 render={({ field, fieldState: { error, invalid } }) => (
                     <TextField
                         {...field}
                         label={t("agileBoards.form.name")}
                         error={invalid}
-                        helperText={error?.message || ""}
+                        helperText={t(error?.message || "")}
                         variant="outlined"
                         size="small"
                         fullWidth
@@ -82,6 +94,10 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
             <Controller
                 control={control}
                 name="projects"
+                rules={{
+                    validate: (value) =>
+                        value.length > 0 || t("form.validation.required"),
+                }}
                 render={({ field, fieldState: { error: fieldError } }) => (
                     <ProjectSelect {...field} error={fieldError} />
                 )}
@@ -90,33 +106,59 @@ export const CreateAgileBoardForm: FC<CreateAgileBoardFormProps> = ({
             <Controller
                 control={control}
                 name="columns.field"
-                render={({ field: { onChange, value } }) => (
-                    <span>
-                        {t("columns.describedBy")}:{" "}
-                        <Button
-                            {...bindTrigger(columnSelectPopoverState)}
-                            variant="text"
-                            size="small"
-                        >
-                            {value?.name || "-"}
-                        </Button>
-                        <ColumnSelectPopover
-                            {...bindPopover(columnSelectPopoverState)}
-                            projectId={projectIds}
-                            onChange={(_, value) => onChange(value)}
-                        />
-                    </span>
+                rules={{
+                    required: t("form.validation.required"),
+                }}
+                render={({
+                    field: { value, onChange },
+                    fieldState: { error },
+                }) => (
+                    <Box>
+                        <Stack direction="row" alignItems="center" gap={1}>
+                            <Typography
+                                color={error ? "error.main" : "text.primary"}
+                            >
+                                {t("columns.describedBy")}:{" "}
+                            </Typography>
+
+                            <Button
+                                {...bindTrigger(columnSelectPopoverState)}
+                                variant="outlined"
+                                size="small"
+                            >
+                                {value?.name || t("columns.selectColumn")}
+                            </Button>
+
+                            {value && (
+                                <IconButton
+                                    onClick={() => onChange(null)}
+                                    size="small"
+                                >
+                                    <ClearIcon fontSize="small" />
+                                </IconButton>
+                            )}
+
+                            <ColumnSelectPopover
+                                {...bindPopover(columnSelectPopoverState)}
+                                projectId={projectIds}
+                                onChange={(_, value) => onChange(value)}
+                            />
+                        </Stack>
+
+                        {error && (
+                            <FormHelperText sx={{ mt: 0.5, ml: 1.75 }} error>
+                                {error.message}
+                            </FormHelperText>
+                        )}
+                    </Box>
                 )}
             />
 
             <Stack direction="row" gap={1}>
-                <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleSubmit(onSubmit)}
-                >
+                <Button type="submit" variant="contained" size="small">
                     {t("save")}
                 </Button>
+
                 <Link to="..">
                     <Button variant="outlined" size="small" color="error">
                         {t("cancel")}

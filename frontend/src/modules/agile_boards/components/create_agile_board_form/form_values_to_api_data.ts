@@ -8,7 +8,7 @@ export const form_values_to_api_data = (
     projects: form.projects.map((el) => el.id),
     description: form.description,
     columns: [],
-    column_field: form.columns?.field.gid || "",
+    column_field: form.columns?.field?.gid,
     swimlanes: [],
     swimlane_field: null,
     query: "",
