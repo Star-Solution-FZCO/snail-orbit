@@ -25,7 +25,7 @@ class MentionOption extends MenuOption {
     user: BasicUserT;
 
     constructor(user: BasicUserT) {
-        super(user.name);
+        super(user.email);
         this.user = user;
     }
 }
