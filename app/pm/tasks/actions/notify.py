@@ -13,6 +13,7 @@ from pm.tasks._base import setup_database
 from pm.tasks.app import broker
 from pm.tasks.logging import set_tasks_logging_context
 from pm.tasks.types import CommentChange
+from pm.utils.dateutils import DurationSegmentsT
 
 __all__ = ('task_notify_by_pararam',)
 
@@ -27,6 +28,18 @@ def sanitize_issue_subject(subject: str) -> str:
     return subject.replace('[', '\\[').replace(']', '\\]')
 
 
+def _format_duration(value: int) -> str:
+    segments = DurationSegmentsT.from_total_seconds(value)
+    parts = [
+        f'{segments.weeks}w' if segments.weeks else '',
+        f'{segments.days}d' if segments.days else '',
+        f'{segments.hours}h' if segments.hours else '',
+        f'{segments.minutes}m' if segments.minutes else '',
+        f'{segments.seconds}s' if segments.seconds else '',
+    ]
+    return ' '.join(p for p in parts if p)
+
+
 def _format_field_value(value: Any, field: m.CustomFieldLink) -> str:
     if value is None:
         return 'None'
@@ -39,11 +52,15 @@ def _format_field_value(value: Any, field: m.CustomFieldLink) -> str:
         m.CustomFieldTypeT.ENUM,
         m.CustomFieldTypeT.STATE,
         m.CustomFieldTypeT.VERSION,
+        m.CustomFieldTypeT.OWNED,
+        m.CustomFieldTypeT.SPRINT,
     ):
         return value.value
     if field.type in (
         m.CustomFieldTypeT.ENUM_MULTI,
         m.CustomFieldTypeT.VERSION_MULTI,
+        m.CustomFieldTypeT.OWNED_MULTI,
+        m.CustomFieldTypeT.SPRINT_MULTI,
     ):
         return ', '.join([item.value for item in value])
     if field.type == m.CustomFieldTypeT.BOOLEAN:
@@ -59,6 +76,8 @@ def _format_field_value(value: Any, field: m.CustomFieldLink) -> str:
                 '%d %b %Y %H:%M:%S',
             )
         return value.strftime('%d %b %Y %H:%M:%S')
+    if field.type == m.CustomFieldTypeT.DURATION:
+        return _format_duration(value)
 
     val_str = str(value)
     return (
