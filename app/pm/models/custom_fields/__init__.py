@@ -1,7 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal
-
-from beanie import PydanticObjectId
+from typing import Literal
 
 from pm.models.user import UserLinkField
 
@@ -130,8 +128,6 @@ CustomFieldValueT = (
     | list[OwnedOption]
     | SprintOption
     | list[SprintOption]
-    | PydanticObjectId
-    | Any
     | None
 )
 
