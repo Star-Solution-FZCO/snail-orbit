@@ -44,13 +44,28 @@ const IssueList: FC<IssueListProps> = (props) => {
     }, [listId]);
 
     const totalQuery = useMemo(() => {
-        const parts = [
+        const query = listQueryParams.query || "";
+
+        const sortByMatch = query.match(/(\s+|^)(sort\s+by:\s*.+)$/i);
+        const sortByPart = sortByMatch ? sortByMatch[2].trim() : "";
+        const queryWithoutSort = sortByMatch
+            ? query.slice(0, query.length - sortByMatch[0].length).trim()
+            : query.trim();
+
+        const filterParts = [
             splitListId?.length
                 ? `(${splitListId.map((el) => `project: ${el}`).join(" or ")})`
                 : undefined,
-            listQueryParams.query,
-        ];
-        return parts.filter((el) => !!el).join(" and ");
+            queryWithoutSort ? `(${queryWithoutSort})` : undefined,
+        ].filter((el) => !!el);
+
+        const filtersQuery = filterParts.join(" and ");
+
+        const result = [filtersQuery, sortByPart]
+            .filter((el) => !!el)
+            .join(" ");
+
+        return result;
     }, [listQueryParams.query, splitListId]);
 
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
