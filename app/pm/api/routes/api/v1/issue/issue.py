@@ -13,7 +13,7 @@ from pm.api.context import current_user
 from pm.api.events_bus import send_event
 from pm.api.exceptions import ValidateModelError
 from pm.api.helpers.issue_validation import validate_custom_fields_values
-from pm.api.helpers.user import resolve_users_by_email
+from pm.api.helpers.user import get_user_favorite_projects, resolve_users_by_email
 from pm.api.issue_query import (
     IssueQueryTransformError,
     transform_query,
@@ -1010,6 +1010,7 @@ async def select_linkable_issues(
 
     user_ctx = current_user()
     user_ctx.validate_issue_permission(obj, ProjectPermissions.ISSUE_READ)
+    user_favorite_project_ids = await get_user_favorite_projects(user_ctx.user.id)
 
     q = m.Issue.find(
         bo.And(
@@ -1022,12 +1023,41 @@ async def select_linkable_issues(
                 bo.RegEx(m.Issue.aliases, query.search, 'i'),
             ),
         ),
-    ).sort(m.Issue.id)
-    return await BaseListOutput.make_from_query(
-        q,
+    )
+
+    # Count for pagination
+    cnt = await q.count()
+
+    # Build pipeline to sort by favorite projects first, then by update date
+    pipeline = [
+        {
+            '$addFields': {
+                'is_favorite_project': {
+                    '$in': ['$project.id', list(user_favorite_project_ids)]
+                },
+            },
+        },
+        {
+            '$sort': {
+                'is_favorite_project': -1,
+                'updated_at': -1,
+            },
+        },
+        {
+            '$skip': query.offset,
+        },
+        {
+            '$limit': query.limit,
+        },
+    ]
+
+    q_agg = q.aggregate(pipeline, projection_model=m.IssueRO)
+
+    return BaseListOutput.make(
+        items=[await IssueListOutput.from_obj(issue) async for issue in q_agg],
+        count=cnt,
         limit=query.limit,
         offset=query.offset,
-        projection_fn=IssueListOutput.from_obj,
     )
 
 

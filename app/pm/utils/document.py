@@ -1,13 +1,19 @@
 from collections.abc import Collection
-from typing import ClassVar, Self, Unpack
+from typing import Annotated, ClassVar, Self, Unpack
 
-from beanie import Document
+from beanie import Document, PydanticObjectId
+from pydantic import BaseModel, Field
 from pydantic.config import ConfigDict
 
 __all__ = (
+    'DocumentIdRO',
     'DocumentWithReadOnlyProjection',
     'init_read_only_projection_models',
 )
+
+
+class DocumentIdRO(BaseModel):
+    id: Annotated[PydanticObjectId, Field(alias='_id')]
 
 
 class DocumentWithReadOnlyProjection(Document):

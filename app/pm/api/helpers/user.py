@@ -1,10 +1,18 @@
-from collections.abc import Collection
+from collections.abc import Callable, Collection
+from typing import Any
 
 import beanie.operators as bo
+from beanie import PydanticObjectId
 
 import pm.models as m
+from pm.cache import cached
+from pm.utils.cache.serializers import deserialize_objectid_set, serialize_objectid_set
+from pm.utils.document import DocumentIdRO
 
-__all__ = ('resolve_users_by_email',)
+__all__ = (
+    'get_user_favorite_projects',
+    'resolve_users_by_email',
+)
 
 
 async def resolve_users_by_email(
@@ -32,3 +40,32 @@ async def resolve_users_by_email(
             raise ValueError(f'Users not found for emails: {", ".join(missing_emails)}')
 
     return users
+
+
+# pylint: disable=unused-argument
+# ruff: noqa: ARG001
+def _user_favorite_projects_key_builder(
+    func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> str:
+    """Build cache key for resolve_user_favorite_projects based on user ID."""
+    return f'user_favorite_projects:{args[0]}'
+
+
+@cached(
+    ttl=120,
+    tags=['projects:all'],
+    namespace='settings',
+    serializer=serialize_objectid_set,
+    deserializer=deserialize_objectid_set,
+    key_builder=_user_favorite_projects_key_builder,
+)
+async def get_user_favorite_projects(
+    user_id: PydanticObjectId,
+) -> set[PydanticObjectId]:
+    """Resolve favorite project IDs for user."""
+    favorite_projects = (
+        await m.Project.find(bo.Eq(m.Project.favorite_of, user_id))
+        .project(DocumentIdRO)
+        .to_list()
+    )
+    return {p.id for p in favorite_projects}

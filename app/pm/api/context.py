@@ -24,6 +24,7 @@ from pm.permissions import (
     ProjectPermissions,
     ProjectPermissionT,
 )
+from pm.utils.cache.serializers import deserialize_objectid_set, serialize_objectid_set
 
 __all__ = (
     'UserContext',
@@ -34,12 +35,6 @@ __all__ = (
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
-
-
-# ACL-specific serializers for cached functions
-def _serialize_objectid_set(data: set[PydanticObjectId]) -> list[str]:
-    """Convert set of PydanticObjectId to list of strings for JSON serialization."""
-    return [str(obj_id) for obj_id in data]
 
 
 def _serialize_permissions_dict(
@@ -55,12 +50,6 @@ def _serialize_permissions_dict(
 def _serialize_global_permissions_set(data: set[GlobalPermissions]) -> list[str]:
     """Convert set of GlobalPermissions to list of strings for JSON serialization."""
     return [p.value for p in data]
-
-
-# ACL-specific deserializers for cached functions
-def _deserialize_objectid_set(data: list[str]) -> set[PydanticObjectId]:
-    """Convert list of ObjectId strings back to set of PydanticObjectId."""
-    return {PydanticObjectId(id_str) for id_str in data}
 
 
 def _deserialize_permissions_dict(
@@ -321,8 +310,8 @@ async def admin_context_dependency(
     ttl=120,
     tags=['groups:all'],
     namespace='acl',
-    serializer=_serialize_objectid_set,
-    deserializer=_deserialize_objectid_set,
+    serializer=serialize_objectid_set,
+    deserializer=deserialize_objectid_set,
     key_builder=_user_groups_key_builder,
 )
 async def resolve_all_user_groups(user: m.User) -> set[PydanticObjectId]:
