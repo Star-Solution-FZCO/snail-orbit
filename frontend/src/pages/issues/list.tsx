@@ -5,7 +5,7 @@ import IssuesList from "modules/issues/components/list/issues_list";
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import { useIssueModalView } from "modules/issues/widgets/modal_view/use_modal_view";
 import type { FC } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { issueApi } from "shared/model";
 import type { IssueT, ProjectT } from "shared/model/types";
@@ -61,11 +61,7 @@ const IssueList: FC<IssueListProps> = (props) => {
 
         const filtersQuery = filterParts.join(" and ");
 
-        const result = [filtersQuery, sortByPart]
-            .filter((el) => !!el)
-            .join(" ");
-
-        return result;
+        return [filtersQuery, sortByPart].filter((el) => !!el).join(" ");
     }, [listQueryParams.query, splitListId]);
 
     const { data, isFetching, error, isLoading } = issueApi.useListIssuesQuery({
@@ -81,6 +77,10 @@ const IssueList: FC<IssueListProps> = (props) => {
         },
         [],
     );
+
+    useEffect(() => {
+        updateListQueryParams({ query: queryParams?.query });
+    }, [queryParams?.query, updateListQueryParams]);
 
     const handleIssueRowDoubleClick = useCallback(
         (issue: IssueT) => {
