@@ -10,11 +10,12 @@ export const useEditorStyles = () => {
             display: "block",
             position: "relative",
             outline: 0,
-            padding: `0 ${theme.spacing(1.2)}`,
-            paddingBottom: theme.spacing(1.2),
+            padding: theme.spacing(1.2),
             minHeight: theme.spacing(37.5), // 300px
-            "& p": {
-                margin: `${theme.spacing(1.8)} 0`,
+
+            "& p, h1, h2, h3": {
+                marginTop: 0,
+                marginBottom: theme.spacing(1.8),
             },
         },
 
@@ -24,7 +25,7 @@ export const useEditorStyles = () => {
 
         ".content_editable__placeholder": {
             position: "absolute",
-            top: theme.spacing(1.8),
+            top: theme.spacing(1.2),
             left: theme.spacing(1.2),
             color: theme.palette.text.disabled,
         },
@@ -190,7 +191,7 @@ export const useEditorStyles = () => {
             content: '"✓"',
             position: "absolute",
             left: theme.spacing(0.375),
-            top: 0,
+            top: 1,
             color: theme.palette.common.white,
             fontSize: "12px",
             fontWeight: "bold",
