@@ -59,12 +59,22 @@ export const IssueForm: FC<IssueFormProps> = ({
             });
     }, [issue, getIssueText]);
 
+    const handleChecklistChange = useCallback(
+        async (newContent: string) => {
+            setText(newContent);
+            await onUpdateIssue({ text: { value: newContent } });
+        },
+        [onUpdateIssue],
+    );
+
     if (mode === "view") {
         return (
             <Box mt={-1}>
                 {text || textLoading ? (
                     <MarkdownRenderer
                         content={text || t("issues.form.text.loading")}
+                        onContentChange={handleChecklistChange}
+                        editable={!textLoading}
                     />
                 ) : (
                     <Box

@@ -66,6 +66,15 @@ const CommentCard: FC<CommentCardProps> = ({
         }).catch(toastApiError);
     };
 
+    const handleChecklistChange = (newContent: string) => {
+        setCommentText(newContent);
+        updateComment({
+            id: issueId,
+            commentId: comment.id,
+            text: { value: newContent },
+        }).catch(toastApiError);
+    };
+
     const handleClickDeleteAttachment = (id: string, filename: string) => {
         setSelectedAttachment({ id, filename });
         setOpenDeleteDialog(true);
@@ -108,6 +117,7 @@ const CommentCard: FC<CommentCardProps> = ({
                         isCommentUpdateLoading
                     }
                     onDownloadAttachment={downloadAttachment}
+                    onChecklistChange={handleChecklistChange}
                 />
             ) : (
                 <>

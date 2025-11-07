@@ -32,4 +32,11 @@ export const markdownComponents: Components = {
             </Link>
         );
     },
+    input: ({ node: _, ...props }) => {
+        if (props.type === "checkbox") {
+            const { disabled: _disabled, ...restProps } = props;
+            return <input {...restProps} />;
+        }
+        return <input {...props} />;
+    },
 };

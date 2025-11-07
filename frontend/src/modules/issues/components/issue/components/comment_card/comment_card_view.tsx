@@ -18,6 +18,7 @@ type CommentCardViewProps = {
     onDeleteClick: (comment: CommentT) => unknown;
     onDeleteAttachment: (id: string, filename: string) => unknown;
     onDownloadAttachment: (attachment: IssueAttachmentT) => unknown;
+    onChecklistChange?: (newContent: string) => void;
     isLoading?: boolean;
 };
 
@@ -32,6 +33,7 @@ export const CommentCardView = (props: CommentCardViewProps) => {
         isLoading,
         onDeleteAttachment,
         onDownloadAttachment,
+        onChecklistChange,
     } = props;
 
     const commentBoxRef = useRef<null | HTMLDivElement>(null);
@@ -143,7 +145,11 @@ export const CommentCardView = (props: CommentCardViewProps) => {
                 )}
 
                 <Box mt={0.5}>
-                    <MarkdownRenderer content={commentText} />
+                    <MarkdownRenderer
+                        content={commentText}
+                        onContentChange={onChecklistChange}
+                        editable={!!onChecklistChange}
+                    />
                 </Box>
 
                 {attachmentsExists && (

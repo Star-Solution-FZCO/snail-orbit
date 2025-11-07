@@ -164,7 +164,6 @@ export const useEditorStyles = () => {
         // Checklist
         ".editor-listitem-checked, .editor-listitem-unchecked": {
             position: "relative",
-            marginLeft: theme.spacing(1),
             marginRight: theme.spacing(1),
             paddingLeft: theme.spacing(3),
             listStyle: "none",
