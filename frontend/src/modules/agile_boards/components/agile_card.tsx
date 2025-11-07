@@ -24,6 +24,7 @@ import {
     IssueCardHeader,
 } from "shared/ui/agile/issue_card/issue_card.styles";
 import { notEmpty } from "shared/utils/helpers/notEmpty";
+import { CustomFieldSearchLink } from "../../../features/custom_fields/custom_field_search_link";
 import type { TotalAgileBoardViewSettings } from "./agile_board_view_settings/agile_board_view_settings.types";
 
 export type IssueCardProps = {
@@ -176,12 +177,14 @@ export const AgileCard: FC<IssueCardProps> = memo(
                     showCustomFields ? (
                         <IssueCardBottom>
                             {fields.map((field) => (
-                                <CustomFieldsChipParser
-                                    field={field}
-                                    onChange={onFieldUpdate}
-                                    size="xsmall"
-                                    key={field.id}
-                                />
+                                <CustomFieldSearchLink field={field}>
+                                    <CustomFieldsChipParser
+                                        field={field}
+                                        onChange={onFieldUpdate}
+                                        size="xsmall"
+                                        key={field.id}
+                                    />
+                                </CustomFieldSearchLink>
                             ))}
                         </IssueCardBottom>
                     ) : null}

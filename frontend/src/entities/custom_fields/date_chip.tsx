@@ -17,7 +17,7 @@ export const DateChip = forwardRef(
     ) => {
         const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-        const handleChange = (value: Dayjs) => {
+        const handleChange = (value: Dayjs | null) => {
             onChange?.(value);
             setAnchorEl(null);
         };

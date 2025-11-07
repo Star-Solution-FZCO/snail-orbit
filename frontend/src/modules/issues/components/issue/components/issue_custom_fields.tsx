@@ -14,6 +14,7 @@ import type {
     ProjectT,
 } from "shared/model/types";
 import type { IssueUpdate } from "shared/model/types/backend-schema.gen";
+import { CustomFieldSearchLink } from "../../../../../features/custom_fields/custom_field_search_link";
 
 export type IssueCustomFieldsProps = {
     issue: IssueT;
@@ -70,13 +71,15 @@ export const IssueCustomFields: FC<IssueCustomFieldsProps> = ({
             />
 
             {fields.map((field) => (
-                <CustomFieldsParser
-                    key={field.gid || field.id}
-                    field={field}
-                    onChange={onFieldUpdate}
-                    customFieldsErrors={customFieldsErrors}
-                    clearable
-                />
+                <CustomFieldSearchLink field={field}>
+                    <CustomFieldsParser
+                        key={field.gid || field.id}
+                        field={field}
+                        onChange={onFieldUpdate}
+                        customFieldsErrors={customFieldsErrors}
+                        clearable
+                    />
+                </CustomFieldSearchLink>
             ))}
         </>
     );

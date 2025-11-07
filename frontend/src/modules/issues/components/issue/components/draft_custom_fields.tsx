@@ -1,4 +1,5 @@
 import { ProjectField } from "entities/projects/project_field";
+import { CustomFieldSearchLink } from "features/custom_fields/custom_field_search_link";
 import { CustomFieldsParser } from "features/custom_fields/custom_fields_parser";
 import type { FC } from "react";
 import { useMemo } from "react";
@@ -64,11 +65,13 @@ export const DraftCustomFields: FC<DraftCustomFieldsProps> = ({
             />
 
             {fields.map((field) => (
-                <CustomFieldsParser
-                    key={field.id}
-                    field={field}
-                    onChange={onFieldUpdate}
-                />
+                <CustomFieldSearchLink field={field}>
+                    <CustomFieldsParser
+                        key={field.id}
+                        field={field}
+                        onChange={onFieldUpdate}
+                    />
+                </CustomFieldSearchLink>
             ))}
         </>
     );

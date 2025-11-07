@@ -1,3 +1,4 @@
+import { CustomFieldSearchLink } from "features/custom_fields/custom_field_search_link";
 import { CustomFieldsChipParser } from "features/custom_fields/custom_fields_chip_parser";
 import type { FC } from "react";
 import { useMemo } from "react";
@@ -65,12 +66,14 @@ export const IssueCustomFieldChips: FC<IssueCustomFieldChipsProps> = ({
         !field ? (
             <div key={idx} />
         ) : (
-            <CustomFieldsChipParser
-                field={field}
-                onChange={onFieldUpdate}
-                size="xsmall"
-                key={field.id}
-            />
+            <CustomFieldSearchLink field={field}>
+                <CustomFieldsChipParser
+                    field={field}
+                    onChange={onFieldUpdate}
+                    size="xsmall"
+                    key={field.id}
+                />
+            </CustomFieldSearchLink>
         ),
     );
 };

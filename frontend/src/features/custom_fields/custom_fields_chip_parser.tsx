@@ -161,11 +161,12 @@ export const CustomFieldsChipParser: FC<CustomFieldsChipParserV2Props> = ({
                     onChange={(value) => {
                         onChange?.({
                             ...field,
-                            value: value.format(
-                                field.type === "datetime"
-                                    ? "YYYY-MM-DDTHH:mm:ss"
-                                    : "YYYY-MM-DD",
-                            ),
+                            value:
+                                value?.format(
+                                    field.type === "datetime"
+                                        ? "YYYY-MM-DDTHH:mm:ss"
+                                        : "YYYY-MM-DD",
+                                ) || null,
                         });
                     }}
                     type={field.type === "datetime" ? "datetime" : "date"}

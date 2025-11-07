@@ -11,9 +11,9 @@ export const fieldToFieldValue = (
     if (!field) return null;
     switch (field.type) {
         case "user":
-            return field.value?.id;
+            return field.value?.email;
         case "user_multi":
-            return field.value?.map((el) => el.id);
+            return field.value?.map((el) => el.email);
         case "enum":
         case "state":
         case "version":
