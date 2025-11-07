@@ -379,7 +379,10 @@ class MongoQueryTransformer(Transformer):
         return None
 
     def NUMBER_VALUE(self, token):
-        return float(token.value)
+        try:
+            return int(token.value)
+        except ValueError:
+            return float(token.value)
 
     def DURATION_VALUE(self, token):
         duration_str = token.value.strip()

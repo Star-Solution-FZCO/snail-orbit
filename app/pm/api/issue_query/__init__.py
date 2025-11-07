@@ -1,3 +1,4 @@
+import logging
 import re
 
 from ._base import IssueQueryTransformError
@@ -8,6 +9,8 @@ __all__ = (
     'IssueQueryTransformError',
     'transform_query',
 )
+
+logger = logging.getLogger(__name__)
 
 
 SORT_BY_PATTERN = r'(^|\s+)sort\s+by:\s*'
@@ -29,7 +32,12 @@ async def transform_query(
     search_part, sort_part = split_query(query)
     if sort_by:
         sort_part = sort_by
-    return await transform_search(
+    search_transformed = await transform_search(
         search_part,
         current_user_email,
-    ), await transform_sort(sort_part)
+    )
+    sort_transformed = await transform_sort(sort_part)
+    logger.debug(
+        "query='%s' -> search=%s sort=%s", query, search_transformed, sort_transformed
+    )
+    return search_transformed, sort_transformed

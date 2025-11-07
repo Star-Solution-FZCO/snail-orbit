@@ -758,7 +758,7 @@ TEST_ENUM_FIELD_PYTEST_PARAMS = [
         },
         id=f'enum field with value {priority}',
     )
-    for priority in ['null', '1.', '1.1', 1.1]
+    for priority in ['null', '1.', '1.1', 1.1, -1.5, -5, 1, 0]
 ]
 TEST_STATE_FIELD_PYTEST_PARAMS = [
     pytest.param(
@@ -773,7 +773,7 @@ TEST_STATE_FIELD_PYTEST_PARAMS = [
         },
         id=f'state field with value {value}',
     )
-    for value in [1.1, '1.1', 'null', '1-v', 'v-20']
+    for value in [1.1, '1.1', 'null', '1-v', 'v-20', 444]
 ]
 TEST_OWNED_FIELD_PYTEST_PARAMS = [
     pytest.param(
