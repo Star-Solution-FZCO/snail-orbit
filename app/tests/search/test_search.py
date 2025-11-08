@@ -3209,11 +3209,6 @@ TEST_MULTI_VALUE_PYTEST_PARAMS = [
             id='closed brackets at end of expression',
         ),
         pytest.param(
-            '#resolved',
-            {'resolved_at': {'$ne': None}},
-            id='resolved hashtag',
-        ),
-        pytest.param(
             '#resolved OR Date: 2024-12-12..inf',
             {
                 '$or': [
@@ -3229,6 +3224,46 @@ TEST_MULTI_VALUE_PYTEST_PARAMS = [
                 ]
             },
             id='resolved hashtag and date range',
+        ),
+        pytest.param(
+            '#resolved',
+            {'resolved_at': {'$ne': None}},
+            id='resolved hashtag',
+        ),
+        pytest.param(
+            '#unresolved',
+            {'resolved_at': None},
+            id='unresolved hashtag',
+        ),
+        pytest.param(
+            '#closed',
+            {'closed_at': {'$ne': None}},
+            id='closed hashtag',
+        ),
+        pytest.param(
+            '#open',
+            {'closed_at': None},
+            id='open hashtag',
+        ),
+        pytest.param(
+            '#closed AND #resolved',
+            {
+                '$and': [
+                    {'closed_at': {'$ne': None}},
+                    {'resolved_at': {'$ne': None}},
+                ]
+            },
+            id='closed and resolved hashtags',
+        ),
+        pytest.param(
+            '#open OR #unresolved',
+            {
+                '$or': [
+                    {'closed_at': None},
+                    {'resolved_at': None},
+                ]
+            },
+            id='open or unresolved hashtags',
         ),
         pytest.param('(((((((((((((((', {}, id='Many open brackets'),
         *TEST_VERSION_FIELD_PYTEST_PARAMS,

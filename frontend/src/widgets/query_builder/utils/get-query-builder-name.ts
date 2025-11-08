@@ -12,6 +12,8 @@ export const useGetQueryBuilderFilterName = () => {
             if (name === "created_at") return t("Created at");
             if (name === "project") return t("Project");
             if (name === "tag") return t("Tag");
+            if (name === "#closed") return t("#Closed");
+            if (name === "#open") return t("#Open");
             if (name === "#resolved") return t("#Resolved");
             if (name === "#unresolved") return t("#Unresolved");
             if (name === "id") return t("Id");

@@ -46,7 +46,7 @@ __all__ = (
     'transform_text_search',
 )
 
-HASHTAG_VALUES = {'#resolved', '#unresolved'}
+HASHTAG_VALUES = {'#resolved', '#unresolved', '#closed', '#open'}
 RESERVED_FIELDS = {
     'subject',
     'text',
@@ -62,10 +62,12 @@ RESERVED_FIELDS = {
 EXPRESSION_GRAMMAR = """
     start: attribute_condition | hashtag_value
 
-    hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED
+    hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED | HASHTAG_CLOSED | HASHTAG_OPEN
 
     HASHTAG_RESOLVED: "#resolved"i
     HASHTAG_UNRESOLVED: "#unresolved"i
+    HASHTAG_CLOSED: "#closed"i
+    HASHTAG_OPEN: "#open"i
 
     attribute_condition: FIELD_NAME _COLON attribute_values
 
@@ -207,6 +209,14 @@ class MongoQueryTransformer(Transformer):
         if val == '#unresolved':
             return {
                 'resolved_at': None,
+            }
+        if val == '#closed':
+            return {
+                'closed_at': {'$ne': None},
+            }
+        if val == '#open':
+            return {
+                'closed_at': None,
             }
         raise ValueError(f'Unknown hashtag value: {val}')
 

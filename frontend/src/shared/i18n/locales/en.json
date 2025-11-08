@@ -1,4 +1,6 @@
 {
+  "#Closed": "#Closed",
+  "#Open": "#Open",
   "#Resolved": "#Resolved",
   "#Unresolved": "#Unresolved",
   "about.backendVersion": "Backend version",

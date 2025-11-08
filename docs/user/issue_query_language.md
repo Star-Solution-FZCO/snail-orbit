@@ -184,6 +184,14 @@ Use hashtag keywords to filter by resolution status:
 #unresolved    # Only unresolved issues
 ```
 
+### Issue Status
+Use hashtag keywords to filter by open/closed status:
+
+```
+#closed        # Only closed issues
+#open          # Only open issues
+```
+
 ## Logical Operators
 
 Logical operators are case-insensitive, so you can use `AND`/`and` and `OR`/`or`.
@@ -217,6 +225,16 @@ State: Open AND (priority: High OR (created_at: 2024-01-01..inf AND assignee: me
 ### Find high-priority unresolved issues assigned to you:
 ```
 priority: High AND assignee: me AND #unresolved
+```
+
+### Find open issues that are resolved (awaiting final review):
+```
+#open AND #resolved
+```
+
+### Find closed issues that were never resolved (rejected/won't fix):
+```
+#closed AND #unresolved
 ```
 
 ### Find issues created this week in specific projects:
@@ -326,10 +344,12 @@ For reference, here is the formal grammar used by the query parser:
 ```
 start: attribute_condition | hashtag_value
 
-hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED
+hashtag_value: HASHTAG_RESOLVED | HASHTAG_UNRESOLVED | HASHTAG_CLOSED | HASHTAG_OPEN
 
 HASHTAG_RESOLVED: "#resolved"i
 HASHTAG_UNRESOLVED: "#unresolved"i
+HASHTAG_CLOSED: "#closed"i
+HASHTAG_OPEN: "#open"i
 
 attribute_condition: FIELD_NAME _COLON attribute_values
 
