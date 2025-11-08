@@ -84,6 +84,10 @@ def _custom_fields() -> dict:
         ),
         pytest.param('created_at', [{'$sort': {'created_at': 1}}], id='created_at_asc'),
         pytest.param(
+            'resolved_at', [{'$sort': {'resolved_at': 1}}], id='resolved_at_asc'
+        ),
+        pytest.param('closed_at', [{'$sort': {'closed_at': 1}}], id='closed_at_asc'),
+        pytest.param(
             'created_by',
             [{'$sort': {'created_by.email': 1}}],
             id='created_by_asc',
@@ -144,6 +148,16 @@ def _custom_fields() -> dict:
             'created_at desc',
             [{'$sort': {'created_at': -1}}],
             id='created_at_desc',
+        ),
+        pytest.param(
+            'resolved_at desc',
+            [{'$sort': {'resolved_at': -1}}],
+            id='resolved_at_desc',
+        ),
+        pytest.param(
+            'closed_at desc',
+            [{'$sort': {'closed_at': -1}}],
+            id='closed_at_desc',
         ),
         pytest.param(
             'state',
@@ -1089,6 +1103,16 @@ def _custom_fields() -> dict:
             id='integer_uppercase',
         ),
         pytest.param(
+            'RESOLVED_AT',
+            [{'$sort': {'resolved_at': 1}}],
+            id='resolved_at_uppercase',
+        ),
+        pytest.param(
+            'Closed_At DESC',
+            [{'$sort': {'closed_at': -1}}],
+            id='closed_at_mixed_case',
+        ),
+        pytest.param(
             'project, id',
             [
                 {
@@ -1336,6 +1360,58 @@ def _custom_fields() -> dict:
                 {'$project': {'priority__sort': 0, 'assignee__sort': 0}},
             ],
             id='complex_multi_type_sort',
+        ),
+        pytest.param(
+            'resolved_at, closed_at desc, updated_at',
+            [{'$sort': {'resolved_at': 1, 'closed_at': -1, 'updated_at': 1}}],
+            id='multiple_datetime_fields_sort',
+        ),
+        pytest.param(
+            'priority desc, resolved_at, closed_at desc',
+            [
+                {
+                    '$addFields': {
+                        'priority__sort': {
+                            '$ifNull': [
+                                {
+                                    '$arrayElemAt': [
+                                        {
+                                            '$map': {
+                                                'input': {
+                                                    '$filter': {
+                                                        'input': '$fields',
+                                                        'as': 'field',
+                                                        'cond': {
+                                                            '$regexMatch': {
+                                                                'input': '$$field.name',
+                                                                'regex': '^priority$',
+                                                                'options': 'i',
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                'as': 'matchedField',
+                                                'in': '$$matchedField.value.value',
+                                            },
+                                        },
+                                        0,
+                                    ],
+                                },
+                                None,
+                            ],
+                        },
+                    },
+                },
+                {
+                    '$sort': {
+                        'priority__sort': -1,
+                        'resolved_at': 1,
+                        'closed_at': -1,
+                    },
+                },
+                {'$project': {'priority__sort': 0}},
+            ],
+            id='mixed_custom_and_datetime_fields_sort',
         ),
         pytest.param(
             'field name',
@@ -2131,6 +2207,15 @@ async def test_sort_transformation(
                 ],
             ),
             id='complex_search_and_sort',
+        ),
+        pytest.param(
+            '#resolved',
+            'resolved_at desc, closed_at',
+            (
+                {'resolved_at': {'$ne': None}},
+                [{'$sort': {'resolved_at': -1, 'closed_at': 1}}],
+            ),
+            id='resolved_hashtag_with_datetime_sort',
         ),
     ],
 )

@@ -295,7 +295,7 @@ async def _create_parsed_field_object(
             )
         )
 
-    if field_name in ('updated_at', 'created_at'):
+    if field_name in ('updated_at', 'created_at', 'resolved_at', 'closed_at'):
         return ParsedQueryObjectRootModel(
             root=DateTimeCustomFieldParsed(
                 type=QueryFieldTypeT.DATETIME,
@@ -606,7 +606,7 @@ def _create_reserved_fields(
                 )
             )
             continue
-        if field_name in ('updated_at', 'created_at'):
+        if field_name in ('updated_at', 'created_at', 'resolved_at', 'closed_at'):
             available_fields.append(
                 AvailableFieldRootModel(
                     root=DateTimeCustomFieldAvailable(
@@ -745,7 +745,7 @@ def _get_reserved_field_type(field_name: str) -> QueryFieldTypeT:
     """Get the QueryFieldTypeT for a reserved field name."""
     if field_name in ('subject', 'text', 'id'):
         return QueryFieldTypeT.STRING
-    if field_name in ('updated_at', 'created_at'):
+    if field_name in ('updated_at', 'created_at', 'resolved_at', 'closed_at'):
         return QueryFieldTypeT.DATETIME
     if field_name in ('updated_by', 'created_by'):
         return QueryFieldTypeT.USER

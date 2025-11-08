@@ -55,6 +55,8 @@ RESERVED_FIELDS = {
     'updated_by',
     'created_at',
     'created_by',
+    'resolved_at',
+    'closed_at',
     'tag',
     'id',
 }
@@ -251,7 +253,7 @@ class MongoQueryTransformer(Transformer):
             if value is None:
                 return {'text': None}
             return {'$text': {'$search': str(value)}}
-        if field_lower in ('updated_at', 'created_at'):
+        if field_lower in ('updated_at', 'created_at', 'resolved_at', 'closed_at'):
             if isinstance(value, date) and not isinstance(value, datetime):
                 start_of_day = datetime.combine(value, time.min)
                 now = utcnow()

@@ -175,7 +175,13 @@ async def transform_sort(
                 }
             )
             continue
-        if field_name_lower in {'subject', 'updated_at', 'created_at'}:
+        if field_name_lower in {
+            'subject',
+            'updated_at',
+            'created_at',
+            'resolved_at',
+            'closed_at',
+        }:
             sort_stage[field_name_lower] = -1 if is_descending else 1
             continue
         if field_name_lower in {'created_by', 'updated_by'}:

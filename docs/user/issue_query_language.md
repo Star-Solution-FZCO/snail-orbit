@@ -33,6 +33,8 @@ The system includes several built-in fields that can be queried:
 - `tag` - Issue tags
 - `created_at` - Issue creation date
 - `updated_at` - Last update date
+- `resolved_at` - Issue resolution date
+- `closed_at` - Issue closure date
 - `created_by` - User who created the issue
 - `updated_by` - User who last updated the issue
 
@@ -86,12 +88,16 @@ Use ISO 8601 format for dates and datetimes:
 ```
 created_at: 2024-01-15
 updated_at: 2024-12-31
+resolved_at: 2024-01-20
+closed_at: 2024-01-25
 ```
 
 **Datetimes (YYYY-MM-DDTHH:MM:SS):**
 ```
 created_at: 2024-01-15T09:30:00
 updated_at: 2024-12-31T23:59:59
+resolved_at: 2024-01-20T14:30:00
+closed_at: 2024-01-25T16:45:00
 ```
 
 ### Relative Dates
@@ -235,6 +241,21 @@ priority: High AND assignee: me AND #unresolved
 ### Find closed issues that were never resolved (rejected/won't fix):
 ```
 #closed AND #unresolved
+```
+
+### Find issues resolved this week:
+```
+resolved_at: this week
+```
+
+### Find issues closed after being resolved (normal workflow):
+```
+closed_at: 2024-01-01..inf AND resolved_at: 2024-01-01..inf
+```
+
+### Find issues resolved but not yet closed:
+```
+#resolved AND #open
 ```
 
 ### Find issues created this week in specific projects:

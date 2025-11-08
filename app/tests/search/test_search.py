@@ -515,6 +515,107 @@ TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
         ]
     ]
 )
+
+TEST_RESOLVED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
+    [
+        pytest.param(
+            'resolved_at: 2024-01-01',
+            {
+                'resolved_at': {
+                    '$gte': datetime(2024, 1, 1, 0, 0),
+                    '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+                }
+            },
+            id='resolved_at field with value 2024-01-01 and valid date in date',
+        ),
+        pytest.param(
+            'resolved_at: 2024-01-01T00:00:00',
+            {'resolved_at': datetime(2024, 1, 1, 0, 0, 0)},
+            id='resolved_at field with value 2024-01-01T00:00:00 and valid datetime',
+        ),
+        pytest.param(
+            'resolved_at: null',
+            {'resolved_at': None},
+            id='resolved_at field with null value',
+        ),
+    ]
+    + [
+        pytest.param(
+            f'resolved_at: {value}',
+            'Failed to parse query',
+            id=f'resolved_at field with value {value} and {id}',
+        )
+        for value, id in [
+            ('2024-02-30', 'invalid days of date'),
+            ('2024-01-01T12:00:60', 'invalid second of datetime'),
+            ('2024/01/01', 'forward slashes'),
+        ]
+    ]
+    + [
+        pytest.param(
+            f'resolved_at: {value}',
+            {'resolved_at': f'{value}'},
+            id=f'resolved_at field with value {value} and {id}',
+        )
+        for value, id in [
+            ('2024-00-01', 'zero month'),
+            ('2024-01-32', 'invalid day'),
+            ('2024-01-00', 'zero day'),
+            ('2024-13-01', 'invalid month'),
+        ]
+    ]
+)
+
+TEST_CLOSED_AT_RESERVED_FIELD_PYTEST_PARAMS = (
+    [
+        pytest.param(
+            'closed_at: 2024-01-01',
+            {
+                'closed_at': {
+                    '$gte': datetime(2024, 1, 1, 0, 0),
+                    '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+                }
+            },
+            id='closed_at field with value 2024-01-01 and valid date in date',
+        ),
+        pytest.param(
+            'closed_at: 2024-01-01T00:00:00',
+            {'closed_at': datetime(2024, 1, 1, 0, 0, 0)},
+            id='closed_at field with value 2024-01-01T00:00:00 and valid datetime',
+        ),
+        pytest.param(
+            'closed_at: null',
+            {'closed_at': None},
+            id='closed_at field with null value',
+        ),
+    ]
+    + [
+        pytest.param(
+            f'closed_at: {value}',
+            'Failed to parse query',
+            id=f'closed_at field with value {value} and {id}',
+        )
+        for value, id in [
+            ('2024-02-30', 'invalid days of date'),
+            ('2024-01-01T12:00:60', 'invalid second of datetime'),
+            ('2024/01/01', 'forward slashes'),
+        ]
+    ]
+    + [
+        pytest.param(
+            f'closed_at: {value}',
+            {'closed_at': f'{value}'},
+            id=f'closed_at field with value {value} and {id}',
+        )
+        for value, id in [
+            ('2024-00-01', 'zero month'),
+            ('2024-01-32', 'invalid day'),
+            ('2024-01-00', 'zero day'),
+            ('2024-13-01', 'invalid month'),
+        ]
+    ]
+)
+
 TEST_TAG_RESERVED_FIELD_PYTEST_PARAMS = [
     pytest.param(
         'tag: TAG1',
@@ -622,6 +723,48 @@ TEST_CASE_INSENSITIVE_FIELD_PYTEST_PARAMS = [
             }
         },
         id='case insensitive updated_at field all uppercase',
+    ),
+    # Test resolved_at field case variations
+    pytest.param(
+        'Resolved_At: 2024-01-01',
+        {
+            'resolved_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive resolved_at field mixed case',
+    ),
+    pytest.param(
+        'RESOLVED_AT: 2024-01-01',
+        {
+            'resolved_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive resolved_at field all uppercase',
+    ),
+    # Test closed_at field case variations
+    pytest.param(
+        'Closed_At: 2024-01-01',
+        {
+            'closed_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive closed_at field mixed case',
+    ),
+    pytest.param(
+        'CLOSED_AT: 2024-01-01',
+        {
+            'closed_at': {
+                '$gte': datetime(2024, 1, 1, 0, 0),
+                '$lte': datetime(2024, 1, 1, 23, 59, 59, 999999),
+            }
+        },
+        id='case insensitive closed_at field all uppercase',
     ),
     # Test created_by field case variations
     pytest.param(
@@ -3274,6 +3417,8 @@ TEST_MULTI_VALUE_PYTEST_PARAMS = [
         *TEST_SUBJECT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_TEXT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_CREATED_AT_RESERVED_FIELD_PYTEST_PARAMS,
+        *TEST_RESOLVED_AT_RESERVED_FIELD_PYTEST_PARAMS,
+        *TEST_CLOSED_AT_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_TAG_RESERVED_FIELD_PYTEST_PARAMS,
         *TEST_CASE_INSENSITIVE_FIELD_PYTEST_PARAMS,
         *TEST_DATETIME_FIELD_PYTEST_PARAMS,
