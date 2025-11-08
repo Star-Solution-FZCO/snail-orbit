@@ -45,7 +45,7 @@ export const AgileCard: FC<IssueCardProps> = memo(
         ...props
     }) => {
         const { t } = useTranslation();
-        const { id_readable, subject, project } = outerIssue;
+        const { id_readable, subject, project, is_resolved } = outerIssue;
         const { minCardHeight, showCustomFields, showDescription } =
             cardSetting;
 
@@ -154,7 +154,12 @@ export const AgileCard: FC<IssueCardProps> = memo(
             >
                 <IssueCardBody>
                     <IssueCardHeader>
-                        <IssueLink issue={outerIssue} flexShrink={0}>
+                        <IssueLink
+                            issue={outerIssue}
+                            flexShrink={0}
+                            lineThrough={is_resolved}
+                            resolved={is_resolved}
+                        >
                             {id_readable}
                         </IssueLink>
                         <span title={subject}>{subject}</span>
