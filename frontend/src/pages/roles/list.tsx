@@ -122,7 +122,9 @@ const RoleList = () => {
     const rowCount = data?.payload.count || 0;
 
     if (error) {
-        return <ErrorHandler error={error} message="roles.list.fetch.error" />;
+        return (
+            <ErrorHandler error={error} message={t("roles.list.fetch.error")} />
+        );
     }
 
     return (

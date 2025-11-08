@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import SomethingWentWrongImagePath from "shared/assets/images/cat_broken_shell.png";
 import { Link } from "./link";
 
-const ErrorFallback = (e: any) => {
-    console.log(e);
+const ErrorFallback = () => {
     const { t } = useTranslation();
 
     return (

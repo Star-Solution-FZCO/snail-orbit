@@ -153,7 +153,10 @@ export const WorkflowList = () => {
 
     if (error) {
         return (
-            <ErrorHandler error={error} message="workflows.list.fetch.error" />
+            <ErrorHandler
+                error={error}
+                message={t("workflows.list.fetch.error")}
+            />
         );
     }
 

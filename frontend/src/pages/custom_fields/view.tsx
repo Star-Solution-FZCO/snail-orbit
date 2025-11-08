@@ -77,7 +77,7 @@ export const CustomFieldGroupView: FC<CustomFieldGroupViewProps> = (props) => {
         return (
             <ErrorHandler
                 error={error}
-                message="customFields.item.fetch.error"
+                message={t("customFields.item.fetch.error")}
             />
         );
     }

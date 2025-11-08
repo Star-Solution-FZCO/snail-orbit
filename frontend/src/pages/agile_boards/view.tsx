@@ -3,6 +3,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
     Box,
+    Button,
     CircularProgress,
     IconButton,
     Stack,
@@ -23,9 +24,8 @@ import { useTranslation } from "react-i18next";
 import { agileBoardApi } from "shared/model";
 import { useEventSubscriptionAutoReFetch } from "shared/model/api/events.api";
 import type { AgileBoardT, IssueT } from "shared/model/types";
-import { StarButton } from "shared/ui";
+import { ErrorHandler, Link, StarButton } from "shared/ui";
 import { formatErrorMessages, toastApiError } from "shared/utils";
-import { saveToLS } from "shared/utils/helpers/local-storage";
 
 type AgileBoardViewProps = {
     boardId: string;
@@ -50,6 +50,7 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
     const {
         data,
         error,
+        isError,
         isLoading: isBoardLoading,
     } = agileBoardApi.useGetAgileBoardQuery(boardId);
 
@@ -66,10 +67,6 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
         setSearch(value);
         onQueryChange?.(value);
     };
-
-    useEffect(() => {
-        saveToLS("LAST_VIEW_BOARD", boardId);
-    }, [boardId]);
 
     const handleBoardSelect = useCallback(
         (board: AgileBoardT) => {
@@ -111,6 +108,19 @@ const AgileBoardView: FC<AgileBoardViewProps> = (props) => {
                 <CircularProgress sx={{ w: 52, h: 52 }} />
                 {t("agileBoards.loading")}
             </Box>
+        );
+
+    if (!agileBoard && isError)
+        return (
+            <ErrorHandler
+                error={error}
+                message={t("agileBoards.fetch.error")}
+                action={
+                    <Link to="/agiles/list">
+                        <Button>{t("agileBoards.fetch.error.action")}</Button>
+                    </Link>
+                }
+            />
         );
     if (!agileBoard) return null;
 

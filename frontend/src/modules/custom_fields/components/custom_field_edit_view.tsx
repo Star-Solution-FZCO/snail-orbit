@@ -54,13 +54,13 @@ export const CustomFieldEditView: FC<ICustomFieldEditViewProps> = ({
 
     useEffect(() => {
         setIsEditingEnabled(!isMultiProjectField || !hasOptions);
-    }, [isMultiProjectField]);
+    }, [hasOptions, isMultiProjectField]);
 
     if (error) {
         return (
             <ErrorHandler
                 error={error}
-                message="customFields.item.fetch.error"
+                message={t("customFields.item.fetch.error")}
             />
         );
     }

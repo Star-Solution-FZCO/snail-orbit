@@ -27,7 +27,9 @@ const UserView = () => {
     };
 
     if (error) {
-        return <ErrorHandler error={error} message="users.item.fetch.error" />;
+        return (
+            <ErrorHandler error={error} message={t("users.item.fetch.error")} />
+        );
     }
 
     if (!data) return null;

@@ -162,7 +162,7 @@ const CustomFieldList = () => {
         return (
             <ErrorHandler
                 error={error}
-                message="customFields.list.fetch.error"
+                message={t("customFields.list.fetch.error")}
             />
         );
     }

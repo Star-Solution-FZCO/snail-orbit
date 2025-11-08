@@ -9,6 +9,7 @@ import {
 import { useCreateIssueNavbarSettings } from "modules/issues/hooks/use-create-issue-navbar-settings";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { dashboardApi } from "shared/model";
 import type { CreateDashboardTileT } from "shared/model/types";
 import { ErrorHandler } from "shared/ui";
@@ -21,6 +22,8 @@ interface DashboardViewProps {
 
 export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
     useCreateIssueNavbarSettings();
+
+    const { t } = useTranslation();
 
     const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
 
@@ -75,7 +78,10 @@ export const DashboardView: FC<DashboardViewProps> = ({ dashboardId }) => {
 
     if (error) {
         return (
-            <ErrorHandler error={error} message="dashboards.item.fetch.error" />
+            <ErrorHandler
+                error={error}
+                message={t("dashboards.item.fetch.error")}
+            />
         );
     }
 

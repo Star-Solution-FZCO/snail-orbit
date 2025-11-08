@@ -27,7 +27,12 @@ const GroupView = () => {
     };
 
     if (error) {
-        return <ErrorHandler error={error} message="groups.item.fetch.error" />;
+        return (
+            <ErrorHandler
+                error={error}
+                message={t("groups.item.fetch.error")}
+            />
+        );
     }
 
     if (!data) return null;

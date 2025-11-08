@@ -127,7 +127,12 @@ const GroupList = () => {
     const rowCount = data?.payload.count || 0;
 
     if (error) {
-        return <ErrorHandler error={error} message="groups.list.fetch.error" />;
+        return (
+            <ErrorHandler
+                error={error}
+                message={t("groups.list.fetch.error")}
+            />
+        );
     }
 
     return (

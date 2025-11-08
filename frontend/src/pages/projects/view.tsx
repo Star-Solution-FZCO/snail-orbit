@@ -79,7 +79,10 @@ const ProjectView: FC<ProjectViewProps> = (props) => {
 
     if (error) {
         return (
-            <ErrorHandler error={error} message="projects.item.fetch.error" />
+            <ErrorHandler
+                error={error}
+                message={t("projects.item.fetch.error")}
+            />
         );
     }
 

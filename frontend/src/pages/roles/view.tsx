@@ -27,7 +27,9 @@ const RoleView = () => {
     };
 
     if (error) {
-        return <ErrorHandler error={error} message="roles.item.fetch.error" />;
+        return (
+            <ErrorHandler error={error} message={t("roles.item.fetch.error")} />
+        );
     }
 
     if (!data) return null;

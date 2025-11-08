@@ -149,7 +149,9 @@ export const UserList = () => {
     const rowCount = data?.payload.count || 0;
 
     if (error) {
-        return <ErrorHandler error={error} message="users.list.fetch.error" />;
+        return (
+            <ErrorHandler error={error} message={t("users.list.fetch.error")} />
+        );
     }
 
     return (

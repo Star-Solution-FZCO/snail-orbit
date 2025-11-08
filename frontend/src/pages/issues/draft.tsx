@@ -192,7 +192,12 @@ const IssueDraft: FC<IssueDraftProps> = ({ draftId }) => {
     const error = draftError || projectError;
 
     if (error) {
-        return <ErrorHandler error={error} message="issues.item.fetch.error" />;
+        return (
+            <ErrorHandler
+                error={error}
+                message={t("issues.item.fetch.error")}
+            />
+        );
     }
 
     return (

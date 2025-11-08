@@ -128,7 +128,7 @@ const GlobalRoleList = () => {
         return (
             <ErrorHandler
                 error={error}
-                message="globalRoles.list.fetch.error"
+                message={t("globalRoles.list.fetch.error")}
             />
         );
     }

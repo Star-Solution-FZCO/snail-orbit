@@ -91,7 +91,12 @@ const IssueView: FC<IssueViewProps> = ({ issueId }) => {
     const isLoading = isIssueLoading || isProjectLoading;
 
     if (error) {
-        return <ErrorHandler error={error} message="issues.item.fetch.error" />;
+        return (
+            <ErrorHandler
+                error={error}
+                message={t("issues.item.fetch.error")}
+            />
+        );
     }
 
     return (

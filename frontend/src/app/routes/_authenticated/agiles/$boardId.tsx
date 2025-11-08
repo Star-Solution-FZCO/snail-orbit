@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AgileBoardView } from "pages/agile_boards";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import type { AgileBoardT } from "shared/model/types";
+import { saveToLS } from "../../../../shared/utils/helpers/local-storage";
 
 type BoardViewSearch = {
     query?: string;
@@ -32,6 +33,10 @@ function Component() {
         },
         [navigate],
     );
+
+    useEffect(() => {
+        saveToLS("LAST_VIEW_BOARD", boardId);
+    }, [boardId]);
 
     return (
         <AgileBoardView

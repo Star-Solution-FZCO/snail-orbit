@@ -37,7 +37,10 @@ const WorkflowView = () => {
 
     if (error) {
         return (
-            <ErrorHandler error={error} message="workflows.item.fetch.error" />
+            <ErrorHandler
+                error={error}
+                message={t("workflows.item.fetch.error")}
+            />
         );
     }
 

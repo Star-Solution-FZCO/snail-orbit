@@ -30,7 +30,7 @@ const GlobalRoleView = () => {
         return (
             <ErrorHandler
                 error={error}
-                message="globalRoles.item.fetch.error"
+                message={t("globalRoles.item.fetch.error")}
             />
         );
     }
